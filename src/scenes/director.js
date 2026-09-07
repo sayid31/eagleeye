@@ -415,7 +415,11 @@ export class SceneDirector {
     this._sceneUpdateShotBtn?.addEventListener('click', () => this.updateSelectedShot());
 
     this._sceneStartBtn?.addEventListener('click', () => {
-      this.startScene(this._selectedSceneId);
+      // Play only the selected scene — without `single: true` this falls through
+      // to _buildPlaybackQueue's round-robin-through-the-whole-project default,
+      // which is what voice's control_scene action wants but not what a user
+      // clicking START on one scene expects (was silently playing every scene).
+      this.startScene(this._selectedSceneId, { single: true });
     });
 
     this._sceneStopBtn?.addEventListener('click', () => {
