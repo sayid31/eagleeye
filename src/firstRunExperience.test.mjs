@@ -655,17 +655,21 @@ test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is
   const end = src.indexOf('\n];\n', start);
   const block = src.slice(start, end + 4);
 
-  // Re-pinned 2026-09-08: the "EagleEye View" display-name rebrand
+  // Re-pinned 2026-09-08 (a): the "EagleEye View" display-name rebrand
   // DELIBERATELY edits the prose text of 3 tool descriptions
   // (fly_to_location, set_layer_visibility, set_visual_style) that mention
   // the product name — exactly the kind of schema change this pin exists to
-  // make loud. The guarded claim is unchanged: first-run missions ride
-  // existing tools, and any NEW drift from this recorded schema still fails
-  // here.
-  assert.equal(block.length, 31186, 'tool schema byte length drifted from the pinned release schema');
+  // make loud.
+  // Re-pinned 2026-09-08 (b): Indonesia expansion adds 'jakarta' to the
+  // locationId enum of 3 tools (fly_to_location, select_nearest_aircraft,
+  // control_radio) so voice commands can select the new Jakarta location
+  // alongside the existing Location-menu cities. The guarded claim is
+  // unchanged: first-run missions ride existing tools, and any NEW drift
+  // from this recorded schema still fails here.
+  assert.equal(block.length, 31219, 'tool schema byte length drifted from the pinned release schema');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    '19ded9488f77cf0f13d0e7278bbb4326844569bf1a4866ce8570bbd731fe38d2',
+    'd66bf84aa0aaf78be4181c18be7b665b4be662904b678896044e2e39effe9135',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
 

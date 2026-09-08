@@ -17,6 +17,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   Indonesia. Added a `jakarta` entry to `CAMERA_PRESETS` in `src/camera.js`;
   the `austin`/`sf`/`nyc` presets remain available. Cosmetic only — no layer
   or data-source logic changed.
+- Added Jakarta to the Location dropdown menu (`CITY_POIS` in
+  `src/locations.js`), with 5 landmark POIs (Monas, Istiqlal Mosque, Wisma 46,
+  Selamat Datang Monument, Fatahillah Museum). This is a separate registry
+  from `CAMERA_PRESETS` above — it drives the Location pills, voice
+  `fly_to_location`, and CCTV seed placement. Also added `'jakarta'` to the
+  `locationId` enum of the `fly_to_location`, `select_nearest_aircraft`, and
+  `control_radio` voice tools in `vite.config.js` so voice commands can select
+  it too.
 
 ## [0.1.1] — 2026-09-01 — Installation and live-data fixes
 
