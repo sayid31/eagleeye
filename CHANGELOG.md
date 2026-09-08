@@ -5,6 +5,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- Renamed the app's display name from "God's Eye View" to "EagleEye View"
+  (title, README, docs, UI copy, code comments, Pinokio launcher, voice-tool
+  descriptions sent to the Realtime API). Display-only: `godsEyeView.*`
+  localStorage keys, `package.json` identity fields, `gevActions.js`/
+  `gevRealtime.js` filenames, the GitHub repo URL, and references to Bilawal
+  Sidhu's "God's Eye View" YouTube series are unchanged.
+
 ## [0.1.1] — 2026-09-01 — Installation and live-data fixes
 
 ### Changed

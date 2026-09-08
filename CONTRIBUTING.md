@@ -1,6 +1,6 @@
-# Contributing to God's Eye View
+# Contributing to EagleEye View
 
-Thanks for being here. God's Eye View is an open foundation for live spatial intelligence in the browser, and it gets better when more people run it, break it, and extend it.
+Thanks for being here. EagleEye View is an open foundation for live spatial intelligence in the browser, and it gets better when more people run it, break it, and extend it.
 
 ## Getting set up
 
@@ -61,7 +61,7 @@ The highest-leverage places to jump in:
 
 ## Maintainers
 
-God's Eye View is maintained by [Bilawal Sidhu](https://github.com/bilawalsidhu)
+EagleEye View is maintained by [Bilawal Sidhu](https://github.com/bilawalsidhu)
 and [Sameh Khamis](https://github.com/samehkhamis) at
 [Halfpixel](https://halfpixel.ai). Either maintainer can review and merge
 contributions.
