@@ -117,6 +117,18 @@ export const CITY_POIS = {
       { name: 'Jefferson Memorial', lat: 38.8814, lon: -77.0365, alt: 400, pitch: -30, heading: 0, buildingHeight: 25 },
     ],
   },
+  jakarta: {
+    name: 'Jakarta',
+    groundElevation: 8,
+    viewBounds: { southwest: { lat: -6.37, lng: 106.68 }, northeast: { lat: -6.08, lng: 106.97 } },
+    pois: [
+      { name: 'National Monument (Monas)', lat: -6.1754, lon: 106.8271, alt: 550, pitch: -28, heading: 180, buildingHeight: 132 },
+      { name: 'Istiqlal Mosque', lat: -6.1698, lon: 106.8309, alt: 500, pitch: -25, heading: 30, buildingHeight: 45 },
+      { name: 'Wisma 46', lat: -6.2036, lon: 106.8200, alt: 700, pitch: -20, heading: 45, buildingHeight: 250 },
+      { name: 'Selamat Datang Monument', lat: -6.1950, lon: 106.8230, alt: 450, pitch: -25, heading: 0, buildingHeight: 30 },
+      { name: 'Fatahillah Museum', lat: -6.1352, lon: 106.8133, alt: 400, pitch: -25, heading: 180, buildingHeight: 15 },
+    ],
+  },
 };
 
 /**
