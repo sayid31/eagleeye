@@ -13,6 +13,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   localStorage keys, `package.json` identity fields, `gevActions.js`/
   `gevRealtime.js` filenames, the GitHub repo URL, and references to Bilawal
   Sidhu's "God's Eye View" YouTube series are unchanged.
+- Changed the app's default initial camera view from Austin, TX to Jakarta,
+  Indonesia. Added a `jakarta` entry to `CAMERA_PRESETS` in `src/camera.js`;
+  the `austin`/`sf`/`nyc` presets remain available. Cosmetic only — no layer
+  or data-source logic changed.
 
 ## [0.1.1] — 2026-09-01 — Installation and live-data fixes
 
