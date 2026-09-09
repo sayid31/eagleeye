@@ -8,6 +8,10 @@
  *
  * Stations are loaded on-demand based on camera proximity and altitude gating,
  * with periodic status polling to keep availability colors current.
+ *
+ * MONITORED_CITIES_NO_FEED separately documents 8 Indonesian metro cities
+ * that have no live public GBFS feed yet — see its own doc comment for why
+ * they aren't in the live registry.
  */
 
 import * as Cesium from 'cesium';
@@ -389,6 +393,33 @@ const RAW_GBFS_CITY_REGISTRY = [
     centerLon: -119.6982,
     systemId: 'bcycle_santabarbara',
   }),
+];
+
+/**
+ * Indonesia metro cities with no live public GBFS feed as of 2026-09-09
+ * (verified via WebSearch — no Indonesian bikeshare operator currently
+ * publishes a GBFS feed; Jakarta's prior system ceased operating in late
+ * 2022). These are NOT added to RAW_GBFS_CITY_REGISTRY because
+ * normalizeRegistryEntry() requires a real, working station_information/
+ * station_status URL pair — there is nothing to point at yet, and faking
+ * a feed would render dummy data.
+ *
+ * This list exists so these 8 cities are documented as monitored-for-future
+ * rather than silently absent, matching the CCTV registry's 8-city Indonesia
+ * coverage (src/data/cctv.js). Re-check periodically; once any city here
+ * gets a real GBFS feed, move it into RAW_GBFS_CITY_REGISTRY via
+ * bcycleEntry()/a manual entry instead of adding it here.
+ * @type {{ id: string, city: string, centerLat: number, centerLon: number }[]}
+ */
+export const MONITORED_CITIES_NO_FEED = [
+  { id: 'jakarta-monitor', city: 'Jakarta', centerLat: -6.2088, centerLon: 106.8456 },
+  { id: 'surabaya-monitor', city: 'Surabaya', centerLat: -7.2575, centerLon: 112.7521 },
+  { id: 'bandung-monitor', city: 'Bandung', centerLat: -6.9175, centerLon: 107.6191 },
+  { id: 'medan-monitor', city: 'Medan', centerLat: 3.5952, centerLon: 98.6722 },
+  { id: 'semarang-monitor', city: 'Semarang', centerLat: -6.9667, centerLon: 110.4167 },
+  { id: 'yogyakarta-monitor', city: 'Yogyakarta', centerLat: -7.7956, centerLon: 110.3695 },
+  { id: 'makassar-monitor', city: 'Makassar', centerLat: -5.1477, centerLon: 119.4327 },
+  { id: 'denpasar-monitor', city: 'Denpasar', centerLat: -8.6705, centerLon: 115.2126 },
 ];
 
 /**

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
 import {
   BIKESHARE_SELECTED_OVERLAY_SOURCE_OPTIONS,
+  MONITORED_CITIES_NO_FEED,
   _clearBikeshareSelectionForTest,
   _selectBikeshareStationForTest,
   _setBikeshareSelectionStateForTest,
@@ -76,4 +77,36 @@ test('real station select/clear path publishes one card and creates no native la
   } finally {
     _clearBikeshareSelectionForTest();
   }
+});
+
+test('MONITORED_CITIES_NO_FEED lists 8 Indonesian metros with valid coordinates and unique ids', () => {
+  const EXPECTED_CITIES = [
+    'Jakarta', 'Surabaya', 'Bandung', 'Medan',
+    'Semarang', 'Yogyakarta', 'Makassar', 'Denpasar',
+  ];
+  assert.equal(MONITORED_CITIES_NO_FEED.length, 8);
+
+  const ids = new Set();
+  for (const entry of MONITORED_CITIES_NO_FEED) {
+    assert.ok(EXPECTED_CITIES.includes(entry.city), `unexpected city: ${entry.city}`);
+    assert.equal(typeof entry.id, 'string');
+    assert.ok(!ids.has(entry.id), `duplicate monitored city id: ${entry.id}`);
+    ids.add(entry.id);
+    assert.ok(Number.isFinite(entry.centerLat) && Math.abs(entry.centerLat) <= 90);
+    assert.ok(Number.isFinite(entry.centerLon) && Math.abs(entry.centerLon) <= 180);
+  }
+  for (const city of EXPECTED_CITIES) {
+    assert.ok(MONITORED_CITIES_NO_FEED.some((entry) => entry.city === city), `missing city: ${city}`);
+  }
+});
+
+test('MONITORED_CITIES_NO_FEED entries are not silently duplicated into the live GBFS registry', () => {
+  // Guards against someone later copy-pasting a monitored entry into
+  // RAW_GBFS_CITY_REGISTRY without wiring a real feed — that registry
+  // requires a working station_information/station_status URL pair
+  // (normalizeRegistryEntry throws on invalid/missing URLs), so any id
+  // collision here would mean a monitored city is masquerading as live.
+  const monitoredIds = new Set(MONITORED_CITIES_NO_FEED.map((c) => c.id));
+  assert.equal(monitoredIds.has('jakarta'), false);
+  assert.equal(monitoredIds.has('jakarta-monitor'), true);
 });
