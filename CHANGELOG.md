@@ -47,6 +47,35 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   enum of the `fly_to_location`, `select_nearest_aircraft`, and
   `control_radio` voice tools in `vite.config.js`.
 
+### Added
+
+- Added a new Intensity slider (`#scope-intensity-slider`, 0–100%) for the
+  Scope mask (the radial dark-corner vignette effect), separate from the
+  existing on/off toggle and Feather slider. At 0% the mask disappears
+  completely — a fully unobstructed view — while at 100% it looks exactly as
+  it always has. This is a plain multiplier on the mask's painted outside
+  opacity (`resolvePaintedAlpha()` in `src/scopeMask.js`), independent of the
+  mask's existing 94–100% terminus/override band (`SCOPE_TERMINUS_MIN_PCT`/
+  `MAX_PCT`), which is unchanged and still cannot be fully transparent by
+  design. Persisted to share links via a new `sci` hash parameter
+  (`src/sharelink.js`) and to saved scenes via `getVisualState()`/
+  `applyVisualState()` (`src/ui.js`).
+
+### Fixed
+
+- Traffic dots (Street Traffic layer) no longer drift off the road into
+  nearby buildings. `parseRoads()`/`parseRoadsTimed()` in
+  `src/data/traffic.js` previously sampled terrain/building height once, at
+  each road's first vertex, and applied that single height to every waypoint
+  on the road — so on any road crossing varying terrain or building height,
+  later waypoints rendered at the wrong elevation. Each waypoint's height is
+  now read from its own cell in the shared ground-floor cache
+  (`src/data/groundFloor.js` + `src/data/meshFloorSampler.js`), the same
+  batch-warm-then-read infrastructure `flights.js` already relies on. A
+  waypoint whose cell hasn't resolved yet falls back to the road's original
+  first-vertex height, so behavior degrades gracefully rather than dropping
+  to sea level.
+
 ## [0.1.1] — 2026-09-01 — Installation and live-data fixes
 
 ### Changed
