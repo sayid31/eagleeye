@@ -25,6 +25,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   `locationId` enum of the `fly_to_location`, `select_nearest_aircraft`, and
   `control_radio` voice tools in `vite.config.js` so voice commands can select
   it too.
+- Documented 8 Indonesian metro cities (Jakarta, Surabaya, Bandung, Medan,
+  Semarang, Yogyakarta, Makassar, Denpasar) in a new
+  `MONITORED_CITIES_NO_FEED` list in `src/data/bikeshare.js`, matching the
+  CCTV registry's Indonesia coverage. Verified (2026-09-09) that no
+  Indonesian bikeshare operator currently publishes a GBFS feed — Jakarta's
+  prior system ceased operating in late 2022 — so these cities are not added
+  to the live `RAW_GBFS_CITY_REGISTRY` (which requires a real, working feed
+  URL pair); this only stops them being silently absent from the codebase
+  and gives a single place to wire a real feed in once one exists.
 
 ## [0.1.1] — 2026-09-01 — Installation and live-data fixes
 
