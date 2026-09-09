@@ -3,7 +3,8 @@ import { viewportBias, placesNearViewRecovery } from './annotations/annotationRe
 
 /**
  * Points of Interest per city.
- * Each city has 5 POIs; the first is the default fly-to landmark.
+ * Each city has 5 POIs (Denpasar has 6, adding the outlying Pura Ulun Danu
+ * Beratan); the first is the default fly-to landmark.
  *
  * Field reference:
  *   alt     — RANGE (distance from target in meters), NOT absolute altitude
@@ -221,6 +222,11 @@ export const CITY_POIS = {
       // Sanur Beach: source coordinate is arcminute-precision (~1.8 km uncertainty),
       // coarser than the other Denpasar POIs, which are second/sub-second precision.
       { name: 'Sanur Beach', lat: -8.683, lon: 115.267, alt: 500, pitch: -20, heading: 90, buildingHeight: 5 },
+      // Pura Ulun Danu Beratan is ~50 km north of Denpasar proper, in the Bedugul
+      // mountain region (a separate lakeside temple, not part of the city) —
+      // included at the user's explicit request as a Denpasar/Bali landmark;
+      // coordinate itself is precise (Wikipedia).
+      { name: 'Pura Ulun Danu Beratan', lat: -8.27528, lon: 115.16639, alt: 500, pitch: -25, heading: 0, buildingHeight: 15 },
     ],
   },
 };

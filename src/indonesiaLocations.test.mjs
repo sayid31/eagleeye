@@ -38,14 +38,18 @@ function stubViewer() {
   };
 }
 
+// Denpasar carries a 6th POI (Pura Ulun Danu Beratan, an outlying Bedugul
+// landmark added at the user's explicit request) — every other city has 5.
+const EXPECTED_POI_COUNT = { denpasar: 6 };
+
 for (const [id, name] of NEW_CITIES) {
-  test(`CITY_POIS.${id} exists with a valid viewBounds and 5 POIs`, () => {
+  test(`CITY_POIS.${id} exists with a valid viewBounds and POI list`, () => {
     const city = CITY_POIS[id];
     assert.ok(city, `CITY_POIS.${id} is missing`);
     assert.equal(city.name, name);
     assert.ok(city.viewBounds.southwest.lat < city.viewBounds.northeast.lat);
     assert.ok(city.viewBounds.southwest.lng < city.viewBounds.northeast.lng);
-    assert.equal(city.pois.length, 5);
+    assert.equal(city.pois.length, EXPECTED_POI_COUNT[id] ?? 5);
     for (const poi of city.pois) {
       assert.equal(typeof poi.name, 'string');
       assert.equal(typeof poi.lat, 'number');
