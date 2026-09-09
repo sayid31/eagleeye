@@ -666,10 +666,14 @@ test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is
   // alongside the existing Location-menu cities. The guarded claim is
   // unchanged: first-run missions ride existing tools, and any NEW drift
   // from this recorded schema still fails here.
-  assert.equal(block.length, 31219, 'tool schema byte length drifted from the pinned release schema');
+  // Re-pinned 2026-09-09 (c): Indonesia expansion adds the remaining 7 metro
+  // cities (surabaya, bandung, medan, semarang, yogyakarta, makassar,
+  // denpasar) to the same locationId enum of the same 3 tools — completing
+  // the Location-menu coverage started in (b). No other schema change.
+  assert.equal(block.length, 31465, 'tool schema byte length drifted from the pinned release schema');
   assert.equal(
     crypto.createHash('sha256').update(block).digest('hex'),
-    'd66bf84aa0aaf78be4181c18be7b665b4be662904b678896044e2e39effe9135',
+    'adcebc8e2fee646815fcd5e9b02b295dc46200a07d5deca344ce3b411d27c7fa',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
 
