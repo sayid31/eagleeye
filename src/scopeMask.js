@@ -103,6 +103,17 @@ let _container = null;
 let _viewer = null;
 let _enabled = true;
 let _featherRatio = SCOPE_FEATHER_RATIO_DEFAULT;
+/**
+ * Intensity dial [0,1] — a plain multiplier on the painted outside alpha,
+ * independent of the terminus/override system above. 1 = today's shipped
+ * look (no change); 0 = the mask paints nothing extra beyond what the
+ * `#scope-toggle` binary off already achieves. Deliberately separate from
+ * `_terminusOverride`/`SCOPE_TERMINUS_MIN_PCT`: that band stays 94..100 by
+ * design ("a fully transparent terminus is a hole in the mask, not a
+ * scope"), so a genuine slide-to-zero dial had to live outside it rather
+ * than loosen that clamp. See resolvePaintedAlpha() below.
+ */
+let _maskOpacityScale = 1;
 let _resizeObserver = null;
 let _dprQuery = null;
 let _dprListener = null;
@@ -331,6 +342,19 @@ export function scopeMaskGeometry(width, height, featherRatio = _featherRatio) {
   };
 }
 
+/**
+ * Resolve the alpha actually painted: the altitude/override-derived terminus
+ * scaled by the independent intensity dial. Pure — unit-tested directly.
+ * @param {number} terminusAlpha - Value from getScopeTerminusAlpha() (or scopeTerminusAlpha()).
+ * @param {number} opacityScale - Value from getScopeMaskOpacity(), [0,1].
+ * @returns {number} Alpha in [0,1].
+ */
+export function resolvePaintedAlpha(terminusAlpha, opacityScale) {
+  const t = Math.max(0, Math.min(1, Number(terminusAlpha) || 0));
+  const s = Math.max(0, Math.min(1, Number(opacityScale) || 0));
+  return t * s;
+}
+
 function draw() {
   if (_coalescingPaint) { _paintDirty = true; return; } // one paint at scope exit
   if (!_canvas || !_container) return;
@@ -362,13 +386,14 @@ function draw() {
   const geo = scopeMaskGeometry(width, height, _featherRatio);
   if (!geo) return;
   const { r, g, b } = SCOPE_OUTSIDE_COLOR;
+  const paintedAlpha = resolvePaintedAlpha(_terminusAlpha, _maskOpacityScale);
   if (geo.outerR - geo.innerR < 1) {
     // Zero/near-zero feather: a radial gradient with equal radii is
     // DEGENERATE in Canvas2D (Chromium paints nothing — browser
     // finding). Draw the hard crop explicitly: rect minus circle, evenodd.
     // The hard crop honors the same altitude terminus — a hard edge at city
     // scale must be fully opaque too, not 6% translucent.
-    ctx.fillStyle = `rgba(${r},${g},${b},${_terminusAlpha})`;
+    ctx.fillStyle = `rgba(${r},${g},${b},${paintedAlpha})`;
     ctx.beginPath();
     ctx.rect(0, 0, width, height);
     ctx.arc(geo.centerX, geo.centerY, Math.max(1, geo.innerR), 0, Math.PI * 2);
@@ -381,7 +406,7 @@ function draw() {
     geo.centerX, geo.centerY, geo.outerR,
   );
   gradient.addColorStop(0, `rgba(${r},${g},${b},0)`);
-  gradient.addColorStop(1, `rgba(${r},${g},${b},${_terminusAlpha})`);
+  gradient.addColorStop(1, `rgba(${r},${g},${b},${paintedAlpha})`);
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, width, height);
   _painted = true;
@@ -493,6 +518,21 @@ export function getScopeMaskFeather() {
 }
 
 /**
+ * @param {number} scale - Intensity dial, [0,1]. 1 = shipped look, 0 = the
+ *   mask paints nothing extra beyond the toggle's off state.
+ * @returns {void}
+ */
+export function setScopeMaskOpacity(scale) {
+  _maskOpacityScale = Math.max(0, Math.min(1, Number(scale) || 0));
+  draw();
+}
+
+/** @returns {number} Intensity dial currently applied, [0,1]. */
+export function getScopeMaskOpacity() {
+  return _maskOpacityScale;
+}
+
+/**
  * Tear the mask down (canvas + observer). Reinstall with installScopeMask.
  * @returns {void}
  */
@@ -520,6 +560,7 @@ export function _resetScopeMaskForTest() {
   _viewer = null;
   _enabled = true;
   _featherRatio = SCOPE_FEATHER_RATIO_DEFAULT;
+  _maskOpacityScale = 1;
   _terminusAlpha = SCOPE_OUTSIDE_ALPHA;
   _terminusOverride = null;
   _terminusRepaints = 0;

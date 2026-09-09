@@ -163,6 +163,8 @@ import {
   isScopeMaskEnabled,
   setScopeMaskFeather,
   getScopeMaskFeather,
+  setScopeMaskOpacity,
+  getScopeMaskOpacity,
   setScopeTerminusOverride,
   getScopeTerminusOverride,
   clampScopeTerminusPct,
@@ -2252,6 +2254,8 @@ export class StyleManager {
     this._scopeBtn = document.getElementById('scope-toggle');
     this._scopeFeatherSlider = document.getElementById('scope-feather-slider');
     this._scopeFeatherValue = document.getElementById('scope-feather-value');
+    this._scopeIntensitySlider = document.getElementById('scope-intensity-slider');
+    this._scopeIntensityValue = document.getElementById('scope-intensity-value');
     this._mapStackChips = document.getElementById('map-stack-chips');
     this._mapStackStatus = document.getElementById('map-stack-status');
     this._mapStackChangeHandler = null;
@@ -2488,6 +2492,7 @@ export class StyleManager {
           celestialRing,
           scopeEnabled,
           scopeFeatherPct,
+          scopeIntensityPct,
           scopeTerminusPct,
           mapStack,
           panelState,
@@ -2551,6 +2556,12 @@ export class StyleManager {
           this._scopeFeatherSlider.value = String(pct);
           if (this._scopeFeatherValue) this._scopeFeatherValue.textContent = `${pct}%`;
           setScopeMaskFeather(pct / 100);
+        }
+        if (typeof scopeIntensityPct === 'number' && this._scopeIntensitySlider) {
+          const pct = Math.max(0, Math.min(100, Math.round(scopeIntensityPct)));
+          this._scopeIntensitySlider.value = String(pct);
+          if (this._scopeIntensityValue) this._scopeIntensityValue.textContent = `${pct}%`;
+          setScopeMaskOpacity(pct / 100);
         }
         // null restores the altitude-adaptive ramp; a number pins the terminus
         // (clamped to the supported 94..100 band, same as the `sce` hash key).
@@ -3409,6 +3420,17 @@ export class StyleManager {
       setScopeMaskFeather(pct / 100);
       this._syncShareState();
     });
+    // Intensity dial — independent of the feather (edge softness) slider above
+    // and of the terminus/override system in scopeMask.js. Pure alpha
+    // multiplier: 0% is fully transparent (no mask paint beyond the toggle's
+    // off state), 100% is today's shipped look.
+    this._scopeIntensitySlider?.addEventListener('input', () => {
+      this.shareLinkManager?.claimRestoreLane?.('visual');
+      const pct = Math.max(0, Math.min(100, parseInt(this._scopeIntensitySlider.value, 10) || 0));
+      if (this._scopeIntensityValue) this._scopeIntensityValue.textContent = `${pct}%`;
+      setScopeMaskOpacity(pct / 100);
+      this._syncShareState();
+    });
 
     if (this._sharpenSlider) {
       this._sharpenSlider.addEventListener('input', () => {
@@ -3843,6 +3865,7 @@ export class StyleManager {
       celestialRingEnabled: this.celestialRingEnabled,
       scopeEnabled: isScopeMaskEnabled(),
       scopeFeatherPct: Math.round(getScopeMaskFeather() * 100),
+      scopeIntensityPct: Math.round(getScopeMaskOpacity() * 100),
       // null when adaptive — the share layer omits `sce` entirely in that case.
       scopeTerminusPct: getScopeTerminusOverride() == null
         ? null
@@ -8621,6 +8644,7 @@ export class StyleManager {
       scope: {
         enabled: isScopeMaskEnabled(),
         featherPct: Math.round(getScopeMaskFeather() * 100),
+        intensityPct: Math.round(getScopeMaskOpacity() * 100),
       },
       mapStack: this.mapStackController?.getActiveId?.() || 'photoreal',
       styleParams,
@@ -8694,6 +8718,12 @@ export class StyleManager {
       this._scopeFeatherSlider.value = String(pct);
       if (this._scopeFeatherValue) this._scopeFeatherValue.textContent = `${pct}%`;
       setScopeMaskFeather(pct / 100);
+    }
+    if (typeof scopeState.intensityPct === 'number' && this._scopeIntensitySlider) {
+      const pct = Math.max(0, Math.min(100, Math.round(scopeState.intensityPct)));
+      this._scopeIntensitySlider.value = String(pct);
+      if (this._scopeIntensityValue) this._scopeIntensityValue.textContent = `${pct}%`;
+      setScopeMaskOpacity(pct / 100);
     }
 
     const detectionState = state.detection || {};

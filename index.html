@@ -443,6 +443,16 @@
         <input type="range" class="pp-slider" id="scope-feather-slider" min="0" max="100" value="11" title="Scope edge feather as a percentage of the keyhole radius" />
         <span class="pp-slider-value" id="scope-feather-value">11%</span>
       </div>
+      <div class="pp-slider-row visible" id="scope-intensity-row">
+        <span class="pp-slider-mini-label">Intensity</span>
+        <!-- Independent of the terminus/override system in src/scopeMask.js
+             (that band stays 94..100% by design — "a hole in the mask, not a
+             scope"). This is a plain multiplier on the painted outside alpha:
+             100% is today's shipped look, 0% paints nothing extra beyond what
+             the Scope toggle's off state already gives. -->
+        <input type="range" class="pp-slider" id="scope-intensity-slider" min="0" max="100" value="100" title="Scope mask intensity — 0% is fully transparent, 100% is the shipped look" />
+        <span class="pp-slider-value" id="scope-intensity-value">100%</span>
+      </div>
     </div>
     <div class="pp-toggle-group">
       <button class="pp-toggle-btn" id="celestial-toggle" title="Celestial ring — reveal the full globe" aria-pressed="false">

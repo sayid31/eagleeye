@@ -119,6 +119,10 @@ export class ShareLinkManager {
     // superseding the 08-22 hard-crop and 08-23 8% rulings) — mirrors
     // SCOPE_FEATHER_RATIO_DEFAULT in scopeMask.js and the slider's markup value.
     this._scopeFeatherPct = 11;
+    // Intensity dial, [0,100] — independent of the terminus/override band
+    // above (that stays 94..100 by design). 100 = today's shipped look, 0 =
+    // the mask paints nothing extra beyond the toggle's off state. (`sci`)
+    this._scopeIntensityPct = 100;
     // null = the altitude-adaptive terminus (the default). A number pins the
     // outside-fill opacity as a percent, 94..100. (`sce`, 2026-08-17)
     this._scopeTerminusPct = null;
@@ -217,6 +221,10 @@ export class ShareLinkManager {
       // mirrors live state for the link this session generates, so it must match
       // the mask, not the archive.)
       scopeFeatherPct: Math.max(0, Math.min(100, Math.round(parseOr(params.get('scf'), 35)))),
+      // Absent (or non-numeric) `sci` = 100 (today's shipped look) — this dial
+      // is new, so every pre-existing link predates it and should render
+      // exactly as it did before the dial existed.
+      scopeIntensityPct: Math.max(0, Math.min(100, Math.round(parseOr(params.get('sci'), 100)))),
       // Absent (or non-numeric) `sce` = adaptive (null), the default behavior;
       // a value pins the terminus opacity percent, clamped into the SUPPORTED
       // 94..100 band. `sce=0` used to survive as a sub-94 terminus — a hole in
@@ -323,6 +331,7 @@ export class ShareLinkManager {
         celestialRing: visualCurrent ? state.celestialRing : undefined,
         scopeEnabled: visualCurrent ? state.scopeEnabled : undefined,
         scopeFeatherPct: visualCurrent ? state.scopeFeatherPct : undefined,
+        scopeIntensityPct: visualCurrent ? state.scopeIntensityPct : undefined,
         scopeTerminusPct: visualCurrent ? state.scopeTerminusPct : undefined,
         mapStack: mapCurrent ? state.mapStack : undefined,
         panelState,
@@ -434,6 +443,9 @@ export class ShareLinkManager {
     if (typeof extras.scopeFeatherPct === 'number') {
       this._scopeFeatherPct = Math.max(0, Math.min(100, Math.round(extras.scopeFeatherPct)));
     }
+    if (typeof extras.scopeIntensityPct === 'number') {
+      this._scopeIntensityPct = Math.max(0, Math.min(100, Math.round(extras.scopeIntensityPct)));
+    }
     if (extras.scopeTerminusPct === null) this._scopeTerminusPct = null;
     else if (typeof extras.scopeTerminusPct === 'number') {
       this._scopeTerminusPct = clampScopeTerminusPct(extras.scopeTerminusPct);
@@ -501,6 +513,10 @@ export class ShareLinkManager {
     params.set('cr', this._celestialRingEnabled ? '1' : '0');
     params.set('sc', this._scopeEnabled ? '1' : '0');
     params.set('scf', Math.round(this._scopeFeatherPct).toString());
+    // Always written — this is a plain 0..100 dial, not a "pinned vs adaptive"
+    // concept like `sce` below, so there's no adaptive default to protect by
+    // omission.
+    params.set('sci', Math.round(this._scopeIntensityPct).toString());
     // Only written when pinned — an absent `sce` IS the adaptive default, so a
     // shared link never freezes the ramp for the recipient by accident. The
     // same 94..100 clamp applies on the way OUT, so a link can never carry an
