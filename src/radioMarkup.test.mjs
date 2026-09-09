@@ -161,8 +161,10 @@ test('no unchanged Realtime tool definition drifts silently', () => {
   // `bing-road` stack leaving `set_map_stack`'s enum, the "EagleEye
   // View" display-name rebrand touching set_layer_visibility's and
   // set_visual_style's descriptions, and the Indonesia expansion adding
-  // 'jakarta' to the locationId enum of fly_to_location, select_nearest_aircraft,
-  // and control_radio are the known schema changes.
+  // 'jakarta' plus 7 more metro cities (surabaya, bandung, medan, semarang,
+  // yogyakarta, makassar, denpasar) to the locationId enum of
+  // fly_to_location, select_nearest_aircraft, and control_radio are the
+  // known schema changes.
   // Everything else must be byte-identical: an unnoticed edit
   // to a shipped tool changes
   // model behavior in production with nothing in review to catch it.

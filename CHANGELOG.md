@@ -34,6 +34,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   to the live `RAW_GBFS_CITY_REGISTRY` (which requires a real, working feed
   URL pair); this only stops them being silently absent from the codebase
   and gives a single place to wire a real feed in once one exists.
+- Added the remaining 7 Indonesian metro cities (Surabaya, Bandung, Medan,
+  Semarang, Yogyakarta, Makassar, Denpasar) to the Location dropdown menu
+  (`CITY_POIS` in `src/locations.js`), completing the 8-city set started
+  with Jakarta — 5 landmark POIs each, coordinates verified via web search
+  (2026-09-09). Two landmarks are geographic outliers from their city center
+  (Candi Prambanan, ~17 km from Yogyakarta; included because it is a
+  well-known Yogyakarta-associated landmark) and one uses a coarser
+  city-center approximation (Puputan Badung Square, Denpasar — no dedicated
+  geocode found). Also added all 7 city ids to the `locationId` enum of the
+  `fly_to_location`, `select_nearest_aircraft`, and `control_radio` voice
+  tools in `vite.config.js`.
 
 ## [0.1.1] — 2026-09-01 — Installation and live-data fixes
 

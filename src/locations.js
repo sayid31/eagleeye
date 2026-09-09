@@ -129,6 +129,100 @@ export const CITY_POIS = {
       { name: 'Fatahillah Museum', lat: -6.1352, lon: 106.8133, alt: 400, pitch: -25, heading: 180, buildingHeight: 15 },
     ],
   },
+  surabaya: {
+    name: 'Surabaya',
+    groundElevation: 5, // meters above WGS84 ellipsoid — city sits near sea level
+    viewBounds: { southwest: { lat: -7.35, lng: 112.68 }, northeast: { lat: -7.15, lng: 112.82 } },
+    pois: [
+      { name: 'Tugu Pahlawan (Heroes Monument)', lat: -7.24611, lon: 112.73750, alt: 450, pitch: -28, heading: 180, buildingHeight: 41 },
+      { name: 'House of Sampoerna', lat: -7.230813, lon: 112.734247, alt: 350, pitch: -25, heading: 30, buildingHeight: 12 },
+      { name: 'Jembatan Suramadu (Suramadu Bridge)', lat: -7.18417, lon: 112.78028, alt: 900, pitch: -22, heading: 90, buildingHeight: 30 },
+      { name: 'Surabaya City Hall', lat: -7.259257, lon: 112.747003, alt: 400, pitch: -25, heading: 0, buildingHeight: 15 },
+      { name: 'Surabaya Zoo', lat: -7.29583, lon: 112.73611, alt: 450, pitch: -35, heading: 0, buildingHeight: 10 },
+    ],
+  },
+  bandung: {
+    name: 'Bandung',
+    groundElevation: 768, // meters above WGS84 ellipsoid — Bandung sits on a highland plateau
+    viewBounds: { southwest: { lat: -6.97, lng: 107.55 }, northeast: { lat: -6.87, lng: 107.70 } },
+    pois: [
+      { name: 'Gedung Sate', lat: -6.902459, lon: 107.618730, alt: 450, pitch: -25, heading: 0, buildingHeight: 30 },
+      { name: 'Jalan Braga', lat: -6.917914, lon: 107.609448, alt: 350, pitch: -20, heading: 180, buildingHeight: 15 },
+      { name: 'Trans Studio Bandung', lat: -6.926186, lon: 107.636222, alt: 450, pitch: -25, heading: 30, buildingHeight: 25 },
+      { name: 'Museum Geologi', lat: -6.9008, lon: 107.6212, alt: 350, pitch: -25, heading: 90, buildingHeight: 15 },
+      { name: 'Saung Angklung Udjo', lat: -6.8977, lon: 107.6547, alt: 350, pitch: -30, heading: 0, buildingHeight: 10 },
+    ],
+  },
+  medan: {
+    name: 'Medan',
+    groundElevation: 25, // meters above WGS84 ellipsoid — official range 2.5-37.5 m, midpoint used
+    viewBounds: { southwest: { lat: 3.52, lng: 98.60 }, northeast: { lat: 3.65, lng: 98.75 } },
+    pois: [
+      { name: 'Istana Maimun (Maimun Palace)', lat: 3.575201, lon: 98.683883, alt: 400, pitch: -25, heading: 0, buildingHeight: 20 },
+      { name: 'Masjid Raya Al Mashun', lat: 3.575111, lon: 98.687321, alt: 400, pitch: -25, heading: 30, buildingHeight: 30 },
+      { name: 'Tjong A Fie Mansion', lat: 3.58557, lon: 98.68056, alt: 300, pitch: -25, heading: 180, buildingHeight: 10 },
+      { name: 'Kuil Shri Mariamman', lat: 3.583917, lon: 98.671000, alt: 300, pitch: -25, heading: 0, buildingHeight: 12 },
+      // Merdeka Walk: coordinate converted from a DMS reading the source itself marks
+      // approximate — flagged 2026-09-09, may drift a block or two from the actual walk.
+      { name: 'Merdeka Walk', lat: 3.590278, lon: 98.678667, alt: 350, pitch: -25, heading: 0, buildingHeight: 8 },
+    ],
+  },
+  semarang: {
+    name: 'Semarang',
+    groundElevation: 2, // meters above WGS84 ellipsoid — northern Semarang sits near/below sea level
+    viewBounds: { southwest: { lat: -7.05, lng: 110.35 }, northeast: { lat: -6.90, lng: 110.48 } },
+    pois: [
+      { name: 'Lawang Sewu', lat: -6.9839250, lon: 110.4106333, alt: 400, pitch: -25, heading: 0, buildingHeight: 18 },
+      { name: 'Sam Poo Kong', lat: -6.9963, lon: 110.3980, alt: 350, pitch: -25, heading: 30, buildingHeight: 12 },
+      { name: 'Blenduk Church (Kota Lama)', lat: -6.9682, lon: 110.4275, alt: 300, pitch: -25, heading: 180, buildingHeight: 20 },
+      { name: 'Masjid Agung Jawa Tengah', lat: -6.9839, lon: 110.4458, alt: 450, pitch: -25, heading: 0, buildingHeight: 30 },
+      { name: 'Simpang Lima', lat: -6.9906, lon: 110.4237, alt: 400, pitch: -35, heading: 0, buildingHeight: 10 },
+    ],
+  },
+  yogyakarta: {
+    name: 'Yogyakarta',
+    groundElevation: 113, // meters above WGS84 ellipsoid
+    viewBounds: { southwest: { lat: -7.85, lng: 110.30 }, northeast: { lat: -7.75, lng: 110.42 } },
+    pois: [
+      { name: 'Malioboro', lat: -7.793359, lon: 110.365713, alt: 400, pitch: -22, heading: 180, buildingHeight: 10 },
+      { name: 'Keraton Yogyakarta', lat: -7.805689, lon: 110.36406, alt: 450, pitch: -30, heading: 0, buildingHeight: 15 },
+      { name: 'Tugu Jogja', lat: -7.782921, lon: 110.367085, alt: 300, pitch: -25, heading: 0, buildingHeight: 15 },
+      { name: 'Taman Sari Water Castle', lat: -7.810151, lon: 110.358946, alt: 350, pitch: -30, heading: 90, buildingHeight: 12 },
+      // Candi Prambanan is ~17 km northeast of central Yogyakarta (a separate temple
+      // complex, not part of the city proper) — included because the user explicitly
+      // named it as a Yogyakarta landmark; coordinate itself is precise (Wikipedia).
+      { name: 'Candi Prambanan', lat: -7.75222, lon: 110.49167, alt: 600, pitch: -25, heading: 0, buildingHeight: 47 },
+    ],
+  },
+  makassar: {
+    name: 'Makassar',
+    groundElevation: 5, // meters above WGS84 ellipsoid — official range 0-25 m
+    viewBounds: { southwest: { lat: -5.20, lng: 119.35 }, northeast: { lat: -5.10, lng: 119.47 } },
+    pois: [
+      { name: 'Fort Rotterdam (Benteng Rotterdam)', lat: -5.13417, lon: 119.40556, alt: 400, pitch: -25, heading: 0, buildingHeight: 10 },
+      { name: 'Pantai Losari (Losari Beach)', lat: -5.1443, lon: 119.4081, alt: 400, pitch: -20, heading: 270, buildingHeight: 5 },
+      { name: 'Trans Studio Makassar', lat: -5.159676, lon: 119.394243, alt: 450, pitch: -25, heading: 30, buildingHeight: 25 },
+      { name: 'Museum Kota Makassar', lat: -5.1346, lon: 119.4086, alt: 300, pitch: -25, heading: 0, buildingHeight: 10 },
+      { name: 'Karebosi Park', lat: -5.13527, lon: 119.41222, alt: 350, pitch: -35, heading: 0, buildingHeight: 5 },
+    ],
+  },
+  denpasar: {
+    name: 'Denpasar',
+    groundElevation: 4, // meters above WGS84 ellipsoid — city-center figure; outer districts rise to ~75 m
+    viewBounds: { southwest: { lat: -8.78, lng: 115.10 }, northeast: { lat: -8.60, lng: 115.32 } },
+    pois: [
+      { name: 'Monumen Bajra Sandhi', lat: -8.67167, lon: 115.23389, alt: 450, pitch: -25, heading: 0, buildingHeight: 45 },
+      { name: 'Pantai Kuta (Kuta Beach)', lat: -8.723796, lon: 115.175228, alt: 500, pitch: -20, heading: 270, buildingHeight: 5 },
+      // Puputan Badung Square: no dedicated geocode found — derived from Denpasar's
+      // own city-center reference point (adjacent to the Catus Patha landmark), so
+      // this is a coarser approximation than the other Denpasar entries.
+      { name: 'Puputan Badung Square', lat: -8.65, lon: 115.217, alt: 350, pitch: -30, heading: 0, buildingHeight: 5 },
+      { name: 'Bali Museum', lat: -8.6575, lon: 115.218528, alt: 350, pitch: -25, heading: 90, buildingHeight: 10 },
+      // Sanur Beach: source coordinate is arcminute-precision (~1.8 km uncertainty),
+      // coarser than the other Denpasar POIs, which are second/sub-second precision.
+      { name: 'Sanur Beach', lat: -8.683, lon: 115.267, alt: 500, pitch: -20, heading: 90, buildingHeight: 5 },
+    ],
+  },
 };
 
 /**
