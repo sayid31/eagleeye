@@ -13,6 +13,8 @@ import {
 import { queuePlatoons, locateAlongRoad } from './trafficQueue.js';
 import { registerDynamicCredit, TOMTOM_CREDIT } from './dataCredits.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import { cachedGroundFloor, warmGroundFloor, resolveGroundFloorCellsBounded } from './groundFloor.js';
+import { sampleMeshFloorCells } from './meshFloorSampler.js';
 
 /**
  * @file Street Traffic — animated dots along OSM road polylines, colored by
@@ -50,13 +52,13 @@ const FAST_FETCH_ALTITUDE = 4500;
 /** @const {number} Milliseconds — debounce delay before fetching after camera settles */
 const FETCH_DEBOUNCE = 320;
 /** @const {number} Meters — vertical offset to keep dots above clamped terrain surface */
-const DOT_HEIGHT_OFFSET = 3.0;
+export const DOT_HEIGHT_OFFSET = 3.0;
 /** @const {number} Fraction (0-1) — skip re-fetch when viewport overlap exceeds this */
 const OVERLAP_THRESHOLD = 0.6;
 /** @const {number} Hard cap on total rendered dot primitives for GPU/CPU performance */
 const MAX_DOTS = 6000;
 /** @const {number} Polylines longer than this are simplified by sub-sampling */
-const MAX_WAYPOINTS_PER_ROAD = 80;
+export const MAX_WAYPOINTS_PER_ROAD = 80;
 /** @const {number} Km — minimum viewport center shift before allowing refresh */
 const MIN_CENTER_SHIFT_KM = 0.35;
 /**
@@ -148,6 +150,19 @@ const CREEP_STOP_MS = [1500, 5000];
 // ─── Module State ──────────────────────────────────────────
 /** @type {Cesium.Viewer|null} */
 let _viewer = null;
+
+/**
+ * Test seam: injects a minimal viewer stand-in so `parseRoads`'s height
+ * logic (sampleHeight fallback + camera position for the mesh sampler) is
+ * reachable without a full `init(viewer)`, which wires a real
+ * PointPrimitiveCollection into `scene.primitives`. Mirrors the
+ * `_setViewerForTest`/`_set*ForTest` seam convention already used across
+ * `src/data/*.js` (e.g. flights.js's `_setTrackedFlightRefreshStateForTest`).
+ * @param {Cesium.Viewer|null} viewer
+ */
+export function _setViewerForTest(viewer) {
+  _viewer = viewer;
+}
 /** @type {Cesium.PointPrimitiveCollection|null} */
 let _pointCollection = null;
 /** @type {Array<{point:Cesium.PointPrimitive, waypoints:Cesium.Cartesian3[], segmentDist:number[], numSegments:number, segIdx:number, t:number, mps:number, direction:number, stoppedUntil:number}>} Active animated dots */
@@ -536,18 +551,35 @@ async function fetchRoads(
  * Processing per way:
  *  1. Extract [lon, lat] coordinate pairs.
  *  2. Sub-sample long polylines to at most MAX_WAYPOINTS_PER_ROAD vertices.
- *  3. Sample terrain height once at the first vertex (avoids per-vertex cost).
+ *  3. Batch-warm the ground floor (DEM + rendered-mesh) for every waypoint
+ *     across every road, then read each waypoint's height from ITS OWN
+ *     cell — see the "per-waypoint height" note below.
  *  4. Convert to Cartesian3 waypoints and pre-compute inter-vertex distances.
+ *
+ * Per-waypoint height (2026-09): the original implementation sampled terrain
+ * height ONCE at each road's first vertex and applied that single height to
+ * every waypoint on the road ("avoids per-vertex cost"). Along any road that
+ * crosses varying terrain/building height, later waypoints rendered at the
+ * wrong elevation — dots drifting into buildings. This now reuses the same
+ * batch-warm-then-sync-read pattern flights.js already relies on
+ * (`groundFloor.js` + `meshFloorSampler.js`): warm every waypoint's coarse
+ * cell up front (bounded wait so the FIRST paint benefits, not just a later
+ * poll), then read each waypoint's own cell. Any cell that didn't resolve in
+ * time falls back to the road's first-vertex `sampleHeight` — the original
+ * behavior, not a hard dependency on the floor system being warm.
  *
  * @param {Object} overpassData - Raw JSON response from the Overpass API.
  * @param {Array}  overpassData.elements - Array of OSM elements.
- * @returns {Array<{coords:number[][], type:string, waypoints:Cesium.Cartesian3[], segmentDist:number[]}>}
+ * @returns {Promise<Array<{coords:number[][], type:string, waypoints:Cesium.Cartesian3[], segmentDist:number[]}>>}
  *   Parsed road objects ready for dot spawning.
  */
-function parseRoads(overpassData) {
+export async function parseRoads(overpassData) {
   if (!overpassData || !overpassData.elements) return [];
 
-  const roads = [];
+  // Phase 1: pure coordinate/metadata extraction — no heights yet. Collect
+  // every waypoint coordinate across every road for a single batch warm.
+  const pending = [];
+  const warmPoints = [];
   for (const el of overpassData.elements) {
     if (el.type !== 'way' || !el.geometry || el.geometry.length < 2) continue;
 
@@ -581,7 +613,8 @@ function parseRoads(overpassData) {
       ? 1
       : (onewayTag === '-1' ? -1 : 0);
 
-    // Sample terrain height once at the road start to avoid per-vertex cost
+    // Fallback height: the original single first-vertex sample, kept as the
+    // graceful-degrade path for any waypoint whose cell never resolves.
     let baseHeight = 0;
     const firstCoord = coords[0];
     if (_viewer?.scene?.sampleHeightSupported && firstCoord) {
@@ -590,9 +623,32 @@ function parseRoads(overpassData) {
       if (Number.isFinite(sampled)) baseHeight = sampled;
     }
 
-    // Pre-compute Cartesian3 waypoints (lon, lat, height) for fast lerp animation
+    for (const [lng, lat] of coords) warmPoints.push({ lat, lon: lng });
+    pending.push({ coords, type, oneway, baseHeight });
+  }
+
+  if (!pending.length) return [];
+
+  // Phase 2: batch-warm the ground floor for every waypoint collected above —
+  // DEM (fire-and-forget) + rendered mesh (rationed, viewer-proximate,
+  // photoreal-only) + a bounded await so the first paint benefits instead of
+  // only a later poll. No `excludeObjects`: traffic dots are
+  // PointPrimitiveCollection entries, which scene.sampleHeight (tiles/terrain
+  // only) doesn't hit, unlike flights.js's billboards/models.
+  const carto = _viewer?.camera?.positionCartographic;
+  const viewerLatDeg = carto ? Cesium.Math.toDegrees(carto.latitude) : undefined;
+  const viewerLonDeg = carto ? Cesium.Math.toDegrees(carto.longitude) : undefined;
+  warmGroundFloor(warmPoints);
+  sampleMeshFloorCells(_viewer?.scene, warmPoints, { viewerLat: viewerLatDeg, viewerLon: viewerLonDeg });
+  await resolveGroundFloorCellsBounded(warmPoints);
+
+  // Phase 3: materialize waypoints — per-coordinate height from its own
+  // resolved cell, falling back to the road's baseHeight when cold.
+  const roads = [];
+  for (const { coords, type, oneway, baseHeight } of pending) {
     const waypoints = coords.map(([lng, lat]) => {
-      const h = baseHeight + DOT_HEIGHT_OFFSET;
+      const floor = cachedGroundFloor(lat, lng);
+      const h = (floor ?? baseHeight) + DOT_HEIGHT_OFFSET;
       return Cesium.Cartesian3.fromDegrees(lng, lat, h);
     });
 
@@ -1810,10 +1866,11 @@ function markTrafficTimingMoveEnd() {
 
 /**
  * Instrumented twin of `parseRoads`. Operation ordering and road output match
- * the normal function; debug-only clocks accumulate synchronous height and
- * waypoint-materialization time independently.
+ * the normal function; debug-only clocks accumulate synchronous height,
+ * the batch ground-floor warm/resolve, and waypoint-materialization time
+ * independently.
  */
-function parseRoadsTimed(overpassData, trace) {
+async function parseRoadsTimed(overpassData, trace) {
   /* TRACE_ONLY_BEGIN */
   const _trafficTimingState = trafficTimingPass(trace, trace?.currentPass || 'full');
   const _trafficTimingParseStartTime = performance.now();
@@ -1836,6 +1893,10 @@ function parseRoadsTimed(overpassData, trace) {
       distinctCells: 0,
       roadCount: 0,
     });
+    trafficTimingAggregate('ground-floor-warm-total', _trafficTimingState, _trafficTimingParseStartTime, 0, {
+      warmPointCount: 0,
+      roadCount: 0,
+    });
     trafficTimingAggregate(
       'waypoint-materialization', _trafficTimingState, _trafficTimingParseStartTime, 0,
       { roadCount: 0 }
@@ -1844,7 +1905,8 @@ function parseRoadsTimed(overpassData, trace) {
     return [];
   }
 
-  const roads = [];
+  const pending = [];
+  const warmPoints = [];
   /* TRACE_ONLY_BEGIN */
   const _trafficTimingSampledCells = new Set();
   let _trafficTimingSampleHeightCalls = 0;
@@ -1894,11 +1956,33 @@ function parseRoadsTimed(overpassData, trace) {
       if (Number.isFinite(sampled)) baseHeight = sampled;
     }
 
+    for (const [lng, lat] of coords) warmPoints.push({ lat, lon: lng });
+    pending.push({ coords, type, oneway, baseHeight });
+  }
+
+  if (!pending.length) return [];
+
+  /* TRACE_ONLY_BEGIN */
+  const _trafficTimingWarmStart = performance.now();
+  /* TRACE_ONLY_END */
+  const carto = _viewer?.camera?.positionCartographic;
+  const viewerLatDeg = carto ? Cesium.Math.toDegrees(carto.latitude) : undefined;
+  const viewerLonDeg = carto ? Cesium.Math.toDegrees(carto.longitude) : undefined;
+  warmGroundFloor(warmPoints);
+  sampleMeshFloorCells(_viewer?.scene, warmPoints, { viewerLat: viewerLatDeg, viewerLon: viewerLonDeg });
+  await resolveGroundFloorCellsBounded(warmPoints);
+  /* TRACE_ONLY_BEGIN */
+  const _trafficTimingWarmMs = performance.now() - _trafficTimingWarmStart;
+  /* TRACE_ONLY_END */
+
+  const roads = [];
+  for (const { coords, type, oneway, baseHeight } of pending) {
     /* TRACE_ONLY_BEGIN */
     const _trafficTimingMaterializeStart = performance.now();
     /* TRACE_ONLY_END */
     const waypoints = coords.map(([lng, lat]) => {
-      const h = baseHeight + DOT_HEIGHT_OFFSET;
+      const floor = cachedGroundFloor(lat, lng);
+      const h = (floor ?? baseHeight) + DOT_HEIGHT_OFFSET;
       return Cesium.Cartesian3.fromDegrees(lng, lat, h);
     });
     const segmentDist = [];
@@ -1924,6 +2008,10 @@ function parseRoadsTimed(overpassData, trace) {
   trafficTimingAggregate(
     'sample-height-total', _trafficTimingState, _trafficTimingParseStartTime,
     _trafficTimingSampleHeightMs, _trafficTimingMetrics
+  );
+  trafficTimingAggregate(
+    'ground-floor-warm-total', _trafficTimingState, _trafficTimingParseStartTime,
+    _trafficTimingWarmMs, { ..._trafficTimingMetrics, warmPointCount: warmPoints.length }
   );
   trafficTimingAggregate(
     'waypoint-materialization', _trafficTimingState, _trafficTimingParseStartTime,
@@ -2101,7 +2189,7 @@ async function loadRoadsForBounds(bounds, altitude, trace = null) {
       );
       // Discard stale response if a newer load was triggered while waiting
       if (generation !== _loadGeneration) return;
-      cache.major = _parseRoads(majorData, trace);
+      cache.major = await _parseRoads(majorData, trace);
       if (!await applyFlowThenRender(
         cache.major, clamped, generation, altitude, 'Loaded major', trace
       )) return;
@@ -2121,7 +2209,7 @@ async function loadRoadsForBounds(bounds, altitude, trace = null) {
     );
     if (generation !== _loadGeneration) return;
 
-    cache.full = _parseRoads(fullData, trace);
+    cache.full = await _parseRoads(fullData, trace);
     if (!await applyFlowThenRender(
       cache.full, clamped, generation, altitude, 'Loaded full', trace
     )) return;
