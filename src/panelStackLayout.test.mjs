@@ -132,7 +132,7 @@ test('minimum panel corridor expands upward without crossing the lower obstacle 
 });
 
 test('desktop panel lanes use per-panel allocations and presentation-only auto-collapse', () => {
-  const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const ui = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
   assert.doesNotMatch(ui, /_enforce(?:Left|Right)PanelAccordion/);
   assert.match(ui, /classList\.add\('collapsed', 'layout-auto-collapsed'\)/);
@@ -186,35 +186,44 @@ test('desktop panel lanes use per-panel allocations and presentation-only auto-c
 });
 
 test('share-panel state excludes responsive collapse and preserves recipient preferences', () => {
+  // _buildSharePanelState/_restorePanelState/setPanelCollapsed live in the
+  // adaptive-layout mixin; _setCommandDockPanelPinState stays in ui.js.
   const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const mixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
   const sharelink = readFileSync(new URL('./sharelink.js', import.meta.url), 'utf8');
 
   assert.match(
-    ui,
+    mixin,
     /const collapsed = panelEl\.classList\.contains\('layout-auto-collapsed'\)\s*\? false\s*: panelEl\.classList\.contains\('collapsed'\);/,
     'responsive auto-collapse must serialize the explicit expanded preference',
   );
   assert.match(
-    ui,
+    mixin,
     /_setCommandDockPanelPinState\(spec\.id, state\.pinned, \{\s*restore: true,\s*persist: false,\s*syncShare: false,/,
     'restoring a pin must not overwrite local panel preferences or emit an intermediate hash',
   );
   assert.match(
     ui,
-    /_setCommandDockPanelPinState[\s\S]*?if \(syncShare\) this\.shareLinkManager\?\.onPanelStateChange\?\.\(\);/,
-    'pin and unpin must update the share hash even when collapse state is unchanged',
+    /_setCommandDockPanelPinState[\s\S]*?if \(syncShare\) \{[\s\S]*?this\.shareLinkManager\?\.onPanelStateChange\?\.\(\);/,
+    'pinning must update the share hash even when collapse state is unchanged',
   );
-  assert.match(ui, /\{ id: 'param-slider-panel' \}/);
+  assert.match(
+    mixin,
+    /if \(syncShare\) this\.shareLinkManager\?\.onPanelStateChange\?\.\(\);/,
+    'unpin/collapse-toggle path must also update the share hash even when collapse state is unchanged',
+  );
+  assert.match(mixin, /\{ id: 'param-slider-panel' \}/);
   assert.match(sharelink, /\{ id: 'param-slider-panel', token: 'm', pinnable: false \}/);
 });
 
 test('parameterized Display presets keep one stable scroll owner', () => {
   const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const mixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
 
   assert.match(css, /#pp-toggles:not\(\.collapsed\) > #param-slider-panel\.active\s*\{[\s\S]*?flex:\s*0 0 auto;[\s\S]*?max-height:\s*none;[\s\S]*?overflow-y:\s*visible;/);
-  assert.match(ui, /const displayScrollTop = this\._displayPortalScrollRestoreOwner === 'standard'[\s\S]*?this\._standardDisplayScrollTop[\s\S]*?this\._ppToggles\?\.scrollTop \|\| 0/);
-  assert.match(ui, /this\._ppToggles\.scrollTop = Math\.min\(displayScrollTop, maxScrollTop\);/);
+  assert.match(mixin, /const displayScrollTop = this\._displayPortalScrollRestoreOwner === 'standard'[\s\S]*?this\._standardDisplayScrollTop[\s\S]*?this\._ppToggles\?\.scrollTop \|\| 0/);
+  assert.match(mixin, /this\._ppToggles\.scrollTop = Math\.min\(displayScrollTop, maxScrollTop\);/);
   assert.match(
     ui,
     /this\._sliderPanel\.classList\.remove\('active'\);\s*this\._scheduleRightPanelLayout\(\);/,

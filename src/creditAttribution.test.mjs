@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+const mixin = fs.readFileSync(path.join(ROOT, 'src', 'panelAdaptiveLayoutMixin.js'), 'utf8');
 
 /*
  * Required-attribution keep-out pin.
@@ -479,9 +480,9 @@ test('the full-width rail cannot inherit a height that overrides its floor', () 
   // over-constrained. It is safe only because the rail's layout pass switches
   // to a mobile mode at the SAME breakpoint and removes both the class and the
   // custom property. Pin that, or the exemption above is unearned.
-  const gate = ui.indexOf("window.matchMedia('(max-width: 720px)')");
+  const gate = mixin.indexOf("window.matchMedia('(max-width: 720px)')");
   assert.ok(gate > 0, 'the rail layout pass no longer keys off (max-width: 720px)');
-  const mobileBranch = ui.slice(gate, ui.indexOf("layoutMode = 'mobile'", gate) + 40);
+  const mobileBranch = mixin.slice(gate, mixin.indexOf("layoutMode = 'mobile'", gate) + 40);
   assert.match(mobileBranch, /stack\.classList\.remove\('layout-focus'\)/);
   assert.match(mobileBranch, /stack\.style\.removeProperty\('--right-stack-max-height'\)/);
 });

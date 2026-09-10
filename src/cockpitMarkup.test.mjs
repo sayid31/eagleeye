@@ -8,6 +8,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
 const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+const mixin = fs.readFileSync(path.join(ROOT, 'src', 'panelAdaptiveLayoutMixin.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
@@ -286,7 +287,7 @@ test('Display orders 3D above Celestial, Clean UI below it, and Parameters below
   );
   assert.equal((html.match(/id="param-slider-panel"/g) || []).length, 1, 'Parameters must have one DOM owner');
   assert.match(
-    ui,
+    mixin,
     /const detectionGroup = this\._detectionBtn\?\.closest\('\.pp-toggle-group'\);[\s\S]*?detectionGroup\.after\(this\._sliderPanel\)/,
   );
   assert.match(
@@ -333,11 +334,11 @@ test('Cockpit side surfaces behave as two single-expanded accordions', () => {
     /'gev:cockpit-context-expanded'[\s\S]*?setPanelCollapsed\('data-panel', true\);/,
   );
   assert.match(
-    ui,
+    mixin,
     /!nextCollapsed && this\.cockpitView\?\.active && panelId === 'data-panel'[\s\S]*?_cockpitContextCollapsedForDataPanel = !this\.cockpitView\.contextCollapsed[\s\S]*?this\.cockpitView\.setContextCollapsed\(true\);/,
   );
   assert.match(
-    ui,
+    mixin,
     /nextCollapsed && this\.cockpitView\?\.active && panelId === 'data-panel'[\s\S]*?_cockpitContextCollapsedForDataPanel[\s\S]*?this\.cockpitView\.setContextCollapsed\(false\);/,
     'closing Data Layers must restore Contact only after an automatic collapse',
   );
@@ -437,11 +438,10 @@ test('fresh Cockpit entry temporarily collapses map panels and exit restores the
 });
 
 test('real disclosure changes reconsider only their own temporary panel lane', () => {
-  const collapseStart = ui.indexOf('setPanelCollapsed(panelId, collapsed, {');
-  const collapse = ui.slice(
-    collapseStart,
-    ui.indexOf('toggleCleanView(forceEnabled)', collapseStart),
-  );
+  // setPanelCollapsed now lives in panelAdaptiveLayoutMixin.js; toggleCleanView
+  // (the original end-of-slice marker) stays in ui.js, so slice to EOF instead.
+  const collapseStart = mixin.indexOf('setPanelCollapsed(panelId, collapsed, {');
+  const collapse = mixin.slice(collapseStart);
   assert.match(collapse, /classList\.contains\('collapsed'\) === nextCollapsed && !wasAutoCollapsed[\s\S]*?return;/);
   assert.match(collapse, /_rightPanelStack\?\.contains\(panelEl\)[\s\S]*?_scheduleRightPanelLayout\(\{ reconsiderAutoCollapse: true \}\)/);
   assert.match(collapse, /_scheduleLeftPanelLayout\(\{[\s\S]*?reconsiderAutoCollapse: this\._leftPanelStack\?\.contains\(panelEl\) === true/);
@@ -518,15 +518,15 @@ test('Cockpit Radio station changes preserve first-person camera ownership', () 
 });
 
 test('Cockpit panel corridors reserve the owned topline readouts', () => {
-  const leftObstacles = ui.match(/const LEFT_STACK_OBSTACLE_SELECTOR = \[([\s\S]*?)\]\.join/);
-  const rightObstacles = ui.match(/const RIGHT_STACK_OBSTACLE_SELECTOR = \[([\s\S]*?)\]\.join/);
+  const leftObstacles = mixin.match(/const LEFT_STACK_OBSTACLE_SELECTOR = \[([\s\S]*?)\]\.join/);
+  const rightObstacles = mixin.match(/const RIGHT_STACK_OBSTACLE_SELECTOR = \[([\s\S]*?)\]\.join/);
   assert.ok(leftObstacles && rightObstacles, 'responsive panel obstacle selectors are missing');
   assert.match(leftObstacles[1], /#cockpit-hud \.cockpit-topline/);
   assert.match(rightObstacles[1], /#cockpit-hud \.cockpit-topline/);
   assert.match(leftObstacles[1], /#cockpit-hud \.cockpit-topline > div/);
   assert.match(rightObstacles[1], /#cockpit-hud \.cockpit-topline > div/);
-  const leftLayout = ui.match(
-    /_syncLeftPanelAdaptiveLayout\(\) \{([\s\S]*?)\n  \}\n\n  \/\*\*/,
+  const leftLayout = mixin.match(
+    /_syncLeftPanelAdaptiveLayout\(\) \{([\s\S]*?)\n  \},\n\n  \/\*\*/,
   );
   assert.ok(leftLayout, 'left accordion layout pass is missing');
   assert.doesNotMatch(
@@ -559,7 +559,7 @@ test('Cockpit panel corridors reserve the owned topline readouts', () => {
     /function isRenderedOnScreen\(element\) \{[\s\S]*?style\.display === 'none' \|\| style\.visibility === 'hidden' \|\| Number\(style\.opacity\) === 0[\s\S]*?rect\.width > 0 && rect\.height > 0;/,
   );
   assert.match(
-    ui,
+    mixin,
     /_leftStackHudTransitionHandler = \(event\) => \{[\s\S]*?_scheduleLeftPanelLayout\(\{ reconsiderAutoCollapse: true \}\);[\s\S]*?this\.cockpitView\?\.scheduleContextLayout\(\);/,
     'the strip must remeasure on the same HUD fade the accordion does — the REC '
       + 'readout keeps its rect until the transition ends',
@@ -585,8 +585,8 @@ test('an expanded Cockpit left panel stays above Contact, HUD, and attribution',
     /COCKPIT_PASSABLE_LEFT_OBSTACLE_SELECTOR|cockpitOverlaysPassable/,
     'Cockpit obstacles must never be bypassed by an expanded map panel',
   );
-  const leftLayout = ui.match(
-    /_syncLeftPanelAdaptiveLayout\(\) \{([\s\S]*?)\n  \}\n\n  \/\*\*/,
+  const leftLayout = mixin.match(
+    /_syncLeftPanelAdaptiveLayout\(\) \{([\s\S]*?)\n  \},\n\n  \/\*\*/,
   );
   assert.ok(leftLayout, 'left accordion layout pass is missing');
   assert.match(

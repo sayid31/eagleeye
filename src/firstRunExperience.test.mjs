@@ -625,7 +625,7 @@ test('the launcher keeps focus, restores it, and never disables the focused butt
 });
 
 test('the DISPLAY rail starts collapsed on a first run, and a stored choice wins', () => {
-  const ui = fs.readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const ui = fs.readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
   // The rail opened by default to advertise HUD / DETECT / 3D. Those default ON
   // now, so it was opening to offer controls for things already happening —
   // while competing with the mission card for the one first impression there is.
