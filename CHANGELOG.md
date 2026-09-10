@@ -5,6 +5,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Refactored
+
+- Split `src/ui.js`'s `StyleManager` class (10,340 lines) by moving its
+  Adaptive Panel Layout, CCTV panel, and Radio panel method groups into
+  three new prototype-mixin files — `src/panelAdaptiveLayoutMixin.js`,
+  `src/cctvPanelMixin.js`, `src/radioPanelMixin.js` — composed back in via
+  `Object.assign(StyleManager.prototype, ...)`. No runtime behavior change;
+  `ui.js` drops to 7,754 lines. Shared panel-position constants moved to a
+  new `src/panelPositionConstants.js`. Global Context panel intentionally
+  not split this round (no dedicated QA gate; deferred).
+
 ### Changed
 
 - Renamed the app's display name from "God's Eye View" to "EagleEye View"
