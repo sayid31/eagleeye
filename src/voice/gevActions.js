@@ -20,6 +20,8 @@ import { isPickedWorldPosition } from '../data/scenePick.js';
 import { resolveRegionRingForQuery } from '../annotations/annotationResolver.js';
 import { normalizeRadioCountryInput } from '../data/radioCountry.js';
 import { TR3B_CLASS } from '../data/tr3bRegistry.js';
+import { activeGeocodeProvider, forwardGeocode } from '../geocodeProvider.js';
+import { LOCATION_SEARCH_OSM_CREDIT, registerDynamicCredit } from '../data/dataCredits.js';
 
 const ALLOWED_STYLES = new Set(['normal', 'retro', 'surveillance', 'thermal', 'anime', 'noir', 'snow']);
 const PANEL_ALIASES = new Map([
@@ -1254,7 +1256,7 @@ function radioAbortError() {
   return error;
 }
 
-async function resolveRadioLocation(args = {}, coordinates = radioCoordinatePair(args), options = {}) {
+async function resolveRadioLocation(viewer, args = {}, coordinates = radioCoordinatePair(args), options = {}) {
   if (!radioActionIsCurrent(options)) throw radioAbortError();
   if (coordinates.valid) {
     const { latitude, longitude } = coordinates;
@@ -1264,24 +1266,22 @@ async function resolveRadioLocation(args = {}, coordinates = radioCoordinatePair
   const known = knownRadioLocation(query, args.locationId);
   if (known) return known;
   if (!query) return null;
-  const apiKey = window.__GOOGLE_MAPS_API_KEY__ || import.meta.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) throw new Error('No Google Maps API key available for Radio location search');
   const controller = new AbortController();
   const cancelFromTurn = () => controller.abort();
   if (options.signal?.aborted) throw radioAbortError();
   options.signal?.addEventListener('abort', cancelFromTurn, { once: true });
   const timer = setTimeout(() => controller.abort(), 6000);
   try {
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
-    const response = await fetch(url, { signal: controller.signal });
-    const body = await response.json();
+    const result = await forwardGeocode(query, { signal: controller.signal });
     if (!radioActionIsCurrent(options)) throw radioAbortError();
-    const result = body.status === 'OK' ? body.results?.[0] : null;
-    if (!result?.geometry?.location) return null;
+    if (!result) return null;
+    if (activeGeocodeProvider() === 'nominatim') {
+      registerDynamicCredit(viewer, LOCATION_SEARCH_OSM_CREDIT);
+    }
     return {
-      lat: result.geometry.location.lat,
-      lon: result.geometry.location.lng,
-      label: result.formatted_address || query,
+      lat: result.lat,
+      lon: result.lng,
+      label: result.label || query,
       country: '',
     };
   } finally {
@@ -1520,7 +1520,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
     try {
       // Resolve asynchronous user input before enabling Radio. That keeps an
       // interrupted lookup from mutating layer or station state after barge-in.
-      resolvedLocation = await resolveRadioLocation(args, coordinates, options);
+      resolvedLocation = await resolveRadioLocation(viewer, args, coordinates, options);
     } catch (error) {
       if (error?.name === 'AbortError' || !radioActionIsCurrent(options)) return cancelled(summarize);
       throw error;

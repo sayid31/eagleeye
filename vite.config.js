@@ -505,6 +505,19 @@ function googleRateLimiter() {
   if (_googleRateLimiter === undefined) _googleRateLimiter = makeOptInRateLimiter(process.env.GEV_RATELIMIT_GOOGLE_PER_MIN);
   return _googleRateLimiter;
 }
+let _nominatimSearchRateLimiter;
+/**
+ * Nominatim forward-search proxy. IN ADDITION to (not instead of) the
+ * `_nominatimQueue` 1100ms serialization below, which protects the upstream
+ * Nominatim server — this limiter protects THIS process from a runaway
+ * client. Null = unlimited (default).
+ */
+function nominatimSearchRateLimiter() {
+  if (_nominatimSearchRateLimiter === undefined) {
+    _nominatimSearchRateLimiter = makeOptInRateLimiter(process.env.GEV_RATELIMIT_NOMINATIM_PER_MIN);
+  }
+  return _nominatimSearchRateLimiter;
+}
 
 /**
  * Apply an opt-in limiter to a request, writing a 429 when over the cap.
@@ -7093,11 +7106,31 @@ function normalizeRssArticles(xml, limit = 5) {
   return articles;
 }
 
-function fetchRegionalPlace(point) {
+const NOMINATIM_HEADERS = {
+  'User-Agent': 'GodsEyeView/0.1 (+https://github.com/bilawalsidhu/gods-eye-view)',
+  Referer: 'https://github.com/bilawalsidhu/gods-eye-view',
+};
+
+/**
+ * Serialize one call through the shared Nominatim queue, honoring the ≥1100ms
+ * gap Nominatim's usage policy requires between requests from one app. Shared
+ * by reverse-geocode (`fetchRegionalPlace`) and forward-search
+ * (`fetchNominatimSearch`) — both hit the same rate-limited host, so they
+ * share the same throttle rather than each keeping a separate one.
+ */
+function queuedNominatimFetch(fetchFn) {
   const task = _nominatimQueue.then(async () => {
     const waitMs = Math.max(0, 1100 - (Date.now() - _nominatimLastRequestAt));
     if (waitMs) await new Promise((resolve) => setTimeout(resolve, waitMs));
     _nominatimLastRequestAt = Date.now();
+    return fetchFn();
+  });
+  _nominatimQueue = task.catch(() => null);
+  return task;
+}
+
+function fetchRegionalPlace(point) {
+  return queuedNominatimFetch(async () => {
     const params = new URLSearchParams({
       format: 'jsonv2',
       lat: point.latitude.toFixed(5),
@@ -7107,15 +7140,82 @@ function fetchRegionalPlace(point) {
       'accept-language': 'en',
     });
     const payload = await fetchRegionalJson(`https://nominatim.openstreetmap.org/reverse?${params}`, {
-      headers: {
-        'User-Agent': 'GodsEyeView/0.1 (+https://github.com/bilawalsidhu/gods-eye-view)',
-        Referer: 'https://github.com/bilawalsidhu/gods-eye-view',
-      },
+      headers: NOMINATIM_HEADERS,
     });
     return normalizeRegionalPlace(payload);
   });
-  _nominatimQueue = task.catch(() => null);
-  return task;
+}
+
+/**
+ * Forward-search (place name -> candidates) via Nominatim, for
+ * `nominatimSearchProxy()` below. Only the top hit is used by callers
+ * (src/geocodeProvider.js), matching Google Geocoding's `results[0]`-only
+ * usage — so `limit=1`.
+ */
+function fetchNominatimSearch(query, viewbox) {
+  return queuedNominatimFetch(async () => {
+    const params = new URLSearchParams({
+      q: query,
+      format: 'jsonv2',
+      addressdetails: '1',
+      limit: '1',
+    });
+    if (viewbox) params.set('viewbox', viewbox);
+    return fetchRegionalJson(`https://nominatim.openstreetmap.org/search?${params}`, {
+      headers: NOMINATIM_HEADERS,
+    });
+  });
+}
+
+/**
+ * Vite plugin: forward-geocode via Nominatim (search box, voice fly-to, voice
+ * Radio — see src/geocodeProvider.js). Server-side because Nominatim's usage
+ * policy requires a custom User-Agent, which browser `fetch` cannot set.
+ */
+export function nominatimSearchProxy() {
+  function install(middlewares) {
+    middlewares.use('/api/nominatim/search', async (req, res) => {
+      if (req.method !== 'GET') {
+        res.statusCode = 405;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Method not allowed' }));
+        return;
+      }
+      if (!enforceOptInRateLimit(nominatimSearchRateLimiter(), req, res)) return;
+
+      const url = new URL(req.url || '', 'http://localhost');
+      const query = String(url.searchParams.get('q') || '').trim();
+      if (!query) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'A non-empty q is required' }));
+        return;
+      }
+      const viewbox = url.searchParams.get('viewbox') || null;
+
+      try {
+        const results = await fetchNominatimSearch(query, viewbox);
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/json');
+        res.setHeader('Cache-Control', 'no-store');
+        res.end(JSON.stringify(Array.isArray(results) ? results : []));
+      } catch {
+        res.statusCode = 502;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Nominatim search is temporarily unavailable' }));
+      }
+    });
+  }
+
+  return {
+    name: 'nominatim-search-proxy',
+    configureServer(server) {
+      install(server.middlewares);
+    },
+    configurePreviewServer(server) {
+      install(server.middlewares);
+    },
+  };
 }
 
 async function fetchRegionalNews(place) {
@@ -7696,6 +7796,7 @@ export default defineConfig(({ mode }) => {
       trackBackfillProxies(),
       openAiRealtimeProxy(),
       googlePlacesContextProxy(),
+      nominatimSearchProxy(),
       keySetupEndpoint(),
     ],
     server: {

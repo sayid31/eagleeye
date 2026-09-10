@@ -2169,6 +2169,108 @@ test('interrupting delayed Radio disable forwards cancellation and retains enabl
   assert.equal(enabled, true);
 });
 
+// Default provider (GEOCODE_PROVIDER unset — the temporary Nominatim switch,
+// see geocodeProvider.js): resolveRadioLocation's forwardGeocode() query path
+// reaches the same station-selection outcome through a Nominatim-jsonv2-
+// shaped /api/nominatim/search response, no key required.
+test('voice Radio resolves an unlisted place through the default Nominatim provider', async () => {
+  const hadWindow = Object.hasOwn(globalThis, 'window');
+  const priorWindow = globalThis.window;
+  const priorFetch = globalThis.fetch;
+  globalThis.window = {};
+  const requestedUrls = [];
+  globalThis.fetch = async (url) => {
+    requestedUrls.push(String(url));
+    return {
+      ok: true,
+      json: async () => [{
+        lat: '48.8566',
+        lon: '2.3522',
+        display_name: 'Paris, Île-de-France, France',
+        place_rank: 16,
+        addresstype: 'city',
+        boundingbox: ['48.81', '48.90', '2.22', '2.47'],
+      }],
+    };
+  };
+  const calls = [];
+  const radio = {
+    getUIState: () => ({ stationCount: 2, selected: null, filter: 'all', audioState: 'stopped', volume: 0.8 }),
+    selectRequestedStation(criteria) {
+      calls.push(criteria);
+      return { id: 'paris-fm', name: 'Paris FM' };
+    },
+  };
+  const dataManager = {
+    layers: new Map([['radio', { module: radio }]]),
+    isEnabled: () => true,
+  };
+  try {
+    const result = await controlRadio({}, dataManager, {
+      action: 'select',
+      locationQuery: 'a place not in the curated city list',
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.requestedLocation, 'Paris, Île-de-France, France');
+    assert.ok(Math.abs(calls[0].anchor.lat - 48.8566) < 0.001);
+    assert.ok(requestedUrls[0].startsWith('/api/nominatim/search'), 'must hit the server-side proxy, not Google');
+  } finally {
+    globalThis.fetch = priorFetch;
+    if (hadWindow) globalThis.window = priorWindow;
+    else delete globalThis.window;
+  }
+});
+
+// Explicit GEOCODE_PROVIDER=google reversion path — proves resolveRadioLocation
+// still reaches Google Geocoding unmodified when the provider is flipped back.
+test('voice Radio resolves an unlisted place through the explicit Google provider', async () => {
+  const hadWindow = Object.hasOwn(globalThis, 'window');
+  const priorWindow = globalThis.window;
+  const priorFetch = globalThis.fetch;
+  globalThis.window = { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_API_KEY__: 'test-key' };
+  const requestedUrls = [];
+  globalThis.fetch = async (url) => {
+    requestedUrls.push(String(url));
+    return {
+      ok: true,
+      json: async () => ({
+        status: 'OK',
+        results: [{
+          formatted_address: 'Paris, France',
+          geometry: { location: { lat: 48.8566, lng: 2.3522 } },
+          types: ['locality'],
+        }],
+      }),
+    };
+  };
+  const calls = [];
+  const radio = {
+    getUIState: () => ({ stationCount: 2, selected: null, filter: 'all', audioState: 'stopped', volume: 0.8 }),
+    selectRequestedStation(criteria) {
+      calls.push(criteria);
+      return { id: 'paris-fm', name: 'Paris FM' };
+    },
+  };
+  const dataManager = {
+    layers: new Map([['radio', { module: radio }]]),
+    isEnabled: () => true,
+  };
+  try {
+    const result = await controlRadio({}, dataManager, {
+      action: 'select',
+      locationQuery: 'a place not in the curated city list',
+    });
+    assert.equal(result.ok, true);
+    assert.equal(result.requestedLocation, 'Paris, France');
+    assert.ok(Math.abs(calls[0].anchor.lat - 48.8566) < 0.001);
+    assert.ok(requestedUrls[0].startsWith('https://maps.googleapis.com/'), 'must hit Google when explicitly selected');
+  } finally {
+    globalThis.fetch = priorFetch;
+    if (hadWindow) globalThis.window = priorWindow;
+    else delete globalThis.window;
+  }
+});
+
 test('voice Radio propagates fulfilled-false enable, disable, and auto-enable failures', async () => {
   let enabled = true;
   const radio = {

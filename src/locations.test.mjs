@@ -53,11 +53,17 @@ const AUSTIN_RESULT = {
   },
 };
 
+// These fixtures/tests exercise the framing logic downstream of a geocode
+// result, not the geocode provider itself — runSearch() sticks to the
+// GEOCODE_PROVIDER=google revert path (window.__GEOCODE_PROVIDER__: 'google')
+// so the existing Google-shaped fixtures (formatted_address/geometry/types)
+// keep working unmodified. A dedicated test below covers the Nominatim
+// default path end-to-end through searchAndFlyTo.
 async function runSearch(viewer, options, { result = AUSTIN_RESULT, query = 'austin' } = {}) {
   const hadWindow = Object.hasOwn(globalThis, 'window');
   const priorWindow = globalThis.window;
   const priorFetch = globalThis.fetch;
-  globalThis.window = { __GOOGLE_MAPS_API_KEY__: 'test-key' };
+  globalThis.window = { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_API_KEY__: 'test-key' };
   globalThis.fetch = async () => ({
     json: async () => ({ status: 'OK', results: [result] }),
   });
@@ -589,6 +595,43 @@ test('a final authority veto returns cancellation without issuing a flight', asy
   const result = await runSearch(viewer, { beforeFly: () => false });
   assert.equal(result, CANCELLED_SEARCH);
   assert.equal(viewer.flights.length, 0);
+});
+
+// Default provider (GEOCODE_PROVIDER unset — the temporary Nominatim switch,
+// see geocodeProvider.js): the same searchAndFlyTo pipeline reaches an
+// identical flight through a Nominatim-jsonv2-shaped fetch response, no key
+// required. Proves the provider swap didn't just move the Google fixture.
+test('searchAndFlyTo reaches the same flight through the default Nominatim provider', async () => {
+  const hadWindow = Object.hasOwn(globalThis, 'window');
+  const priorWindow = globalThis.window;
+  const priorFetch = globalThis.fetch;
+  globalThis.window = {};
+  const requestedUrls = [];
+  globalThis.fetch = async (url) => {
+    requestedUrls.push(String(url));
+    return {
+      ok: true,
+      json: async () => [{
+        lat: '30.2672',
+        lon: '-97.7431',
+        display_name: 'Austin, TX, USA',
+        place_rank: 16,
+        addresstype: 'city',
+        boundingbox: ['30.10', '30.50', '-97.95', '-97.55'],
+      }],
+    };
+  };
+  try {
+    const viewer = stubViewer();
+    const result = await searchAndFlyTo(viewer, 'austin', {});
+    assert.equal(result.navigationMode, 'city-overview');
+    assert.equal(viewer.flights.length, 1);
+    assert.ok(requestedUrls[0].startsWith('/api/nominatim/search'), 'must hit the server-side proxy, not Google');
+  } finally {
+    globalThis.fetch = priorFetch;
+    if (hadWindow) globalThis.window = priorWindow;
+    else delete globalThis.window;
+  }
 });
 
 test('search without an authority hook preserves the existing caller contract', async () => {

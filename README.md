@@ -86,13 +86,14 @@ aircraft, military traffic, satellites, earthquakes, public cameras, radio and
 launches already moving on it. No account, no key, no file to edit.
 
 **Optional signups, optimal experience.** The keyless globe gets you running;
-a couple of two-minute signups make it spectacular. Want the photorealistic-3D
+a couple of two-minute signups make it spectacular. In-app place search
+already works keyless (OpenStreetMap Nominatim). Want the photorealistic-3D
 cities? A **free Cesium ion token** covers them for eligible personal,
 non-commercial use — no Google account needed; current ion terms and quotas
-apply. Prefer them straight from Google, plus in-app place search? A
-**Google Maps key** is the billing-enabled, metered route — with a surprisingly
-generous free tier ([real numbers](#-api-keys)). Either one pastes straight
-into **Then power it up** below.
+apply. Prefer them straight from Google? A **Google Maps key** is the
+billing-enabled, metered route — with a surprisingly generous free tier
+([real numbers](#-api-keys)). Either one pastes straight into **Then power it
+up** below.
 
 ### Path 1 — One click, no terminal
 
@@ -141,9 +142,10 @@ reopens the same panel.
   Keychain show as *configured externally* and are read-only to the panel.
 - **What to get first:** the free [Cesium ion](https://cesium.com/ion) token
   (eligible personal, non-commercial use; current terms and quotas apply) for
-  photorealistic 3D and world terrain; a Google Maps key only for the
-  billing-enabled, metered route + place search; OpenAI when you want to talk
-  to the world. Full map, costs included, in [Keys & Costs](#-api-keys).
+  photorealistic 3D and world terrain; a Google Maps key only for the direct,
+  billing-enabled 3D-tiles route (place search works keyless by default);
+  OpenAI when you want to talk to the world. Full map, costs included, in
+  [Keys & Costs](#-api-keys).
 
 > [!WARNING]
 > Do not enter credentials in Pinokio 8.0.40's native **Configure** panel: that
@@ -252,7 +254,7 @@ Thirteen live layers. **Eleven of them need nothing at all** — no key, no acco
 
 | Layer | What you get | Source | Auth |
 |-------|--------------|--------|------|
-| 🗺️ **Map Stack** | Esri satellite imagery, Google Photorealistic 3D, OSM, plus additional ion-hosted stacks | Esri / Google / Ion / OSM | 🟢 Esri satellite + OSM · 🟡 ion-hosted Google 3D + world terrain · 🔴 direct Google + place search |
+| 🗺️ **Map Stack** | Esri satellite imagery, Google Photorealistic 3D, OSM, plus additional ion-hosted stacks | Esri / Google / Ion / OSM | 🟢 Esri satellite + OSM (place search is also keyless by default, via OSM Nominatim) · 🟡 ion-hosted Google 3D + world terrain · 🔴 direct Google 3D |
 | ✈️ **Live Flights** | 11,000+ live aircraft + route history | OpenSky + adsb.lol | 🟢 (🟡 optional for more polling credits) |
 | 🎖️ **Military Flights** | ADS-B military traffic in amber | adsb.lol | 🟢 |
 | 🚢 **Live Vessels** | Thousands of ships worldwide | AISStream | 🟡 |
@@ -272,7 +274,7 @@ Thirteen live layers. **Eleven of them need nothing at all** — no key, no acco
 |---|---|
 | 🟢 Nothing | Esri World Imagery satellite basemap + keyless terrain, in 2D. OSM takes over automatically if Esri is unreachable; if terrain is unavailable the globe continues without it |
 | 🟡 A free Cesium ion token | **Google Photorealistic 3D cities** and world terrain — eligible personal, non-commercial use; current ion terms and quotas apply |
-| 🔴 A Google Maps key | The same 3D direct from Google, plus in-app place search — the billing-enabled, metered route |
+| 🔴 A Google Maps key | The same 3D direct from Google — the billing-enabled, metered route. Place search stays keyless (OSM Nominatim) unless you opt into `GEOCODE_PROVIDER=google` |
 
 ![A reconstructed Falcon 9 ascent climbing and curving into its projected orbit](docs/media/08-falcon9-replay.gif)
 
@@ -369,7 +371,7 @@ Six keys. Four have a free tier, and the two 🔴 ones are metered:
 | | Key | Why | Get it |
 |---|-----|-----|--------|
 | 🟡 | **Cesium ion** | 🗺️ Google Photorealistic 3D, world terrain, and additional ion-hosted imagery stacks. The free Community plan is for eligible individual, personal/non-commercial use and has quotas | [cesium.com/ion](https://cesium.com/ion) — use a public `assets:read` token and check current [pricing/eligibility](https://cesium.com/platform/cesium-ion/pricing/) |
-| 🔴 | **Google Maps** | Direct Google Photorealistic 3D + Google place search ([Map Tiles API](https://developers.google.com/maps/documentation/tile)) | [Google Cloud Console](https://console.cloud.google.com/) — URL-restrict it |
+| 🔴 | **Google Maps** | Direct Google Photorealistic 3D ([Map Tiles API](https://developers.google.com/maps/documentation/tile)). Place search is keyless by default (OSM Nominatim); this key only also switches search to Google if you set `GEOCODE_PROVIDER=google` | [Google Cloud Console](https://console.cloud.google.com/) — URL-restrict it |
 | 🔴 | **OpenAI** | 🎙️ The voice experience + AI HUD summary. The mini model works; the standard model is noticeably smarter. Want Gemini or another provider behind the mic? PRs welcome | [platform.openai.com](https://platform.openai.com) — metered, see costs below |
 | 🟡 | **AISStream** | 🚢 Live global ships | [aisstream.io](https://aisstream.io) — free, seriously, it's a two-minute signup |
 | 🟡 | **NASA FIRMS** | 🔥 Live active fires | [firms.modaps.eosdis.nasa.gov](https://firms.modaps.eosdis.nasa.gov/api/map_key/) — free |
@@ -420,7 +422,7 @@ Honest numbers, roughly, as of mid-2026 — always check the provider pricing pa
 |---|---|
 | **🟢 Most layers** | **$0, no signup.** OpenSky anon, USGS, CelesTrak, adsb.lol, city CCTV, Radio Browser, GBFS, Launch Library 2, bundled datasets. |
 | **🟡 The free-key tier** | **$0 with a signup.** AISStream, FIRMS, TomTom, OpenSky, plus Cesium ion for eligible personal/non-commercial use. Provider quotas and eligibility still apply. |
-| **🗺️ Google 3D tiles** | **Free through an eligible Cesium ion Community account within its quota; metered through a direct Google key.** Use the direct route for GEV place search or commercial deployment, verify current provider terms, and set budget alerts where billing is enabled. |
+| **🗺️ Google 3D tiles** | **Free through an eligible Cesium ion Community account within its quota; metered through a direct Google key.** Use the direct route for commercial deployment, verify current provider terms, and set budget alerts where billing is enabled. Place search itself is $0/keyless by default (OSM Nominatim) regardless of which 3D route you pick. |
 | **🔴 OpenAI voice** | **The one that costs real money — so the app meters it for you.** Realtime audio runs a few cents per active minute; an evening of heavy use is single-digit dollars. A live session-spend readout sits next to the mic, with an STD/MINI model toggle, a $2 warning, and a **$5 hard cap that ends the session**. The voice context window is kept deliberately short too. |
 
 Google's direct 3D route is surprisingly generous: the first 1,000 Photorealistic

@@ -7,6 +7,21 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Location search (search box, voice fly-to, voice Radio location) now
+  defaults to OpenStreetMap Nominatim and no longer requires a Google Maps
+  API key. This is a temporary, reversible switch — set
+  `GEOCODE_PROVIDER=google` (with `GOOGLE_MAPS_API_KEY` configured) to use
+  Google Geocoding instead. New provider-abstraction module
+  `src/geocodeProvider.js` (`forwardGeocode()`) normalizes both providers to
+  the same result shape so downstream navigation-mode/viewport-framing logic
+  in `src/locations.js` is unaffected either way. Requests to Nominatim are
+  proxied server-side (`/api/nominatim/search` in `vite.config.js`, new
+  `GEV_RATELIMIT_NOMINATIM_PER_MIN` opt-in throttle) to satisfy its required
+  `User-Agent` header and request-spacing policy. Out of scope, unchanged:
+  click-to-annotate geocoding, HUD/scene-context reverse geocoding, and
+  Google Places-based view recovery all remain Google-only as before. The
+  8 preset Indonesian/US/etc. cities (`CITY_POIS`) are static data and
+  unaffected.
 - Renamed the app's display name from "God's Eye View" to "EagleEye View"
   (title, README, docs, UI copy, code comments, Pinokio launcher, voice-tool
   descriptions sent to the Realtime API). Display-only: `godsEyeView.*`
