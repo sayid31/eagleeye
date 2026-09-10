@@ -75,6 +75,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   waypoint whose cell hasn't resolved yet falls back to the road's original
   first-vertex height, so behavior degrades gracefully rather than dropping
   to sea level.
+- Intelligence HUD text (classification banner, mission ID, mode label,
+  locality readout, coordinates, sensor metrics) is now legible over any
+  basemap color instead of blending into bright satellite imagery. The HUD's
+  text color was a low-opacity tint with only a soft glow for contrast, which
+  read as transparent against sunlit rooftops. `#intel-hud *` in `style.css`
+  now outlines every HUD glyph with a solid dark 4-direction shadow, and each
+  shader mode's text color (`HUD_COLORS` in `src/hud.js`) is raised to near-
+  full opacity — contrast now comes from the outline, not the hue, so it
+  holds in NORMAL, NVG, FLIR, and CRT modes alike.
 
 ## [0.1.1] — 2026-09-01 — Installation and live-data fixes
 

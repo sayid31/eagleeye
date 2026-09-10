@@ -21,12 +21,19 @@ import { ellipsoidalToMslDisplayM, ensureGeoidReady, geoidHeight } from './data/
 import { getBasemapLabelContext } from './voice/gevActions.js';
 import { isHudSummaryUnconfigured } from './hudSummaryResponse.js';
 
-/** Color palettes keyed by shader mode; applied as CSS custom properties. */
+/**
+ * Color palettes keyed by shader mode; applied as CSS custom properties.
+ * `main` alpha is kept high (~0.95+) across every mode — legibility against
+ * a bright basemap now comes from the dark 4-direction outline in
+ * `#intel-hud *` (style.css), not from the text color's own opacity, but a
+ * washed-out fill would still fight that outline on light backgrounds
+ * (owner report, 2026-09-10: text disappearing into sunlit satellite tiles).
+ */
 const HUD_COLORS = {
-  surveillance: { main: 'rgba(51, 255, 51, 0.8)',  glow: 'rgba(51, 255, 51, 0.5)',  border: 'rgba(51, 255, 51, 0.2)' },
-  thermal:      { main: 'rgba(255, 255, 255, 0.7)', glow: 'rgba(255, 255, 255, 0.4)', border: 'rgba(255, 255, 255, 0.15)' },
-  retro:        { main: 'rgba(255, 170, 0, 0.8)',   glow: 'rgba(255, 170, 0, 0.5)',   border: 'rgba(255, 170, 0, 0.2)' },
-  _default:     { main: 'rgba(0, 255, 255, 0.6)',   glow: 'rgba(0, 255, 255, 0.4)',   border: 'rgba(0, 255, 255, 0.15)' },
+  surveillance: { main: 'rgba(120, 255, 120, 0.96)', glow: 'rgba(51, 255, 51, 0.5)',   border: 'rgba(51, 255, 51, 0.2)' },
+  thermal:      { main: 'rgba(255, 255, 255, 0.97)', glow: 'rgba(255, 255, 255, 0.4)', border: 'rgba(255, 255, 255, 0.15)' },
+  retro:        { main: 'rgba(255, 195, 80, 0.96)',  glow: 'rgba(255, 170, 0, 0.5)',   border: 'rgba(255, 170, 0, 0.2)' },
+  _default:     { main: 'rgba(120, 245, 255, 0.96)', glow: 'rgba(0, 255, 255, 0.4)',   border: 'rgba(0, 255, 255, 0.15)' },
 };
 
 /** Shader modes that automatically show the HUD overlay. */
