@@ -71,6 +71,13 @@ const UI_SOURCE = fs.readFileSync(
   path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'ui.js'),
   'utf8',
 );
+// _renderCctvState now lives in cctvPanelMixin.js (mechanical relocation —
+// see that file's header), as an object-shorthand property (comma-terminated)
+// rather than a class method (brace-terminated).
+const CCTV_MIXIN_SOURCE = fs.readFileSync(
+  path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'cctvPanelMixin.js'),
+  'utf8',
+);
 
 const ASPECT = 16 / 9;
 const toRad = (deg) => (deg * Math.PI) / 180;
@@ -931,7 +938,7 @@ test('CCTV null-active coverage, auto-hop, cycling, and panel targets stay hones
     assert.equal(cctvCycleIndex(2, 1, records.length), 0);
     assert.equal(cctvCycleIndex(0, -1, records.length), records.length - 1);
 
-    const renderer = UI_SOURCE.match(/_renderCctvState\(state\) \{[\s\S]*?\n  \}\n/);
+    const renderer = CCTV_MIXIN_SOURCE.match(/_renderCctvState\(state\) \{[\s\S]*?\n  \},\n/);
     assert.ok(renderer, '_renderCctvState is missing');
     assert.match(renderer[0], /else if \(!activeId\)[\s\S]*?selectedIndex = -1/);
     assert.match(renderer[0], /_cctvFocusBtn\.disabled = !enabled \|\| cameras\.length === 0 \|\| !activeId/);

@@ -6,6 +6,10 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+// _runExplicitCctvFocus now lives in cctvPanelMixin.js (mechanical relocation
+// — see that file's header) as an object-shorthand property (comma-terminated)
+// rather than a class method (brace-terminated).
+const cctvMixin = fs.readFileSync(path.join(ROOT, 'src', 'cctvPanelMixin.js'), 'utf8');
 const firms = fs.readFileSync(path.join(ROOT, 'src', 'data', 'firmsHeatmap.js'), 'utf8');
 const vessels = fs.readFileSync(path.join(ROOT, 'src', 'data', 'aisLiveVessels.js'), 'utf8');
 const voice = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
@@ -326,8 +330,8 @@ test('teardown synchronously closes immediate camera entry points', () => {
   ], 'disposed navigation guard');
 
   const cctvFocus = body(
-    ui,
-    /_runExplicitCctvFocus\(activate, focus\) \{([\s\S]*?)\n  \}/,
+    cctvMixin,
+    /_runExplicitCctvFocus\(activate, focus\) \{([\s\S]*?)\n  \},/,
     'explicit CCTV focus',
   );
   ordered(cctvFocus, [
