@@ -5,6 +5,13 @@ import test from 'node:test';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+// Radio panel wiring (tuner interaction, disclosure, panel render) now lives
+// in radioPanelMixin.js (mechanical relocation — see that file's header).
+const radioMixin = readFileSync(new URL('./radioPanelMixin.js', import.meta.url), 'utf8');
+// setPanelCollapsed/_syncPanelCollapseButton now live in
+// panelAdaptiveLayoutMixin.js (mechanical relocation from an earlier step —
+// see that file's header).
+const adaptiveLayoutMixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
 const radio = readFileSync(new URL('./data/radio.js', import.meta.url), 'utf8');
 const rocketLaunches = readFileSync(new URL('./data/rocketLaunches.js', import.meta.url), 'utf8');
 const realtime = readFileSync(new URL('./voice/gevRealtime.js', import.meta.url), 'utf8');
@@ -257,20 +264,20 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(css, /#title-bar\.radio-broadcasting \.title-logo::after/);
   assert.match(css, /--radio-broadcast-opacity: \.17/);
   assert.match(css, /@media \(prefers-reduced-motion: reduce\)[\s\S]*?\.radio-tuner-needle,[\s\S]*?\.radio-tuner-tick\s*\{\s*transition: none;/);
-  assert.doesNotMatch(ui, /_radioTunerCameraRemove = this\.viewer\?\.camera\?\.changed/);
-  assert.match(ui, /classList\.toggle\('radio-broadcasting', state\.audioState === 'playing'\)/);
-  assert.match(ui, /cycleStation\(direction, \{[\s\S]*?rotate,[\s\S]*?stationIds:/);
-  const cycleStart = ui.indexOf('const cycleRadio = (direction, { rotate = true } = {}) =>');
-  const cycleMethod = ui.slice(cycleStart, ui.indexOf('const toggleRadio', cycleStart));
+  assert.doesNotMatch(radioMixin, /_radioTunerCameraRemove = this\.viewer\?\.camera\?\.changed/);
+  assert.match(radioMixin, /classList\.toggle\('radio-broadcasting', state\.audioState === 'playing'\)/);
+  assert.match(radioMixin, /cycleStation\(direction, \{[\s\S]*?rotate,[\s\S]*?stationIds:/);
+  const cycleStart = radioMixin.indexOf('const cycleRadio = (direction, { rotate = true } = {}) =>');
+  const cycleMethod = radioMixin.slice(cycleStart, radioMixin.indexOf('const toggleRadio', cycleStart));
   assert.doesNotMatch(cycleMethod, /refreshTunerBand/);
-  assert.match(ui, /_radioTunerBandPinnedForNavigation = true/);
-  assert.match(ui, /viewer\?\.canvas\?\.addEventListener\('pointerdown', releaseNavigationBand/);
-  assert.match(ui, /previewTuningStation\(station\?\.id \|\| null, \{ rotate \}\)/);
-  assert.match(ui, /tunerPreview\(\{ coordinate: this\._radioTunerCoordinate, rotate: commit \}\)/);
-  assert.match(ui, /radioLayer\.cancelTuning\(\)/);
+  assert.match(radioMixin, /_radioTunerBandPinnedForNavigation = true/);
+  assert.match(radioMixin, /viewer\?\.canvas\?\.addEventListener\('pointerdown', releaseNavigationBand/);
+  assert.match(radioMixin, /previewTuningStation\(station\?\.id \|\| null, \{ rotate \}\)/);
+  assert.match(radioMixin, /tunerPreview\(\{ coordinate: this\._radioTunerCoordinate, rotate: commit \}\)/);
+  assert.match(radioMixin, /radioLayer\.cancelTuning\(\)/);
   assert.match(ui, /classList\.remove\('radio-broadcasting'\)/);
-  assert.match(ui, /radioLayer\.getTunerStations\(750\)/);
-  assert.match(ui, /radioTunerPointerPosition\(/);
+  assert.match(radioMixin, /radioLayer\.getTunerStations\(750\)/);
+  assert.match(radioMixin, /radioTunerPointerPosition\(/);
   assert.doesNotMatch(css, /#right-context-rail\s*>\s*#radio-panel/);
   assert.match(css, /#global-context-panel #radio-panel\.collapsed/);
   assert.doesNotMatch(css, /\.context-radio-dock\.active:hover \.context-radio-mini/);
@@ -279,15 +286,15 @@ test('Radio is nested inside Context with separate disclosure and power controls
 });
 
 test('panel collapse is presentation-only and Radio exposes explicit voice playback controls', () => {
-  const start = ui.lastIndexOf('\n  setPanelCollapsed(panelId');
-  const method = ui.slice(start, ui.indexOf('toggleCleanView(forceEnabled)', start));
+  const start = adaptiveLayoutMixin.lastIndexOf('\n  setPanelCollapsed(panelId');
+  const method = adaptiveLayoutMixin.slice(start);
   assert.doesNotMatch(method, /stopRadio|stopPlayback|setEnabled\('radio'/);
   assert.match(voice, /'radio-panel'/);
   assert.match(voice, /'radio'/);
   assert.match(voice, /name:\s*'control_radio'/);
   assert.match(voice, /enum:\s*\['enable', 'disable', 'play', 'resume', 'pause', 'stop', 'next', 'previous', 'volume', 'select', 'status'\]/);
-  const enableStart = ui.lastIndexOf('\n  _initRadioPanel()');
-  const enableMethod = ui.slice(enableStart, ui.indexOf('\n  _renderRadioState(state)', enableStart));
+  const enableStart = radioMixin.lastIndexOf('\n  _initRadioPanel()');
+  const enableMethod = radioMixin.slice(enableStart, radioMixin.indexOf('\n  _renderRadioState(state)', enableStart));
   assert.doesNotMatch(enableMethod, /playSelectedRadio|togglePlayback\(\).*radio-enable/i);
   assert.match(enableMethod, /contextRadioToggleBtn/);
   assert.match(enableMethod, /contextRadioMiniEnableBtn/);
@@ -313,37 +320,37 @@ test('panel collapse is presentation-only and Radio exposes explicit voice playb
 });
 
 test('expanded Context routes its Radio icon to the embedded section and keeps collapsed Context compact', () => {
-  const revealStart = ui.indexOf('\n  async _revealRadioPanelInsideContext');
-  const revealEnd = ui.indexOf('\n  /**', revealStart + 10);
-  const revealMethod = ui.slice(revealStart, revealEnd);
+  const revealStart = radioMixin.indexOf('\n  async _revealRadioPanelInsideContext');
+  const revealEnd = radioMixin.indexOf('\n  /**', revealStart + 10);
+  const revealMethod = radioMixin.slice(revealStart, revealEnd);
   assert.ok(revealStart >= 0 && revealEnd > revealStart, 'embedded Radio reveal helper is missing');
   assert.match(revealMethod, /requestAnimationFrame\(\(\) => requestAnimationFrame/);
   assert.match(revealMethod, /scroller\.scrollTo\(\{ top: next, behavior: reducedMotion \? 'auto' : 'smooth' \}\)/);
   assert.match(revealMethod, /focus\?\.\(\{ preventScroll: true \}\)/);
   assert.doesNotMatch(revealMethod, /setEnabled|togglePlayback|selectStation|setContextMode/);
 
-  const syncStart = ui.indexOf('\n  _syncContextRadioLauncherState()');
-  const syncEnd = ui.indexOf('\n  /**', syncStart + 10);
-  const syncMethod = ui.slice(syncStart, syncEnd);
+  const syncStart = radioMixin.indexOf('\n  _syncContextRadioLauncherState()');
+  const syncEnd = radioMixin.indexOf('\n  /**', syncStart + 10);
+  const syncMethod = radioMixin.slice(syncStart, syncEnd);
   assert.ok(syncStart >= 0 && syncEnd > syncStart, 'Context Radio launcher state sync is missing');
   assert.match(syncMethod, /contextExpanded[\s\S]*?aria-controls', 'radio-panel'[\s\S]*?aria-expanded', String\(radioExpanded\)/);
   assert.match(syncMethod, /aria-controls', 'context-radio-mini'[\s\S]*?aria-expanded', String\(compactOpen\)/);
-  const renderStart = ui.indexOf('\n  _renderRadioState(state)');
-  const renderMethod = ui.slice(renderStart, ui.indexOf('\n  _renderRadioTuner', renderStart));
+  const renderStart = radioMixin.indexOf('\n  _renderRadioState(state)');
+  const renderMethod = radioMixin.slice(renderStart, radioMixin.indexOf('\n  _renderRadioTuner', renderStart));
   assert.match(renderMethod, /this\._syncContextRadioLauncherState\(\)/);
   assert.doesNotMatch(renderMethod, /compact Radio controls/);
   assert.doesNotMatch(renderMethod, /_contextRadioToggleBtn\.setAttribute\('aria-(?:controls|expanded|label)'/);
 });
 
 test('Radio disclosure is explicit, starts closed while off, and preserves playback state', () => {
-  const renderStart = ui.indexOf('\n  _renderRadioState(state)');
-  const renderMethod = ui.slice(renderStart, ui.indexOf('\n  _renderRadioTuner', renderStart));
+  const renderStart = radioMixin.indexOf('\n  _renderRadioState(state)');
+  const renderMethod = radioMixin.slice(renderStart, radioMixin.indexOf('\n  _renderRadioTuner', renderStart));
   assert.ok(renderStart >= 0, 'Radio render method is missing');
   assert.doesNotMatch(renderMethod, /setPanelCollapsed\('radio-panel', true\).*stopPlayback/s);
   assert.doesNotMatch(renderMethod, /_radioMiniExpanded\s*=\s*false.*audioState === 'playing'/s);
   assert.match(ui, /contextRadioDetailsBtn/);
-  const syncStart = ui.indexOf('\n  _syncPanelCollapseButton(panelEl)');
-  const syncMethod = ui.slice(syncStart, ui.indexOf('\n  /**', syncStart + 10));
+  const syncStart = adaptiveLayoutMixin.indexOf('\n  _syncPanelCollapseButton(panelEl)');
+  const syncMethod = adaptiveLayoutMixin.slice(syncStart, adaptiveLayoutMixin.indexOf('\n  /**', syncStart + 10));
   assert.doesNotMatch(syncMethod, /contextRadioDetailsBtn[\s\S]*?(?:aria-label|textContent|\.title)/);
 });
 
@@ -355,8 +362,8 @@ test('successful explicit user playback hands the speaker from voice to Radio', 
   assert.ok(confirmedPlaying >= 0 && takeoverSignal > confirmedPlaying);
   assert.match(radio, /startPlayback: \(\) => playSelectedRadio\(\{ origin: 'voice', attemptId: options\.attemptId \}\)/);
   assert.match(radio, /selectRadioStation\(stationId, \{ autoplay: true, origin: 'user' \}\)/);
-  assert.match(ui, /togglePlayback\(\{ origin: 'user' \}\)/);
-  assert.match(ui, /cycleStation\(direction, \{[\s\S]*?origin: 'user'/);
-  assert.match(ui, /commitTuningStation\(station\.id, \{ origin: 'user' \}\)/);
+  assert.match(radioMixin, /togglePlayback\(\{ origin: 'user' \}\)/);
+  assert.match(radioMixin, /cycleStation\(direction, \{[\s\S]*?origin: 'user'/);
+  assert.match(radioMixin, /commitTuningStation\(station\.id, \{ origin: 'user' \}\)/);
   assert.match(realtime, /event\.origin === 'user' && event\.action === 'play' && this\.isActive\(\)[\s\S]*?this\.stop\(\{ preserveRadioPlayback: true \}\)/);
 });
