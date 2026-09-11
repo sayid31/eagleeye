@@ -3379,6 +3379,14 @@ export class StyleManager {
       this._mapStackChangeHandler = (event) => {
         this._renderMapStackState(event.detail);
         this._syncShareState();
+        // The photoreal coverage-gap watchdog also fires silently through
+        // this same event — unlike the Esri→OSM tile-failure fallback, a
+        // sudden loss of Google 3D at a spot the user deliberately flew to
+        // is visually obvious, so it gets an explicit toast on top of the
+        // status chip's amber warn state.
+        if (this.mapStackController?.consumeCoverageFallbackFlag?.()) {
+          this._showToast(event.detail?.lastError || 'Google 3D has no coverage here — showing Esri Satellite');
+        }
       };
       window.addEventListener('gev:map-stack-changed', this._mapStackChangeHandler);
     }

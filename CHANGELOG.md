@@ -5,6 +5,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Added
+
+- Automatic fallback when Google Photorealistic 3D has no photo coverage at
+  the current view. Google's photo-textured tiles only cover ~2,500 cities
+  worldwide; elsewhere the map used to show a flat, near-white viewport with
+  no indication anything was wrong (reported: interior Kalimantan,
+  Indonesia). The app now detects this after the camera settles and
+  silently switches to Esri Satellite imagery, with a toast explaining why.
+  Flying back to a covered city and re-selecting Google 3D re-arms the
+  detector.
+
 ### Fixed
 
 - HUD summary's "NEAR &lt;landmark&gt;" locality tag no longer matches
