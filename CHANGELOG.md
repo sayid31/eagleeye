@@ -5,6 +5,27 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Fixed
+
+- HUD summary's "NEAR &lt;landmark&gt;" locality tag no longer matches
+  landmarks up to 150km away. `NEAR_POI_MAX_KM` (`src/hudLocality.js`)
+  tightened 150km → 50km after a report of the HUD reading "NEAR PURA ULUN
+  DANU BERATAN (DENPASAR) 102KM" while parked over Kawah Ijen, East Java — a
+  real POI, but a 102km reading doesn't read as "near" anything. The wider
+  Indonesian POI catalog spreads city landmarks farther apart than the
+  original 8 cities (Denpasar's own POIs span up to ~50km), so the old bound
+  started matching across regions instead of within one. 50km was chosen as
+  the smallest bound that still keeps every one of the 16 catalogued cities'
+  own in-view POI matches intact (worst case 39.1km, Dubai).
+- Added fictional/synthetic seed CCTV cameras (`CAMERA_SEEDS` in
+  `src/data/cctv.js`) for the 8 Indonesian cities (Jakarta, Surabaya, Bandung,
+  Medan, Semarang, Yogyakarta, Makassar, Denpasar) — 2 per city, anchored to
+  existing `CITY_POIS` landmarks, same pattern as the original 8 cities'
+  seeds. No live open-data CCTV source exists for these cities yet (only
+  Austin Open Data, Caltrans, and TfL London are wired), so without seeds
+  their camera catalog was empty while the original 8 cities always showed
+  coverage.
+
 ### Refactored
 
 - Split `src/ui.js`'s `StyleManager` class (10,340 lines) by moving its
