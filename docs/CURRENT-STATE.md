@@ -1959,7 +1959,13 @@ silently demoting every later lookup for the session.
   default 36 → 250, hard bound 300), filtered to `camera_status === TURNED_ON` (~815 live of
   1,003 rows). City packs (2026-07-04): Caltrans (districts 4/7/11/3 — SF, LA, San Diego,
   Sacramento; cap 300) and TfL London JamCams (cap 250) join Austin (cap 250) as keyless default
-  sources — ~800 cameras total, all RAW PRIOR poses, stills-first.
+  sources — ~800 cameras total, all RAW PRIOR poses, stills-first. 34 hand-authored fictional/
+  synthetic seed cameras (`CAMERA_SEEDS` in `cctv.js` — the original 8 cities plus all 8
+  Indonesian metros, 2 per city, no live open-data source wired for either group) merge into the
+  catalog alongside whatever live sources load (`mergeSeedAndSourceCatalogs`, id-deduped, live
+  source wins on a collision) rather than only appearing when live sources are entirely empty —
+  seed-only cities keep their `feedConfigured:false` coverage even when Austin/Caltrans/TfL are
+  all reachable.
 - **CCTV v3 UX — viewshed + calibration gizmo** (built 2026-07-05 and field
   validated 2026-07-21): the COVERAGE toggle is a
   tri-state cycle `OFF → ON → VIEWSHED`; viewshed mode renders each visible camera's frustum

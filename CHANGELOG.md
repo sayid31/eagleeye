@@ -18,6 +18,18 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- CCTV camera catalog no longer drops every seed camera (Jakarta and the
+  other 15 Indonesian seeds, plus the original 8 cities' 18 seeds) the
+  moment any live source pack (Austin Open Data, Caltrans, TfL London)
+  successfully loads. `cctvLayer.init()` previously picked EITHER the
+  live-source catalog OR the seed catalog outright
+  (`catalogFromSources.length ? catalogFromSources : seedCatalog()`); in a
+  normally-networked deployment live sources are non-empty by default, so
+  seeds silently never rendered — defeating the fictional-seed fallback's
+  whole purpose. `mergeSeedAndSourceCatalogs()` (`src/data/cctv.js`) now
+  unions both catalogs by camera id (live source wins on an id collision),
+  so seed-only cities keep their coverage alongside successfully-loaded live
+  cameras instead of being replaced by them.
 - HUD summary's "NEAR &lt;landmark&gt;" locality tag no longer matches
   landmarks up to 150km away. `NEAR_POI_MAX_KM` (`src/hudLocality.js`)
   tightened 150km → 50km after a report of the HUD reading "NEAR PURA ULUN
