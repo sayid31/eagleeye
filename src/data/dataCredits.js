@@ -201,6 +201,22 @@ export const NATURAL_EARTH_CREDIT = {
     '<a href="https://www.naturalearthdata.com" target="_blank" rel="noopener">Natural Earth</a> (public domain)',
 };
 
+/** Registered the first time the location search box, voice fly-to, or voice
+ * Radio location lookup resolves through the (default, temporary)
+ * OpenStreetMap Nominatim provider — see geocodeProvider.js. Distinct key
+ * from 'cockpit-place-osm' (reverse geocode for HUD context) since this is a
+ * separate, forward-geocode capability with its own activation point.
+ * Reuses cockpit-place-osm's wording since it's the same OSM/Nominatim
+ * attribution obligation. GEOCODE_PROVIDER=google skips this credit
+ * entirely — Google's own terms apply there instead. */
+export const LOCATION_SEARCH_OSM_CREDIT = {
+  key: 'location-search-osm',
+  html:
+    'Location search: ' +
+    '<a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">© OpenStreetMap contributors</a> ' +
+    'via Nominatim (ODbL 1.0)',
+};
+
 /** @type {Set<string>} Keys of dynamic credits already registered this session. */
 const _dynamicCreditKeys = new Set();
 
