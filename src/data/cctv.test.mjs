@@ -46,6 +46,7 @@ import cctvLayer, {
   calibrationPatchMovesAnchor,
   cctvGeometryDrainPacing,
   createGeometryProgressNotifier,
+  mergeSeedAndSourceCatalogs,
   normalizeCoverageMode,
   frameSignatureFromPixels,
   focusCctvRecord,
@@ -1289,4 +1290,63 @@ test('frameSignatureFromPixels: empty or junk input yields null (always redraw)'
   assert.equal(frameSignatureFromPixels(null), null);
   assert.equal(frameSignatureFromPixels(undefined), null);
   assert.equal(frameSignatureFromPixels({}), null);
+});
+
+// mergeSeedAndSourceCatalogs — regression coverage for the all-or-nothing
+// seed-vs-live-source catalog bug: cctvLayer.init() used to pick EITHER the
+// live-source catalog OR the seed catalog (catalogFromSources.length ? ... :
+// seedCatalog()), so the moment Austin/Caltrans/TfL returned any live rows,
+// every seed camera in every city — Indonesian and original alike — silently
+// dropped out of the catalog. mergeSeedAndSourceCatalogs() unions both by id
+// instead, live sources taking priority.
+test('mergeSeedAndSourceCatalogs: seed-only cameras stay in the catalog alongside live sources', () => {
+  const sourceCameras = [
+    { id: 'austin-1', name: 'Austin Cam 1' },
+    { id: 'tfl-2', name: 'TfL Cam 2' },
+  ];
+  const seedCameras = [
+    { id: 'jakarta-monas-n', name: 'Monas North Plaza' },
+    { id: 'nyc-midtown-w', name: 'Midtown West @ 34th' },
+  ];
+  const merged = mergeSeedAndSourceCatalogs(sourceCameras, seedCameras);
+  const mergedIds = merged.map((camera) => camera.id).sort();
+  assert.deepEqual(
+    mergedIds,
+    ['austin-1', 'jakarta-monas-n', 'nyc-midtown-w', 'tfl-2'],
+    'live sources and seed-only cameras must both survive the merge',
+  );
+});
+
+test('mergeSeedAndSourceCatalogs: a live source with the same id as a seed wins over the seed', () => {
+  const liveVersion = { id: 'jakarta-monas-n', name: 'Live Monas Feed', feedConfigured: true };
+  const seedVersion = { id: 'jakarta-monas-n', name: 'Monas North Plaza (seed)', feedConfigured: false };
+  const merged = mergeSeedAndSourceCatalogs([liveVersion], [seedVersion]);
+  assert.equal(merged.length, 1, 'a matching id must not be duplicated');
+  assert.equal(merged[0], liveVersion, 'the live-source entry must be the one kept');
+});
+
+test('mergeSeedAndSourceCatalogs: an empty live-source catalog falls back to seeds unchanged', () => {
+  const seedCameras = [{ id: 'nyc-midtown-w' }, { id: 'sf-market-5th' }];
+  const merged = mergeSeedAndSourceCatalogs([], seedCameras);
+  assert.deepEqual(merged, seedCameras);
+});
+
+test('mergeSeedAndSourceCatalogs: an empty seed catalog leaves live sources unchanged', () => {
+  const sourceCameras = [{ id: 'austin-1' }, { id: 'tfl-2' }];
+  const merged = mergeSeedAndSourceCatalogs(sourceCameras, []);
+  assert.deepEqual(merged, sourceCameras);
+});
+
+test('cctvLayer.init merges seeds into the live-source catalog instead of an all-or-nothing choice', () => {
+  const initSource = cctvLayer.init.toString();
+  assert.match(
+    initSource,
+    /mergeSeedAndSourceCatalogs\(catalogFromSources, seedCatalog\(\)\)/,
+    'init() must merge live sources with seeds rather than picking one or the other',
+  );
+  assert.doesNotMatch(
+    initSource,
+    /catalogFromSources\.length\s*\?\s*catalogFromSources\s*:\s*seedCatalog\(\)/,
+    'the old all-or-nothing ternary must be gone',
+  );
 });

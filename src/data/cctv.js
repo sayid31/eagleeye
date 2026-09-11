@@ -1208,6 +1208,33 @@ function buildCatalogFromSources(rawSources) {
 }
 
 /**
+ * Merges the live-source catalog with the seed catalog so seed-only cameras
+ * (no live open-data source is wired for their city — e.g. every Indonesian
+ * city, plus the original 8 cities before Austin/Caltrans/TfL cover them)
+ * keep showing coverage alongside successfully-loaded live sources, instead
+ * of being replaced outright.
+ *
+ * Root cause this fixes: `buildCatalogFromSources()` only enriches source
+ * rows that already exist in the backend response — it never appends a seed
+ * that has no matching row. The old call site then picked EITHER the live
+ * catalog OR the seed catalog (`catalogFromSources.length ? ... : seedCatalog()`),
+ * so the instant Austin/Caltrans/TfL returned any rows at all, every seed
+ * camera in every city (Indonesian and original) silently dropped out of the
+ * catalog. A seed's `id` never collides with a live source's `id` (seed ids
+ * are hand-authored slugs like `jakarta-monas-n`; live ids are provider-
+ * generated — Austin numeric device ids, `ca-d<district>-<code>`, `tfl-<raw>`),
+ * so a plain id-dedup union is sufficient here.
+ * @param {Object[]} sourceCameras - Cameras built from live backend sources.
+ * @param {Object[]} seedCameras - Cameras built from CAMERA_SEEDS.
+ * @returns {Object[]} Union catalog, live sources taking priority by id.
+ */
+export function mergeSeedAndSourceCatalogs(sourceCameras, seedCameras) {
+  const sourceIds = new Set(sourceCameras.map((camera) => camera.id));
+  const seedOnly = seedCameras.filter((camera) => !sourceIds.has(camera.id));
+  return [...sourceCameras, ...seedOnly];
+}
+
+/**
  * Reports whether the active Google Photorealistic 3D Tileset (if any) has
  * finished loading the tiles in view. Shared mesh-floor sampling is gated on
  * this so a one-shot cell never bakes in a miss from still-streaming tiles.
@@ -4221,7 +4248,10 @@ const cctvLayer = {
 
     const sources = await loadCameraSources();
     const catalogFromSources = buildCatalogFromSources(sources);
-    const catalog = catalogFromSources.length ? catalogFromSources : seedCatalog();
+    // Seeds always merge in alongside live sources (mergeSeedAndSourceCatalogs)
+    // rather than only being used when live sources are entirely empty — see
+    // that function's doc comment for the bug this replaces.
+    const catalog = mergeSeedAndSourceCatalogs(catalogFromSources, seedCatalog());
 
     // Viewshed color identity (design §3a): golden-angle hue over the
     // id-SORTED catalog index — deterministic across sessions for a stable
