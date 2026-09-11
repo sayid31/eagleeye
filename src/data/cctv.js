@@ -252,6 +252,36 @@ const CAMERA_SEEDS = [
 
   { id: 'austin-congress-s', cityId: 'austin', poiIndex: 0, label: 'Congress Southbound', offsetNorthM: -165, offsetEastM: 40, headingDeg: 12, fovDeg: 74, rangeM: 760, elevationM: 24 },
   { id: 'austin-downtown-west', cityId: 'austin', poiIndex: 1, label: 'Downtown West', offsetNorthM: -120, offsetEastM: -160, headingDeg: 120, fovDeg: 69, rangeM: 700, elevationM: 20 },
+
+  // Fictional/synthetic seeds — no live open-data CCTV source is wired for these
+  // eight Indonesian cities (see vite.config.js's CCTV source list: Austin Open
+  // Data, Caltrans, TfL London only). Added 2026-09 alongside the CITY_POIS
+  // entries so `feedConfigured: false` renders coverage the same way the
+  // original eight cities' seeds do, rather than an empty catalog. Same
+  // structure and same `sourceKind: 'seed'` marking as every entry above.
+  { id: 'jakarta-monas-n', cityId: 'jakarta', poiIndex: 0, label: 'Monas North Plaza', offsetNorthM: 110, offsetEastM: 55, headingDeg: 200, fovDeg: 72, rangeM: 760, elevationM: 25 },
+  { id: 'jakarta-wisma46-core', cityId: 'jakarta', poiIndex: 2, label: 'Wisma 46 Core', offsetNorthM: -90, offsetEastM: 60, headingDeg: 300, fovDeg: 70, rangeM: 700, elevationM: 26 },
+
+  { id: 'surabaya-tugu-pahlawan-e', cityId: 'surabaya', poiIndex: 0, label: 'Tugu Pahlawan East', offsetNorthM: 70, offsetEastM: 90, headingDeg: 250, fovDeg: 70, rangeM: 700, elevationM: 22 },
+  { id: 'surabaya-city-hall-s', cityId: 'surabaya', poiIndex: 3, label: 'City Hall South', offsetNorthM: -120, offsetEastM: 30, headingDeg: 8, fovDeg: 68, rangeM: 660, elevationM: 20 },
+
+  { id: 'bandung-gedung-sate-n', cityId: 'bandung', poiIndex: 0, label: 'Gedung Sate North', offsetNorthM: 130, offsetEastM: -40, headingDeg: 180, fovDeg: 72, rangeM: 720, elevationM: 24 },
+  { id: 'bandung-braga-core', cityId: 'bandung', poiIndex: 1, label: 'Jalan Braga Core', offsetNorthM: -60, offsetEastM: 80, headingDeg: 296, fovDeg: 68, rangeM: 640, elevationM: 20 },
+
+  { id: 'medan-maimun-e', cityId: 'medan', poiIndex: 0, label: 'Istana Maimun East', offsetNorthM: 90, offsetEastM: 100, headingDeg: 250, fovDeg: 70, rangeM: 700, elevationM: 22 },
+  { id: 'medan-merdeka-walk', cityId: 'medan', poiIndex: 4, label: 'Merdeka Walk Core', offsetNorthM: -70, offsetEastM: -60, headingDeg: 120, fovDeg: 68, rangeM: 660, elevationM: 20 },
+
+  { id: 'semarang-kota-lama-n', cityId: 'semarang', poiIndex: 2, label: 'Kota Lama North', offsetNorthM: 100, offsetEastM: 45, headingDeg: 210, fovDeg: 71, rangeM: 700, elevationM: 23 },
+  { id: 'semarang-simpang-lima', cityId: 'semarang', poiIndex: 4, label: 'Simpang Lima Core', offsetNorthM: -80, offsetEastM: -50, headingDeg: 110, fovDeg: 74, rangeM: 720, elevationM: 24 },
+
+  { id: 'yogyakarta-malioboro-n', cityId: 'yogyakarta', poiIndex: 0, label: 'Malioboro North', offsetNorthM: 140, offsetEastM: 20, headingDeg: 190, fovDeg: 72, rangeM: 740, elevationM: 22 },
+  { id: 'yogyakarta-keraton-s', cityId: 'yogyakarta', poiIndex: 1, label: 'Keraton South Gate', offsetNorthM: -95, offsetEastM: 50, headingDeg: 340, fovDeg: 66, rangeM: 620, elevationM: 20 },
+
+  { id: 'makassar-losari-w', cityId: 'makassar', poiIndex: 1, label: 'Pantai Losari West', offsetNorthM: 60, offsetEastM: -110, headingDeg: 270, fovDeg: 74, rangeM: 760, elevationM: 24 },
+  { id: 'makassar-karebosi-core', cityId: 'makassar', poiIndex: 4, label: 'Karebosi Park Core', offsetNorthM: -85, offsetEastM: 65, headingDeg: 150, fovDeg: 68, rangeM: 660, elevationM: 20 },
+
+  { id: 'denpasar-bajra-sandhi-n', cityId: 'denpasar', poiIndex: 0, label: 'Bajra Sandhi North', offsetNorthM: 100, offsetEastM: 35, headingDeg: 200, fovDeg: 70, rangeM: 700, elevationM: 22 },
+  { id: 'denpasar-kuta-beach-w', cityId: 'denpasar', poiIndex: 1, label: 'Kuta Beach Front', offsetNorthM: -50, offsetEastM: -130, headingDeg: 280, fovDeg: 76, rangeM: 780, elevationM: 24 },
 ];
 
 // ---------------------------------------------------------------------------

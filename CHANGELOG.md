@@ -17,6 +17,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   started matching across regions instead of within one. 50km was chosen as
   the smallest bound that still keeps every one of the 16 catalogued cities'
   own in-view POI matches intact (worst case 39.1km, Dubai).
+- Added fictional/synthetic seed CCTV cameras (`CAMERA_SEEDS` in
+  `src/data/cctv.js`) for the 8 Indonesian cities (Jakarta, Surabaya, Bandung,
+  Medan, Semarang, Yogyakarta, Makassar, Denpasar) — 2 per city, anchored to
+  existing `CITY_POIS` landmarks, same pattern as the original 8 cities'
+  seeds. No live open-data CCTV source exists for these cities yet (only
+  Austin Open Data, Caltrans, and TfL London are wired), so without seeds
+  their camera catalog was empty while the original 8 cities always showed
+  coverage.
 
 ### Refactored
 
