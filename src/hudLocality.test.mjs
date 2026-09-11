@@ -12,7 +12,7 @@ const LINCOLN = { poi: 'Lincoln Memorial', city: 'Washington DC' };
 const SACRE_COEUR = { poi: 'Sacré-Cœur', city: 'Paris' };
 
 test('the NEAR bound is metro scale, not continental', () => {
-  assert.equal(NEAR_POI_MAX_KM, 150);
+  assert.equal(NEAR_POI_MAX_KM, 50);
 });
 
 test('a landmark under the camera reads NEAR', () => {
@@ -48,6 +48,17 @@ test('the boundary is pinned on both sides, inclusive at the bound', () => {
 
   const just_over = composeLocalityTag({ ...LINCOLN, distKm: NEAR_POI_MAX_KM + 0.1 }, 40, -78);
   assert.match(just_over, /^SECTOR /, 'one step past the bound falls through');
+});
+
+test('a real but distant POI no longer reads as NEAR (2026-09 Kawah Ijen report)', () => {
+  // A camera over Kawah Ijen (East Java) matched Pura Ulun Danu Beratan (Bali) as
+  // its nearest catalogued POI at 102km — a real landmark, but not "near" by any
+  // ordinary reading. This must now fall through to SECTOR.
+  const ULUN_DANU_BERATAN = { poi: 'Pura Ulun Danu Beratan', city: 'Denpasar' };
+  assert.equal(
+    composeLocalityTag({ ...ULUN_DANU_BERATAN, distKm: 102 }, -8.058, 114.242),
+    'SECTOR 8.06S 114.24E',
+  );
 });
 
 test('southern and western hemispheres carry the right suffixes', () => {

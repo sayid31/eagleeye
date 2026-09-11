@@ -14,14 +14,26 @@
  * while parked over Moscow, and NEAR LINCOLN MEMORIAL 962KM over Chicago — the old
  * bound was 2,500 km, roughly a continent. The POI catalogue only covers eight
  * cities, so anywhere else on Earth matched whichever landmark happened to be
- * closest and reported an absurd distance as if it were a locality.
+ * closest and reported an absurd distance as if it were a locality. That pass
+ * landed on 150 km ("metro scale").
  *
- * 150 km is metro scale: a camera over San Francisco still reads NEAR ALCATRAZ, a
- * camera over DC still reads NEAR its monuments, and Chicago (962 km from the
- * nearest catalogued POI) correctly falls through to the SECTOR readout that
- * already worked for Honolulu and Rio.
+ * A 2026-09 report found the same failure mode still reachable at 150 km: a
+ * camera over Kawah Ijen (East Java) read NEAR PURA ULUN DANU BERATAN (DENPASAR)
+ * 102KM — a real POI, but a 102 km reading is not "near" anything by ordinary
+ * language, it's a different island region. Adding the eight Indonesian cities'
+ * POIs (see CITY_POIS in locations.js) made the catalogue sparser and more
+ * spread out per city than the original eight (Denpasar's own POIs span up to
+ * ~50 km, e.g. Kuta to Pura Ulun Danu Beratan), so the wide 150 km bound started
+ * matching across neighbouring regions instead of within one.
+ *
+ * 50 km was chosen by computing, for every catalogued city, the worst-case
+ * distance from that city's own view-bounds corners to its own nearest POI —
+ * the largest such value across all 16 cities (original eight plus the eight
+ * Indonesian additions) was 39.1 km (Dubai). 50 km keeps every city's
+ * legitimate in-view NEAR match intact with headroom, while rejecting the
+ * 102 km Kawah Ijen/Denpasar false positive and anything of similar scale.
  */
-export const NEAR_POI_MAX_KM = 150;
+export const NEAR_POI_MAX_KM = 50;
 
 /**
  * Format one hemisphere-tagged coordinate, e.g. `21.33N` / `157.80W`.
