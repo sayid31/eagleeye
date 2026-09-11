@@ -4111,9 +4111,10 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.4s ease, visibility 0.4s ease;
-  --hud-color: rgba(0, 255, 255, 0.6);
+  --hud-color: rgba(120, 245, 255, 0.96);
   --hud-glow: rgba(0, 255, 255, 0.4);
   --hud-border: rgba(0, 255, 255, 0.15);
+  --hud-outline: rgba(0, 12, 16, 0.92);
 }
 
 #intel-hud.active {
@@ -4124,7 +4125,17 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 #intel-hud * {
   font-family: var(--font-mono);
   color: var(--hud-color);
-  text-shadow: 0 0 4px var(--hud-glow);
+  /* Solid dark outline in 4 directions carries legibility over any basemap
+     color (bright rooftops, dark water, etc.) — the earlier single soft glow
+     read as transparent cyan and disappeared against sunlit satellite
+     imagery (owner report, 2026-09-10). The glow stays as a subtle 5th layer
+     for the original "tactical" look, now on top of a readable base. */
+  text-shadow:
+    -1px -1px 0 var(--hud-outline),
+    1px -1px 0 var(--hud-outline),
+    -1px 1px 0 var(--hud-outline),
+    1px 1px 0 var(--hud-outline),
+    0 0 4px var(--hud-glow);
   text-transform: uppercase;
   line-height: 1.6;
 }
