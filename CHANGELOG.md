@@ -7,6 +7,27 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- Real, live HLS video for 5 Indonesian CCTV cameras (Jakarta, Bandung ×3,
+  Denpasar) — an **UNOFFICIAL, internal-demo-only** source pack layered on
+  top of the existing fictional seed cameras. Stream URLs were
+  reverse-engineered via manual browser network inspection of public city
+  CCTV portals (Jakarta Smart City, Bandung Dishub ATCS, Denpasar ATCS);
+  there is no formal data-sharing agreement with any of these city
+  governments, and this is not vetted for public/commercial deployment. A
+  new server-side manifest-rewrite proxy (`src/server/hlsManifestProxy.mjs`
+  + a `/api/cctv/media/:id/rel` sub-route in `vite.config.js`) resolves the
+  multi-level relative-path HLS manifests these sources use, keeping the
+  real upstream host server-side only; client playback goes through hls.js
+  for browsers without native HLS support
+  (`createProjectionRuntime`/`destroyProjectionRuntime` in
+  `src/data/cctv.js`). The CCTV panel badge reads "⚠ UNOFFICIAL SOURCE" for
+  every camera in this pack (`src/cctvPanelMixin.js`). Revoke at any time by
+  setting `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0` or deleting
+  `config/cctv_sources.indonesia_unofficial.json` — see `DATA_SOURCES.md`
+  for the full disclosure. The camera dropdown sorts these unofficial
+  sources to the top (with a ⚠ prefix on the label) instead of leaving them
+  buried among the ~500 live open-data cameras
+  (`orderCctvCameraOptions` in `src/cctvPanelMixin.js`).
 - Automatic fallback when Google Photorealistic 3D has no photo coverage at
   the current view. Google's photo-textured tiles only cover ~2,500 cities
   worldwide; elsewhere the map used to show a flat, near-white viewport with
@@ -18,6 +39,24 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Indonesia unofficial HLS cameras' status badge no longer reads DEGRADED
+  while their live stream is actually healthy. Root cause: the server-side
+  health record (`vite.config.js`) is a single map keyed by camera id, shared
+  between `/api/cctv/media/:id` (the real video stream) and
+  `/api/cctv/frame/:id` (a still-image thumbnail endpoint). Video/HLS
+  cameras have no still-image candidate — their `url` is an HLS manifest,
+  not a JPEG — so `/frame/:id` always fell through to a Street
+  View/synthetic fallback, which unconditionally set `status: 'degraded'`.
+  The CCTV panel's preview `<img>` polled `activeCamera.frameUrl` (built
+  unconditionally for every camera) on every ~10s UI refresh, so the
+  fallback kept re-firing and stomping the healthy `status: 'ok'` that
+  `/media/:id` had just set. Fix: `getPublicCameraState()`
+  (`src/data/cctv.js`) now omits `frameUrl` for video-type cameras
+  (`mp4`/`hls`/`webm`) entirely — their live view is the `mediaUrl`-driven
+  monitor plane instead, so the panel never polls the doomed endpoint for
+  them. `fetchCardFrame()` gained the same guard as a defensive backstop for
+  the protected active-camera ambient-card lane, which bypasses the normal
+  video-camera filter in `selectCctvLod()`.
 - CCTV camera catalog no longer drops every seed camera (Jakarta and the
   other 15 Indonesian seeds, plus the original 8 cities' 18 seeds) the
   moment any live source pack (Austin Open Data, Caltrans, TfL London)

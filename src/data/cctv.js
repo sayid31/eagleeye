@@ -1713,6 +1713,51 @@ export function _updateCctvProjectionPlaneForTest(record) {
 }
 
 /**
+ * Attach an hls.js (MSE-based) player to a <video> element for browsers
+ * without native HLS support. Dynamically imports hls.js so it's only ever
+ * loaded when a non-Safari browser actually activates an HLS camera
+ * (code-split — Safari's native-HLS path above never triggers this import).
+ *
+ * Bails out quietly (leaves the video with no source) if hls.js reports the
+ * browser lacks MSE support at all — the existing placeholder-paint path in
+ * the draw loop already handles "no frame ever arrives" gracefully via the
+ * video.readyState gate, so there's no separate error UI needed here.
+ *
+ * @param {Object} runtime - Projection runtime; the created Hls instance is
+ *   stored on `runtime.hlsInstance` for destroyProjectionRuntime to tear down.
+ * @param {HTMLVideoElement} video
+ * @param {string} url - Proxied manifest URL (/api/cctv/media/:id).
+ */
+function attachHlsJs(runtime, video, url) {
+  import('hls.js')
+    .then(({ default: Hls }) => {
+      // Runtime may have been torn down while the dynamic import was in flight.
+      if (runtime.destroyed) return;
+      if (!Hls.isSupported()) return;
+      const hls = new Hls();
+      hls.on(Hls.Events.MANIFEST_PARSED, () => {
+        video.play().catch(() => {});
+      });
+      // Fatal errors (network/media) are swallowed rather than surfaced as a
+      // console error — an unofficial upstream going down is an expected,
+      // not exceptional, condition here, and the placeholder frame already
+      // covers "no video arriving" in the draw loop.
+      hls.on(Hls.Events.ERROR, (_event, data) => {
+        if (!data?.fatal) return;
+        hls.destroy();
+        if (runtime.hlsInstance === hls) runtime.hlsInstance = null;
+      });
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      runtime.hlsInstance = hls;
+    })
+    .catch(() => {
+      // hls.js failed to load (offline, blocked bundle chunk, etc.) — leave
+      // the video without a source; placeholder frame covers this case too.
+    });
+}
+
+/**
  * Creates the projection runtime for a camera record: an offscreen canvas,
  * the monitor plane plus associated host label, and either an
  * <img> or <video> element depending on the feed type.
@@ -1740,6 +1785,8 @@ function createProjectionRuntime(record) {
     ctx,
     image: null,
     video: null,
+    hlsInstance: null,
+    destroyed: false,
     planeEntity: null,
     cameraId: String(record.camera.id),
     labelPosition: new Cesium.Cartesian3(),
@@ -1771,15 +1818,24 @@ function createProjectionRuntime(record) {
   if (mode === 'video') {
     const video = document.createElement('video');
     video.muted = true;
-    video.loop = true;
+    // Live HLS streams are not loops (there's no "end" to wrap back to) —
+    // only the looping mp4/webm sample clips use native loop playback.
+    video.loop = feedType !== 'hls';
     video.autoplay = true;
     video.playsInline = true;
     video.crossOrigin = 'anonymous';
     video.preload = 'auto';
-    video.src = mediaUrlFor(record.camera);
-    video.addEventListener('canplay', () => {
-      video.play().catch(() => {});
-    });
+    const mediaUrl = mediaUrlFor(record.camera);
+    if (feedType === 'hls' && !video.canPlayType('application/vnd.apple.mpegurl')) {
+      // No native HLS support (every non-Safari browser) — attach hls.js
+      // (MSE-based) instead of a plain video.src assignment.
+      attachHlsJs(runtime, video, mediaUrl);
+    } else {
+      video.src = mediaUrl;
+      video.addEventListener('canplay', () => {
+        video.play().catch(() => {});
+      });
+    }
     runtime.video = video;
   } else {
     const img = new Image();
@@ -1837,6 +1893,12 @@ function ensureProjectionRuntime(record) {
  */
 function destroyProjectionRuntime(runtime) {
   if (!runtime) return;
+  runtime.destroyed = true;
+  // hls.js recommends detaching before clearing the video's src.
+  if (runtime.hlsInstance) {
+    runtime.hlsInstance.destroy();
+    runtime.hlsInstance = null;
+  }
   if (runtime.video) {
     runtime.video.pause();
     runtime.video.removeAttribute('src');
@@ -3139,6 +3201,12 @@ function cardFrameTick() {
  */
 function fetchCardFrame(record, slot, refreshMs, { userGesture = false } = {}) {
   if (typeof document !== 'undefined' && document.hidden && !userGesture) return;
+  // Video/HLS cameras have no still-image endpoint (see getPublicCameraState's
+  // frameUrl comment) — ambient cards normally never reach here for them
+  // (selectCctvLod filters isVideo), but the protected active-camera lane in
+  // cardFrameTick bypasses that filter, so guard here too rather than let a
+  // doomed /frame/:id fetch stomp the shared health status back to degraded.
+  if (isVideoFeedType(normalizeFeedType(record.camera.feedType))) return;
   const now = Date.now();
   const cameraId = record.camera.id;
   _cardFetchInFlightCount += 1;
@@ -3445,6 +3513,7 @@ function getPublicCameraState(record, activeId = null) {
   const health = _healthById.get(camera.id) || null;
   const isActive = camera.id === resolvedActiveId;
   const refreshMs = isActive ? ACTIVE_FRAME_REFRESH_MS : IDLE_FRAME_REFRESH_MS;
+  const isVideo = isVideoFeedType(normalizeFeedType(camera.feedType));
   return {
     id: camera.id,
     name: camera.name,
@@ -3489,7 +3558,15 @@ function getPublicCameraState(record, activeId = null) {
     calBadge: deriveCalBadge(camera),
     poseSource: camera.poseSource || null,
     basePose: camera.basePose ? { ...camera.basePose } : null,
-    frameUrl: frameUrlFor(camera, refreshMs),
+    // Video/HLS cameras have no still-image candidate server-side (their
+    // `url` is a manifest/video, not a JPEG) — the /frame/:id endpoint always
+    // falls through to a Street View/synthetic fallback for them, which
+    // unconditionally overwrites the shared per-camera health status to
+    // 'degraded' even while the live stream (mediaUrl) is healthy. Omitting
+    // frameUrl here stops the panel's still-image preview (_cctvFrame in
+    // cctvPanelMixin.js) from polling /frame/:id for these cameras at all —
+    // their live view is the mediaUrl-driven monitor plane instead.
+    frameUrl: isVideo ? null : frameUrlFor(camera, refreshMs),
     mediaUrl: mediaUrlFor(camera),
   };
 }
@@ -4002,6 +4079,31 @@ function extractPickedCameraId(picked) {
 /** Test-only seam for the CCTV ownership proof used by the world-click route. */
 export function _extractPickedCameraIdForTest(picked) {
   return extractPickedCameraId(picked);
+}
+
+/** @see normalizeFeedType */
+export function _normalizeFeedTypeForTest(value) {
+  return normalizeFeedType(value);
+}
+
+/** @see isVideoFeedType */
+export function _isVideoFeedTypeForTest(feedType) {
+  return isVideoFeedType(feedType);
+}
+
+/** @see buildCatalogFromSources */
+export function _buildCatalogFromSourcesForTest(rawSources) {
+  return buildCatalogFromSources(rawSources);
+}
+
+/**
+ * Test-only seam for getPublicCameraState: builds a minimal fake `record`
+ * from a raw camera object (as buildCatalogFromSources would produce) and
+ * returns its public state, without requiring a live Cesium viewer/catalog.
+ * @see getPublicCameraState
+ */
+export function _getPublicCameraStateForTest(camera, activeId = null) {
+  return getPublicCameraState({ camera, calDirty: false }, activeId);
 }
 
 /**

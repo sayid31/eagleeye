@@ -21,8 +21,12 @@ import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 import cctvLayer, {
   CCTV_PROJECTION_OVERLAY_SOURCE_OPTIONS,
+  _buildCatalogFromSourcesForTest,
   _createCctvProjectionPlaneForTest,
   _extractPickedCameraIdForTest,
+  _getPublicCameraStateForTest,
+  _isVideoFeedTypeForTest,
+  _normalizeFeedTypeForTest,
   _updateCctvProjectionPlaneForTest,
   _setCctvCoverageStateForTest,
   _pushAmbientCardEntriesForTest,
@@ -1349,4 +1353,107 @@ test('cctvLayer.init merges seeds into the live-source catalog instead of an all
     /catalogFromSources\.length\s*\?\s*catalogFromSources\s*:\s*seedCatalog\(\)/,
     'the old all-or-nothing ternary must be gone',
   );
+});
+
+// normalizeFeedType / isVideoFeedType — 'hls' coverage added for the
+// Indonesia unofficial live-streaming pack (Jakarta/Bandung/Denpasar HLS
+// sources). See src/server/hlsManifestProxy.mjs for the matching
+// server-side manifest-rewrite proxy.
+test("normalizeFeedType: 'hls' passes through unchanged", () => {
+  assert.equal(_normalizeFeedTypeForTest('hls'), 'hls');
+});
+
+test("normalizeFeedType: 'stream' aliases to 'hls'", () => {
+  assert.equal(_normalizeFeedTypeForTest('stream'), 'hls');
+});
+
+test("normalizeFeedType: 'HLS' (mixed case) normalizes to lowercase 'hls'", () => {
+  assert.equal(_normalizeFeedTypeForTest('HLS'), 'hls');
+});
+
+test("isVideoFeedType: 'hls' requires a <video> element like mp4/webm", () => {
+  assert.equal(_isVideoFeedTypeForTest('hls'), true);
+});
+
+test("isVideoFeedType: 'image' does not require a <video> element", () => {
+  assert.equal(_isVideoFeedTypeForTest('image'), false);
+});
+
+// buildCatalogFromSources — unofficial-hls-id source rows (Indonesia live
+// streaming pack). Confirms sourceKind/feedType/feedConfigured land on the
+// built camera object exactly as the UNOFFICIAL badge (cctvPanelMixin.js
+// _syncCctvSourceBadge) and hls.js wiring (createProjectionRuntime) depend on.
+test('buildCatalogFromSources: an unofficial-hls-id row carries sourceKind/feedType/feedConfigured through', () => {
+  const rawSources = [
+    {
+      id: 'jakarta-unofficial-gatot-subroto-jpo-02',
+      name: 'JPO Jl. Gatot Subroto (Live — Unofficial)',
+      city: 'Jakarta',
+      cityId: 'jakarta',
+      provider: 'UNOFFICIAL — Jakarta Smart City (Internal Demo Only)',
+      sourceKind: 'unofficial-hls-id',
+      feedType: 'hls',
+      url: 'https://dki-jkt.balitower.co.id:7028/CAM1/index.fmp4.m3u8',
+      lat: -6.2367,
+      lon: 106.8106,
+      headingDeg: 90,
+      headingConfidence: 'low',
+    },
+  ];
+  const catalog = _buildCatalogFromSourcesForTest(rawSources);
+  assert.equal(catalog.length, 1);
+  const [camera] = catalog;
+  assert.equal(camera.sourceKind, 'unofficial-hls-id');
+  assert.equal(camera.feedType, 'hls');
+  assert.equal(camera.feedConfigured, true, 'a populated url must mark the feed as configured');
+  assert.equal(camera.provider, 'UNOFFICIAL — Jakarta Smart City (Internal Demo Only)');
+});
+
+test('buildCatalogFromSources: feedConfigured is false when no url is set', () => {
+  const rawSources = [
+    { id: 'no-url-cam', city: 'Jakarta', cityId: 'jakarta', lat: -6.2, lon: 106.8, feedType: 'hls' },
+  ];
+  const catalog = _buildCatalogFromSourcesForTest(rawSources);
+  assert.equal(catalog[0].feedConfigured, false);
+});
+
+// getPublicCameraState.frameUrl — regression for the "status degraded semua"
+// report on the Indonesia HLS cameras. Video/HLS cameras have no still-image
+// candidate server-side (/api/cctv/frame/:id always falls through to a
+// Street View/synthetic fallback for them), and that fallback unconditionally
+// overwrites the shared per-camera health status back to 'degraded' — even
+// while /api/cctv/media/:id has the live stream healthy (status 'ok'). The
+// panel's still-image preview (_cctvFrame in cctvPanelMixin.js) polls
+// activeCamera.frameUrl on every UI refresh, so as long as a video camera
+// exposes a frameUrl, its badge status keeps flapping back to DEGRADED. The
+// fix: getPublicCameraState omits frameUrl entirely for video-type cameras.
+test('getPublicCameraState: frameUrl is null for a video/HLS camera (no still-image endpoint to poll)', () => {
+  const [camera] = _buildCatalogFromSourcesForTest([{
+    id: 'jakarta-unofficial-gatot-subroto-jpo-02',
+    city: 'Jakarta',
+    cityId: 'jakarta',
+    sourceKind: 'unofficial-hls-id',
+    feedType: 'hls',
+    url: 'https://dki-jkt.balitower.co.id:7028/CAM1/index.fmp4.m3u8',
+    lat: -6.2367,
+    lon: 106.8106,
+  }]);
+  const state = _getPublicCameraStateForTest(camera);
+  assert.equal(state.frameUrl, null);
+  assert.match(state.mediaUrl, /^\/api\/cctv\/media\/jakarta-unofficial-gatot-subroto-jpo-02\?/);
+});
+
+test('getPublicCameraState: frameUrl is populated for a still-image camera', () => {
+  const [camera] = _buildCatalogFromSourcesForTest([{
+    id: 'austin-cam-1',
+    city: 'Austin',
+    cityId: 'austin',
+    sourceKind: 'configured',
+    feedType: 'image',
+    url: 'https://example.invalid/snapshot.jpg',
+    lat: 30.27,
+    lon: -97.74,
+  }]);
+  const state = _getPublicCameraStateForTest(camera);
+  assert.match(state.frameUrl, /^\/api\/cctv\/frame\/austin-cam-1\?/);
 });
