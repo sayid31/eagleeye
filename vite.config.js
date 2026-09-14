@@ -42,6 +42,11 @@ import {
   isOverBudget as isTomTomOverBudget,
 } from './src/data/tomtomTiles.js';
 import { filterTrailing24h, parseFirmsCsv } from './src/data/firmsCsv.js';
+import {
+  rewriteHlsManifest,
+  isManifestContentType,
+  isAllowedRelOrigin,
+} from './src/server/hlsManifestProxy.mjs';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
 import { defineConfig, loadEnv } from 'vite';
@@ -3477,6 +3482,11 @@ function isVideoFeedType(feedType) {
 // ---------------------------------------------------------------------------
 /** Path to the optional static CCTV source list (JSON array). */
 const DEFAULT_CCTV_SOURCE_FILE = 'config/cctv_sources.austin.json';
+/** UNOFFICIAL — internal-demo-only Indonesia camera pack (see file header
+ * comment + DATA_SOURCES.md). Revoke by deleting this file or setting
+ * CCTV_INDONESIA_UNOFFICIAL_ENABLED=0 — do not delete this constant/loader
+ * without also removing the disclosure in DATA_SOURCES.md/CHANGELOG.md. */
+const DEFAULT_CCTV_INDONESIA_UNOFFICIAL_FILE = 'config/cctv_sources.indonesia_unofficial.json';
 /** Austin Open Data portal endpoint for traffic camera records. */
 const DEFAULT_AUSTIN_ROWS_URL = 'https://data.austintexas.gov/api/views/b4k4-adkb/rows.json?accessType=DOWNLOAD';
 /** Default cap on Austin cameras after distance-based prioritization. */
@@ -3581,6 +3591,45 @@ function loadSourcesFromEnv() {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch {
+    return [];
+  }
+}
+
+/**
+ * UNOFFICIAL SOURCE PACK — internal demo only, NOT for public/commercial
+ * deployment. Loads a small, hardcoded set of Indonesian city cameras whose
+ * HLS manifest URLs were reverse-engineered via manual browser network
+ * inspection of public city-government CCTV portals (Jakarta Smart City,
+ * Bandung Dishub ATCS, Denpasar ATCS). There is no formal data-sharing
+ * agreement with any of these city governments. See
+ * config/cctv_sources.indonesia_unofficial.json (per-camera `license` field)
+ * and DATA_SOURCES.md for the full disclosure.
+ *
+ * Deliberately independent of loadSourcesFromFile()/CCTV_SOURCES_FILE so it
+ * can never flip `needsLiveSources` off and silently disable the
+ * Austin/Caltrans/TfL live open-data packs in refreshCctvSources().
+ *
+ * Revocation levers (either is sufficient):
+ *   - set CCTV_INDONESIA_UNOFFICIAL_ENABLED=0
+ *   - delete config/cctv_sources.indonesia_unofficial.json (or the file
+ *     pointed to by CCTV_INDONESIA_UNOFFICIAL_FILE)
+ *
+ * @returns {Array<object>} Array of raw source objects, or [] if disabled/missing/invalid.
+ */
+function loadIndonesiaUnofficialSources() {
+  const enabled = String(process.env.CCTV_INDONESIA_UNOFFICIAL_ENABLED || '1').trim() !== '0';
+  if (!enabled) return [];
+  const sourceFile = process.env.CCTV_INDONESIA_UNOFFICIAL_FILE || DEFAULT_CCTV_INDONESIA_UNOFFICIAL_FILE;
+  const resolved = path.isAbsolute(sourceFile)
+    ? sourceFile
+    : path.resolve(__dirname, sourceFile);
+  try {
+    if (!fs.existsSync(resolved)) return [];
+    const raw = fs.readFileSync(resolved, 'utf8');
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('[CCTV] failed to read Indonesia unofficial source file:', resolved, error?.message || error);
     return [];
   }
 }
@@ -4196,6 +4245,10 @@ async function getCctvSources() {
 async function refreshCctvSources() {
   const fromFile = loadSourcesFromFile();
   const fromEnv = loadSourcesFromEnv();
+  // UNOFFICIAL — internal demo only; always loaded independent of the
+  // needsLiveSources gate below so it never disables the Austin/Caltrans/TfL
+  // live packs. See loadIndonesiaUnofficialSources() for revocation levers.
+  const fromIndonesiaUnofficial = loadIndonesiaUnofficialSources();
 
   const forceAustin = String(process.env.CCTV_FORCE_AUSTIN || '').trim() === '1';
   const preferAustin = String(process.env.CCTV_PREFER_AUSTIN || '1').trim() !== '0';
@@ -4219,7 +4272,7 @@ async function refreshCctvSources() {
     fromTfl = tflResult.status === 'fulfilled' ? tflResult.value : [];
   }
   // Live sources first so file/env overrides win on duplicate IDs (Map last-write).
-  const merged = [...fromAustin, ...fromCaltrans, ...fromTfl, ...fromFile, ...fromEnv];
+  const merged = [...fromAustin, ...fromCaltrans, ...fromTfl, ...fromFile, ...fromEnv, ...fromIndonesiaUnofficial];
 
   // Deduplicate by camera ID (last-write wins because of Map.set)
   const byId = new Map();
@@ -4603,6 +4656,63 @@ function cctvProxy() {
             return;
           }
 
+          // /media/:id/rel?p=<encoded absolute upstream URL> — sub-resource
+          // route for nested HLS manifest/segment references (see
+          // src/server/hlsManifestProxy.mjs header comment). Only ever
+          // fetches a URL whose origin matches the camera's own registered
+          // source.url (isAllowedRelOrigin — SSRF guard), so the client
+          // never gets to pick an arbitrary upstream host.
+          if (url.pathname.startsWith('/media/') && url.pathname.endsWith('/rel')) {
+            const cameraId = decodeURIComponent(
+              url.pathname.replace('/media/', '').replace(/\/rel$/, '').trim(),
+            ) || 'camera';
+            const source = sourceById.get(cameraId);
+            const relUrl = url.searchParams.get('p') || '';
+
+            if (!source || !isAllowedRelOrigin(relUrl, source?.url || '')) {
+              res.writeHead(404, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+              res.end(JSON.stringify({ error: 'Invalid or disallowed sub-resource URL' }));
+              return;
+            }
+
+            try {
+              const upstreamHeaders = { 'User-Agent': 'gods-eye-view-cctv-proxy/1.0' };
+              const requestRange = req.headers?.range;
+              if (requestRange) upstreamHeaders.Range = requestRange;
+              const upstream = await fetch(relUrl, { headers: upstreamHeaders });
+              if (!upstream.ok) {
+                res.writeHead(upstream.status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ error: `Upstream returned ${upstream.status}` }));
+                return;
+              }
+
+              const contentType = upstream.headers.get('content-type') || '';
+              if (isManifestContentType(contentType, relUrl)) {
+                const CCTV_MANIFEST_MAX_BYTES = 512 * 1024;
+                const { tooLarge, text } = await readCappedResponseText(upstream, CCTV_MANIFEST_MAX_BYTES);
+                if (tooLarge) {
+                  res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                  res.end(JSON.stringify({ error: 'Upstream manifest exceeds size cap' }));
+                  return;
+                }
+                const rewritten = rewriteHlsManifest(text, relUrl, cameraId);
+                res.writeHead(200, {
+                  'Content-Type': 'application/vnd.apple.mpegurl',
+                  'Cache-Control': 'no-store',
+                });
+                res.end(rewritten);
+                return;
+              }
+
+              await proxyMediaResponse(res, upstream, { sourceHeader: 'live-media-rel' });
+              return;
+            } catch (error) {
+              res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+              res.end(JSON.stringify({ error: error?.message || 'Sub-resource proxy failed' }));
+              return;
+            }
+          }
+
           if (url.pathname.startsWith('/media/')) {
             const cameraId = decodeURIComponent(url.pathname.replace('/media/', '').trim()) || 'camera';
             const source = sourceById.get(cameraId);
@@ -4655,6 +4765,28 @@ function cctvProxy() {
                   label: source?.provider || 'Configured source',
                   message: isVideoFeedType(feedType) ? 'Live stream connected' : 'Snapshot feed connected',
                 });
+              }
+
+              // Manifest responses (feedType 'hls', or any content-type/path
+              // that looks like an .m3u8) must be rewritten rather than
+              // piped byte-for-byte — a raw pipe leaves relative sub-playlist
+              // /segment references resolving against OUR origin instead of
+              // upstream, breaking playback. See src/server/hlsManifestProxy.mjs.
+              if (isManifestContentType(contentType, mediaUrl)) {
+                const CCTV_MANIFEST_MAX_BYTES = 512 * 1024;
+                const { tooLarge, text } = await readCappedResponseText(upstream, CCTV_MANIFEST_MAX_BYTES);
+                if (tooLarge) {
+                  res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                  res.end(JSON.stringify({ error: 'Upstream manifest exceeds size cap' }));
+                  return;
+                }
+                const rewritten = rewriteHlsManifest(text, mediaUrl, cameraId);
+                res.writeHead(200, {
+                  'Content-Type': 'application/vnd.apple.mpegurl',
+                  'Cache-Control': 'no-store',
+                });
+                res.end(rewritten);
+                return;
               }
 
               await proxyMediaResponse(res, upstream, {

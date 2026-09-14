@@ -2210,6 +2210,7 @@ export class StyleManager {
     this._cctvCalibSaveBtn = document.getElementById('cctv-calib-save-btn');
     this._cctvCalibResetBtn = document.getElementById('cctv-calib-reset-btn');
     this._cctvFrame = document.getElementById('cctv-frame');
+    this._cctvFrameVideo = document.getElementById('cctv-frame-video');
     this._cctvFrameWrap = document.getElementById('cctv-frame-wrap');
     this._cctvFrameRequestToken = 0;
     this._cctvFramePreloader = null;

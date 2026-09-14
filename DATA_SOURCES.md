@@ -38,6 +38,23 @@ How to read this:
 | **Radio Browser** | Geolocated internet-radio station directory and station-level tags | Public-domain directory data under PDDL 1.0; individual broadcaster stream terms apply | "Radio Browser" plus a link to the selected broadcaster |
 | **Re:Earth Terrain** (Mapterhorn) | Terrain (keyless globe stacks — OSM etc. — + `/api/terrain/heights` ellipsoidal-height lookups) | Terrain mesh: CC BY 4.0; geoid: EGM2008 (NGA, public domain) | "Terrain (keyless globe stacks): Re:Earth Terrain / Mapterhorn (CC BY 4.0) / EGM2008 (NGA)" |
 
+### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar)
+
+5 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+video reverse-engineered via manual browser network inspection of public
+city CCTV portals (`jakcctv.jakarta.go.id`, `atcs-dishub.bandung.go.id`,
+`atcs.denpasarkota.go.id`). **Unlike every other row in this table, there is
+no open-data program, published ToS, or formal agreement with DKI Jakarta,
+Bandung Dishub, or Denpasar ATCS covering this use.** This pack exists for
+one internal demo and is explicitly **not vetted for public or commercial
+deployment or redistribution**. The UI always shows a
+`⚠ UNOFFICIAL SOURCE` badge on these cameras (never folds into the generic
+status badge), and every row's `license` field repeats this disclaimer.
+Revoke instantly via `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0` or by deleting
+`config/cctv_sources.indonesia_unofficial.json` (or the file named by
+`CCTV_INDONESIA_UNOFFICIAL_FILE`) — see `docs/CURRENT-STATE.md` § CCTV for
+the manifest-proxy design.
+
 ### Notes on the live sources
 
 - **Google Maps Platform.** You supply your own API key and are bound by [Google's ToS](https://cloud.google.com/maps-platform/terms). Google Maps Content (tiles, geocodes, places) **may not be cached, stored, rehosted, or committed** — this app only ever uses it live, which is the compliant pattern. The "Google" attribution is displayed on the globe and must stay visible. Restrict your key (see [SECURITY.md](SECURITY.md)).

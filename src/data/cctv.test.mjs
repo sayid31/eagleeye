@@ -21,8 +21,13 @@ import { fileURLToPath } from 'node:url';
 import * as Cesium from 'cesium';
 import cctvLayer, {
   CCTV_PROJECTION_OVERLAY_SOURCE_OPTIONS,
+  _buildCatalogFromSourcesForTest,
   _createCctvProjectionPlaneForTest,
   _extractPickedCameraIdForTest,
+  _getPublicCameraStateForTest,
+  _isVideoFeedTypeForTest,
+  _normalizeFeedTypeForTest,
+  _rebuildVideoPlaneMaterialForTest,
   _updateCctvProjectionPlaneForTest,
   _setCctvCoverageStateForTest,
   _pushAmbientCardEntriesForTest,
@@ -67,6 +72,7 @@ import {
   CCTV_FOCUS_REQUEST_EVENT,
   activateCctvCameraFromWorldClick,
 } from '../cctvFocusRequest.js';
+import { viewshedColors } from './cctvViewshed.js';
 
 const UI_SOURCE = fs.readFileSync(
   path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'ui.js'),
@@ -595,6 +601,122 @@ test('real active monitor plane owns one protected host label and no native labe
     ]);
   } finally {
     _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('Viewshed mode skips the active camera\'s fill volume while its monitor plane is showing, so the live feed is never occluded', () => {
+  // Regression for owner report 2026-09-14: Bandung "Buahbatu" rendered solid
+  // red instead of live video with VIEWSHED ON — the active camera's own fill
+  // volume is welded to the same far-cap corners as the monitor plane, so its
+  // cull-disabled translucent faces stacked opaque over the live texture.
+  const added = [];
+  const viewer = {
+    ...makeDeselectViewer(),
+    scene: {
+      canvas: { clientWidth: 1200, clientHeight: 800 },
+      cartesianToCanvasCoordinates: () => undefined,
+      primitives: {
+        add: (primitive) => { added.push(primitive); return primitive; },
+        remove: () => true,
+      },
+      requestRender() {},
+    },
+  };
+  const active = { ...makeDeselectRecord('active-viewshed'), viewshedColors: viewshedColors(0) };
+  const idle = { ...makeDeselectRecord('idle-viewshed', 1), viewshedColors: viewshedColors(120) };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    _createCctvProjectionPlaneForTest(viewer, active);
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [active, idle],
+      activeCameraId: active.camera.id,
+      enabled: true,
+      coverageMode: 'viewshed',
+      showProjection: true,
+    });
+    refreshCoverageStyles();
+
+    assert.ok(!active.viewshedPrimitive, 'active camera with a live plane gets no fill volume');
+    assert.equal(active.projection.planeEntity.show, true, 'the monitor plane itself is unaffected');
+    assert.ok(idle.viewshedPrimitive, 'idle cameras keep their normal viewshed fill volume');
+    assert.ok(
+      added.every((primitive) => primitive._gevViewshed !== active.camera.id),
+      'no fill-volume primitive was ever added for the active camera',
+    );
+
+    // Deactivating (no plane showing) restores the active camera's own fill
+    // volume — the exclusion is plane-visibility-gated, not identity-gated.
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [active, idle],
+      activeCameraId: active.camera.id,
+      enabled: true,
+      coverageMode: 'viewshed',
+      showProjection: false,
+    });
+    refreshCoverageStyles();
+    assert.ok(active.viewshedPrimitive, 'without a showing plane, the active camera gets its fill volume back');
+  } finally {
+    _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('video-mode monitor plane rebuilds its GPU texture material when the decoded frame size changes', () => {
+  // Regression for owner report 2026-09-14: after the Viewshed occlusion fix
+  // above, the active camera's plane still didn't show live video — it went
+  // solid BLACK instead. Root cause (confirmed via a live browser diagnostic
+  // session): Cesium's ImageMaterialProperty only builds a fresh GPU texture
+  // when the bound HTMLVideoElement's *identity* changes, not when its
+  // decoded videoWidth/videoHeight changes mid-stream — a later HLS segment
+  // decoding at a different size than the first (observed on these
+  // unofficial feeds: non-16:9 sizes like 704x576/640x480) leaves every
+  // subsequent texture upload silently failing
+  // (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level
+  // of the destination texture must be defined`). The 2D panel's canvas
+  // mirror is unaffected (drawImage auto-scales), which is exactly the
+  // "2D live, 3D black" asymmetry reported.
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.video = { videoWidth: 0, videoHeight: 0 };
+    runtime.videoTextureW = 0;
+    runtime.videoTextureH = 0;
+
+    // No decoded frame yet — nothing to rebuild against.
+    const initialMaterial = runtime.planeMaterial;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial, initialMaterial, 'no rebuild while videoWidth/Height are unknown (0)');
+
+    // First real decoded frame arrives at 704x576 (Bandung "Buahbatu" shape).
+    runtime.video.videoWidth = 704;
+    runtime.video.videoHeight = 576;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    const firstMaterial = runtime.planeMaterial;
+    assert.notEqual(firstMaterial, initialMaterial, 'first known frame size builds a fresh material');
+    assert.equal(runtime.planeEntity.plane.material, firstMaterial, 'plane entity is rebound to the new material');
+    assert.equal(runtime.videoTextureW, 704);
+    assert.equal(runtime.videoTextureH, 576);
+
+    // Same size again on the next tick — must NOT rebuild (would defeat the
+    // whole point: constant per-tick material churn is itself a flash risk).
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial, firstMaterial, 'unchanged decoded size does not rebuild the material');
+
+    // A later segment decodes at a different size — this is the exact case
+    // that left the plane black. Must rebuild again.
+    runtime.video.videoWidth = 640;
+    runtime.video.videoHeight = 480;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.notEqual(runtime.planeMaterial, firstMaterial, 'a decoded-size change rebuilds the material again');
+    assert.equal(runtime.planeEntity.plane.material, runtime.planeMaterial);
+    assert.equal(runtime.videoTextureW, 640);
+    assert.equal(runtime.videoTextureH, 480);
+  } finally {
     _setCctvOverlayHostForTest();
   }
 });
@@ -1349,4 +1471,107 @@ test('cctvLayer.init merges seeds into the live-source catalog instead of an all
     /catalogFromSources\.length\s*\?\s*catalogFromSources\s*:\s*seedCatalog\(\)/,
     'the old all-or-nothing ternary must be gone',
   );
+});
+
+// normalizeFeedType / isVideoFeedType — 'hls' coverage added for the
+// Indonesia unofficial live-streaming pack (Jakarta/Bandung/Denpasar HLS
+// sources). See src/server/hlsManifestProxy.mjs for the matching
+// server-side manifest-rewrite proxy.
+test("normalizeFeedType: 'hls' passes through unchanged", () => {
+  assert.equal(_normalizeFeedTypeForTest('hls'), 'hls');
+});
+
+test("normalizeFeedType: 'stream' aliases to 'hls'", () => {
+  assert.equal(_normalizeFeedTypeForTest('stream'), 'hls');
+});
+
+test("normalizeFeedType: 'HLS' (mixed case) normalizes to lowercase 'hls'", () => {
+  assert.equal(_normalizeFeedTypeForTest('HLS'), 'hls');
+});
+
+test("isVideoFeedType: 'hls' requires a <video> element like mp4/webm", () => {
+  assert.equal(_isVideoFeedTypeForTest('hls'), true);
+});
+
+test("isVideoFeedType: 'image' does not require a <video> element", () => {
+  assert.equal(_isVideoFeedTypeForTest('image'), false);
+});
+
+// buildCatalogFromSources — unofficial-hls-id source rows (Indonesia live
+// streaming pack). Confirms sourceKind/feedType/feedConfigured land on the
+// built camera object exactly as the UNOFFICIAL badge (cctvPanelMixin.js
+// _syncCctvSourceBadge) and hls.js wiring (createProjectionRuntime) depend on.
+test('buildCatalogFromSources: an unofficial-hls-id row carries sourceKind/feedType/feedConfigured through', () => {
+  const rawSources = [
+    {
+      id: 'jakarta-unofficial-gatot-subroto-jpo-02',
+      name: 'JPO Jl. Gatot Subroto (Live — Unofficial)',
+      city: 'Jakarta',
+      cityId: 'jakarta',
+      provider: 'UNOFFICIAL — Jakarta Smart City (Internal Demo Only)',
+      sourceKind: 'unofficial-hls-id',
+      feedType: 'hls',
+      url: 'https://dki-jkt.balitower.co.id:7028/CAM1/index.fmp4.m3u8',
+      lat: -6.2367,
+      lon: 106.8106,
+      headingDeg: 90,
+      headingConfidence: 'low',
+    },
+  ];
+  const catalog = _buildCatalogFromSourcesForTest(rawSources);
+  assert.equal(catalog.length, 1);
+  const [camera] = catalog;
+  assert.equal(camera.sourceKind, 'unofficial-hls-id');
+  assert.equal(camera.feedType, 'hls');
+  assert.equal(camera.feedConfigured, true, 'a populated url must mark the feed as configured');
+  assert.equal(camera.provider, 'UNOFFICIAL — Jakarta Smart City (Internal Demo Only)');
+});
+
+test('buildCatalogFromSources: feedConfigured is false when no url is set', () => {
+  const rawSources = [
+    { id: 'no-url-cam', city: 'Jakarta', cityId: 'jakarta', lat: -6.2, lon: 106.8, feedType: 'hls' },
+  ];
+  const catalog = _buildCatalogFromSourcesForTest(rawSources);
+  assert.equal(catalog[0].feedConfigured, false);
+});
+
+// getPublicCameraState.frameUrl — regression for the "status degraded semua"
+// report on the Indonesia HLS cameras. Video/HLS cameras have no still-image
+// candidate server-side (/api/cctv/frame/:id always falls through to a
+// Street View/synthetic fallback for them), and that fallback unconditionally
+// overwrites the shared per-camera health status back to 'degraded' — even
+// while /api/cctv/media/:id has the live stream healthy (status 'ok'). The
+// panel's still-image preview (_cctvFrame in cctvPanelMixin.js) polls
+// activeCamera.frameUrl on every UI refresh, so as long as a video camera
+// exposes a frameUrl, its badge status keeps flapping back to DEGRADED. The
+// fix: getPublicCameraState omits frameUrl entirely for video-type cameras.
+test('getPublicCameraState: frameUrl is null for a video/HLS camera (no still-image endpoint to poll)', () => {
+  const [camera] = _buildCatalogFromSourcesForTest([{
+    id: 'jakarta-unofficial-gatot-subroto-jpo-02',
+    city: 'Jakarta',
+    cityId: 'jakarta',
+    sourceKind: 'unofficial-hls-id',
+    feedType: 'hls',
+    url: 'https://dki-jkt.balitower.co.id:7028/CAM1/index.fmp4.m3u8',
+    lat: -6.2367,
+    lon: 106.8106,
+  }]);
+  const state = _getPublicCameraStateForTest(camera);
+  assert.equal(state.frameUrl, null);
+  assert.match(state.mediaUrl, /^\/api\/cctv\/media\/jakarta-unofficial-gatot-subroto-jpo-02\?/);
+});
+
+test('getPublicCameraState: frameUrl is populated for a still-image camera', () => {
+  const [camera] = _buildCatalogFromSourcesForTest([{
+    id: 'austin-cam-1',
+    city: 'Austin',
+    cityId: 'austin',
+    sourceKind: 'configured',
+    feedType: 'image',
+    url: 'https://example.invalid/snapshot.jpg',
+    lat: 30.27,
+    lon: -97.74,
+  }]);
+  const state = _getPublicCameraStateForTest(camera);
+  assert.match(state.frameUrl, /^\/api\/cctv\/frame\/austin-cam-1\?/);
 });
