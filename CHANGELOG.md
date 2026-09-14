@@ -39,6 +39,43 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Indonesia unofficial HLS cameras' 3D monitor plane no longer goes solid
+  BLACK instead of live video (a separate bug from the Viewshed-occlusion
+  fix below, which only addressed the plane being COVERED by a colored
+  block — this one is the plane's own texture never updating at all). Root
+  cause, confirmed via a live browser diagnostic session: Cesium's
+  `ImageMaterialProperty` rebuilds its GPU texture only when the bound
+  `HTMLVideoElement`'s *identity* changes, not when the video's decoded
+  `videoWidth`/`videoHeight` changes mid-stream. These unofficial,
+  reverse-engineered feeds do not guarantee a constant decoded frame size
+  across HLS segments (observed non-16:9 sizes on the Bandung sources, e.g.
+  704×576 then 640×480) — once a segment decodes at a different size than
+  the one the texture was originally built at, every subsequent
+  `copyFrom` texture upload silently fails
+  (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level of
+  the destination texture must be defined`), freezing the plane on its last
+  successfully-uploaded frame or leaving it black if that never happened.
+  The 2D panel's canvas mirror was unaffected (`drawImage` auto-scales any
+  source size to the fixed canvas), which is why the 2D preview stayed live
+  while the 3D plane went dark. Fix: `drawProjectionFrame()`
+  (`src/data/cctv.js`) now calls `rebuildVideoPlaneMaterial()` every
+  projection tick, which tracks the decoded size the plane's current
+  material was built at and, on a change, hands the plane a fresh
+  `ImageMaterialProperty` instance bound to the same video element — forcing
+  Cesium to treat it as a new bind and rebuild the texture at the new size.
+- Indonesia unofficial HLS cameras' 3D monitor plane no longer renders as a
+  solid hue-colored block (e.g. red for Bandung "Buahbatu") instead of live
+  video when Viewshed coverage mode is on. Root cause: Viewshed mode's
+  translucent per-camera fill volume (`createFrustumVolumePrimitive`) is
+  welded to the exact same far-cap corners as the monitor plane, and renders
+  with `cull: { enabled: false }` (both faces visible) — for the active
+  camera, that fill sat directly over the plane's live video texture and,
+  viewed from most angles, read as fully opaque. Fix: `refreshCoverageStyles()`
+  (`src/data/cctv.js`) now skips building a fill volume for the active
+  camera specifically while its monitor plane is showing; the hue-tinted
+  wireframe (which doesn't occlude anything) still renders, so Viewshed
+  mode's per-camera coverage-color identity is preserved for every other
+  camera and restored for this one the moment its plane is hidden again.
 - Indonesia unofficial HLS cameras' status badge no longer reads DEGRADED
   while their live stream is actually healthy. Root cause: the server-side
   health record (`vite.config.js`) is a single map keyed by camera id, shared
@@ -69,6 +106,30 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   unions both catalogs by camera id (live source wins on an id collision),
   so seed-only cities keep their coverage alongside successfully-loaded live
   cameras instead of being replaced by them.
+- Indonesia unofficial HLS cameras (Jakarta especially) no longer freeze on
+  a single stale frame after a few seconds of playback, and the CCTV panel's
+  2D preview no longer goes solid black for these cameras. Root cause,
+  confirmed by direct upstream timing measurements: the unofficial Jakarta
+  source (`dki-jkt.balitower.co.id`) is itself capacity-constrained —
+  measured segment download times ranged 1–14s against ~7.5s segment
+  duration, both through our proxy and fetched directly from the upstream,
+  so hls.js was starving for segments and freezing on the last decoded
+  frame; on a fatal error it then destroyed the player outright instead of
+  attempting recovery. The 2D panel went black separately as a side effect
+  of the DEGRADED-badge fix above: video/HLS cameras have no `frameUrl` to
+  poll, but the panel had no `<video>` element to show their live decoded
+  frames either. Fix: `attachHlsJs()` (`src/data/cctv.js`) now runs a
+  bounded network/media-error recovery loop (`hls.startLoad()` /
+  `hls.recoverMediaError()`, reset on the next successful `FRAG_BUFFERED`)
+  before falling back to a full `hls.destroy()`, and raises
+  `liveSyncDurationCount` from hls.js's default of 3 to 5 segments of
+  buffer headroom against the upstream's own inconsistent segment timing.
+  The 2D panel gained a `<video>` element (`index.html`) that mirrors the
+  3D monitor plane's already-decoded frames via
+  `canvas.captureStream()` (`getProjectionMirrorStream()` in
+  `src/data/cctv.js`, wired through `_syncCctvVideoMirror()` in
+  `src/cctvPanelMixin.js`) rather than opening a second hls.js connection
+  to the same rate-limited unofficial upstream.
 - HUD summary's "NEAR &lt;landmark&gt;" locality tag no longer matches
   landmarks up to 150km away. `NEAR_POI_MAX_KM` (`src/hudLocality.js`)
   tightened 150km → 50km after a report of the HUD reading "NEAR PURA ULUN

@@ -1610,7 +1610,7 @@ its criteria cannot be silently ignored.
 | Satellites | CelesTrak | `src/data/satellites.js` | `/api/celestrak` | 120s |
 | Space Missions (30d) | Launch Library 2 + CelesTrak | `src/data/rocketLaunches.js` | `/api/launches` + `/api/celestrak/active` | 5 min |
 | Traffic | OSM Overpass (+ optional TomTom live flow) | `src/data/traffic.js` | `/api/overpass` + `/api/tomtom` | viewport-driven |
-| CCTV | Austin + Caltrans (CA) + TfL London Open Data + Street View fallback | `src/data/cctv.js` | `/api/cctv` | 10s (active) |
+| CCTV | Austin + Caltrans (CA) + TfL London Open Data + Street View fallback + 5-camera **unofficial** Indonesia HLS pack (see below) | `src/data/cctv.js` | `/api/cctv` | 10s (active) |
 | Radio | Radio Browser (public-domain station directory) | `src/data/radio.js` | `/api/radio/stations`, `/api/radio/click/:uuid` | 45 min directory refresh |
 | Bikeshare 🚲 | GBFS (Lyft + BCycle) | `src/data/bikeshare.js` | `/api/gbfs` | 60s |
 | Datacenters ▣ | OSM extract (bundled) | `src/data/localLayers.js` | — | static |
@@ -1971,6 +1971,12 @@ silently demoting every later lookup for the session.
   tri-state cycle `OFF → ON → VIEWSHED`; viewshed mode renders each visible camera's frustum
   as a translucent **color-coded volume** (golden-angle hue per camera, `cctvViewshed.js`)
   welded to the same 5 points as the wireframe — zero new scene queries or update cadences.
+  **Exception (2026-09-14):** the active camera's own fill volume is skipped while its
+  monitor plane is showing — the fill is welded to the same far-cap corners as the plane and
+  renders both faces (`cull: { enabled: false }`), so it otherwise sits opaque over the live
+  video texture (reported: Bandung "Buahbatu" rendering solid red instead of its feed). The
+  hue-tinted wireframe still renders for the active camera in this state, so the coverage-color
+  identity isn't lost, just the occluding fill.
   The 7 calibration sliders are **deleted**: ADJUST mode puts a direct-manipulation **gizmo**
   on the active camera (`cctvGizmo.js` — heading/pitch rings, E/N/U arrows, range handle at
   the cap center, FOV handles on the cap edges; all 7 offset DOF), plus a click-to-edit
@@ -2261,6 +2267,95 @@ silently demoting every later lookup for the session.
   pathological field and 5,200-object normal field without relaxing budgets.
 - `src/data/detectionDraw.js` performs the batched, DPI-crisp canvas drawing for tier-colored labels, corner brackets, callouts, and distance-scaled tracked boxes. Unit tests cover label measurement and draw geometry.
 - `src/data/trackedReadout.js` publishes a protected shared-host callout above tracked aircraft and satellites or selected mapped installations. It reads only each layer's cached display position—never a fresh entity position evaluation—preventing readout jitter against the rendered target. AIS selection remains in the vessel source's protected card path.
+
+### CCTV — Indonesia unofficial live HLS pack (internal demo only)
+
+- 5 hardcoded cameras — Jakarta (1), Bandung (3: Samsat/Buahbatu/Pasteur),
+  Denpasar (1) — configured in
+  `config/cctv_sources.indonesia_unofficial.json`, loaded independently of
+  every other CCTV pack by `loadIndonesiaUnofficialSources()`
+  (`vite.config.js`) so it can never disable the Austin/Caltrans/TfL live
+  open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
+  **Static config only — no auto-discovery or crawling of Indonesian ATCS
+  portals; adding another city means manually adding another row.**
+- **UNOFFICIAL, not for public/commercial deployment**: stream URLs were
+  reverse-engineered via manual browser network inspection of public city
+  CCTV portals. There is no formal data-sharing agreement with DKI Jakarta,
+  Bandung Dishub, or Denpasar ATCS. See `DATA_SOURCES.md` for the full
+  disclosure and each row's `license` field for the per-camera text.
+- All 3 upstreams serve **multi-level relative-path HLS manifests**
+  (master playlist → sub-playlist → segments). A byte-for-byte proxy pipe
+  breaks this (relative URIs resolve against our own origin, not
+  upstream), so `src/server/hlsManifestProxy.mjs` rewrites every relative/
+  absolute URI in a manifest response to route back through a new
+  `/api/cctv/media/:id/rel?p=<absolute upstream URL>` sub-route
+  (`vite.config.js`), recursively handling nested manifests. The upstream
+  host is never exposed to the client; the `/rel` route only ever fetches a
+  URL whose origin matches the camera's own registered `source.url`
+  (`isAllowedRelOrigin` — SSRF guard).
+- Client playback: `createProjectionRuntime()` (`src/data/cctv.js`)
+  feature-detects native HLS (`video.canPlayType(...)`) and falls back to a
+  dynamically-imported `hls.js` (code-split, only loaded for non-Safari
+  browsers activating an HLS camera). `destroyProjectionRuntime()` tears
+  down the `Hls` instance before clearing `video.src`.
+- UI: the CCTV panel source badge reads `⚠ UNOFFICIAL SOURCE · <STATUS>`
+  (amber, `[data-frame-state='unofficial']` in `style.css`) for every camera
+  in this pack, and the meta line shows the config's short `provider`
+  disclaimer string automatically (`src/cctvPanelMixin.js`).
+- **Revocation** (either is sufficient): set
+  `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`, or delete
+  `config/cctv_sources.indonesia_unofficial.json` (or the file pointed to by
+  `CCTV_INDONESIA_UNOFFICIAL_FILE`).
+- **Upstream is capacity-constrained, not just latent**: direct timing
+  measurements against the Jakarta source found segment download times
+  ranging 1–14s against a ~7.5s segment duration — sometimes exceeding the
+  segment's own playback window, both through our proxy and fetched
+  directly. `attachHlsJs()` (`src/data/cctv.js`) accounts for this two ways:
+  `liveSyncDurationCount: 5` (up from hls.js's default 3) buys extra buffer
+  headroom, and the `Hls.Events.ERROR` handler runs a bounded recovery loop
+  (`hls.startLoad()` for `NETWORK_ERROR`, `hls.recoverMediaError()` for
+  `MEDIA_ERROR`, retry counters reset on the next successful
+  `FRAG_BUFFERED`) instead of destroying the player on the first fatal
+  error — these unofficial feeds fatal-error far more often than a normal
+  CDN-backed HLS source.
+- **2D panel live-video mirror**: the CCTV panel's preview pane has a
+  `<video id="cctv-frame-video">` element (`index.html`) alongside the
+  existing still-image `<img id="cctv-frame">`. For video/HLS cameras
+  (`activeCamera.isVideo`, from `getPublicCameraState()`), it's fed a
+  `MediaStream` from `cctvLayer.getProjectionMirrorStream(cameraId)`
+  (`src/data/cctv.js`) — a `canvas.captureStream(12)` of the *same*
+  offscreen projection canvas already being painted with decoded frames for
+  the 3D monitor plane, not a second hls.js/MSE connection. This is
+  deliberate: a second concurrent player per camera would double the load
+  against sources that already can't reliably serve one. Wiring lives in
+  `_syncCctvVideoMirror()`/`_clearCctvVideoMirror()`
+  (`src/cctvPanelMixin.js`); `_clearCctvFrame()` (the still-image cleanup)
+  no longer touches the mirror element, since both run every render pass
+  and the mirror must survive a render where the `<img>` path is
+  simultaneously idle. Image-feed cameras are unaffected — the mirror is a
+  no-op for them and the `<video>` element stays hidden
+  (`opacity: 0`, `#cctv-frame-video` in `style.css`).
+- **3D monitor plane going solid BLACK (fixed 2026-09-14, separate from the
+  Viewshed-occlusion issue above)**: confirmed via a live browser diagnostic
+  session that Cesium's `ImageMaterialProperty` only rebuilds its GPU texture
+  when the bound `HTMLVideoElement`'s *identity* changes — not when the
+  video's decoded `videoWidth`/`videoHeight` changes mid-stream. These
+  unofficial feeds don't guarantee a constant decoded frame size across HLS
+  segments (observed non-16:9 sizes on the Bandung sources, e.g. 704x576 then
+  640x480 on the same camera); once a later segment decodes at a different
+  size than the one the texture was originally built at, every subsequent
+  `copyFrom` texture upload silently fails
+  (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level of
+  the destination texture must be defined`), leaving the plane black/frozen
+  while the 2D panel mirror above stays live (`drawImage` auto-scales any
+  source size onto the fixed offscreen canvas, so it never hits this). Fix:
+  `rebuildVideoPlaneMaterial()` (`src/data/cctv.js`), called every projection
+  tick from `drawProjectionFrame()`'s video-mode branch, tracks the decoded
+  size the plane's current material was built at and, on a change, hands the
+  plane a brand-new `ImageMaterialProperty` bound to the same video element —
+  forcing Cesium to treat it as a fresh bind and rebuild the texture at the
+  new size. No rebuild happens when the size is unchanged, to avoid
+  unnecessary per-tick material churn.
 
 ### Not Currently in Runtime
 

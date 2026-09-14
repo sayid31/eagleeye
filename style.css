@@ -6282,6 +6282,27 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   opacity: 1;
 }
 
+/* UNOFFICIAL live-video mirror (video/HLS cameras only — see
+   cctv.js getProjectionMirrorStream, cctvPanelMixin._syncCctvVideoMirror).
+   Absolutely positioned over #cctv-frame so it never adds a second layout
+   box inside .cctv-frame-wrap (the wrap's height is still driven by the
+   <img>'s aspect-ratio box even when the <img> itself is invisible). */
+#cctv-frame-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+#cctv-frame-video.active {
+  opacity: 1;
+}
+
 #cctv-meta {
   font-family: var(--font-mono);
   font-size: 9px;
@@ -6311,6 +6332,16 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   color: #ffb0b0;
   border-color: rgba(255, 102, 102, 0.5);
   background: rgba(255, 72, 72, 0.11);
+}
+
+/* Reverse-engineered/unofficial government camera endpoints (internal demo
+   only — see DATA_SOURCES.md). Amber, distinct from the error state, so the
+   disclosure reads as "handle with care" rather than "broken". */
+#cctv-source-badge[data-frame-state='unofficial'] {
+  color: #ffcf5c;
+  border-color: rgba(255, 176, 32, 0.55);
+  background: rgba(255, 176, 32, 0.13);
+  font-weight: 600;
 }
 
 .cctv-summary-label {

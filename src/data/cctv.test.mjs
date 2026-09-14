@@ -27,6 +27,7 @@ import cctvLayer, {
   _getPublicCameraStateForTest,
   _isVideoFeedTypeForTest,
   _normalizeFeedTypeForTest,
+  _rebuildVideoPlaneMaterialForTest,
   _updateCctvProjectionPlaneForTest,
   _setCctvCoverageStateForTest,
   _pushAmbientCardEntriesForTest,
@@ -71,6 +72,7 @@ import {
   CCTV_FOCUS_REQUEST_EVENT,
   activateCctvCameraFromWorldClick,
 } from '../cctvFocusRequest.js';
+import { viewshedColors } from './cctvViewshed.js';
 
 const UI_SOURCE = fs.readFileSync(
   path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'ui.js'),
@@ -599,6 +601,122 @@ test('real active monitor plane owns one protected host label and no native labe
     ]);
   } finally {
     _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('Viewshed mode skips the active camera\'s fill volume while its monitor plane is showing, so the live feed is never occluded', () => {
+  // Regression for owner report 2026-09-14: Bandung "Buahbatu" rendered solid
+  // red instead of live video with VIEWSHED ON — the active camera's own fill
+  // volume is welded to the same far-cap corners as the monitor plane, so its
+  // cull-disabled translucent faces stacked opaque over the live texture.
+  const added = [];
+  const viewer = {
+    ...makeDeselectViewer(),
+    scene: {
+      canvas: { clientWidth: 1200, clientHeight: 800 },
+      cartesianToCanvasCoordinates: () => undefined,
+      primitives: {
+        add: (primitive) => { added.push(primitive); return primitive; },
+        remove: () => true,
+      },
+      requestRender() {},
+    },
+  };
+  const active = { ...makeDeselectRecord('active-viewshed'), viewshedColors: viewshedColors(0) };
+  const idle = { ...makeDeselectRecord('idle-viewshed', 1), viewshedColors: viewshedColors(120) };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    _createCctvProjectionPlaneForTest(viewer, active);
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [active, idle],
+      activeCameraId: active.camera.id,
+      enabled: true,
+      coverageMode: 'viewshed',
+      showProjection: true,
+    });
+    refreshCoverageStyles();
+
+    assert.ok(!active.viewshedPrimitive, 'active camera with a live plane gets no fill volume');
+    assert.equal(active.projection.planeEntity.show, true, 'the monitor plane itself is unaffected');
+    assert.ok(idle.viewshedPrimitive, 'idle cameras keep their normal viewshed fill volume');
+    assert.ok(
+      added.every((primitive) => primitive._gevViewshed !== active.camera.id),
+      'no fill-volume primitive was ever added for the active camera',
+    );
+
+    // Deactivating (no plane showing) restores the active camera's own fill
+    // volume — the exclusion is plane-visibility-gated, not identity-gated.
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [active, idle],
+      activeCameraId: active.camera.id,
+      enabled: true,
+      coverageMode: 'viewshed',
+      showProjection: false,
+    });
+    refreshCoverageStyles();
+    assert.ok(active.viewshedPrimitive, 'without a showing plane, the active camera gets its fill volume back');
+  } finally {
+    _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('video-mode monitor plane rebuilds its GPU texture material when the decoded frame size changes', () => {
+  // Regression for owner report 2026-09-14: after the Viewshed occlusion fix
+  // above, the active camera's plane still didn't show live video — it went
+  // solid BLACK instead. Root cause (confirmed via a live browser diagnostic
+  // session): Cesium's ImageMaterialProperty only builds a fresh GPU texture
+  // when the bound HTMLVideoElement's *identity* changes, not when its
+  // decoded videoWidth/videoHeight changes mid-stream — a later HLS segment
+  // decoding at a different size than the first (observed on these
+  // unofficial feeds: non-16:9 sizes like 704x576/640x480) leaves every
+  // subsequent texture upload silently failing
+  // (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level
+  // of the destination texture must be defined`). The 2D panel's canvas
+  // mirror is unaffected (drawImage auto-scales), which is exactly the
+  // "2D live, 3D black" asymmetry reported.
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.video = { videoWidth: 0, videoHeight: 0 };
+    runtime.videoTextureW = 0;
+    runtime.videoTextureH = 0;
+
+    // No decoded frame yet — nothing to rebuild against.
+    const initialMaterial = runtime.planeMaterial;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial, initialMaterial, 'no rebuild while videoWidth/Height are unknown (0)');
+
+    // First real decoded frame arrives at 704x576 (Bandung "Buahbatu" shape).
+    runtime.video.videoWidth = 704;
+    runtime.video.videoHeight = 576;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    const firstMaterial = runtime.planeMaterial;
+    assert.notEqual(firstMaterial, initialMaterial, 'first known frame size builds a fresh material');
+    assert.equal(runtime.planeEntity.plane.material, firstMaterial, 'plane entity is rebound to the new material');
+    assert.equal(runtime.videoTextureW, 704);
+    assert.equal(runtime.videoTextureH, 576);
+
+    // Same size again on the next tick — must NOT rebuild (would defeat the
+    // whole point: constant per-tick material churn is itself a flash risk).
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial, firstMaterial, 'unchanged decoded size does not rebuild the material');
+
+    // A later segment decodes at a different size — this is the exact case
+    // that left the plane black. Must rebuild again.
+    runtime.video.videoWidth = 640;
+    runtime.video.videoHeight = 480;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.notEqual(runtime.planeMaterial, firstMaterial, 'a decoded-size change rebuilds the material again');
+    assert.equal(runtime.planeEntity.plane.material, runtime.planeMaterial);
+    assert.equal(runtime.videoTextureW, 640);
+    assert.equal(runtime.videoTextureH, 480);
+  } finally {
     _setCctvOverlayHostForTest();
   }
 });

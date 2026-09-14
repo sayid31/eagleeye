@@ -608,6 +608,12 @@
       </div>
       <div id="cctv-frame-wrap" class="cctv-frame-wrap">
         <img id="cctv-frame" alt="CCTV feed frame" />
+        <!-- UNOFFICIAL live-video mirror (video/HLS cameras only — see
+             cctv.js getProjectionMirrorStream): mirrors the 3D monitor
+             plane's decoded frames via canvas.captureStream() rather than
+             opening a second hls.js connection. Hidden unless a mirror
+             stream is actually attached (cctvPanelMixin._syncCctvVideoMirror). -->
+        <video id="cctv-frame-video" muted playsinline autoplay></video>
       </div>
       <div id="cctv-source-badge" role="status" aria-live="polite">SOURCE · UNKNOWN</div>
       <div id="cctv-meta">Enable CCTV to load camera intersections</div>

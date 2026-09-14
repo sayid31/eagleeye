@@ -1705,12 +1705,35 @@ export function _createCctvProjectionPlaneForTest(viewer, record) {
 }
 
 /**
+ * Test-only seam for rebuildVideoPlaneMaterial (video-mode plane texture
+ * rebuild on decoded-resolution change — see its docstring for why this
+ * exists).
+ * @param {Object} runtime - Projection runtime.
+ * @returns {void}
+ */
+export function _rebuildVideoPlaneMaterialForTest(runtime) {
+  rebuildVideoPlaneMaterial(runtime);
+}
+
+/**
  * Exercise the production geometry-to-plane-and-label cache update.
  * @param {Object} record CCTV runtime record.
  */
 export function _updateCctvProjectionPlaneForTest(record) {
   updatePlanePlacement(record);
 }
+
+// Bounds on hls.js's own bounded internal retries (see below) before we give
+// up and tear the player down entirely. These unofficial upstreams (measured
+// 2026-09-14: segment fetch time through our proxy ranged 1-14s against a
+// ~7.5s segment duration, i.e. sometimes slower than real-time) throw
+// transient fatal network/media errors under normal operation, not just on
+// a genuine outage — destroying the player on the first one (the prior
+// behavior) meant a single slow segment could permanently freeze the plane
+// until the camera was reselected. A handful of retries absorbs that without
+// retrying forever against a camera that's actually gone.
+const HLS_MAX_NETWORK_ERROR_RECOVERIES = 5;
+const HLS_MAX_MEDIA_ERROR_RECOVERIES = 3;
 
 /**
  * Attach an hls.js (MSE-based) player to a <video> element for browsers
@@ -1734,16 +1757,52 @@ function attachHlsJs(runtime, video, url) {
       // Runtime may have been torn down while the dynamic import was in flight.
       if (runtime.destroyed) return;
       if (!Hls.isSupported()) return;
-      const hls = new Hls();
+      const hls = new Hls({
+        // Sit further back from the live edge than hls.js's default (3
+        // segments, ~22s at this upstream's ~7.5s segment duration). These
+        // proxied unofficial feeds have uneven round-trip latency (measured
+        // 1-14s per segment) and a short live window (~4 segments listed at
+        // once) — sitting closer to the edge leaves no margin before a slow
+        // fetch requests a segment that has already rolled off the upstream
+        // playlist and 404s. More lag from true live is an acceptable
+        // trade-off for an internal demo; a frozen frame is not.
+        liveSyncDurationCount: 5,
+      });
+      let networkErrorRecoveries = 0;
+      let mediaErrorRecoveries = 0;
+      // A fragment actually reaching the buffer means the stream is
+      // healthy again — reset both counters so a later, unrelated blip
+      // gets its own full retry budget instead of inheriting an old one.
+      hls.on(Hls.Events.FRAG_BUFFERED, () => {
+        networkErrorRecoveries = 0;
+        mediaErrorRecoveries = 0;
+      });
       hls.on(Hls.Events.MANIFEST_PARSED, () => {
         video.play().catch(() => {});
       });
-      // Fatal errors (network/media) are swallowed rather than surfaced as a
-      // console error — an unofficial upstream going down is an expected,
-      // not exceptional, condition here, and the placeholder frame already
-      // covers "no video arriving" in the draw loop.
+      // Fatal errors are not surfaced as a console error — an unofficial
+      // upstream having a rough moment is an expected, not exceptional,
+      // condition here. Network/media fatals get hls.js's own recommended
+      // bounded recovery (startLoad / recoverMediaError) rather than an
+      // immediate destroy, since most observed fatals on these feeds are
+      // transient segment-timing misses, not real outages. Any other fatal
+      // type (or exceeding the recovery budget) still tears the player down;
+      // the placeholder frame already covers "no video arriving" in the draw
+      // loop, so there's no separate error UI needed here.
       hls.on(Hls.Events.ERROR, (_event, data) => {
         if (!data?.fatal) return;
+        if (data.type === Hls.ErrorTypes.NETWORK_ERROR
+          && networkErrorRecoveries < HLS_MAX_NETWORK_ERROR_RECOVERIES) {
+          networkErrorRecoveries += 1;
+          hls.startLoad();
+          return;
+        }
+        if (data.type === Hls.ErrorTypes.MEDIA_ERROR
+          && mediaErrorRecoveries < HLS_MAX_MEDIA_ERROR_RECOVERIES) {
+          mediaErrorRecoveries += 1;
+          hls.recoverMediaError();
+          return;
+        }
         hls.destroy();
         if (runtime.hlsInstance === hls) runtime.hlsInstance = null;
       });
@@ -1811,6 +1870,15 @@ function createProjectionRuntime(record) {
     // only re-uploads the plane texture when there is genuinely new content.
     canvasStamp: 1,
     lastSwappedCanvasStamp: 0,
+    // Decoded video dimensions the plane's current GPU texture was built at
+    // (video mode only) — see rebuildVideoPlaneMaterial for why this is
+    // tracked separately from readyState.
+    videoTextureW: 0,
+    videoTextureH: 0,
+    // Lazily created by getActiveProjectionMirrorStream() — a captureStream()
+    // of `canvas` for the 2D panel's <video> preview. Stopped/cleared in
+    // destroyProjectionRuntime.
+    mirrorStream: null,
   };
 
   paintProjectionPlaceholder(ctx, record.camera);
@@ -1871,6 +1939,52 @@ function createProjectionRuntime(record) {
 }
 
 /**
+ * Video-mode monitor planes bind Cesium's ImageMaterialProperty directly to
+ * the HTMLVideoElement (H5) — Cesium then owns re-uploading the current
+ * frame into an existing GPU texture every render tick via `copyFrom`. That
+ * fast path only works when the texture's dimensions still match the
+ * video's decoded frame size: Cesium builds the texture once per *video
+ * element identity* (WHATWG_ARTIFACT: `Material.js`'s translucent-image
+ * uniform binder), not once per resolution, so it never notices a mid-stream
+ * resolution change on its own.
+ *
+ * These unofficial/reverse-engineered HLS feeds are not guaranteed to keep a
+ * constant decoded frame size across segments (observed non-16:9 sizes like
+ * 704x576/640x480 on the Bandung sources) — when a later segment decodes at
+ * a different size than the one the texture was originally built at, every
+ * subsequent `copyFrom` silently fails
+ * (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level of
+ * the destination texture must be defined`, observed 2026-09-14 diagnostic
+ * session) and the plane goes solid black — while the 2D panel's canvas
+ * mirror (drawImage auto-scales any source size) is unaffected, which is
+ * exactly the asymmetry the owner reported.
+ *
+ * Fix: watch the video's decoded size every projection tick; on a change,
+ * discard the stale material and hand the plane a *new*
+ * ImageMaterialProperty instance so Cesium treats it as a fresh bind and
+ * rebuilds the GPU texture at the new size.
+ *
+ * @param {Object} runtime - Projection runtime (video mode).
+ * @returns {void}
+ */
+function rebuildVideoPlaneMaterial(runtime) {
+  const video = runtime?.video;
+  if (!video || !runtime.planeEntity?.plane) return;
+  const w = video.videoWidth;
+  const h = video.videoHeight;
+  if (!w || !h) return;
+  if (w === runtime.videoTextureW && h === runtime.videoTextureH) return;
+  runtime.videoTextureW = w;
+  runtime.videoTextureH = h;
+  runtime.planeMaterial = new Cesium.ImageMaterialProperty({
+    image: video,
+    transparent: true,
+    color: Cesium.Color.WHITE.withAlpha(0.95),
+  });
+  runtime.planeEntity.plane.material = runtime.planeMaterial;
+}
+
+/**
  * Lazily initializes the projection runtime for a record if it doesn't exist yet.
  * @param {Object} record - Camera record.
  * @returns {Object|null} The record's projection runtime.
@@ -1904,6 +2018,10 @@ function destroyProjectionRuntime(runtime) {
     runtime.video.removeAttribute('src');
     runtime.video.load();
   }
+  if (runtime.mirrorStream) {
+    for (const track of runtime.mirrorStream.getTracks()) track.stop();
+    runtime.mirrorStream = null;
+  }
   if (runtime.planeEntity && _viewer) {
     _viewer.entities.remove(runtime.planeEntity);
     runtime.planeEntity = null;
@@ -1912,6 +2030,36 @@ function destroyProjectionRuntime(runtime) {
   runtime.overlayEntry = null;
   runtime.labelPosition = null;
   runtime.planeMaterial = null;
+}
+
+/**
+ * Returns a live MediaStream mirroring the active camera's projection
+ * canvas — the same decoded frames already being drawn onto the 3D monitor
+ * plane (drawProjectionFrame) — for the 2D panel's <video> preview.
+ *
+ * Deliberately does NOT open a second hls.js/MSE connection to the upstream:
+ * these unofficial feeds are already timing-constrained (see attachHlsJs),
+ * and a second concurrent player per camera would double the load against a
+ * source that's already occasionally missing its own segment window. Video
+ * feeds mirror the canvas (which drawProjectionFrame keeps painted with the
+ * live video element's frames); image feeds return null — the panel's
+ * existing frameUrl/<img> path already covers them.
+ *
+ * @param {string} cameraId
+ * @returns {MediaStream|null}
+ */
+function getActiveProjectionMirrorStream(cameraId) {
+  const record = _recordById.get(cameraId);
+  const runtime = record?.projection;
+  if (!runtime || runtime.mode !== 'video' || !runtime.canvas) return null;
+  if (!runtime.mirrorStream) {
+    if (typeof runtime.canvas.captureStream !== 'function') return null;
+    // 12fps is plenty for a monitor plane already limited by ~7.5s segment
+    // cadence — no point paying encode cost for a framerate the source can't
+    // fill.
+    runtime.mirrorStream = runtime.canvas.captureStream(12);
+  }
+  return runtime.mirrorStream;
 }
 
 /**
@@ -1983,6 +2131,10 @@ function drawProjectionFrame(record) {
   if (runtime.mode === 'video' && runtime.video) {
     const video = runtime.video;
     if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+      // Guards against the plane's GPU texture silently going stale after a
+      // mid-stream decoded-resolution change (see rebuildVideoPlaneMaterial).
+      // The 2D canvas below is unaffected either way (drawImage auto-scales).
+      rebuildVideoPlaneMaterial(runtime);
       runtime.ctx.clearRect(0, 0, PROJECTION_CANVAS_WIDTH, PROJECTION_CANVAS_HEIGHT);
       runtime.ctx.drawImage(video, 0, 0, PROJECTION_CANVAS_WIDTH, PROJECTION_CANVAS_HEIGHT);
       runtime.canvasStamp = (runtime.canvasStamp || 0) + 1;
@@ -3402,7 +3554,22 @@ export function refreshCoverageStyles() {
     // Viewshed volume lifecycle: exists iff enabled + viewshed mode + in the
     // visible set. Rebuild on active-tint flips (rare); otherwise leave the
     // primitive alone so idle refreshes never churn geometry.
-    const wantVolume = !!(_enabled && viewshedOn && inVisibleSet && record.frustumPositions);
+    //
+    // Excluded when the active camera's monitor plane is showing: the fill
+    // volume is welded to the exact same far-cap corners as the plane
+    // (frustumVolumeGeometryData / createProjectionPlane share one frustum
+    // geometry source), so its cull-disabled, translucent faces render
+    // coincident with the plane's live video texture — stacking up to a
+    // near-opaque hue-colored block that hides the feed entirely (owner
+    // report 2026-09-14: Bandung "Buahbatu" camera showed solid red with
+    // Viewshed ON instead of live video; that camera's golden-angle hue
+    // happens to land near 0deg/red). The wireframe (still hue-tinted above)
+    // already carries the coverage-color identity without occluding the
+    // plane, so only the fill is skipped — not the whole viewshed presence.
+    const wantVolume = !!(
+      _enabled && viewshedOn && inVisibleSet && record.frustumPositions
+      && !(isActive && planeShowing)
+    );
     if (wantVolume) {
       if (!record.viewshedPrimitive || record.viewshedActiveTint !== isActive) {
         rebuildViewshedVolume(record, isActive);
@@ -3568,6 +3735,9 @@ function getPublicCameraState(record, activeId = null) {
     // their live view is the mediaUrl-driven monitor plane instead.
     frameUrl: isVideo ? null : frameUrlFor(camera, refreshMs),
     mediaUrl: mediaUrlFor(camera),
+    // Lets the panel (cctvPanelMixin.js) pick the <video>-mirror path over
+    // the frameUrl/<img> path without re-deriving feed-type logic itself.
+    isVideo,
   };
 }
 
@@ -4913,6 +5083,18 @@ const cctvLayer = {
    */
   setCardPresentationOptions(options = {}) {
     return setCctvCardPresentationOptions(options);
+  },
+
+  /**
+   * Returns a live MediaStream mirroring a video/HLS camera's monitor-plane
+   * frames, for the 2D panel's <video> preview. Null for image-feed cameras
+   * (they use the existing frameUrl/<img> path) or if the camera has no
+   * active projection runtime yet.
+   * @param {string} cameraId
+   * @returns {MediaStream|null}
+   */
+  getProjectionMirrorStream(cameraId) {
+    return getActiveProjectionMirrorStream(cameraId);
   },
 
   /**

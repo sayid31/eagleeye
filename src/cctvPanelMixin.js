@@ -5,6 +5,26 @@ import { runCctvLayerEnableTransition } from './cctvFocusPolicy.js';
 const signedNormalizeDeg = (deg) => ((((deg + 180) % 360) + 360) % 360) - 180;
 
 /**
+ * Orders the camera dropdown list so unofficial/demo-only sources (see
+ * DATA_SOURCES.md) sort to the top, ahead of the ~500 live-pack cameras they'd
+ * otherwise be buried under — display order only, does not touch cctv.js's
+ * `_records` order (autoHop/cycleCamera sequencing, default-camera selection
+ * are unaffected). Stable: ties keep the server's original order.
+ * @param {Object[]} cameras - `state.cameras` from the CCTV layer's UI state.
+ * @returns {Object[]} The same camera objects, reordered.
+ */
+export function orderCctvCameraOptions(cameras) {
+  return cameras
+    .map((camera, idx) => ({ camera, idx }))
+    .sort((a, b) => {
+      const aUnofficial = String(a.camera.sourceKind || '').startsWith('unofficial') ? 0 : 1;
+      const bUnofficial = String(b.camera.sourceKind || '').startsWith('unofficial') ? 0 : 1;
+      return aUnofficial - bUnofficial || a.idx - b.idx;
+    })
+    .map(({ camera }) => camera);
+}
+
+/**
  * Field definitions for the CCTV click-to-edit pose readout. Chips DISPLAY the
  * camera's EFFECTIVE pose (not raw offsets — "HDG 135.0°" instead of the old
  * "HEADING 0°" nonsense); typed values convert back to calibration offsets
@@ -205,7 +225,12 @@ export const cctvPanelMixin = {
   },
 
   /**
-   * Clears the preview and invalidates any in-flight preload.
+   * Clears the still-frame <img> preview and invalidates any in-flight
+   * preload. Does NOT touch the live-video mirror element — that has its
+   * own owner, `_syncCctvVideoMirror`, called separately every render
+   * (clearing it here too would race: a video camera's render calls this
+   * for the <img> in the SAME tick `_syncCctvVideoMirror` attaches the
+   * mirror, and call order must not matter).
    * @returns {void}
    */
   _clearCctvFrame() {
@@ -220,6 +245,59 @@ export const cctvPanelMixin = {
       this._cctvFrame.dataset.error = '';
     }
     this._cctvFrameWrap?.classList.remove('loading', 'has-frame');
+  },
+
+  /**
+   * Detaches the panel's live-video mirror element from any MediaStream.
+   * Always safe to call even if no mirror is currently attached.
+   * @returns {void}
+   */
+  _clearCctvVideoMirror() {
+    if (!this._cctvFrameVideo) return;
+    this._cctvFrameVideo.classList.remove('active');
+    if (this._cctvFrameVideo.srcObject) {
+      this._cctvFrameVideo.pause();
+      this._cctvFrameVideo.srcObject = null;
+    }
+    this._cctvFrameMirrorCameraId = null;
+  },
+
+  /**
+   * Attaches (or refreshes) the panel's live-video mirror for a video/HLS
+   * camera — see `cctv.js`'s `getProjectionMirrorStream`: this mirrors the
+   * SAME decoded frames already driving the 3D monitor plane
+   * (canvas.captureStream), rather than opening a second connection to an
+   * already timing-constrained unofficial upstream. Falls back to the
+   * still-frame `<img>` path (a "LIVE — see monitor" placeholder state) if
+   * no stream is available yet (projection runtime not created this tick,
+   * or the browser lacks captureStream support).
+   * @param {object|null} activeCamera
+   * @param {boolean} enabled
+   * @returns {boolean} True if the mirror is attached and driving the preview.
+   */
+  _syncCctvVideoMirror(activeCamera, enabled) {
+    if (!this._cctvFrameVideo) return false;
+    if (!enabled || !activeCamera?.isVideo) {
+      this._clearCctvVideoMirror();
+      return false;
+    }
+    if (this._cctvFrameMirrorCameraId === activeCamera.id
+      && this._cctvFrameVideo.srcObject) {
+      return true;
+    }
+    const stream = cctvLayer.getProjectionMirrorStream?.(activeCamera.id) || null;
+    if (!stream) {
+      // Runtime not ready yet (e.g. projection just activated this tick) —
+      // leave the still-frame path as-is; the next render picks the stream
+      // up once it exists.
+      this._clearCctvVideoMirror();
+      return false;
+    }
+    this._cctvFrameVideo.srcObject = stream;
+    this._cctvFrameVideo.play().catch(() => {});
+    this._cctvFrameVideo.classList.add('active');
+    this._cctvFrameMirrorCameraId = activeCamera.id;
+    return true;
   },
 
   /**
@@ -327,8 +405,17 @@ export const cctvPanelMixin = {
       this._cctvSourceBadge.dataset.frameState = 'error';
       return;
     }
-    const kind = String(activeCamera.sourceKind || activeCamera.feedType || 'unknown').toUpperCase();
     const status = String(activeCamera.sourceStatus || 'unknown').toUpperCase();
+    // Unofficial/demo-only sources (reverse-engineered government camera
+    // endpoints — see DATA_SOURCES.md) always get a distinct, explicit badge
+    // rather than folding into the generic KIND · STATUS format, so this
+    // disclosure can't be missed in the UI regardless of live status.
+    if (String(activeCamera.sourceKind || '').startsWith('unofficial')) {
+      this._cctvSourceBadge.textContent = `⚠ UNOFFICIAL SOURCE · ${status}`;
+      this._cctvSourceBadge.dataset.frameState = 'unofficial';
+      return;
+    }
+    const kind = String(activeCamera.sourceKind || activeCamera.feedType || 'unknown').toUpperCase();
     this._cctvSourceBadge.textContent = `${kind} · ${status}`;
     this._cctvSourceBadge.dataset.frameState = 'ready';
   },
@@ -517,14 +604,18 @@ export const cctvPanelMixin = {
     }
 
     if (this._cctvSelect) {
-      const shouldRebuild = this._cctvSelect.options.length !== cameras.length
-        || cameras.some((cam, idx) => this._cctvSelect.options[idx]?.value !== cam.id);
+      const orderedCameras = orderCctvCameraOptions(cameras);
+      const shouldRebuild = this._cctvSelect.options.length !== orderedCameras.length
+        || orderedCameras.some((cam, idx) => this._cctvSelect.options[idx]?.value !== cam.id);
       if (shouldRebuild) {
         this._cctvSelect.innerHTML = '';
-        for (const camera of cameras) {
+        for (const camera of orderedCameras) {
           const option = document.createElement('option');
           option.value = camera.id;
-          option.textContent = `${camera.city} · ${camera.name}`;
+          const unofficial = String(camera.sourceKind || '').startsWith('unofficial');
+          option.textContent = unofficial
+            ? `⚠ ${camera.city} · ${camera.name}`
+            : `${camera.city} · ${camera.name}`;
           this._cctvSelect.appendChild(option);
         }
       }
@@ -603,8 +694,14 @@ export const cctvPanelMixin = {
       }
     }
 
+    // Video/HLS cameras prefer the live-video mirror (real motion, same
+    // decoded frames as the 3D monitor plane) over the still-frame <img>
+    // path — they have no frameUrl to poll anyway (see getPublicCameraState
+    // in cctv.js). Image-feed cameras are unaffected: _syncCctvVideoMirror
+    // no-ops and clears the (always-hidden) mirror element for them.
+    const mirrorActive = this._syncCctvVideoMirror(activeCamera, enabled);
     if (this._cctvFrame) {
-      const nextSrc = enabled ? activeCamera?.frameUrl : null;
+      const nextSrc = (enabled && !mirrorActive) ? activeCamera?.frameUrl : null;
       const nextCameraId = enabled ? (activeCamera?.id || '') : '';
       const cameraChanged = this._cctvFrame.dataset.cameraId !== nextCameraId;
       const frameLoading = this._cctvFrame.dataset.loading === 'true';

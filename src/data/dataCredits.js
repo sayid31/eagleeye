@@ -128,6 +128,13 @@ export const DATA_CREDITS = [
       'Contains OS data © Crown copyright and database rights.',
   },
   {
+    key: 'indonesia-unofficial-cctv',
+    html:
+      '⚠ CCTV cameras (Jakarta, Bandung, Denpasar): unofficial, reverse-engineered ' +
+      'endpoints — internal demo only, no formal agreement with the city operators, ' +
+      'not for public/commercial use (see DATA_SOURCES.md)',
+  },
+  {
     key: 'gbfs',
     html: 'Bikeshare availability: GBFS operator feeds (e.g. Austin BCycle)',
   },
