@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {
   loadPhotorealisticTileset,
   selectMapStartupRoute,
+  PHOTOREAL_MAXIMUM_SCREEN_SPACE_ERROR,
 } from './mapStartup.js';
 
 function fakeCesium(outcomes = []) {
@@ -48,6 +49,8 @@ test('a direct Google key is preferred', async () => {
   assert.equal(result.tileset, tileset);
   assert.equal(result.route, 'google-direct');
   assert.equal(Cesium.calls[0].googleKey, 'google-secret');
+  assert.equal(Cesium.calls[0].options.maximumScreenSpaceError, PHOTOREAL_MAXIMUM_SCREEN_SPACE_ERROR);
+  assert.equal(Cesium.calls[0].options.dynamicScreenSpaceError, true);
 });
 
 test('an ion-only setup loads the hosted Google 3D asset', async () => {

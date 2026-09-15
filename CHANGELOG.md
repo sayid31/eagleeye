@@ -184,6 +184,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Tuned the Google Photorealistic 3D Tileset's level-of-detail settings**
+  for better GPU headroom when many data layers are active at once
+  (`maximumScreenSpaceError: 24` instead of Cesium's untuned default of 16,
+  `dynamicScreenSpaceError: true` pinned explicitly). Trades a small amount
+  of distant-tile crispness for lower GPU load under combined fleet-3D-model
+  + detection-overlay + post-process-style usage — see
+  `docs/CURRENT-STATE.md`'s new "Photoreal tileset LOD tuning" note. Esri/
+  OSM/Bing basemaps are unaffected.
 - Location search (search box, voice fly-to, voice Radio location) now
   defaults to OpenStreetMap Nominatim and no longer requires a Google Maps
   API key. This is a temporary, reversible switch — set
