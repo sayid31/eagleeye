@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './voice/toolSchemas.js';
+import { GEV_VOICE_SYSTEM_PROMPT } from './voice/voiceSystemPrompt.js';
 import {
   ENVIRONMENTAL_LABEL_CHOICE,
   EXCLUSIVE_SURFACE_CLASSES,
@@ -652,8 +653,6 @@ test('the DISPLAY rail starts collapsed on a first run, and a stored choice wins
 // ── Voice: instruction-only, tool schema byte-unchanged ─────────────────────
 
 test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is instructions only', () => {
-  const src = fs.readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
-
   // The 28-tool schema array itself was mechanically relocated out of this
   // file's formerly-inline `GEV_REALTIME_TOOLS` literal into
   // voice/toolSchemas.js (see that module's header) — vite.config.js now
@@ -691,16 +690,18 @@ test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is
   );
 
   // ...and the mapping that makes them reachable by voice is one instruction
-  // string, whose rollback is deleting that string. Anchored to a LIVE array
-  // entry — a quote at the start of its own line — so commenting the paragraph
-  // out reads as the removal it is, not as a passing substring match.
+  // string, whose rollback is deleting that string. This instruction array
+  // was mechanically relocated out of this file's formerly-inline literal
+  // into voice/voiceSystemPrompt.js (see that module's header) — the pin
+  // below now reads the LIVE exported prompt string instead of vite.config.js
+  // source text, so it still catches an accidental removal of the paragraph.
   assert.match(
-    src,
-    /\n\s+'NAMED VIEWS are shorthand/,
+    GEV_VOICE_SYSTEM_PROMPT,
+    /\nNAMED VIEWS are shorthand/,
     'the mission mapping must be an active instruction entry, not commented out',
   );
-  const mapping = src.slice(src.indexOf('NAMED VIEWS are shorthand'));
-  const paragraph = mapping.slice(0, mapping.indexOf("',\n"));
+  const mapping = GEV_VOICE_SYSTEM_PROMPT.slice(GEV_VOICE_SYSTEM_PROMPT.indexOf('NAMED VIEWS are shorthand'));
+  const paragraph = mapping.slice(0, mapping.indexOf('\n'));
   for (const layerId of [
     'local-datacenters', 'local-dams', 'telegeography-submarine-cables', 'local-firms', 'earthquakes',
   ]) {

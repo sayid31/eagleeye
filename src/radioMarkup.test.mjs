@@ -15,9 +15,13 @@ const adaptiveLayoutMixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js'
 const radio = readFileSync(new URL('./data/radio.js', import.meta.url), 'utf8');
 const rocketLaunches = readFileSync(new URL('./data/rocketLaunches.js', import.meta.url), 'utf8');
 const realtime = readFileSync(new URL('./voice/gevRealtime.js', import.meta.url), 'utf8');
-const voice = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
 const toolSchemasSrc = readFileSync(new URL('./voice/toolSchemas.js', import.meta.url), 'utf8');
+// Instruction text now lives in voiceSystemPrompt.js (mechanical relocation
+// out of vite.config.js's formerly-inline literal — see that module's
+// header). `voice` below reads the live exported prompt string so these
+// pins still catch an accidental removal/edit of the paragraphs they check.
+const { GEV_VOICE_SYSTEM_PROMPT: voice } = await import('./voice/voiceSystemPrompt.js');
 
 // The 28-tool schema array now lives in voice/toolSchemas.js (mechanical
 // relocation — vite.config.js derives GEV_REALTIME_TOOLS from it via
@@ -57,7 +61,7 @@ test('the counting contract is stated in the Realtime instructions', () => {
   // Owner ruling: "near" has one meaning per state, and every count names its
   // scope. Instruction text is the only place the narration rules can live, so
   // it is pinned — a silent trim here is a silent behaviour change.
-  const start = voice.indexOf("'COUNTING CONTRACT");
+  const start = voice.indexOf('COUNTING CONTRACT');
   assert.ok(start >= 0, 'the counting contract instruction is missing');
   // One instruction per source line; the string carries escaped quotes, so take
   // the line rather than trying to match a quoted literal.
@@ -75,7 +79,7 @@ test('the counting contract is stated in the Realtime instructions', () => {
 });
 
 test('Context panel opening stays distinct from Contacts activation', () => {
-  const start = voice.indexOf("'For requests to open, show, reveal, or focus a menu/panel");
+  const start = voice.indexOf('For requests to open, show, reveal, or focus a menu/panel');
   assert.ok(start >= 0, 'panel-routing instruction is missing');
   const text = voice.slice(start, voice.indexOf('\n', start));
   assert.match(text, /"Open Context" means only set_panel_open/);
@@ -85,7 +89,7 @@ test('Context panel opening stays distinct from Contacts activation', () => {
 });
 
 test('nearest-aircraft selection stays out of Contacts and Cockpit', () => {
-  const start = voice.indexOf("'For a request to enable an aircraft layer and SELECT or FIND");
+  const start = voice.indexOf('For a request to enable an aircraft layer and SELECT or FIND');
   assert.ok(start >= 0, 'nearest-aircraft selection routing instruction is missing');
   const text = voice.slice(start, voice.indexOf('\n', start));
   assert.match(text, /Turn on flights and select the closest aircraft to Austin/);
