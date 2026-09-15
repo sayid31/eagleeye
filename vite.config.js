@@ -80,7 +80,12 @@ import {
   validTerrainResult,
 } from './src/data/terrainHeightsProxy.js';
 import { VOICE_MODELS, isKnownVoiceTier, resolveVoiceModel } from './src/voice/voiceCost.js';
-import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './src/voice/toolSchemas.js';
+import {
+  VOICE_MODELS as CLAUDE_VOICE_MODELS,
+  isKnownVoiceTier as isKnownClaudeVoiceTier,
+  resolveVoiceModel as resolveClaudeVoiceModel,
+} from './src/voice/claudeVoiceCost.js';
+import { GEV_TOOL_SCHEMAS, toAnthropicTools, toOpenAiRealtimeTools } from './src/voice/toolSchemas.js';
 
 /** Resolve __dirname for ESM context. */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -510,6 +515,14 @@ function openAiRateLimiter() {
 function googleRateLimiter() {
   if (_googleRateLimiter === undefined) _googleRateLimiter = makeOptInRateLimiter(process.env.GEV_RATELIMIT_GOOGLE_PER_MIN);
   return _googleRateLimiter;
+}
+let _anthropicRateLimiter;
+/** Anthropic cost endpoint (/api/anthropic/messages). Null = unlimited (default). */
+function anthropicRateLimiter() {
+  if (_anthropicRateLimiter === undefined) {
+    _anthropicRateLimiter = makeOptInRateLimiter(process.env.GEV_RATELIMIT_ANTHROPIC_PER_MIN);
+  }
+  return _anthropicRateLimiter;
 }
 let _nominatimSearchRateLimiter;
 /**
@@ -1390,6 +1403,19 @@ const OPENAI_REALTIME_REASONING_DEFAULT = 'low';
 const OPENAI_REALTIME_CONTEXT_TOKENS_DEFAULT = 3000;
 const OPENAI_REALTIME_CONTEXT_RETENTION_DEFAULT = 0.5;
 const OPENAI_HUD_SUMMARY_MODEL_DEFAULT = 'gpt-5-nano';
+// Same pattern as the OpenAI defaults above: sourced from the shared
+// Claude-voice-model registry so the client's cost estimate can never be
+// computed against a different model than the request actually ran on.
+const ANTHROPIC_VOICE_MODEL_DEFAULT = CLAUDE_VOICE_MODELS.standard.id;
+const ANTHROPIC_VOICE_MODEL_PRO_DEFAULT = CLAUDE_VOICE_MODELS.pro.id;
+/**
+ * `anthropic-version` header value. Verified 2026-09-15 against
+ * https://platform.claude.com/docs/en/api/versioning — despite the dated
+ * string this has been the current API version since 2023; it is expected
+ * to stay stable, but is env-overridable per Rule 15 (external facts drift).
+ */
+const ANTHROPIC_API_VERSION_DEFAULT = '2023-06-01';
+const ANTHROPIC_MAX_TOKENS_DEFAULT = 1024;
 const REALTIME_DEBUG_LOG_DIR = path.join(__dirname, '.gev-logs');
 const REALTIME_DEBUG_LOG_FILE = path.join(REALTIME_DEBUG_LOG_DIR, 'realtime-conversations.jsonl');
 const REALTIME_DEBUG_LOG_MAX_BYTES = 8 * 1024 * 1024;
@@ -5424,6 +5450,121 @@ export function openAiRealtimeProxy() {
   };
 }
 
+/**
+ * Vite plugin: Anthropic Messages API proxy for the Claude/Web Speech voice
+ * backend (see docs/CURRENT-STATE.md's Voice Control section).
+ *
+ * Keeps ANTHROPIC_API_KEY server-side. Unlike `openAiRealtimeProxy`'s
+ * `/api/realtime/token` (which mints an ephemeral client secret for a
+ * browser-to-OpenAI WebRTC connection), this proxy is a plain pass-through
+ * request/response endpoint: Web Speech API recognition is turn-based (one
+ * transcript per utterance), so there is no continuous session to hand the
+ * browser a secret for, and no streaming benefit to preserve — a single JSON
+ * POST per turn (or per tool-loop round-trip) is enough.
+ *
+ * The client sends only `{messages, system?, tier?}` — `tools` is never
+ * accepted from the client. The tool list is injected here, server-side,
+ * from the same `GEV_TOOL_SCHEMAS` the OpenAI Realtime proxy derives its own
+ * tool list from (see toolSchemas.js), so the two backends can never expose
+ * a different set of callable actions to a user.
+ */
+export function anthropicProxy() {
+  function install(middlewares) {
+    middlewares.use('/api/anthropic/messages', async (req, res) => {
+      if (req.method !== 'POST') {
+        res.statusCode = 405;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'Method not allowed' }));
+        return;
+      }
+
+      // Opt-in per-IP throttle (GEV_RATELIMIT_ANTHROPIC_PER_MIN). No-op when unset.
+      if (!enforceOptInRateLimit(anthropicRateLimiter(), req, res)) return;
+
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        res.statusCode = 503;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: 'ANTHROPIC_API_KEY is not set' }));
+        return;
+      }
+
+      let payload;
+      try {
+        const body = await readRequestBody(req, 256 * 1024);
+        payload = JSON.parse(body || '{}');
+      } catch (error) {
+        res.statusCode = 400;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: error?.message || 'Invalid request body' }));
+        return;
+      }
+
+      const messages = Array.isArray(payload.messages) ? payload.messages : [];
+      const system = typeof payload.system === 'string' ? payload.system : undefined;
+
+      // Voice model tier, requested by the client — same total/never-throw
+      // contract as resolveVoiceModel for OpenAI: an unknown, empty, or
+      // hostile value resolves to `standard` instead of reaching Anthropic
+      // as a model id.
+      const tier = resolveClaudeVoiceModel(payload.tier).tier;
+      const model =
+        tier === 'pro'
+          ? process.env.ANTHROPIC_VOICE_MODEL_PRO || ANTHROPIC_VOICE_MODEL_PRO_DEFAULT
+          : process.env.ANTHROPIC_VOICE_MODEL || ANTHROPIC_VOICE_MODEL_DEFAULT;
+      const apiVersion = process.env.ANTHROPIC_API_VERSION || ANTHROPIC_API_VERSION_DEFAULT;
+
+      const requestBody = {
+        model,
+        max_tokens: ANTHROPIC_MAX_TOKENS_DEFAULT,
+        messages,
+        tools: toAnthropicTools(GEV_TOOL_SCHEMAS),
+        tool_choice: { type: 'auto' },
+      };
+      if (system) requestBody.system = system;
+
+      try {
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': apiKey,
+            'anthropic-version': apiVersion,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(requestBody),
+        });
+        const body = await response.text();
+        res.statusCode = response.status;
+        res.setHeader('Content-Type', response.headers.get('content-type') || 'application/json');
+        // Which tier/model this request actually ran on. The upstream body is
+        // passed through untouched (the client parses it verbatim), so these
+        // headers are the authoritative echo — including the case where a
+        // bogus ?tier= was silently downgraded to standard.
+        res.setHeader('X-GEV-Voice-Tier', tier);
+        res.setHeader('X-GEV-Voice-Model', model);
+        if (payload.tier && !isKnownClaudeVoiceTier(payload.tier)) {
+          res.setHeader('X-GEV-Voice-Tier-Fallback', '1');
+        }
+        res.end(body);
+      } catch (error) {
+        res.statusCode = 502;
+        res.setHeader('Content-Type', 'application/json');
+        res.end(JSON.stringify({ error: error?.message || 'Failed to reach Anthropic' }));
+      }
+    });
+  }
+
+  return {
+    name: 'anthropic-proxy',
+    configureServer(server) {
+      install(server.middlewares);
+    },
+    configurePreviewServer(server) {
+      install(server.middlewares);
+    },
+  };
+}
+
 function extractOpenAiResponseText(data) {
   if (typeof data?.output_text === 'string' && data.output_text.trim()) {
     return data.output_text.trim();
@@ -7306,6 +7447,7 @@ export default defineConfig(({ mode }) => {
       aisLiveProxy(),
       trackBackfillProxies(),
       openAiRealtimeProxy(),
+      anthropicProxy(),
       googlePlacesContextProxy(),
       nominatimSearchProxy(),
       keySetupEndpoint(),

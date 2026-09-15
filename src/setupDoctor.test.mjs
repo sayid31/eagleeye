@@ -63,6 +63,18 @@ test('doctor selects a Windows-safe npm process without changing Unix behavior',
   assert.deepEqual(npmProcessSpec('linux'), { command: 'npm', shell: false });
 });
 
+test('doctor tracks Claude voice as a distinct, optional-backend credential', () => {
+  const spec = credential('ANTHROPIC_API_KEY');
+  assert.ok(spec, 'ANTHROPIC_API_KEY must be a registered credential');
+  assert.match(spec.label, /alt\. backend/);
+
+  const capabilitiesOff = buildCapabilitySummary({ ANTHROPIC_API_KEY: { configured: false } });
+  assert.equal(capabilitiesOff.claudeVoice, 'off until an Anthropic key is added');
+
+  const capabilitiesOn = buildCapabilitySummary({ ANTHROPIC_API_KEY: { configured: true, source: 'environment' } });
+  assert.equal(capabilitiesOn.claudeVoice, 'available');
+});
+
 test('doctor recognizes every OpenSky OAuth keychain alias used by dev-fresh', () => {
   assert.deepEqual(
     credential('OPENSKY_CLIENT_ID').keychain,
@@ -150,6 +162,7 @@ test('doctor describes the credential ladder without exposing values', () => {
     GOOGLE_MAPS_API_KEY: { configured: false },
     CESIUM_ION_TOKEN: { configured: true, source: 'environment' },
     OPENAI_API_KEY: { configured: true, source: 'dotenv files' },
+    ANTHROPIC_API_KEY: { configured: false },
     AISSTREAM_API_KEY: { configured: false },
     FIRMS_MAP_KEY: { configured: false },
     TOMTOM_API_KEY: { configured: false },
@@ -193,6 +206,7 @@ test('doctor sends Keychain-backed reports to dev-fresh and describes OpenSky as
     'GOOGLE_MAPS_API_KEY',
     'CESIUM_ION_TOKEN',
     'OPENAI_API_KEY',
+    'ANTHROPIC_API_KEY',
     'AISSTREAM_API_KEY',
     'FIRMS_MAP_KEY',
     'TOMTOM_API_KEY',
@@ -224,6 +238,7 @@ test('doctor never calls a dependency-missing setup ready', () => {
     'GOOGLE_MAPS_API_KEY',
     'CESIUM_ION_TOKEN',
     'OPENAI_API_KEY',
+    'ANTHROPIC_API_KEY',
     'AISSTREAM_API_KEY',
     'FIRMS_MAP_KEY',
     'TOMTOM_API_KEY',

@@ -387,6 +387,7 @@ Six keys. Four have a free tier, and the two 🔴 ones are metered:
 |---|-----|-----|--------|
 | 🟡 | **OpenSky** | ✈️ More flight-polling credits (🟢 anonymous works without) | [opensky-network.org](https://opensky-network.org) |
 | 🟡 | **Launch Library 2** | 🚀 Higher space-missions request allowance (🟢 works without) | [thespacedevs.com](https://thespacedevs.com) |
+| 🔴 | **Anthropic** | 🎙️ Optional *alternative* voice backend (Claude + your browser's own Web Speech API for STT/TTS) — a stopgap, turn-based experience, not a replacement for the OpenAI key above and not required alongside it | [console.anthropic.com](https://console.anthropic.com) — metered |
 
 All of them are worth getting. None of them are required to start.
 
