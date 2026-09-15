@@ -7,6 +7,28 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- **Claude (Anthropic) voice backend — a temporary, opt-in alternative to
+  OpenAI Realtime**, for users without an OpenAI voice budget. Since
+  Anthropic has no speech-to-speech API, it's paired with the browser's own
+  Web Speech API (`SpeechRecognition`/`SpeechSynthesis`) — turn-based
+  (push-to-talk) rather than always-listening, and $0 per-turn cost for
+  audio since STT/TTS never touch Claude. A `[GPT|CLAUDE]` pill appears next
+  to the existing STD/MINI tier toggle in the voice tray, but only once an
+  `ANTHROPIC_API_KEY` is configured (via **POWER UP**, `.env`, or Keychain)
+  *and* the browser actually supports Web Speech (Firefox lacks it by
+  default, so the pill simply doesn't appear there). Both backends share one
+  mic button, one cost readout, and the exact same 28 GEV tool
+  implementations (`src/voice/gevActions.js`) — Claude calls the same
+  action runner OpenAI Realtime does, so nothing the app can do depends on
+  which backend is talking. A bounded multi-turn tool loop
+  (`src/voice/claudeToolLoop.js`) handles Anthropic's tool-use shape, which
+  — unlike this app's single-shot treatment of OpenAI function calls — can
+  ask for more tool calls after the first batch resolves. This is
+  explicitly a stopgap: switch back to OpenAI Realtime once voice budget
+  allows. See `docs/CURRENT-STATE.md`'s new "Voice Backend #2" section for
+  the full design and known limitations (Space push-to-talk still only
+  targets OpenAI; no automated end-to-end voice-loop test — see
+  `TESTING.md`).
 - Real, live HLS video for 5 Indonesian CCTV cameras (Jakarta, Bandung ×3,
   Denpasar) — an **UNOFFICIAL, internal-demo-only** source pack layered on
   top of the existing fictional seed cameras. Stream URLs were
