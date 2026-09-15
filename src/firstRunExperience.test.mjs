@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
+import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './voice/toolSchemas.js';
 import {
   ENVIRONMENTAL_LABEL_CHOICE,
   EXCLUSIVE_SURFACE_CLASSES,
@@ -652,10 +653,16 @@ test('the DISPLAY rail starts collapsed on a first run, and a stored choice wins
 
 test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is instructions only', () => {
   const src = fs.readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
-  const start = src.indexOf('const GEV_REALTIME_TOOLS = [');
-  assert.ok(start > 0, 'GEV_REALTIME_TOOLS must still be a single literal array');
-  const end = src.indexOf('\n];\n', start);
-  const block = src.slice(start, end + 4);
+
+  // The 28-tool schema array itself was mechanically relocated out of this
+  // file's formerly-inline `GEV_REALTIME_TOOLS` literal into
+  // voice/toolSchemas.js (see that module's header) — vite.config.js now
+  // only derives the wire array via toOpenAiRealtimeTools(GEV_TOOL_SCHEMAS).
+  // The pin below therefore targets the OpenAI-shaped array as JSON
+  // (equivalent data, independent of which file/wrapper produced it), so it
+  // still catches any future schema edit exactly as before.
+  const wireTools = toOpenAiRealtimeTools(GEV_TOOL_SCHEMAS);
+  const json = JSON.stringify(wireTools);
 
   // Re-pinned 2026-09-08 (a): the "EagleEye View" display-name rebrand
   // DELIBERATELY edits the prose text of 3 tool descriptions
@@ -672,10 +679,14 @@ test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is
   // cities (surabaya, bandung, medan, semarang, yogyakarta, makassar,
   // denpasar) to the same locationId enum of the same 3 tools — completing
   // the Location-menu coverage started in (b). No other schema change.
-  assert.equal(block.length, 31465, 'tool schema byte length drifted from the pinned release schema');
+  // Re-pinned 2026-09-15 (d): mechanical relocation of GEV_REALTIME_TOOLS
+  // into voice/toolSchemas.js (see above) — the pin moved from a raw-source
+  // byte/hash of the vite.config.js literal to a JSON hash of the derived
+  // wire array. Content is unchanged; only the measurement method changed.
+  assert.equal(json.length, 26373, 'tool schema JSON length drifted from the pinned release schema');
   assert.equal(
-    crypto.createHash('sha256').update(block).digest('hex'),
-    'adcebc8e2fee646815fcd5e9b02b295dc46200a07d5deca344ce3b411d27c7fa',
+    crypto.createHash('sha256').update(json).digest('hex'),
+    '06ff7b37f1addfa880e1ecfde1f1ae51997435a2818028c1e94cceb9b01726e0',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
 
@@ -700,8 +711,13 @@ test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is
 });
 
 test('every layer a mission drives is already in the shipped set_layer_visibility enum', () => {
-  const src = fs.readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
-  const tool = src.slice(src.indexOf("name: 'set_layer_visibility'"), src.indexOf("name: 'show_data_layers_menu'"));
+  // set_layer_visibility's schema now lives in voice/toolSchemas.js (mechanical
+  // relocation — see that module's header).
+  const toolSchemasSrc = fs.readFileSync(new URL('./voice/toolSchemas.js', import.meta.url), 'utf8');
+  const tool = toolSchemasSrc.slice(
+    toolSchemasSrc.indexOf("name: 'set_layer_visibility'"),
+    toolSchemasSrc.indexOf("name: 'show_data_layers_menu'"),
+  );
   const missionLayerIds = Object.values(FIRST_RUN_MISSIONS).flatMap((mission) => mission.layerIds || []);
   assert.ok(missionLayerIds.length > 0);
   for (const layerId of missionLayerIds) {

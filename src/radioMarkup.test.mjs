@@ -17,15 +17,18 @@ const rocketLaunches = readFileSync(new URL('./data/rocketLaunches.js', import.m
 const realtime = readFileSync(new URL('./voice/gevRealtime.js', import.meta.url), 'utf8');
 const voice = readFileSync(new URL('../vite.config.js', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
+const toolSchemasSrc = readFileSync(new URL('./voice/toolSchemas.js', import.meta.url), 'utf8');
 
-/** Parse the Realtime tool array out of the Vite config as real data. */
+// The 28-tool schema array now lives in voice/toolSchemas.js (mechanical
+// relocation — vite.config.js derives GEV_REALTIME_TOOLS from it via
+// toOpenAiRealtimeTools, see that file's header for why). realtimeTools()
+// reproduces the exact wire shape vite.config.js sends OpenAI so every
+// assertion below (tool.type, .parameters, etc.) is unchanged by the move.
+const { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } = await import('./voice/toolSchemas.js');
+
+/** The Realtime tool array, in OpenAI's wire shape, as real data. */
 function realtimeTools() {
-  const start = voice.indexOf('const GEV_REALTIME_TOOLS = [');
-  const end = voice.indexOf('\n];', start);
-  assert.ok(start >= 0 && end > start, 'Realtime tool schema block is missing');
-  const literal = voice.slice(start + 'const GEV_REALTIME_TOOLS = '.length, end + 2);
-  // The block is pure data; evaluating it beats regexing nested schemas.
-  return new Function(`return ${literal};`)();
+  return toOpenAiRealtimeTools(GEV_TOOL_SCHEMAS);
 }
 
 test('Realtime schema exposes the authoritative 28-tool inventory', () => {
@@ -289,10 +292,11 @@ test('panel collapse is presentation-only and Radio exposes explicit voice playb
   const start = adaptiveLayoutMixin.lastIndexOf('\n  setPanelCollapsed(panelId');
   const method = adaptiveLayoutMixin.slice(start);
   assert.doesNotMatch(method, /stopRadio|stopPlayback|setEnabled\('radio'/);
-  assert.match(voice, /'radio-panel'/);
-  assert.match(voice, /'radio'/);
-  assert.match(voice, /name:\s*'control_radio'/);
-  assert.match(voice, /enum:\s*\['enable', 'disable', 'play', 'resume', 'pause', 'stop', 'next', 'previous', 'volume', 'select', 'status'\]/);
+  // Tool schema strings now live in toolSchemas.js (mechanical relocation).
+  assert.match(toolSchemasSrc, /'radio-panel'/);
+  assert.match(toolSchemasSrc, /'radio'/);
+  assert.match(toolSchemasSrc, /name:\s*'control_radio'/);
+  assert.match(toolSchemasSrc, /enum:\s*\['enable', 'disable', 'play', 'resume', 'pause', 'stop', 'next', 'previous', 'volume', 'select', 'status'\]/);
   const enableStart = radioMixin.lastIndexOf('\n  _initRadioPanel()');
   const enableMethod = radioMixin.slice(enableStart, radioMixin.indexOf('\n  _renderRadioState(state)', enableStart));
   assert.doesNotMatch(enableMethod, /playSelectedRadio|togglePlayback\(\).*radio-enable/i);
