@@ -210,6 +210,37 @@ While recording, call out anything in these areas — this is the feedback I mos
   happened? Any command it misunderstood?
 - **Anything that looks wrong, janky, or surprising** — screenshot it; that's the gold.
 
+---
+
+## 6. Claude voice backend (September 2026, manual-only)
+
+> Not covered by `npm test` or `npm run test:track` — real microphone
+> capture and real speech synthesis can't run in either harness. This is
+> the only test surface for the actual end-to-end voice round trip; the
+> automated gates only prove the pure tool-loop/coordinator logic is
+> correct. Needs `ANTHROPIC_API_KEY` configured (POWER UP panel, `.env`, or
+> Keychain) and a browser with Web Speech support (Chrome/Edge; not
+> Firefox by default).
+
+- **Backend switch appears and works:** with the key configured, the
+  `[GPT|CLAUDE]` pill should appear next to STD/MINI in the voice tray.
+  Click it — it should read `CLAUDE` and turn violet. If a session was
+  active on GPT, switching should stop it first.
+- **Round trip:** click the mic, say "fly to Tokyo and turn on satellites".
+  ✅ pass: status goes LISTENING → THINKING → EXECUTING → SPEAKING → OFF,
+  the camera actually flies to Tokyo, the satellites layer turns on, and a
+  short spoken confirmation is heard naming what happened. Try 2–3 more
+  tools this way (e.g. "what am I looking at", "zoom out").
+- **Tool-loop cap:** hard to trigger naturally; if you want to exercise it,
+  ask something that would plausibly chain several tool calls in a row and
+  confirm the mic doesn't hang indefinitely — it should eventually speak a
+  "reached the tool-call limit" message rather than going silent forever.
+- **Switch back to GPT mid-session:** click the pill again while Claude is
+  idle — it should read `GPT` again and behave exactly as before this
+  feature existed.
+- **Firefox (or with no `ANTHROPIC_API_KEY`):** the pill should simply not
+  appear — never a visible error on click.
+
 ## If something looks off
 
 - **Grey globe / slow tiles:** wait a few seconds after a camera flight; photoreal streams in.
@@ -218,3 +249,5 @@ While recording, call out anything in these areas — this is the feedback I mos
 - **No planes:** OpenSky data may be momentarily sparse; scroll out or wait a poll cycle.
 - **No GEV MIC button / voice errors:** `OPENAI_API_KEY` didn't load — use the console API for
   the annotation tests and skip the voice-only ones (§2).
+- **No `[GPT|CLAUDE]` pill:** either `ANTHROPIC_API_KEY` isn't configured, or this browser
+  lacks Web Speech support (expected on Firefox) — see §6.

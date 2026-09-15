@@ -2192,6 +2192,82 @@ silently demoting every later lookup for the session.
   4. **The loaded-data caveat is stated once when relevant**: counts cover loaded data, and the flights layer loads where you look (appended to `coverage.note` for radius/view scopes over viewport-loaded layers).
 - **Degradation**: without `OPENAI_API_KEY`, `/api/realtime/token` returns 503 and the mic button surfaces the error; the rest of the app is unaffected.
 
+### Voice Backend #2: Claude + Web Speech API (September 2026, stopgap)
+
+A second, **additive** voice backend for users without an OpenAI budget —
+per PM decision `ec1f62af-ba33-4f83-b602-76ae742bfc59`, explicitly temporary
+and not a replacement for OpenAI Realtime above. Anthropic has no
+speech-to-speech API, so Claude is paired with the browser's own
+**Web Speech API** (`SpeechRecognition` for STT, `SpeechSynthesis` for TTS)
+— $0 cost, turn-based rather than always-listening.
+
+- **One `window.__gevVoiceCommands`, two backends.** `src/voice/voiceBackendSwitch.js`'s
+  `createVoiceBackendCoordinator` delegates every public call
+  (`start`/`stop`/`setStatus`/`setMicrophoneEnabled`/`setVoiceSpeaker`/
+  `isActive`/`getDiagnostics`) to whichever backend is currently selected.
+  Both backends share the SAME DOM tray (one `#gev-voice-control`, one mic
+  button, one cost readout) and the SAME `gevActions.js` action runner (one
+  `createGevActionRunner()` call, not two) — Claude is a second *caller* of
+  the existing tool runner, not a new tool implementation. `runner` itself
+  is pinned to the OpenAI-built instance regardless of which backend is
+  active, so camera-verb/prewarm wiring is never installed twice.
+- **`[GPT|CLAUDE]` backend pill** sits next to the STD/MINI tier pill inside
+  the voice tray. Hidden by default; revealed only once BOTH hold: the
+  server reports `ANTHROPIC_API_KEY` configured (`GET /api/setup/status`,
+  the `anthropic` key entry's `set` field) AND this browser supports both
+  Web Speech pieces (`isSpeechRecognitionSupported() &&
+  isSpeechSynthesisSupported()` in `src/voice/webSpeechIO.js`) — Firefox has
+  no default `SpeechRecognition` support, so the pill simply never appears
+  there rather than failing on click.
+- **Turn-based state machine, not always-listening.** `GevClaudeVoiceController`
+  (`src/voice/gevClaudeVoice.js`) runs `idle → listening → thinking →
+  toolExecuting → speaking → idle` per utterance — `webSpeechIO.js`'s
+  recognizer is push-to-talk (one result per `start()`), so there is no
+  "connected and waiting" state. **Known limitation, not silently patched:**
+  the hold-Space push-to-talk shortcut always targets OpenAI Realtime, even
+  while Claude is selected — only the mic BUTTON is backend-aware.
+- **Bounded multi-turn tool loop.** Unlike this app's single-shot treatment
+  of an OpenAI Realtime function call, Anthropic's Messages API can return
+  several `tool_use` blocks per response and ask for MORE tools after their
+  `tool_result`s come back. `src/voice/claudeToolLoop.js` holds the pure
+  bookkeeping (`extractToolUseBlocks`, `buildToolResultMessage`,
+  `extractFinalText`, `hasExceededToolLoopLimit`,
+  `trimConversationHistory`) — `MAX_TOOL_LOOP_ITERATIONS` hard-stops a
+  confused model or a tool that always looks actionable, and speaks
+  whatever partial confirmation is available rather than hanging silently.
+  Conversation history is trimmed to a short window, mirroring the OpenAI
+  pipeline's own "map state is fetched live per turn" philosophy.
+- **Non-streaming proxy** (`anthropicProxy()`, `vite.config.js`), mounted at
+  `POST /api/anthropic/messages`: reads `ANTHROPIC_API_KEY` server-side
+  (browser never sees it), injects `tools: toAnthropicTools(GEV_TOOL_SCHEMAS)`
+  server-side — same trust boundary as `GEV_REALTIME_TOOLS`, the client
+  never defines what's callable — and defaults `system` to
+  `GEV_CLAUDE_VOICE_SYSTEM_PROMPT` (`src/voice/voiceSystemPrompt.js`, the
+  same persona/tool-usage contract as OpenAI Realtime's own instructions, so
+  the two backends can't drift apart in what they're allowed to do). Returns
+  `503` if the key is unset, mirroring `/api/realtime/token`. Opt-in per-IP
+  rate limit via `GEV_RATELIMIT_ANTHROPIC_PER_MIN`.
+- **Model tier + cost tracker** (`src/voice/claudeVoiceCost.js`) mirrors
+  `voiceCost.js`'s shape: `standard` = `claude-haiku-4-5-20251001` (default),
+  `pro` = `claude-sonnet-5`, both overridable via `ANTHROPIC_VOICE_MODEL` /
+  `ANTHROPIC_VOICE_MODEL_PRO`. Audio never reaches Claude (STT/TTS happen
+  entirely in the browser), so pricing is plain per-token input/output —
+  no audio-token tier to account for. Shares the same visible cost readout
+  (`#gev-voice-cost-value`) OpenAI uses; whichever backend is active repaints it.
+- **Visual states.** `thinking`/`speaking` are genuine new states (Claude
+  round-trip latency plus TTS playback are both real time the user should
+  see something for); `toolExecuting` deliberately reuses the existing
+  `executing` CSS hook (`DATASET_STATUS` remap table in `gevClaudeVoice.js`)
+  rather than duplicating the amber tool-running treatment.
+- **Explicit manual-QA gap**: real microphone capture and real speech
+  synthesis cannot run in `node:test` or in `npm run test:track`'s puppeteer
+  harness — see `TESTING.md`'s Claude voice backend scenario. `npm run
+  build`/`npm test` prove the pure tool-loop/coordinator logic is correct,
+  not that the end-to-end voice round trip works.
+- **Degradation**: without `ANTHROPIC_API_KEY`, or on a browser lacking Web
+  Speech support, the backend pill never appears — OpenAI Realtime is
+  entirely unaffected either way.
+
 ### AI HUD Summary (June 2026)
 
 - HUD `SUMMARY` readout requests a five-word intelligence-style summary from `/api/openai/hud-summary` (model `OPENAI_HUD_SUMMARY_MODEL`, default `gpt-5-nano`, minimal reasoning).

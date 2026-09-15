@@ -12,6 +12,7 @@ export const CREDENTIALS = Object.freeze([
   { name: 'GOOGLE_MAPS_API_KEY', label: 'Google Maps', keychain: [['google-maps-api', 'api-key'], ['google-maps-api', 'default'], ['google-maps-api', 'key']] },
   { name: 'CESIUM_ION_TOKEN', label: 'Cesium ion', keychain: [['cesium-ion', 'token']] },
   { name: 'OPENAI_API_KEY', label: 'OpenAI voice', keychain: [['openai-api', 'api-key']] },
+  { name: 'ANTHROPIC_API_KEY', label: 'Claude voice (alt. backend)', keychain: [['anthropic-api', 'api-key']] },
   { name: 'AISSTREAM_API_KEY', label: 'AISStream vessels', keychain: [['aisstream-api', 'api-key']] },
   { name: 'FIRMS_MAP_KEY', label: 'NASA FIRMS fires', keychain: [['firms-map', 'map-key']] },
   { name: 'TOMTOM_API_KEY', label: 'TomTom traffic', keychain: [['tomtom-api', 'api-key']] },
@@ -142,6 +143,7 @@ export function buildCapabilitySummary(credentials) {
       ? 'OpenSky OAuth credentials present (runtime mode and validity not verified)'
       : 'OpenSky OAuth credentials not configured',
     voice: configured('OPENAI_API_KEY') ? 'available' : 'off until an OpenAI key is added',
+    claudeVoice: configured('ANTHROPIC_API_KEY') ? 'available' : 'off until an Anthropic key is added',
     vessels: configured('AISSTREAM_API_KEY') ? 'live AISStream feed' : 'off until an AISStream key is added',
     fires: configured('FIRMS_MAP_KEY') ? 'live NASA FIRMS feed' : 'off until a FIRMS key is added',
     traffic: configured('TOMTOM_API_KEY') ? 'live TomTom flow' : 'built-in traffic simulation',
@@ -197,6 +199,7 @@ export function formatSetupReport(report, { readyMessage } = {}) {
     `Map:     ${report.capabilities.map}`,
     `Flights: ${report.capabilities.flights}`,
     `Voice:   ${report.capabilities.voice}`,
+    `Claude voice (alt.): ${report.capabilities.claudeVoice}`,
     `Vessels: ${report.capabilities.vessels}`,
     `Fires:   ${report.capabilities.fires}`,
     `Traffic: ${report.capabilities.traffic}`,

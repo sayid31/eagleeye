@@ -394,6 +394,19 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   color: #ffdc78;
 }
 
+/* Claude backend only (gevClaudeVoice.js) — OpenAI Realtime has no
+   "thinking"/"speaking" states of its own; it goes straight from
+   listening to executing/idle. */
+#gev-voice-control[data-status='thinking'],
+#gev-voice-control[data-status='speaking'] {
+  border-color: rgba(92, 255, 198, 0.45);
+}
+
+#gev-voice-control[data-status='thinking'] #gev-voice-status,
+#gev-voice-control[data-status='speaking'] #gev-voice-status {
+  color: #5cffc6;
+}
+
 #gev-voice-control[data-status='error'] {
   align-items: flex-start;
   width: min(440px, calc(100vw - 72px));
@@ -7624,7 +7637,9 @@ body.recording-mode #cesium-credits {
 #command-dock .gev-voice-visualizer span:nth-child(7n) { height: 0.75rem; }
 
 #command-dock #gev-voice-control[data-status='listening'] .gev-voice-visualizer span,
-#command-dock #gev-voice-control[data-status='executing'] .gev-voice-visualizer span {
+#command-dock #gev-voice-control[data-status='executing'] .gev-voice-visualizer span,
+#command-dock #gev-voice-control[data-status='thinking'] .gev-voice-visualizer span,
+#command-dock #gev-voice-control[data-status='speaking'] .gev-voice-visualizer span {
   animation: gev-voice-bar 680ms ease-in-out infinite alternate;
   animation-delay: calc(var(--bar) * -45ms);
 }
@@ -7992,7 +8007,9 @@ body:not(.ui-clean-view):not(.recording-mode) #cesium-credits {
 
 #command-dock #gev-voice-control[data-status='connecting'] .gev-voice-visualizer,
 #command-dock #gev-voice-control[data-status='listening'] .gev-voice-visualizer,
-#command-dock #gev-voice-control[data-status='executing'] .gev-voice-visualizer {
+#command-dock #gev-voice-control[data-status='executing'] .gev-voice-visualizer,
+#command-dock #gev-voice-control[data-status='thinking'] .gev-voice-visualizer,
+#command-dock #gev-voice-control[data-status='speaking'] .gev-voice-visualizer {
   visibility: visible;
   opacity: 1;
   transform: none;
@@ -8024,7 +8041,9 @@ body:not(.ui-clean-view):not(.recording-mode) #cesium-credits {
 
 #command-dock #gev-voice-control[data-status='connecting'] #gev-voice-detail,
 #command-dock #gev-voice-control[data-status='listening'] #gev-voice-detail,
-#command-dock #gev-voice-control[data-status='executing'] #gev-voice-detail {
+#command-dock #gev-voice-control[data-status='executing'] #gev-voice-detail,
+#command-dock #gev-voice-control[data-status='thinking'] #gev-voice-detail,
+#command-dock #gev-voice-control[data-status='speaking'] #gev-voice-detail {
   grid-row: 3;
   font-size: 0.43rem;
 }
@@ -8612,7 +8631,9 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
 #command-dock #gev-voice-control:is(
   [data-status='connecting'],
   [data-status='listening']:not([data-microphone='muted']),
-  [data-status='executing']
+  [data-status='executing'],
+  [data-status='thinking'],
+  [data-status='speaking']
 ) .gev-mic-orbit {
   background: rgba(0, 212, 255, 0.06);
   border-color: rgba(0, 212, 255, 0.48);
@@ -8623,7 +8644,9 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
 #command-dock #gev-voice-control:is(
   [data-status='connecting'],
   [data-status='listening']:not([data-microphone='muted']),
-  [data-status='executing']
+  [data-status='executing'],
+  [data-status='thinking'],
+  [data-status='speaking']
 ) .gev-mic-orbit img {
   filter: none;
   opacity: 1;
@@ -8857,6 +8880,14 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
   color: #ffc46b;
   border-color: rgba(255, 196, 107, 0.55);
   background: rgba(255, 196, 107, 0.12);
+}
+
+/* Claude backend engaged — violet, distinct from both the cyan GPT default
+   and the amber MINI tier so three simultaneous pill states never collide. */
+.gev-voice-backend-btn[aria-pressed='true'] {
+  color: #c39bff;
+  border-color: rgba(195, 155, 255, 0.55);
+  background: rgba(195, 155, 255, 0.12);
 }
 
 .gev-voice-cost-value {
