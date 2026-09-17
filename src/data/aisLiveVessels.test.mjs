@@ -26,6 +26,7 @@ import {
   _setVesselOverlayHostForTest,
   _updateVesselCardsForTest,
   applyVesselFocusDeemphasis,
+  aisNeedsContinuousRender,
   mapAnalystRecord,
 } from './aisLiveVessels.js';
 import aisLiveVesselsLayer from './aisLiveVessels.js';
@@ -35,6 +36,11 @@ import { ensureGeoidReady, geoidHeight } from './geoid.js';
 import { registerPickOwner, unregisterPickOwner } from './pickRegistry.js';
 import { applyVesselOverlayPolicy } from './vesselLabels.js';
 import { layerFeedState } from './manager.js';
+import {
+  installRenderGovernor,
+  getRenderGovernorDiagnostics,
+  _resetRenderGovernorForTest,
+} from '../renderGovernor.js';
 
 test('open feed with vessels is healthy (null)', () => {
   assert.equal(deriveAisFeedError({ status: 'open', lastMessageAt: 1, error: null }, 42), null);
@@ -776,6 +782,15 @@ test('vessel focus wire restores a hidden sprite before releasing the active pas
   assert.equal(billboard.color.alpha, 1);
 });
 
+test('aisNeedsContinuousRender mirrors focusPassIsNeeded\'s truth table', () => {
+  assert.equal(aisNeedsContinuousRender({ focusTarget: null, activeFocusCount: 0 }), false);
+  assert.equal(aisNeedsContinuousRender({ focusTarget: undefined, activeFocusCount: 0 }), false);
+  assert.equal(aisNeedsContinuousRender({ focusTarget: null, activeFocusCount: undefined }), false);
+  assert.equal(aisNeedsContinuousRender({ focusTarget: { screenRect: {} }, activeFocusCount: 0 }), true);
+  assert.equal(aisNeedsContinuousRender({ focusTarget: null, activeFocusCount: 1 }), true);
+  assert.equal(aisNeedsContinuousRender({ focusTarget: null, activeFocusCount: -1 }), false);
+});
+
 // --- Selection gestures (FB-1) ---------------------------------------------
 
 test('vessel selection: empty-space click requests deselection', () => {
@@ -1272,6 +1287,61 @@ test('vessel trail lifecycle: reconciliation eviction clears an orphaned trail',
     });
   } finally {
     _setVesselStateForTest({ enabled: false });
+  }
+});
+
+// Dropping the unconditional hold (perf wave 3) is only safe if a poll landing
+// while idle still reaches the screen — updateVisibility(true) recomputes the
+// billboard show/hide/rotation state regardless of render mode, but the canvas
+// won't reflect it until an actual frame is requested. Wires the REAL governor
+// so the omission this guards against would be observable, not just inferred.
+test('an AIS poll still reaches the screen with the render loop idle', () => {
+  const renderRequests = [];
+  const viewer = {
+    scene: {
+      requestRenderMode: false,
+      requestRender: () => renderRequests.push(Date.now()),
+      primitives: { add: (p) => p },
+    },
+  };
+  _resetRenderGovernorForTest();
+  installRenderGovernor(viewer);
+  // Installing the governor enters idle mode, which itself paints one settling
+  // frame — drop that from the baseline so the poll assertion below can't pass
+  // on the install alone.
+  renderRequests.length = 0;
+
+  // A minimal billboard-collection stand-in: reconcileVessels() adds one
+  // primitive for the new row below and updateVisibility() mutates its show/
+  // rotation fields afterward — a plain mutable object covers both.
+  const billboardCollection = { add: (opts) => ({ ...opts }), remove() {} };
+  _setVesselStateForTest({ viewer, records: [], billboardCollection });
+  const originalProjection = Cesium.SceneTransforms.worldToWindowCoordinates;
+  Cesium.SceneTransforms.worldToWindowCoordinates = () => ({ x: 50, y: 50 });
+  try {
+    _reconcileVesselsForTest(viewer, [{
+      mmsi: '353136000',
+      name: 'EVER GIVEN',
+      lat: 30.1,
+      lon: 32.5,
+    }]);
+
+    // Nothing is focused, so the layer must not force continuous render.
+    assert.equal(getRenderGovernorDiagnostics().mode, 'idle', 'an unfocused poll must not force continuous render');
+    assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
+
+    // ...but the poll that changed the billboard state must still have asked
+    // for a frame, because in idle mode nothing repaints on its own.
+    assert.ok(renderRequests.length > 0, 'a poll applied while idle must request a render');
+    const reasons = getRenderGovernorDiagnostics().recentRequests.map(({ reason }) => reason);
+    assert.ok(
+      reasons.includes('ais-vessels-poll'),
+      `the poll frame must be attributed to ais-vessels-poll, got ${JSON.stringify(reasons)}`,
+    );
+  } finally {
+    Cesium.SceneTransforms.worldToWindowCoordinates = originalProjection;
+    _setVesselStateForTest({ enabled: false });
+    _resetRenderGovernorForTest();
   }
 });
 

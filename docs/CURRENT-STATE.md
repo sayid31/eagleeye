@@ -143,6 +143,85 @@ Updated: August 24, 2026
 > no height sampling and no canvas work after the single clear on the disable
 > transition. The hard-crop (FEATHER 0) path honors the same terminus.
 
+> **2026-09-17 — performance wave 3: conditional holds on `ais-live-vessels`,
+> `traffic`, `satellites`, and the `rocket-launches` mission-replay mode.**
+> Waves 1+2 stopped a handful of animators from holding continuous render
+> forever; this wave applies the same "hold only while genuinely needed"
+> discipline to four more layers that had been holding unconditionally for
+> their entire enabled lifetime — the same class of cost `renderGovernor.js`'s
+> own header quantifies (~60% GPU / ~54% of a CPU core with ZERO layers
+> enabled and a parked camera, before the governor existed). Each follows the
+> `militaryAwareness.js` shape: a pure predicate evaluated on an existing
+> cadence (no new polling loop), feeding a `sync<Layer>RenderHold()` that
+> acquires/releases the hold; `enable()`/`init()` call it once immediately so
+> a layer enabled with something already visible does not wait a tick to
+> hold; `disable()`/`destroy()` keep their unconditional release as a hard
+> backstop.
+> - **`aisLiveVessels.js`** — AIS billboards don't dead-reckon between polls
+>   (positions are written directly from the latest fix and held static), so
+>   the only genuine per-frame need is the existing focus/de-emphasis
+>   transition. `syncAisRenderHold()` reuses the file's own
+>   `focusPassIsNeeded(focusTarget, activeFocusCount)` predicate (already
+>   imported from `focusDeemphasis.js`) and runs at the top of
+>   `updateVisibility()`. A poll landing while idle still requests a frame
+>   explicitly (`governorRequestRender('ais-vessels-poll')`) so a background
+>   update is never invisible until an unrelated camera nudge repaints it.
+> - **`traffic.js`** — `trafficNeedsContinuousRender({ dotCount })` — dots only
+>   exist for the loaded/bounds-clamped viewport, so existence is already a
+>   reasonable on-screen proxy; `syncTrafficRenderHold()` runs at the end of
+>   `animate()` every tick. Checked and accepted as harmless: `dot.t`'s
+>   capped-`dt` motion resumes seamlessly (no teleport) if `animate()` stalls;
+>   `dot.stoppedUntil`/`dot.creep.until` are absolute wall-clock timestamps
+>   that keep expiring in real time regardless, so a dot may resume from a
+>   stop a few seconds early — cosmetic only, on a dot that was off-screen the
+>   whole time it wasn't ticking.
+> - **`satellites.js`** — `satellitesNeedContinuousRender({ showPoints,
+>   anyPointOnScreen })`. The on-screen scan piggybacks on the EXISTING
+>   `_propagateAll()` 1 Hz cadence (200 ms while tracking) rather than adding
+>   a second one; `_preRenderTick()` reads the cached boolean every frame at
+>   near-zero cost. Known, deliberately-uncollapsed overlap: while a specific
+>   satellite is tracked, `main.js`'s independent `'tracked-entity'` hold
+>   already keeps the scene continuous, making this layer's own hold
+>   redundant during tracking — commented in source so it isn't "fixed" into
+>   a bug later.
+> - **`rocketLaunches.js` (carve-out only)** — mission **replay** is a
+>   discrete, explicit opt-in mode (same shape as `cctv.js`'s `cctv-adjust`
+>   calibration hold), so it got its OWN hold, `'rocket-replay'`, acquired in
+>   `startMissionReplay()` and released in `stopMissionReplay()` — every one
+>   of that function's 11 call sites funnels through it, so no other call
+>   site needed a direct edit. The layer-wide `'rocket-launches'` hold in
+>   `enable()`/`disable()`/`destroy()` is unchanged by this carve-out.
+>   `updateMissionFrame()`'s own unconditional per-frame horizon-occlusion
+>   sweep is explicitly OUT OF SCOPE for this wave — deferred to its own pass
+>   with dedicated pan/zoom/rotate visual QA, since it shares the
+>   `percentageChanged` camera knob `traffic.js` already flags as a
+>   cross-layer footgun.
+> - **Explicitly NOT touched this wave: `flights.js` / `militaryFlights.js`.**
+>   Both still hold unconditionally. `detectionRenderDemand.test.mjs` pins a
+>   regression, *"aircraft brackets stay prompt because the aircraft layers
+>   hold the render loop"*: detection paints its HUD AIR brackets from live
+>   aircraft positions every frame and takes no part in detection's own
+>   change-notification system, so the only reason a bracket doesn't go stale
+>   on a parked scene is that the aircraft layers force continuous repaint for
+>   unrelated reasons. A parked aircraft at a gate still needs its bracket
+>   kept fresh, so a "genuine on-screen motion" predicate does not coincide
+>   with detection's actual need — fixing this properly means giving
+>   detection its own per-object delta signal (real, separate design work),
+>   not just gating the existing hold. Left alone on purpose, given this
+>   territory's own documented history of four prior tracked-camera
+>   regressions (`track-regression.mjs`'s own comment) and its harder,
+>   tolerance-based `npm run test:track` gate.
+> - Verification for the four changed layers: new predicate/governor-wiring
+>   tests per layer (`aisLiveVessels.test.mjs`, `traffic.test.mjs`,
+>   `satellitesRenderHold.test.mjs` + `satellitesVisibility.test.mjs`,
+>   `rocketLaunchesRenderHold.test.mjs`); full `npm test` and `npm run build`
+>   green; `npm run test:track` run twice post-change, 107/108 passing both
+>   times with the one failure landing on a DIFFERENT assertion each run,
+>   both inside the unrelated flights/military ground-floor height-sampling
+>   section (`display-floor/corridor`, `display-floor/regime`) — consistent
+>   with pre-existing headless-SwiftShader timing flakiness the harness's own
+>   comments already document, not a regression from this wave's layers.
+
 This is the current runtime/source-of-truth snapshot for the project.
 
 > [!IMPORTANT]

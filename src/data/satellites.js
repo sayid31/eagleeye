@@ -30,8 +30,9 @@ import {
   refreshTrackedSubjectContext,
   selectTrackedSubjectContext,
 } from './contextStore.js';
-import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import { holdContinuousRender, releaseContinuousRender, getRenderGovernorDiagnostics } from '../renderGovernor.js';
 import { isExplicitLayerStateOrigin } from './layerState.js';
+import { horizonOccluder } from './iconOrientation.js';
 
 /**
  * Satellite Orbits — Real-time positions via CelesTrak TLE + SGP4 propagation.
@@ -62,6 +63,7 @@ let _overlayHost = DEFAULT_OVERLAY_HOST;
 const ORBIT_PATH_STEPS = 180;  // points per orbital path
 const POSITION_UPDATE_MS = 1000; // re-propagate every 1s (SGP4 is smooth at this rate)
 const RING_ROTATION_MS = 1000;   // re-align baked orbit rings to current GMST every 1s
+const WATCHDOG_TICK_MS = 1000;   // idle-mode fallback cadence — see _watchdogTick
 
 /**
  * CelesTrak groups loaded as the core catalog, in dedupe-priority order:
@@ -207,6 +209,21 @@ function _abortActiveUpdates() {
 }
 let _viewer = null;
 let _preRenderListener = null;
+/**
+ * Wall-clock fallback for the on-screen scan (see syncSatellitesRenderHold).
+ * `scene.preRender` — and therefore `_preRenderTick` — only fires while
+ * something is ALREADY forcing a render (a hold, camera motion, a pending
+ * request); Cesium's own `Scene.render()` skips raising `preRender` whenever
+ * `shouldRender` is false. Once this layer drops its own hold and the camera
+ * parks, preRender stops firing entirely — nothing would ever re-run the
+ * on-screen scan that could re-acquire it, so an orbiting satellite drifting
+ * into frustum over a static camera would stay frozen forever. This interval
+ * is the one thing that keeps ticking regardless of render mode (mirrors
+ * radio.js's `_horizonTimer` solving the identical problem for its own
+ * horizon-occlusion scan).
+ * @type {ReturnType<typeof setInterval>|null}
+ */
+let _watchdogTimer = null;
 let _lastPropagation = 0;
 let _lastRingRotation = 0;
 let _lastFocusUpdate = 0;
@@ -429,6 +446,16 @@ let _trackedFrameNowForTest = null;
 // Scratch variables
 const _scratchCartesian = new Cesium.Cartesian3();
 const _scratchRingRotation = new Cesium.Matrix3();
+/** Frustum-visibility scratch bounding sphere (radius is irrelevant — a point test). */
+const _scratchOnScreenBS = new Cesium.BoundingSphere(new Cesium.Cartesian3(), 1.0);
+/**
+ * Cached across `_propagateAll()`'s 1 Hz cadence (see syncSatellitesRenderHold):
+ * whether at least one on-screen point is currently orbiting into view. Read
+ * every frame by `_preRenderTick()` at near-zero cost — recomputing it there
+ * would repeat a horizon+frustum test per satellite every vsync instead of
+ * once a second.
+ */
+let _anyPointOnScreen = true; // fail toward continuous until the first scan completes
 
 /**
  * Build the rigid ECEF transform that keeps an orbit path baked at one GMST
@@ -1027,10 +1054,27 @@ function _trackSatellite(noradId, { origin = 'programmatic' } = {}) {
  * Propagate all CORE satellite positions and update point primitives.
  * (~840 sats ≈ 1.6 ms/pass — fine at the 1s/200ms cadence.) Dense extras are
  * excluded: they refresh on the round-robin budget in _propagateDenseChunk.
+ *
+ * Piggybacks the on-screen visibility scan (horizon occluder + frustum cull,
+ * same two-line pattern `flights.js`'s `_sweepAmbientEnrichment` uses) onto
+ * this existing 1 Hz cadence rather than adding a new per-frame scan —
+ * measured at ~0.3ms for 840 points, roughly doubling this pass's cost but
+ * still cheap at 1 Hz. The result is cached in `_anyPointOnScreen` for
+ * `_preRenderTick()`'s `syncSatellitesRenderHold()` to read every frame at
+ * near-zero cost.
  */
 function _propagateAll() {
   const now = new Date();
   let updated = 0;
+
+  const camera = _viewer?.camera;
+  // No camera to test against (a render-free test seam) — fail toward
+  // continuous rather than silently freezing a scene we can't evaluate.
+  const occluder = camera ? horizonOccluder(camera) : null;
+  const cull = camera
+    ? camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC)
+    : null;
+  let anyOnScreen = !camera;
 
   for (const [noradId, sat] of _catalog) {
     if (sat.group === 'dense') continue;
@@ -1042,9 +1086,16 @@ function _propagateAll() {
     if (point) {
       point.position = cartesian;
       updated++;
+      if (!anyOnScreen && point.show !== false && occluder?.isPointVisible(cartesian)) {
+        Cesium.Cartesian3.clone(cartesian, _scratchOnScreenBS.center);
+        if (cull.computeVisibility(_scratchOnScreenBS) !== Cesium.Intersect.OUTSIDE) {
+          anyOnScreen = true;
+        }
+      }
     }
   }
 
+  _anyPointOnScreen = anyOnScreen;
   return updated;
 }
 
@@ -1253,6 +1304,67 @@ function _preRenderTick() {
     _updateOrbitPathRotations(new Date(now));
     _lastRingRotation = now;
   }
+
+  syncSatellitesRenderHold();
+}
+
+/**
+ * Whether Satellites genuinely has per-frame work right now. Orbital motion
+ * is never "not moving" (unlike a parked traffic dot or an AIS billboard
+ * between polls), so the gate here is "is anything moving **on screen**",
+ * not "is anything moving" — always true. `anyPointOnScreen` is the cached
+ * result of the horizon+frustum scan piggybacked onto `_propagateAll()`'s
+ * existing 1 Hz cadence (see there); it defaults true — fail toward
+ * continuous, never toward a silently-stale scene — until the first scan
+ * completes.
+ * @param {{showPoints?: boolean, anyPointOnScreen?: boolean}} [snapshot] Explicit state, for tests.
+ * @returns {boolean}
+ */
+export function satellitesNeedContinuousRender({
+  showPoints = _params.showPoints,
+  anyPointOnScreen = _anyPointOnScreen,
+} = {}) {
+  return Boolean(showPoints) && Boolean(anyPointOnScreen);
+}
+
+/**
+ * Idle-mode fallback for `_preRenderTick()`. `scene.preRender` only fires
+ * when Cesium's own `shouldRender` check is true — camera motion, a pending
+ * `requestRender()`, or an existing hold. Once this layer's own hold is
+ * released and the camera parks, nothing forces a render, so `preRender`
+ * (and the on-screen scan inside `_propagateAll()`) stops firing entirely —
+ * an orbiting satellite drifting into frustum over a static camera would
+ * never be noticed and this layer would never re-acquire its hold. This
+ * wall-clock interval — independent of the render loop, like radio.js's
+ * `_horizonTimer` solving the identical problem for its horizon scan —
+ * re-runs the exact same tick on a cadence so the scan (and, in turn, the
+ * hold) stays live even while idle. Skipped while continuous mode is
+ * already forcing `preRender` every frame for any reason (this layer's own
+ * hold, or another owner's, e.g. `main.js`'s tracked-entity hold) — running
+ * it there too would just be redundant, throttle-absorbed work.
+ * @returns {void}
+ */
+function _watchdogTick() {
+  if (!_enabled) return;
+  if (getRenderGovernorDiagnostics().mode === 'continuous') return;
+  _preRenderTick();
+}
+
+/**
+ * Take or drop the continuous-render hold to match current need. Idempotent
+ * (the governor is identity-keyed). Called at the end of every
+ * `_preRenderTick()` — whether driven by `scene.preRender` or by the
+ * `_watchdogTick()` fallback above — not held for the layer's whole enabled
+ * lifetime — see `satellitesNeedContinuousRender()`.
+ *
+ * Known, harmless overlap: while a specific satellite is tracked,
+ * `main.js`'s independent `'tracked-entity'` hold already keeps the scene
+ * continuous regardless of this hold's state — do not "fix" that overlap.
+ * @returns {void}
+ */
+function syncSatellitesRenderHold() {
+  if (_enabled && satellitesNeedContinuousRender()) holdContinuousRender('satellites');
+  else releaseContinuousRender('satellites');
 }
 
 /**
@@ -1356,6 +1468,11 @@ export function _setDenseCatalogStateForTest({ catalog = 'core', showPoints = tr
   _cancelPendingTrackingRestore();
   _params = { catalog, showPoints, showOrbits: false };
   _enabled = true;
+  // So a test driving _runSatellitePreRenderForTest() right after this seam
+  // isn't at the mercy of how much wall-clock time elapsed since whatever
+  // ran before it in the same test process — force the next tick's
+  // interval gate (POSITION_UPDATE_MS) to pass unconditionally.
+  _lastPropagation = 0;
 }
 
 /** Tear the dense seam back down so ordering cannot leak into other tests. */
@@ -1379,6 +1496,46 @@ export function _clearDenseCatalogStateForTest() {
 /** Catalog group tag recorded for a satellite, for ingestion-path assertions. */
 export function _catalogGroupForTest(noradId) {
   return _catalog.get(Number(noradId))?.group;
+}
+
+/**
+ * Add one real, propagable core-catalog satellite + point primitive on top
+ * of whichever render-state seam (e.g. _setDenseCatalogStateForTest) already
+ * set up _catalog/_points — for tests that need _propagateAll()'s real SGP4 +
+ * on-screen scan to have a genuine target, not a 'dense' entry it skips.
+ * @param {number} noradId
+ * @param {import('satellite.js').SatRec} satrec
+ * @param {{show?: boolean}} [pointOverrides]
+ */
+export function _addCoreCatalogEntryForTest(noradId, satrec, pointOverrides = {}) {
+  _catalog.set(noradId, { name: `TEST-${noradId}`, satrec, group: 'stations' });
+  const point = { position: new Cesium.Cartesian3(), show: true, ...pointOverrides };
+  _points.set(noradId, point);
+  _count = _points.size;
+  return point;
+}
+
+/**
+ * Attach a real Cesium camera to whichever render-state seam (e.g.
+ * _setDenseCatalogStateForTest) already built `_viewer` — needed so
+ * `_propagateAll()`'s on-screen scan (horizon occluder + frustum cull) has
+ * something genuine to test satellites against instead of the seam's
+ * camera-less viewer stub (which makes the scan fail toward "on screen").
+ * @param {Cesium.Camera} camera
+ */
+export function _setCameraForTest(camera) {
+  if (_viewer) _viewer.camera = camera;
+}
+
+/**
+ * Force the next `_runSatellitePreRenderForTest()` call to re-run
+ * `_propagateAll()` (and therefore the on-screen scan) regardless of how
+ * little wall-clock time has passed since the last one — a test driving two
+ * scans back to back (e.g. to swing the camera between them) would otherwise
+ * have its second call swallowed by the real 1s throttle in `_preRenderTick`.
+ */
+export function _forceNextPropagationForTest() {
+  _lastPropagation = 0;
 }
 
 /** Seed ISS/tracking state while retaining the production track and host paths. */
@@ -1569,7 +1726,15 @@ const satellitesLayer = {
 
   enable(viewer) {
     _enabled = true;
-    holdContinuousRender('satellites'); // per-frame animator (perf wave 2)
+    // Conditional render hold (perf wave 3): held only while showPoints is on
+    // AND at least one point is actually on screen — not for the layer's
+    // whole enabled lifetime — see satellitesNeedContinuousRender(). The
+    // on-screen scan hasn't run yet for this enable, so fail toward
+    // continuous until _propagateAll()'s first pass settles it; sync once
+    // immediately so a layer enabled with something already visible doesn't
+    // wait a tick to hold.
+    _anyPointOnScreen = true;
+    syncSatellitesRenderHold();
     if (_pointCollection) _pointCollection.show = satelliteVisualsVisible(_enabled, _params.showPoints);
     // Orbit ring primitives + persistent ISS host label — show them
     for (const path of _orbitPaths.values()) path.primitive.show = satelliteVisualsVisible(_enabled, _params.showOrbits);
@@ -1585,6 +1750,9 @@ const satellitesLayer = {
     if (!_preRenderListener && viewer) {
       _preRenderListener = viewer.scene.preRender.addEventListener(_preRenderTick);
     }
+    // Idle-mode fallback so the on-screen scan keeps running once preRender
+    // itself stops firing — see _watchdogTick(). Cleared in disable()/destroy().
+    if (!_watchdogTimer) _watchdogTimer = setInterval(_watchdogTick, WATCHDOG_TICK_MS);
     _applyPendingTrackingRestore();
   },
 
@@ -1592,7 +1760,11 @@ const satellitesLayer = {
     _abortActiveUpdates();
     _cancelPendingTrackingRestore();
     _enabled = false;
-    releaseContinuousRender('satellites');
+    releaseContinuousRender('satellites'); // hard backstop — _preRenderTick() stops running once disabled (preRenderListener removed below)
+    if (_watchdogTimer) {
+      clearInterval(_watchdogTimer);
+      _watchdogTimer = null;
+    }
     if (_pointCollection) _pointCollection.show = false;
     for (const path of _orbitPaths.values()) path.primitive.show = false;
     _clearTracking();
@@ -1779,6 +1951,10 @@ const satellitesLayer = {
     _abortActiveUpdates();
     releaseContinuousRender('satellites'); // direct-destroy path (perf wave 2 fix)
     _enabled = false;
+    if (_watchdogTimer) {
+      clearInterval(_watchdogTimer);
+      _watchdogTimer = null;
+    }
     _clearTracking();
     _cancelPendingTrackingRestore();
     if (_clickHandler) {

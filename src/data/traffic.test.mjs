@@ -7,11 +7,20 @@
 // that contract; the layer's getStats() is a thin caller.
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import * as Cesium from 'cesium';
 import trafficLayer, {
   deriveTrafficFlowError,
   trafficFeedPresentation,
+  trafficNeedsContinuousRender,
+  _setViewerForTest,
+  _renderRoadsForAltitudeForTest,
 } from './traffic.js';
 import { DataLayerManager, layerFeedState } from './manager.js';
+import {
+  installRenderGovernor,
+  getRenderGovernorDiagnostics,
+  _resetRenderGovernorForTest,
+} from '../renderGovernor.js';
 
 /**
  * The app's live markers. Case-SENSITIVE on purpose: uppercase LIVE/GPS is
@@ -142,6 +151,78 @@ test('the manager reads keyless as FALLBACK and an outage as DEGRADED', () => {
     }),
     'degraded',
   );
+});
+
+test('trafficNeedsContinuousRender mirrors the existence-based proxy', () => {
+  assert.equal(trafficNeedsContinuousRender({ dotCount: 0, heatLineCount: 0 }), false);
+  assert.equal(trafficNeedsContinuousRender({ dotCount: 1, heatLineCount: 0 }), true);
+  assert.equal(trafficNeedsContinuousRender({ dotCount: 0, heatLineCount: 1 }), true);
+  assert.equal(trafficNeedsContinuousRender({ dotCount: 5, heatLineCount: 5 }), true);
+  // anyVisibleAndMoving is a seam for a future frustum-cull refinement — it
+  // defaults true (fail toward continuous), but must still gate off when a
+  // future caller passes false explicitly.
+  assert.equal(
+    trafficNeedsContinuousRender({ dotCount: 5, heatLineCount: 0, anyVisibleAndMoving: false }),
+    false,
+  );
+});
+
+// Dropping the unconditional hold (perf wave 3) is only safe if a road/dot
+// load landing while idle still reaches the screen — renderRoadsForAltitude
+// spawns dots into the real PointPrimitiveCollection regardless of render
+// mode, but the canvas won't reflect it until an actual frame is requested.
+// Wires the REAL governor so the omission this guards against would be
+// observable, not just inferred.
+test('a road load still reaches the screen with the render loop idle', () => {
+  const renderRequests = [];
+  const viewer = {
+    scene: {
+      requestRenderMode: false,
+      requestRender: () => renderRequests.push(Date.now()),
+      primitives: { add: (p) => p },
+    },
+    camera: { positionWC: new Cesium.Cartesian3(0, 0, 0) },
+  };
+  _resetRenderGovernorForTest();
+  installRenderGovernor(viewer);
+  // Installing the governor enters idle mode, which itself paints one settling
+  // frame — drop that from the baseline so the load assertion below can't
+  // pass on the install alone.
+  renderRequests.length = 0;
+
+  trafficLayer.init(viewer);
+  const waypoints = [
+    Cesium.Cartesian3.fromDegrees(106.80, -6.20, 3),
+    Cesium.Cartesian3.fromDegrees(106.81, -6.20, 3),
+  ];
+  const road = {
+    coords: [[106.80, -6.20], [106.81, -6.20]],
+    type: 'motorway',
+    oneway: 0,
+    waypoints,
+    segmentDist: [Cesium.Cartesian3.distance(waypoints[0], waypoints[1])],
+  };
+  try {
+    _renderRoadsForAltitudeForTest([road], 500, 'test-idle-load');
+
+    // The layer was never enabled, so the load must not force continuous
+    // render on its own — spawning dots is not the same as animating them.
+    assert.equal(getRenderGovernorDiagnostics().mode, 'idle', 'an un-enabled load must not force continuous render');
+    assert.deepEqual(getRenderGovernorDiagnostics().holds, []);
+
+    // ...but the load that spawned dots must still have asked for a frame,
+    // because in idle mode nothing repaints on its own.
+    assert.ok(renderRequests.length > 0, 'a road load applied while idle must request a render');
+    const reasons = getRenderGovernorDiagnostics().recentRequests.map(({ reason }) => reason);
+    assert.ok(
+      reasons.includes('traffic-poll'),
+      `the load frame must be attributed to traffic-poll, got ${JSON.stringify(reasons)}`,
+    );
+  } finally {
+    _renderRoadsForAltitudeForTest([], 500, 'test-idle-cleanup');
+    _setViewerForTest(null);
+    _resetRenderGovernorForTest();
+  }
 });
 
 test('the shipped layer boots keyless-honest before any status check', () => {
