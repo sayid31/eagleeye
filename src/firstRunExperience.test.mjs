@@ -682,10 +682,14 @@ test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is
   // into voice/toolSchemas.js (see above) — the pin moved from a raw-source
   // byte/hash of the vite.config.js literal to a JSON hash of the derived
   // wire array. Content is unchanged; only the measurement method changed.
-  assert.equal(json.length, 26373, 'tool schema JSON length drifted from the pinned release schema');
+  // Re-pinned 2026-09-17 (e): esri-dark-gray basemap feature adds
+  // 'esri-dark-gray' to set_map_stack's enum and extends its description
+  // with the dark/gray/canvas disambiguation clause — the tools are the same
+  // 28, one enum/description grew. See CHANGELOG.md "Esri Dark Gray Canvas".
+  assert.equal(json.length, 26460, 'tool schema JSON length drifted from the pinned release schema');
   assert.equal(
     crypto.createHash('sha256').update(json).digest('hex'),
-    '06ff7b37f1addfa880e1ecfde1f1ae51997435a2818028c1e94cceb9b01726e0',
+    'fbc1bea2757ec64226a10e5c9e0c282b29770fba2381daed079ddef1d827ff79',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
 

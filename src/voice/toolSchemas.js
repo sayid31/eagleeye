@@ -326,8 +326,8 @@ export const GEV_TOOL_SCHEMAS = [
       properties: {
         stack: {
           type: 'string',
-          enum: ['photoreal', 'bing-aerial', 'bing-labels', 'esri-imagery', 'osm'],
-          description: 'photoreal = Google 3D. Use bing-aerial only when the user explicitly says "Bing aerial" — "satellite(s)" never means a basemap; only the explicit phrase "Esri" / "Esri imagery" means esri-imagery.',
+          enum: ['photoreal', 'bing-aerial', 'bing-labels', 'esri-imagery', 'esri-dark-gray', 'osm'],
+          description: 'photoreal = Google 3D. Use bing-aerial only when the user explicitly says "Bing aerial" — "satellite(s)" never means a basemap; only the explicit phrase "Esri" / "Esri imagery" means esri-imagery; "dark gray" / "dark mode" / "dark canvas" means esri-dark-gray.',
         },
       },
       required: ['stack'],

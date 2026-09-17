@@ -33,6 +33,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- **New keyless basemap: Esri Dark Gray Canvas.** A muted, dark-styled ArcGIS
+  Online basemap alongside the existing Esri Satellite/Bing/OSM/Google 3D map
+  stacks — no API key required, pairs well with the app's HUD visual styles.
+  Available as a chip in the bottom MAP SOURCE tray, via voice ("dark gray" /
+  "dark mode" / "esri dark gray"), and via `set_map_stack`'s `esri-dark-gray`
+  value. Falls back to OSM automatically if Esri is unreachable, same as the
+  existing Esri Satellite stack.
 - **Claude (Anthropic) voice backend — a temporary, opt-in alternative to
   OpenAI Realtime**, for users without an OpenAI voice budget. Since
   Anthropic has no speech-to-speech API, it's paired with the browser's own
