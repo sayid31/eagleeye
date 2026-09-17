@@ -5,6 +5,32 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Performance
+
+- **Continuous-render holds on the AIS Vessels, Street Traffic, Satellites,
+  and Rocket Launches (mission-replay mode) layers are now conditional**,
+  matching the pattern the render governor already used for detection and
+  military awareness. Each of these previously forced the scene to repaint
+  every vsync for its entire enabled lifetime, even while showing nothing
+  that was actually moving on screen — the same measured cost class
+  documented for the render governor itself (~60% GPU / ~54% of a CPU core
+  idle-with-nothing-enabled before it existed). Now each layer holds
+  continuous render only while it genuinely needs it (something visibly
+  animating on screen) and releases it the rest of the time, so more layers
+  can run together without the frame cost stacking up:
+  - AIS Vessels holds only during an active focus/de-emphasis transition.
+  - Street Traffic holds only while moving dots exist for the loaded viewport.
+  - Satellites holds only while a catalog point is actually on screen.
+  - Rocket Launches' mission-replay chase camera gets its own hold, scoped to
+    just the replay's own duration, separate from the layer's existing
+    always-on hold (unchanged) — the replay's per-frame occlusion sweep
+    itself is intentionally not part of this change.
+  Flights and Military Flights were audited too and intentionally left
+  unconditional this round — their hold is currently load-bearing for the
+  Intelligence HUD's aircraft brackets staying repainted; fixing that
+  properly needs its own follow-up. See `docs/CURRENT-STATE.md` for the full
+  per-layer breakdown.
+
 ### Added
 
 - **Claude (Anthropic) voice backend — a temporary, opt-in alternative to
