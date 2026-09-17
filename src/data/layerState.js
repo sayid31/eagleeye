@@ -29,6 +29,17 @@ export const LAYER_RESTORE_ORIGINS = Object.freeze({
   share: 'share-restore',
   local: 'local-restore',
 });
+/**
+ * Cap on simultaneously in-flight layer restores in `_restoreSelectedState`.
+ * A returning user or a rich share link can have most/all 16 registered
+ * layers enabled at once; without a cap every one of them fires its full
+ * init/enable/first-update sequence in the same tick (CCTV cold activation,
+ * satellite TLE fetches, bundled JSON parses, etc. — all at once). Set above
+ * the largest layer count any existing restore scenario enables together (2,
+ * per `layerState.test.mjs`), so ordinary sessions are dispatched exactly as
+ * before; the cap only bites once a session exceeds it.
+ */
+export const LAYER_RESTORE_CONCURRENCY = 4;
 
 const RADIO_FILTER_CODES = Object.freeze({
   all: 'a',
@@ -527,6 +538,72 @@ function currentLayerOutcome(dataManager, layerId) {
 }
 
 /**
+ * Restore dispatch priority, lightest first. Only affects the ORDER layers
+ * are pulled off the queue once `LAYER_RESTORE_CONCURRENCY` is exceeded — it
+ * never changes which layers restore or their final settled state. Kept as a
+ * plain lookup here rather than a field on `LAYER_STATE_REGISTRY` entries so
+ * the frozen registry shape (and every test/validator built on it) stays
+ * untouched by this queue-ordering concern.
+ */
+const RESTORE_PRIORITY_TIER = new Map([
+  // Tier 0 — light: simple single-fetch or viewport-driven layers.
+  ['flights', 0],
+  ['military', 0],
+  ['earthquakes', 0],
+  ['traffic', 0],
+  ['military-installations', 0],
+  ['military-awareness', 0],
+  // Tier 1 — moderate.
+  ['bikeshare', 1],
+  ['rocket-launches', 1],
+  ['ais-live-vessels', 1],
+  // Tier 2 — heavy: large bundled datasets, multi-fetch fan-out, or slow
+  // cold activation (cctv, satellites' TLE fetches, radio's station list,
+  // the bundled local-* JSON datasets, submarine cables).
+  ['cctv', 2],
+  ['satellites', 2],
+  ['radio', 2],
+  ['local-dams', 2],
+  ['local-datacenters', 2],
+  ['local-firms', 2],
+  ['telegeography-submarine-cables', 2],
+]);
+
+/** Defaults to tier 1 for any id not explicitly tiered above (defensive — the
+ * map above covers every currently registered id). */
+function restorePriority(layerId) {
+  return RESTORE_PRIORITY_TIER.get(layerId) ?? 1;
+}
+
+/**
+ * Run `worker(item)` over `items` with at most `limit` concurrently in
+ * flight, dispatching in `items`' given order (the caller sorts by priority
+ * beforehand) but returning results ALIGNED TO THE ORIGINAL `items` INDEX —
+ * same `Promise.allSettled`-shaped output, so callers that read results by
+ * position see no difference from an unbounded `Promise.allSettled`. Mirrors
+ * the concurrency-limited FIFO drain pattern already used for deferred
+ * outline upgrades (`src/annotations/annotationEngine.js`'s
+ * `drainOutlineQueue`), rather than introducing a new queue primitive.
+ */
+function runWithConcurrency(items, worker, limit) {
+  const results = new Array(items.length);
+  let cursor = 0;
+  async function runNext() {
+    while (cursor < items.length) {
+      const index = cursor;
+      cursor += 1;
+      try {
+        results[index] = { status: 'fulfilled', value: await worker(items[index], index) };
+      } catch (reason) {
+        results[index] = { status: 'rejected', reason };
+      }
+    }
+  }
+  const runners = Array.from({ length: Math.min(limit, items.length) }, runNext);
+  return Promise.all(runners).then(() => results);
+}
+
+/**
  * Owns durable user layer preferences independently from transient runtime
  * choreography, and coordinates passive post-registration restoration.
  */
@@ -733,7 +810,15 @@ export class LayerStateCoordinator {
     try {
       await this._waitForRestoreGate();
       const enabled = new Set(this._durableState.enabledLayerIds);
-      const settled = await Promise.allSettled(LAYER_STATE_REGISTRY.map(async (entry) => {
+      // Dispatch light layers first and cap concurrent in-flight restores
+      // (see LAYER_RESTORE_CONCURRENCY / RESTORE_PRIORITY_TIER above) —
+      // results are scattered back to ORIGINAL registry order below, so
+      // everything downstream (lastRestoreResults, the returned array) is
+      // unaffected by dispatch order.
+      const orderedEntries = LAYER_STATE_REGISTRY
+        .map((entry, index) => ({ entry, index }))
+        .sort((a, b) => restorePriority(a.entry.id) - restorePriority(b.entry.id));
+      const orderedSettled = await runWithConcurrency(orderedEntries, async ({ entry }) => {
         const controller = this._restoreControllers.get(entry.id);
         const targetEnabled = enabled.has(entry.id);
         const options = layerOptionsForRestore(this._durableState, entry.id);
@@ -770,7 +855,9 @@ export class LayerStateCoordinator {
           errorClass: paramsSucceeded ? result.errorClass : 'ParamsRejected',
           succeeded: paramsSucceeded && result.succeeded,
         }));
-      }));
+      }, LAYER_RESTORE_CONCURRENCY);
+      const settled = new Array(LAYER_STATE_REGISTRY.length);
+      orderedSettled.forEach((result, i) => { settled[orderedEntries[i].index] = result; });
       this.lastRestoreResults = settled.map((result, index) => {
         if (result.status === 'fulfilled') return result.value;
         const entry = LAYER_STATE_REGISTRY[index];
