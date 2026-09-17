@@ -1933,6 +1933,13 @@ function stopMissionReplay() {
   _replayPaused = false;
   _replayPausedAtMs = null;
   if (stoppedLaunchId) _animationStarts.set(stoppedLaunchId, Date.now());
+  // Own hold (perf wave 3) — every stopMissionReplay() call site (11 of them:
+  // re-click same launch, TLE refresh, mission-data update, layer disable/
+  // destroy, camera-ownership release, panel cancel button, …) funnels through
+  // this one function, so releasing here covers every teardown path. Safe to
+  // call even when replay was never held (releaseContinuousRender is a no-op
+  // on an owner id that isn't currently held).
+  releaseContinuousRender('rocket-replay');
   syncReplayButton();
   syncMissionOverlayEntries();
 }
@@ -1951,6 +1958,13 @@ function startMissionReplay(launchId) {
   _replayCameraLaunchId = launchId;
   _replayPaused = false;
   _replayPausedAtMs = null;
+  // Own hold (perf wave 3) — mission replay is a discrete, explicit opt-in
+  // mode (same shape as cctv.js's 'cctv-adjust' calibration-mode hold): the
+  // preUpdate listener below mutates the chase camera every frame, which
+  // request-on-demand rendering would otherwise never notice. Scoped to only
+  // the replay's own lifetime, not the whole 'rocket-launches' layer — that
+  // hold (above, in enable()/disable()) is unchanged by this carve-out.
+  holdContinuousRender('rocket-replay');
   const token = ++_replayCameraToken;
   const ascentDurationSec = track.ascentDurationSec;
   // Start broadside to the ascent/orbit direction so the launch profile is
@@ -3571,6 +3585,23 @@ export function _setRocketMissionOverlayHostForTest(host = null) {
 /** Test seam that exercises the real selection/deselection path. */
 export function _setSelectedRocketMissionForTest(launchId = null) {
   setSelectedMission(launchId, Boolean(launchId));
+}
+
+/**
+ * Test seam for the mission-replay render-hold carve-out (perf wave 3).
+ * Exercises the real startMissionReplay/stopMissionReplay functions — same
+ * path the panel's REPLAY ASCENT/cancel buttons call — without needing a full
+ * DOM-driven panel render just to reach them.
+ * @param {string} launchId
+ * @returns {boolean} Whatever startMissionReplay returns.
+ */
+export function _startMissionReplayForTest(launchId) {
+  return startMissionReplay(launchId);
+}
+
+/** Test seam for the mission-replay render-hold carve-out (perf wave 3). */
+export function _stopMissionReplayForTest() {
+  stopMissionReplay();
 }
 
 export default rocketLaunchesLayer;
