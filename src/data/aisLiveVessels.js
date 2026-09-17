@@ -44,7 +44,11 @@ import {
   getFocusTarget,
 } from './focusDeemphasis.js';
 import { requestWorldFocus } from '../worldFocus.js';
-import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import {
+  holdContinuousRender,
+  releaseContinuousRender,
+  governorRequestRender,
+} from '../renderGovernor.js';
 
 const FOCUS_EVIDENCE_DEV = import.meta.env?.DEV === true;
 
@@ -356,7 +360,11 @@ const aisLiveVesselsLayer = {
     const wasEnabled = state.enabled;
     state.enabled = true;
     if (!wasEnabled) beginAisSession();
-    holdContinuousRender('ais-vessels'); // per-frame animator (perf wave 2)
+    // Conditional render hold (perf wave 3): held only while a vessel is
+    // focused/mid-transition, not for the layer's whole enabled lifetime —
+    // see syncAisRenderHold(). Sync once immediately so a layer enabled with
+    // something already focused doesn't wait a tick to hold.
+    syncAisRenderHold();
     const activeViewer = viewer || state.viewer;
     ensureCollections(activeViewer);
     installInteraction(activeViewer);
@@ -384,7 +392,7 @@ const aisLiveVesselsLayer = {
   disable() {
     state.enabled = false;
     invalidateAisSession();
-    releaseContinuousRender('ais-vessels');
+    releaseContinuousRender('ais-vessels'); // hard backstop — updateVisibility() stops running once disabled
     unregisterPickOwner('ais-live-vessels');
     setVisible(false);
     _vesselOverlayHost.clearSource(VESSEL_OVERLAY_SOURCE_ID);
@@ -1039,6 +1047,11 @@ function reconcileVessels(viewer, rows) {
   state.vesselRecords = [...state.vesselMap.values(), ...state.unkeyedRecords];
   state.lastVisibilityUpdate = 0;
   updateVisibility(true);
+  // A poll landing while idle (hold released, nothing focused) still needs
+  // one frame to paint the billboard show/hide/rotation changes just applied
+  // above — updateVisibility() ran the computation regardless of render mode,
+  // but the canvas won't reflect it until an actual frame is requested.
+  governorRequestRender('ais-vessels-poll');
 }
 
 /**
@@ -1219,8 +1232,37 @@ function installRuntime(viewer) {
   state.preRenderRemover = viewer.scene.preRender.addEventListener(() => updateVisibility());
 }
 
+/**
+ * Whether AIS needs the render loop held open. Billboards don't animate
+ * between polls (no dead-reckoning — positions are written directly from the
+ * latest fix and held static until the next poll), so the only genuine
+ * per-frame need is a focus/de-emphasis transition in flight.
+ * @param {{focusTarget: *, activeFocusCount: number}} input
+ * @returns {boolean}
+ */
+export function aisNeedsContinuousRender({ focusTarget, activeFocusCount }) {
+  return focusPassIsNeeded(focusTarget, activeFocusCount);
+}
+
+/**
+ * Sync the continuous-render hold to current need (perf wave 3). Called
+ * every updateVisibility() tick rather than held for the layer's whole
+ * enabled lifetime — see aisNeedsContinuousRender().
+ */
+function syncAisRenderHold() {
+  if (state.enabled && aisNeedsContinuousRender({
+    focusTarget: getFocusTarget(),
+    activeFocusCount: state.activeFocusCount,
+  })) {
+    holdContinuousRender('ais-vessels');
+  } else {
+    releaseContinuousRender('ais-vessels');
+  }
+}
+
 function updateVisibility(force = false) {
   if (!state.enabled) return;
+  syncAisRenderHold();
   const now = focusNowMs(performance.now());
   const focusTarget = getFocusTarget();
   const regularPass = force || now - state.lastVisibilityUpdate >= VISIBILITY_UPDATE_MS;

@@ -12,7 +12,11 @@ import {
 } from './trafficPresetStyle.js';
 import { queuePlatoons, locateAlongRoad } from './trafficQueue.js';
 import { registerDynamicCredit, TOMTOM_CREDIT } from './dataCredits.js';
-import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import {
+  holdContinuousRender,
+  releaseContinuousRender,
+  governorRequestRender,
+} from '../renderGovernor.js';
 import { cachedGroundFloor, warmGroundFloor, resolveGroundFloorCellsBounded } from './groundFloor.js';
 import { sampleMeshFloorCells } from './meshFloorSampler.js';
 
@@ -162,6 +166,23 @@ let _viewer = null;
  */
 export function _setViewerForTest(viewer) {
   _viewer = viewer;
+}
+
+/**
+ * Test seam: runs the real dot-spawn + heat-line rebuild pipeline
+ * (`renderRoadsForAltitude`) directly against caller-supplied parsed roads,
+ * bypassing the Overpass fetch/cache layer entirely. Exists to exercise the
+ * `governorRequestRender('traffic-poll')` plumbing (perf wave 3) — whether a
+ * road/dot load landing while the render loop is idle still requests a
+ * frame — without mocking the network. Requires `init(viewer)` (or an
+ * equivalent minimal viewer via `_setViewerForTest`) to have already run so
+ * `_pointCollection` exists.
+ * @param {Array} roads - Parsed road objects (see `parseRoads`'s output shape).
+ * @param {number} altitude - Camera altitude in meters.
+ * @param {string} [label='test'] - Logging label.
+ */
+export function _renderRoadsForAltitudeForTest(roads, altitude, label = 'test') {
+  renderRoadsForAltitude(roads, altitude, label);
 }
 /** @type {Cesium.PointPrimitiveCollection|null} */
 let _pointCollection = null;
@@ -1025,6 +1046,40 @@ function animate() {
   }
 
   _animFrame++;
+  syncTrafficRenderHold();
+}
+
+/**
+ * Whether Traffic genuinely has per-frame work right now. Every dot lerps
+ * along its road every frame, and the live jam heat-line pulse recomputes
+ * its shared material alpha every frame — both die naturally the instant the
+ * loaded viewport empties (`clearDots()` on high altitude, camera-away, or
+ * disable). No per-object on-screen check is needed here: the dot/heat-line
+ * set is already scoped to the loaded viewport by
+ * `onCameraChanged`/`renderRoadsForAltitude`, unlike a globally-resident
+ * catalog. `anyVisibleAndMoving` is a seam for a future frustum-cull
+ * refinement (a camera pitched away from a still-loaded area); it defaults
+ * true — fail toward continuous, never toward a silently-stale scene — until
+ * that refinement lands.
+ * @param {{dotCount?: number, heatLineCount?: number, anyVisibleAndMoving?: boolean}} [snapshot] Explicit state, for tests.
+ * @returns {boolean}
+ */
+export function trafficNeedsContinuousRender({
+  dotCount = _dots.length,
+  heatLineCount = _heatLineCount,
+  anyVisibleAndMoving = true,
+} = {}) {
+  return (dotCount > 0 || heatLineCount > 0) && anyVisibleAndMoving;
+}
+
+/**
+ * Take or drop the continuous-render hold to match current need. Idempotent
+ * (the governor is identity-keyed).
+ * @returns {void}
+ */
+function syncTrafficRenderHold() {
+  if (_enabled && trafficNeedsContinuousRender()) holdContinuousRender('traffic');
+  else releaseContinuousRender('traffic');
 }
 
 /**
@@ -1727,6 +1782,12 @@ function renderRoadsForAltitude(roads, altitude, label, trace = null) {
     const renderEnd = trafficTimingMark(state, 'render-return', renderMetrics);
     scheduleTrafficTimingPostRender(state, renderEnd, renderId, renderMetrics);
   }
+  // A road load landing while idle (hold released, viewport was empty) still
+  // needs one frame to paint the just-spawned dots/heat-lines — animate() is
+  // a preRender listener, so it can't run to re-take the hold until a frame
+  // is actually requested. This also flushes the visual clear when a load
+  // resolves to zero dots (e.g. every road in view is closed).
+  governorRequestRender('traffic-poll');
 }
 
 // ─── Development-only causal timing ───────────────────────
@@ -2324,7 +2385,13 @@ const trafficLayer = {
    */
   enable(viewer) {
     _enabled = true;
-    holdContinuousRender('traffic'); // per-frame animator (perf wave 2)
+    // Conditional render hold (perf wave 3): held only while dots/heat-lines
+    // are actually loaded, not for the layer's whole enabled lifetime — see
+    // syncTrafficRenderHold(), called every animate() tick. Sync once
+    // immediately so re-enabling with dots still resident (rare — enable
+    // always starts from a cleared state today, but keeps the same-shape
+    // contract as the other layers) doesn't wait a tick to hold.
+    syncTrafficRenderHold();
     _lastAnimTime = 0;
     _pointCollection.show = true;
 
@@ -2375,7 +2442,7 @@ const trafficLayer = {
    */
   disable(viewer) {
     _enabled = false;
-    releaseContinuousRender('traffic');
+    releaseContinuousRender('traffic'); // hard backstop — animate() stops running once disabled
     clearTimeout(_fetchTimeout);
     clearInterval(_enableKickTimer);
     _enableKickTimer = null;
