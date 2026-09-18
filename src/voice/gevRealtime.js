@@ -33,10 +33,10 @@ const VIEWPORT_MAX_ENCODED_BYTES = 200 * 1024; // ~200 KB encoded ceiling
 const ERROR_LOG_LIMIT = 30;
 const ERROR_STORAGE_KEY = 'gev-realtime-errors';
 const DEBUG_LOG_URL = '/api/realtime/debug-log';
-// Voice cost control (repo-wide `godsEyeView.<feature>.<field>` convention;
+// Voice cost control (repo-wide `gev:<feature>:<version>` convention;
 // the neighbouring ERROR_STORAGE_KEY predates it).
-const VOICE_TIER_STORAGE_KEY = 'godsEyeView.voiceCost.tier';
-const VOICE_LIMITS_STORAGE_KEY = 'godsEyeView.voiceCost.limits';
+const VOICE_TIER_STORAGE_KEY = 'gev:voice-cost:tier';
+const VOICE_LIMITS_STORAGE_KEY = 'gev:voice-cost:limits';
 // The input meter is intentionally stricter than the assistant-output meter:
 // microphones carry room tone even after browser noise suppression, whereas the
 // incoming Realtime stream is already clean speech audio.

@@ -1,6 +1,6 @@
 // src/voice/voiceSystemPrompt.js
 /**
- * Single source of truth for the GEV Voice Control persona + tool-usage
+ * Single source of truth for the EagleEye Voice Control persona + tool-usage
  * contract sent to any LLM voice backend.
  *
  * `GEV_VOICE_SYSTEM_PROMPT_LINES` was mechanically relocated out of
@@ -23,7 +23,7 @@
  */
 
 export const GEV_VOICE_SYSTEM_PROMPT_LINES = [
-  "You are GEV Voice Control, a concise voice controller for a Cesium geospatial app called EagleEye View.",
+  "You are EagleEye Voice Control, a concise voice controller for a Cesium geospatial app called EagleEye View.",
   'Have a natural spoken conversation with the user while the mic session is active.',
   'Do not require a wake phrase. Treat direct commands like "zoom into London" or "open datacenters" as GEV control requests.',
   'Only control the app by calling the provided tools. Never invent tool names or arguments.',

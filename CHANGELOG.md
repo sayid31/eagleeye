@@ -5,6 +5,35 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- **Closed the remaining EagleEye View rebrand gaps.** A prior rebrand pass
+  renamed display-only text but deliberately left several things unchanged;
+  this closes those gaps:
+  - `localStorage` keys that still used the old dotted `godsEyeView.<feature>.<field>`
+    convention (panel positions/collapsed state, CCTV calibration, scene
+    project, voice cost tier/limits, cockpit weather toggle) are now on the
+    existing colon `gev:<feature>:<version>` convention. A one-time,
+    idempotent boot migration (`src/storageKeyMigration.js`, wired into
+    `main.js`) carries a returning user's existing values forward under
+    their new keys — nothing is lost, and the migration is safe to run more
+    than once.
+  - The voice assistant's spoken self-identification changed from "GEV Voice
+    Control" to "EagleEye Voice Control" (`src/voice/voiceSystemPrompt.js`).
+  - Remaining cosmetic old-brand text in `style.css`, `.env.example`, dev
+    scripts (`dev-fresh.sh`, `dev-cctv.sh`, `dev-secure.sh`), internal Cesium
+    `PostProcessStage` names, and outbound `User-Agent` strings in
+    `vite.config.js` (proxy identification only — the embedded GitHub URLs
+    and `Referer` header are unchanged, since the repository itself is not
+    being renamed).
+  - **Unchanged by design**: the `LICENSE` file's Bilawal Sidhu copyright
+    notice (a legal requirement of the MIT license), the media credits in
+    `docs/media/README.md`, the maintainer attribution and YouTube "God's
+    Eye View" series links in `README.md`/`CONTRIBUTING.md`/`SECURITY.md`,
+    `package.json`'s `name`/`author`/repository URLs (kept truthful to the
+    real, unrenamed `bilawalsidhu/gods-eye-view` GitHub repository), and the
+    internal `window.__godsEyeView` debug global (not user-visible).
+
 ### Performance
 
 - **Continuous-render holds on the AIS Vessels, Street Traffic, Satellites,

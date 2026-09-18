@@ -12,10 +12,10 @@ test('the OpenAI voice system prompt is byte-identical to the pre-refactor inlin
   // `instructions: [...].join('\n')` — see this module's header. Pinned so a
   // future edit to the persona/tool-usage contract is a loud, deliberate
   // change to voiceSystemPrompt.js, not a silent vite.config.js edit.
-  assert.equal(GEV_VOICE_SYSTEM_PROMPT.length, 18655, 'system prompt length drifted from the pinned release text');
+  assert.equal(GEV_VOICE_SYSTEM_PROMPT.length, 18660, 'system prompt length drifted from the pinned release text');
   assert.equal(
     crypto.createHash('sha256').update(GEV_VOICE_SYSTEM_PROMPT).digest('hex'),
-    'cb6cc0bb7f627210703c24be9aba08cb71629c66ec57004941a3234d5919ec43',
+    '26fea715dbaca8e70ca556fc90bc7f7d3c2afa92995d99108c5250dc6e0df7b8',
     'the relocated persona/tool-usage contract text must not silently drift',
   );
 });
