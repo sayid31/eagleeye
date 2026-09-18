@@ -2834,7 +2834,7 @@ export class StyleManager {
       }
 
       const stage = new Cesium.PostProcessStage({
-        name: `godsEyeView_${name}`,
+        name: `gev_${name}`,
         fragmentShader: shader.fragmentShader,
         uniforms,
       });
@@ -3064,7 +3064,7 @@ export class StyleManager {
 
     // Sharpen — custom unsharp mask PostProcessStage
     this._sharpenStage = new Cesium.PostProcessStage({
-      name: 'godsEyeView_sharpen',
+      name: 'gev_sharpen',
       fragmentShader: SHARPEN_SHADER,
       uniforms: {
         amount: 1.3,
@@ -3968,11 +3968,11 @@ export class StyleManager {
    */
   _maybeNotifyLayoutReset() {
     try {
-      const marker = `godsEyeView.${PANEL_POSITION_STORAGE_VERSION}.layoutResetNotified`;
+      const marker = `gev:layout-reset-notified:${PANEL_POSITION_STORAGE_VERSION}`;
       if (localStorage.getItem(marker)) return;
       localStorage.setItem(marker, '1');
       const hadOldPositions = Object.keys(localStorage)
-        .some((key) => key.startsWith('godsEyeView.v6.panelPos.'));
+        .some((key) => key.startsWith('gev:panel-pos:v6:'));
       if (hadOldPositions) {
         this._showToast('Panel layout updated — positions reset to new defaults');
       }

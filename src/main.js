@@ -34,6 +34,13 @@ import { installScopeMask } from './scopeMask.js';
 import { initFirstRunExperience } from './firstRunExperience.js';
 import { initKeySetup } from './keySetup.js';
 import { loadPhotorealisticTileset } from './mapStartup.js';
+import { runStorageKeyMigrations } from './storageKeyMigration.js';
+
+// One-time carry-forward of pre-rebrand `godsEyeView.*` localStorage keys
+// onto the current `gev:*` convention — must run before any layer/panel
+// touches its own storage key, so nothing races ahead and re-populates a
+// "new" key from defaults before the legacy value has a chance to migrate.
+runStorageKeyMigrations();
 
 initLogoGaze();
 

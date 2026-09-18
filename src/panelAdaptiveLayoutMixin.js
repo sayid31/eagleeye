@@ -111,7 +111,7 @@ export const panelAdaptiveLayoutMixin = {
    * @returns {string} localStorage key.
    */
   _panelStorageKey(panelId) {
-    return `godsEyeView.${PANEL_POSITION_STORAGE_VERSION}.panelPos.${panelId}`;
+    return `gev:panel-pos:${PANEL_POSITION_STORAGE_VERSION}:${panelId}`;
   },
 
   /**
@@ -120,7 +120,7 @@ export const panelAdaptiveLayoutMixin = {
    * @returns {string} localStorage key.
    */
   _panelCollapseStorageKey(panelId) {
-    return `godsEyeView.${PANEL_LAYOUT_STORAGE_VERSION}.panelCollapsed.${panelId}`;
+    return `gev:panel-collapsed:${PANEL_LAYOUT_STORAGE_VERSION}:${panelId}`;
   },
 
   /**

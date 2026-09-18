@@ -157,7 +157,7 @@ test('calls Nominatim with the required User-Agent/Referer and forwards the top 
   assert.equal(params.get('q'), 'austin');
   assert.equal(params.get('format'), 'jsonv2');
   assert.equal(params.get('limit'), '1');
-  assert.match(requestedHeaders[0]['User-Agent'], /GodsEyeView/);
+  assert.match(requestedHeaders[0]['User-Agent'], /EagleEyeView/);
   assert.ok(requestedHeaders[0].Referer);
 });
 
