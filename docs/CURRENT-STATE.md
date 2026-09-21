@@ -2827,6 +2827,21 @@ easier to meet (detection is now on more often), but does not create it.
   (`flowMatch.js`), and rendered as green/amber/red dot color + speed/density
   scaling (`trafficFlowStyle.js`); closures spawn no dots; unmatched roads stay
   white. Road fetch bounds center on the camera look-at point (`trafficBounds.js`).
+- **`parseRoads()`'s per-road `sampleHeight` fallback is capped, not
+  unconditional (fixed 2026-09).** A dense-city detailed fetch (triggered
+  whenever camera altitude drops to/below `FAST_FETCH_ALTITUDE`, 4500 m,
+  including `residential`/`unclassified` roads) can return thousands of OSM
+  ways. The parser's cold-cell fallback height used to call the real
+  depth-buffer/tileset raycast `scene.sampleHeight()` synchronously once per
+  way with no cap, unlike `meshFloorSampler.js`'s own scene queries (rationed
+  to `MAX_SAMPLES_PER_CALL = 40`) — enough sustained main-thread blocking to
+  trigger Chrome's "Page Unresponsive" dialog. `MAX_HEIGHT_FALLBACK_SAMPLES`
+  (40, exported from `traffic.js`) now caps that raycast per `parseRoads()`
+  call; roads past the cap simply keep `baseHeight=0` until Phase 2/3's
+  batched, cached ground-floor resolution (`groundFloor.js`) fills in their
+  real per-waypoint height, which is the common case anyway — the fallback
+  raycast was already redundant for any road whose cell resolves in time.
+  Pinned in `src/data/traffic.roadHeight.test.mjs`.
 - Development captures opened with `?trafficDebug=1` mint an interaction anchor
   from the exact `camera.changed` event that arms each debounced load, then emit
   scheduling-correlated User Timing entries for production `response.json`, road

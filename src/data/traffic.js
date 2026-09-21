@@ -63,6 +63,16 @@ const OVERLAP_THRESHOLD = 0.6;
 const MAX_DOTS = 6000;
 /** @const {number} Polylines longer than this are simplified by sub-sampling */
 export const MAX_WAYPOINTS_PER_ROAD = 80;
+/**
+ * @const {number} Cap on `scene.sampleHeight()` raycasts per `parseRoads()`
+ * call. Rations the cold-cell fallback height the same way
+ * `meshFloorSampler.js`'s `MAX_SAMPLES_PER_CALL` rations its own scene
+ * queries — sampleHeight is a real depth-buffer/tileset raycast, so a dense
+ * city fetch (thousands of OSM ways) must never call it once per road
+ * unconditionally; that blocked the main thread long enough to trigger
+ * Chrome's "Page Unresponsive" dialog (2026-09).
+ */
+export const MAX_HEIGHT_FALLBACK_SAMPLES = 40;
 /** @const {number} Km — minimum viewport center shift before allowing refresh */
 const MIN_CENTER_SHIFT_KM = 0.35;
 /**
@@ -601,6 +611,7 @@ export async function parseRoads(overpassData) {
   // every waypoint coordinate across every road for a single batch warm.
   const pending = [];
   const warmPoints = [];
+  let heightFallbackSamples = 0;
   for (const el of overpassData.elements) {
     if (el.type !== 'way' || !el.geometry || el.geometry.length < 2) continue;
 
@@ -635,10 +646,16 @@ export async function parseRoads(overpassData) {
       : (onewayTag === '-1' ? -1 : 0);
 
     // Fallback height: the original single first-vertex sample, kept as the
-    // graceful-degrade path for any waypoint whose cell never resolves.
+    // graceful-degrade path for any waypoint whose cell never resolves. Capped
+    // at MAX_HEIGHT_FALLBACK_SAMPLES per call — Phase 2/3 below already
+    // resolve real per-waypoint height for every road via the batched/cached
+    // ground-floor system, so this raycast is a rare degrade path, not a
+    // per-road requirement; roads past the cap simply keep baseHeight=0 until
+    // their own cell resolves.
     let baseHeight = 0;
     const firstCoord = coords[0];
-    if (_viewer?.scene?.sampleHeightSupported && firstCoord) {
+    if (_viewer?.scene?.sampleHeightSupported && firstCoord && heightFallbackSamples < MAX_HEIGHT_FALLBACK_SAMPLES) {
+      heightFallbackSamples++;
       const carto = Cesium.Cartographic.fromDegrees(firstCoord[0], firstCoord[1]);
       const sampled = _viewer.scene.sampleHeight(carto);
       if (Number.isFinite(sampled)) baseHeight = sampled;
@@ -1968,6 +1985,7 @@ async function parseRoadsTimed(overpassData, trace) {
 
   const pending = [];
   const warmPoints = [];
+  let heightFallbackSamples = 0;
   /* TRACE_ONLY_BEGIN */
   const _trafficTimingSampledCells = new Set();
   let _trafficTimingSampleHeightCalls = 0;
@@ -2001,7 +2019,8 @@ async function parseRoadsTimed(overpassData, trace) {
 
     let baseHeight = 0;
     const firstCoord = coords[0];
-    if (_viewer?.scene?.sampleHeightSupported && firstCoord) {
+    if (_viewer?.scene?.sampleHeightSupported && firstCoord && heightFallbackSamples < MAX_HEIGHT_FALLBACK_SAMPLES) {
+      heightFallbackSamples++;
       /* TRACE_ONLY_BEGIN */
       _trafficTimingSampleHeightCalls += 1;
       _trafficTimingSampledCells.add(`${firstCoord[1].toFixed(3)},${firstCoord[0].toFixed(3)}`);
