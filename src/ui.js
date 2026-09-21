@@ -7732,6 +7732,10 @@ export class StyleManager {
     this._radioTunerAbort = null;
     this._cctvListboxAbort?.abort();
     this._cctvListboxAbort = null;
+    // Undo the portal reparent from _initCctvCameraListbox (backdrop-filter
+    // containing-block workaround) so a re-instantiated StyleManager doesn't
+    // find a stray listbox node already hanging off document.body.
+    this._cctvCameraListbox?.remove();
     this._radioTunerBandPinnedForNavigation = false;
     this._radioTunerDragSnapshot = null;
     this._radioTunerPool = [];
