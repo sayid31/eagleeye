@@ -26,6 +26,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   the panel instead of the screen. Fixed by reparenting the popup onto
   `document.body` at init (`src/cctvPanelMixin.js`), clear of any
   `backdrop-filter` ancestor.
+- **Follow-up: the camera picker popup was too narrow, truncating every
+  camera label.** The popup was sized to the trigger button's own width,
+  but the trigger is only ~1/3 of the panel's width (it sits between PREV
+  and NEXT). The popup now matches the CCTV panel's full content width
+  instead (`src/cctvPanelMixin.js`).
 
 ### Changed
 
