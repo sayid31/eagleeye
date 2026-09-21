@@ -2562,6 +2562,13 @@ instead of the screen, rendering as a large mispositioned dark rectangle
 `StyleManager.dispose()` (`this._cctvCameraListbox?.remove()`) so a
 re-instantiated instance can't find a stray node already on `document.body`.
 
+**Width (fixed 2026-09, follow-up):** `_positionCctvListbox()` sizes the
+popup to `.cctv-panel-inner`'s content width (panel width minus its own
+padding), not the trigger button's own width. The trigger sits between
+PREV/NEXT and is only ~1/3 of the panel's width, so a trigger-width popup
+truncated every camera label to a couple of characters (field-reported).
+The popup now lines up with the panel's other full-width rows.
+
 ### Not Currently in Runtime
 
 - Weather radar (removed before OSS v1 after QA; no reliable visible payoff)
