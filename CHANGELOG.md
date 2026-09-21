@@ -5,6 +5,20 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Fixed
+
+- **CCTV camera picker rendered as a plain white dropdown on Windows.** The
+  picker was a native `<select>`; its open `<option>` popup is rendered by
+  the OS/browser and ignores author CSS — Windows Chrome rendered it opaque
+  white regardless of the dark closed-state styling, while macOS Chrome's
+  native popup happened to honor the styling. Replaced with a custom
+  `role="listbox"` control (`src/cctvCameraListbox.js` +
+  `src/cctvPanelMixin.js`) so the open popup is ordinary page HTML/CSS,
+  rendering identically on every platform. Full keyboard support (arrow
+  keys, Home/End, Enter/Space, Escape) and click-outside-to-close are
+  unchanged in behavior from a native `<select>`; see
+  `docs/CURRENT-STATE.md` for details.
+
 ### Changed
 
 - **Closed the remaining EagleEye View rebrand gaps.** A prior rebrand pass

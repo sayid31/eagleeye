@@ -2512,6 +2512,43 @@ speech-to-speech API, so Claude is paired with the browser's own
   new size. No rebuild happens when the size is unchanged, to avoid
   unnecessary per-tick material churn.
 
+### CCTV camera picker — custom ARIA listbox (fixed 2026-09)
+
+The camera picker in the CCTV panel used to be a native `<select
+id="cctv-camera-select">`. Its closed-state styling was custom CSS, but the
+open `<option>` popup is rendered entirely by the OS/browser and ignores
+that CSS: on Windows Chrome it rendered as a plain opaque-white OS listbox
+regardless of the dark closed-state styling, while macOS Chrome's
+native-select popup happened to honor `color`/`background-color` more
+faithfully — a platform rendering difference, not a regression.
+
+Fix: the `<select>` was replaced with a custom-built `role="listbox"`
+control so the open popup is ordinary page HTML/CSS instead of OS-native
+chrome, rendering identically on every platform. Markup is
+`.cctv-camera-picker` > `#cctv-camera-trigger` (`<button>`) +
+`#cctv-camera-listbox` (`<ul role="listbox">`) in `index.html`. Pure
+render/sync/keyboard logic (`cctvCameraOptionLabel`,
+`shouldRebuildCctvCameraListbox`, `renderCctvCameraListboxOptions`,
+`syncCctvCameraListboxState`, `handleCctvListboxKeydown`) lives in
+`src/cctvCameraListbox.js`, mirroring `src/mapStackChips.js`'s
+render-only-on-set-change / sync-every-tick split; camera ordering itself
+stays owned by `orderCctvCameraOptions()` in `src/cctvPanelMixin.js`
+(unmoved). Open/close/keyboard wiring lives in `cctvPanelMixin.js`
+(`_initCctvCameraListbox`, mirroring `radioPanelMixin.js`'s disclosure
+pattern: one `AbortController`, click-outside via `pointerdown`,
+Escape-to-close via a capturing `keydown` listener that returns focus to
+the trigger). The popup uses `position: fixed` (not `absolute`), positioned
+from `getBoundingClientRect()` in `_positionCctvListbox()` — required
+because `.cctv-panel-inner` gets `overflow-y: auto` when the panel is
+docked in `#right-context-rail`, which would clip an
+absolutely-positioned popup. `ui.js`'s two global hotkey guards
+(`_globalKeydownHandler`, `_poiKeydownHandler`) gained
+`|| this._isCctvListboxOpen()` alongside their existing
+`select, input, textarea` check, so arrow-key navigation inside the open
+popup can't also fire style/POI hotkeys. Type-ahead-to-letter is not
+implemented (the list is unofficial-first ordered, not alphabetical, so it
+would be low value) — a known gap, not a silent omission.
+
 ### Not Currently in Runtime
 
 - Weather radar (removed before OSS v1 after QA; no reliable visible payoff)
