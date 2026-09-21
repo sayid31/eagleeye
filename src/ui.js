@@ -2199,7 +2199,8 @@ export class StyleManager {
     this._cctvNearestBtn = document.getElementById('cctv-nearest-btn');
     this._cctvPrevBtn = document.getElementById('cctv-prev-btn');
     this._cctvNextBtn = document.getElementById('cctv-next-btn');
-    this._cctvSelect = document.getElementById('cctv-camera-select');
+    this._cctvCameraTrigger = document.getElementById('cctv-camera-trigger');
+    this._cctvCameraListbox = document.getElementById('cctv-camera-listbox');
     this._cctvFocusBtn = document.getElementById('cctv-focus-btn');
     this._cctvCoverageBtn = document.getElementById('cctv-coverage-btn');
     this._cctvAutoHopBtn = document.getElementById('cctv-auto-hop-btn');
@@ -2585,6 +2586,7 @@ export class StyleManager {
     this._windowResizeHandler = () => {
       this._scheduleRightPanelLayout({ reconsiderAutoCollapse: true });
       this._syncCctvPanelViewport();
+      if (this._isCctvListboxOpen?.()) this._positionCctvListbox();
       this._scheduleLeftPanelLayout({ reconsiderAutoCollapse: true });
     };
     window.addEventListener('resize', this._windowResizeHandler);
@@ -3208,7 +3210,8 @@ export class StyleManager {
       // <select> dropdown (e.g. HUD layout) is focused and its native
       // type-ahead is in use, or while typing in a text field (M9).
       const isFormControl = e.target?.matches?.('select, input, textarea')
-        || e.target === this._locationSearch;
+        || e.target === this._locationSearch
+        || this._isCctvListboxOpen?.();
       if (isFormControl && e.key !== 'Escape') return;
 
       const keyMap = {
@@ -6708,7 +6711,8 @@ export class StyleManager {
       // Bail while a form control is focused so POI hotkeys don't fire from a
       // <select> dropdown's type-ahead or while typing in a field (M9).
       const isFormControl = e.target?.matches?.('select, input, textarea')
-        || e.target === this._locationSearch;
+        || e.target === this._locationSearch
+        || this._isCctvListboxOpen?.();
       if (isFormControl) return;
 
       const keyIndex = QWERTY_KEYS.indexOf(e.key.toUpperCase());
@@ -7726,6 +7730,8 @@ export class StyleManager {
     this._radioUnsubscribe = null;
     this._radioTunerAbort?.abort();
     this._radioTunerAbort = null;
+    this._cctvListboxAbort?.abort();
+    this._cctvListboxAbort = null;
     this._radioTunerBandPinnedForNavigation = false;
     this._radioTunerDragSnapshot = null;
     this._radioTunerPool = [];

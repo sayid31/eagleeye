@@ -623,7 +623,13 @@
       </div>
       <div class="cctv-controls">
         <button id="cctv-prev-btn" class="scene-btn">PREV</button>
-        <select id="cctv-camera-select" aria-label="CCTV camera"></select>
+        <div class="cctv-camera-picker">
+          <button type="button" id="cctv-camera-trigger" class="cctv-camera-trigger"
+            aria-haspopup="listbox" aria-expanded="false"
+            aria-controls="cctv-camera-listbox" aria-label="CCTV camera">Select camera</button>
+          <ul id="cctv-camera-listbox" class="cctv-camera-listbox" role="listbox"
+            aria-label="CCTV camera" hidden></ul>
+        </div>
         <button id="cctv-next-btn" class="scene-btn">NEXT</button>
       </div>
       <div class="cctv-controls">
