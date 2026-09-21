@@ -664,7 +664,7 @@ test('Viewshed mode skips the active camera\'s fill volume while its monitor pla
   }
 });
 
-test('video-mode monitor plane rebuilds its GPU texture material when the decoded frame size changes', () => {
+test('video-mode monitor plane rebuilds its GPU texture material when the decoded frame size changes (confirmed over 2 ticks)', () => {
   // Regression for owner report 2026-09-14: after the Viewshed occlusion fix
   // above, the active camera's plane still didn't show live video — it went
   // solid BLACK instead. Root cause (confirmed via a live browser diagnostic
@@ -678,6 +678,13 @@ test('video-mode monitor plane rebuilds its GPU texture material when the decode
   // of the destination texture must be defined`). The 2D panel's canvas
   // mirror is unaffected (drawImage auto-scales), which is exactly the
   // "2D live, 3D black" asymmetry reported.
+  //
+  // A later owner report (2026-09-21, laptop only, not reproduced on a
+  // desktop iMac) added the 1-tick debounce below: a size change is only
+  // acted on once the SAME new size is observed on two consecutive ticks —
+  // see rebuildVideoPlaneMaterial's docstring for why a slower/integrated
+  // GPU can observe a transient, not-yet-fully-decoded size on the very
+  // first tick a change appears.
   const viewer = makeDeselectViewer();
   const record = { ...makeDeselectRecord('video-plane') };
   _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
@@ -693,29 +700,78 @@ test('video-mode monitor plane rebuilds its GPU texture material when the decode
     assert.equal(runtime.planeMaterial, initialMaterial, 'no rebuild while videoWidth/Height are unknown (0)');
 
     // First real decoded frame arrives at 704x576 (Bandung "Buahbatu" shape).
+    // First tick just records the candidate — does not rebuild yet.
     runtime.video.videoWidth = 704;
     runtime.video.videoHeight = 576;
     _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial, initialMaterial, 'first tick at a new size only records a candidate, does not rebuild yet');
+    assert.equal(runtime.videoTextureW, 0, 'confirmed texture size is untouched until the candidate is confirmed');
+
+    // Second consecutive tick at the SAME candidate size confirms it.
+    _rebuildVideoPlaneMaterialForTest(runtime);
     const firstMaterial = runtime.planeMaterial;
-    assert.notEqual(firstMaterial, initialMaterial, 'first known frame size builds a fresh material');
+    assert.notEqual(firstMaterial, initialMaterial, 'confirmed new frame size builds a fresh material');
     assert.equal(runtime.planeEntity.plane.material, firstMaterial, 'plane entity is rebound to the new material');
     assert.equal(runtime.videoTextureW, 704);
     assert.equal(runtime.videoTextureH, 576);
 
-    // Same size again on the next tick — must NOT rebuild (would defeat the
+    // Same size again on later ticks — must NOT rebuild (would defeat the
     // whole point: constant per-tick material churn is itself a flash risk).
     _rebuildVideoPlaneMaterialForTest(runtime);
     assert.equal(runtime.planeMaterial, firstMaterial, 'unchanged decoded size does not rebuild the material');
 
     // A later segment decodes at a different size — this is the exact case
-    // that left the plane black. Must rebuild again.
+    // that left the plane black. Must rebuild again, once confirmed.
     runtime.video.videoWidth = 640;
     runtime.video.videoHeight = 480;
     _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.notEqual(runtime.planeMaterial, firstMaterial, 'a decoded-size change rebuilds the material again');
+    assert.equal(runtime.planeMaterial, firstMaterial, 'the new size is only a candidate on its first tick');
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.notEqual(runtime.planeMaterial, firstMaterial, 'a decoded-size change rebuilds the material once confirmed');
     assert.equal(runtime.planeEntity.plane.material, runtime.planeMaterial);
     assert.equal(runtime.videoTextureW, 640);
     assert.equal(runtime.videoTextureH, 480);
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('video-mode monitor plane ignores a one-tick transient size reading (the "half screen" glitch)', () => {
+  // Owner report 2026-09-21: the 3D CCTV monitor plane briefly showed as
+  // "half" on a laptop (slower/integrated GPU), never reproduced on a
+  // desktop iMac. A single-tick size blip — videoWidth/videoHeight
+  // reporting a new value for exactly one tick before reverting to the
+  // steady size, which can happen when the property updates a frame or two
+  // before the underlying decoded frame buffer is fully resolved — must NOT
+  // trigger a texture rebuild; a rebuild against a not-yet-fully-decoded
+  // source frame is exactly the mechanism that could paint half the old
+  // frame/half garbage onto the plane.
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane-blip') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.video = { videoWidth: 704, videoHeight: 576 };
+    runtime.videoTextureW = 0;
+    runtime.videoTextureH = 0;
+    _rebuildVideoPlaneMaterialForTest(runtime); // tick 1: candidate
+    _rebuildVideoPlaneMaterialForTest(runtime); // tick 2: confirmed → steady state
+    const steadyMaterial = runtime.planeMaterial;
+    assert.equal(runtime.videoTextureW, 704);
+
+    // A one-tick blip to a different size, then straight back to steady.
+    runtime.video.videoWidth = 352;
+    runtime.video.videoHeight = 288;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial, steadyMaterial, 'a single-tick size blip records a candidate but does not rebuild');
+
+    runtime.video.videoWidth = 704;
+    runtime.video.videoHeight = 576;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial, steadyMaterial,
+      'the blip never got a second confirming tick, so the steady-state texture is untouched');
+    assert.equal(runtime.videoTextureW, 704, 'confirmed size is never overwritten by an unconfirmed blip');
+    assert.equal(runtime.videoTextureH, 576);
   } finally {
     _setCctvOverlayHostForTest();
   }

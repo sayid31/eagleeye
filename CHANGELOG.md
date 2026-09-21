@@ -7,6 +7,21 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **3D CCTV monitor plane could briefly show "half" a frame on slower/
+  integrated-GPU laptops** (not reproduced on a desktop iMac). Video-mode
+  monitor planes bind Cesium's `ImageMaterialProperty` directly to the live
+  `<video>` element for smooth per-frame updates; when the unofficial
+  Indonesian HLS sources change decoded frame size mid-stream (observed:
+  704x576 ↔ 640x480 on the same Bandung camera), the existing
+  `rebuildVideoPlaneMaterial()` fix (2026-09-14) rebuilds the plane's texture
+  to match. On a slower/integrated GPU, `videoWidth`/`videoHeight` can report
+  a new size for one tick before the underlying decoded frame buffer is
+  fully resolved — rebuilding immediately against that transient read could
+  bind a texture mid-copy, painting half the old frame/half garbage until
+  the next frame naturally overwrote it. `rebuildVideoPlaneMaterial()`
+  (`src/data/cctv.js`) now requires the same new size to be observed on two
+  consecutive projection ticks before rebuilding, at the cost of at most one
+  extra frame (~16–33ms) of staleness on a genuine resolution change.
 - **CCTV camera picker rendered as a plain white dropdown on Windows.** The
   picker was a native `<select>`; its open `<option>` popup is rendered by
   the OS/browser and ignores author CSS — Windows Chrome rendered it opaque
