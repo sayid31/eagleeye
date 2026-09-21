@@ -221,10 +221,22 @@ export const cctvPanelMixin = {
    * on one element the whole time the popup is open, matching the disclosure
    * pattern already used in `radioPanelMixin.js`. All listeners share one
    * `AbortController` so re-init (e.g. panel rebuild) can't arm duplicates.
+   *
+   * The popup `<ul>` is reparented onto `document.body` here (a "portal") —
+   * left in `index.html` under `.cctv-camera-picker`, `position: fixed`
+   * resolves against the CCTV panel instead of the viewport, because
+   * `.cctv-panel-inner` has `backdrop-filter` and the CSS spec makes any
+   * element with a `backdrop-filter`/`filter`/`transform` the *containing
+   * block* for its `position: fixed` descendants. Without the portal, the
+   * popup's computed top/left in `_positionCctvListbox()` land relative to
+   * the panel's box, not the screen — a large mispositioned dark rectangle
+   * (field-reported 2026-09). `_initCctvPanel()` runs once from the
+   * constructor, so this reparent can't run twice and duplicate the node.
    * @returns {void}
    */
   _initCctvCameraListbox() {
     if (!this._cctvCameraTrigger || !this._cctvCameraListbox) return;
+    document.body.appendChild(this._cctvCameraListbox);
     this._cctvListboxAbort?.abort();
     this._cctvListboxAbort = new AbortController();
     const { signal } = this._cctvListboxAbort;
@@ -330,7 +342,12 @@ export const cctvPanelMixin = {
    * position. `position: fixed` (not `absolute`) because `.cctv-panel-inner`
    * can be `overflow-y: auto` when the CCTV panel is docked in
    * `#right-context-rail`, which would clip an absolutely-positioned popup.
-   * Flips to open upward if there isn't enough room below.
+   * Relies on the popup being portaled onto `document.body` (see
+   * `_initCctvCameraListbox`) — without that, `.cctv-panel-inner`'s
+   * `backdrop-filter` would make it the containing block for this `fixed`
+   * element instead of the viewport, and these viewport-relative coordinates
+   * would land in the wrong place. Flips to open upward if there isn't
+   * enough room below.
    * @returns {void}
    */
   _positionCctvListbox() {
