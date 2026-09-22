@@ -18,6 +18,19 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   keys, Home/End, Enter/Space, Escape) and click-outside-to-close are
   unchanged in behavior from a native `<select>`; see
   `docs/CURRENT-STATE.md` for details.
+- **Follow-up: the new camera picker popup rendered as a large mispositioned
+  dark rectangle over the panel.** The listbox's `position: fixed`
+  coordinates were computed relative to the viewport, but
+  `.cctv-panel-inner`'s `backdrop-filter` makes it the CSS containing block
+  for `position: fixed` descendants — so the coordinates resolved against
+  the panel instead of the screen. Fixed by reparenting the popup onto
+  `document.body` at init (`src/cctvPanelMixin.js`), clear of any
+  `backdrop-filter` ancestor.
+- **Follow-up: the camera picker popup was too narrow, truncating every
+  camera label.** The popup was sized to the trigger button's own width,
+  but the trigger is only ~1/3 of the panel's width (it sits between PREV
+  and NEXT). The popup now matches the CCTV panel's full content width
+  instead (`src/cctvPanelMixin.js`).
 
 ### Changed
 

@@ -221,10 +221,22 @@ export const cctvPanelMixin = {
    * on one element the whole time the popup is open, matching the disclosure
    * pattern already used in `radioPanelMixin.js`. All listeners share one
    * `AbortController` so re-init (e.g. panel rebuild) can't arm duplicates.
+   *
+   * The popup `<ul>` is reparented onto `document.body` here (a "portal") —
+   * left in `index.html` under `.cctv-camera-picker`, `position: fixed`
+   * resolves against the CCTV panel instead of the viewport, because
+   * `.cctv-panel-inner` has `backdrop-filter` and the CSS spec makes any
+   * element with a `backdrop-filter`/`filter`/`transform` the *containing
+   * block* for its `position: fixed` descendants. Without the portal, the
+   * popup's computed top/left in `_positionCctvListbox()` land relative to
+   * the panel's box, not the screen — a large mispositioned dark rectangle
+   * (field-reported 2026-09). `_initCctvPanel()` runs once from the
+   * constructor, so this reparent can't run twice and duplicate the node.
    * @returns {void}
    */
   _initCctvCameraListbox() {
     if (!this._cctvCameraTrigger || !this._cctvCameraListbox) return;
+    document.body.appendChild(this._cctvCameraListbox);
     this._cctvListboxAbort?.abort();
     this._cctvListboxAbort = new AbortController();
     const { signal } = this._cctvListboxAbort;
@@ -330,24 +342,45 @@ export const cctvPanelMixin = {
    * position. `position: fixed` (not `absolute`) because `.cctv-panel-inner`
    * can be `overflow-y: auto` when the CCTV panel is docked in
    * `#right-context-rail`, which would clip an absolutely-positioned popup.
-   * Flips to open upward if there isn't enough room below.
+   * Relies on the popup being portaled onto `document.body` (see
+   * `_initCctvCameraListbox`) — without that, `.cctv-panel-inner`'s
+   * `backdrop-filter` would make it the containing block for this `fixed`
+   * element instead of the viewport, and these viewport-relative coordinates
+   * would land in the wrong place. Flips to open upward if there isn't
+   * enough room below.
+   *
+   * Width/left are taken from `.cctv-panel-inner`'s content box (panel
+   * width minus its own padding), not the trigger's own width — the trigger
+   * sits between PREV/NEXT and is only ~1/3 of the panel's width, which made
+   * a trigger-width popup uncomfortably narrow and truncated every label to
+   * a couple of characters (field-reported). Matching the full panel width
+   * instead lines the popup up with the panel's other full-width rows
+   * (CALIBRATION block, PROJECTION/CAL row, etc).
    * @returns {void}
    */
   _positionCctvListbox() {
     if (!this._cctvCameraTrigger || this._cctvCameraListbox.hidden) return;
-    const rect = this._cctvCameraTrigger.getBoundingClientRect();
+    const triggerRect = this._cctvCameraTrigger.getBoundingClientRect();
+    const inner = this._cctvPanel?.querySelector('.cctv-panel-inner') || null;
+    const innerRect = inner?.getBoundingClientRect() || triggerRect;
+    const innerStyle = inner ? getComputedStyle(inner) : null;
+    const paddingLeft = innerStyle ? parseFloat(innerStyle.paddingLeft) || 0 : 0;
+    const paddingRight = innerStyle ? parseFloat(innerStyle.paddingRight) || 0 : 0;
+    const left = innerRect.left + paddingLeft;
+    const width = Math.max(0, innerRect.width - paddingLeft - paddingRight);
+
     const maxHeight = 260;
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const openUpward = spaceBelow < maxHeight && rect.top > spaceBelow;
-    this._cctvCameraListbox.style.left = `${Math.round(rect.left)}px`;
-    this._cctvCameraListbox.style.width = `${Math.round(rect.width)}px`;
-    this._cctvCameraListbox.style.maxHeight = `${Math.round(Math.max(120, Math.min(maxHeight, openUpward ? rect.top - 8 : spaceBelow - 8)))}px`;
+    const spaceBelow = window.innerHeight - triggerRect.bottom;
+    const openUpward = spaceBelow < maxHeight && triggerRect.top > spaceBelow;
+    this._cctvCameraListbox.style.left = `${Math.round(left)}px`;
+    this._cctvCameraListbox.style.width = `${Math.round(width)}px`;
+    this._cctvCameraListbox.style.maxHeight = `${Math.round(Math.max(120, Math.min(maxHeight, openUpward ? triggerRect.top - 8 : spaceBelow - 8)))}px`;
     if (openUpward) {
       this._cctvCameraListbox.style.top = '';
-      this._cctvCameraListbox.style.bottom = `${Math.round(window.innerHeight - rect.top)}px`;
+      this._cctvCameraListbox.style.bottom = `${Math.round(window.innerHeight - triggerRect.top)}px`;
     } else {
       this._cctvCameraListbox.style.bottom = '';
-      this._cctvCameraListbox.style.top = `${Math.round(rect.bottom)}px`;
+      this._cctvCameraListbox.style.top = `${Math.round(triggerRect.bottom)}px`;
     }
   },
 

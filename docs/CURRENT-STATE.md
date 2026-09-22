@@ -2549,6 +2549,26 @@ popup can't also fire style/POI hotkeys. Type-ahead-to-letter is not
 implemented (the list is unofficial-first ordered, not alphabetical, so it
 would be low value) — a known gap, not a silent omission.
 
+**Portal (fixed 2026-09, follow-up):** `#cctv-camera-listbox` is reparented
+onto `document.body` in `_initCctvCameraListbox()` (`_cctvCameraListbox`
+stays cached from its original `index.html` location; only the live DOM
+node moves). `.cctv-panel-inner` has `backdrop-filter`, and per the CSS
+Filter Effects spec any element with `backdrop-filter`/`filter`/`transform`
+becomes the *containing block* for its `position: fixed` descendants — so
+left where `index.html` places it, the popup's viewport-relative
+`getBoundingClientRect()` coordinates resolved against the panel's box
+instead of the screen, rendering as a large mispositioned dark rectangle
+(field-reported same week as the initial ship). The portal is undone in
+`StyleManager.dispose()` (`this._cctvCameraListbox?.remove()`) so a
+re-instantiated instance can't find a stray node already on `document.body`.
+
+**Width (fixed 2026-09, follow-up):** `_positionCctvListbox()` sizes the
+popup to `.cctv-panel-inner`'s content width (panel width minus its own
+padding), not the trigger button's own width. The trigger sits between
+PREV/NEXT and is only ~1/3 of the panel's width, so a trigger-width popup
+truncated every camera label to a couple of characters (field-reported).
+The popup now lines up with the panel's other full-width rows.
+
 ### Not Currently in Runtime
 
 - Weather radar (removed before OSS v1 after QA; no reliable visible payoff)
