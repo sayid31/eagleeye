@@ -2490,59 +2490,39 @@ speech-to-speech API, so Claude is paired with the browser's own
   simultaneously idle. Image-feed cameras are unaffected — the mirror is a
   no-op for them and the `<video>` element stays hidden
   (`opacity: 0`, `#cctv-frame-video` in `style.css`).
-- **3D monitor plane going solid BLACK (fixed 2026-09-14, separate from the
-  Viewshed-occlusion issue above)**: confirmed via a live browser diagnostic
-  session that Cesium's `ImageMaterialProperty` only rebuilds its GPU texture
-  when the bound `HTMLVideoElement`'s *identity* changes — not when the
-  video's decoded `videoWidth`/`videoHeight` changes mid-stream. These
-  unofficial feeds don't guarantee a constant decoded frame size across HLS
-  segments (observed non-16:9 sizes on the Bandung sources, e.g. 704x576 then
-  640x480 on the same camera); once a later segment decodes at a different
-  size than the one the texture was originally built at, every subsequent
-  `copyFrom` texture upload silently fails
-  (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level of
-  the destination texture must be defined`), leaving the plane black/frozen
-  while the 2D panel mirror above stays live (`drawImage` auto-scales any
-  source size onto the fixed offscreen canvas, so it never hits this). Fix:
-  `rebuildVideoPlaneMaterial()` (`src/data/cctv.js`), called every projection
-  tick from `drawProjectionFrame()`'s video-mode branch, tracks the decoded
-  size the plane's current material was built at and, on a change, hands the
-  plane a brand-new `ImageMaterialProperty` bound to the same video element —
-  forcing Cesium to treat it as a fresh bind and rebuild the texture at the
-  new size. No rebuild happens when the size is unchanged, to avoid
-  unnecessary per-tick material churn.
-- **3D monitor plane briefly showing "half" a frame on slower/integrated-GPU
-  laptops (fixed 2026-09-21, not reproduced on a desktop iMac)**: a follow-on
-  to the black-plane fix above. `videoWidth`/`videoHeight` can report a new
-  decoded size for a single projection tick before the underlying frame
-  buffer they describe is actually fully resolved on a slower GPU —
-  `rebuildVideoPlaneMaterial()` rebuilding on that first tick could bind a
-  texture mid-copy, painting half the previous frame/half garbage onto the
-  plane until the next real frame overwrote it a tick later. Fix: the same
-  new size must now be observed on two consecutive projection ticks before
-  a rebuild fires (a `pendingTextureW`/`pendingTextureH` candidate on the
-  runtime, promoted to `videoTextureW`/`videoTextureH` only once confirmed).
-  Costs at most one extra frame (~16-33ms) of staleness on a genuine
-  resolution change; a transient one-tick blip is now ignored entirely.
-- **`glCopySubTextureCHROMIUM` still firing despite the debounce above (fixed
-  2026-09-22)**: the two-tick debounce only delayed *when* a material
-  rebuild happened — it left the plane's material bound directly to the
-  video element for the entire candidate/confirm window, during which
-  Cesium keeps re-copying the video's already-new-size decoded frame into
-  the still-old-sized GPU texture every render tick regardless of the
-  debounce, reproducing the exact same GL error inside that window. Fix:
-  `rebuildVideoPlaneMaterial()` now parks the plane on the projection canvas
-  mirror (`runtime.canvas`, the same fixed-size offscreen surface
-  `drawProjectionFrame()` already keeps filled via `drawImage` scaling) the
-  instant a size mismatch is first detected, via a new
-  `textureMismatchGuardActive` runtime flag — never leaving the plane bound
-  to the video against a texture sized for a resolution the decoder has
-  already moved past. Only once the same candidate size is confirmed on the
-  following tick (preserving the existing 2-tick anti-blip guarantee) does
-  the plane rebind directly to the video, now trusted at its new size. A
-  companion guard rebinds straight back to the video if a candidate blip
-  reverts to the already-confirmed size before ever confirming, so the plane
-  is never left stuck parked on a frozen canvas frame.
+- **3D monitor plane going solid BLACK, then briefly "half" a frame, then still
+  throwing `glCopySubTextureCHROMIUM` even with a debounce (three iterative
+  fixes 2026-09-14 → 2026-09-21 → 2026-09-22, all now superseded by an
+  architectural fix, also 2026-09-22)**: root cause across all three earlier
+  attempts was the same — the plane's `ImageMaterialProperty` was bound
+  directly to the live `HTMLVideoElement`, and Cesium's `Material.js`
+  unconditionally calls `texture.copyFrom({source: video})` on that binding
+  every render tick with **no size-consistency check at all**. Each earlier
+  fix (rebuild-on-decoded-size-change, then a 2-tick debounce against a
+  transient blip, then an immediate park-on-mismatch guard) added JS-side
+  logic keyed off `videoWidth`/`videoHeight`, but a live diagnostic session
+  confirmed hls.js's `recoverMediaError()` (invoked on a `MediaSource` error,
+  which these unofficial feeds hit periodically) fully resets the
+  `MediaSource`/`SourceBuffer`s via `detachMedia()`+`attachMedia()` with **no
+  corresponding change to `videoWidth`/`videoHeight`** — a GL-error window no
+  size-based guard can ever observe, because the reported resolution never
+  actually changes. Circuit-breaker invoked (CLAUDE.md rule: 2-3 failed fixes
+  at the same root) rather than attempting a fourth size-guard variant. Fix:
+  the plane's material is now bound to the projection canvas
+  (`runtime.canvas`, the same fixed-size offscreen double-buffer surface used
+  for image feeds) from creation and **never rebinds to the raw
+  `HTMLVideoElement`, for any decoded size, at any point** —
+  `drawProjectionFrame()`'s video-mode branch draws the current video frame
+  onto that canvas via `ctx.drawImage(video, ...)` (auto-scales any decoded
+  size, so there's no longer anything to guard against), and
+  `refreshProjectionTextures()` swaps the double-buffer at a mode-dependent
+  throttle: `PROJECTION_VIDEO_SWAP_MS` (~83 ms / ~12fps, matching the
+  `captureStream(12)` budget the 2D panel mirror already uses) for video,
+  `PROJECTION_TEXTURE_SWAP_MS` (1000 ms / 1Hz) for image — previously video
+  mode skipped this swap path entirely since it bound straight to the video.
+  The now-fully-superseded `rebuildVideoPlaneMaterial()` state machine
+  (candidate/confirm ticks, `videoTextureW/H`, `textureMismatchGuardActive`)
+  is deleted rather than left dead, since none of it can be reached anymore.
 
 ### CCTV camera picker — custom ARIA listbox (fixed 2026-09)
 

@@ -8,34 +8,23 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 ### Fixed
 
 - **`glCopySubTextureCHROMIUM` GL error still occurring on the 3D CCTV
-  monitor plane despite the previous two-tick debounce fix.** That debounce
-  only delayed *when* a texture rebuild happened; it left the plane's
-  material bound directly to the video element for the whole
-  candidate/confirm window, during which Cesium kept re-copying the video's
-  already-new-size decoded frame into the still-old-sized GPU texture every
-  render tick. `rebuildVideoPlaneMaterial()` (`src/data/cctv.js`) now parks
-  the plane on the projection canvas mirror (a fixed-size surface already
-  kept live by `drawProjectionFrame()`) the instant a size mismatch is first
-  detected, and only rebinds directly to the video once the new size is
-  confirmed on the following tick — never leaving the plane bound to a
-  texture sized for a resolution the decoder has already moved past. A blip
-  that reverts before confirming rebinds straight back to the video rather
-  than staying parked on a frozen canvas frame.
-- **3D CCTV monitor plane could briefly show "half" a frame on slower/
-  integrated-GPU laptops** (not reproduced on a desktop iMac). Video-mode
-  monitor planes bind Cesium's `ImageMaterialProperty` directly to the live
-  `<video>` element for smooth per-frame updates; when the unofficial
-  Indonesian HLS sources change decoded frame size mid-stream (observed:
-  704x576 ↔ 640x480 on the same Bandung camera), the existing
-  `rebuildVideoPlaneMaterial()` fix (2026-09-14) rebuilds the plane's texture
-  to match. On a slower/integrated GPU, `videoWidth`/`videoHeight` can report
-  a new size for one tick before the underlying decoded frame buffer is
-  fully resolved — rebuilding immediately against that transient read could
-  bind a texture mid-copy, painting half the old frame/half garbage until
-  the next frame naturally overwrote it. `rebuildVideoPlaneMaterial()`
-  (`src/data/cctv.js`) now requires the same new size to be observed on two
-  consecutive projection ticks before rebuilding, at the cost of at most one
-  extra frame (~16–33ms) of staleness on a genuine resolution change.
+  monitor plane despite two prior size-guard fixes** (rebuild-on-decoded-
+  size-change, then a two-tick debounce, then an immediate park-on-mismatch
+  guard — all now removed as dead code). Root cause: the plane's material
+  was bound directly to the live `<video>` element, and Cesium's
+  `Material.js` copies the video's current frame into that texture every
+  render tick with **no size check at all** — while hls.js's
+  `recoverMediaError()` (hit periodically on these unofficial feeds) resets
+  the `MediaSource` with **no corresponding `videoWidth`/`videoHeight`
+  change**, a window no JS-side size guard could ever detect. Fix: the
+  monitor plane's material is now bound to the same fixed-size offscreen
+  canvas used for image feeds from creation, and **never rebinds to the raw
+  `<video>` element at any point** — video frames reach the plane only via
+  `drawImage` (auto-scales any decoded size, eliminating the GL error class
+  by construction) at a faster ~12fps double-buffer swap rate
+  (`PROJECTION_VIDEO_SWAP_MS`) instead of image feeds' 1Hz. This entry
+  supersedes and folds in the two prior "half frame" and repeat-GL-error
+  changelog entries for the same root cause.
 - **CCTV camera picker rendered as a plain white dropdown on Windows.** The
   picker was a native `<select>`; its open `<option>` popup is rendered by
   the OS/browser and ignores author CSS — Windows Chrome rendered it opaque
