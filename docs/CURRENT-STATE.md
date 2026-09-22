@@ -2511,6 +2511,19 @@ speech-to-speech API, so Claude is paired with the browser's own
   forcing Cesium to treat it as a fresh bind and rebuild the texture at the
   new size. No rebuild happens when the size is unchanged, to avoid
   unnecessary per-tick material churn.
+- **3D monitor plane briefly showing "half" a frame on slower/integrated-GPU
+  laptops (fixed 2026-09-21, not reproduced on a desktop iMac)**: a follow-on
+  to the black-plane fix above. `videoWidth`/`videoHeight` can report a new
+  decoded size for a single projection tick before the underlying frame
+  buffer they describe is actually fully resolved on a slower GPU —
+  `rebuildVideoPlaneMaterial()` rebuilding on that first tick could bind a
+  texture mid-copy, painting half the previous frame/half garbage onto the
+  plane until the next real frame overwrote it a tick later. Fix: the same
+  new size must now be observed on two consecutive projection ticks before
+  a rebuild fires (a `pendingTextureW`/`pendingTextureH` candidate on the
+  runtime, promoted to `videoTextureW`/`videoTextureH` only once confirmed).
+  Costs at most one extra frame (~16-33ms) of staleness on a genuine
+  resolution change; a transient one-tick blip is now ignored entirely.
 
 ### CCTV camera picker — custom ARIA listbox (fixed 2026-09)
 

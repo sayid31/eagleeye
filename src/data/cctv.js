@@ -1875,6 +1875,10 @@ function createProjectionRuntime(record) {
     // tracked separately from readyState.
     videoTextureW: 0,
     videoTextureH: 0,
+    // A candidate new size seen on the immediately-PRIOR tick but not yet
+    // confirmed — see rebuildVideoPlaneMaterial's debounce.
+    pendingTextureW: 0,
+    pendingTextureH: 0,
     // Lazily created by getActiveProjectionMirrorStream() — a captureStream()
     // of `canvas` for the 2D panel's <video> preview. Stopped/cleared in
     // destroyProjectionRuntime.
@@ -1964,6 +1968,20 @@ function createProjectionRuntime(record) {
  * ImageMaterialProperty instance so Cesium treats it as a fresh bind and
  * rebuilds the GPU texture at the new size.
  *
+ * Debounced by one tick (owner report 2026-09-21: "half screen" flash seen
+ * on a laptop, not reproduced on a desktop iMac). A raw `readyState`/size
+ * read can observe a video mid-decode — `videoWidth`/`videoHeight` update a
+ * frame or two before the actual frame buffer backing them is fully
+ * resolved on a slower/integrated GPU, so a rebuild fired on the very first
+ * tick a new size is seen could bind a texture that copies from a
+ * half-written source frame (the plane briefly showing half the old frame,
+ * half garbage/black, until the NEXT source frame is fully ready and
+ * naturally overwrites it). Requiring the same new size to be observed on
+ * two consecutive ticks before rebuilding costs at most one extra
+ * ~16-33ms frame of staleness on a genuine resolution change, which is
+ * imperceptible, while giving a mid-decode read one more tick to resolve
+ * before it's trusted.
+ *
  * @param {Object} runtime - Projection runtime (video mode).
  * @returns {void}
  */
@@ -1973,9 +1991,23 @@ function rebuildVideoPlaneMaterial(runtime) {
   const w = video.videoWidth;
   const h = video.videoHeight;
   if (!w || !h) return;
-  if (w === runtime.videoTextureW && h === runtime.videoTextureH) return;
+  if (w === runtime.videoTextureW && h === runtime.videoTextureH) {
+    runtime.pendingTextureW = 0;
+    runtime.pendingTextureH = 0;
+    return;
+  }
+  if (w !== runtime.pendingTextureW || h !== runtime.pendingTextureH) {
+    // First tick this size has been seen — record it as a candidate but
+    // don't act on it yet; wait for confirmation next tick.
+    runtime.pendingTextureW = w;
+    runtime.pendingTextureH = h;
+    return;
+  }
+  // Same candidate size confirmed on a second consecutive tick.
   runtime.videoTextureW = w;
   runtime.videoTextureH = h;
+  runtime.pendingTextureW = 0;
+  runtime.pendingTextureH = 0;
   runtime.planeMaterial = new Cesium.ImageMaterialProperty({
     image: video,
     transparent: true,
