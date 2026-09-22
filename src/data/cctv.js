@@ -17,10 +17,18 @@
  *
  * - Monitor plane (v2): the live frame renders on a plane entity capping the
  *   far end of the frustum ("monitor at the end of the cone"), oriented
- *   perpendicular to the view axis (static — never billboarded). Video feeds
- *   bind the HTMLVideoElement directly (Cesium updates video textures
- *   per-frame); image feeds alternate two offscreen canvases so the texture
- *   re-uploads on every repaint tick (<=1Hz). One live plane at a time. On
+ *   perpendicular to the view axis (static — never billboarded). Both video
+ *   and image feeds alternate two offscreen canvases so the texture
+ *   re-uploads only on a fresh reference (video feeds at ~12fps, image feeds
+ *   at <=1Hz) — see refreshProjectionTextures' docstring (2026-09-22 fix)
+ *   for why video feeds no longer bind the plane material to the
+ *   HTMLVideoElement directly: Cesium's Material.js unconditionally calls
+ *   texture.copyFrom() on a video-backed uniform every tick with no size
+ *   check, which throws glCopySubTextureCHROMIUM GL errors whenever hls.js
+ *   resets the MediaSource (e.g. recoverMediaError()) without a matching
+ *   videoWidth/videoHeight change — a window no JS-side size guard can ever
+ *   close, since the resolution never actually changes. One live plane at
+ *   a time. On
  *   activation a single scene.pickFromRay obstruction probe (§9.1 — the ONLY
  *   raycast in the subsystem) clamps the plane's range short of the first
  *   tile hit so the end cap never clips into buildings.
@@ -151,6 +159,13 @@ export const CCTV_CALIBRATION_STORAGE_KEY_V2 = 'gev:cctv-calibration:v2';
 // full 1080p texture re-upload because Cesium re-uploads only on a NEW image
 // object reference).
 const PROJECTION_TEXTURE_SWAP_MS = 1000;
+// Video-feed double-buffer swap rate (2026-09-22 fix — see
+// refreshProjectionTextures docstring). Matches the 12fps budget
+// getActiveProjectionMirrorStream already uses for this same canvas via
+// captureStream(12): plenty smooth for a monitor plane whose upstream is
+// already limited by ~7.5s HLS segment cadence, with no per-frame dependency
+// on the video's decoded resolution staying constant.
+const PROJECTION_VIDEO_SWAP_MS = Math.round(1000 / 12);
 const PROJECTION_VERT_ASPECT = PROJECTION_CANVAS_WIDTH / PROJECTION_CANVAS_HEIGHT;
 // V2 frustum geometry (design §2a/§6): the far-cap center + corners never sink
 // below groundAlt + this clearance, so a fabricated pitch (-24°) cannot bury
@@ -1495,26 +1510,60 @@ function paintNextProjectionBuffer(runtime) {
  * Pushes fresh pixels into the monitor plane material. Called every
  * projection tick.
  *
- * Video feeds are skipped entirely — their HTMLVideoElement uniform is
- * updated per-frame by Cesium natively (H5). Image/webcam-frame feeds swap
- * the double-buffer canvas reference, throttled to PROJECTION_TEXTURE_SWAP_MS.
+ * Owner report 2026-09-22: video feeds used to skip this entirely, binding
+ * the plane's material straight to the live HTMLVideoElement so Cesium could
+ * update it per-frame natively (H5) — but that path re-copies the video's
+ * CURRENT decoded frame into the plane's EXISTING GPU texture every single
+ * render tick (`Material`'s `texture.copyFrom({source: video})`, confirmed
+ * against Cesium's own source), unconditionally, with no size check. These
+ * unofficial HLS feeds don't guarantee a constant decoded frame size across
+ * segments (observed 704x576 vs 640x480 on the same Bandung camera) and can
+ * also have their MediaSource silently reset out from under a stable-sized
+ * video element mid-stream (hls.js's `recoverMediaError()` on a fatal
+ * MEDIA_ERROR does a detach+reattach with no visible resolution change at
+ * all) — either one leaves that unconditional `copyFrom` racing a texture
+ * that's no longer valid for what it's being asked to copy, firing
+ * `GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level of
+ * the destination texture must be defined`. Two prior fixes (a same-size
+ * debounce, then an immediate park-on-mismatch guard) both tried to detect
+ * and route around specific instances of "the video's decoded size doesn't
+ * match the texture" — the MediaSource-reset case has no size signal to
+ * detect at all, so both were structurally unable to close every window.
+ *
+ * Fix: video feeds now go through the exact same double-buffer canvas path
+ * as image feeds, just swapped far more often (throttled to
+ * PROJECTION_VIDEO_SWAP_MS, ~12fps — already the framerate
+ * `getActiveProjectionMirrorStream`'s captureStream budgets for this same
+ * canvas) instead of image feeds' 1Hz. The canvas is always filled via
+ * `ctx.drawImage(video, ...)`, which auto-scales any source resolution onto
+ * the plane's fixed PROJECTION_CANVAS_WIDTH/HEIGHT — no per-frame size
+ * dependency, so a mid-stream resolution change or an MSE reset is
+ * invisible to this path by construction, not detected-and-routed-around.
+ * Cesium only re-uploads a canvas-backed texture when the material's
+ * `.image` reference itself changes (never on a `copyFrom` against a stale
+ * size), which is the alternating-buffer trick this function already used
+ * for image feeds — see its docstring above.
  *
  * @param {Object} record - Camera record with an initialized projection runtime.
  */
 function refreshProjectionTextures(record) {
   const runtime = record?.projection;
-  if (!runtime || runtime.mode === 'video') return;
+  if (!runtime) return;
   const now = Date.now();
-  if (now - safeNumber(runtime.lastTextureSwapAt, 0) < PROJECTION_TEXTURE_SWAP_MS) return;
+  const swapIntervalMs = runtime.mode === 'video' ? PROJECTION_VIDEO_SWAP_MS : PROJECTION_TEXTURE_SWAP_MS;
+  if (now - safeNumber(runtime.lastTextureSwapAt, 0) < swapIntervalMs) return;
 
   const planeShowing = !!(runtime.planeEntity?.show && runtime.planeMaterial);
   if (!planeShowing) return;
 
   // Only swap when the canvas content actually changed since the last swap.
-  // Frames land every ~10 s but this runs at 1 Hz — swapping an UNCHANGED
-  // canvas re-uploads the texture for nothing, and each material image
-  // reassignment is a flash opportunity on the live plane (owner field test
-  // 2026-07-04: intermittent white flashes on the monitor plane).
+  // Frames land every ~10 s (image) but this runs at 1 Hz — swapping an
+  // UNCHANGED canvas re-uploads the texture for nothing, and each material
+  // image reassignment is a flash opportunity on the live plane (owner field
+  // test 2026-07-04: intermittent white flashes on the monitor plane). Video
+  // feeds bump canvasStamp on every drawProjectionFrame tick (real motion),
+  // so this check is a no-op for them in practice but stays correct if a
+  // stalled/frozen source ever repeats the same canvas content.
   if (runtime.canvasStamp === runtime.lastSwappedCanvasStamp) return;
 
   const buffer = paintNextProjectionBuffer(runtime);
@@ -1705,22 +1754,32 @@ export function _createCctvProjectionPlaneForTest(viewer, record) {
 }
 
 /**
- * Test-only seam for rebuildVideoPlaneMaterial (video-mode plane texture
- * rebuild on decoded-resolution change — see its docstring for why this
- * exists).
- * @param {Object} runtime - Projection runtime.
- * @returns {void}
- */
-export function _rebuildVideoPlaneMaterialForTest(runtime) {
-  rebuildVideoPlaneMaterial(runtime);
-}
-
-/**
  * Exercise the production geometry-to-plane-and-label cache update.
  * @param {Object} record CCTV runtime record.
  */
 export function _updateCctvProjectionPlaneForTest(record) {
   updatePlanePlacement(record);
+}
+
+/**
+ * Test-only seam for drawProjectionFrame (canvas paint of the current video
+ * or image source — see its comments for why video mode never binds the
+ * plane material to the HTMLVideoElement, 2026-09-22 fix).
+ * @param {Object} record - Camera record with an initialized projection runtime.
+ * @returns {void}
+ */
+export function _drawProjectionFrameForTest(record) {
+  drawProjectionFrame(record);
+}
+
+/**
+ * Test-only seam for refreshProjectionTextures (mode-dependent double-buffer
+ * swap throttle — see its docstring for the video-vs-image swap rate split).
+ * @param {Object} record - Camera record with an initialized projection runtime.
+ * @returns {void}
+ */
+export function _refreshProjectionTexturesForTest(record) {
+  refreshProjectionTextures(record);
 }
 
 // Bounds on hls.js's own bounded internal retries (see below) before we give
@@ -1823,8 +1882,9 @@ function attachHlsJs(runtime, video, url) {
  *
  * The plane is the only projection representation (v2): the frustum's far cap,
  * perpendicular to the view axis (§2b — never billboarded; a wall primitive
- * can't pitch, the plane can). It is textured with the live frame: video
- * element direct, canvas double-buffer otherwise.
+ * can't pitch, the plane can). It is textured via the double-buffer canvas
+ * mechanism for both video and image feeds (see refreshProjectionTextures'
+ * docstring, 2026-09-22 fix) — never bound to the HTMLVideoElement directly.
  *
  * @param {Object} record - Camera record.
  * @returns {Object|null} Projection runtime, or null if no viewer.
@@ -1870,20 +1930,6 @@ function createProjectionRuntime(record) {
     // only re-uploads the plane texture when there is genuinely new content.
     canvasStamp: 1,
     lastSwappedCanvasStamp: 0,
-    // Decoded video dimensions the plane's current GPU texture was built at
-    // (video mode only) — see rebuildVideoPlaneMaterial for why this is
-    // tracked separately from readyState.
-    videoTextureW: 0,
-    videoTextureH: 0,
-    // A candidate new size seen on the immediately-PRIOR tick but not yet
-    // confirmed — see rebuildVideoPlaneMaterial's debounce.
-    pendingTextureW: 0,
-    pendingTextureH: 0,
-    // True while the plane is parked on the mirror canvas (a stable size)
-    // during a candidate→confirm resolution-change window, so it is never
-    // left bound to the video element against a texture already sized for
-    // the OLD resolution — see rebuildVideoPlaneMaterial.
-    textureMismatchGuardActive: false,
     // Lazily created by getActiveProjectionMirrorStream() — a captureStream()
     // of `canvas` for the 2D panel's <video> preview. Stopped/cleared in
     // destroyProjectionRuntime.
@@ -1930,145 +1976,22 @@ function createProjectionRuntime(record) {
     runtime.image = img;
   }
 
-  // Monitor plane = the frustum's far cap: video feeds bind the video element
-  // directly (Cesium updates video-backed entity materials per frame); image
-  // feeds start on the placeholder canvas and switch to double-buffer swaps
-  // at <=1Hz.
+  // Monitor plane = the frustum's far cap: both video and image feeds start
+  // on the placeholder canvas and switch to double-buffer swaps once frames
+  // arrive (video at ~12fps, image at <=1Hz) — see refreshProjectionTextures'
+  // docstring for why video feeds no longer bind the plane to the
+  // HTMLVideoElement directly (2026-09-22).
   const geometry = record.frustumGeometry
     || computeFrustumGeometry(record.camera, groundAltFor(record), record.probeClampRangeM);
   const positions = record.frustumPositions || frustumCartesians(geometry);
   runtime.planeMaterial = new Cesium.ImageMaterialProperty({
-    image: (mode === 'video' && runtime.video) ? runtime.video : canvas,
+    image: canvas,
     transparent: true,
     color: Cesium.Color.WHITE.withAlpha(0.95),
   });
   createProjectionPlane(record, runtime, geometry, positions);
 
   return runtime;
-}
-
-/**
- * Video-mode monitor planes bind Cesium's ImageMaterialProperty directly to
- * the HTMLVideoElement (H5) — Cesium then owns re-uploading the current
- * frame into an existing GPU texture every render tick via `copyFrom`. That
- * fast path only works when the texture's dimensions still match the
- * video's decoded frame size: Cesium builds the texture once per *video
- * element identity* (WHATWG_ARTIFACT: `Material.js`'s translucent-image
- * uniform binder), not once per resolution, so it never notices a mid-stream
- * resolution change on its own.
- *
- * These unofficial/reverse-engineered HLS feeds are not guaranteed to keep a
- * constant decoded frame size across segments (observed non-16:9 sizes like
- * 704x576/640x480 on the Bandung sources) — when a later segment decodes at
- * a different size than the one the texture was originally built at, every
- * subsequent `copyFrom` silently fails
- * (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level of
- * the destination texture must be defined`, observed 2026-09-14 diagnostic
- * session) and the plane goes solid black — while the 2D panel's canvas
- * mirror (drawImage auto-scales any source size) is unaffected, which is
- * exactly the asymmetry the owner reported.
- *
- * Fix: watch the video's decoded size every projection tick; on a change,
- * discard the stale material and hand the plane a *new*
- * ImageMaterialProperty instance so Cesium treats it as a fresh bind and
- * rebuilds the GPU texture at the new size.
- *
- * Debounced by one tick (owner report 2026-09-21: "half screen" flash seen
- * on a laptop, not reproduced on a desktop iMac). A raw `readyState`/size
- * read can observe a video mid-decode — `videoWidth`/`videoHeight` update a
- * frame or two before the actual frame buffer backing them is fully
- * resolved on a slower/integrated GPU, so a rebuild fired on the very first
- * tick a new size is seen could bind a texture that copies from a
- * half-written source frame (the plane briefly showing half the old frame,
- * half garbage/black, until the NEXT source frame is fully ready and
- * naturally overwrites it). Requiring the same new size to be observed on
- * two consecutive ticks before rebuilding costs at most one extra
- * ~16-33ms frame of staleness on a genuine resolution change, which is
- * imperceptible, while giving a mid-decode read one more tick to resolve
- * before it's trusted.
- *
- * Owner report 2026-09-22: `GL_INVALID_OPERATION: glCopySubTextureCHROMIUM:
- * the destination level of the destination texture must be defined` was
- * STILL observed live with the above debounce active. Root cause: the
- * debounce only delays *when we rebuild* — it does nothing about the video
- * element that stays bound to the OLD-sized GPU texture for the whole
- * candidate/confirm window. Cesium re-copies the video's current (already
- * new-size) frame into that stale texture on every single render tick in
- * between, independent of our debounce, so the mismatched `copyFrom` this
- * error reports was firing in that window regardless.
- *
- * Fix: the moment a size mismatch is first detected (candidate tick), unbind
- * the plane from the video immediately and park it on the projection canvas
- * instead — `drawProjectionFrame` keeps that canvas filled with
- * `drawImage`-scaled video frames at a fixed, safe size every tick
- * regardless of the source's decoded resolution — so nothing points a
- * `copyFrom` at a texture sized for a resolution the source no longer has.
- * Cesium only re-uploads a canvas-backed material when its `.image`
- * reference itself changes (not on redraws to the same canvas in place —
- * see `paintNextProjectionBuffer`'s docstring), so the plane shows one
- * static-but-correctly-scaled frame for the guard's duration rather than
- * live video; that's the same "at most one extra tick of staleness, which
- * is imperceptible" tradeoff the debounce above already accepted, just
- * covering the window the debounce alone left exposed. The plane rebinds
- * directly to the video, live again, as soon as the candidate size is
- * confirmed OR reverts back to the already-trusted steady-state size.
- *
- * @param {Object} runtime - Projection runtime (video mode).
- * @returns {void}
- */
-function rebuildVideoPlaneMaterial(runtime) {
-  const video = runtime?.video;
-  if (!video || !runtime.planeEntity?.plane) return;
-  const w = video.videoWidth;
-  const h = video.videoHeight;
-  if (!w || !h) return;
-
-  const rebindToVideo = () => {
-    runtime.textureMismatchGuardActive = false;
-    runtime.planeMaterial = new Cesium.ImageMaterialProperty({
-      image: video,
-      transparent: true,
-      color: Cesium.Color.WHITE.withAlpha(0.95),
-    });
-    runtime.planeEntity.plane.material = runtime.planeMaterial;
-  };
-
-  if (w === runtime.videoTextureW && h === runtime.videoTextureH) {
-    runtime.pendingTextureW = 0;
-    runtime.pendingTextureH = 0;
-    // A candidate blip reverted to the already-trusted size before ever
-    // confirming — the guard would otherwise leave the plane stuck parked
-    // on a frozen canvas frame forever, since this branch never re-checks
-    // pendingTexture. Rebind straight back to the video now that its
-    // decoded size once again matches the texture we already trust.
-    if (runtime.textureMismatchGuardActive) rebindToVideo();
-    return;
-  }
-  if (w !== runtime.pendingTextureW || h !== runtime.pendingTextureH) {
-    // First tick this size has been seen. Immediately drop the video binding
-    // in favor of the canvas mirror — never leave the plane pointed at the
-    // video while its GPU texture is still sized for a resolution the
-    // decoder has already moved past.
-    runtime.pendingTextureW = w;
-    runtime.pendingTextureH = h;
-    if (!runtime.textureMismatchGuardActive) {
-      runtime.textureMismatchGuardActive = true;
-      runtime.planeMaterial = new Cesium.ImageMaterialProperty({
-        image: runtime.canvas,
-        transparent: true,
-        color: Cesium.Color.WHITE.withAlpha(0.95),
-      });
-      runtime.planeEntity.plane.material = runtime.planeMaterial;
-    }
-    return;
-  }
-  // Same candidate size confirmed on a second consecutive tick — safe to
-  // rebind directly to the video at its new, now-trusted size.
-  runtime.videoTextureW = w;
-  runtime.videoTextureH = h;
-  runtime.pendingTextureW = 0;
-  runtime.pendingTextureH = 0;
-  rebindToVideo();
 }
 
 /**
@@ -2218,10 +2141,15 @@ function drawProjectionFrame(record) {
   if (runtime.mode === 'video' && runtime.video) {
     const video = runtime.video;
     if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
-      // Guards against the plane's GPU texture silently going stale after a
-      // mid-stream decoded-resolution change (see rebuildVideoPlaneMaterial).
-      // The 2D canvas below is unaffected either way (drawImage auto-scales).
-      rebuildVideoPlaneMaterial(runtime);
+      // Always draws into the fixed-size canvas (drawImage auto-scales any
+      // source resolution) rather than binding the plane material to the
+      // video element directly — see refreshProjectionTextures' docstring
+      // (2026-09-22 fix) for why that's now structurally required, not just
+      // preferred: Cesium's copyFrom-based video texture path has no size
+      // check at all, so a mid-stream decode-size change or an hls.js
+      // MediaSource reset (recoverMediaError) reliably throws
+      // glCopySubTextureCHROMIUM GL errors on that path, and this canvas
+      // path is immune to both by construction.
       runtime.ctx.clearRect(0, 0, PROJECTION_CANVAS_WIDTH, PROJECTION_CANVAS_HEIGHT);
       runtime.ctx.drawImage(video, 0, 0, PROJECTION_CANVAS_WIDTH, PROJECTION_CANVAS_HEIGHT);
       runtime.canvasStamp = (runtime.canvasStamp || 0) + 1;

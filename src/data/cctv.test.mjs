@@ -23,11 +23,12 @@ import cctvLayer, {
   CCTV_PROJECTION_OVERLAY_SOURCE_OPTIONS,
   _buildCatalogFromSourcesForTest,
   _createCctvProjectionPlaneForTest,
+  _drawProjectionFrameForTest,
   _extractPickedCameraIdForTest,
   _getPublicCameraStateForTest,
   _isVideoFeedTypeForTest,
   _normalizeFeedTypeForTest,
-  _rebuildVideoPlaneMaterialForTest,
+  _refreshProjectionTexturesForTest,
   _updateCctvProjectionPlaneForTest,
   _setCctvCoverageStateForTest,
   _pushAmbientCardEntriesForTest,
@@ -664,223 +665,199 @@ test('Viewshed mode skips the active camera\'s fill volume while its monitor pla
   }
 });
 
-test('video-mode monitor plane rebuilds its GPU texture material when the decoded frame size changes (confirmed over 2 ticks)', () => {
-  // Regression for owner report 2026-09-14: after the Viewshed occlusion fix
-  // above, the active camera's plane still didn't show live video — it went
-  // solid BLACK instead. Root cause (confirmed via a live browser diagnostic
-  // session): Cesium's ImageMaterialProperty only builds a fresh GPU texture
-  // when the bound HTMLVideoElement's *identity* changes, not when its
-  // decoded videoWidth/videoHeight changes mid-stream — a later HLS segment
-  // decoding at a different size than the first (observed on these
-  // unofficial feeds: non-16:9 sizes like 704x576/640x480) leaves every
-  // subsequent texture upload silently failing
-  // (`GL_INVALID_OPERATION: glCopySubTextureCHROMIUM: the destination level
-  // of the destination texture must be defined`). The 2D panel's canvas
-  // mirror is unaffected (drawImage auto-scales), which is exactly the
-  // "2D live, 3D black" asymmetry reported.
-  //
-  // A later owner report (2026-09-21, laptop only, not reproduced on a
-  // desktop iMac) added the 1-tick debounce below: a size change is only
-  // acted on once the SAME new size is observed on two consecutive ticks —
-  // see rebuildVideoPlaneMaterial's docstring for why a slower/integrated
-  // GPU can observe a transient, not-yet-fully-decoded size on the very
-  // first tick a change appears.
+// Fake 2D context covering every CanvasRenderingContext2D method the
+// projection paint path touches (drawProjectionFrame's video/image draws,
+// plus paintProjectionPlaceholder's placeholder card) so tests can drive
+// the real production functions without a DOM.
+function makeFake2dCtx() {
+  return {
+    clearRect() {},
+    drawImage() {},
+    fillRect() {},
+    strokeRect() {},
+    fillText() {},
+    createLinearGradient() {
+      return { addColorStop() {} };
+    },
+    fillStyle: null,
+    strokeStyle: null,
+    lineWidth: null,
+    font: null,
+  };
+}
+
+// Production plane material starts as a Cesium.ImageMaterialProperty bound
+// to the projection canvas (see createProjectionRuntime) — the test helper
+// _createCctvProjectionPlaneForTest instead seeds a plain ColorMaterialProperty
+// (it has no canvas/video to bind to yet), so these tests swap in the real
+// image-backed material to match what production actually builds.
+function useImagePlaneMaterial(runtime, canvas) {
+  runtime.planeMaterial = new Cesium.ImageMaterialProperty({
+    image: canvas,
+    transparent: true,
+    color: Cesium.Color.WHITE.withAlpha(0.95),
+  });
+  if (runtime.planeEntity?.plane) {
+    runtime.planeEntity.plane.material = runtime.planeMaterial;
+  }
+}
+
+// Fake document.createElement('canvas') for paintNextProjectionBuffer's
+// double-buffer allocation, used by the refreshProjectionTextures tests
+// below. Mirrors the stub pattern trackedReadout.test.mjs/vesselLabels
+// .test.mjs use for the same production call.
+function withFakeCanvasDocument(fn) {
+  const originalDocument = globalThis.document;
+  globalThis.document = {
+    createElement: (tag) => {
+      if (tag !== 'canvas') throw new Error(`unexpected createElement(${tag})`);
+      return { width: 0, height: 0, getContext: () => makeFake2dCtx() };
+    },
+  };
+  try {
+    return fn();
+  } finally {
+    globalThis.document = originalDocument;
+  }
+}
+
+test('video-mode monitor plane never rebinds to the video element, across decoded-size changes (2026-09-22 architectural fix)', () => {
+  // Regression for owner report 2026-09-22: GL_INVALID_OPERATION:
+  // glCopySubTextureCHROMIUM was STILL observed live even with two prior
+  // size-based guards (a same-size debounce, then an immediate
+  // park-on-mismatch guard) active. Root cause (Cesium source + hls.js
+  // source review): Cesium's Material.js calls texture.copyFrom({source:
+  // video}) on a video-bound material every render tick with NO size check
+  // at all, and hls.js's recoverMediaError() resets the MediaSource with no
+  // corresponding videoWidth/videoHeight change — a window no JS-side size
+  // guard can ever observe, let alone close. Fix: the plane's material is
+  // now bound to the projection canvas from creation and NEVER rebinds to
+  // the raw HTMLVideoElement, for any decoded size, at any point — video
+  // frames only ever reach the plane via drawImage onto that canvas (see
+  // refreshProjectionTextures' docstring).
   const viewer = makeDeselectViewer();
-  const record = { ...makeDeselectRecord('video-plane') };
+  const record = { ...makeDeselectRecord('video-plane-never-rebinds') };
   _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
   try {
     const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.planeEntity.show = true;
+    runtime.mode = 'video';
     runtime.canvas = { marker: 'projection-canvas-mirror' };
-    runtime.video = { videoWidth: 0, videoHeight: 0 };
-    runtime.videoTextureW = 0;
-    runtime.videoTextureH = 0;
+    useImagePlaneMaterial(runtime, runtime.canvas);
+    runtime.ctx = makeFake2dCtx();
+    runtime.video = { readyState: 2, videoWidth: 0, videoHeight: 0 };
+    runtime.canvasStamp = 0;
+    runtime.lastSwappedCanvasStamp = -1;
 
-    // No decoded frame yet — nothing to rebuild against.
-    const initialMaterial = runtime.planeMaterial;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial, initialMaterial, 'no rebuild while videoWidth/Height are unknown (0)');
+    const boundToCanvasOnly = () => {
+      const image = runtime.planeMaterial.image.getValue();
+      assert.notEqual(image, runtime.video, 'plane material must never be the raw video element');
+    };
+    boundToCanvasOnly();
 
-    // First real decoded frame arrives at 704x576 (Bandung "Buahbatu" shape).
-    // First tick records the candidate AND immediately parks the plane on
-    // the canvas mirror (see the texture-mismatch guard test below) — it
-    // must not stay bound to the video while the confirmed texture is still
-    // sized for the OLD (unknown/0) resolution.
-    runtime.video.videoWidth = 704;
-    runtime.video.videoHeight = 576;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.notEqual(runtime.planeMaterial, initialMaterial, 'first candidate tick parks the plane on the canvas mirror, off the video');
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas, 'parked on the canvas mirror, not the video, during the candidate window');
-    assert.equal(runtime.videoTextureW, 0, 'confirmed texture size is untouched until the candidate is confirmed');
+    // Sweep the same size changes the old debounce/guard tests exercised —
+    // none of them may ever touch runtime.video as the material's image.
+    for (const [w, h] of [[704, 576], [704, 576], [640, 480], [352, 288], [704, 576]]) {
+      runtime.video.videoWidth = w;
+      runtime.video.videoHeight = h;
+      _drawProjectionFrameForTest(record);
+      boundToCanvasOnly();
+      withFakeCanvasDocument(() => _refreshProjectionTexturesForTest(record));
+      boundToCanvasOnly();
+    }
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
 
-    // Second consecutive tick at the SAME candidate size confirms it.
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    const firstMaterial = runtime.planeMaterial;
-    assert.notEqual(firstMaterial, initialMaterial, 'confirmed new frame size builds a fresh material');
-    assert.equal(runtime.planeEntity.plane.material, firstMaterial, 'plane entity is rebound to the new material');
-    assert.equal(runtime.videoTextureW, 704);
-    assert.equal(runtime.videoTextureH, 576);
+test('drawProjectionFrame paints video frames onto the fixed-size canvas with no per-frame size branching', () => {
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane-draw') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.mode = 'video';
+    runtime.canvas = { marker: 'projection-canvas-mirror' };
+    useImagePlaneMaterial(runtime, runtime.canvas);
+    const drawImageCalls = [];
+    runtime.ctx = {
+      ...makeFake2dCtx(),
+      drawImage(...args) { drawImageCalls.push(args); },
+    };
+    runtime.video = { readyState: 2, videoWidth: 704, videoHeight: 576 };
+    runtime.canvasStamp = 0;
 
-    // Same size again on later ticks — must NOT rebuild (would defeat the
-    // whole point: constant per-tick material churn is itself a flash risk).
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial, firstMaterial, 'unchanged decoded size does not rebuild the material');
+    _drawProjectionFrameForTest(record);
+    assert.equal(runtime.canvasStamp, 1, 'a ready frame bumps canvasStamp');
+    assert.equal(drawImageCalls.length, 1);
+    assert.equal(drawImageCalls[0][0], runtime.video, 'draws directly from the video element');
 
-    // A later segment decodes at a different size — this is the exact case
-    // that left the plane black. Its first (candidate) tick must immediately
-    // park the plane off the video (same texture-mismatch guard as above),
-    // and the confirming tick must rebind directly to the video.
+    // A later segment decodes at a different size — drawImage auto-scales,
+    // so this must draw exactly the same way, no branch on size at all.
     runtime.video.videoWidth = 640;
     runtime.video.videoHeight = 480;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.notEqual(runtime.planeMaterial, firstMaterial, 'the new candidate size parks the plane off the video on its first tick too');
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas, 'parked on the canvas mirror during the second candidate window');
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.notEqual(runtime.planeMaterial, firstMaterial, 'a decoded-size change rebuilds the material once confirmed');
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video, 'confirmed tick rebinds directly to the video');
-    assert.equal(runtime.planeEntity.plane.material, runtime.planeMaterial);
-    assert.equal(runtime.videoTextureW, 640);
-    assert.equal(runtime.videoTextureH, 480);
+    _drawProjectionFrameForTest(record);
+    assert.equal(runtime.canvasStamp, 2, 'a decoded-size change is still just another paint tick');
+    assert.equal(drawImageCalls.length, 2);
+
+    // Not enough decoded data yet — falls back to the placeholder path
+    // instead of drawing (unaffected by this refactor). The placeholder
+    // paint still bumps canvasStamp (it repaints the canvas with a
+    // different frame), just via paintProjectionPlaceholder instead of
+    // drawImage(video, ...).
+    runtime.video.readyState = 0;
+    _drawProjectionFrameForTest(record);
+    assert.equal(runtime.canvasStamp, 3, 'falling back to the placeholder still counts as a new canvas frame');
+    assert.equal(drawImageCalls.length, 2, 'the placeholder path never calls ctx.drawImage on the video');
   } finally {
     _setCctvOverlayHostForTest();
   }
 });
 
-test('video-mode monitor plane ignores a one-tick transient size reading (the "half screen" glitch)', () => {
-  // Owner report 2026-09-21: the 3D CCTV monitor plane briefly showed as
-  // "half" on a laptop (slower/integrated GPU), never reproduced on a
-  // desktop iMac. A single-tick size blip — videoWidth/videoHeight
-  // reporting a new value for exactly one tick before reverting to the
-  // steady size, which can happen when the property updates a frame or two
-  // before the underlying decoded frame buffer is fully resolved — must NOT
-  // *confirm* a texture rebuild against the blip's size (the CONFIRMED
-  // texture size, videoTextureW/H, must stay untouched); a rebuild against a
-  // not-yet-fully-decoded source frame is exactly the mechanism that could
-  // paint half the old frame/half garbage onto the plane. The blip tick DOES
-  // still park the plane on the canvas mirror in the meantime (see the
-  // texture-mismatch guard tests below) — that's a deliberate, separate
-  // safety net for the GL copy error, not a regression of this guarantee.
+test('refreshProjectionTextures swaps video-mode buffers at the faster ~12fps throttle, distinct from image mode\'s 1Hz', () => {
+  // 2026-09-22 fix: video feeds now go through the SAME double-buffer swap
+  // path as image feeds (refreshProjectionTextures no longer skips video
+  // mode entirely) — just throttled far more often, matching the 12fps
+  // budget getActiveProjectionMirrorStream already uses for this same
+  // canvas via captureStream(12), instead of image feeds' 1Hz.
   const viewer = makeDeselectViewer();
-  const record = { ...makeDeselectRecord('video-plane-blip') };
   _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
   try {
-    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
-    runtime.canvas = { marker: 'projection-canvas-mirror' };
-    runtime.video = { videoWidth: 704, videoHeight: 576 };
-    runtime.videoTextureW = 0;
-    runtime.videoTextureH = 0;
-    _rebuildVideoPlaneMaterialForTest(runtime); // tick 1: candidate
-    _rebuildVideoPlaneMaterialForTest(runtime); // tick 2: confirmed → steady state
-    assert.equal(runtime.videoTextureW, 704);
+    const videoRecord = { ...makeDeselectRecord('swap-video') };
+    const videoRuntime = _createCctvProjectionPlaneForTest(viewer, videoRecord);
+    videoRuntime.planeEntity.show = true;
+    videoRuntime.mode = 'video';
+    videoRuntime.canvas = { marker: 'video-canvas' };
+    useImagePlaneMaterial(videoRuntime, videoRuntime.canvas);
+    videoRuntime.canvasStamp = 1;
+    videoRuntime.lastSwappedCanvasStamp = 0;
+    // 200ms since the last swap: past the ~83ms video throttle, short of
+    // the 1000ms image throttle.
+    videoRuntime.lastTextureSwapAt = Date.now() - 200;
+    const imageBeforeSwap = videoRuntime.planeMaterial.image.getValue();
+    withFakeCanvasDocument(() => _refreshProjectionTexturesForTest(videoRecord));
+    assert.notEqual(
+      videoRuntime.planeMaterial.image.getValue(),
+      imageBeforeSwap,
+      'video mode swaps well before the 1Hz image-mode interval elapses',
+    );
 
-    // A one-tick blip to a different size, then straight back to steady.
-    runtime.video.videoWidth = 352;
-    runtime.video.videoHeight = 288;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas,
-      'a single-tick size blip parks the plane on the canvas mirror but does not confirm the new size');
-    assert.equal(runtime.videoTextureW, 704, 'the confirmed texture size is not touched by an unconfirmed candidate');
-
-    runtime.video.videoWidth = 704;
-    runtime.video.videoHeight = 576;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video,
-      'reverting to the already-confirmed size rebinds straight back to the video, never confirming the blip');
-    assert.equal(runtime.videoTextureW, 704, 'confirmed size is never overwritten by an unconfirmed blip');
-    assert.equal(runtime.videoTextureH, 576);
-  } finally {
-    _setCctvOverlayHostForTest();
-  }
-});
-
-test('video-mode monitor plane parks on the canvas mirror (not the video) for the whole candidate/confirm window', () => {
-  // Owner report 2026-09-22: GL_INVALID_OPERATION: glCopySubTextureCHROMIUM
-  // was still observed live even with the 2-tick debounce above active.
-  // Root cause: the debounce only delayed WHEN we rebuild the material — it
-  // left the plane's material bound directly to the video element (still
-  // pointed at the OLD-sized GPU texture) for the whole candidate/confirm
-  // window, and Cesium re-copies the video's current (already new-size)
-  // frame into that stale texture every render tick in between, independent
-  // of the debounce. This test locks that the plane is unbound from the
-  // video and parked on the canvas mirror the INSTANT a size mismatch is
-  // first observed — not just once it's confirmed two ticks later.
-  const viewer = makeDeselectViewer();
-  const record = { ...makeDeselectRecord('video-plane-guard') };
-  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
-  try {
-    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
-    runtime.canvas = { marker: 'projection-canvas-mirror' };
-    runtime.video = { videoWidth: 704, videoHeight: 576 };
-    runtime.videoTextureW = 0;
-    runtime.videoTextureH = 0;
-    _rebuildVideoPlaneMaterialForTest(runtime); // tick 1: candidate
-    _rebuildVideoPlaneMaterialForTest(runtime); // tick 2: confirmed → steady state
-    const steadyMaterial = runtime.planeMaterial;
-    assert.equal(steadyMaterial.image.getValue(), runtime.video, 'steady state binds directly to the video element');
-    assert.equal(runtime.textureMismatchGuardActive, false);
-
-    // A new size shows up — first (candidate) tick.
-    runtime.video.videoWidth = 640;
-    runtime.video.videoHeight = 480;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.notEqual(runtime.planeMaterial, steadyMaterial,
-      'the material is swapped on the FIRST candidate tick, not deferred to confirmation');
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas,
-      'on the candidate tick the plane is parked on the canvas mirror, never left bound to the video');
-    assert.notEqual(runtime.planeMaterial.image.getValue(), runtime.video,
-      'the video must not still be bound to a texture sized for the OLD resolution');
-    assert.equal(runtime.textureMismatchGuardActive, true);
-    assert.equal(runtime.videoTextureW, 704, 'the trusted confirmed size is untouched until the new size confirms');
-
-    // Second consecutive tick at the SAME candidate size — this is the
-    // confirming tick (the 2-tick debounce), so it rebinds directly to the
-    // video at its new size, ending the canvas-parked guard window.
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video, 'confirmed size rebinds directly to the video');
-    assert.equal(runtime.textureMismatchGuardActive, false);
-    assert.equal(runtime.videoTextureW, 640);
-    assert.equal(runtime.videoTextureH, 480);
-  } finally {
-    _setCctvOverlayHostForTest();
-  }
-});
-
-test('video-mode monitor plane rebinds to the video (not stuck parked) when a candidate blip reverts before confirming', () => {
-  // Companion to the guard test above: a one-tick blip that reverts to the
-  // already-trusted steady-state size (see the "half screen" glitch test)
-  // must not leave the plane stuck parked on a frozen canvas frame forever —
-  // the guard-active branch only gets re-checked via the
-  // w===videoTextureW/h===videoTextureH early-return, so this exercises that
-  // explicit un-park path.
-  const viewer = makeDeselectViewer();
-  const record = { ...makeDeselectRecord('video-plane-guard-revert') };
-  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
-  try {
-    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
-    runtime.canvas = { marker: 'projection-canvas-mirror' };
-    runtime.video = { videoWidth: 704, videoHeight: 576 };
-    runtime.videoTextureW = 0;
-    runtime.videoTextureH = 0;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video);
-
-    // One-tick blip to a different size — parks on the canvas.
-    runtime.video.videoWidth = 352;
-    runtime.video.videoHeight = 288;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas);
-    assert.equal(runtime.textureMismatchGuardActive, true);
-
-    // Reverts straight back to the trusted steady size without ever
-    // confirming the blip.
-    runtime.video.videoWidth = 704;
-    runtime.video.videoHeight = 576;
-    _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video,
-      'reverting to the already-trusted size rebinds to the video, not left stuck parked on the canvas');
-    assert.equal(runtime.textureMismatchGuardActive, false);
-    assert.equal(runtime.videoTextureW, 704);
-    assert.equal(runtime.videoTextureH, 576);
+    const imageRecord = { ...makeDeselectRecord('swap-image') };
+    const imageRuntime = _createCctvProjectionPlaneForTest(viewer, imageRecord);
+    imageRuntime.planeEntity.show = true;
+    imageRuntime.mode = 'image';
+    imageRuntime.canvas = { marker: 'image-canvas' };
+    useImagePlaneMaterial(imageRuntime, imageRuntime.canvas);
+    imageRuntime.canvasStamp = 1;
+    imageRuntime.lastSwappedCanvasStamp = 0;
+    imageRuntime.lastTextureSwapAt = Date.now() - 200;
+    const stillImage = imageRuntime.planeMaterial.image.getValue();
+    withFakeCanvasDocument(() => _refreshProjectionTexturesForTest(imageRecord));
+    assert.equal(
+      imageRuntime.planeMaterial.image.getValue(),
+      stillImage,
+      'image mode does not swap yet at 200ms — its throttle is 1000ms',
+    );
   } finally {
     _setCctvOverlayHostForTest();
   }
