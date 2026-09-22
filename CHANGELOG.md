@@ -7,6 +7,20 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **`glCopySubTextureCHROMIUM` GL error still occurring on the 3D CCTV
+  monitor plane despite the previous two-tick debounce fix.** That debounce
+  only delayed *when* a texture rebuild happened; it left the plane's
+  material bound directly to the video element for the whole
+  candidate/confirm window, during which Cesium kept re-copying the video's
+  already-new-size decoded frame into the still-old-sized GPU texture every
+  render tick. `rebuildVideoPlaneMaterial()` (`src/data/cctv.js`) now parks
+  the plane on the projection canvas mirror (a fixed-size surface already
+  kept live by `drawProjectionFrame()`) the instant a size mismatch is first
+  detected, and only rebinds directly to the video once the new size is
+  confirmed on the following tick — never leaving the plane bound to a
+  texture sized for a resolution the decoder has already moved past. A blip
+  that reverts before confirming rebinds straight back to the video rather
+  than staying parked on a frozen canvas frame.
 - **3D CCTV monitor plane could briefly show "half" a frame on slower/
   integrated-GPU laptops** (not reproduced on a desktop iMac). Video-mode
   monitor planes bind Cesium's `ImageMaterialProperty` directly to the live

@@ -2524,6 +2524,25 @@ speech-to-speech API, so Claude is paired with the browser's own
   runtime, promoted to `videoTextureW`/`videoTextureH` only once confirmed).
   Costs at most one extra frame (~16-33ms) of staleness on a genuine
   resolution change; a transient one-tick blip is now ignored entirely.
+- **`glCopySubTextureCHROMIUM` still firing despite the debounce above (fixed
+  2026-09-22)**: the two-tick debounce only delayed *when* a material
+  rebuild happened — it left the plane's material bound directly to the
+  video element for the entire candidate/confirm window, during which
+  Cesium keeps re-copying the video's already-new-size decoded frame into
+  the still-old-sized GPU texture every render tick regardless of the
+  debounce, reproducing the exact same GL error inside that window. Fix:
+  `rebuildVideoPlaneMaterial()` now parks the plane on the projection canvas
+  mirror (`runtime.canvas`, the same fixed-size offscreen surface
+  `drawProjectionFrame()` already keeps filled via `drawImage` scaling) the
+  instant a size mismatch is first detected, via a new
+  `textureMismatchGuardActive` runtime flag — never leaving the plane bound
+  to the video against a texture sized for a resolution the decoder has
+  already moved past. Only once the same candidate size is confirmed on the
+  following tick (preserving the existing 2-tick anti-blip guarantee) does
+  the plane rebind directly to the video, now trusted at its new size. A
+  companion guard rebinds straight back to the video if a candidate blip
+  reverts to the already-confirmed size before ever confirming, so the plane
+  is never left stuck parked on a frozen canvas frame.
 
 ### CCTV camera picker — custom ARIA listbox (fixed 2026-09)
 
