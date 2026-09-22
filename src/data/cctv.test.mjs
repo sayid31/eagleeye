@@ -37,6 +37,8 @@ import cctvLayer, {
   bindCctvWorldClickGesture,
   clearProbeClampOnDeactivation,
   computeFrustumGeometry,
+  WIREFRAME_ZFIGHT_LIFT_M,
+  _frustumCartesiansForTest,
   cctvCycleIndex,
   cctvEmptyClickDeselects,
   cctvRecordNeedsActivation,
@@ -446,6 +448,32 @@ test('clamped pose keeps corner/plane coincidence and the rigid 2·halfW × 2·h
   const height = mag(sub(enu(g.mount, g.corners.tl), enu(g.mount, g.corners.bl)));
   assert.ok(Math.abs(width - 2 * g.halfW) < 0.5, `width ${width} vs ${2 * g.halfW}`);
   assert.ok(Math.abs(height - 2 * g.halfH) < 0.5, `height ${height} vs ${2 * g.halfH}`);
+});
+
+test('wireframe z-fight guard: corners/mount lift off the surface by WIREFRAME_ZFIGHT_LIFT_M, capCenter stays welded', () => {
+  const g = computeFrustumGeometry(UNCLAMPED_CAMERA, UNCLAMPED_GROUND);
+  const positions = _frustumCartesiansForTest(g);
+  const trueMount = Cesium.Cartesian3.fromDegrees(g.mount.lon, g.mount.lat, g.mount.alt);
+  const trueCapCenter = Cesium.Cartesian3.fromDegrees(g.capCenter.lon, g.capCenter.lat, g.capCenter.alt);
+  const trueTl = Cesium.Cartesian3.fromDegrees(g.corners.tl.lon, g.corners.tl.lat, g.corners.tl.alt);
+
+  // Lifted vertices move by exactly WIREFRAME_ZFIGHT_LIFT_M along the local
+  // surface normal — not zero, not some other distance.
+  assert.ok(
+    Math.abs(Cesium.Cartesian3.distance(positions.mount, trueMount) - WIREFRAME_ZFIGHT_LIFT_M) < 1e-6,
+    'mount lift distance must equal WIREFRAME_ZFIGHT_LIFT_M',
+  );
+  assert.ok(
+    Math.abs(Cesium.Cartesian3.distance(positions.tl, trueTl) - WIREFRAME_ZFIGHT_LIFT_M) < 1e-6,
+    'corner lift distance must equal WIREFRAME_ZFIGHT_LIFT_M',
+  );
+
+  // capCenter is the plane/coincidence-test anchor — must stay exactly on
+  // the true (unlifted) geometry so the monitor plane keeps its weld.
+  assert.ok(
+    Cesium.Cartesian3.equals(positions.capCenter, trueCapCenter),
+    'capCenter must remain unlifted',
+  );
 });
 
 test('range override (activation probe clamp) shortens but never lengthens the range', () => {
