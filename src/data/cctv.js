@@ -1879,6 +1879,11 @@ function createProjectionRuntime(record) {
     // confirmed — see rebuildVideoPlaneMaterial's debounce.
     pendingTextureW: 0,
     pendingTextureH: 0,
+    // True while the plane is parked on the mirror canvas (a stable size)
+    // during a candidate→confirm resolution-change window, so it is never
+    // left bound to the video element against a texture already sized for
+    // the OLD resolution — see rebuildVideoPlaneMaterial.
+    textureMismatchGuardActive: false,
     // Lazily created by getActiveProjectionMirrorStream() — a captureStream()
     // of `canvas` for the 2D panel's <video> preview. Stopped/cleared in
     // destroyProjectionRuntime.
@@ -1982,6 +1987,32 @@ function createProjectionRuntime(record) {
  * imperceptible, while giving a mid-decode read one more tick to resolve
  * before it's trusted.
  *
+ * Owner report 2026-09-22: `GL_INVALID_OPERATION: glCopySubTextureCHROMIUM:
+ * the destination level of the destination texture must be defined` was
+ * STILL observed live with the above debounce active. Root cause: the
+ * debounce only delays *when we rebuild* — it does nothing about the video
+ * element that stays bound to the OLD-sized GPU texture for the whole
+ * candidate/confirm window. Cesium re-copies the video's current (already
+ * new-size) frame into that stale texture on every single render tick in
+ * between, independent of our debounce, so the mismatched `copyFrom` this
+ * error reports was firing in that window regardless.
+ *
+ * Fix: the moment a size mismatch is first detected (candidate tick), unbind
+ * the plane from the video immediately and park it on the projection canvas
+ * instead — `drawProjectionFrame` keeps that canvas filled with
+ * `drawImage`-scaled video frames at a fixed, safe size every tick
+ * regardless of the source's decoded resolution — so nothing points a
+ * `copyFrom` at a texture sized for a resolution the source no longer has.
+ * Cesium only re-uploads a canvas-backed material when its `.image`
+ * reference itself changes (not on redraws to the same canvas in place —
+ * see `paintNextProjectionBuffer`'s docstring), so the plane shows one
+ * static-but-correctly-scaled frame for the guard's duration rather than
+ * live video; that's the same "at most one extra tick of staleness, which
+ * is imperceptible" tradeoff the debounce above already accepted, just
+ * covering the window the debounce alone left exposed. The plane rebinds
+ * directly to the video, live again, as soon as the candidate size is
+ * confirmed OR reverts back to the already-trusted steady-state size.
+ *
  * @param {Object} runtime - Projection runtime (video mode).
  * @returns {void}
  */
@@ -1991,29 +2022,53 @@ function rebuildVideoPlaneMaterial(runtime) {
   const w = video.videoWidth;
   const h = video.videoHeight;
   if (!w || !h) return;
+
+  const rebindToVideo = () => {
+    runtime.textureMismatchGuardActive = false;
+    runtime.planeMaterial = new Cesium.ImageMaterialProperty({
+      image: video,
+      transparent: true,
+      color: Cesium.Color.WHITE.withAlpha(0.95),
+    });
+    runtime.planeEntity.plane.material = runtime.planeMaterial;
+  };
+
   if (w === runtime.videoTextureW && h === runtime.videoTextureH) {
     runtime.pendingTextureW = 0;
     runtime.pendingTextureH = 0;
+    // A candidate blip reverted to the already-trusted size before ever
+    // confirming — the guard would otherwise leave the plane stuck parked
+    // on a frozen canvas frame forever, since this branch never re-checks
+    // pendingTexture. Rebind straight back to the video now that its
+    // decoded size once again matches the texture we already trust.
+    if (runtime.textureMismatchGuardActive) rebindToVideo();
     return;
   }
   if (w !== runtime.pendingTextureW || h !== runtime.pendingTextureH) {
-    // First tick this size has been seen — record it as a candidate but
-    // don't act on it yet; wait for confirmation next tick.
+    // First tick this size has been seen. Immediately drop the video binding
+    // in favor of the canvas mirror — never leave the plane pointed at the
+    // video while its GPU texture is still sized for a resolution the
+    // decoder has already moved past.
     runtime.pendingTextureW = w;
     runtime.pendingTextureH = h;
+    if (!runtime.textureMismatchGuardActive) {
+      runtime.textureMismatchGuardActive = true;
+      runtime.planeMaterial = new Cesium.ImageMaterialProperty({
+        image: runtime.canvas,
+        transparent: true,
+        color: Cesium.Color.WHITE.withAlpha(0.95),
+      });
+      runtime.planeEntity.plane.material = runtime.planeMaterial;
+    }
     return;
   }
-  // Same candidate size confirmed on a second consecutive tick.
+  // Same candidate size confirmed on a second consecutive tick — safe to
+  // rebind directly to the video at its new, now-trusted size.
   runtime.videoTextureW = w;
   runtime.videoTextureH = h;
   runtime.pendingTextureW = 0;
   runtime.pendingTextureH = 0;
-  runtime.planeMaterial = new Cesium.ImageMaterialProperty({
-    image: video,
-    transparent: true,
-    color: Cesium.Color.WHITE.withAlpha(0.95),
-  });
-  runtime.planeEntity.plane.material = runtime.planeMaterial;
+  rebindToVideo();
 }
 
 /**

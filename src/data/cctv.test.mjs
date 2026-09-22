@@ -690,6 +690,7 @@ test('video-mode monitor plane rebuilds its GPU texture material when the decode
   _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
   try {
     const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.canvas = { marker: 'projection-canvas-mirror' };
     runtime.video = { videoWidth: 0, videoHeight: 0 };
     runtime.videoTextureW = 0;
     runtime.videoTextureH = 0;
@@ -700,11 +701,15 @@ test('video-mode monitor plane rebuilds its GPU texture material when the decode
     assert.equal(runtime.planeMaterial, initialMaterial, 'no rebuild while videoWidth/Height are unknown (0)');
 
     // First real decoded frame arrives at 704x576 (Bandung "Buahbatu" shape).
-    // First tick just records the candidate — does not rebuild yet.
+    // First tick records the candidate AND immediately parks the plane on
+    // the canvas mirror (see the texture-mismatch guard test below) — it
+    // must not stay bound to the video while the confirmed texture is still
+    // sized for the OLD (unknown/0) resolution.
     runtime.video.videoWidth = 704;
     runtime.video.videoHeight = 576;
     _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial, initialMaterial, 'first tick at a new size only records a candidate, does not rebuild yet');
+    assert.notEqual(runtime.planeMaterial, initialMaterial, 'first candidate tick parks the plane on the canvas mirror, off the video');
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas, 'parked on the canvas mirror, not the video, during the candidate window');
     assert.equal(runtime.videoTextureW, 0, 'confirmed texture size is untouched until the candidate is confirmed');
 
     // Second consecutive tick at the SAME candidate size confirms it.
@@ -721,13 +726,17 @@ test('video-mode monitor plane rebuilds its GPU texture material when the decode
     assert.equal(runtime.planeMaterial, firstMaterial, 'unchanged decoded size does not rebuild the material');
 
     // A later segment decodes at a different size — this is the exact case
-    // that left the plane black. Must rebuild again, once confirmed.
+    // that left the plane black. Its first (candidate) tick must immediately
+    // park the plane off the video (same texture-mismatch guard as above),
+    // and the confirming tick must rebind directly to the video.
     runtime.video.videoWidth = 640;
     runtime.video.videoHeight = 480;
     _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial, firstMaterial, 'the new size is only a candidate on its first tick');
+    assert.notEqual(runtime.planeMaterial, firstMaterial, 'the new candidate size parks the plane off the video on its first tick too');
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas, 'parked on the canvas mirror during the second candidate window');
     _rebuildVideoPlaneMaterialForTest(runtime);
     assert.notEqual(runtime.planeMaterial, firstMaterial, 'a decoded-size change rebuilds the material once confirmed');
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video, 'confirmed tick rebinds directly to the video');
     assert.equal(runtime.planeEntity.plane.material, runtime.planeMaterial);
     assert.equal(runtime.videoTextureW, 640);
     assert.equal(runtime.videoTextureH, 480);
@@ -743,34 +752,134 @@ test('video-mode monitor plane ignores a one-tick transient size reading (the "h
   // reporting a new value for exactly one tick before reverting to the
   // steady size, which can happen when the property updates a frame or two
   // before the underlying decoded frame buffer is fully resolved — must NOT
-  // trigger a texture rebuild; a rebuild against a not-yet-fully-decoded
-  // source frame is exactly the mechanism that could paint half the old
-  // frame/half garbage onto the plane.
+  // *confirm* a texture rebuild against the blip's size (the CONFIRMED
+  // texture size, videoTextureW/H, must stay untouched); a rebuild against a
+  // not-yet-fully-decoded source frame is exactly the mechanism that could
+  // paint half the old frame/half garbage onto the plane. The blip tick DOES
+  // still park the plane on the canvas mirror in the meantime (see the
+  // texture-mismatch guard tests below) — that's a deliberate, separate
+  // safety net for the GL copy error, not a regression of this guarantee.
   const viewer = makeDeselectViewer();
   const record = { ...makeDeselectRecord('video-plane-blip') };
   _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
   try {
     const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.canvas = { marker: 'projection-canvas-mirror' };
     runtime.video = { videoWidth: 704, videoHeight: 576 };
     runtime.videoTextureW = 0;
     runtime.videoTextureH = 0;
     _rebuildVideoPlaneMaterialForTest(runtime); // tick 1: candidate
     _rebuildVideoPlaneMaterialForTest(runtime); // tick 2: confirmed → steady state
-    const steadyMaterial = runtime.planeMaterial;
     assert.equal(runtime.videoTextureW, 704);
 
     // A one-tick blip to a different size, then straight back to steady.
     runtime.video.videoWidth = 352;
     runtime.video.videoHeight = 288;
     _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial, steadyMaterial, 'a single-tick size blip records a candidate but does not rebuild');
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas,
+      'a single-tick size blip parks the plane on the canvas mirror but does not confirm the new size');
+    assert.equal(runtime.videoTextureW, 704, 'the confirmed texture size is not touched by an unconfirmed candidate');
 
     runtime.video.videoWidth = 704;
     runtime.video.videoHeight = 576;
     _rebuildVideoPlaneMaterialForTest(runtime);
-    assert.equal(runtime.planeMaterial, steadyMaterial,
-      'the blip never got a second confirming tick, so the steady-state texture is untouched');
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video,
+      'reverting to the already-confirmed size rebinds straight back to the video, never confirming the blip');
     assert.equal(runtime.videoTextureW, 704, 'confirmed size is never overwritten by an unconfirmed blip');
+    assert.equal(runtime.videoTextureH, 576);
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('video-mode monitor plane parks on the canvas mirror (not the video) for the whole candidate/confirm window', () => {
+  // Owner report 2026-09-22: GL_INVALID_OPERATION: glCopySubTextureCHROMIUM
+  // was still observed live even with the 2-tick debounce above active.
+  // Root cause: the debounce only delayed WHEN we rebuild the material — it
+  // left the plane's material bound directly to the video element (still
+  // pointed at the OLD-sized GPU texture) for the whole candidate/confirm
+  // window, and Cesium re-copies the video's current (already new-size)
+  // frame into that stale texture every render tick in between, independent
+  // of the debounce. This test locks that the plane is unbound from the
+  // video and parked on the canvas mirror the INSTANT a size mismatch is
+  // first observed — not just once it's confirmed two ticks later.
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane-guard') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.canvas = { marker: 'projection-canvas-mirror' };
+    runtime.video = { videoWidth: 704, videoHeight: 576 };
+    runtime.videoTextureW = 0;
+    runtime.videoTextureH = 0;
+    _rebuildVideoPlaneMaterialForTest(runtime); // tick 1: candidate
+    _rebuildVideoPlaneMaterialForTest(runtime); // tick 2: confirmed → steady state
+    const steadyMaterial = runtime.planeMaterial;
+    assert.equal(steadyMaterial.image.getValue(), runtime.video, 'steady state binds directly to the video element');
+    assert.equal(runtime.textureMismatchGuardActive, false);
+
+    // A new size shows up — first (candidate) tick.
+    runtime.video.videoWidth = 640;
+    runtime.video.videoHeight = 480;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.notEqual(runtime.planeMaterial, steadyMaterial,
+      'the material is swapped on the FIRST candidate tick, not deferred to confirmation');
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas,
+      'on the candidate tick the plane is parked on the canvas mirror, never left bound to the video');
+    assert.notEqual(runtime.planeMaterial.image.getValue(), runtime.video,
+      'the video must not still be bound to a texture sized for the OLD resolution');
+    assert.equal(runtime.textureMismatchGuardActive, true);
+    assert.equal(runtime.videoTextureW, 704, 'the trusted confirmed size is untouched until the new size confirms');
+
+    // Second consecutive tick at the SAME candidate size — this is the
+    // confirming tick (the 2-tick debounce), so it rebinds directly to the
+    // video at its new size, ending the canvas-parked guard window.
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video, 'confirmed size rebinds directly to the video');
+    assert.equal(runtime.textureMismatchGuardActive, false);
+    assert.equal(runtime.videoTextureW, 640);
+    assert.equal(runtime.videoTextureH, 480);
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('video-mode monitor plane rebinds to the video (not stuck parked) when a candidate blip reverts before confirming', () => {
+  // Companion to the guard test above: a one-tick blip that reverts to the
+  // already-trusted steady-state size (see the "half screen" glitch test)
+  // must not leave the plane stuck parked on a frozen canvas frame forever —
+  // the guard-active branch only gets re-checked via the
+  // w===videoTextureW/h===videoTextureH early-return, so this exercises that
+  // explicit un-park path.
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane-guard-revert') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.canvas = { marker: 'projection-canvas-mirror' };
+    runtime.video = { videoWidth: 704, videoHeight: 576 };
+    runtime.videoTextureW = 0;
+    runtime.videoTextureH = 0;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video);
+
+    // One-tick blip to a different size — parks on the canvas.
+    runtime.video.videoWidth = 352;
+    runtime.video.videoHeight = 288;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.canvas);
+    assert.equal(runtime.textureMismatchGuardActive, true);
+
+    // Reverts straight back to the trusted steady size without ever
+    // confirming the blip.
+    runtime.video.videoWidth = 704;
+    runtime.video.videoHeight = 576;
+    _rebuildVideoPlaneMaterialForTest(runtime);
+    assert.equal(runtime.planeMaterial.image.getValue(), runtime.video,
+      'reverting to the already-trusted size rebinds to the video, not left stuck parked on the canvas');
+    assert.equal(runtime.textureMismatchGuardActive, false);
+    assert.equal(runtime.videoTextureW, 704);
     assert.equal(runtime.videoTextureH, 576);
   } finally {
     _setCctvOverlayHostForTest();
