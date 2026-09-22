@@ -2056,6 +2056,21 @@ silently demoting every later lookup for the session.
   video texture (reported: Bandung "Buahbatu" rendering solid red instead of its feed). The
   hue-tinted wireframe still renders for the active camera in this state, so the coverage-color
   identity isn't lost, just the occluding fill.
+  **Wireframe/viewshed-volume z-fight guard (2026-09-22):** the 4 corner
+  rays and mount point are lifted `WIREFRAME_ZFIGHT_LIFT_M` (0.75 m) off
+  the true frustum geometry along the local ellipsoid surface normal before
+  becoming entity positions — root-caused to laptop-GPU-only flicker where
+  ray endpoints skim terrain/3D-tile depth near-coincidentally (the bottom
+  corner pair can sit below ground per the ground-clamp behavior above),
+  compounded by `depthFailMaterial`'s `EXT_frag_depth` dependency on
+  inconsistently-supported GPUs; not reproducible on every machine, so
+  treat as a root-cause-driven mitigation pending field confirmation. The
+  viewshed fill volume shares these same lifted corners by design (it
+  tracks the wireframe 1:1). `capCenter` — and therefore the monitor plane
+  — stays on the true unlifted geometry, preserving the existing
+  corner/plane coincidence invariant. Same fix family as `VESSEL_LIFT_M`
+  (`src/data/aisLiveVessels.js`) and `GROUND_FLOOR_LIFT_M`
+  (`src/data/groundFloor.js`).
   The 7 calibration sliders are **deleted**: ADJUST mode puts a direct-manipulation **gizmo**
   on the active camera (`cctvGizmo.js` — heading/pitch rings, E/N/U arrows, range handle at
   the cap center, FOV handles on the cap edges; all 7 offset DOF), plus a click-to-edit

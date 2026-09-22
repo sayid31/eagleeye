@@ -7,6 +7,23 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **CCTV coverage wireframe green flicker, reported on a laptop GPU (not
+  reproducible on this project's own hardware).** Root cause: the frustum
+  wireframe's corner rays and mount point could sit near-coincident with
+  terrain/3D-tile depth (the ground-clamp only lifts the far-cap center, not
+  the bottom corner pair — see the existing "true pyramid" clamp behavior),
+  compounded by the wireframe's `depthFailMaterial` depending on the
+  `EXT_frag_depth` WebGL extension, which Cesium's own docs warn can produce
+  artifacts where unsupported/inconsistently supported — more likely on
+  integrated laptop GPUs. Fix: lift the wireframe's corner/mount vertices
+  (and, by design, the viewshed fill volume that shares them) a small
+  constant distance off the surface along the local ellipsoid normal before
+  they become entity positions (`WIREFRAME_ZFIGHT_LIFT_M`, `src/data/cctv.js`
+  — same technique as `VESSEL_LIFT_M`/`GROUND_FLOOR_LIFT_M` elsewhere in the
+  codebase). The monitor plane's `capCenter` is left unlifted, preserving
+  the existing corner/plane coincidence invariant. This addresses a
+  well-evidenced root-cause hypothesis via static analysis; it has not been
+  visually confirmed against the actual laptop that reported the flicker.
 - **`glCopySubTextureCHROMIUM` GL error still occurring on the 3D CCTV
   monitor plane despite two prior size-guard fixes** (rebuild-on-decoded-
   size-change, then a two-tick debounce, then an immediate park-on-mismatch

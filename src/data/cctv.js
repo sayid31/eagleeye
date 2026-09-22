@@ -1285,10 +1285,52 @@ function projectionTilesReady() {
   return _activeTileset.tilesLoaded === true;
 }
 
+// Wireframe-only z-fighting guard: the 4 corner rays terminate exactly on the
+// far-cap plane (weld invariant locked by the "corner/plane coincidence"
+// test), and per computeFrustumGeometry's own doc comment the BOTTOM pair may
+// sit below groundAlt — right where the ray crosses close to (or through)
+// terrain/3D-tile geometry along most of its length, not just at the
+// endpoint. On GPUs with lower depth-buffer precision (integrated laptop
+// GPUs; not reproducible on this session's iMac) that near-coincident depth
+// flickers per frame. Same fix family already used for vessel trails
+// (VESSEL_LIFT_M, src/data/aisLiveVessels.js) and ground-floor clamps
+// (GROUND_FLOOR_LIFT_M, src/data/groundFloor.js): lift the corner/mount
+// vertices a small constant distance along the local surface normal.
+// The viewshed FILL VOLUME (createFrustumVolumePrimitive) is built from
+// these same lifted corners on purpose — it's a solid surface with the same
+// terrain-coincidence exposure as the wireframe, and it must stay welded to
+// the wireframe it accompanies (frustumVolumeGeometryData's own doc:
+// "the same 5 Cartesians the wireframe draws"), so lifting one without the
+// other would separate them visibly instead of just moving both off the
+// ground together. Only capCenter is left unlifted: it drives the monitor
+// PLANE (an opaque textured rectangle, not a thin line/volume skin, so it
+// isn't exposed to this failure mode) and the geometric coincidence tests
+// assert plane/corner alignment against the true unlifted geometry.
+export const WIREFRAME_ZFIGHT_LIFT_M = 0.75;
+
+/**
+ * Nudges a Cartesian3 a small constant distance along the local ellipsoid
+ * surface normal at that point — enough to separate a near-coincident line
+ * from terrain/3D-tile depth without a visually perceptible position shift.
+ * @param {Cesium.Cartesian3} position - Point to lift.
+ * @param {number} liftM - Distance in metres.
+ * @returns {Cesium.Cartesian3} A new, lifted Cartesian3.
+ */
+function liftAlongSurfaceNormal(position, liftM) {
+  const normal = Cesium.Ellipsoid.WGS84.geodeticSurfaceNormal(position, new Cesium.Cartesian3());
+  const offset = Cesium.Cartesian3.multiplyByScalar(normal, liftM, new Cesium.Cartesian3());
+  return Cesium.Cartesian3.add(position, offset, new Cesium.Cartesian3());
+}
+
 /**
  * Converts a computeFrustumGeometry result into the Cartesian3 positions the
  * entities consume. Fresh objects per call (geometry updates are rare —
  * slider/save/activation — and entities must never share scratch objects).
+ * `tl`/`tr`/`br`/`bl`/`mount` carry a small WIREFRAME_ZFIGHT_LIFT_M surface-
+ * normal lift (z-fighting guard, see constant doc) — this also lifts the
+ * viewshed fill volume, which shares these same corners by design.
+ * `capCenter` stays unlifted since the monitor plane must weld to the true
+ * geometry the geometric coincidence tests assert against.
  * @param {Object} geometry - Result of computeFrustumGeometry.
  * @returns {{ mount: Cesium.Cartesian3, capCenter: Cesium.Cartesian3,
  *   tl: Cesium.Cartesian3, tr: Cesium.Cartesian3, br: Cesium.Cartesian3,
@@ -1296,19 +1338,30 @@ function projectionTilesReady() {
  */
 function frustumCartesians(geometry) {
   const at = (p) => Cesium.Cartesian3.fromDegrees(p.lon, p.lat, p.alt);
+  const atLifted = (p) => liftAlongSurfaceNormal(at(p), WIREFRAME_ZFIGHT_LIFT_M);
   return {
-    mount: at(geometry.mount),
+    mount: atLifted(geometry.mount),
     capCenter: at(geometry.capCenter),
-    tl: at(geometry.corners.tl),
-    tr: at(geometry.corners.tr),
-    br: at(geometry.corners.br),
-    bl: at(geometry.corners.bl),
+    tl: atLifted(geometry.corners.tl),
+    tr: atLifted(geometry.corners.tr),
+    br: atLifted(geometry.corners.br),
+    bl: atLifted(geometry.corners.bl),
     label: Cesium.Cartesian3.fromDegrees(
       geometry.topCenter.lon,
       geometry.topCenter.lat,
       geometry.topCenter.alt + 1.2
     ),
   };
+}
+
+/**
+ * Test seam for frustumCartesians (private — entity-position wiring has no
+ * other exported entry point). Exercises the WIREFRAME_ZFIGHT_LIFT_M lift.
+ * @param {Object} geometry - Result of computeFrustumGeometry.
+ * @returns {Object} Same shape as frustumCartesians.
+ */
+export function _frustumCartesiansForTest(geometry) {
+  return frustumCartesians(geometry);
 }
 
 /**
