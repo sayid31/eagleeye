@@ -42,6 +42,7 @@ import { gbfsProxy } from './src/data/gbfsProxy.mjs';
 import { rocketLaunchesProxy, LL2_CACHE_TTL_MS, launchLibraryRequestHeaders } from './src/data/rocketLaunchesProxy.mjs';
 import { googlePlacesContextProxy, keylessGooglePlacesResponse } from './src/data/googlePlacesContextProxy.mjs';
 import { cctvProxy } from './src/data/cctvProxy.mjs';
+import { osrmRouteProxy } from './src/data/osrmRouteProxy.mjs';
 import {
   OVERPASS_CACHE_MAX_ENTRIES,
   _overpassCache,
@@ -230,38 +231,15 @@ const ADSBLOL_POINT_MAX_RESPONSE_BYTES = 8 * 1024 * 1024;
 // the viewport-scoped adsb.lol source is more honest and keeps local motion
 // current instead of coasting a stale worldwide frame indefinitely.
 const OPENSKY_SOURCE_STALE_MS = 120_000;
-/** OSM routing (FOSSGIS OSRM) cache: profile|coords -> { payload, cachedAt }. */
-const ROUTE_CACHE_MS = 600000;
-// Local duplicate of the haversine helper (also defined in cctvProxy.mjs) —
-// the /api/route handler below needs it and this project's convention is to
-// duplicate small (~12-line) geo helpers per proxy rather than share a
-// geo-utils module (see trafficBounds.js's own greatCircleKm). Phase 7's
-// cctvProxy.mjs extraction took the sole prior definition with it, leaving
-// this call site broken; restored here as its own local copy.
-function haversineKm(lat1, lon1, lat2, lon2) {
-  const toRad = (value) => value * Math.PI / 180;
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a = Math.sin(dLat / 2) ** 2
-    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
-  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-const _routeCache = new Map();
 
-// --- Abuse guards shared by the Overpass + route proxies --------------------
+// --- Abuse guards for the Overpass proxy ------------------------------------
 /** Max accepted POST body for the Overpass proxy (Overpass QL queries are tiny). */
 const OVERPASS_MAX_BODY_BYTES = 24 * 1024; // 24 KB
 /** Max concurrent in-flight upstream Overpass fetches across all distinct queries. */
 const OVERPASS_MAX_CONCURRENT = 6;
 let _overpassConcurrent = 0;
-/** Hard cap on the OSRM route response we will buffer. */
-const ROUTE_MAX_RESPONSE_BYTES = 8 * 1024 * 1024; // 8 MB
-/** Reject routes whose straight-line spans are obviously abusive (km). */
-const ROUTE_MAX_LEG_KM = 600;
-const ROUTE_MAX_TOTAL_KM = 2500;
 
 const _overpassRateLimiter = makeRateLimiter({ windowMs: 60_000, max: 90, globalMax: 300 });
-const _routeRateLimiter = makeRateLimiter({ windowMs: 60_000, max: 60, globalMax: 200 });
 
 // ---------------------------------------------------------------------------
 // AISStream live vessel cache state
@@ -756,98 +734,6 @@ function overpassProxy() {
           console.error('[Overpass Proxy]', e.message);
           res.writeHead(502, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Overpass proxy error' }));
-        }
-      });
-
-      // Real OSM routing via the public FOSSGIS OSRM servers (foot/car/bike).
-      // GET /api/route?profile=foot|car|bike&coords=lon,lat;lon,lat[;...]
-      server.middlewares.use('/api/route', async (req, res) => {
-        const fail = (msg) => {
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ ok: false, error: msg }));
-        };
-        try {
-          if (!_routeRateLimiter(clientKey(req))) {
-            res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': '5' });
-            res.end(JSON.stringify({ ok: false, error: 'rate limited' }));
-            return;
-          }
-          const url = new URL(req.url, 'http://localhost');
-          const raw = (url.searchParams.get('profile') || 'foot').toLowerCase();
-          const profile = (raw === 'car' || raw === 'driving') ? 'car'
-            : (raw === 'bike' || raw === 'cycling' || raw === 'bicycle') ? 'bike'
-              : (raw === 'foot' || raw === 'walking' || raw === 'walk') ? 'foot'
-                : null;
-          if (!profile) return fail('invalid profile');
-          const osrmProfile = profile === 'car' ? 'driving' : profile;
-          const pairs = (url.searchParams.get('coords') || '').split(';').map((s) => s.trim()).filter(Boolean);
-          if (pairs.length < 2 || pairs.length > 12) return fail('need 2-12 coordinates');
-          const clean = [];
-          const pts = [];
-          for (const pr of pairs) {
-            const parts = pr.split(',');
-            if (parts.length !== 2) return fail('invalid coordinate');
-            const lon = Number(parts[0]);
-            const lat = Number(parts[1]);
-            if (!Number.isFinite(lon) || !Number.isFinite(lat) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
-              return fail('invalid coordinate');
-            }
-            clean.push(`${lon},${lat}`);
-            pts.push([lon, lat]);
-          }
-          // Reject obviously-abusive spans — a real walking/driving route is local,
-          // so a cross-continent request is either a bug or an attempt to drive
-          // heavy upstream OSRM work.
-          let totalKm = 0;
-          for (let i = 1; i < pts.length; i += 1) {
-            // pts are [lon, lat]; existing haversineKm takes (lat1, lon1, lat2, lon2).
-            const legKm = haversineKm(pts[i - 1][1], pts[i - 1][0], pts[i][1], pts[i][0]);
-            if (legKm > ROUTE_MAX_LEG_KM) return fail('route leg too long');
-            totalKm += legKm;
-          }
-          if (totalKm > ROUTE_MAX_TOTAL_KM) return fail('route too long');
-          const coords = clean.join(';');
-          const cacheKey = `${profile}|${coords}`;
-          const now = Date.now();
-          const cached = _routeCache.get(cacheKey);
-          if (cached && now - cached.cachedAt <= ROUTE_CACHE_MS) {
-            res.writeHead(200, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify(cached.payload));
-            return;
-          }
-          const upstream = `https://routing.openstreetmap.de/routed-${profile}/route/v1/${osrmProfile}/${coords}?overview=full&geometries=geojson&alternatives=false&steps=false`;
-          const controller = new AbortController();
-          const timer = setTimeout(() => controller.abort(), 12000);
-          let osrm;
-          try {
-            const upstreamRes = await fetch(upstream, {
-              signal: controller.signal,
-              headers: { 'User-Agent': 'eagleeye-view/dev (local)' },
-            });
-            if (!upstreamRes.ok) return fail('no route found');
-            const ctype = upstreamRes.headers.get('content-type') || '';
-            if (!ctype.includes('json')) return fail('no route found');
-            const text = await readResponseTextCapped(upstreamRes, ROUTE_MAX_RESPONSE_BYTES);
-            osrm = JSON.parse(text);
-          } finally {
-            clearTimeout(timer);
-          }
-          const route = osrm?.routes?.[0];
-          if (osrm?.code !== 'Ok' || !route?.geometry?.coordinates?.length) return fail('no route found');
-          const payload = {
-            ok: true,
-            profile,
-            distanceM: Math.round(route.distance),
-            durationS: Math.round(route.duration),
-            geometry: route.geometry.coordinates,
-          };
-          _routeCache.set(cacheKey, { payload, cachedAt: now });
-          if (_routeCache.size > 200) _routeCache.delete(_routeCache.keys().next().value);
-          res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(payload));
-        } catch (e) {
-          console.error('[Route Proxy]', e?.message || e);
-          fail('route proxy error');
         }
       });
     },
@@ -2350,6 +2236,7 @@ export default defineConfig(({ mode }) => {
       terrainHeightsProxy(),
       adsbdbProxy(),
       overpassProxy(),
+      osrmRouteProxy(),
       militaryInstallationsProxy(),
       regionalBriefProxy(),
       weatherEffectsProxy(),
