@@ -2,19 +2,8 @@ import * as Cesium from 'cesium';
 import { StyleManager } from './ui.js';
 import { flyToDefault } from './camera.js';
 import { DataLayerManager } from './data/manager.js';
-import flightsLayer from './data/flights.js';
-import militaryFlightsLayer from './data/militaryFlights.js';
-import earthquakesLayer from './data/earthquakes.js';
-import satellitesLayer from './data/satellites.js';
-import rocketLaunchesLayer from './data/rocketLaunches.js';
-import trafficLayer from './data/traffic.js';
-import cctvLayer from './data/cctv.js';
-import radioLayer from './data/radio.js';
-import bikeshareLayer from './data/bikeshare.js';
-import aisLiveVesselsLayer from './data/aisLiveVessels.js';
-import militaryInstallationsLayer from './data/militaryInstallations.js';
-import militaryAwarenessLayer from './data/militaryAwareness.js';
 import localDataLayers from './data/localLayers.js';
+import { LAYER_METADATA } from './data/layerMetadata.js';
 import { LAYER_STATE_REGISTRY } from './data/layerState.js';
 import { registerDataCredits } from './data/dataCredits.js';
 import { SceneDirector } from './scenes/director.js';
@@ -35,6 +24,7 @@ import { initFirstRunExperience } from './firstRunExperience.js';
 import { initKeySetup } from './keySetup.js';
 import { loadPhotorealisticTileset } from './mapStartup.js';
 import { runStorageKeyMigrations } from './storageKeyMigration.js';
+import { waitForFirstFrame, composeSplashReadiness } from './splashGate.js';
 
 // One-time carry-forward of pre-rebrand `godsEyeView.*` localStorage keys
 // onto the current `gev:*` convention — must run before any layer/panel
@@ -214,20 +204,60 @@ async function init() {
     const dataManager = new DataLayerManager(viewer, {
       allowQaRegistration: import.meta.env.DEV,
     });
-    dataManager.register(flightsLayer);
-    dataManager.register(militaryFlightsLayer);
-    dataManager.register(earthquakesLayer);
-    dataManager.register(satellitesLayer);
-    dataManager.register(rocketLaunchesLayer);
-    rocketLaunchesLayer.attachDataManager(dataManager);
-    dataManager.register(trafficLayer);
-    dataManager.register(cctvLayer);
-    dataManager.register(radioLayer);
-    dataManager.register(bikeshareLayer);
-    dataManager.register(aisLiveVesselsLayer);
-    dataManager.register(militaryInstallationsLayer);
-    dataManager.register(militaryAwarenessLayer);
-    militaryAwarenessLayer.attachDataManager(dataManager);
+    // All 13 data layers are lazy-registered: nothing but the layers a user
+    // actually enables (or has saved as enabled) is downloaded/parsed.
+    // `_ensureModuleResolved` in manager.js calls each module's own
+    // `attachDataManager()` automatically the moment it first resolves, so
+    // no explicit post-register `attachDataManager()` call is needed here
+    // (rocket-launches and military-awareness used to need one eagerly).
+    dataManager.registerLazy({
+      ...LAYER_METADATA.earthquakes,
+      loader: () => import('./data/earthquakes.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA.bikeshare,
+      loader: () => import('./data/bikeshare.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA['ais-live-vessels'],
+      loader: () => import('./data/aisLiveVessels.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA['rocket-launches'],
+      loader: () => import('./data/rocketLaunches.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA['military-installations'],
+      loader: () => import('./data/militaryInstallations.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA.satellites,
+      loader: () => import('./data/satellites.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA.traffic,
+      loader: () => import('./data/traffic.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA.flights,
+      loader: () => import('./data/flights.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA.military,
+      loader: () => import('./data/militaryFlights.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA['military-awareness'],
+      loader: () => import('./data/militaryAwareness.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA.cctv,
+      loader: () => import('./data/cctv.js').then((m) => m.default),
+    });
+    dataManager.registerLazy({
+      ...LAYER_METADATA.radio,
+      loader: () => import('./data/radio.js').then((m) => m.default),
+    });
     for (const layer of localDataLayers) {
       dataManager.register(layer);
     }
@@ -253,11 +283,14 @@ async function init() {
     const annotations = initAnnotations({ viewer, tileset });
 
     // Keep startup chrome truthful: a share is not restored until camera,
-    // visual/map/panel lanes, and every requested layer have terminated.
-    void Promise.all([
-      styleManager.initialRestorePromise,
-      new Promise((resolve) => setTimeout(resolve, 1000)),
-    ]).finally(() => {
+    // visual/map/panel lanes, and every requested layer have terminated —
+    // ANDed with the scene's actual first painted frame (not a flat timer;
+    // see splashGate.js for why) plus a short minimum-visible floor so the
+    // splash never flashes on an unusually fast boot.
+    void composeSplashReadiness({
+      initialRestorePromise: styleManager.initialRestorePromise,
+      firstFramePromise: waitForFirstFrame(viewer.scene),
+    }).finally(() => {
       loadingScreen.classList.add('hidden');
       // Reveal only after the loading cover has yielded. transitionend can be
       // absent under reduced motion, so a bounded fallback makes this reliable.
