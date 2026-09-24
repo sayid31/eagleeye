@@ -19,6 +19,7 @@ import {
 } from '../renderGovernor.js';
 import { cachedGroundFloor, warmGroundFloor, resolveGroundFloorCellsBounded } from './groundFloor.js';
 import { sampleMeshFloorCells } from './meshFloorSampler.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 /**
  * @file Street Traffic — animated dots along OSM road polylines, colored by
@@ -2319,10 +2320,7 @@ function clearDots() {
  * @type {Object}
  */
 const trafficLayer = {
-  id: 'traffic',
-  name: 'Street Traffic',
-  icon: '🚗',
-  source: 'OpenStreetMap',
+  ...LAYER_METADATA.traffic,
   /** @type {number} Zero — layer is self-managed via camera listener + preRender */
   updateInterval: 0,
 

@@ -49,6 +49,7 @@ import {
   releaseContinuousRender,
   governorRequestRender,
 } from '../renderGovernor.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 const FOCUS_EVIDENCE_DEV = import.meta.env?.DEV === true;
 
@@ -340,10 +341,7 @@ function currentGeoidN(lat, lon) {
 const shipIconCache = new Map();
 
 const aisLiveVesselsLayer = {
-  id: 'ais-live-vessels',
-  name: 'Live AIS Vessels',
-  icon: '◭',
-  source: 'AISStream',
+  ...LAYER_METADATA['ais-live-vessels'],
   updateInterval: REFRESH_MS,
   statsRefreshInterval: 1000,
 

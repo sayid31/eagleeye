@@ -33,6 +33,7 @@ import {
 import { holdContinuousRender, releaseContinuousRender, getRenderGovernorDiagnostics } from '../renderGovernor.js';
 import { isExplicitLayerStateOrigin } from './layerState.js';
 import { horizonOccluder } from './iconOrientation.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 /**
  * Satellite Orbits — Real-time positions via CelesTrak TLE + SGP4 propagation.
@@ -1673,10 +1674,7 @@ export function applySatellitePointFocusDeemphasis({
 
 
 const satellitesLayer = {
-  id: 'satellites',
-  name: 'Satellites',
-  icon: '🛰️',
-  source: 'CelesTrak',
+  ...LAYER_METADATA.satellites,
   updateInterval: 0, // We use preRender for real-time updates, not interval polling
   refreshInterval: 5 * 60 * 1000, // Catalog data refresh; propagation remains preRender-owned.
 

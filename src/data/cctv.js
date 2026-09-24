@@ -107,6 +107,8 @@ import {
   onFocusTargetAppear,
 } from './focusDeemphasis.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import { LAYER_METADATA } from './layerMetadata.js';
+import { CCTV_FOCUS_RESULT } from './cctvFocusResult.js';
 
 // ---------------------------------------------------------------------------
 // API endpoints
@@ -171,13 +173,11 @@ const PROJECTION_VERT_ASPECT = PROJECTION_CANVAS_WIDTH / PROJECTION_CANVAS_HEIGH
 // below groundAlt + this clearance, so a fabricated pitch (-24°) cannot bury
 // the monitor plane in the 3D tiles. Exported for the unit suite.
 export const FRUSTUM_GROUND_CLEARANCE_M = 2;
-/** Public result codes for explicit CCTV camera flights. */
-export const CCTV_FOCUS_RESULT = Object.freeze({
-  FOCUSED: 'focused',
-  NO_ACTIVE_CAMERA: 'no-active-camera',
-  TRACKING_HOLDS_VIEW: 'tracking-holds-view',
-  COCKPIT_ACTIVE: 'cockpit-active',
-});
+// CCTV_FOCUS_RESULT now lives in cctvFocusResult.js (lazy-loading refactor,
+// plan §3.6) so gevActions.js can import the constant without pulling in
+// this whole module; re-exported here so this file's own internal call
+// sites are unaffected.
+export { CCTV_FOCUS_RESULT };
 // §9.1 activation obstruction probe: clamp the plane's effective range to just
 // short of the first pickFromRay hit along the frustum axis, with a floor so a
 // point-blank obstruction never collapses the frustum to zero. The floor is
@@ -4560,10 +4560,7 @@ async function syncHealthState(force = false) {
  * plane, health sync, calibration, and auto-hop.
  */
 const cctvLayer = {
-  id: 'cctv',
-  name: 'CCTV',
-  icon: '📹',
-  source: 'CCTV + Street View fallback',
+  ...LAYER_METADATA.cctv,
   updateInterval: DEFAULT_UPDATE_INTERVAL_MS,
 
   /**

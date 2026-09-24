@@ -23,6 +23,7 @@ import {
   setOverlayEntries,
   setOverlaySourceVisible,
 } from '../overlays/worldOverlay.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 export const BIKESHARE_SELECTED_OVERLAY_SOURCE_ID = 'bikeshare-selected';
 export const BIKESHARE_SELECTED_OVERLAY_SOURCE_OPTIONS = Object.freeze({
@@ -1481,10 +1482,7 @@ function onCameraChanged() {
  * @type {Object}
  */
 const bikeshareLayer = {
-  id: 'bikeshare',
-  name: 'Bikeshare',
-  icon: '🚲',
-  source: 'GBFS',
+  ...LAYER_METADATA.bikeshare,
   updateInterval: STATUS_POLL_MS,
 
   /**

@@ -11,6 +11,7 @@ import {
   setOverlaySourceVisible,
 } from '../overlays/worldOverlay.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 const WINDOW_DAYS = 30;
 const API_URL = '/api/launches';
@@ -3417,10 +3418,7 @@ function requestMissionUpdate() {
 }
 
 const rocketLaunchesLayer = {
-  id: 'rocket-launches',
-  name: 'Space Missions (30d)',
-  icon: '🚀',
-  source: 'Launch Library 2',
+  ...LAYER_METADATA['rocket-launches'],
   updateInterval: 300000,
 
   init(viewer) {
