@@ -4,6 +4,7 @@ import * as Cesium from 'cesium';
 import { CCTV_FOCUS_RESULT } from '../data/cctv.js';
 import { getContextStore, registerEntityContext } from '../data/contextStore.js';
 import { DataLayerManager } from '../data/manager.js';
+import militaryAwarenessLayer from '../data/militaryAwareness.js';
 import { getActiveCameraMotion, interruptCameraMotion, moveCamera } from '../cameraVerbs.js';
 import { reassertNavigationHandoff, runExplicitNavigation } from '../navigationPolicy.js';
 import { TR3B_CLASS } from '../data/tr3bRegistry.js';
@@ -69,23 +70,26 @@ test('track_entity runner narrates a callsign-less aircraft by its registration'
   for (const layerId of ['flights', 'military']) {
     const { viewer, styleManager } = createVoiceNavigationHarness();
     let trackedId = null;
+    const layerModule = {
+      findByQuery: () => ({
+        icao24: 'ae1fa4',
+        callsign: null,
+        registration: 'N123AB',
+        latitude: 30.19,
+        longitude: -97.67,
+        altitudeM: 10_668,
+      }),
+      trackById: (id) => { trackedId = id; return true; },
+    };
     const runner = createGevActionRunner({
       viewer,
       styleManager,
       dataManager: {
-        layers: new Map([[layerId, { module: {
-          findByQuery: () => ({
-            icao24: 'ae1fa4',
-            callsign: null,
-            registration: 'N123AB',
-            latitude: 30.19,
-            longitude: -97.67,
-            altitudeM: 10_668,
-          }),
-          trackById: (id) => { trackedId = id; return true; },
-        } }]]),
+        layers: new Map([[layerId, { module: layerModule }]]),
         isEnabled: () => true,
         getAll: () => [],
+        // Mirrors the real DataLayerManager facade (manager.js).
+        callLayerMethod: (id, methodName, ...args) => layerModule[methodName]?.(...args),
       },
     });
 
@@ -234,7 +238,10 @@ test('nearest-aircraft voice action serializes layer enable, arrival, refresh, a
   let trackedId = null;
   const flights = {
     source: 'adsb.lol fallback',
-    getStats: () => ({ count: 2, lastUpdate: Date.now() }),
+    // Mirrors flights.js's real getStats() shape (source: _lastSource) so
+    // dataManager.getLayerStatsRaw()'s raw getStats() passthrough has a
+    // source field to read, same as production.
+    getStats: () => ({ count: 2, lastUpdate: Date.now(), source: 'adsb.lol fallback' }),
     getAnalystRecords: (maxCount = 2000) => {
       assert.ok(maxCount > 2000, 'the nearest search must inspect the complete loaded fleet');
       return [
@@ -264,6 +271,9 @@ test('nearest-aircraft voice action serializes layer enable, arrival, refresh, a
       return true;
     },
     getAll: () => [{ id: 'flights', name: 'Live Flights', enabled }],
+    getLayerStatsRaw: () => flights.getStats(),
+    // Mirrors the real DataLayerManager facade (manager.js).
+    callLayerMethod: (id, methodName, ...args) => flights[methodName]?.(...args),
   };
   const runner = createGevActionRunner({ viewer, styleManager, dataManager });
   const resultPromise = runner('select_nearest_aircraft', {
@@ -321,6 +331,9 @@ test('nearest-aircraft voice action refreshes an already-enabled viewport layer 
       return true;
     },
     getAll: () => [{ id: 'flights', name: 'Live Flights', enabled: true }],
+    getLayerStatsRaw: () => flights.getStats(),
+    // Mirrors the real DataLayerManager facade (manager.js).
+    callLayerMethod: (id, methodName, ...args) => flights[methodName]?.(...args),
   };
   const runner = createGevActionRunner({ viewer, styleManager, dataManager });
   const resultPromise = runner('select_nearest_aircraft', {
@@ -352,7 +365,10 @@ test('fallback with zero airborne records reports enabled fallback without selec
   let enabled = false;
   const flights = {
     source: 'adsb.lol fallback',
-    getStats: () => ({ count: 1, lastUpdate: Date.now() }),
+    // Mirrors flights.js's real getStats() shape (source: _lastSource) so
+    // dataManager.getLayerStatsRaw()'s raw getStats() passthrough has a
+    // source field to read, same as production.
+    getStats: () => ({ count: 1, lastUpdate: Date.now(), source: 'adsb.lol fallback' }),
     getAnalystRecords: () => [
       { id: 'GROUND2', icao24: 'ground-only', callsign: 'GROUND2', lat: 30.2673, lon: -97.7432, onGround: true },
     ],
@@ -371,6 +387,9 @@ test('fallback with zero airborne records reports enabled fallback without selec
       return true;
     },
     getAll: () => [{ id: 'flights', name: 'Live Flights', enabled }],
+    getLayerStatsRaw: () => flights.getStats(),
+    // Mirrors the real DataLayerManager facade (manager.js).
+    callLayerMethod: (id, methodName, ...args) => flights[methodName]?.(...args),
   };
   const runner = createGevActionRunner({ viewer, styleManager, dataManager });
   const resultPromise = runner('select_nearest_aircraft', {
@@ -420,6 +439,8 @@ test('successful voice tracking stamps and releases the old owner before layer t
     layers: new Map([['satellites', { module: satellites }]]),
     isEnabled: (id) => id === 'satellites',
     getAll: () => [],
+    // Mirrors the real DataLayerManager facade (manager.js).
+    callLayerMethod: (id, methodName, ...args) => satellites[methodName]?.(...args),
   };
   const runner = createGevActionRunner({ viewer, styleManager, dataManager });
   const result = await runner('track_entity', { query: 'ISS', layerId: 'satellites' });
@@ -438,6 +459,10 @@ test('voice Stop Tracking clears all durable tracker IDs even without active tra
     ]),
     setLayerParams(layerId, params, options) { cleared.push({ layerId, params, options }); return true; },
     getAll: () => [],
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates to
+    // whichever module is registered for the requested layerId.
+    getTrackedInfo(layerId) { return this.layers.get(layerId)?.module.getTrackedInfo?.() ?? null; },
+    stopTracking(layerId, opts) { return this.layers.get(layerId)?.module.stopTracking?.(opts); },
   };
   const runner = createGevActionRunner({
     viewer: {
@@ -473,6 +498,10 @@ test('voice Stop Tracking reports exact layers whose active or durable clear fai
     ]),
     setLayerParams(layerId) { return layerId !== 'military'; },
     getAll: () => [],
+    // Mirrors the real DataLayerManager facade (manager.js) — dispatches to
+    // whichever module is registered for the requested layerId.
+    getTrackedInfo(layerId) { return this.layers.get(layerId)?.module.getTrackedInfo?.() ?? null; },
+    stopTracking(layerId, opts) { return this.layers.get(layerId)?.module.stopTracking?.(opts); },
   };
   const viewer = {
     trackedEntity: { gevTrackedId: 'flights:active' },
@@ -505,6 +534,8 @@ test('successful voice overhead framing stamps and releases the old owner before
     layers: new Map([['flights', { module: flights }]]),
     isEnabled: (id) => id === 'flights',
     getAll: () => [],
+    // Mirrors the real DataLayerManager facade (manager.js).
+    callLayerMethod: (id, methodName, ...args) => flights[methodName]?.(...args),
   };
   const runner = createGevActionRunner({ viewer, styleManager, dataManager });
   const result = await runner('frame_overhead', { target: 'flights' });
@@ -531,6 +562,8 @@ test('tracked aircraft yields to strongest-fire and vessel voice flights before 
       layers: new Map([[layerId, { module }]]),
       isEnabled: (id) => id === layerId,
       getAll: () => [],
+      // Mirrors the real DataLayerManager facade (manager.js).
+      callLayerMethod: (id, methodName, ...args) => module[methodName]?.(...args),
     };
     const runner = createGevActionRunner({ viewer, styleManager, dataManager });
     const result = await runner('track_entity', {
@@ -658,7 +691,13 @@ test('Cockpit refuses every named voice camera route before camera or selection 
     const runner = createGevActionRunner({
       viewer,
       styleManager,
-      dataManager: { layers: modules, isEnabled: () => true, getAll: () => [] },
+      dataManager: {
+        layers: modules,
+        isEnabled: () => true,
+        getAll: () => [],
+        // Mirrors the real DataLayerManager facade (manager.js).
+        callLayerMethod: (id, methodName, ...args) => modules.get(id)?.module[methodName]?.(...args),
+      },
       annotations: { list: () => [{
         type: 'route', label: 'harbor route',
         path: [{ lat: 29.75, lon: -95.36 }, { lat: 29.76, lon: -95.34 }],
@@ -684,15 +723,16 @@ test('a newer voice action makes an older deferred navigation authority inert', 
   globalThis.window = globalThis.window || { clearTimeout, setTimeout, requestIdleCallback: null };
   const { viewer, styleManager, currentGeneration } = createVoiceNavigationHarness();
   const oldGeneration = currentGeneration();
+  const firms = { getStrongestFire: () => ({ latitude: 37.77, longitude: -122.42, frp: 900 }) };
   const runner = createGevActionRunner({
     viewer,
     styleManager,
     dataManager: {
-      layers: new Map([['local-firms', { module: {
-        getStrongestFire: () => ({ latitude: 37.77, longitude: -122.42, frp: 900 }),
-      } }]]),
+      layers: new Map([['local-firms', { module: firms }]]),
       isEnabled: () => true,
       getAll: () => [],
+      // Mirrors the real DataLayerManager facade (manager.js).
+      callLayerMethod: (id, methodName, ...args) => firms[methodName]?.(...args),
     },
   });
   assert.equal((await runner('track_entity', { query: 'strongest fire' })).ok, true);
@@ -1253,6 +1293,8 @@ test('control_cockpit delegates selected-flight adoption to the canonical cockpi
     layers: new Map([['flights', { module: flights }]]),
     isEnabled: (layerId) => layerId === 'flights',
     getAll: () => [],
+    // Mirrors the real DataLayerManager facade (manager.js).
+    layerHasMethod: (layerId, methodName) => typeof flights[methodName] === 'function' && layerId === 'flights',
   };
   const runner = createGevActionRunner({ viewer, styleManager, dataManager });
 
@@ -1414,6 +1456,8 @@ test('control_cockpit adopts the newest selection after Contacts settles', async
     layers: new Map([['flights', { module: { trackById() { return true; } } }]]),
     isEnabled: (layerId) => layerId === 'flights',
     getAll: () => [],
+    // Mirrors the real DataLayerManager facade (manager.js).
+    layerHasMethod: (layerId) => layerId === 'flights',
   };
   const runner = createGevActionRunner({ viewer, styleManager, dataManager });
 
@@ -1706,9 +1750,16 @@ test('voice CCTV select, next, prev, and nearest report tracking-refused flights
       return CCTV_FOCUS_RESULT.TRACKING_HOLDS_VIEW;
     },
   };
+  // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+  // named/generic facade method to the mocked module, same as production.
   const dataManager = {
     layers: new Map([['cctv', { module: cctv }]]),
     isEnabled: () => true,
+    getLayerUIState: () => cctv.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => cctv[methodName]?.(...args),
+    focusCamera: (layerId, cameraId, durationSec) => (
+      durationSec !== undefined ? cctv.focusCamera(cameraId, durationSec) : cctv.focusCamera(cameraId)
+    ),
   };
 
   for (const args of [
@@ -1749,6 +1800,7 @@ test('voice CCTV coverage writes the canonical durable coverage mode', async () 
   const dataManager = {
     layers: new Map([['cctv', { module: cctv }]]),
     isEnabled: () => true,
+    getLayerUIState: () => cctv.getUIState(),
     setLayerParams(layerId, params, options) {
       calls.push([layerId, params, options]);
       coverageMode = params.coverageMode;
@@ -1811,6 +1863,10 @@ test('voice Radio resolves Austin and exposes semantic selection, volume, pause,
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => enabled,
     async setEnabled(id, value, options) {
       calls.push(['enabled', id, value, options]);
@@ -1908,6 +1964,10 @@ test('community Radio names remain untrusted data and cannot redirect model-visi
     };
     const dataManager = {
       layers: new Map([['radio', { module: radio }]]),
+      // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+      // named/generic facade method to the mocked module, same as production.
+      getLayerUIState: () => radio.getUIState(),
+      callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
       isEnabled: () => true,
     };
     const result = await controlRadio({}, dataManager, {
@@ -1940,6 +2000,10 @@ test('Radio country validation fails closed before enable or selection side effe
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => false,
     setEnabled() { calls.push('enable'); return true; },
   };
@@ -1972,6 +2036,10 @@ test('voice Radio status exposes authoritative four-state lifecycle without side
     };
     const dataManager = {
       layers: new Map([['radio', { module: radio }]]),
+      // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+      // named/generic facade method to the mocked module, same as production.
+      getLayerUIState: () => radio.getUIState(),
+      callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
       isEnabled: () => !lifecycle.enabled,
       getLayerLifecycleState: () => ({ ...lifecycle }),
       async setEnabled() { mutations += 1; return true; },
@@ -1991,6 +2059,8 @@ test('voice Radio status exposes authoritative four-state lifecycle without side
       layers: new Map([['radio', { module: { getUIState: () => ({}) } }]]),
       isEnabled: () => enabled,
       getLayerLifecycleState: () => null,
+      // Mirrors the real DataLayerManager facade (manager.js).
+      getLayerUIState: () => ({}),
     }, { action: 'status' });
     assert.equal(result.enabled, enabled);
     assert.equal(result.lifecycleState, enabled ? 'enabled' : 'disabled');
@@ -2019,14 +2089,17 @@ test('voice Radio reports a rejected Stop without claiming stopped state', async
     audioState: 'playing',
     volume: 0.8,
   };
+  const radio = {
+    getUIState: () => ({ ...state }),
+    stopPlayback: () => false,
+  };
   const dataManager = {
-    layers: new Map([['radio', {
-      module: {
-        getUIState: () => ({ ...state }),
-        stopPlayback: () => false,
-      },
-    }]]),
+    layers: new Map([['radio', { module: radio }]]),
     isEnabled: () => true,
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
   };
 
   const result = await controlRadio({}, dataManager, { action: 'stop' });
@@ -2042,14 +2115,17 @@ test('voice Radio rejects a fulfilled-false Pause without claiming authority', a
     audioState: 'playing',
     volume: 0.8,
   };
+  const radio = {
+    getUIState: () => ({ ...state }),
+    pause: () => false,
+  };
   const dataManager = {
-    layers: new Map([['radio', {
-      module: {
-        getUIState: () => ({ ...state }),
-        pause: () => false,
-      },
-    }]]),
+    layers: new Map([['radio', { module: radio }]]),
     isEnabled: () => true,
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
   };
 
   const result = await controlRadio({}, dataManager, { action: 'pause' });
@@ -2062,17 +2138,20 @@ test('voice Radio Stop rechecks ownership after an awaited player boundary', asy
   let releaseStop;
   const stopGate = new Promise((resolve) => { releaseStop = resolve; });
   let current = true;
+  const radio = {
+    getUIState: () => ({ audioState: 'stopped', volume: 0.8 }),
+    stopPlayback: async () => {
+      await stopGate;
+      return true;
+    },
+  };
   const dataManager = {
-    layers: new Map([['radio', {
-      module: {
-        getUIState: () => ({ audioState: 'stopped', volume: 0.8 }),
-        stopPlayback: async () => {
-          await stopGate;
-          return true;
-        },
-      },
-    }]]),
+    layers: new Map([['radio', { module: radio }]]),
     isEnabled: () => true,
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
   };
 
   const pending = controlRadio({}, dataManager, { action: 'stop' }, {
@@ -2111,6 +2190,10 @@ test('interrupting delayed Radio geocoding causes no enable or selection side ef
   let enabled = false;
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => enabled,
     async setEnabled(_id, value, options) {
       calls.push(['enabled', value, options]);
@@ -2146,6 +2229,10 @@ test('interrupting delayed Radio disable forwards cancellation and retains enabl
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => enabled,
     async setEnabled(_id, value, options) {
       receivedSignal = options.signal;
@@ -2206,6 +2293,10 @@ test('voice Radio resolves an unlisted place through the default Nominatim provi
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => true,
   };
   try {
@@ -2256,6 +2347,10 @@ test('voice Radio resolves an unlisted place through the explicit Google provide
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => true,
   };
   try {
@@ -2288,6 +2383,10 @@ test('voice Radio propagates fulfilled-false enable, disable, and auto-enable fa
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => enabled,
     setEnabled: async () => false,
   };
@@ -2332,6 +2431,10 @@ test('voice Radio reconciles uncertain lifecycle authority before direct selecti
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => true,
     getLayerLifecycleState: () => ({
       enabled: true,
@@ -2393,6 +2496,10 @@ test('voice Radio Volume waits for settled certain lifecycle authority', async (
       };
       const dataManager = {
         layers: new Map([['radio', { module: radio }]]),
+        // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+        // named/generic facade method to the mocked module, same as production.
+        getLayerUIState: () => radio.getUIState(),
+        callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
         isEnabled: () => enabled,
         getLayerLifecycleState: () => ({ ...lifecycle }),
         async setEnabled(_id, value) {
@@ -2433,6 +2540,10 @@ test('voice Radio settled OFF blocks Volume without enabling', async () => {
     };
     const dataManager = {
       layers: new Map([['radio', { module: radio }]]),
+      // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+      // named/generic facade method to the mocked module, same as production.
+      getLayerUIState: () => radio.getUIState(),
+      callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
       isEnabled: () => false,
       getLayerLifecycleState: () => ({
         lifecycleState: 'disabled',
@@ -2480,6 +2591,10 @@ test('voice Radio reconciliation failures leave gated player state unchanged', a
       };
       const dataManager = {
         layers: new Map([['radio', { module: radio }]]),
+        // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+        // named/generic facade method to the mocked module, same as production.
+        getLayerUIState: () => radio.getUIState(),
+        callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
         isEnabled: () => true,
         getLayerLifecycleState: () => ({ ...lifecycle }),
         async setEnabled() {
@@ -2517,6 +2632,10 @@ test('voice Radio cancellation during lifecycle reconciliation prevents Volume m
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => true,
     getLayerLifecycleState: () => ({ ...lifecycle }),
     async setEnabled() {
@@ -2557,6 +2676,10 @@ test('voice Radio Pause while disabled is a truthful playback-only no-op', async
   };
   const dataManager = {
     layers: new Map([['radio', { module: radio }]]),
+    // Mirrors the real DataLayerManager facade (manager.js) — delegates each
+    // named/generic facade method to the mocked module, same as production.
+    getLayerUIState: () => radio.getUIState(),
+    callLayerMethod: (layerId, methodName, ...args) => radio[methodName]?.(...args),
     isEnabled: () => false,
     async setEnabled() {
       lifecycleCalls += 1;
@@ -2978,6 +3101,11 @@ function analystRunner() {
       layers: new Map([['flights', { module: flights }]]),
       isEnabled: (id) => id === 'flights',
       getAll: () => [{ id: 'flights', name: 'Live Flights', enabled: true, stats: { count: 1 } }],
+      // Mirrors the real DataLayerManager facade (manager.js): both delegate
+      // to the militaryAwareness.js default export, same as production
+      // `dataManager.getContextSnapshot()` does via `_callLayerMethod`.
+      callLayerMethod: (id, methodName, ...args) => flights[methodName]?.(...args),
+      getContextSnapshot: () => militaryAwarenessLayer.getContextSnapshot?.() ?? null,
     },
   });
 }

@@ -5,12 +5,27 @@ import {
   getSelectedEntityContext,
   isContextRecordActive,
 } from '../data/contextStore.js';
+// Kept as a direct satellites.js import (lazy-loading refactor, plan §3.6):
+// getNextIssPass reads live `_catalog` module state internally, so it is
+// not pure and was NOT extracted into a small standalone file — per the
+// plan's explicit non-pure fallback, satellites.js stays an eager
+// gevActions.js dependency rather than risking an extraction that could
+// silently desync from the live TLE catalog.
 import { getNextIssPass } from '../data/satellites.js';
-import { CCTV_FOCUS_RESULT } from '../data/cctv.js';
+import { CCTV_FOCUS_RESULT } from '../data/cctvFocusResult.js';
 import { contextModeWord } from '../contextModePolicy.js';
 import { createAnalystEngine } from '../data/analystEngine.js';
 import { layerFeedState } from '../data/manager.js';
-import militaryAwarenessLayer, {
+// Named-import only (lazy-loading refactor, plan §3.6) — the default export
+// (militaryAwarenessLayer) is no longer imported here; its
+// getContextSnapshot() usages now route through dataManager.getContextSnapshot()
+// (see activeContactsWindow/aircraftProximityWindowForQuery/analystProviders
+// below). collectAircraftProximityWindow itself reads live module state
+// (flightsLayer.getNearby/militaryFlightsLayer.getNearby via
+// militaryAwareness.js's own static imports), so it is not pure and was NOT
+// extracted into militaryAwarenessEngine.js per the plan's non-pure
+// fallback — it stays a direct named import instead.
+import {
   collectAircraftProximityWindow,
   contactsWindowFromSnapshot,
 } from '../data/militaryAwareness.js';
@@ -479,13 +494,12 @@ export function createGevActionRunner({ viewer, styleManager, dataManager, scene
         };
       }
 
-      const layerModule = dataManager.layers.get(layerId)?.module || null;
       let refreshed = false;
       try {
         if (typeof dataManager.refreshLayer === 'function') {
           refreshed = await dataManager.refreshLayer(layerId, { signal: runOptions.signal });
-        } else if (typeof layerModule?.update === 'function') {
-          refreshed = (await layerModule.update(viewer, { signal: runOptions.signal })) !== false;
+        } else {
+          refreshed = (await dataManager.callLayerMethod(layerId, 'update', viewer, { signal: runOptions.signal })) !== false;
         }
       } catch {
         refreshed = false;
@@ -503,8 +517,8 @@ export function createGevActionRunner({ viewer, styleManager, dataManager, scene
           layer,
         };
       }
-      const stats = layerModule?.getStats?.() || {};
-      const source = String(stats.source || layerModule?.source || '').trim() || null;
+      const stats = dataManager.getLayerStatsRaw(layerId) || {};
+      const source = String(stats.source || dataManager.getAll().find((item) => item.id === layerId)?.source || '').trim() || null;
       const feed = {
         state: layerFeedState({ ...stats, source }),
         source,
@@ -633,7 +647,7 @@ export function createGevActionRunner({ viewer, styleManager, dataManager, scene
         };
       }
       const contactsWindow = ['contacts', 'flights'].includes(mode)
-        ? activeContactsWindow()
+        ? activeContactsWindow(dataManager)
         : null;
       return {
         ...withContextModeVocabulary(result),
@@ -931,8 +945,7 @@ export function createGevActionRunner({ viewer, styleManager, dataManager, scene
 function selectedCockpitTarget(dataManager) {
   const selected = getSelectedEntityContext({ dataManager });
   if (!selected || !['flights', 'military'].includes(selected.layerId)) return null;
-  const module = dataManager?.layers?.get(selected.layerId)?.module;
-  if (!module?.trackById || typeof module.trackById !== 'function') return null;
+  if (!dataManager?.layerHasMethod?.(selected.layerId, 'trackById')) return null;
   const id = String(selected.id || '').trim();
   return id ? { layerId: selected.layerId, id } : null;
 }
@@ -1093,8 +1106,11 @@ function controlScene(sceneDirector, args = {}) {
 /** Voice CCTV control over the cctv layer module's public surface. */
 export async function controlCctv(dataManager, args = {}, styleManager = null) {
   const action = String(args.action || '').toLowerCase();
-  const cctv = dataManager.layers.get('cctv')?.module;
-  if (!cctv) {
+  // Registration-existence check only — does NOT force-resolve a not-yet-
+  // loaded lazy CCTV module just to answer "does this layer exist" (plan
+  // §3.2/§3.6). Every subsequent read/mutation below routes through the
+  // dataManager facade instead of a captured module reference.
+  if (!dataManager.layers.has('cctv')) {
     return { ok: false, action: 'control_cctv', error: 'CCTV layer unavailable' };
   }
 
@@ -1107,7 +1123,7 @@ export async function controlCctv(dataManager, args = {}, styleManager = null) {
   }
 
   const summarize = () => {
-    const ui = cctv.getUIState?.() || {};
+    const ui = dataManager.getLayerUIState('cctv') || {};
     return {
       activeCameraId: ui.activeCameraId || null,
       activeCamera: ui.activeCamera?.name || ui.activeCamera?.id || null,
@@ -1123,7 +1139,7 @@ export async function controlCctv(dataManager, args = {}, styleManager = null) {
   if (action === 'select') {
     const query = String(args.cameraQuery || '').trim().toLowerCase();
     if (!query) throw new Error('control_cctv select needs cameraQuery');
-    const cams = cctv.getUIState?.()?.cameras || [];
+    const cams = dataManager.getLayerUIState('cctv')?.cameras || [];
     const match = cams.find((cam) => String(cam.id || '').toLowerCase() === query)
       || cams.find((cam) => String(cam.name || '').toLowerCase() === query)
       || cams.find((cam) => String(cam.name || '').toLowerCase().includes(query));
@@ -1131,9 +1147,9 @@ export async function controlCctv(dataManager, args = {}, styleManager = null) {
       return { ok: false, action: 'control_cctv', error: `No camera matched "${args.cameraQuery}"`, ...summarize() };
     }
     styleManager?.supersedeDeferredNavigation?.();
-    const selected = cctv.selectCamera(match.id);
+    const selected = dataManager.callLayerMethod('cctv', 'selectCamera', match.id);
     const focusResult = selected
-      ? cctv.focusCamera(match.id, 1.8)
+      ? dataManager.focusCamera('cctv', match.id, 1.8)
       : CCTV_FOCUS_RESULT.NO_ACTIVE_CAMERA;
     return {
       action: 'control_cctv',
@@ -1144,9 +1160,9 @@ export async function controlCctv(dataManager, args = {}, styleManager = null) {
   }
   if (action === 'next' || action === 'prev') {
     styleManager?.supersedeDeferredNavigation?.();
-    const nextId = cctv.cycleCamera(action === 'next' ? 1 : -1);
+    const nextId = dataManager.callLayerMethod('cctv', 'cycleCamera', action === 'next' ? 1 : -1);
     const focusResult = nextId
-      ? cctv.focusCamera(nextId, 1.8)
+      ? dataManager.focusCamera('cctv', nextId, 1.8)
       : CCTV_FOCUS_RESULT.NO_ACTIVE_CAMERA;
     return {
       action: 'control_cctv',
@@ -1156,9 +1172,9 @@ export async function controlCctv(dataManager, args = {}, styleManager = null) {
   }
   if (action === 'nearest') {
     styleManager?.supersedeDeferredNavigation?.();
-    const nearestId = cctv.focusNearest({ focus: false });
+    const nearestId = dataManager.callLayerMethod('cctv', 'focusNearest', { focus: false });
     const focusResult = nearestId
-      ? cctv.focusCamera(nearestId, 1.8)
+      ? dataManager.focusCamera('cctv', nearestId, 1.8)
       : CCTV_FOCUS_RESULT.NO_ACTIVE_CAMERA;
     return {
       action: 'control_cctv',
@@ -1167,10 +1183,10 @@ export async function controlCctv(dataManager, args = {}, styleManager = null) {
     };
   }
   if (action === 'focus') {
-    const activeId = cctv.getUIState?.()?.activeCameraId;
+    const activeId = dataManager.getLayerUIState('cctv')?.activeCameraId;
     if (activeId) styleManager?.supersedeDeferredNavigation?.();
     const focusResult = activeId
-      ? cctv.focusCamera(activeId)
+      ? dataManager.focusCamera('cctv', activeId)
       : CCTV_FOCUS_RESULT.NO_ACTIVE_CAMERA;
     return { action: 'control_cctv', ...summarize(), ...cctvVoiceFocusOutcome(focusResult) };
   }
@@ -1312,8 +1328,11 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
 
   const readRadioLifecycle = () => readLayerLifecycleSummary(dataManager, 'radio');
 
-  const radio = dataManager.layers.get('radio')?.module;
-  if (!radio) {
+  // Registration-existence check only — does NOT force-resolve a not-yet-
+  // loaded lazy Radio module just to answer "does this layer exist" (plan
+  // §3.2/§3.6). Every subsequent read/mutation below routes through the
+  // dataManager facade instead of a captured module reference.
+  if (!dataManager.layers.has('radio')) {
     return {
       ok: false,
       action: 'control_radio',
@@ -1401,7 +1420,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
   };
 
   const summarize = () => {
-    const state = radio.getUIState?.() || {};
+    const state = dataManager.getLayerUIState('radio') || {};
     return {
       radioAction: action,
       ...readRadioLifecycle(),
@@ -1459,7 +1478,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
     const volumeApplied = typeof dataManager.setLayerParams === 'function'
       ? dataManager.setLayerParams('radio', { volume: volumePct / 100 }, { origin: 'voice' })
-      : radio.setVolume(volumePct / 100);
+      : dataManager.callLayerMethod('radio', 'setVolume', volumePct / 100);
     if (volumeApplied === false) {
       return {
         ok: false,
@@ -1474,7 +1493,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
     let stopped = false;
     try {
-      stopped = await radio.stopPlayback({ origin: 'voice' });
+      stopped = await dataManager.callLayerMethod('radio', 'stopPlayback', { origin: 'voice' });
     } catch (error) {
       return {
         ok: false,
@@ -1504,7 +1523,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
       return { ok: true, action: 'control_radio', changed: false, ...summarize() };
     }
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
-    const paused = radio.pause?.({ origin: 'voice' }) || false;
+    const paused = dataManager.callLayerMethod('radio', 'pause', { origin: 'voice' }) || false;
     if (!paused) {
       return {
         ok: false,
@@ -1535,7 +1554,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
   if (!authorized) {
     return lifecycleFailure('Radio could not be enabled', summarize);
   }
-  const state = radio.getUIState?.() || {};
+  const state = dataManager.getLayerUIState('radio') || {};
   if (!radioActionIsCurrent(options)) return cancelled(summarize);
   if (!state.stationCount) {
     return { ok: false, action: 'control_radio', error: state.error || 'No healthy Radio stations are available', ...summarize() };
@@ -1544,7 +1563,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
     const prepared = state.selected
       ? true
-      : radio.cycleStation?.(1, { focus: false, autoplay: false });
+      : dataManager.callLayerMethod('radio', 'cycleStation', 1, { focus: false, autoplay: false });
     return {
       ok: Boolean(prepared),
       action: 'control_radio',
@@ -1558,10 +1577,10 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
       if (typeof dataManager.setLayerParams === 'function') {
         dataManager.setLayerParams('radio', { filter: String(args.category) }, { origin: 'voice' });
       } else {
-        radio.setFilter(String(args.category));
+        dataManager.callLayerMethod('radio', 'setFilter', String(args.category));
       }
     }
-    const selected = radio.cycleStation?.(action === 'next' ? 1 : -1, {
+    const selected = dataManager.callLayerMethod('radio', 'cycleStation', action === 'next' ? 1 : -1, {
       focus: false,
       autoplay: false,
     });
@@ -1575,7 +1594,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
   if (action === 'select') {
     const location = resolvedLocation;
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
-    const station = radio.selectRequestedStation?.({
+    const station = dataManager.callLayerMethod('radio', 'selectRequestedStation', {
       categoryId: String(args.category || 'all'),
       anchor: location ? { lat: location.lat, lon: location.lon } : null,
       country: normalizedCountry.empty
@@ -1660,8 +1679,7 @@ async function trackEntity(viewer, dataManager, styleManager, args = {}) {
     if (!dataManager.isEnabled('local-firms')) {
       return { ok: false, action: 'track_entity', query, error: 'The FIRMS fires layer is not enabled' };
     }
-    const firms = dataManager.layers.get('local-firms')?.module;
-    const strongest = firms?.getStrongestFire?.();
+    const strongest = dataManager.callLayerMethod('local-firms', 'getStrongestFire');
     if (!strongest) {
       return { ok: false, action: 'track_entity', query, error: 'No fire detections loaded yet' };
     }
@@ -1690,9 +1708,7 @@ async function trackEntity(viewer, dataManager, styleManager, args = {}) {
       skippedDisabled.push(family.layerId);
       continue;
     }
-    const module = dataManager.layers.get(family.layerId)?.module;
-    if (!module || typeof module.findByQuery !== 'function') continue;
-    const found = module.findByQuery(query);
+    const found = dataManager.callLayerMethod(family.layerId, 'findByQuery', query);
     if (!found) continue;
 
     if (family.kind === 'vessel'
@@ -1706,14 +1722,14 @@ async function trackEntity(viewer, dataManager, styleManager, args = {}) {
     return runManagedVoiceNavigation(styleManager, family.kind, 'track_entity', () => {
       let trackedOk = false;
       if (family.kind === 'vessel') {
-        trackedOk = !!module.selectById?.(found.mmsi);
+        trackedOk = !!dataManager.callLayerMethod(family.layerId, 'selectById', found.mmsi);
         flyToLandmark(viewer, found.latitude, found.longitude, {
           range: 6000, pitch: -45, heading: 0, buildingHeight: 0, duration: 2.0,
         });
       } else if (family.kind === 'satellite') {
-        trackedOk = !!module.trackById?.(found.noradId, { origin: 'voice' });
+        trackedOk = !!dataManager.callLayerMethod(family.layerId, 'trackById', found.noradId, { origin: 'voice' });
       } else {
-        trackedOk = !!module.trackById?.(found.icao24, { origin: 'voice' });
+        trackedOk = !!dataManager.callLayerMethod(family.layerId, 'trackById', found.icao24, { origin: 'voice' });
       }
 
       return {
@@ -1743,26 +1759,26 @@ function stopAllTracking(viewer, dataManager) {
   const released = [];
   const failed = new Set();
   for (const family of TRACKABLE_FAMILIES) {
-    const module = dataManager.layers.get(family.layerId)?.module;
-    if (!module) continue;
-    try {
-      if (family.kind === 'vessel') {
-        if (module.getSelectedInfo?.()) {
-          if (typeof module.clearSelection !== 'function' || module.clearSelection() === false) {
-            failed.add(family.layerId);
-          } else {
-            released.push(family.layerId);
-          }
-        }
-      } else if (module.getTrackedInfo?.()) {
-        if (typeof module.stopTracking !== 'function' || module.stopTracking({ origin: 'voice' }) === false) {
+    if (!dataManager.layers.has(family.layerId)) continue;
+    // Every module in TRACKABLE_FAMILIES contracts to return exactly `true`
+    // on a successful stop/clear (see flights.js/satellites.js/
+    // militaryFlights.js/aisLiveVessels.js docstrings) — `!== true` catches
+    // both an explicit `false` and the facade's swallowed-throw `undefined`
+    // fallback (dataManager.callLayerMethod never throws by design).
+    if (family.kind === 'vessel') {
+      if (dataManager.callLayerMethod(family.layerId, 'getSelectedInfo')) {
+        if (dataManager.clearSelection(family.layerId) !== true) {
           failed.add(family.layerId);
         } else {
           released.push(family.layerId);
         }
       }
-    } catch {
-      failed.add(family.layerId);
+    } else if (dataManager.getTrackedInfo(family.layerId)) {
+      if (dataManager.stopTracking(family.layerId, { origin: 'voice' }) !== true) {
+        failed.add(family.layerId);
+      } else {
+        released.push(family.layerId);
+      }
     }
   }
   for (const [layerId, key] of [
@@ -1808,23 +1824,27 @@ async function frameOverhead(viewer, dataManager, styleManager, args = {}) {
   if (!dataManager.isEnabled(layerId)) {
     return { ok: false, action: 'frame_overhead', layerId, error: `The ${layerId} layer is not enabled` };
   }
-  const module = dataManager.layers.get(layerId)?.module;
   const isSatellites = layerId === 'satellites';
   const defaultRadiusKm = isSatellites ? 3000 : (layerId === 'ais-live-vessels' ? 120 : 150);
   const radiusKm = clampNumber(args.radiusKm, 10, 20000, defaultRadiusKm);
   const center = getViewTargetCartesian(viewer) || viewer.camera.positionWC;
 
-  let entries = [];
-  if (typeof module.getNearby === 'function') {
-    entries = module.getNearby(center, radiusKm * 1000, 80) || [];
-  } else if (typeof module.getAllPositions === 'function') {
-    entries = (module.getAllPositions(800) || [])
+  // `getNearby` and `getAllPositions` are mutually-exclusive capability
+  // methods across TRACKABLE_FAMILIES' modules (never both defined on the
+  // same layer), so trying the first and falling back to the second — via
+  // the facade's own not-a-function safe-undefined behavior — needs no
+  // separate existence check.
+  let entries = dataManager.callLayerMethod(layerId, 'getNearby', center, radiusKm * 1000, 80);
+  if (!entries) {
+    const positions = dataManager.callLayerMethod(layerId, 'getAllPositions', 800);
+    entries = (positions || [])
       .filter((entry) => entry.position)
       .map((entry) => ({ ...entry, distance: Cesium.Cartesian3.distance(center, entry.position) }))
       .filter((entry) => entry.distance <= radiusKm * 1000)
       .sort((a, b) => a.distance - b.distance)
       .slice(0, 80);
   }
+  entries = entries || [];
   if (!entries.length) {
     return {
       ok: false, action: 'frame_overhead', layerId, radiusKm: Math.round(radiusKm), count: 0,
@@ -1883,14 +1903,13 @@ function runManagedVoiceNavigation(styleManager, noun, action, navigate, release
 function collectTrackedEntities(dataManager) {
   const tracked = [];
   for (const family of TRACKABLE_FAMILIES) {
-    const module = dataManager.layers.get(family.layerId)?.module;
-    if (!module) continue;
-    try {
-      const info = family.kind === 'vessel' ? module.getSelectedInfo?.() : module.getTrackedInfo?.();
-      if (info) tracked.push({ kind: family.kind, layerId: family.layerId, ...info });
-    } catch {
-      // layer not ready
-    }
+    if (!dataManager.layers.has(family.layerId)) continue;
+    // The facade already catches a synchronously-thrown method and falls
+    // back to null/undefined, so no try/catch is needed at this call site.
+    const info = family.kind === 'vessel'
+      ? dataManager.callLayerMethod(family.layerId, 'getSelectedInfo')
+      : dataManager.getTrackedInfo(family.layerId);
+    if (info) tracked.push({ kind: family.kind, layerId: family.layerId, ...info });
   }
   return tracked;
 }
@@ -2370,7 +2389,7 @@ function getCurrentViewState(viewer, styleManager, dataManager, sceneDirector = 
         ...withContextModeVocabulary(styleManager.getContextModeState()),
         // The numbers on the operator's Contacts panel, so a window/count
         // question can be answered from what they are looking at.
-        ...(activeContactsWindow() ? { contactsWindow: activeContactsWindow() } : {}),
+        ...(activeContactsWindow(dataManager) ? { contactsWindow: activeContactsWindow(dataManager) } : {}),
       }
       : null,
     cockpit: typeof styleManager.getCockpitState === 'function'
@@ -2439,14 +2458,15 @@ async function getEntityContext(viewer, dataManager, styleManager, args = {}) {
  * record engine, which is what those questions actually mean.
  * @param {object} args Tool arguments.
  * @param {object} result The general engine's result, reused for scope text.
+ * @param {import('../data/manager.js').DataLayerManager} dataManager
  * @returns {object|null} A unified-count payload, or null.
  */
-function aircraftProximityWindowForQuery(args, result) {
+function aircraftProximityWindowForQuery(args, result, dataManager) {
   const scope = args?.scope;
   if (String(scope?.kind || '').toLowerCase() !== 'radius') return null;
   const layers = Array.isArray(args.layers) ? args.layers : [];
   if (!layers.some((layer) => layer === 'flights' || layer === 'military')) return null;
-  const snapshot = militaryAwarenessLayer.getContextSnapshot?.();
+  const snapshot = dataManager.getContextSnapshot();
   const subject = snapshot?.subject;
   if (!subject?.position) return null;
   // An explicit centre only qualifies when it IS the subject; otherwise the
@@ -2492,7 +2512,7 @@ function aircraftProximityWindowForQuery(args, result) {
       military: window.military.length,
       aircraft: window.aircraft,
     },
-    ...(activeContactsWindow() ? { contactsWindow: activeContactsWindow() } : {}),
+    ...(activeContactsWindow(dataManager) ? { contactsWindow: activeContactsWindow(dataManager) } : {}),
   };
 }
 
@@ -3298,13 +3318,15 @@ const VIEWPORT_LOADED_LAYERS = new Set(['flights']);
 
 /**
  * The Contacts panel's own counts, or null when Contacts has no subject.
- * Read through the awareness snapshot the panel renders, so the two cannot
- * diverge no matter which surface asks.
+ * Read through the awareness snapshot the panel renders (via the manager
+ * facade, not a direct `militaryAwareness.js` import — lazy-loading refactor,
+ * plan §3.1/§3.6), so the two cannot diverge no matter which surface asks.
+ * @param {import('../data/manager.js').DataLayerManager} dataManager
  * @returns {object|null} Panel-equivalent window counts.
  */
-function activeContactsWindow() {
+function activeContactsWindow(dataManager) {
   try {
-    return contactsWindowFromSnapshot(militaryAwarenessLayer.getContextSnapshot?.());
+    return contactsWindowFromSnapshot(dataManager.getContextSnapshot());
   } catch {
     return null;
   }
@@ -3313,14 +3335,12 @@ function activeContactsWindow() {
 function analystProviders(viewer, dataManager, { recordLimitByLayer = null } = {}) {
   return {
     getRecords(layerKey) {
-      const layer = dataManager.layers.get(layerKey);
-      if (!layer || !dataManager.isEnabled(layerKey)) return [];
-      const mod = layer.module;
-      if (typeof mod?.getAnalystRecords !== 'function') return [];
+      if (!dataManager.layers.has(layerKey) || !dataManager.isEnabled(layerKey)) return [];
       const requestedLimit = recordLimitByLayer?.[layerKey];
-      return Number.isFinite(requestedLimit)
-        ? (mod.getAnalystRecords(requestedLimit) || [])
-        : (mod.getAnalystRecords() || []);
+      const records = Number.isFinite(requestedLimit)
+        ? dataManager.callLayerMethod(layerKey, 'getAnalystRecords', requestedLimit)
+        : dataManager.callLayerMethod(layerKey, 'getAnalystRecords');
+      return records || [];
     },
     resolveRegionRing: (name) => resolveRegionRingForQuery(name),
     /**
@@ -3330,7 +3350,7 @@ function analystProviders(viewer, dataManager, { recordLimitByLayer = null } = {
      * @returns {{lat: number, lon: number, label: string|null}|null} Subject centre.
      */
     getContextSubject() {
-      const snapshot = militaryAwarenessLayer.getContextSnapshot?.();
+      const snapshot = dataManager.getContextSnapshot();
       const subject = snapshot?.subject;
       if (!subject?.position) return null;
       const carto = Cesium.Cartographic.fromCartesian(subject.position);
@@ -3410,10 +3430,10 @@ async function runAnalystQuery(viewer, dataManager, args = {}) {
   // differ. The generic record/scope engine still owns explicit regions and
   // arbitrary points — only "how many aircraft around <this contact>" is
   // unified, because that is the question the panel is already answering.
-  const entityWindow = aircraftProximityWindowForQuery(args, result);
+  const entityWindow = aircraftProximityWindowForQuery(args, result, dataManager);
   if (entityWindow) return entityWindow;
 
-  const contactsWindow = activeContactsWindow();
+  const contactsWindow = activeContactsWindow(dataManager);
   const aircraftQueried = (result.coverage?.layersQueried || [])
     .some((l) => l.layerKey === 'flights' || l.layerKey === 'military');
   // Both numbers, and which one answers the question. The window counts have
