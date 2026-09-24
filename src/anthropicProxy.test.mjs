@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { EventEmitter } from 'node:events';
-import { anthropicProxy } from '../vite.config.js';
+import { anthropicProxy } from './voice/anthropicProxy.mjs';
 import { GEV_CLAUDE_VOICE_SYSTEM_PROMPT } from './voice/voiceSystemPrompt.js';
 
 function installAnthropicRoutes() {
