@@ -1038,7 +1038,14 @@ function main() {
     env.viewer.camera.viewMatrix[0] = 1 / 800_000;
     env.viewer.camera.viewMatrix[5] = 1 / 600_000;
     env.viewer.camera.positionCartographic.height = 2_500_000;
-    initDetection(env.viewer, [workload.detectionLayer], () => {});
+    initDetection(
+      env.viewer,
+      [workload.detectionLayer.id],
+      () => ({ getDetectableObjects: (layerId, opts) => (layerId === workload.detectionLayer.id
+        ? workload.detectionLayer.getDetectableObjects(opts)
+        : null) }),
+      () => {},
+    );
     setDetectionTuning({ densityPct: 100, allocationStrategy: 'ELASTIC' });
     setDetectionMode('DENSE');
   } else if (workload.registrations) {
