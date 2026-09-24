@@ -1672,6 +1672,67 @@ Historical planning documents may not match runtime behavior.
 - Detection overlay and tracked-target readout in `src/data/detection.js`, `src/data/detectionDraw.js`, and `src/data/trackedReadout.js`
 - Proxy middleware and API wiring in `vite.config.js`
 
+### Data layer registration: lazy-loading + the manager facade (September 2026)
+
+- All 13 non-bundled data layers register via
+  `DataLayerManager.registerLazy({ id, name, icon, source,
+  showInTogglePanel, hasRowControls, loader })` in `src/main.js`, not a
+  static `import` + `register()` pair. `loader` is a
+  `() => import('./data/<layer>.js').then((m) => m.default)` thunk; nothing
+  is downloaded or parsed until the layer is actually enabled (UI toggle,
+  voice command, or a restored enabled-layer state resolves it). The
+  manager resolves a lazy entry's module exactly once (memoized on
+  `entry.resolvePromise`), validates the resolved module's `id` matches the
+  registration, and automatically calls the module's own
+  `attachDataManager()` the moment it first resolves — a layer file never
+  needs an explicit post-registration `attachDataManager()` call in
+  `main.js`. This is the standard pattern new layers should follow;
+  `src/data/layerMetadata.js` is the single source of truth for each
+  layer's toggle-panel metadata (`name`/`icon`/`source`/`showInTogglePanel`/
+  `hasRowControls`), spread into `main.js`'s `registerLazy()` call so it
+  isn't duplicated inline.
+- `src/data/localLayers.js`'s bundled static datasets (dams, datacenters,
+  submarine cables, FIRMS heatmap context) stay eagerly `register()`-ed —
+  already lightweight, intentionally out of scope for lazy-loading.
+- **`ui.js` and `voice/gevActions.js` never reach into a layer module's
+  internals directly** (`dataManager.layers.get(id).module.someMethod()`)
+  — a lazy module may still be unresolved at the moment of the call, and a
+  direct read would either throw on `null` or (worse) silently force-load a
+  layer the user never enabled. Both files instead call through
+  `DataLayerManager`'s facade: `callLayerMethod(layerId, methodName,
+  ...args)` (generic escape hatch; looks up the entry fresh, no-ops with a
+  documented fallback if the module/method is missing, catches and warns on
+  a synchronously-thrown error, never throws) plus purpose-named wrappers
+  for the layer methods `ui.js` calls most (`getTrackedInfo`,
+  `stopTracking`, `refocusTrackedById`, `clearSelection`,
+  `releaseCameraOwnership`, `subscribeLayer`, `getLayerUIState`,
+  `getDetectableObjects`, `getLayerDisplayName`, and, scoped specifically to
+  the Contacts coordinator, `getContextSnapshot`/`navigateNext`/
+  `focusTarget`). `subscribeLayer` on a still-unresolved lazy layer queues
+  the callback and replays it once the module resolves, rather than
+  silently dropping it — this is what lets the always-visible CCTV sync
+  chip and cockpit radio mini-player keep working even though CCTV/Radio
+  themselves no longer eagerly subscribe at boot.
+- **Not every layer achieves a separate build chunk.** `earthquakes`,
+  `bikeshare`, `traffic`, `radio`, `rocket-launches`, and `cctv` code-split
+  cleanly. `flights.js`, `militaryFlights.js`, `satellites.js`,
+  `aisLiveVessels.js`, `militaryInstallations.js`, and `militaryAwareness.js`
+  do not — Rollup only moves a module into its own chunk when *every*
+  import path to it is dynamic, and `militaryAwareness.js` (the Contacts
+  coordinator) statically imports `flights.js`/`militaryFlights.js`/
+  `aisLiveVessels.js`/`militaryInstallations.js` internally for its own
+  cross-layer proximity math, while `voice/gevActions.js` keeps a direct
+  import of `satellites.js`'s `getNextIssPass` and two `militaryAwareness.js`
+  helpers. This is an accepted, explicit tradeoff, not an oversight: the
+  specific functions involved read live, non-pure module state internally
+  (e.g. the live TLE catalog, or `flightsLayer.getNearby`/
+  `militaryFlightsLayer.getNearby` results), and extracting them into
+  standalone pure files was judged riskier than the bundle-size win was
+  worth. A user who opens Contacts/Global Context almost certainly wants
+  flights/military/vessel data anyway, so the larger chunk lands on exactly
+  the users who need it. Do not "fix" this by force-converting these
+  imports to dynamic without re-deriving the same purity analysis first.
+
 ### Active Data Layers in Runtime
 
 Qualified Radio playback requests—category, station, country, coordinates, or
@@ -2821,6 +2882,33 @@ easier to meet (detection is now on more often), but does not create it.
 
 ## Operational Notes
 
+- **Splash screen ("Initializing photorealistic world...") hides on real
+  render readiness, not a flat timer.** `src/splashGate.js`'s
+  `composeSplashReadiness()` gates hiding `#loading-screen` on
+  `Promise.all([initialRestorePromise, firstFramePromise, minVisibleMs])`:
+  `firstFramePromise` resolves on the scene's own one-shot
+  `postRender` event (bounded by a 5s `FIRST_FRAME_FALLBACK_MS` fallback
+  for WebGL context loss / headless environments), and
+  `MIN_SPLASH_VISIBLE_MS = 250` is a pure UX floor against flashing on an
+  unusually fast boot — not a readiness gate. The share-link recipient
+  path's own separate, deliberate ~1500ms `_initialShareRestoreTimeout` in
+  `ui.js` is unrelated and unchanged.
+- **Bulk cross-layer restore is throttled to `RESTORE_CONCURRENCY = 4`
+  concurrent layer lifecycles**, via one `p-queue` instance owned by
+  `DataLayerManager` (`runThroughRestoreQueue()`). This applies at every
+  bulk fan-out site: page-load layer-state restore
+  (`LayerStateCoordinator._restoreSelectedState()`), Context-mode session
+  restore (`restoreEnabledLayerIds()`), Context-mode exit's layer teardown
+  (`ui.js`'s `_clearLayersOutsideContextMode()`), and Contacts/Global
+  Context's own dependency auto-enable (`militaryAwareness.js`'s two
+  internal fan-outs) — all four share the SAME global bound, so they can't
+  stack past 4 concurrent lifecycles even if they race each other. A single
+  explicit `toggle()`/`setEnabled()` call is never delayed by this queue,
+  even while it's saturated by an in-flight bulk restore of other layers —
+  only bulk fan-outs are gated, not ordinary UI interaction. See
+  `src/data/manager.js`'s `RESTORE_CONCURRENCY` constant for the full
+  reasoning (browser same-origin connection ceiling headroom + CCTV's
+  measured cold-start cost).
 - **Earthquake discs are STATIC geometry.** Every quake is a `CLAMP_TO_GROUND`
   ellipse; a `CallbackProperty` axis re-tessellates its ground primitive every
   frame, which cost 32.4 ms/frame and 30 fps on the shipped 58-event feed. The

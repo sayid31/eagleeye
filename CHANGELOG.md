@@ -7,6 +7,37 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **Splash screen ("Initializing photorealistic world...") stayed up for a
+  flat, unconditional 1000ms on every ordinary boot**, even though the scene
+  was already rendering well before that. Root cause: the loading-screen
+  hide gate waited on `Promise.all([initialRestorePromise, timeout(1000)])`
+  — a hardcoded timer with no relationship to actual render readiness.
+  Replaced with a real first-painted-frame signal (`viewer.scene.postRender`,
+  one-shot, with a bounded 5s fallback for WebGL context loss/headless
+  environments) plus a much smaller 250ms minimum-visible floor purely to
+  avoid a flash on unusually fast boots (`src/splashGate.js`, new). Removes
+  ~750ms of pure artificial latency from a typical boot. The share-link
+  recipient path's own separate ~1500ms "Restoring shared view..." delay is
+  a deliberate, unrelated UX choice and is unchanged.
+- **The app/tab could crash after load when several previously-enabled
+  layers restored at once** (returning users, share-link recipients,
+  Context-mode session restore, and Contacts/Global Context entry). Root
+  cause: no cross-layer concurrency gate existed anywhere — bulk restore
+  fanned out ALL saved-enabled layers' full `init/enable/update` lifecycles
+  simultaneously via unthrottled `Promise.allSettled`, and CCTV alone can
+  internally fan out up to 14 concurrent viewshed frustums on its own first
+  update (~19.6s / ~193MB heap cold). Several such lifecycles running at
+  once could exhaust GPU/memory and crash the tab. Fixed with one shared
+  `p-queue`-backed concurrency gate (`RESTORE_CONCURRENCY = 4`) owned by
+  `DataLayerManager`, applied at every bulk fan-out site: page-load restore,
+  Context-mode session restore, Context-mode exit's layer teardown, and
+  Contacts' own dependency auto-enable (previously self-bounded locally at
+  4, now sharing the same global bound so it can't stack with a concurrent
+  page-load restore). A single explicit user toggle is never delayed by
+  this gate even while it's saturated by an in-flight bulk restore of other
+  layers. Restoring many saved-enabled layers is now intentionally slower
+  wall-clock (throttled, not parallel) — the correct tradeoff, not a
+  regression.
 - **CCTV coverage wireframe green flicker, reported on a laptop GPU (not
   reproducible on this project's own hardware).** Root cause: the frustum
   wireframe's corner rays and mount point could sit near-coincident with
@@ -69,6 +100,28 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **All 13 data layers are now lazy-loaded.** Previously every layer module
+  (flights, military, satellites, traffic, CCTV, radio, bikeshare, AIS
+  vessels, rocket launches, military installations, military awareness/
+  Contacts, earthquakes) was statically imported and registered eagerly at
+  boot, regardless of whether the user ever enabled it. Each now registers
+  via `DataLayerManager.registerLazy()` with a dynamic `import()` loader
+  that only resolves the first time the layer is actually enabled (by UI
+  toggle, voice command, or restored state). `ui.js` and
+  `voice/gevActions.js` no longer reach directly into layer-module
+  internals (`dataManager.layers.get(id).module...`) — both now go through
+  a `DataLayerManager` facade (`callLayerMethod`, `getTrackedInfo`,
+  `getContextSnapshot`, `subscribeLayer`, etc.), per this project's own
+  stated layer/UI separation rule. `earthquakes`, `bikeshare`, `traffic`,
+  `radio`, `rocket-launches`, and `cctv` achieve real separate-chunk code
+  splitting; `flights`, `militaryFlights`, `satellites`, `aisLiveVessels`,
+  `militaryInstallations`, and `militaryAwareness` stay bundled together
+  because `militaryAwareness.js` and a few `gevActions.js` call sites read
+  live, non-pure module state from them internally — an accepted, explicit
+  tradeoff (`src/data/layerMetadata.js`, `docs/CURRENT-STATE.md`) rather
+  than a risky internal extraction. `localLayers.js`'s bundled static
+  datasets (dams, datacenters, submarine cables) stay eager by design —
+  already lightweight, out of scope.
 - **Closed the remaining EagleEye View rebrand gaps.** A prior rebrand pass
   renamed display-only text but deliberately left several things unchanged;
   this closes those gaps:
