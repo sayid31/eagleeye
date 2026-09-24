@@ -1594,3 +1594,46 @@ test('the owner layer going away revokes the pending watch at any origin', async
     f.coordinator.destroy();
   }
 });
+
+// ── Bulk-restore concurrency throttle (_restoreSelectedState) ──────────────
+//
+// Root cause this guards against: _restoreSelectedState() fans out ALL
+// LAYER_STATE_REGISTRY entries (16 in production) on every boot with a
+// share-link payload or stored state, with no cross-layer throttling of its
+// own — this was the confirmed crash root cause (CCTV's own internal fan-out
+// compounding with N other layers' concurrent fetch()+scene-mutation work).
+// restoreThrottle routes each entry's actual lifecycle work through the
+// manager's shared RESTORE_CONCURRENCY-bounded queue.
+
+test('a bulk share/local restore bounds concurrent layer lifecycle starts', async () => {
+  const counter = { current: 0, max: 0 };
+  const hooks = {};
+  for (const id of REGISTERED_LAYER_IDS) {
+    hooks[id] = {
+      init: async () => {
+        counter.current += 1;
+        counter.max = Math.max(counter.max, counter.current);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        counter.current -= 1;
+        return true;
+      },
+    };
+  }
+  const manager = productionManager(hooks);
+  const coordinator = new LayerStateCoordinator(manager, shareSink(), { storage: memoryStorage() });
+  const state = createDefaultLayerState();
+  // Enable every registered layer so all 16 restore entries race for a
+  // throttle slot at once — the worst case the concurrency gate exists for.
+  state.enabledLayerIds = [...REGISTERED_LAYER_IDS];
+
+  await coordinator.start({ shareLayerState: state });
+  assert.ok(counter.max <= 4, `expected max concurrent init() <= 4 (RESTORE_CONCURRENCY), got ${counter.max}`);
+  assert.ok(counter.max > 0, 'sanity: at least one layer actually started');
+
+  // Completeness regression: throttling must not drop or starve any entry —
+  // every layer still lands in its correct target enabled state.
+  for (const id of REGISTERED_LAYER_IDS) {
+    assert.equal(manager.isEnabled(id), true, `${id} should have reached enabled=true despite throttling`);
+  }
+  coordinator.destroy();
+});

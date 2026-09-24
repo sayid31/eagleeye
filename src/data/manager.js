@@ -1,5 +1,20 @@
+import PQueue from 'p-queue';
 import { governorRequestRender } from '../renderGovernor.js';
 import { markDetectionSourcesChanged } from './detection.js';
+
+/**
+ * Cross-layer concurrency ceiling for bulk restore/clear fan-outs (page-load
+ * layer-state restore, Context-mode session restore/exit, Contacts'
+ * dependency auto-enable). Chosen below the browser's ~6-connection
+ * same-origin HTTP/1.1 ceiling: CCTV alone can occupy a large share of a
+ * "slot" for many seconds (its own internal viewshed fan-out, ~19.6s/~193MB
+ * cold per docs/PERFORMANCE.md), so headroom is needed to avoid several
+ * layers' concurrent fetch()+scene-mutation work compounding and crashing
+ * the tab — the reported failure this constant fixes. 4 lets the common
+ * case (1-4 saved layers) restore in one wave with no serialization
+ * penalty while bounding the worst case.
+ */
+const RESTORE_CONCURRENCY = 4;
 function cloneLayerParams(value) {
   if (Array.isArray(value)) return value.map(cloneLayerParams);
   if (value && typeof value === 'object') {
@@ -127,6 +142,27 @@ export class DataLayerManager {
     this._registrationDispositions = null;
     this._allowQaRegistration = allowQaRegistration === true;
     this._qaLayerIds = new Set();
+    // Shared bulk-restore concurrency gate — see RESTORE_CONCURRENCY above.
+    // Scoped to fan-out call sites only (restoreEnabledLayerIds, layer-state
+    // restore, Context-mode clear, militaryAwareness's dependency fan-outs);
+    // ordinary single-layer toggle()/setEnabled() calls never go through it,
+    // so normal UI responsiveness is unaffected.
+    this._restoreQueue = new PQueue({ concurrency: RESTORE_CONCURRENCY });
+  }
+
+  /**
+   * Run `task` through the shared bulk-restore concurrency gate so no more
+   * than RESTORE_CONCURRENCY layer lifecycles start at once across every
+   * bulk fan-out source (page-load restore, Context-mode restore/exit,
+   * Contacts dependency auto-enable). `task` should wrap only the "wait for
+   * the lifecycle work to actually run" step — never the synchronous intent
+   * reservation itself, or a later explicit toggle could not supersede a
+   * still-queued restore entry.
+   * @param {() => Promise<*>} task
+   * @returns {Promise<*>}
+   */
+  runThroughRestoreQueue(task) {
+    return this._restoreQueue.add(task);
   }
 
   register(layerModule) {
@@ -154,15 +190,15 @@ export class DataLayerManager {
     return destroyed;
   }
 
-  _registerLayer(layerModule) {
-    if (!layerModule || typeof layerModule.id !== 'string' || !layerModule.id) {
-      throw new Error('Data layer must provide a stable id');
-    }
-    if (this.layers.has(layerModule.id)) {
-      throw new Error(`Duplicate data-layer id: ${layerModule.id}`);
-    }
-    this.layers.set(layerModule.id, {
-      module: layerModule,
+  /**
+   * Shared entry-shape constructor for both registration paths (eager
+   * `_registerLayer` and lazy `registerLazy`) so the ~25-field entry shape
+   * can't drift between them. `module`/`lazy`/`loader`/`staticMeta` are
+   * filled in by the caller — everything else is identical either way.
+   */
+  _newEntry() {
+    return {
+      module: null,
       enabled: false,
       initialized: false,
       intervalId: null,
@@ -212,7 +248,112 @@ export class DataLayerManager {
       // interval is armed after the user already turned the layer off, and a
       // subsequent enable arms a SECOND interval → 2× poll → OpenSky 429 (M1).
       toggleChain: Promise.resolve(),
+      // Lazy-loading fields (registerLazy path) — left at these defaults for
+      // eager registrations, which always start already-resolved.
+      lazy: false,
+      loader: null,
+      staticMeta: null,
+      resolvePromise: null,
+      pendingSubscribers: null,
+      resolvedSubscriberUnsubs: null,
+      pendingParams: null,
+    };
+  }
+
+  _registerLayer(layerModule) {
+    if (!layerModule || typeof layerModule.id !== 'string' || !layerModule.id) {
+      throw new Error('Data layer must provide a stable id');
+    }
+    if (this.layers.has(layerModule.id)) {
+      throw new Error(`Duplicate data-layer id: ${layerModule.id}`);
+    }
+    this.layers.set(layerModule.id, {
+      ...this._newEntry(),
+      module: layerModule,
+      staticMeta: Object.freeze({
+        id: layerModule.id,
+        name: layerModule.name,
+        icon: layerModule.icon,
+        source: layerModule.source,
+        showInTogglePanel: layerModule.showInTogglePanel !== false,
+        hasRowControls: typeof layerModule.getRowControls === 'function',
+      }),
     });
+  }
+
+  /**
+   * Register a layer without importing its module up front — the module is
+   * resolved on first lifecycle touch (see `_ensureModuleResolved`). Does
+   * NOT change `register()`'s existing eager contract; this is a distinct
+   * entry point for layers converted to dynamic `import()` (plan §3.2).
+   * @param {{id:string, name?:string, icon?:string, source?:string,
+   *   showInTogglePanel?:boolean, hasRowControls?:boolean,
+   *   loader: () => Promise<object>}} config
+   */
+  registerLazy({ id, name, icon, source, showInTogglePanel, hasRowControls, loader } = {}) {
+    if (this._registrationsFinalized) {
+      throw new Error('Data-layer registrations are finalized');
+    }
+    if (typeof id !== 'string' || !id) {
+      throw new Error('Lazy data layer must provide a stable id');
+    }
+    if (typeof loader !== 'function') {
+      throw new Error(`Lazy data layer ${id} must provide a loader function`);
+    }
+    if (this.layers.has(id)) {
+      throw new Error(`Duplicate data-layer id: ${id}`);
+    }
+    this.layers.set(id, {
+      ...this._newEntry(),
+      module: null,
+      lazy: true,
+      loader,
+      staticMeta: Object.freeze({
+        id,
+        name,
+        icon,
+        source,
+        showInTogglePanel: showInTogglePanel !== false,
+        hasRowControls: !!hasRowControls,
+      }),
+    });
+  }
+
+  /**
+   * Resolve a lazy entry's module exactly once, memoizing concurrent
+   * callers onto the same in-flight promise. No-ops (returns the module
+   * immediately) for an already-resolved or non-lazy entry — safe to call
+   * unconditionally from any lifecycle-triggering path.
+   * @param {object} entry Entry object from `this.layers`.
+   * @returns {Promise<object|null>}
+   */
+  async _ensureModuleResolved(entry) {
+    if (entry.module) return entry.module;
+    if (!entry.lazy) return null;
+    if (!entry.resolvePromise) {
+      entry.resolvePromise = entry.loader().then((module) => {
+        if (!module || typeof module.id !== 'string') {
+          throw new Error(`Lazy layer ${entry.staticMeta.id} loader resolved to an invalid module`);
+        }
+        if (module.id !== entry.staticMeta.id) {
+          throw new Error(`Lazy layer id mismatch: expected ${entry.staticMeta.id}, loader resolved ${module.id}`);
+        }
+        entry.module = module;
+        module.attachDataManager?.(this);
+        if (entry.pendingSubscribers?.size && typeof module.subscribe === 'function') {
+          entry.resolvedSubscriberUnsubs = entry.resolvedSubscriberUnsubs || new Map();
+          for (const cb of entry.pendingSubscribers) {
+            entry.resolvedSubscriberUnsubs.set(cb, module.subscribe(cb));
+          }
+        }
+        if (entry.pendingParams) {
+          module.setParams?.(entry.pendingParams);
+          entry.pendingParams = null;
+        }
+        return module;
+      });
+    }
+    return entry.resolvePromise;
   }
 
   /** Seal registration and prove each production layer has one share disposition. */
@@ -454,6 +595,10 @@ export class DataLayerManager {
     if (!entry || !entry.enabled || entry.destroying) {
       return { ...base, status: 'unavailable', reason: 'layer-unavailable' };
     }
+    // No separate _ensureModuleResolved call needed here: entry.enabled can
+    // only become true via _doToggle's enable branch, which now resolves a
+    // lazy module before any lifecycle work runs — so entry.module is
+    // guaranteed non-null whenever entry.enabled is true.
     if (typeof entry.module?.resolveTrackingRestoreTarget !== 'function') {
       return { ...base, status: 'unsupported', reason: 'tracking-restore-unsupported' };
     }
@@ -577,7 +722,12 @@ export class DataLayerManager {
   }
 
   _syncModuleLifecyclePresentation(entry) {
-    if (typeof entry.module.setLifecyclePresentation !== 'function') return;
+    // A still-unresolved lazy entry has no module yet during the brief
+    // window between _setLifecycleTransition's synchronous 'enabling' call
+    // (fired before _doToggle's enable/disable branch split, ahead of the
+    // _ensureModuleResolved await inside the enable branch) and actual
+    // resolution — safe to skip presentation sync for that narrow window.
+    if (!entry.module || typeof entry.module.setLifecyclePresentation !== 'function') return;
     try {
       entry.module.setLifecyclePresentation({
         lifecycleState: entry.lifecycleState,
@@ -777,6 +927,46 @@ export class DataLayerManager {
       if (!settleLifecycle() || signal?.aborted) return finishCancelledDisable('settle');
     } else {
       // Enable
+      if (entry.lazy && !entry.module) {
+        // Resolve the dynamic import before any lifecycle work. This is the
+        // load-bearing wiring for registerLazy(): without it entry.module
+        // stays null forever and entry.module.init() below throws. Runs
+        // before cancelEnable/finishFailedEnable are defined below (and
+        // before the signal's abort listener is registered at the bottom
+        // of this branch) since neither is needed for a resolve-phase
+        // failure — nothing has been initialized yet, so there is no
+        // module to clean up.
+        this._setVisibilityIntentPhase(entry, intentEpoch, 'resolve');
+        try {
+          await this._ensureModuleResolved(entry);
+        } catch (e) {
+          entry.enabled = false;
+          entry.lifecycleUncertain = false;
+          settleLifecycle();
+          console.warn(`[Data] ${layerId} resolve error:`, e);
+          recordVisibilityFailure('resolve', e);
+          this._refreshTogglePanel();
+          this._notifyListeners({
+            ...requestedChange,
+            type: 'visibility-failed',
+            phase: 'resolve',
+            error: e,
+          });
+          return false;
+        }
+        if (signal?.aborted) {
+          entry.enabled = false;
+          entry.lifecycleUncertain = false;
+          settleLifecycle();
+          this._refreshTogglePanel();
+          this._notifyListeners({
+            ...requestedChange,
+            type: 'visibility-cancelled',
+            ...this._visibilityCancellationMetadata(entry, intentEpoch, signal, 'resolve'),
+          });
+          return false;
+        }
+      }
       let abortCleanup = null;
       const cancelEnable = () => {
         if (entry.intervalId) {
@@ -959,11 +1149,18 @@ export class DataLayerManager {
     origin = 'programmatic',
     signal = null,
     notificationToken = null,
+    // Optional `(task) => Promise` wrapper bounding this call's actual
+    // lifecycle work via the shared cross-layer concurrency gate — see
+    // runThroughRestoreQueue()/RESTORE_CONCURRENCY. Only bulk fan-out
+    // callers pass this; an ordinary single-layer toggle omits it and runs
+    // unthrottled, so normal UI responsiveness is unaffected.
+    restoreThrottle = null,
   } = {}) {
     return this._setEnabledWithIntent(layerId, shouldEnable, {
       origin,
       signal,
       notificationToken,
+      restoreThrottle,
     }).promise;
   }
 
@@ -977,6 +1174,14 @@ export class DataLayerManager {
     notificationToken = null,
     notifyWillChangeBeforeEffective = false,
     beforeEnableParams = null,
+    // Optional `(task) => Promise` wrapper run around the actual lifecycle
+    // work (the _doToggle call that invokes module.init/enable/update) —
+    // used by bulk fan-out callers (restoreEnabledLayerIds, layer-state
+    // restore, Context-mode clear, militaryAwareness dependency auto-enable)
+    // to bound cross-layer concurrency. Epoch reservation above stays
+    // synchronous regardless, so a later explicit toggle can still supersede
+    // a still-queued restore entry.
+    restoreThrottle = null,
   } = {}) {
     const entry = this.layers.get(layerId);
     if (!entry) return { intentEpoch: null, promise: Promise.resolve() };
@@ -1232,7 +1437,18 @@ export class DataLayerManager {
       const activeIntent = { intentEpoch, enabled: desiredState, controller };
       entry.activeVisibilityIntent = activeIntent;
       try {
-        return await this._doToggle(entry, layerId, origin, {
+        // The actual expensive lifecycle work (module.init/enable/update, via
+        // _doToggle) is what bulk fan-out callers need bounded, not "the wait
+        // for it to finish" — this task is scheduled the instant it's called,
+        // so wrapping only a later await does nothing. restoreThrottle (when
+        // supplied) is the shared cross-layer concurrency gate; entry.active
+        // VisibilityIntent is already set above, so a competing explicit
+        // toggle on this same layer can still supersede this request (via
+        // controller.abort() below) while it sits queued for a throttle slot
+        // — _doToggle's own signal.aborted check at its top then produces the
+        // normal graceful cancellation notification once dequeued, with no
+        // real module work performed.
+        const doToggleTask = () => this._doToggle(entry, layerId, origin, {
           signal: controller.signal,
           targetEnabled: desiredState,
           notificationToken,
@@ -1240,6 +1456,7 @@ export class DataLayerManager {
           suppressWillChangeNotification: notifyWillChangeBeforeEffective,
           beforeEnableParams,
         });
+        return await (restoreThrottle ? restoreThrottle(doToggleTask) : doToggleTask());
       } finally {
         signal?.removeEventListener('abort', forwardCallerAbort);
         if (entry.activeVisibilityIntent === activeIntent) {
@@ -1505,10 +1722,20 @@ export class DataLayerManager {
       ...(notificationToken ? { notificationToken } : {}),
       ...(signal ? { signal } : {}),
     };
+    // Epoch reservation is synchronous and stays OUTSIDE the queue (so a
+    // later explicit toggle can still instantly supersede a still-queued
+    // restore entry) — restoreThrottle gates the actual lifecycle work
+    // (runIntentTurn, which is what calls into module.init/enable/update)
+    // via the shared cross-layer concurrency gate. Gating only "the wait"
+    // does NOT work: entry.toggleChain already schedules runIntentTurn as
+    // a microtask the instant _setEnabledWithIntent is called, independent
+    // of when anyone awaits its outcome — confirmed by an empirical
+    // concurrency probe during implementation (all N layers ran init()
+    // concurrently despite the wait-side gate).
     const handles = layerIds.map((layerId) => this._setEnabledWithIntent(
       layerId,
       target.has(layerId),
-      transitionOptions,
+      { ...transitionOptions, restoreThrottle: (task) => this.runThroughRestoreQueue(task) },
     ));
     const results = await Promise.allSettled(handles.map((handle, index) => (
       this._waitForAuthoritativeVisibilityIntent(layerIds[index], handle.intentEpoch)
@@ -1555,7 +1782,13 @@ export class DataLayerManager {
 
   _reserveLayerParamsIntent(layerId, params, origin = 'programmatic') {
     const entry = this.layers.get(layerId);
-    if (!entry || entry.destroying || typeof entry.module?.setParams !== 'function') return null;
+    if (!entry || entry.destroying) return null;
+    // A still-unresolved lazy entry's setParams support is unknown until it
+    // resolves — allow the reservation through so params can queue as
+    // entry.pendingParams (see _applyLayerParamsIntent) instead of forcing
+    // a load just to check. A resolved (eager or already-loaded-lazy) entry
+    // keeps the original upfront rejection when it genuinely has no setter.
+    if (entry.module && typeof entry.module.setParams !== 'function') return null;
     cancelPendingLayerRestore(entry, origin, 'explicit-params');
     const paramsIntentEpoch = ++entry.paramsIntentEpoch;
     entry.paramsIntentOrigin = origin;
@@ -1574,7 +1807,34 @@ export class DataLayerManager {
     paramsIntentEpoch = null,
   } = {}) {
     const entry = this.layers.get(layerId);
-    if (!entry || !entry.module || typeof entry.module.setParams !== 'function') {
+    if (!entry) {
+      return { succeeded: false, error: paramsRejectedError(layerId), params: null };
+    }
+    if (entry.lazy && !entry.module) {
+      // Do not force-resolve the module just to apply params — boot-time
+      // restore iterates every registered layer regardless of whether the
+      // user ever enables it, so naive resolution here would defeat lazy-
+      // loading entirely (plan §3.2). Queue as pendingParams; replayed via
+      // entry.module.setParams() the moment _ensureModuleResolved resolves,
+      // or applied normally by the enable path if this call is part of an
+      // enable transition (beforeEnableParams, handled separately).
+      if (!Number.isInteger(paramsIntentEpoch) || entry.paramsIntentEpoch !== paramsIntentEpoch) {
+        const result = { succeeded: false, cancellationReason: 'superseded', params: null };
+        this._notifyListeners({
+          type: 'params-cancelled',
+          layerId,
+          origin,
+          paramsIntentEpoch,
+          cancellationReason: result.cancellationReason,
+          successorParamsIntentEpoch: entry.paramsIntentEpoch,
+          successorOrigin: entry.paramsIntentOrigin,
+        });
+        return result;
+      }
+      entry.pendingParams = { ...(entry.pendingParams || {}), ...(params || {}) };
+      return { succeeded: true, deferred: true, params: cloneLayerParams(entry.pendingParams), paramsIntentEpoch };
+    }
+    if (!entry.module || typeof entry.module.setParams !== 'function') {
       return { succeeded: false, error: paramsRejectedError(layerId), params: null };
     }
     if (!Number.isInteger(paramsIntentEpoch) || entry.paramsIntentEpoch !== paramsIntentEpoch) {
@@ -1715,6 +1975,12 @@ export class DataLayerManager {
   async restoreLayerState(layerId, { enabled = false, params = null } = {}, {
     origin = 'programmatic',
     signal = null,
+    // Optional `(task) => Promise` wrapper bounding this call's actual
+    // lifecycle work (module.init/enable/update) via the shared cross-layer
+    // concurrency gate — see RESTORE_CONCURRENCY. Passed by bulk fan-out
+    // callers (LayerStateCoordinator._restoreSelectedState); a single-layer
+    // explicit restore call omits it and runs unthrottled.
+    restoreThrottle = null,
   } = {}) {
     if (!this._registrationsFinalized) throw new Error('Layer restore requires finalized registrations');
     const entry = this.layers.get(layerId);
@@ -1760,6 +2026,7 @@ export class DataLayerManager {
       origin,
       signal,
       beforeEnableParams,
+      restoreThrottle,
     });
     const requestedVisibility = await this._waitForVisibilityIntent(layerId, handle.intentEpoch);
     const authoritativeVisibility = requestedVisibility?.cancellationReason === 'superseded'
@@ -1917,12 +2184,17 @@ export class DataLayerManager {
   getAll() {
     const result = [];
     for (const [id, entry] of this.layers) {
+      // Reads entry.staticMeta (registration-time metadata), not
+      // entry.module — uniform for both eager and not-yet-resolved lazy
+      // layers, so listing layers never force-resolves a lazy module just
+      // to name it (plan §3.7).
+      const meta = entry.staticMeta;
       result.push({
         id,
-        name: entry.module.name,
-        icon: entry.module.icon,
-        source: entry.module.source,
-        showInTogglePanel: entry.module.showInTogglePanel !== false,
+        name: meta.name,
+        icon: meta.icon,
+        source: meta.source,
+        showInTogglePanel: meta.showInTogglePanel,
         enabled: entry.enabled,
         lifecycleState: entry.lifecycleState,
         lifecycleUncertain: entry.lifecycleUncertain,
@@ -1930,6 +2202,187 @@ export class DataLayerManager {
       });
     }
     return result;
+  }
+
+  // ---------------------------------------------------------------------
+  // Cross-layer facade (lazy-loading refactor, plan §3.1).
+  //
+  // ui.js / gevActions.js / the CCTV+Radio panel mixins currently reach
+  // directly into imported layer-module objects (and, in a few spots,
+  // straight into `this.layers.get(id)?.module`) — a standing violation of
+  // this project's own "layer logic never reaches into ui.js internals"
+  // rule, and the reason every layer module is an unavoidable eager import
+  // today. These methods are the single point every external caller is
+  // being migrated to go through instead, in later, separately-verified
+  // steps (see plan §3.8 steps 3-4).
+  //
+  // Added here BEHAVIOR-NEUTRAL and ADDITIVE ONLY: nothing calls these yet,
+  // existing direct-module call sites are untouched. Every method looks up
+  // the entry and returns a documented safe default if the entry/module/
+  // method is missing (a layer that hasn't lazy-resolved yet must never
+  // throw just because something asked about it), and catches
+  // synchronously-thrown errors the same way `_rowControlsFor` already does
+  // elsewhere in this file.
+  // ---------------------------------------------------------------------
+
+  /**
+   * Generic layer-method dispatcher underlying every named facade method
+   * below. Returns `fallback` (default `undefined`) when the layer or the
+   * method is missing; never throws.
+   * @param {string} layerId
+   * @param {string} methodName
+   * @param {Array} [args]
+   * @param {{fallback?: *}} [options]
+   */
+  _callLayerMethod(layerId, methodName, args = [], { fallback = undefined } = {}) {
+    const entry = this.layers.get(layerId);
+    const module = entry?.module;
+    if (!module || typeof module[methodName] !== 'function') return fallback;
+    try {
+      return module[methodName](...args);
+    } catch (error) {
+      console.warn(`[Data] ${layerId}.${methodName} error:`, error);
+      return fallback;
+    }
+  }
+
+  /** Public escape hatch for one-off calls not worth individually naming. */
+  callLayerMethod(layerId, methodName, ...args) {
+    if (typeof methodName !== 'string') return undefined;
+    return this._callLayerMethod(layerId, methodName, args);
+  }
+
+  /**
+   * Capability probe for callers that need to decide WHETHER to call a
+   * layer method before actually calling it (e.g. gating on `trackById`
+   * support) without reaching into `entry.module` directly. Mirrors
+   * `_callLayerMethod`'s presence check but never invokes the method, so
+   * it's safe to call on an unresolved lazy layer without forcing it to
+   * load — returns false rather than resolving the module.
+   */
+  layerHasMethod(layerId, methodName) {
+    const entry = this.layers.get(layerId);
+    return typeof entry?.module?.[methodName] === 'function';
+  }
+
+  getTrackedInfo(layerId) {
+    return this._callLayerMethod(layerId, 'getTrackedInfo', [], { fallback: null }) || null;
+  }
+
+  stopTracking(layerId, opts) {
+    return this._callLayerMethod(layerId, 'stopTracking', opts !== undefined ? [opts] : []);
+  }
+
+  /**
+   * Distinct from this file's PRIVATE `cancelPendingLayerRestore` helper
+   * (module-internal bookkeeping) and the PUBLIC `cancelPendingLayerRestore`
+   * method below (per-layer restore-intent cancellation) — this wraps a
+   * layer module's own `cancelPendingTrackingRestore()` method, called by
+   * ui.js when a tracked-entity handoff needs to abandon an in-flight
+   * source-side restore. Do not merge these three.
+   */
+  cancelPendingTrackingRestore(layerId, opts) {
+    return this._callLayerMethod(layerId, 'cancelPendingTrackingRestore', opts !== undefined ? [opts] : []);
+  }
+
+  refocusTrackedById(layerId, targetId) {
+    return this._callLayerMethod(layerId, 'refocusTrackedById', [targetId], { fallback: false });
+  }
+
+  clearSelection(layerId) {
+    return this._callLayerMethod(layerId, 'clearSelection');
+  }
+
+  releaseCameraOwnership(layerId, opts) {
+    return this._callLayerMethod(layerId, 'releaseCameraOwnership', opts !== undefined ? [opts] : []);
+  }
+
+  /** Implicitly layerId='military-awareness' — it's a coordinator ui.js calls far more than any peer layer. */
+  getContextSnapshot() {
+    return this._callLayerMethod('military-awareness', 'getContextSnapshot', [], { fallback: null }) || null;
+  }
+
+  navigateNext(opts) {
+    return this._callLayerMethod('military-awareness', 'navigateNext', opts !== undefined ? [opts] : []);
+  }
+
+  focusTarget(...args) {
+    return this._callLayerMethod('military-awareness', 'focusTarget', args);
+  }
+
+  beginWorldJump(layerId) {
+    return this._callLayerMethod(layerId, 'beginWorldJump');
+  }
+
+  endWorldJump(layerId) {
+    return this._callLayerMethod(layerId, 'endWorldJump');
+  }
+
+  searchNearby(layerId) {
+    return this._callLayerMethod(layerId, 'searchNearby');
+  }
+
+  /** Raw getStats() passthrough — unlike getAll()'s per-row stats, NOT normalized. */
+  getLayerStatsRaw(layerId) {
+    return this._callLayerMethod(layerId, 'getStats', [], { fallback: null }) || null;
+  }
+
+  focusCamera(layerId, cameraId, durationSec) {
+    const args = durationSec !== undefined ? [cameraId, durationSec] : [cameraId];
+    return this._callLayerMethod(layerId, 'focusCamera', args);
+  }
+
+  /**
+   * Subscribe to a layer's own change stream. If the layer hasn't
+   * lazy-resolved yet, the callback is queued on the entry and flushed once
+   * the module resolves (see `_ensureModuleResolved`) instead of being
+   * silently dropped — always-visible surfaces (CCTV sync chip, radio
+   * cockpit mini-player) depend on this firing regardless of whether the
+   * user ever opened the layer's own panel.
+   * @returns {() => void} Unsubscribe function, safe to call any time.
+   */
+  subscribeLayer(layerId, callback) {
+    if (typeof callback !== 'function') return () => {};
+    const entry = this.layers.get(layerId);
+    if (!entry) return () => {};
+    if (entry.module && typeof entry.module.subscribe === 'function') {
+      return entry.module.subscribe(callback);
+    }
+    entry.pendingSubscribers = entry.pendingSubscribers || new Set();
+    entry.pendingSubscribers.add(callback);
+    return () => {
+      entry.pendingSubscribers?.delete(callback);
+      entry.resolvedSubscriberUnsubs?.get(callback)?.();
+      entry.resolvedSubscriberUnsubs?.delete(callback);
+    };
+  }
+
+  getLayerUIState(layerId) {
+    return this._callLayerMethod(layerId, 'getUIState', [], { fallback: null }) || null;
+  }
+
+  endTuning(layerId) {
+    return this._callLayerMethod(layerId, 'endTuning');
+  }
+
+  getDetectableObjects(layerId, opts) {
+    return this._callLayerMethod(
+      layerId,
+      'getDetectableObjects',
+      opts !== undefined ? [opts] : [],
+      { fallback: null },
+    );
+  }
+
+  /**
+   * Static display name for a layer row — reads registration-time metadata,
+   * never touches/resolves the module just to name it. Falls back to the
+   * module's own `name` (pre-lazy-loading layers, or already-resolved ones)
+   * and finally to the raw id.
+   */
+  getLayerDisplayName(layerId) {
+    const entry = this.layers.get(layerId);
+    return entry?.staticMeta?.name || entry?.module?.name || layerId;
   }
 
   subscribe(callback) {
@@ -2071,12 +2524,17 @@ export class DataLayerManager {
       // Optional per-layer sub-controls (chips + color legend). The click
       // listener is delegated and attached once here, so it survives
       // _refreshTogglePanel — which only rewrites the container's contents.
-      const rowModule = this.layers.get(layer.id)?.module;
-      if (typeof rowModule?.getRowControls === 'function') {
+      // Container presence is gated on registration-time staticMeta (never
+      // force-resolves a not-yet-loaded lazy layer just to size the row);
+      // the actual getRowControls() call stays module-resolved-gated in
+      // _rowControlsFor below, since an unresolved layer has no controls
+      // to show regardless.
+      const rowEntry = this.layers.get(layer.id);
+      if (rowEntry?.staticMeta?.hasRowControls) {
         // A layer whose controls settle asynchronously (a chunked catalog load
         // that can also fail) pushes a re-render through this; nothing else
         // would repaint the row before its next scheduled refresh.
-        rowModule.setRowControlsListener?.(() => this._refreshTogglePanel());
+        rowEntry.module?.setRowControlsListener?.(() => this._refreshTogglePanel());
         const controls = document.createElement('div');
         controls.className = 'data-toggle-controls';
         controls.addEventListener('click', (event) => {

@@ -761,10 +761,20 @@ export class LayerStateCoordinator {
         // cancelling or being overwritten by the visibility restore.
         const paramsSucceeded = !options || Object.keys(options).length === 0
           || this.dataManager.setLayerParams(entry.id, options, { origin });
+        // restoreThrottle bounds the actual lifecycle work (module.init/
+        // enable/update) via the manager's shared cross-layer concurrency
+        // gate — this is the confirmed root cause of the reported crash:
+        // without it, every saved-enabled layer (up to ~15) started its full
+        // init/enable lifecycle at once on every returning-user/share-link
+        // boot.
         return this.dataManager.restoreLayerState(entry.id, {
           enabled: targetEnabled,
           params: null,
-        }, { origin, signal: controller.signal }).then((result) => ({
+        }, {
+          origin,
+          signal: controller.signal,
+          restoreThrottle: (task) => this.dataManager.runThroughRestoreQueue(task),
+        }).then((result) => ({
           ...result,
           appliedOptions: paramsSucceeded && options ? options : {},
           errorClass: paramsSucceeded ? result.errorClass : 'ParamsRejected',
