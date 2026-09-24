@@ -1,39 +1,54 @@
 /**
  * Vite configuration for EagleEye View — a cinematic geospatial app.
  *
- * Registers the dev-server proxy middlewares that bypass CORS and add
- * caching/auth for upstream APIs:
- *   1. OpenSky  — aircraft state vectors (OAuth / Basic / anon)
- *   2. CelesTrak — satellite TLE orbital elements
- *   3. Overpass  — OpenStreetMap road geometry queries
- *   4. GBFS     — bike-share station feeds
- *   5. CCTV     — traffic-camera frames, media streams, and fallback SVG
- *   6. adsb.lol — military aircraft tracking
- *   7. AIS live — AISStream websocket-backed live vessel positions
- *   8. Terrain heights — Re:Earth keyless point-height lookups (ellipsoidal ground)
- *   9. TomTom   — live traffic-flow vector tiles (budget-governed, keyless-degradable)
- *  10. NASA FIRMS — live active-fire detections (VIIRS ×3, trailing 24 h)
- *  11. Military-installation context — bounded, cached OpenStreetMap features
- *  12. Regional briefing — cached place, weather, and recent location-matched news
- *  13. Weather effects — camera-local Open-Meteo observations without news/geocoding overhead
- *  14. Rocket launches — recent Launch Library 2 mission metadata
- *  15. Radio Browser — public-domain station directory and click counting
+ * Assembles the dev/preview-server proxy plugins that bypass CORS and add
+ * caching/auth for upstream APIs, plus the `import.meta.env.*` defines for
+ * the Cesium and Google 3D Tiles API keys the client bundle needs. Each
+ * proxy is a self-contained Vite plugin factory imported from its own
+ * module (see the `plugins:` array in `defineConfig()` below for the
+ * exact registration order) rather than defined inline here:
  *
- * Also exposes Cesium and Google 3D Tiles API keys to the
- * client via `import.meta.env.*` defines.
+ *   - src/data/celestrakProxy.mjs, tomtomProxy.mjs, firmsProxy.mjs,
+ *     adsbdbProxy.mjs, gbfsProxy.mjs — isolated single-upstream proxies.
+ *   - src/data/openSkyProxy.mjs, adsbLolProxy.mjs, trackBackfillProxies.mjs
+ *     — aircraft state vectors + track-history backfill (share one OAuth2
+ *     token via openSkyProxy.mjs's exported `getOpenSkyToken()`).
+ *   - src/data/aisLiveProxy.mjs — AISStream websocket-backed live vessel
+ *     positions and per-MMSI recent-path buffers.
+ *   - src/data/overpassCore.mjs (shared fetch/cache machinery) +
+ *     src/data/overpassProxy.mjs (`/api/overpass`) +
+ *     src/data/osrmRouteProxy.mjs (`/api/route`) +
+ *     src/data/militaryInstallationsProxy.mjs (bounded OSM installation
+ *     context, also built on overpassCore.mjs).
+ *   - src/data/regionalProxyHandlers.mjs — regional briefing + weather
+ *     effects (imports rate-limit/cache helpers back from this file; see
+ *     that module's header for why).
+ *   - src/data/cctvProxy.mjs — traffic-camera frames, media streams, and
+ *     fallback SVG.
+ *   - src/data/radioBrowserProxy.mjs, rocketLaunchesProxy.mjs,
+ *     googlePlacesContextProxy.mjs — station directory, launch metadata,
+ *     keyless place context.
+ *   - src/voice/openAiRealtimeProxy.mjs, anthropicProxy.mjs — voice-agent
+ *     token/session proxies.
+ *   - src/data/terrainHeightsProxy.js — Re:Earth ellipsoidal point-height
+ *     lookups.
+ *
+ * `nominatimSearchProxy()` (forward geocode) and `keySetupEndpoint()`
+ * (the in-app "POWER UP" credential writer) stay defined in this file —
+ * see their own JSDoc for why each wasn't moved out with the rest.
+ *
+ * A handful of names are re-exported below purely so
+ * `src/data/regionalProxy.test.mjs` and `src/nominatimSearchProxy.test.mjs`
+ * keep working without a test-file edit; see the comment above each
+ * `export { ... }` for which module now owns the real implementation.
  *
  * @module vite.config
  */
 
 import fs from 'node:fs';
-import os from 'node:os';
 import { promises as fsp } from 'node:fs';
-import { spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-import { Readable } from 'node:stream';
-import https from 'node:https';
-import { lookup as lookupDns } from 'node:dns/promises';
 import { celestrakProxy } from './src/data/celestrakProxy.mjs';
 import { tomtomProxy } from './src/data/tomtomProxy.mjs';
 import { firmsProxy } from './src/data/firmsProxy.mjs';
@@ -61,24 +76,11 @@ import {
 import {
   militaryInstallationsProxy,
   validMilitaryInstallationBox,
-  migrateMilitaryInstallationEntry,
-  militaryInstallationCacheKey,
-  militaryInstallationDiskFresh,
-  militaryInstallationDiskPath,
-  quantizeMilitaryInstallationBox,
-  readMilitaryInstallationDisk,
-  resolveMilitaryInstallationTier,
-  writeMilitaryInstallationDisk,
 } from './src/data/militaryInstallationsProxy.mjs';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import cesium from 'vite-plugin-cesium';
 import { radioBrowserProxy } from './src/data/radioBrowserProxy.mjs';
-import {
-  normalizeRegionalArticles,
-  normalizeRegionalPlace,
-  normalizeRegionalWeather,
-} from './src/data/regionalBrief.js';
 import {
   regionalBriefProxy,
   weatherEffectsProxy,
@@ -102,7 +104,6 @@ import {
 import { hardenCredentialFile } from './src/keySetupHardening.mjs';
 import {
   makeRateLimiter,
-  makeOptInRateLimiter,
   nominatimSearchRateLimiter,
   enforceOptInRateLimit,
   clientKey,
@@ -110,8 +111,6 @@ import {
   readResponseTextCapped,
   readResponseJsonCapped,
   coalesceProxyRequest,
-  toReadable,
-  readCappedResponseText,
 } from './src/server/proxyInfra.mjs';
 import {
   fetchTerrainChunkWithRetry,
