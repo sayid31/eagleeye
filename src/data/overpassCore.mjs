@@ -1,0 +1,522 @@
+/**
+ * overpassCore.mjs — shared Overpass API machinery used by BOTH
+ * overpassProxy.mjs (/api/overpass) and militaryInstallationsProxy() (still
+ * in vite.config.js, moves to its own module in a later phase): the
+ * query-body sanitizer, upstream-mirror fetch with rate-limit/runtime-error
+ * detection, the geometry-simplifying decimator, and the disk + memory
+ * cache primitives. The two proxies use separate rate limiters and
+ * concurrency counters (those stay local to each proxy — not shared), but
+ * both need this same fetch/sanitize/cache core, which is why it lives in
+ * its own module rather than one proxy importing from the other (mirrors
+ * the existing regionalProxyHandlers.mjs precedent of a shared core neither
+ * proxy owns).
+ *
+ * Node-only (imported by vite.config.js), never bundled for the browser.
+ *
+ * @module data/overpassCore
+ */
+
+import { promises as fsp } from 'node:fs';
+import { createHash } from 'node:crypto';
+import path from 'node:path';
+import { readResponseTextCapped } from '../server/proxyInfra.mjs';
+
+// ---------------------------------------------------------------------------
+// Overpass API proxy constants and cache state
+// ---------------------------------------------------------------------------
+/** Ordered list of Overpass API mirrors; tried sequentially on failure/rate-limit. */
+const OVERPASS_UPSTREAMS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://lz4.overpass-api.de/api/interpreter',
+  // Community full-planet instance (privateforge nonprofit) — added 2026-07-30
+  // when all three mirrors above refused this IP (likely a dev-traffic rate
+  // ban; refused connections fail in ms, so healthy mirrors above still win).
+  // Verified: planet coverage (Texas query), CORS *, ~5-20 s cold latency.
+  'https://overpass.private.coffee/api/interpreter',
+];
+/**
+ * TTL for FRESH cached Overpass responses (ms). Road geometry is static for
+ * months — the original 45 s TTL forced a public-mirror round-trip on nearly
+ * every viewport revisit and left nothing to serve when the mirrors 502
+ * (field-test 2026-07-17: all three mirrors down during US morning peak =
+ * "traffic takes forever to load"). 24 h in memory; the disk layer below
+ * keeps 7 days and also survives dev-server restarts.
+ */
+const OVERPASS_CACHE_MS = 86_400_000;
+/** Disk-cache TTL for Overpass responses (ms) — 7 days. */
+const OVERPASS_DISK_TTL_MS = 7 * 86_400_000;
+/**
+ * Disk-cache TTL for BOUNDARY-class queries (is_in / admin-relation pivots) — 30
+ * days. Admin boundaries change ≈never, and their pivots are the most expensive
+ * queries the app issues (multi-MB coastline geometry, 10–25 s on public mirrors —
+ * field test 2026-07-23: outline latency + the Sicily miss). Keeping them a month
+ * means each boundary is fetched roughly once per machine, ever.
+ */
+const OVERPASS_BOUNDARY_DISK_TTL_MS = 30 * 86_400_000;
+/** Disk-cache directory for Overpass responses. */
+const OVERPASS_DISK_DIR = path.join(process.cwd(), '.gev-cache', 'overpass');
+/** Per-upstream fetch timeout (ms). */
+const OVERPASS_TIMEOUT_MS = 22000;
+/** Max entries in the Overpass response cache (LRU-like, oldest evicted first). Exported: overpassProxy.mjs's own trimOverpassCache() reads this cap. */
+export const OVERPASS_CACHE_MAX_ENTRIES = 120;
+/**
+ * @type {Map<string,{status:number,body:string,contentType:string,endpoint:string,cachedAt:number}>}
+ * Exported: genuinely shared with overpassProxy.mjs, which reads/writes it directly
+ * (not just via this module's functions) for its cache-hit and stale-serve paths.
+ */
+export const _overpassCache = new Map();
+/** @type {Map<string,Promise>} In-flight Overpass requests keyed by normalized query body. Exported: shared with overpassProxy.mjs (see _overpassCache note). */
+export const _overpassInFlight = new Map();
+
+/**
+ * Whether a normalized Overpass query is BOUNDARY-class (admin `is_in` lookups
+ * and area→relation pivots) — the static, expensive geometry that earns the
+ * 30-day disk TTL. The enclosing-compound sweep and road fetches keep the
+ * default TTL. Exported for tests.
+ */
+export function isOverpassBoundaryQuery(cacheKey) {
+  return /is_in\s*\(|\bpivot\b/i.test(String(cacheKey || ''));
+}
+
+/** Disk TTL for a query: boundary geometry keeps for a month, the rest 7 days. */
+export function overpassDiskTtlMs(cacheKey) {
+  return isOverpassBoundaryQuery(cacheKey) ? OVERPASS_BOUNDARY_DISK_TTL_MS : OVERPASS_DISK_TTL_MS;
+}
+
+/** Iterative Douglas-Peucker on [{lat,lon},...] (planar-degree approx — fine at
+ *  the ~44 m tolerance used here). Endpoints always kept. */
+function douglasPeucker(points, toleranceDeg) {
+  const n = points.length;
+  if (n <= 2) return points;
+  const keep = new Uint8Array(n);
+  keep[0] = 1;
+  keep[n - 1] = 1;
+  const stack = [[0, n - 1]];
+  while (stack.length) {
+    const [a, b] = stack.pop();
+    if (b - a < 2) continue;
+    const ax = points[a].lon;
+    const ay = points[a].lat;
+    const vx = points[b].lon - ax;
+    const vy = points[b].lat - ay;
+    const c2 = vx * vx + vy * vy;
+    let worst = -1;
+    let worstDist = toleranceDeg;
+    for (let i = a + 1; i < b; i++) {
+      const wx = points[i].lon - ax;
+      const wy = points[i].lat - ay;
+      let d;
+      if (c2 === 0) {
+        d = Math.hypot(wx, wy);
+      } else {
+        const t = Math.max(0, Math.min(1, (vx * wx + vy * wy) / c2));
+        d = Math.hypot(wx - t * vx, wy - t * vy);
+      }
+      if (d > worstDist) {
+        worstDist = d;
+        worst = i;
+      }
+    }
+    if (worst >= 0) {
+      keep[worst] = 1;
+      stack.push([a, worst], [worst, b]);
+    }
+  }
+  const out = [];
+  for (let i = 0; i < n; i++) if (keep[i]) out.push(points[i]);
+  return out;
+}
+
+/** Simplify one element's geometry array in place if it is big enough. */
+function simplifyElementGeometry(el, minPoints, toleranceDeg) {
+  if (Array.isArray(el?.geometry) && el.geometry.length >= minPoints) {
+    el.geometry = douglasPeucker(el.geometry, toleranceDeg);
+  }
+  if (Array.isArray(el?.members)) {
+    for (const member of el.members) {
+      if (Array.isArray(member?.geometry) && member.geometry.length >= minPoints) {
+        member.geometry = douglasPeucker(member.geometry, toleranceDeg);
+      }
+    }
+  }
+}
+
+/**
+ * Server-side geometry simplification for large Overpass `out geom` payloads.
+ * Region/state boundary pivots return multi-MB coastline rings whose fidelity
+ * nothing downstream needs (the client re-simplifies for draw); decimating them
+ * HERE shrinks the disk cache, the wire, and client parse time — and is what
+ * makes the raised read cap safe. Anything unparseable or below the thresholds
+ * passes through byte-identical. Exported for tests (opts override thresholds).
+ *
+ * @param {string} bodyText - Raw upstream JSON body.
+ * @returns {string} Possibly-simplified JSON body.
+ */
+export function simplifyOverpassPayloadBody(bodyText, opts = {}) {
+  const minBytes = opts.minBytes ?? OVERPASS_SIMPLIFY_MIN_BYTES;
+  const minPoints = opts.minPoints ?? OVERPASS_SIMPLIFY_MIN_POINTS;
+  const toleranceDeg = opts.toleranceDeg ?? OVERPASS_SIMPLIFY_TOLERANCE_DEG;
+  if (typeof bodyText !== 'string' || bodyText.length < minBytes) return bodyText;
+  let data;
+  try {
+    data = JSON.parse(bodyText);
+  } catch {
+    return bodyText;
+  }
+  if (!Array.isArray(data?.elements)) return bodyText;
+  for (const el of data.elements) simplifyElementGeometry(el, minPoints, toleranceDeg);
+  try {
+    return JSON.stringify(data);
+  } catch {
+    return bodyText;
+  }
+}
+
+/** Normalized Overpass query -> stable disk-cache file path. */
+function overpassDiskPath(cacheKey) {
+  return path.join(OVERPASS_DISK_DIR, `${createHash('sha1').update(cacheKey).digest('hex')}.json`);
+}
+
+/**
+ * Read a disk-cached Overpass payload. maxAgeMs Infinity = any age (the
+ * serve-stale path when every mirror is down).
+ * @returns {Promise<?Object>} Payload with cachedAt, or null.
+ */
+export async function readOverpassDisk(cacheKey, maxAgeMs) {
+  try {
+    const raw = await fsp.readFile(overpassDiskPath(cacheKey), 'utf8');
+    const payload = JSON.parse(raw);
+    if (!payload || typeof payload.body !== 'string' || !Number.isFinite(payload.cachedAt)) return null;
+    if (Date.now() - payload.cachedAt > maxAgeMs) return null;
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
+/** Fire-and-forget disk write for a successful Overpass payload. */
+export function writeOverpassDisk(cacheKey, payload) {
+  fsp.mkdir(OVERPASS_DISK_DIR, { recursive: true })
+    .then(() => fsp.writeFile(overpassDiskPath(cacheKey), JSON.stringify(payload)))
+    .catch((err) => console.warn('[Overpass Proxy] disk cache write failed:', err?.message || err));
+}
+
+/**
+ * Resolve every cache/coalescing layer before admitting a request to the local
+ * upstream rate limiter. The injected limiter callback is invoked exactly once
+ * for a complete cache miss and never for memory, in-flight, or disk hits.
+ * Exported so the admission ordering can be tested without a Vite server.
+ *
+ * @param {object} options
+ * @param {string} options.cacheKey
+ * @param {Map<string, object>} options.memoryCache
+ * @param {Map<string, Promise<object>>} options.inFlight
+ * @param {()=>Promise<object|null>} options.readDisk
+ * @param {()=>boolean} options.allowUpstream
+ * @param {number} [options.now]
+ * @param {number} [options.cacheMs]
+ * @returns {Promise<{source:'HIT'|'INFLIGHT'|'DISK'|'UPSTREAM'|'RATE_LIMITED', payload:object|null}>}
+ */
+export async function resolveOverpassPreflight({
+  cacheKey,
+  memoryCache,
+  inFlight,
+  readDisk,
+  allowUpstream,
+  now = Date.now(),
+  cacheMs = OVERPASS_CACHE_MS,
+}) {
+  const cached = memoryCache.get(cacheKey);
+  if (cached && now - cached.cachedAt <= cacheMs) return { source: 'HIT', payload: cached };
+
+  const pending = inFlight.get(cacheKey);
+  if (pending) return { source: 'INFLIGHT', payload: await pending };
+
+  const disk = await readDisk();
+  if (disk) return { source: 'DISK', payload: disk };
+
+  return allowUpstream()
+    ? { source: 'UPSTREAM', payload: null }
+    : { source: 'RATE_LIMITED', payload: null };
+}
+const OVERPASS_MAX_RESPONSE_BYTES = 32 * 1024 * 1024; // 32 MB
+/** Only payloads at least this large go through geometry simplification. */
+const OVERPASS_SIMPLIFY_MIN_BYTES = 1_500_000;
+/** Only per-element geometry arrays with at least this many points are simplified. */
+const OVERPASS_SIMPLIFY_MIN_POINTS = 1200;
+/**
+ * Douglas-Peucker tolerance (degrees, ≈44 m of latitude). Region/state boundary
+ * rings are drawn at regional camera scale and the client simplifies again for
+ * draw, so ~44 m fidelity is invisible; building footprints never reach the
+ * point threshold above and pass through untouched.
+ */
+const OVERPASS_SIMPLIFY_TOLERANCE_DEG = 0.0004;
+/** Max concurrent in-flight upstream Overpass fetches across all distinct queries. */
+/** Server-side timeout ceiling (seconds) we allow inside an Overpass QL query. */
+const OVERPASS_MAX_QL_TIMEOUT = 30;
+/** Max `around:` radius (m) — every app caller uses <= 1800 m. */
+const OVERPASS_MAX_AROUND_M = 50000;
+/** Max bbox span (degrees) — app bboxes are small viewport tiles. */
+const OVERPASS_MAX_BBOX_DEG = 12;
+/**
+ * Every Overpass element-type specifier, including the combined shortcuts
+ * (nwr/nw/nr/wr) and `rel`. Shared by the selector + area-element-deny regexes so
+ * they can't drift (a missing shortcut like `wr` was an area-scan bypass).
+ */
+const OVERPASS_ELEMENT_TYPES = 'node|way|relation|nwr|nw|nr|wr|rel';
+/** Element-selector (incl. `area`) whose statements must be individually bounded. */
+const OVERPASS_SELECTOR_RE = new RegExp(`\\b(?:${OVERPASS_ELEMENT_TYPES}|area)\\b`);
+/** An element selector bounded BY an area — the country-scan abuse shape. */
+const OVERPASS_AREA_ELEMENT_RE = new RegExp(`\\b(?:${OVERPASS_ELEMENT_TYPES})\\s*\\(\\s*area\\b`, 'i');
+/** A single bbox 4-tuple `(s,w,n,e)` (non-global so it does not advance lastIndex). */
+const OVERPASS_BBOX_RE = /\(\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*\)/;
+/**
+ * Validate + clamp an Overpass form body. Defends the generic proxy against
+ * planet-scale abuse: requires exactly one `data` query in which EVERY element
+ * selector is individually spatially bounded (around / bbox / is_in / poly /
+ * area-set / pivot), rejects oversized radii and world-sized bboxes, and clamps
+ * every `[timeout:]` directive. Comments + quoted literals are stripped first so
+ * a fake bound inside a tag value can't satisfy the check.
+ *
+ * Every real app caller passes (annotations/locations/cctv use `around:`/`is_in`/
+ * `area.`/`pivot`; traffic uses a small `(s,w,n,e)` bbox); a mixed query that
+ * pairs one bounded selector with a global one is rejected.
+ *
+ * @returns {{ok:true, body:string} | {ok:false, error:string}}
+ */
+/**
+ * Single-pass lexer: blank out quoted literals (→ empty quotes) and strip line
+ * and block comments — recognizing each in one walk so a comment marker INSIDE a
+ * quoted string is treated as string content, not a comment (and vice versa).
+ * Chained regex replaces get the ordering wrong (a quoted slash-slash would hide
+ * the rest of the line), which is exactly the bypass this avoids.
+ */
+function stripOverpassNoise(src) {
+  let out = '';
+  let i = 0;
+  const n = src.length;
+  while (i < n) {
+    const c = src[i];
+    if (c === '"' || c === "'") {
+      const quote = c;
+      i += 1;
+      while (i < n) {
+        if (src[i] === '\\') { i += 2; continue; } // escaped char
+        if (src[i] === quote) { i += 1; break; } // closing quote
+        i += 1;
+      }
+      out += quote + quote; // collapse the literal to empty quotes
+      continue;
+    }
+    if (c === '/' && src[i + 1] === '*') {
+      i += 2;
+      while (i < n && !(src[i] === '*' && src[i + 1] === '/')) i += 1;
+      i += 2;
+      out += ' ';
+      continue;
+    }
+    if (c === '/' && src[i + 1] === '/') {
+      i += 2;
+      while (i < n && src[i] !== '\n') i += 1;
+      out += ' ';
+      continue;
+    }
+    out += c;
+    i += 1;
+  }
+  return out;
+}
+
+export function sanitizeOverpassBody(rawBody) {
+  let params;
+  try { params = new URLSearchParams(rawBody); } catch { return { ok: false, error: 'Malformed query body' }; }
+  const all = params.getAll('data');
+  if (all.length !== 1) return { ok: false, error: 'Exactly one data query is required' };
+  const data = all[0];
+  if (!data || !data.trim()) return { ok: false, error: 'Missing Overpass data query' };
+
+  // Blank quoted literals + strip comments in one lexer pass so a fake bound or a
+  // `//` inside a string can't hide an unbounded selector (or satisfy a bound).
+  const stripped = stripOverpassNoise(data);
+
+  // Reject oversized radii in EVERY around form — point `around:r,lat,lon` AND the
+  // input-set form `around.set:r` — and parse the full numeric token so scientific
+  // notation (`5e7`) can't slip a planet-scale radius past the cap.
+  for (const m of stripped.matchAll(/around(?:\.\w+)?:\s*([\d.eE+-]+)/gi)) {
+    const radius = Number(m[1]);
+    if (!Number.isFinite(radius) || radius > OVERPASS_MAX_AROUND_M) {
+      return { ok: false, error: 'Overpass around radius too large' };
+    }
+  }
+  // Reject world-sized / oversized bboxes.
+  for (const m of stripped.matchAll(/\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)/g)) {
+    const s = Number(m[1]); const w = Number(m[2]); const n = Number(m[3]); const e = Number(m[4]);
+    if (Math.abs(n - s) > OVERPASS_MAX_BBOX_DEG || Math.abs(e - w) > OVERPASS_MAX_BBOX_DEG) {
+      return { ok: false, error: 'Overpass bbox too large' };
+    }
+  }
+
+  // Reject control-flow constructs the app never uses — their set/bound semantics
+  // are hard to validate statically. The app only uses plain selectors + is_in /
+  // area / pivot / recursion, so this denylist closes loop/transform escape hatches.
+  if (/\b(?:foreach|complete|retro|compare|convert|make)\b/i.test(stripped)) {
+    return { ok: false, error: 'Unsupported Overpass construct' };
+  }
+  // `poly:` has unchecked extent and the app never uses it — reject outright
+  // (position-independent, so tag filters can't hide it).
+  if (/\bpoly\s*:/i.test(stripped)) {
+    return { ok: false, error: 'Overpass poly filter not allowed' };
+  }
+
+  // Every selector statement must be individually bounded, WITH set provenance: a
+  // set counts as a bound only if it was assigned (->.set) by an already-bounded
+  // statement. So `way[...]->.a` (global assigned to a set) is rejected, while the
+  // app's `is_in(...)->.a; area.a[...]` and `area(id)->.x; rel(pivot.x)` validate.
+  const boundedSets = new Set();
+  for (let stmt of stripped.split(';')) {
+    stmt = stmt.trim();
+    if (!stmt || stmt.startsWith('[') || /^out\b/.test(stmt)) continue;
+
+    // Strip output-set assignments (NOT input bounds), then strip bracket tag
+    // filters so a tag KEY/value (e.g. `way[is_in]`, `node[around]`) can never be
+    // misread as a spatial bound. Bounds live in (...) / function calls / set
+    // refs, never inside [...], so the probe loses nothing real.
+    const outSets = [];
+    const body = stmt.replace(/->\s*\.(\w+)/g, (_, name) => { outSets.push(name); return ' '; });
+    const probe = body.replace(/\[[^\]]*\]/g, ' ');
+
+    // Reject element-in-area scans on the TAG-STRIPPED probe, so a tag filter
+    // between the selector and the area filter (way["highway"](area.a)) can't hide
+    // it. An area has unbounded extent (could be a whole country); the app only
+    // SELECTS admin areas (area.set) and pivots (rel(pivot.x)), never node/way/
+    // relation(area...). The probe collapses tags so `way (area.a)` is caught.
+    if (OVERPASS_AREA_ELEMENT_RE.test(probe)) {
+      return { ok: false, error: 'Overpass area-bounded element selector not allowed' };
+    }
+
+    const hasSelector = OVERPASS_SELECTOR_RE.test(probe);
+    const inputSets = [...probe.matchAll(/(?<!\d)\.([a-z_]\w*)/gi)].map((m) => m[1]);
+    const directBound = /around:\s*\d/.test(probe)
+      || OVERPASS_BBOX_RE.test(probe)
+      || /is_in\s*\(/.test(probe)                 // is_in(lat,lon) — the function form only
+      || /\barea\s*\(/.test(probe);               // area(id) — bounded as a set definition
+
+    const setBound = inputSets.some((s) => boundedSets.has(s));
+    const bounded = directBound || setBound;
+
+    if (hasSelector && !bounded) {
+      return { ok: false, error: 'Overpass query has an unbounded selector' };
+    }
+    // Only a bounded statement can mark its output sets as bounded.
+    if (bounded) for (const name of outSets) boundedSets.add(name);
+  }
+
+  const clamped = data.replace(
+    /\[timeout:\s*(\d+)\s*\]/gi,
+    (_, n) => `[timeout:${Math.min(Number(n) || OVERPASS_MAX_QL_TIMEOUT, OVERPASS_MAX_QL_TIMEOUT)}]`,
+  );
+  return { ok: true, body: `data=${encodeURIComponent(clamped)}` };
+}
+/**
+ * Detect whether an Overpass API response body indicates rate-limiting.
+ *
+ * Checks for known rate-limit phrases in the body text regardless of
+ * HTTP status code, since some mirrors return 200 with an error payload.
+ *
+ * @param {string} bodyText - Upstream response body.
+ * @returns {boolean} True if the body looks rate-limited.
+ */
+function overpassLooksRateLimited(bodyText) {
+  const text = String(bodyText || '').toLowerCase();
+  return text.includes('rate_limited')
+    || text.includes('quota of your ip address')
+    || text.includes('dispatcher_client::request_read_and_idx::rate_limited')
+    || text.includes('too many requests');
+}
+
+/**
+ * Detect an Overpass HTTP-200 body that is actually a runtime FAILURE (server-side
+ * timeout / out-of-memory) via its `remark`. These are transient upstream failures,
+ * not authoritative empty results, so they must not be returned or cached.
+ */
+function overpassLooksRuntimeError(bodyText) {
+  const text = String(bodyText || '').toLowerCase();
+  return text.includes('runtime error')
+    || text.includes('timed out')
+    || text.includes('out of memory');
+}
+
+/**
+ * Try each Overpass upstream in order until one succeeds.
+ *
+ * Skips rate-limited or 5xx responses and falls through to the next
+ * mirror. If all mirrors fail, returns the last rate-limited payload
+ * (if any) or throws the last error.
+ *
+ * @param {string} body - URL-encoded Overpass QL query body.
+ * @param {number} [maxResponseBytes] Endpoint-specific response cap.
+ * @returns {Promise<{status:number,body:string,contentType:string,endpoint:string,rateLimited:boolean}>}
+ */
+export async function fetchOverpassPayload(body, maxResponseBytes = OVERPASS_MAX_RESPONSE_BYTES) {
+  let lastError = null;
+  let lastRateLimitPayload = null;
+
+  for (const endpoint of OVERPASS_UPSTREAMS) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+
+    try {
+      const upstream = await fetch(endpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'User-Agent': 'eagleeye-view-overpass-proxy/1.0',
+        },
+        body,
+        signal: controller.signal,
+      });
+
+      const responseBody = await readResponseTextCapped(upstream, maxResponseBytes);
+      const contentType = upstream.headers.get('content-type') || 'application/json';
+      const status = upstream.status;
+      const rateLimited = status === 429 || overpassLooksRateLimited(responseBody);
+      const runtimeError = overpassLooksRuntimeError(responseBody);
+      const payload = {
+        status,
+        body: responseBody,
+        contentType,
+        endpoint,
+        rateLimited,
+        runtimeError,
+      };
+
+      if (rateLimited) {
+        lastRateLimitPayload = payload;
+        continue;
+      }
+      // A 200 body carrying a runtime error / timeout is a transient upstream
+      // failure — skip to the next mirror rather than returning or caching it.
+      if (runtimeError) {
+        lastError = new Error(`Overpass runtime error (${endpoint})`);
+        continue;
+      }
+      if (status >= 500) {
+        lastError = new Error(`Overpass upstream returned ${status} (${endpoint})`);
+        continue;
+      }
+
+      // Success: decimate giant boundary geometry before it reaches the cache,
+      // the disk, or the client (what makes the 32 MB read cap safe to hold).
+      payload.body = simplifyOverpassPayloadBody(payload.body);
+      return payload;
+    } catch (error) {
+      lastError = error;
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  if (lastRateLimitPayload) return lastRateLimitPayload;
+  throw lastError || new Error('All Overpass upstreams failed');
+}
