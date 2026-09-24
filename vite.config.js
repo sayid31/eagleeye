@@ -3529,6 +3529,16 @@ const CALTRANS_CCTV_URL = (district) =>
 /** Districts fetched by default: SF Bay (4), LA (7), San Diego (11), Sacramento (3). */
 const DEFAULT_CALTRANS_DISTRICTS = '4,7,11,3';
 const DEFAULT_CALTRANS_MAX_SOURCES = 300;
+/** Consecutive whole-pack failures (every configured district failed) before
+ * the pack backs off from every-refresh retries to a slower cadence. Some
+ * deployment networks (e.g. hosts outside the US) cannot reach
+ * cwwp2.dot.ca.gov at all — retrying every 15-min cache cycle forever just
+ * spams the log for an outage this process can't fix. */
+const CALTRANS_BACKOFF_FAILURE_THRESHOLD = 3;
+/** Retry cadence once backed off (ms) — much slower than the normal
+ * CCTV_SOURCE_CACHE_MS refresh, but still recovers automatically if
+ * reachability comes back (route change, host migration, etc). */
+const CALTRANS_BACKOFF_RETRY_MS = 60 * 60 * 1000;
 /** Prioritization anchors: downtown cores of the four default metros. */
 const CALTRANS_ANCHORS = [
   { lat: 37.7793, lon: -122.4193 }, // San Francisco
@@ -3552,6 +3562,13 @@ const CCTV_SOURCE_FETCH_TIMEOUT_MS = 15 * 1000;
  * client refresh cadence. A bounded miss can fall through to Street View or
  * the synthetic frame instead of leaving the browser preview pending. */
 export const CCTV_FRAME_FETCH_TIMEOUT_MS = 8 * 1000;
+/** @type {number} Consecutive whole-pack Caltrans failures (see
+ * CALTRANS_BACKOFF_FAILURE_THRESHOLD). Reset to 0 on any successful fetch
+ * (per-district — the pack doesn't need every district to succeed). */
+let _caltransConsecutiveFailures = 0;
+/** @type {number} Epoch-ms of the next Caltrans fetch attempt once backed
+ * off; 0 means "not backed off, fetch on every refresh". */
+let _caltransBackoffUntil = 0;
 /** @type {Array<object>} Cached merged + normalized CCTV source list. */
 let _cctvSourceCache = [];
 /** @type {number} Epoch-ms when the source cache was last refreshed. */
