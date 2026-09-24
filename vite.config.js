@@ -424,6 +424,20 @@ export async function resolveOverpassPreflight({
 }
 /** OSM routing (FOSSGIS OSRM) cache: profile|coords -> { payload, cachedAt }. */
 const ROUTE_CACHE_MS = 600000;
+// Local duplicate of the haversine helper (also defined in cctvProxy.mjs) —
+// the /api/route handler below needs it and this project's convention is to
+// duplicate small (~12-line) geo helpers per proxy rather than share a
+// geo-utils module (see trafficBounds.js's own greatCircleKm). Phase 7's
+// cctvProxy.mjs extraction took the sole prior definition with it, leaving
+// this call site broken; restored here as its own local copy.
+function haversineKm(lat1, lon1, lat2, lon2) {
+  const toRad = (value) => value * Math.PI / 180;
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 const _routeCache = new Map();
 
 // --- Abuse guards shared by the Overpass + route proxies --------------------
