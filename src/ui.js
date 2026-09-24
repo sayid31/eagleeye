@@ -56,18 +56,7 @@ import {
   normalizeProfile,
   profileForDensity,
 } from './data/detectionPolicy.js';
-import trafficLayer from './data/traffic.js';
-import flightsLayer from './data/flights.js';
-import militaryFlightsLayer from './data/militaryFlights.js';
 import { isTr3b, toggleTr3b } from './data/tr3bRegistry.js';
-import satellitesLayer from './data/satellites.js';
-import cctvLayer from './data/cctv.js';
-import radioLayer from './data/radio.js';
-import bikeshareLayer from './data/bikeshare.js';
-import aisLiveVesselsLayer from './data/aisLiveVessels.js';
-import militaryAwarenessLayer from './data/militaryAwareness.js';
-import militaryInstallationsLayer from './data/militaryInstallations.js';
-import rocketLaunchesLayer from './data/rocketLaunches.js';
 import {
   aggregateLayerLoading,
   canPresentDeferredStatusNotice,
@@ -524,8 +513,15 @@ class CockpitViewController {
     onExited = null,
     getInheritedVisionLabel = null,
     restoreTrackingFrame = null,
+    getDataManager = null,
   } = {}) {
     this.viewer = viewer;
+    // Reads the owning StyleManager's live `_dataManager` field rather than
+    // capturing a snapshot — the controller is constructed before
+    // attachDataManager() runs (see StyleManager constructor), so a captured
+    // value would be permanently null. Facade calls (§3.1), not direct
+    // layer-module imports.
+    this.getDataManager = typeof getDataManager === 'function' ? getDataManager : () => null;
     this.active = false;
     this.trackedEntity = null;
     this.trackedEntityWasShown = true;
@@ -690,7 +686,7 @@ class CockpitViewController {
       const target = event.target.closest('button[data-signal-layer][data-signal-id]');
       if (!target) return;
       event.preventDefault();
-      militaryAwarenessLayer.focusTarget?.(
+      this.getDataManager()?.focusTarget(
         target.dataset.signalLayer,
         target.dataset.signalId,
         { origin: 'user' },
@@ -734,9 +730,10 @@ class CockpitViewController {
     // In cockpit mode the controller takes the entity off `viewer.trackedEntity`
     // (see update()), so the cockpit's own handle is the tracked identity there.
     const trackedEntity = this.viewer?.trackedEntity || this.trackedEntity;
+    const dataManager = this.getDataManager();
     return resolveTrackedAircraftInfo({
-      civilian: flightsLayer.getTrackedInfo?.() || null,
-      military: militaryFlightsLayer.getTrackedInfo?.() || null,
+      civilian: dataManager?.getTrackedInfo('flights') || null,
+      military: dataManager?.getTrackedInfo('military') || null,
       trackedId: trackedEntity?.gevTrackedId || '',
     });
   }
@@ -764,8 +761,8 @@ class CockpitViewController {
     const icao24 = String(info?.icao24 || '').trim();
     if (!icao24) return false;
     toggleTr3b(icao24);
-    const layer = info.layerId === 'military' ? militaryFlightsLayer : flightsLayer;
-    layer.refreshTr3b?.(icao24);
+    const layerId = info.layerId === 'military' ? 'military' : 'flights';
+    this.getDataManager()?.callLayerMethod(layerId, 'refreshTr3b', icao24);
     this._tr3bSignature = null; // force the chip to repaint on the next sync
     this.syncTr3bToggle(info);
     return true;
@@ -816,7 +813,7 @@ class CockpitViewController {
     const wasActive = this.active;
     if (wasActive) this.contextNavigationDeadlineMs = performance.now() + 1500;
     const navigationOptions = wasActive ? { ...options, aircraftOnly: true } : options;
-    const changed = Boolean(militaryAwarenessLayer?.[method]?.(navigationOptions));
+    const changed = Boolean(this.getDataManager()?.callLayerMethod('military-awareness', method, navigationOptions));
     if (!changed) {
       this.contextNavigationDeadlineMs = 0;
       return false;
@@ -1382,7 +1379,7 @@ class CockpitViewController {
 
   updateContext(info, heading) {
     if (!this.context) return;
-    const snapshot = militaryAwarenessLayer.getContextSnapshot?.() || null;
+    const snapshot = this.getDataManager()?.getContextSnapshot() || null;
     const trackedId = info.icao24 || info.id;
     const readout = resolveCockpitContextReadout({ snapshot, info });
     if (!readout.visible) {
@@ -2272,6 +2269,7 @@ export class StyleManager {
     /** Pre-Contacts detection state, restored on deactivation (see _syncContactsDetection). */
     this._contactsDetectionRestore = null;
     this.cockpitView = new CockpitViewController(viewer, {
+      getDataManager: () => this._dataManager,
       onVisionChange: (mode, active, options) => this._setCockpitVision(mode, active, options),
       onCameraTakeover: () => this._stampNavigation({ cancelPendingSelection: false }),
       getInheritedVisionLabel: () => (
@@ -2319,8 +2317,9 @@ export class StyleManager {
         const [layerId, ...idParts] = String(entity?.gevTrackedId || '').split(':');
         const trackedId = idParts.join(':');
         if (!trackedId) return false;
-        if (layerId === 'flights') return flightsLayer.refocusTrackedById?.(trackedId) === true;
-        if (layerId === 'military') return militaryFlightsLayer.refocusTrackedById?.(trackedId) === true;
+        if (layerId === 'flights' || layerId === 'military') {
+          return this._dataManager?.refocusTrackedById(layerId, trackedId) === true;
+        }
         return false;
       },
     });
@@ -2480,9 +2479,18 @@ export class StyleManager {
 
     // Initialize detection overlay BEFORE style stages so the composite
     // stage is first in the post-process pipeline
-    initDetection(viewer, [trafficLayer, flightsLayer, militaryFlightsLayer, satellitesLayer, cctvLayer, bikeshareLayer, aisLiveVesselsLayer], (modeLabel) => {
-      this._updateDetectionButton(modeLabel);
-    });
+    initDetection(
+      viewer,
+      ['traffic', 'flights', 'military', 'satellites', 'cctv', 'bikeshare', 'ais-live-vessels'],
+      // Read the live manager at call time, not a captured reference —
+      // initDetection runs from inside this constructor, before
+      // attachDataManager() has necessarily fired (same reasoning as
+      // CockpitViewController.getDataManager above).
+      () => this._dataManager,
+      (modeLabel) => {
+        this._updateDetectionButton(modeLabel);
+      },
+    );
     initTrackedReadout(viewer);
     setDetectionStyle(this.activeStyle);
     this._applyDetectionDensityFromUi();
@@ -2601,7 +2609,7 @@ export class StyleManager {
     this._cctvRequestFocusHandler = (event) => routeCctvFocusRequest(
       event,
       (activate, focus) => this._runExplicitCctvFocus(activate, focus),
-      (cameraId, durationSec) => cctvLayer.focusCamera(cameraId, durationSec),
+      (cameraId, durationSec) => this._dataManager?.focusCamera('cctv', cameraId, durationSec),
     );
     this._removeCctvRequestFocusListener = registerCctvFocusRequestListener(
       window,
@@ -2649,22 +2657,22 @@ export class StyleManager {
           'superseded-by-explicit-navigation',
           { clearSelection: true },
         ) === true;
-      try { flightsLayer.cancelPendingTrackingRestore?.(); } catch { /* best effort */ }
-      try { militaryFlightsLayer.cancelPendingTrackingRestore?.(); } catch { /* best effort */ }
-      try { satellitesLayer.cancelPendingTrackingRestore?.(); } catch { /* best effort */ }
+      try { this._dataManager?.cancelPendingTrackingRestore('flights'); } catch { /* best effort */ }
+      try { this._dataManager?.cancelPendingTrackingRestore('military'); } catch { /* best effort */ }
+      try { this._dataManager?.cancelPendingTrackingRestore('satellites'); } catch { /* best effort */ }
       // A deliberate destination supersedes share-selected entities that have
       // not arrived yet. Active owners publish their clear when released.
-      if (!passivelyClearedShareSelection && !flightsLayer.getTrackedInfo?.()) {
+      if (!passivelyClearedShareSelection && !this._dataManager?.getTrackedInfo('flights')) {
         this._dataManager?.setLayerParams('flights', {
           selectedFlightsTrackingId: null,
         }, { origin: 'tool' });
       }
-      if (!passivelyClearedShareSelection && !militaryFlightsLayer.getTrackedInfo?.()) {
+      if (!passivelyClearedShareSelection && !this._dataManager?.getTrackedInfo('military')) {
         this._dataManager?.setLayerParams('military', {
           selectedMilitaryTrackingId: null,
         }, { origin: 'tool' });
       }
-      if (!passivelyClearedShareSelection && !satellitesLayer.getTrackedInfo?.()) {
+      if (!passivelyClearedShareSelection && !this._dataManager?.getTrackedInfo('satellites')) {
         this._dataManager?.setLayerParams('satellites', {
           selectedSatTrackingId: null,
         }, { origin: 'tool' });
@@ -2694,20 +2702,20 @@ export class StyleManager {
     let contactSelected = false;
     try {
       contactSelected = Boolean(
-        militaryAwarenessLayer.releaseCameraOwnership?.({
+        this._dataManager?.releaseCameraOwnership('military-awareness', {
           preserveVesselSelection,
           origin: trackingOrigin,
         }),
       );
     } catch {
-      try { flightsLayer.stopTracking?.({ origin: trackingOrigin }); } catch { /* best-effort release */ }
-      try { militaryFlightsLayer.stopTracking?.({ origin: trackingOrigin }); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('flights', { origin: trackingOrigin }); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('military', { origin: trackingOrigin }); } catch { /* best-effort release */ }
       if (!preserveVesselSelection) {
-        try { aisLiveVesselsLayer.clearSelection?.(); } catch { /* best-effort release */ }
+        try { this._dataManager?.clearSelection('ais-live-vessels'); } catch { /* best-effort release */ }
       }
     }
-    try { satellitesLayer.stopTracking?.({ origin: trackingOrigin }); } catch { /* best-effort release */ }
-    try { rocketLaunchesLayer.releaseCameraOwnership?.(); } catch { /* best-effort release */ }
+    try { this._dataManager?.stopTracking('satellites', { origin: trackingOrigin }); } catch { /* best-effort release */ }
+    try { this._dataManager?.releaseCameraOwnership('rocket-launches'); } catch { /* best-effort release */ }
     this.viewer.trackedEntity = undefined;
     interruptCameraMotion('explicit-navigation');
     this._stopOrbit();
@@ -4300,7 +4308,7 @@ export class StyleManager {
     }
     if (typeof this._dataManager?.addVisibilityGuard === 'function') {
       this._dataManagerVisibilityGuardUnsubscribe = this._dataManager.addVisibilityGuard(async (change) => {
-        const layerName = this._dataManager?.layers?.get(change.layerId)?.module?.name || change.layerId;
+        const layerName = this._dataManager?.getLayerDisplayName(change.layerId) || change.layerId;
         const reason = contextLayerEnableBlockReason({
           contextMode: this._contextModeEntering || this._contextMode,
           change,
@@ -4376,23 +4384,18 @@ export class StyleManager {
       this._cctvUnsubscribe();
       this._cctvUnsubscribe = null;
     }
-    if (typeof cctvLayer.subscribe === 'function') {
-      this._cctvUnsubscribe = cctvLayer.subscribe((state) => {
-        this._renderCctvState(state);
-      });
-    }
-    if (typeof cctvLayer.getUIState === 'function') {
-      this._renderCctvState(cctvLayer.getUIState());
-    }
+    this._cctvUnsubscribe = this._dataManager?.subscribeLayer('cctv', (state) => {
+      this._renderCctvState(state);
+    }) || null;
+    const cctvUiState = this._dataManager?.getLayerUIState('cctv');
+    if (cctvUiState) this._renderCctvState(cctvUiState);
     if (this._radioUnsubscribe) {
       this._radioUnsubscribe();
       this._radioUnsubscribe = null;
     }
-    if (typeof radioLayer.subscribe === 'function') {
-      this._radioUnsubscribe = radioLayer.subscribe((state) => {
-        this._renderRadioState(state);
-      });
-    }
+    this._radioUnsubscribe = this._dataManager?.subscribeLayer('radio', (state) => {
+      this._renderRadioState(state);
+    }) || null;
     if (!this._awarenessSelectedHandler) {
       this._awarenessSelectedHandler = (event) => this._persistAwarenessSelection(event, false);
       this._awarenessClearedHandler = (event) => this._persistAwarenessSelection(event, true);
@@ -4554,9 +4557,9 @@ export class StyleManager {
           notificationToken,
         });
         if (enabled === false || !this._dataManager.isEnabled('military-installations')) return false;
-        const searched = await militaryInstallationsLayer.searchNearby?.();
+        const searched = await this._dataManager?.searchNearby('military-installations');
         if (searched === false) return false;
-        const stats = militaryInstallationsLayer.getStats?.();
+        const stats = this._dataManager?.getLayerStatsRaw('military-installations');
         this._showToast(stats?.status === 'zoom-in'
           ? 'Zoom in to search mapped installations'
           : 'Nearby installations refreshed');
@@ -4965,11 +4968,17 @@ export class StyleManager {
       // Effective visibility: a disallowed layer still mid-ENABLING must be
       // isolated too, or it settles ON inside the exclusive mode.
       if (!allowed.has(layerId) && this._dataManager.isEffectivelyEnabled(layerId)) {
+        // restoreThrottle bounds each layer's actual teardown lifecycle via
+        // the manager's shared cross-layer concurrency gate — without it,
+        // every disallowed layer (CCTV included, which tears down live
+        // HLS/viewshed primitives on disable) starts teardown simultaneously
+        // on every Context-mode entry/switch.
         pending.push({
           layerId,
           transition: this._dataManager.setEnabled(layerId, false, {
             notificationToken,
             ...(signal ? { signal } : {}),
+            restoreThrottle: (task) => this._dataManager.runThroughRestoreQueue(task),
           }),
         });
       }
@@ -4992,7 +5001,7 @@ export class StyleManager {
       'visibility-cancelled',
       'visibility-failed',
     ].includes(change.type)) {
-      this._renderRadioState(radioLayer.getUIState());
+      this._renderRadioState(this._dataManager?.getLayerUIState('radio'));
     }
     if (change?.type === 'visibility-transition') return;
     // The effective mode must be read BEFORE the entering flag is cleared:
@@ -5699,7 +5708,7 @@ export class StyleManager {
    * @returns {{active:boolean, entryAllowed:boolean, visionMode:string, subject:{id:string,layerId:string}|null, navigation:{canPrevious:boolean,canNext:boolean,canFocus:boolean}|null, awareness?: object}|null}
    */
   getCockpitState() {
-    const snapshot = militaryAwarenessLayer.getContextSnapshot?.();
+    const snapshot = this._dataManager?.getContextSnapshot();
     const info = this.cockpitView?.readAircraftInfo?.();
     const active = Boolean(this.cockpitView?.active);
     const gateOpen = Boolean(this.cockpitView?.isEntryAllowed?.());
@@ -5785,13 +5794,11 @@ export class StyleManager {
     const activeLayer = selectedTarget?.layerId || currentTarget?.layerId || null;
     const alreadyOnLayer = activeLayer === targetLayer;
     if (alreadyOnLayer && !aircraftClass) return { ok: true, retargeted: false };
-    const moved = militaryAwarenessLayer?.navigateNext
-      ? !!militaryAwarenessLayer.navigateNext({
-        targetLayer,
-        aircraftClass,
-        origin: 'voice',
-      })
-      : false;
+    const moved = !!this._dataManager?.navigateNext({
+      targetLayer,
+      aircraftClass,
+      origin: 'voice',
+    });
     if (moved) return { ok: true, retargeted: true };
     // A filter that matched nothing still enters, as long as the layer is
     // already right — the operator asked for that layer and is on it.
@@ -5855,9 +5862,18 @@ export class StyleManager {
         };
       }
       let currentTarget = this.getAircraftTrackingTarget();
-      const layerForTarget = (target) => target?.layerId === 'military'
-        ? militaryFlightsLayer
-        : target?.layerId === 'flights' ? flightsLayer : null;
+      // enterCockpitWithTracking() (cockpitTracking.js) calls trackById()/
+      // stopTracking() on whatever "layer" it's handed — it has no
+      // dataManager of its own, so this thin per-layerId adapter is what
+      // routes those calls through the facade instead of a direct module
+      // reference, keeping cockpitTracking.js's pure-helper contract intact.
+      const layerFacade = (layerId) => (layerId ? {
+        trackById: (id, opts) => this._dataManager?.callLayerMethod(layerId, 'trackById', id, opts),
+        stopTracking: (opts) => this._dataManager?.stopTracking(layerId, opts),
+      } : null);
+      const layerForTarget = (target) => layerFacade(target?.layerId === 'military'
+        ? 'military'
+        : target?.layerId === 'flights' ? 'flights' : null);
       // A requested layer retargets BEFORE entry, through the same filtered
       // navigation NEXT uses. Ignoring it entered on whatever was already
       // tracked and reported success, so "cockpit in that military helicopter"
@@ -5885,9 +5901,9 @@ export class StyleManager {
           currentTarget = this.getAircraftTrackingTarget();
         }
       }
-      const selectedLayer = selectedTarget?.layerId === 'military'
-        ? militaryFlightsLayer
-        : selectedTarget?.layerId === 'flights' ? flightsLayer : null;
+      const selectedLayer = layerFacade(selectedTarget?.layerId === 'military'
+        ? 'military'
+        : selectedTarget?.layerId === 'flights' ? 'flights' : null);
       const entry = enterCockpitWithTracking({
         cockpitView: this.cockpitView,
         selectedLayer,
@@ -6789,7 +6805,7 @@ export class StyleManager {
    */
   _beginWorldJumpTransition() {
     clearTimeout(this._trafficTransitionTimer);
-    trafficLayer.beginWorldJump?.();
+    this._dataManager?.beginWorldJump('traffic');
     suspendDetection('intercity');
   }
 
@@ -6800,7 +6816,7 @@ export class StyleManager {
    */
   _endWorldJumpTransition() {
     clearTimeout(this._trafficTransitionTimer);
-    trafficLayer.endWorldJump?.();
+    this._dataManager?.endWorldJump('traffic');
     resumeDetection();
     this._updateTrafficSyncChip(true);
   }
@@ -7146,15 +7162,15 @@ export class StyleManager {
     this._stopOrbit();
     this.cockpitView?.exit({ restoreTracking: false });
     try {
-      militaryAwarenessLayer.releaseCameraOwnership?.({ origin: 'tool' });
+      this._dataManager?.releaseCameraOwnership('military-awareness', { origin: 'tool' });
     } catch {
       // Keep reset available if Context has not initialized completely.
-      try { flightsLayer.stopTracking?.({ origin: 'tool' }); } catch { /* best-effort release */ }
-      try { militaryFlightsLayer.stopTracking?.({ origin: 'tool' }); } catch { /* best-effort release */ }
-      try { aisLiveVesselsLayer.clearSelection?.(); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('flights', { origin: 'tool' }); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('military', { origin: 'tool' }); } catch { /* best-effort release */ }
+      try { this._dataManager?.clearSelection('ais-live-vessels'); } catch { /* best-effort release */ }
     }
-    try { satellitesLayer.stopTracking?.({ origin: 'tool' }); } catch { /* best-effort release */ }
-    try { rocketLaunchesLayer.releaseCameraOwnership?.(); } catch { /* best-effort release */ }
+    try { this._dataManager?.stopTracking('satellites', { origin: 'tool' }); } catch { /* best-effort release */ }
+    try { this._dataManager?.releaseCameraOwnership('rocket-launches'); } catch { /* best-effort release */ }
     this.viewer.trackedEntity = undefined;
     this.viewer.camera.cancelFlight();
     this.viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
@@ -7743,7 +7759,7 @@ export class StyleManager {
     this._radioTunerCameraRemove = null;
     this._refreshRadioTunerBand = null;
     document.getElementById('title-bar')?.classList.remove('radio-broadcasting');
-    radioLayer.endTuning();
+    this._dataManager?.endTuning('radio');
     if (this._radioSelectedHandler) {
       document.removeEventListener('gev:radio-selected', this._radioSelectedHandler);
       this._radioSelectedHandler = null;

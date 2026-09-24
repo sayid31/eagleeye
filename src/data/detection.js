@@ -195,8 +195,19 @@ let _hostCanvas = null;
 let _hostSurface = null;
 /** @type {CanvasRenderingContext2D|null} Current host-owned paint target. */
 let _ctx = null;
-/** @type {Array} Registered data layers that may expose detectable objects */
-let _layers = [];
+/** @type {Array<string>} Registered layer ids that may expose detectable objects */
+let _layerIds = [];
+/**
+ * Reads the live `DataLayerManager` at call time rather than a captured
+ * reference — `initDetection` runs from inside `StyleManager`'s constructor,
+ * before `attachDataManager()` has run (same timing constraint documented on
+ * `CockpitViewController.getDataManager` in ui.js), so a captured value would
+ * be permanently null. Facade calls only (`getDetectableObjects`), never a
+ * direct module reach — this is also what keeps a not-yet-loaded lazy layer
+ * from being force-resolved just to ask whether it has any contacts.
+ * @type {() => (import('./manager.js').DataLayerManager|null)}
+ */
+let _getDataManager = () => null;
 /** @type {number} Monotonic frame counter for frame-skip gating and scanline animation */
 let _frameCount = 0;
 /** @type {number} Wall-clock ms spent in the last _drawOverlay call (used for adaptive throttling) */
@@ -267,20 +278,29 @@ let _cockpitActive = false;
 let _cockpitModeListener = null;
 
 /**
- * Initializes detection inside the shared world-overlay host and stores
- * references to data layers. The host owns the canvas and render listener.
+ * Initializes detection inside the shared world-overlay host and stores the
+ * layer ids it should poll for detectable objects. The host owns the canvas
+ * and render listener.
  * @param {Cesium.Viewer} viewer - The active Cesium viewer instance.
- * @param {Array} layers - Data layer modules that may implement getDetectableObjects().
+ * @param {Array<string>} layerIds - Layer ids that may expose detectable
+ *   objects, looked up through `getDataManager()` per frame — never a live
+ *   module reference — so an unresolved lazy layer is never force-loaded
+ *   just to be asked for contacts (see `DataLayerManager.getDetectableObjects`).
+ * @param {() => (import('./manager.js').DataLayerManager|null)} getDataManager -
+ *   Accessor for the live manager, read at call time rather than captured
+ *   (mirrors `CockpitViewController.getDataManager` in ui.js) — `initDetection`
+ *   runs before `StyleManager.attachDataManager()` has necessarily fired.
  * @param {Function} onModeChange - Callback invoked with the new mode label string on mode changes.
  */
-export function initDetection(viewer, layers, onModeChange) {
+export function initDetection(viewer, layerIds, getDataManager, onModeChange) {
   if (_cockpitModeListener && typeof window !== 'undefined') {
     window.removeEventListener('gev:cockpit-mode-changed', _cockpitModeListener);
   }
   _hostLane?.unregister?.();
   _calloutLane?.unregister?.();
   _viewer = viewer;
-  _layers = layers;
+  _layerIds = Array.isArray(layerIds) ? layerIds : [];
+  _getDataManager = typeof getDataManager === 'function' ? getDataManager : () => null;
   _onModeChange = onModeChange;
   _debugBanner = detectionDebugRequested(
     typeof window !== 'undefined' ? window.location?.search : '',
@@ -331,7 +351,8 @@ export function destroyDetection() {
   _calloutLane = null;
   _calloutCount = 0;
   _viewer = null;
-  _layers = [];
+  _layerIds = [];
+  _getDataManager = () => null;
   _onModeChange = null;
   _hostCanvas = null;
   _hostSurface = null;
@@ -720,27 +741,28 @@ function _paintDetectionLane(frame) {
 function _collectDetectableObjects() {
   const label = MODE_LABELS[_mode];
   const objects = [];
+  const dataManager = _getDataManager();
+  if (!dataManager) return objects;
 
-  for (let i = 0; i < _layers.length; i++) {
-    const layer = _layers[i];
-    if (typeof layer.getDetectableObjects !== 'function') continue;
-    try {
-      const maxCount = ['flights', 'military'].includes(layer.id)
-        ? Number.POSITIVE_INFINITY
-        : LAYER_CANDIDATE_CAP;
-      const items = layer.getDetectableObjects({
-        mode: label,
-        maxCount,
-        seed: 0,
-      });
-      if (items && items.length > 0) {
-        for (const item of items) {
-          item._layerId = layer.id;
-          objects.push(item);
-        }
+  for (let i = 0; i < _layerIds.length; i++) {
+    const layerId = _layerIds[i];
+    const maxCount = ['flights', 'military'].includes(layerId)
+      ? Number.POSITIVE_INFINITY
+      : LAYER_CANDIDATE_CAP;
+    // getDetectableObjects() is a facade call: a not-yet-loaded lazy layer
+    // (or a layer with no getDetectableObjects at all) returns its documented
+    // null fallback here, without being resolved/loaded just to be asked.
+    // Any throw inside the layer's own implementation is also caught there.
+    const items = dataManager.getDetectableObjects(layerId, {
+      mode: label,
+      maxCount,
+      seed: 0,
+    });
+    if (items && items.length > 0) {
+      for (const item of items) {
+        item._layerId = layerId;
+        objects.push(item);
       }
-    } catch {
-      // layer skipped — may not have data or threw an error
     }
   }
 

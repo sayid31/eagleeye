@@ -1,4 +1,3 @@
-import cctvLayer from './data/cctv.js';
 import { runCctvLayerEnableTransition } from './cctvFocusPolicy.js';
 import {
   shouldRebuildCctvCameraListbox,
@@ -127,24 +126,24 @@ export const cctvPanelMixin = {
     this._cctvNearestBtn?.addEventListener('click', async () => {
       if (!await this._toggleCctvEnabled(true)) return;
       this._runExplicitCctvFocus(
-        () => cctvLayer.focusNearest({ focus: false }),
-        (cameraId) => cctvLayer.focusCamera(cameraId, 1.8),
+        () => this._dataManager?.callLayerMethod('cctv', 'focusNearest', { focus: false }),
+        (cameraId) => this._dataManager?.focusCamera('cctv', cameraId, 1.8),
       );
     });
 
     this._cctvPrevBtn?.addEventListener('click', async () => {
       if (!await this._toggleCctvEnabled(true)) return;
       this._runExplicitCctvFocus(
-        () => cctvLayer.cycleCamera(-1),
-        (cameraId) => cctvLayer.focusCamera(cameraId, 1.4),
+        () => this._dataManager?.callLayerMethod('cctv', 'cycleCamera', -1),
+        (cameraId) => this._dataManager?.focusCamera('cctv', cameraId, 1.4),
       );
     });
 
     this._cctvNextBtn?.addEventListener('click', async () => {
       if (!await this._toggleCctvEnabled(true)) return;
       this._runExplicitCctvFocus(
-        () => cctvLayer.cycleCamera(1),
-        (cameraId) => cctvLayer.focusCamera(cameraId, 1.4),
+        () => this._dataManager?.callLayerMethod('cctv', 'cycleCamera', 1),
+        (cameraId) => this._dataManager?.focusCamera('cctv', cameraId, 1.4),
       );
     });
 
@@ -156,7 +155,7 @@ export const cctvPanelMixin = {
       if (!await this._toggleCctvEnabled(true)) return;
       this._runExplicitCctvFocus(
         () => selected,
-        (cameraId) => cctvLayer.focusCamera(cameraId, 1.9),
+        (cameraId) => this._dataManager?.focusCamera('cctv', cameraId, 1.9),
       );
       this._dataManager?.setLayerParams('cctv', { selectedCameraId: selected }, { origin: 'user' });
     });
@@ -420,8 +419,8 @@ export const cctvPanelMixin = {
     // metros, so a bare selection used to leave the view in the old city
     // with a camera active thousands of km away.
     this._runExplicitCctvFocus(
-      () => (cctvLayer.selectCamera(cameraId) ? cameraId : null),
-      (selectedId) => cctvLayer.focusCamera(selectedId, 2.2),
+      () => (this._dataManager?.callLayerMethod('cctv', 'selectCamera', cameraId) ? cameraId : null),
+      (selectedId) => this._dataManager?.focusCamera('cctv', selectedId, 2.2),
     );
     this._dataManager?.setLayerParams('cctv', { selectedCameraId: cameraId }, { origin: 'user' });
   },
@@ -495,7 +494,7 @@ export const cctvPanelMixin = {
       && this._cctvFrameVideo.srcObject) {
       return true;
     }
-    const stream = cctvLayer.getProjectionMirrorStream?.(activeCamera.id) || null;
+    const stream = this._dataManager?.callLayerMethod('cctv', 'getProjectionMirrorStream', activeCamera.id) || null;
     if (!stream) {
       // Runtime not ready yet (e.g. projection just activated this tick) —
       // leave the still-frame path as-is; the next render picks the stream
@@ -750,10 +749,10 @@ export const cctvPanelMixin = {
         cockpitActive: !!this.cockpitView?.active,
       }),
       shouldFocus: () => !this._cctvState?.activeCameraId,
-      activate: () => cctvLayer.focusNearest({ focus: false }),
+      activate: () => this._dataManager?.callLayerMethod('cctv', 'focusNearest', { focus: false }),
       fly: (cameraId) => this._runExplicitCctvFocus(
         () => cameraId,
-        (selectedId) => cctvLayer.focusCamera(selectedId, 1.6),
+        (selectedId) => this._dataManager?.focusCamera('cctv', selectedId, 1.6),
       ),
     });
     return true;

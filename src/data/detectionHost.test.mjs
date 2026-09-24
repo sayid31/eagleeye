@@ -333,6 +333,40 @@ function mixedTierLayer() {
   };
 }
 
+/**
+ * Minimal `DataLayerManager`-shaped double for detection's id-based lookup —
+ * exposes only `getDetectableObjects(layerId, opts)`, mirroring the real
+ * facade's contract (manager.js `_callLayerMethod`): a missing layer id or a
+ * layer without `getDetectableObjects` returns `null` rather than throwing,
+ * and a throwing layer method is caught and also reported as `null`.
+ * @param {Array<{id:string, getDetectableObjects?: Function}>} layers
+ */
+function fakeDataManager(layers) {
+  const byId = new Map(layers.map((layer) => [layer.id, layer]));
+  return {
+    getDetectableObjects(layerId, opts) {
+      const layer = byId.get(layerId);
+      if (!layer || typeof layer.getDetectableObjects !== 'function') return null;
+      try {
+        return layer.getDetectableObjects(opts);
+      } catch {
+        return null;
+      }
+    },
+  };
+}
+
+/**
+ * Test-only convenience over the real `initDetection(viewer, layerIds,
+ * getDataManager, onModeChange)` signature: takes the same fake-layer-object
+ * shape the tests already build, derives ids + a `fakeDataManager` double
+ * from them. Keeps this file's diff mechanical against the pre-conversion
+ * (layer-object-array) call sites.
+ */
+function initDetectionWithLayers(env, layers, onModeChange) {
+  initDetection(env.viewer, layers.map((layer) => layer.id), () => fakeDataManager(layers), onModeChange);
+}
+
 /** Fill styles that actually reached the shared normal-blend canvas. */
 function sharedFillStyles(env) {
   return env.ctx.calls
@@ -352,7 +386,7 @@ test('detection lifecycle re-hosts unchanged painters behind the sole host liste
   const modes = [];
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [detectableLayer()], (mode) => modes.push(mode));
+    initDetectionWithLayers(env, [detectableLayer()], (mode) => modes.push(mode));
     assert.equal(env.postRender.listeners.size, 1);
     assert.equal(env.document.getElementById('detection-overlay'), null);
     assert.ok(env.document.getElementById('world-overlay-canvas'));
@@ -500,7 +534,7 @@ test('callouts stop painting the moment the last detectable object goes away', (
   }];
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [{ id: 'flights', getDetectableObjects: () => objects }], () => {});
+    initDetectionWithLayers(env, [{ id: 'flights', getDetectableObjects: () => objects }], () => {});
     setMode('DENSE');
     env.advance(250);
     env.postRender.raise();
@@ -536,7 +570,7 @@ test('every style paints its OWN plate token through the production callout path
   const env = installEnvironment();
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [mixedTierLayer()], () => {});
+    initDetectionWithLayers(env, [mixedTierLayer()], () => {});
     setMode('DENSE');
     settleFrame(env);
     settleFrame(env);
@@ -574,7 +608,7 @@ test('space-tier callouts take the heavier plate while air contacts keep the lig
   const env = installEnvironment();
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [mixedTierLayer()], () => {});
+    initDetectionWithLayers(env, [mixedTierLayer()], () => {});
     setDetectionStyle('surveillance');
     setMode('DENSE');
     settleFrame(env);
@@ -602,7 +636,7 @@ test('surveillance military tier reaches the dedicated render target as shipped 
   const env = installEnvironment();
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [militaryLayer()], () => {});
+    initDetectionWithLayers(env, [militaryLayer()], () => {});
     setDetectionStyle('surveillance');
     setMode('DENSE');
     env.advance(250);
@@ -624,7 +658,7 @@ test('pathological detection paint holds alternate frames without freezing share
   const env = installEnvironment({ search: '?detectDebug=1' });
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [detectableLayer()], () => {});
+    initDetectionWithLayers(env, [detectableLayer()], () => {});
     setOverlayEntries('valve-card', [{
       id: 'ambient-card',
       position: new Cesium.Cartesian3(0, 0, 0),
@@ -730,7 +764,7 @@ test('the mode banner is absent by default and present behind the flag', () => {
     const env = installEnvironment({ search });
     try {
       initWorldOverlay(env.viewer);
-      initDetection(env.viewer, [detectableLayer()], () => {});
+      initDetectionWithLayers(env, [detectableLayer()], () => {});
       setMode('DENSE');
       env.advance(250);
       env.postRender.raise();
@@ -757,7 +791,7 @@ test('detection telemetry stays reachable programmatically with the banner hidde
   const env = installEnvironment();
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [detectableLayer()], () => {});
+    initDetectionWithLayers(env, [detectableLayer()], () => {});
     setMode('DENSE');
     env.advance(250);
     env.postRender.raise();
@@ -785,7 +819,7 @@ test('civilian and military AIR brackets cover front, left, and right at Sparse 
         type: 'AIR',
       }));
       initWorldOverlay(env.viewer);
-      initDetection(env.viewer, [{ id: layerId, getDetectableObjects: () => objects }], () => {});
+      initDetectionWithLayers(env, [{ id: layerId, getDetectableObjects: () => objects }], () => {});
       setDetectionTuning({ densityPct: 25 });
       setMode('SPARSE');
       settleFrame(env);
@@ -843,7 +877,7 @@ test('the backdrop feather reaches the canvas as a lighter plate against sky', (
   const env = installEnvironment();
   try {
     initWorldOverlay(env.viewer);
-    initDetection(env.viewer, [backdropLayer()], () => {});
+    initDetectionWithLayers(env, [backdropLayer()], () => {});
     setDetectionStyle('normal');
     setMode('DENSE');
     settleFrame(env);
