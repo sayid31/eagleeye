@@ -19,11 +19,17 @@ const src = readFileSync(fileURLToPath(new URL('./ui.js', import.meta.url)), 'ut
 // toggleRadio (the Radio panel's Enable/Disable gesture handler) now lives in
 // radioPanelMixin.js (mechanical relocation — see that file's header).
 const radioMixinSrc = readFileSync(fileURLToPath(new URL('./radioPanelMixin.js', import.meta.url)), 'utf8');
+// Global Context mode (session capture/restore, the mode state machine, the
+// layer-change reaction handler, panel button sync) now lives in
+// contextModeMixin.js — mechanical relocation, see that file's header.
+// setContextMode/getCockpitState/attachDataManager/dispose stay in ui.js.
+const contextMixinSrc = readFileSync(fileURLToPath(new URL('./contextModeMixin.js', import.meta.url)), 'utf8');
 
-const handlerStart = src.indexOf('_handleContextLayerChange(change) {');
+const handlerStart = contextMixinSrc.indexOf('_handleContextLayerChange(change) {');
 assert.ok(handlerStart > 0, 'handler found');
-const handlerEnd = src.indexOf('_syncContextModeButtons() {', handlerStart);
-const handler = src.slice(handlerStart, handlerEnd);
+// contextModeMixin.js is an object literal — methods end in `,`, not `}`.
+const handlerEnd = contextMixinSrc.indexOf('_syncContextModeButtons() {', handlerStart);
+const handler = contextMixinSrc.slice(handlerStart, handlerEnd);
 
 test('context handler: session bookkeeping runs before the exit early-return', () => {
   const record = handler.indexOf('recordContextSessionUserChange(');
@@ -79,9 +85,9 @@ test('Clear All defers a newer explicit mission guard until its batch settles', 
 });
 
 test('context restore replays explicit companion intent after the stale restore queue drains', () => {
-  const restore = src.slice(
-    src.indexOf('async _restoreContextSession('),
-    src.indexOf('async _selectContextMode('),
+  const restore = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _restoreContextSession('),
+    contextMixinSrc.indexOf('async _selectContextMode('),
   );
   const restoreAwait = restore.indexOf('await this._dataManager.restoreEnabledLayerIds(');
   const replay = restore.indexOf('await settleContextIntentReplay(');
@@ -91,9 +97,9 @@ test('context restore replays explicit companion intent after the stale restore 
 });
 
 test('context restore settles the Contacts coordinator before dependency fanout', () => {
-  const restore = src.slice(
-    src.indexOf('async _restoreContextSession('),
-    src.indexOf('async _selectContextMode('),
+  const restore = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _restoreContextSession('),
+    contextMixinSrc.indexOf('async _selectContextMode('),
   );
   const settle = restore.indexOf("const contactsCoordinatorId = 'military-awareness'");
   const coordinatorOff = restore.indexOf('const coordinatorSettled = await this._dataManager.setEnabled(', settle);
@@ -105,9 +111,9 @@ test('context restore settles the Contacts coordinator before dependency fanout'
 });
 
 test('context restore preserves its exact pending target after a failed transition', () => {
-  const restore = src.slice(
-    src.indexOf('async _restoreContextSession('),
-    src.indexOf('async _selectContextMode('),
+  const restore = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _restoreContextSession('),
+    contextMixinSrc.indexOf('async _selectContextMode('),
   );
   assert.match(restore, /const replayError = await settleContextIntentReplay\(\{/);
   assert.match(restore, /if \(restoreError && !this\._contextSessionSnapshot\)/);
@@ -138,9 +144,9 @@ test('context handler: either failed direct Context-shell start rolls the sessio
     /else if \(!this\._userFacingContextNotificationTokens\.has\(change\.notificationToken\)\)/,
   );
 
-  const deferredRestore = src.slice(
-    src.indexOf('async _restoreContextSessionAfterLayerSettles('),
-    src.indexOf('async _selectContextMode('),
+  const deferredRestore = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _restoreContextSessionAfterLayerSettles('),
+    contextMixinSrc.indexOf('async _selectContextMode('),
   );
   assert.match(deferredRestore, /await this\._dataManager\?\.waitForLayerSettled\?\.\(layerId\)/);
   assert.match(deferredRestore, /return this\._restoreContextSession\(\{ notificationToken \}\)/);
@@ -160,9 +166,9 @@ test('wrapped visibility blocks leave the accessible toast to the wrapper token 
 });
 
 test('every user-facing Context exit route settles through the failure surface', () => {
-  const initPanel = src.slice(
-    src.indexOf('_initGlobalContextPanel() {'),
-    src.indexOf('_captureContextSessionSnapshot(', src.indexOf('_initGlobalContextPanel() {')),
+  const initPanel = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('_initGlobalContextPanel() {'),
+    contextMixinSrc.indexOf('_captureContextSessionSnapshot(', contextMixinSrc.indexOf('_initGlobalContextPanel() {')),
   );
   assert.equal((initPanel.match(/void this\._runUserFacingContextAction/g) || []).length, 3);
   assert.doesNotMatch(initPanel, /falseIsFailure:\s*false/);
@@ -196,9 +202,9 @@ test('only the expanded Radio Enable gesture requests the contained post-enable 
 });
 
 test('right-rail context entry is transactional: activation result gates the mode', () => {
-  const select = src.slice(
-    src.indexOf('async _selectContextMode('),
-    src.indexOf('async _deactivateContextForLayerChange('),
+  const select = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _selectContextMode('),
+    contextMixinSrc.indexOf('async _deactivateContextForLayerChange('),
   );
   const activation = select.indexOf('activationIntent = this._dataManager._setEnabledWithIntent(');
   assert.ok(activation > 0, 'activation result captured');
@@ -218,9 +224,9 @@ test('right-rail context entry is transactional: activation result gates the mod
 });
 
 test('Context entry awaits isolation and direct shell routes isolate in the visibility guard', () => {
-  const select = src.slice(
-    src.indexOf('async _selectContextMode('),
-    src.indexOf('async _deactivateContextForLayerChange('),
+  const select = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _selectContextMode('),
+    contextMixinSrc.indexOf('async _deactivateContextForLayerChange('),
   );
   assert.match(select, /await this\._clearLayersOutsideContextMode\(mode, \{ notificationToken, signal \}\)/);
   assert.match(select, /await this\._restoreContextSession\(\{ notificationToken, signal \}\)/);
@@ -299,13 +305,13 @@ test('a lost cross-mode switch says Context is off, and the state agrees', () =>
 });
 
 test('Context cancellation reaches isolation and restore lifecycle mutations', () => {
-  const clearStart = src.indexOf('async _clearLayersOutsideContextMode(');
-  const clear = src.slice(clearStart, src.indexOf('_handleContextLayerChange(', clearStart));
+  const clearStart = contextMixinSrc.indexOf('async _clearLayersOutsideContextMode(');
+  const clear = contextMixinSrc.slice(clearStart, contextMixinSrc.indexOf('_handleContextLayerChange(', clearStart));
   assert.match(clear, /setEnabled\(layerId, false, \{[\s\S]*?signal/);
 
-  const restore = src.slice(
-    src.indexOf('async _restoreContextSession('),
-    src.indexOf('async _restoreContextSessionAfterLayerSettles('),
+  const restore = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _restoreContextSession('),
+    contextMixinSrc.indexOf('async _restoreContextSessionAfterLayerSettles('),
   );
   assert.match(restore, /restoreEnabledLayerIds\([\s\S]*?signal/);
   assert.match(restore, /setEnabled: \(layerId, enabled, options = \{\}\)[\s\S]*?signal/);
@@ -332,9 +338,9 @@ test('Context facade preserves success when cancellation arrives after commit', 
 });
 
 test('Context production rollback paths merge primary and restore failed-layer identities', () => {
-  const select = src.slice(
-    src.indexOf('async _selectContextMode('),
-    src.indexOf('async _deactivateContextForLayerChange('),
+  const select = contextMixinSrc.slice(
+    contextMixinSrc.indexOf('async _selectContextMode('),
+    contextMixinSrc.indexOf('async _deactivateContextForLayerChange('),
   );
   assert.equal(
     (select.match(/mergeContextTransitionErrors\(transitionError, restoreError\)/g) || []).length,

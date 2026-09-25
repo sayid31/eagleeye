@@ -17,6 +17,10 @@ const radioMixin = fs.readFileSync(path.join(ROOT, 'src', 'radioPanelMixin.js'),
 // lives in cockpitViewController.js — mechanical relocation, see that file's
 // header.
 const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
+// Global Context mode (session capture/restore, the mode state machine, the
+// layer-change reaction handler, panel button sync) now lives in
+// contextModeMixin.js — mechanical relocation, see that file's header.
+const contextModeMixinSrc = fs.readFileSync(path.join(ROOT, 'src', 'contextModeMixin.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
@@ -189,7 +193,9 @@ test('the cockpit reads its aircraft from the layer that owns Cesium tracking', 
 });
 
 test('programmatic Context layer changes cannot bypass explicit expansion policy', () => {
-  const handler = ui.match(/_handleContextLayerChange\(change\) \{([\s\S]*?)\n  \}\n\n  _syncContextModeButtons/);
+  // _handleContextLayerChange now lives in contextModeMixin.js (a
+  // prototype-mixin object literal — methods end in `,`, not `}`).
+  const handler = contextModeMixinSrc.match(/_handleContextLayerChange\(change\) \{([\s\S]*?)\n  \},\n\n  _syncContextModeButtons/);
   assert.ok(handler, 'Context layer state handler is missing');
   assert.doesNotMatch(handler[1], /setPanelCollapsed\('global-context-panel', false\)/);
 });
@@ -312,10 +318,10 @@ test('Clear Selected Layers uses one adopted batch and discards Context restorat
     /for \(const \{ layerId, intentEpoch \} of targets\)[\s\S]*?visibilityIntentEpoch !== intentEpoch[\s\S]*?await this\.setEnabled\(layerId, false/,
   );
   assert.match(ui, /if \(this\._clearSelectedLayersPromise\) return this\._clearSelectedLayersPromise/);
-  assert.match(ui, /async _selectContextMode\([\s\S]*?if \(this\._clearSelectedLayersPromise\) return false/);
+  assert.match(contextModeMixinSrc, /async _selectContextMode\([\s\S]*?if \(this\._clearSelectedLayersPromise\) return false/);
   assert.match(ui, /this\._contextModeGeneration[\s\S]*?this\._contextSessionSnapshot = null;[\s\S]*?this\._contextRestoreState = null;/);
   assert.match(ui, /if \(this\._contextRestoreState\) this\._contextRestoreState\.cancelled = true/);
-  assert.match(ui, /if \(restoreState\.cancelled\) return;[\s\S]*?settleContextIntentReplay/);
+  assert.match(contextModeMixinSrc, /if \(restoreState\.cancelled\) return;[\s\S]*?settleContextIntentReplay/);
   assert.match(radioMixin, /!this\._preservePanelStateDuringLayerClear[\s\S]*?this\.setPanelCollapsed\('radio-panel', true\)/);
   assert.match(ui, /this\._userFacingContextNotificationTokens\.add\(notificationToken\)/);
 });

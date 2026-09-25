@@ -55,7 +55,7 @@ test('deferred terminal notices lose ownership to newer acquisition epochs and d
 test('share-follow failures use the universal top-center status instead of the bottom toast', () => {
   const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
   const start = ui.indexOf('  _handleShareTrackingRestoreStatus(result) {');
-  const end = ui.indexOf('\n  _initGlobalContextPanel() {', start);
+  const end = ui.indexOf('\n  toggleCleanView(forceEnabled) {', start);
   const handler = ui.slice(start, end);
   assert.match(handler, /this\._showGlobalStatusNotice\(message\)/);
   assert.match(handler, /this\.initialRestorePromise\.then\(showAfterStartupCover\)/);
