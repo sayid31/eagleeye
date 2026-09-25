@@ -26,6 +26,11 @@ const contextModeMixinSrc = fs.readFileSync(path.join(ROOT, 'src', 'contextModeM
 // now live in navigationLocationMixin.js — mechanical relocation, see that
 // file's header.
 const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin.js'), 'utf8');
+// Cockpit Control Facade (getCockpitState, _retargetCockpitEntryLayer,
+// controlCockpit, getControlState, getCameraState/applyCameraState,
+// getVisualState/applyVisualState) now lives in cockpitControlMixin.js —
+// mechanical relocation, see that file's header.
+const cockpitMixin = fs.readFileSync(path.join(ROOT, 'src', 'cockpitControlMixin.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
@@ -808,9 +813,9 @@ test('voice Cockpit entry honours a requested contact layer before it enters', (
   // Field case (mic test 01:43:23): enter with targetLayer:"military" reported
   // ok:true on a FLIGHTS subject — the requested layer was read only by
   // next/previous, so entry silently used whatever was already tracked.
-  const branch = ui.slice(
-    ui.indexOf("if (normalized === 'enter') {"),
-    ui.indexOf("if (normalized === 'exit') {"),
+  const branch = cockpitMixin.slice(
+    cockpitMixin.indexOf("if (normalized === 'enter') {"),
+    cockpitMixin.indexOf("if (normalized === 'exit') {"),
   );
   assert.ok(branch, 'cockpit enter branch is missing');
   const gateIndex = branch.indexOf('isEntryAllowed?.()');
@@ -832,9 +837,9 @@ test('voice Cockpit entry honours a requested contact layer before it enters', (
   // A refused retarget is an honest failure, never a silent wrong-layer entry.
   assert.match(branch, /ok: false,[\s\S]*?error: requested\.error,/);
 
-  const retarget = ui.slice(
-    ui.indexOf('  _retargetCockpitEntryLayer({'),
-    ui.indexOf('   * Controls cockpit entry/exit and context navigation.'),
+  const retarget = cockpitMixin.slice(
+    cockpitMixin.indexOf('  _retargetCockpitEntryLayer({'),
+    cockpitMixin.indexOf('   * Controls cockpit entry/exit and context navigation.'),
   );
   assert.match(
     retarget,
@@ -849,9 +854,9 @@ test('voice Cockpit entry refuses when the entry gate is shut', () => {
   // The half-entered state the operator reported (a plane anchored under the
   // camera, no HUD, no exit) is what attempting entry through a shut gate looks
   // like. Refuse with the reason instead.
-  const branch = ui.slice(
-    ui.indexOf("if (normalized === 'enter') {"),
-    ui.indexOf("if (normalized === 'exit') {"),
+  const branch = cockpitMixin.slice(
+    cockpitMixin.indexOf("if (normalized === 'enter') {"),
+    cockpitMixin.indexOf("if (normalized === 'exit') {"),
   );
   assert.match(branch, /if \(!this\.cockpitView\.isEntryAllowed\?\.\(\)\) \{/);
   assert.match(branch, /Contacts must be active to enter Cockpit/);
@@ -862,9 +867,9 @@ test('cockpit state cannot report entryAllowed while already active', () => {
   // Cockpit takes the entity off viewer.trackedEntity on entry and NEXT puts
   // one back, so this flipped true/false between calls while active stayed
   // true — read by the voice model as a broken half-entered state.
-  const state = ui.slice(
-    ui.indexOf('  getCockpitState() {'),
-    ui.indexOf('  _retargetCockpitEntryLayer({'),
+  const state = cockpitMixin.slice(
+    cockpitMixin.indexOf('  getCockpitState() {'),
+    cockpitMixin.indexOf('  _retargetCockpitEntryLayer({'),
   );
   assert.match(
     state,

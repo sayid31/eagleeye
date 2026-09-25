@@ -511,7 +511,10 @@ test('explicit Context transitions claim the visual restore lane before transiti
   }
 
   // The voice/tool facade validates the mode first, then transitions.
-  const facade = sourceBlock('  async setContextMode(mode, {', '  getCockpitState() {');
+  // getCockpitState moved to cockpitControlMixin.js; setContextMode's own
+  // closing method (_initRecordingOverlay, unrelated concern) still follows
+  // it directly in ui.js, so it remains a valid end-of-block marker here.
+  const facade = sourceBlock('  async setContextMode(mode, {', '  _initRecordingOverlay() {');
   assertContextClaimsBefore(facade, 'this._selectContextMode(', 'setContextMode facade');
   // Authority is taken per validated branch, never ahead of validation. The
   // OFF branch is validated by its own guard; the named-mode branch must claim
@@ -542,7 +545,7 @@ test('explicit Context transitions claim the visual restore lane before transiti
 // auto-enable for the rest of the session. Contacts entry is not that.
 test('Context lane claims never set the session detection-override flag', () => {
   const contextPanel = sourceBlock('  _initGlobalContextPanel() {', '  async _runUserFacingContextAction(', contextModeMixinSource);
-  const facade = sourceBlock('  async setContextMode(mode, {', '  getCockpitState() {');
+  const facade = sourceBlock('  async setContextMode(mode, {', '  _initRecordingOverlay() {');
   for (const [block, label] of [
     [contextPanel, 'Context panel'],
     [facade, 'setContextMode facade'],
