@@ -29,6 +29,10 @@ const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
+// Toggle-panel DOM rendering (buildTogglePanel/_renderToggles/etc., including
+// the showInTogglePanel filter checked below) now lives in
+// managerTogglePanel.js — mechanical relocation, see that file's header.
+const managerTogglePanel = fs.readFileSync(path.join(ROOT, 'src', 'data', 'managerTogglePanel.js'), 'utf8');
 const contextLayer = fs.readFileSync(path.join(ROOT, 'src', 'data', 'militaryAwareness.js'), 'utf8');
 const voiceActions = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
 
@@ -769,7 +773,7 @@ test('Global Context names its mixed contact cycle without changing the stable m
 
 test('Global Context uses its dedicated right rail without a duplicate Data Layers row', () => {
   assert.match(contextLayer, /id:\s*'military-awareness'[\s\S]*?showInTogglePanel:\s*false/);
-  assert.match(manager, /if \(!layer\.showInTogglePanel\) continue;/);
+  assert.match(managerTogglePanel, /if \(!layer\.showInTogglePanel\) continue;/);
   assert.match(html, /id="global-context-panel"/);
   assert.match(html, /id="global-context-flights-btn"/);
   assert.match(html, /id="global-context-missions-btn"/);
