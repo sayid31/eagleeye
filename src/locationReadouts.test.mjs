@@ -7,14 +7,20 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
 const director = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
+// Navigation Authority + Location Bar (_stampNavigation,
+// _beginDeferredNavigation, _reassertNavigationHandoff, the free-text search
+// handler, _setActiveLocation, _updateLocationMiniStatus, clearSearchedLocation)
+// now live in navigationLocationMixin.js — mechanical relocation, see that
+// file's header.
+const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin.js'), 'utf8');
 
 /** Source of the free-text LOCATION search handler (Enter on #location-search). */
 function locationSearchHandler() {
-  const start = ui.indexOf('searchAndFlyTo(this.viewer, query, {');
+  const start = navMixin.indexOf('searchAndFlyTo(this.viewer, query, {');
   assert.ok(start > 0, 'free-text location search handler is missing');
-  const end = ui.indexOf('_beginWorldJumpTransition() {', start);
+  const end = navMixin.indexOf('_beginWorldJumpTransition() {', start);
   assert.ok(end > start, 'could not bound the location search handler');
-  return ui.slice(start, end);
+  return navMixin.slice(start, end);
 }
 
 test('the ACTIVE STYLE indicator is written from the style name and nothing else', () => {
@@ -44,19 +50,19 @@ test('a free-text search records its destination for the LOCATION mini-status', 
 });
 
 test('the mini-status reads its copy from the shared formatter', () => {
-  assert.match(ui, /import \{ locationMiniStatus \} from '\.\/locationStatus\.js';/);
-  const start = ui.indexOf('  _updateLocationMiniStatus() {');
+  assert.match(navMixin, /import \{ locationMiniStatus \} from '\.\/locationStatus\.js';/);
+  const start = navMixin.indexOf('  _updateLocationMiniStatus() {');
   assert.ok(start > 0, '_updateLocationMiniStatus is missing');
-  const body = ui.slice(start, ui.indexOf('\n  }', start));
+  const body = navMixin.slice(start, navMixin.indexOf('\n  }', start));
   assert.match(body, /locationMiniStatus\(\{[\s\S]*?searchedLabel: this\._searchedLocationLabel,[\s\S]*?\}\)/);
   // No second copy of the placeholder strings to drift out of sync.
   assert.doesNotMatch(body, /Location: --/);
 });
 
 test('selecting a preset location clears the superseded search label', () => {
-  const start = ui.indexOf('  _setActiveLocation(locationId) {');
+  const start = navMixin.indexOf('  _setActiveLocation(locationId) {');
   assert.ok(start > 0, '_setActiveLocation is missing');
-  const body = ui.slice(start, ui.indexOf('\n  }', start));
+  const body = navMixin.slice(start, navMixin.indexOf('\n  }', start));
   assert.match(body, /if \(locationId\) this\._searchedLocationLabel = null;/);
 });
 
@@ -64,19 +70,25 @@ test('any other camera destination clears the search label too', () => {
   // Voice navigation, the globe reset, camera takeover and entity selection
   // all funnel through _stampNavigation; without a clear there, a searched
   // label outlives the place it named.
-  const start = ui.indexOf('  _stampNavigation({ cancelPendingSelection = true, clearSearchedLocation = true } = {}) {');
+  const start = navMixin.indexOf('  _stampNavigation({ cancelPendingSelection = true, clearSearchedLocation = true } = {}) {');
   assert.ok(start > 0, '_stampNavigation is missing');
-  assert.match(ui.slice(start, start + 700), /if \(clearSearchedLocation\) this\.clearSearchedLocation\(\);/);
+  assert.match(navMixin.slice(start, start + 700), /if \(clearSearchedLocation\) this\.clearSearchedLocation\(\);/);
 
-  // The shared funnel is what the reset and voice seams actually reach.
-  for (const seam of ['resetToGlobeView() {', 'beginLocationNavigation() {', '_runExplicitNavigation(noun, navigate']) {
-    const at = ui.indexOf(seam);
+  // resetToGlobeView stays in ui.js (Orbit mode's neighbor); the other two
+  // navigation seams moved with the mixin.
+  {
+    const at = ui.indexOf('resetToGlobeView() {');
+    assert.ok(at > 0, 'missing navigation seam "resetToGlobeView() {"');
+    assert.match(ui.slice(at, at + 900), /_stampNavigation\(/, '"resetToGlobeView() {" must stamp navigation');
+  }
+  for (const seam of ['beginLocationNavigation() {', '_runExplicitNavigation(noun, navigate']) {
+    const at = navMixin.indexOf(seam);
     assert.ok(at > 0, `missing navigation seam "${seam}"`);
-    assert.match(ui.slice(at, at + 900), /_stampNavigation\(/, `"${seam}" must stamp navigation`);
+    assert.match(navMixin.slice(at, at + 900), /_stampNavigation\(/, `"${seam}" must stamp navigation`);
   }
 
   // Public seam, so a camera owner that flies on its own can invalidate it.
-  assert.match(ui, /\n {2}clearSearchedLocation\(\) \{\n[\s\S]{0,240}?this\._searchedLocationLabel = null;/);
+  assert.match(navMixin, /\n {2}clearSearchedLocation\(\) \{\n[\s\S]{0,240}?this\._searchedLocationLabel = null;/);
 });
 
 test('a deferred lookup that never flies leaves the readout standing', () => {
@@ -84,17 +96,17 @@ test('a deferred lookup that never flies leaves the readout standing', () => {
   // the stamp blanked a still-true readout whenever the lookup failed, was
   // superseded, or was refused — no camera ever moved. The deferred begin opts
   // out; the reassert seam, reached only once the flight is granted, clears.
-  const begin = ui.indexOf('  _beginDeferredNavigation(noun = ');
+  const begin = navMixin.indexOf('  _beginDeferredNavigation(noun = ');
   assert.ok(begin > 0, '_beginDeferredNavigation is missing');
   assert.match(
-    ui.slice(begin, begin + 700),
+    navMixin.slice(begin, begin + 700),
     /stamp: \(\) => this\._stampNavigation\(\{ cancelPendingSelection, clearSearchedLocation: false \}\)/,
   );
 
-  const reassert = ui.indexOf('  _reassertNavigationHandoff(generation) {');
+  const reassert = navMixin.indexOf('  _reassertNavigationHandoff(generation) {');
   assert.ok(reassert > 0, '_reassertNavigationHandoff is missing');
   assert.match(
-    ui.slice(reassert, reassert + 900),
+    navMixin.slice(reassert, reassert + 900),
     /release: \(\) => \{[\s\S]{0,320}?this\.clearSearchedLocation\(\);[\s\S]{0,200}?this\._releaseFollowCamera\(\)/,
   );
 

@@ -10,6 +10,10 @@ const uiSource = fs.readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
 // contextModeMixin.js; setContextMode itself (the voice/state-sync facade)
 // stays in ui.js — see that file's header for the boundary rationale.
 const contextModeMixinSource = fs.readFileSync(new URL('./contextModeMixin.js', import.meta.url), 'utf8');
+// Navigation Authority (_beginDeferredNavigation, _reassertNavigationHandoff,
+// etc.) moved into navigationLocationMixin.js — the constructor's initial-
+// share-restore call site stays in ui.js, see that file's header.
+const navMixinSource = fs.readFileSync(new URL('./navigationLocationMixin.js', import.meta.url), 'utf8');
 
 function sourceBlock(start, end, source = uiSource) {
   const startIndex = source.indexOf(start);
@@ -194,6 +198,7 @@ test('a shared view reserves its own camera without cancelling its saved Follow'
   const deferred = sourceBlock(
     "  _beginDeferredNavigation(noun = 'location', { cancelPendingSelection = true } = {}) {",
     '  /** Final authority check and release immediately before a delayed flight. */',
+    navMixinSource,
   );
   // The shared view's own `cancelPendingSelection` must reach the stamp; other
   // stamp options may ride alongside it.

@@ -113,6 +113,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
     same way as the three existing mixins (`panelAdaptiveLayoutMixin.js`,
     `cctvPanelMixin.js`, `radioPanelMixin.js`) — no behavior change.
     `ui.js` drops from 6,118 to 5,402 lines.
+  - Navigation Authority (the camera-ownership generation/handoff system)
+    and the Location Bar (city pill / POI / world-jump-transition /
+    mini-status UI) moved out of `src/ui.js`'s `StyleManager` into a fifth
+    prototype mixin, `src/navigationLocationMixin.js`, composed back in the
+    same way as the four existing mixins — no behavior change. Orbit mode
+    and `setOrbit()` stay in `ui.js` (same rationale as `setContextMode()`
+    staying behind for the Context mixin: it's a distinct concern that only
+    reads the navigation/location fields, not a part of navigation/location
+    itself). `ui.js` drops from 5,402 to 4,916 lines.
   - `regionalBriefProxy()`/`weatherEffectsProxy()` and their fetch/cache
     helpers moved out of `vite.config.js` into
     `src/data/regionalProxyHandlers.mjs`; `vite.config.js` re-exports the
