@@ -18,3 +18,12 @@
 *.glb binary
 *.wav binary
 *.pbf binary
+
+# docs/media/ gifs and screenshots are large (single files run several MB)
+# and are what pushed .git past 120MB. Route NEW files here through Git LFS
+# so the repo stops growing further — existing history is intentionally left
+# alone (rewriting it needs a force-push + re-clone for every collaborator).
+# Requires `git lfs install` locally before committing new media here; see
+# CONTRIBUTING.md.
+docs/media/**/*.gif filter=lfs diff=lfs merge=lfs -text
+docs/media/**/*.png filter=lfs diff=lfs merge=lfs -text

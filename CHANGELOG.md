@@ -95,6 +95,28 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
     `package.json`'s `name`/`author`/repository URLs (kept truthful to the
     real, unrenamed `bilawalsidhu/gods-eye-view` GitHub repository), and the
     internal `window.__godsEyeView` debug global (not user-visible).
+- **Reduced token cost of working in this repo — doc restructuring + two
+  small module extractions, no runtime behavior change.**
+  - `docs/CURRENT-STATE.md` is now a present-tense reference only; the
+    dated rationale/history it used to carry (performance-wave notes,
+    threshold-change history, milestone asides) moved to the new
+    `docs/DECISIONS.md`, added to the Canonical Docs Order in both
+    `docs/CURRENT-STATE.md` and `CLAUDE.md`.
+  - `CockpitViewController` moved out of `src/ui.js` into its own
+    `src/cockpitViewController.js` (mechanical relocation, `ui.js` now
+    imports it — no behavior change).
+  - `regionalBriefProxy()`/`weatherEffectsProxy()` and their fetch/cache
+    helpers moved out of `vite.config.js` into
+    `src/data/regionalProxyHandlers.mjs`; `vite.config.js` re-exports the
+    two symbols `src/data/regionalProxy.test.mjs` imports directly, and
+    imports back the shared Nominatim request queue so
+    `nominatimSearchProxy()` (which stays in `vite.config.js`) keeps
+    sharing one throttle with the moved reverse-geocode path, matching
+    prior behavior exactly.
+  - `.gitattributes` now routes new `docs/media/**/*.gif`/`*.png` through
+    Git LFS (existing history is untouched — this only stops the repo
+    growing further on new media); see `CONTRIBUTING.md` for the
+    one-time `git lfs install` contributors need before adding new media.
 
 ### Performance
 

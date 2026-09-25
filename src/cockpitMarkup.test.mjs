@@ -13,6 +13,10 @@ const mixin = fs.readFileSync(path.join(ROOT, 'src', 'panelAdaptiveLayoutMixin.j
 // click-outside/Escape guards) now lives in radioPanelMixin.js — mechanical
 // relocation, see that file's header.
 const radioMixin = fs.readFileSync(path.join(ROOT, 'src', 'radioPanelMixin.js'), 'utf8');
+// CockpitViewController (the whole cockpit view/camera controller class) now
+// lives in cockpitViewController.js — mechanical relocation, see that file's
+// header.
+const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
@@ -70,8 +74,8 @@ test('Cockpit heading tape leaves the bottom exit row unobstructed', () => {
 });
 
 test('Cockpit vision cycle exposes exactly five real visual styles without NONE', () => {
-  assert.match(ui, /const modes = COCKPIT_VISION_MODES;/);
-  assert.match(ui, /const labels = \{ optical: inherited, crt: 'CRT', nvg: 'NVG', thermal: 'FLIR', noir: 'NOIR' \};/);
+  assert.match(cockpitSrc, /const modes = COCKPIT_VISION_MODES;/);
+  assert.match(cockpitSrc, /const labels = \{ optical: inherited, crt: 'CRT', nvg: 'NVG', thermal: 'FLIR', noir: 'NOIR' \};/);
   assert.doesNotMatch(ui, /none: 'NONE'/);
   assert.match(ui, /getInheritedVisionLabel: \(\) => \([\s\S]*?STYLE_STATUS_LABELS\[this\.activeStyle\]/);
   assert.match(html, /id="cockpit-vision-current-label"[^>]*>NORMAL<\/strong>/);
@@ -97,14 +101,14 @@ test('Contacts uses the approved radar icon', () => {
 });
 
 test('Cockpit Escape handling precedes form-control shortcut suppression and focus is restored', () => {
-  const keydown = ui.match(/onKeyDown\(event\) \{([\s\S]*?)\n  \}\n\n  enter\(\)/);
+  const keydown = cockpitSrc.match(/onKeyDown\(event\) \{([\s\S]*?)\n  \}\n\n  enter\(\)/);
   assert.ok(keydown, 'Cockpit keyboard handler is missing');
   const escapeIndex = keydown[1].indexOf("event.key === 'Escape'");
   const formGuardIndex = keydown[1].indexOf("closest?.('input, textarea, select, [contenteditable]')");
   assert.ok(escapeIndex >= 0 && formGuardIndex > escapeIndex, 'Escape must work while focus is inside a form control');
 
-  const enter = ui.match(/\n  enter\(\) \{([\s\S]*?)\n  \}\n\n  exit\(/);
-  const exit = ui.match(/\n  exit\(\{ restoreTracking = true \} = \{\}\) \{([\s\S]*?)\n  \}\n\n  update\(\)/);
+  const enter = cockpitSrc.match(/\n  enter\(\) \{([\s\S]*?)\n  \}\n\n  exit\(/);
+  const exit = cockpitSrc.match(/\n  exit\(\{ restoreTracking = true \} = \{\}\) \{([\s\S]*?)\n  \}\n\n  update\(\)/);
   assert.ok(enter && exit, 'Cockpit entry/exit methods are missing');
   assert.match(enter[1], /activeElement/);
   assert.match(enter[1], /mapViewButton.*focus|focus.*mapViewButton/s);
@@ -119,7 +123,7 @@ test('Cockpit Escape handling precedes form-control shortcut suppression and foc
 });
 
 test('Cockpit shortcut failures do not leak and open Radio owns the first Escape', () => {
-  const keydown = ui.match(/onKeyDown\(event\) \{([\s\S]*?)\n  \}\n\n  enter\(\)/);
+  const keydown = cockpitSrc.match(/onKeyDown\(event\) \{([\s\S]*?)\n  \}\n\n  enter\(\)/);
   assert.ok(keydown, 'Cockpit keyboard handler is missing');
   assert.match(keydown[1], /document\.getElementById\('context-radio-dock'\)\?\.classList\.contains\('disclosure-open'\)/);
   assert.match(keydown[1], /#cockpit-utility-controls \[aria-expanded="true"\]/);
@@ -130,7 +134,7 @@ test('Cockpit shortcut failures do not leak and open Radio owns the first Escape
 });
 
 test('the Contact panel never hides itself out from under its own NEXT button', () => {
-  const updateContext = ui.match(/\n  updateContext\(info, heading\) \{([\s\S]*?)\n  \}\n\n  scheduleContextLayout\(\)/);
+  const updateContext = cockpitSrc.match(/\n  updateContext\(info, heading\) \{([\s\S]*?)\n  \}\n\n  scheduleContextLayout\(\)/);
   assert.ok(updateContext, 'Cockpit updateContext is missing');
   const body = updateContext[1];
   // ui.js cannot be imported under node (Cesium's `mgrs` dependency), so the
@@ -175,7 +179,7 @@ test('the Contact panel never hides itself out from under its own NEXT button', 
 });
 
 test('the cockpit reads its aircraft from the layer that owns Cesium tracking', () => {
-  const read = ui.match(/\n  readAircraftInfo\(\) \{([\s\S]*?)\n  \}/);
+  const read = cockpitSrc.match(/\n  readAircraftInfo\(\) \{([\s\S]*?)\n  \}/);
   assert.ok(read, 'readAircraftInfo is missing');
   assert.match(read[1], /resolveTrackedAircraftInfo\(\{/);
   assert.match(read[1], /gevTrackedId/);
@@ -278,8 +282,8 @@ test('Cockpit owns a focused shared Display portal and compact Radio controls', 
   );
   assert.match(css, /\.cockpit-utility-controls\.layout-primary-only[\s\S]*?display:\s*none/);
   assert.match(css, /@media \(max-width:\s*760px\)[\s\S]*?\.cockpit-utility-controls:has\(\.cockpit-utility-control\.is-expanded\)[\s\S]*?display:\s*none/);
-  assert.match(ui, /resolveCockpitUtilityLayout\(\{ availableHeight, expandedHeight, collapsedHeight \}\)/);
-  assert.match(ui, /setAttribute\('aria-hidden', String\(hiddenSibling\)\)/);
+  assert.match(cockpitSrc, /resolveCockpitUtilityLayout\(\{ availableHeight, expandedHeight, collapsedHeight \}\)/);
+  assert.match(cockpitSrc, /setAttribute\('aria-hidden', String\(hiddenSibling\)\)/);
 });
 
 test('Display orders 3D above Celestial, Clean UI below it, and Parameters below Detection', () => {
@@ -347,17 +351,17 @@ test('Cockpit side surfaces behave as two single-expanded accordions', () => {
     'closing Data Layers must restore Contact only after an automatic collapse',
   );
   assert.match(
-    ui,
+    cockpitSrc,
     /const wasCollapsed = this\.contextCollapsed;[\s\S]*?this\.active && wasCollapsed && !this\.contextCollapsed[\s\S]*?'gev:cockpit-context-expanded'/,
     'Contact expansion must notify only on a collapsed-to-expanded transition',
   );
   assert.match(
-    ui,
+    cockpitSrc,
     /const wasCollapsed = this\.signalCollapsed;[\s\S]*?this\.active && wasCollapsed && !this\.signalCollapsed[\s\S]*?'gev:cockpit-signal-expanded'/,
     'Live Signals expansion must notify only on a collapsed-to-expanded transition',
   );
   assert.match(
-    ui,
+    cockpitSrc,
     /setSignalCollapsed\(collapsed, \{ user = false \} = \{\}\)[\s\S]*?if \(user\) this\.signalUserCollapsed = this\.signalCollapsed/,
   );
   assert.match(
@@ -477,8 +481,8 @@ test('Reset releases Contact camera ownership through its selection-preserving r
     /for \(const button of \[this\._resetGlobeBtn, this\._cockpitResetGlobeBtn\]\) \{[\s\S]*?addEventListener\('click', this\._globeResetHandler\)/,
     'both reset controls must delegate to the one shared reset route',
   );
-  assert.match(ui, /if \(this\.resetGlobeButton\) this\.resetGlobeButton\.hidden = false;/);
-  assert.match(ui, /if \(this\.resetGlobeButton\) this\.resetGlobeButton\.hidden = true;/);
+  assert.match(cockpitSrc, /if \(this\.resetGlobeButton\) this\.resetGlobeButton\.hidden = false;/);
+  assert.match(cockpitSrc, /if \(this\.resetGlobeButton\) this\.resetGlobeButton\.hidden = true;/);
 });
 
 test('Location navigation releases immediate routes before flight and deferred routes after resolution', () => {
@@ -539,7 +543,7 @@ test('Cockpit panel corridors reserve the owned topline readouts', () => {
     'the right margin must not borrow the left accordion corridor: it is solved '
       + 'against left-lane obstacles and put the strip through the briefing card',
   );
-  const signalLayout = ui.match(/syncSignalLayout\(\) \{([\s\S]*?)\n  \}\n\n  dispose\(\)/);
+  const signalLayout = cockpitSrc.match(/syncSignalLayout\(\) \{([\s\S]*?)\n  \}\n\n  dispose\(\)/);
   assert.ok(signalLayout, 'Cockpit signal layout method is missing');
   assert.match(
     signalLayout[1],
@@ -559,7 +563,7 @@ test('Cockpit panel corridors reserve the owned topline readouts', () => {
       + 'readout a rect — a rect test alone would anchor the strip to an invisible readout',
   );
   assert.match(
-    ui,
+    cockpitSrc,
     /function isRenderedOnScreen\(element\) \{[\s\S]*?style\.display === 'none' \|\| style\.visibility === 'hidden' \|\| Number\(style\.opacity\) === 0[\s\S]*?rect\.width > 0 && rect\.height > 0;/,
   );
   assert.match(
@@ -661,7 +665,7 @@ test('Cockpit Display portals shared HUD, Detection, Parameters, and 3D controls
   assert.match(radioMixin, /closest\?\.\('\.cockpit-vision-controls'\)\) return;/);
   assert.match(ui, /_revealCockpitStyleParameters\(\{ openDisplay = false \} = \{\}\) \{[\s\S]*?openDisplay[\s\S]*?_setCockpitDisclosure\?\.\('display', true\)[\s\S]*?aria-expanded'\) !== 'true'[\s\S]*?classList\.remove\('collapsed'\)/);
   assert.match(radioMixin, /if \(displayOpen\) this\._revealCockpitStyleParameters\(\);/);
-  assert.match(ui, /setVisionMode\(modes\[nextIndex\], \{ revealParameters: true \}\);/);
+  assert.match(cockpitSrc, /setVisionMode\(modes\[nextIndex\], \{ revealParameters: true \}\);/);
   assert.match(css, /\.cockpit-display-slot\s*\{[\s\S]*?display:\s*block;[\s\S]*?min-width:\s*0;/);
   assert.match(css, /#cockpit-display-panel \.pp-toggle-group\s*\{\s*width:\s*100%/);
   assert.match(css, /#cockpit-display-panel \.pp-toggle-group\s*\{[\s\S]*?min-width:\s*0;/);
@@ -699,7 +703,7 @@ test('cockpit route direction uses self-contained vector artwork, not a font lig
 });
 
 test('cockpit aircraft handoff invalidates the prior world-position anchor', () => {
-  const match = ui.match(
+  const match = cockpitSrc.match(
     /_adoptTrackedEntity\(nowMs, suppliedInfo = null\) \{([\s\S]*?)\n  \}\n\n  setVisionMode/,
   );
   assert.ok(match, 'cockpit tracked-entity handoff block is missing');
@@ -731,7 +735,7 @@ test('cockpit summary presents the focused item as Contact', () => {
   assert.match(match[0], /aria-label="Next — nearest unvisited contact in the 250 km window"/);
   assert.match(match[0], /aria-label="Collapse Contact panel"/);
   assert.doesNotMatch(match[0], />GLOBAL CONTEXT</);
-  assert.match(ui, /`\$\{expanded \? 'Collapse' : 'Expand'\} Contact panel`/);
+  assert.match(cockpitSrc, /`\$\{expanded \? 'Collapse' : 'Expand'\} Contact panel`/);
 });
 
 test('Cockpit Contact navigation omits the redundant Focus camera action', () => {
@@ -779,7 +783,7 @@ test('cockpit briefing cycle control keeps its state as the accessible name', ()
   assert.match(match[0], />CYCLE OFF<\/button>/);
   assert.match(match[0], /title="Cycle briefing pages automatically every 9 seconds \(Signals → News → Local\)\./);
 
-  const update = ui.match(
+  const update = cockpitSrc.match(
     /setBriefAutoRotate\(enabled\) \{([\s\S]*?)\n  \}\n\n  startBriefRotation/,
   );
   assert.ok(update, 'cockpit briefing cycle state updater is missing');

@@ -27,6 +27,12 @@ through Pinokio; the terminal path above remains the contributor path.
 
 Open `http://localhost:4173`. Before sending a PR run `npm run build`, `npm test`, and `npm run test:track` (dev server must be up) — **all three must stay green.**
 
+If your change adds a new GIF or PNG under `docs/media/` (demo captures,
+screenshots), install [Git LFS](https://git-lfs.com) first and run
+`git lfs install` once per machine — `.gitattributes` routes new files there
+through Git LFS since `docs/media/` is what pushed this repo's `.git` past
+120MB. Existing media in history is left alone; this only affects new files.
+
 ## Good first contributions
 
 The highest-leverage places to jump in:

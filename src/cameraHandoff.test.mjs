@@ -10,6 +10,10 @@ const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
 // — see that file's header) as an object-shorthand property (comma-terminated)
 // rather than a class method (brace-terminated).
 const cctvMixin = fs.readFileSync(path.join(ROOT, 'src', 'cctvPanelMixin.js'), 'utf8');
+// CockpitViewController now lives in cockpitViewController.js (mechanical
+// relocation — see that file's header). Its methods (enter/exit,
+// navigateContext, the context-prev/next listeners) moved with it.
+const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
 const firms = fs.readFileSync(path.join(ROOT, 'src', 'data', 'firmsHeatmap.js'), 'utf8');
 const vessels = fs.readFileSync(path.join(ROOT, 'src', 'data', 'aisLiveVessels.js'), 'utf8');
 const voice = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
@@ -34,7 +38,7 @@ function ordered(source, needles, label) {
 
 test('Cockpit takeover invalidates deferred work before camera cancellation', () => {
   const enter = body(
-    ui,
+    cockpitSrc,
     /enter\(\) \{([\s\S]*?)\n  \}\n\n  exit\(/,
     'Cockpit enter',
   );
@@ -135,15 +139,15 @@ test('voice Cockpit next/previous shares the manual Context navigation path', ()
   // is what stamps. Divergence here is how a voice-only camera path escapes
   // the arbiter.
   assert.match(
-    ui,
+    cockpitSrc,
     /this\._listen\(this\.contextPrevious, 'click', \(\) => this\.navigateContext\(-1, \{ origin: 'user' \}\)\);/,
   );
   assert.match(
-    ui,
+    cockpitSrc,
     /this\._listen\(this\.contextNext, 'click', \(\) => this\.navigateContext\(1, \{ origin: 'user' \}\)\);/,
   );
   const funnel = body(
-    ui,
+    cockpitSrc,
     /navigateContext\(direction, options = \{\}\) \{([\s\S]*?)\n  \}\n\n  \/\*\* Adopt/,
     'Cockpit Context navigation funnel',
   );

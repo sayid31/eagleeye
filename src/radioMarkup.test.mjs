@@ -13,6 +13,10 @@ const radioMixin = readFileSync(new URL('./radioPanelMixin.js', import.meta.url)
 // see that file's header).
 const adaptiveLayoutMixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
 const radio = readFileSync(new URL('./data/radio.js', import.meta.url), 'utf8');
+// CockpitViewController now lives in cockpitViewController.js (mechanical
+// relocation — see that file's header); its aria-expanded/hidden-toggle
+// wiring moved with it.
+const cockpitSrc = readFileSync(new URL('./cockpitViewController.js', import.meta.url), 'utf8');
 const rocketLaunches = readFileSync(new URL('./data/rocketLaunches.js', import.meta.url), 'utf8');
 const realtime = readFileSync(new URL('./voice/gevRealtime.js', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
@@ -322,8 +326,8 @@ test('panel collapse is presentation-only and Radio exposes explicit voice playb
     /contextRadioToggleBtn[\s\S]*?!contextPanel\.classList\.contains\('collapsed'\)[\s\S]*?setRadioDisclosure\(false\)[\s\S]*?setPanelCollapsed\('radio-panel', false, \{ explicit: true \}\)[\s\S]*?_revealRadioPanelInsideContext/,
   );
   assert.doesNotMatch(disclosureBindings, /setPanelCollapsed\('radio-panel', !/);
-  assert.match(ui, /setAttribute\('aria-expanded', String\(/);
-  assert.match(ui, /\.hidden = !/);
+  assert.match(cockpitSrc, /setAttribute\('aria-expanded', String\(/);
+  assert.match(cockpitSrc, /\.hidden = !/);
   assert.doesNotMatch(method, /panelId === 'global-context-panel'[\s\S]*?this\._radioState\?\.enabled[\s\S]*?setPanelCollapsed\('radio-panel', false\)/);
 });
 
