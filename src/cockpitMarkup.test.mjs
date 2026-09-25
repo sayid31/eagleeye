@@ -21,6 +21,11 @@ const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController
 // layer-change reaction handler, panel button sync) now lives in
 // contextModeMixin.js — mechanical relocation, see that file's header.
 const contextModeMixinSrc = fs.readFileSync(path.join(ROOT, 'src', 'contextModeMixin.js'), 'utf8');
+// Navigation Authority + Location Bar (_releaseFollowCamera,
+// _flyWithTransition, _onCityPillClick/_onPoiClick, the search-handler body)
+// now live in navigationLocationMixin.js — mechanical relocation, see that
+// file's header.
+const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
@@ -492,25 +497,25 @@ test('Reset releases Contact camera ownership through its selection-preserving r
 });
 
 test('Location navigation releases immediate routes before flight and deferred routes after resolution', () => {
-  const releaseStart = ui.indexOf('  _releaseFollowCamera(');
-  const locationFlight = ui.indexOf('_flyWithTransition(cityChanged, flyAction)');
-  const search = ui.indexOf('searchAndFlyTo(this.viewer, query, {');
+  const releaseStart = navMixin.indexOf('  _releaseFollowCamera(');
+  const locationFlight = navMixin.indexOf('_flyWithTransition(cityChanged, flyAction)');
+  const search = navMixin.indexOf('searchAndFlyTo(this.viewer, query, {');
   const voiceStart = voiceActions.indexOf('beginDeferredLocationNavigation');
 
   assert.ok(releaseStart >= 0, 'shared Location camera handoff is missing');
   assert.match(
-    ui.slice(releaseStart, releaseStart + 1800),
+    navMixin.slice(releaseStart, releaseStart + 1800),
     /militaryAwarenessLayer\.releaseCameraOwnership\?\.\(\{[\s\S]*?origin: trackingOrigin[\s\S]*?\}\)[\s\S]*?satellitesLayer\.stopTracking\?\.\(\{ origin: trackingOrigin \}\)[\s\S]*?rocketLaunchesLayer\.releaseCameraOwnership\?\.\(\)/,
   );
   assert.match(
-    ui.slice(locationFlight, locationFlight + 900),
+    navMixin.slice(locationFlight, locationFlight + 900),
     /this\._runExplicitNavigation\('location',[\s\S]*?flyAction\(/,
   );
-  const cityHandler = ui.slice(ui.indexOf('_onCityPillClick(cityId) {'), ui.indexOf('_onPoiClick(cityId, poiIndex) {'));
-  const poiHandler = ui.slice(ui.indexOf('_onPoiClick(cityId, poiIndex) {'), ui.indexOf('_expandPOIRow(cityId) {'));
+  const cityHandler = navMixin.slice(navMixin.indexOf('_onCityPillClick(cityId) {'), navMixin.indexOf('_onPoiClick(cityId, poiIndex) {'));
+  const poiHandler = navMixin.slice(navMixin.indexOf('_onPoiClick(cityId, poiIndex) {'), navMixin.indexOf('_expandPOIRow(cityId) {'));
   assert.match(cityHandler, /if \(result === false\) return;[\s\S]*?_setActiveLocation/);
   assert.match(poiHandler, /if \(result === false\) return;[\s\S]*?_setActiveLocation/);
-  assert.match(ui.slice(search, search + 320), /beforeFly: \(\) => this\._reassertNavigationHandoff\(generation\)/);
+  assert.match(navMixin.slice(search, search + 320), /beforeFly: \(\) => this\._reassertNavigationHandoff\(generation\)/);
   assert.ok(voiceStart >= 0, 'voice Location must use the same handoff');
   assert.match(voiceActions, /styleManager\.reassertDeferredLocationNavigation\(generation\)/);
 });

@@ -19,6 +19,11 @@ const vessels = fs.readFileSync(path.join(ROOT, 'src', 'data', 'aisLiveVessels.j
 const voice = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
 const cameraVerbs = fs.readFileSync(path.join(ROOT, 'src', 'cameraVerbs.js'), 'utf8');
 const cockpitTracking = fs.readFileSync(path.join(ROOT, 'src', 'cockpitTracking.js'), 'utf8');
+// Navigation Authority (_stampNavigation, _runExplicitNavigation,
+// _releaseFollowCamera, _beginDeferredNavigation, etc.) and the Location Bar
+// (_onCityPillClick, _onPoiClick, the search-handler body) now live in
+// navigationLocationMixin.js (mechanical relocation — see that file's header).
+const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin.js'), 'utf8');
 
 function body(source, pattern, label) {
   const match = source.match(pattern);
@@ -75,8 +80,8 @@ test('one explicit tracking selection clears sibling IDs before publishing its d
 
 test('navigation clears dormant tracker IDs without aborting unrelated layer restoration', () => {
   const stamp = body(
-    ui,
-    /_stampNavigation\(\{ cancelPendingSelection = true[^)]*\} = \{\}\) \{([\s\S]*?)\n  \}/,
+    navMixin,
+    /_stampNavigation\(\{ cancelPendingSelection = true[^)]*\} = \{\}\) \{([\s\S]*?)\n  \},/,
     'navigation authority stamp',
   );
   assert.doesNotMatch(stamp, /cancelPendingRestores\(\)/);
@@ -175,8 +180,8 @@ test('voice Cockpit next/previous shares the manual Context navigation path', ()
 
 test('accepted navigation releases through PR15-aware ownership before flight', () => {
   const run = body(
-    ui,
-    /_runExplicitNavigation\(noun, navigate, releaseOptions = undefined\) \{([\s\S]*?)\n  \}/,
+    navMixin,
+    /_runExplicitNavigation\(noun, navigate, releaseOptions = undefined\) \{([\s\S]*?)\n  \},/,
     'explicit navigation',
   );
   ordered(run, [
@@ -186,8 +191,8 @@ test('accepted navigation releases through PR15-aware ownership before flight', 
     'navigate,',
   ], 'explicit navigation');
   const release = body(
-    ui,
-    /_releaseFollowCamera\(\{[\s\S]*?\} = \{\}\) \{([\s\S]*?)\n  \}/,
+    navMixin,
+    /_releaseFollowCamera\(\{[\s\S]*?\} = \{\}\) \{([\s\S]*?)\n  \},/,
     'follow release',
   );
   ordered(release, [
@@ -204,7 +209,7 @@ test('accepted navigation releases through PR15-aware ownership before flight', 
 });
 
 test('validated voice camera destinations share the UI navigation authority facade', () => {
-  assert.match(ui, /runImmediateNavigation\(noun, navigate, releaseOptions = undefined\) \{\s*return this\._runExplicitNavigation\(noun, navigate, releaseOptions\);/);
+  assert.match(navMixin, /runImmediateNavigation\(noun, navigate, releaseOptions = undefined\) \{\s*return this\._runExplicitNavigation\(noun, navigate, releaseOptions\);/);
   assert.match(voice, /runManagedVoiceNavigation\(\s*styleManager, 'camera', 'move_camera', navigate, releaseOptions/);
   assert.match(voice, /runManagedVoiceNavigation\(styleManager, 'route', 'fly_route', navigate/);
   assert.match(voice, /runManagedVoiceNavigation\(styleManager, 'fire', 'track_entity'/);
@@ -252,7 +257,7 @@ test('validated voice camera destinations share the UI navigation authority faca
 
 test('deferred search releases only after its final authority check', () => {
   const handler = body(
-    ui,
+    navMixin,
     /this\._locationSearch\.addEventListener\('keydown', async \(e\) => \{([\s\S]*?)\n    \}\);/,
     'search handler',
   );
@@ -287,8 +292,8 @@ test('a direct globe gesture retires delayed camera and selection restore only',
     /removeEventListener\('pointerdown', this\._initialShareGestureHandler\)[\s\S]*?removeEventListener\('wheel', this\._initialShareGestureHandler\)/,
   );
   const stamp = body(
-    ui,
-    /_stampNavigation\(\{ cancelPendingSelection = true[^)]*\} = \{\}\) \{([\s\S]*?)\n  \}/,
+    navMixin,
+    /_stampNavigation\(\{ cancelPendingSelection = true[^)]*\} = \{\}\) \{([\s\S]*?)\n  \},/,
     'navigation stamp',
   );
   assert.match(stamp, /if \(cancelPendingSelection\) \{[\s\S]*?cancelPendingTrackingRestore/);
@@ -296,7 +301,7 @@ test('a direct globe gesture retires delayed camera and selection restore only',
 });
 
 test('newer navigation, reset, Cockpit, and teardown share one generation', () => {
-  assert.equal((ui.match(/_navigationGeneration \+= 1/g) || []).length, 1);
+  assert.equal((navMixin.match(/_navigationGeneration \+= 1/g) || []).length, 1);
   const reset = body(ui, /resetToGlobeView\(\) \{([\s\S]*?)\n  \}/, 'reset');
   ordered(reset, [
     'if (this._globeResetPromise) return this._globeResetPromise;',
@@ -323,8 +328,8 @@ test('teardown synchronously closes immediate camera entry points', () => {
   ], 'synchronous teardown barrier');
 
   const navigation = body(
-    ui,
-    /_runExplicitNavigation\(noun, navigate, releaseOptions = undefined\) \{([\s\S]*?)\n  \}/,
+    navMixin,
+    /_runExplicitNavigation\(noun, navigate, releaseOptions = undefined\) \{([\s\S]*?)\n  \},/,
     'explicit navigation',
   );
   ordered(navigation, [
@@ -346,14 +351,14 @@ test('teardown synchronously closes immediate camera entry points', () => {
 
 test('teardown refuses deferred location work before geocoding begins', () => {
   const deferred = body(
-    ui,
-    /_beginDeferredNavigation\(noun = 'location', \{ cancelPendingSelection = true \} = \{\}\) \{([\s\S]*?)\n  \}/,
+    navMixin,
+    /_beginDeferredNavigation\(noun = 'location', \{ cancelPendingSelection = true \} = \{\}\) \{([\s\S]*?)\n  \},/,
     'deferred navigation',
   );
   assert.match(deferred, /disposed: this\._disposed/);
 
   const handler = body(
-    ui,
+    navMixin,
     /this\._locationSearch\.addEventListener\('keydown', async \(e\) => \{([\s\S]*?)\n    \}\);/,
     'search handler',
   );
@@ -368,10 +373,10 @@ test('teardown refuses deferred location work before geocoding begins', () => {
 
 test('refused canned destinations commit no location or POI state', () => {
   for (const [name, pattern] of [
-    ['city', /_onCityPillClick\(cityId\) \{([\s\S]*?)\n  \}/],
-    ['poi', /_onPoiClick\(cityId, poiIndex\) \{([\s\S]*?)\n  \}/],
+    ['city', /_onCityPillClick\(cityId\) \{([\s\S]*?)\n  \},/],
+    ['poi', /_onPoiClick\(cityId, poiIndex\) \{([\s\S]*?)\n  \},/],
   ]) {
-    const handler = body(ui, pattern, name);
+    const handler = body(navMixin, pattern, name);
     ordered(handler, [
       'this._flyWithTransition(',
       'if (result === false) return;',

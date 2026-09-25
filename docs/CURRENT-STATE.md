@@ -25,18 +25,24 @@ Historical planning documents may not match runtime behavior.
 - Vite + CesiumJS app with Google Photorealistic 3D Tiles
 - Scene/HUD/style systems in `src/ui.js` and `src/hud.js`. `ui.js`'s single
   `StyleManager` class has its Adaptive Panel Layout, CCTV panel, Radio
-  panel, and Global Context mode (Contacts / Space Missions) method groups
-  composed in via prototype mixins — `src/panelAdaptiveLayoutMixin.js`,
-  `src/cctvPanelMixin.js`, `src/radioPanelMixin.js`,
-  `src/contextModeMixin.js` (each `Object.assign(StyleManager.prototype, ...)`
-  right after the class body) — rather than defined inline, to keep the file
-  within a reviewable size. Field declarations/initialization stay in the
-  `StyleManager` constructor in `ui.js`; only method bodies moved, so
-  `this.methodName()` call sites elsewhere in `ui.js` are unchanged. Shared
-  panel-position constants live in `src/panelPositionConstants.js`. The
-  `setContextMode()` public facade and `_handleContextLayerChange()`'s
-  sole caller, `attachDataManager()`, stay in `ui.js` — see
-  `src/contextModeMixin.js`'s header for the extraction boundary rationale.
+  panel, Global Context mode (Contacts / Space Missions), and Navigation
+  Authority + Location Bar method groups composed in via prototype mixins —
+  `src/panelAdaptiveLayoutMixin.js`, `src/cctvPanelMixin.js`,
+  `src/radioPanelMixin.js`, `src/contextModeMixin.js`,
+  `src/navigationLocationMixin.js` (each
+  `Object.assign(StyleManager.prototype, ...)` right after the class body) —
+  rather than defined inline, to keep the file within a reviewable size.
+  Field declarations/initialization stay in the `StyleManager` constructor
+  in `ui.js`; only method bodies moved, so `this.methodName()` call sites
+  elsewhere in `ui.js` are unchanged. Shared panel-position constants live
+  in `src/panelPositionConstants.js`. The `setContextMode()` public facade
+  and `_handleContextLayerChange()`'s sole caller, `attachDataManager()`,
+  stay in `ui.js` — see `src/contextModeMixin.js`'s header for the
+  extraction boundary rationale. Orbit mode (`_initOrbit`/`_toggleOrbit`/
+  `_stopOrbit`) and the `setOrbit()` public facade likewise stay in `ui.js`
+  — same rationale: orbiting a POI only reads the navigation/location
+  fields the mixin owns, it isn't part of navigation/location selection
+  itself — see `src/navigationLocationMixin.js`'s header.
 - Layer management in `src/data/manager.js`
 - Map stack switching in `src/mapStackController.js`
 - Voice control in `src/voice/` (OpenAI Realtime over WebRTC)
