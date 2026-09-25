@@ -105,6 +105,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   - `CockpitViewController` moved out of `src/ui.js` into its own
     `src/cockpitViewController.js` (mechanical relocation, `ui.js` now
     imports it — no behavior change).
+  - Global Context mode (the Contacts / Space Missions exclusive-layer
+    session capture/restore, mode state machine, layer-change reaction
+    handler, and panel button sync) moved out of `src/ui.js`'s
+    `StyleManager` into a fourth prototype mixin,
+    `src/contextModeMixin.js`, composed back in via `Object.assign` the
+    same way as the three existing mixins (`panelAdaptiveLayoutMixin.js`,
+    `cctvPanelMixin.js`, `radioPanelMixin.js`) — no behavior change.
+    `ui.js` drops from 6,118 to 5,402 lines.
   - `regionalBriefProxy()`/`weatherEffectsProxy()` and their fetch/cache
     helpers moved out of `vite.config.js` into
     `src/data/regionalProxyHandlers.mjs`; `vite.config.js` re-exports the

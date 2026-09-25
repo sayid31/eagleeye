@@ -5,13 +5,18 @@ import { ShareLinkManager, decodeShareCreatedAtMs } from './sharelink.js';
 import { createDefaultLayerState } from './data/layerState.js';
 
 const uiSource = fs.readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+// Global Context mode (_initGlobalContextPanel, _claimContextVisualAuthority,
+// _selectContextMode, _runUserFacingContextAction, ...) moved into
+// contextModeMixin.js; setContextMode itself (the voice/state-sync facade)
+// stays in ui.js — see that file's header for the boundary rationale.
+const contextModeMixinSource = fs.readFileSync(new URL('./contextModeMixin.js', import.meta.url), 'utf8');
 
-function sourceBlock(start, end) {
-  const startIndex = uiSource.indexOf(start);
-  const endIndex = uiSource.indexOf(end, startIndex + start.length);
+function sourceBlock(start, end, source = uiSource) {
+  const startIndex = source.indexOf(start);
+  const endIndex = source.indexOf(end, startIndex + start.length);
   assert.ok(startIndex >= 0, `missing source block start: ${start}`);
   assert.ok(endIndex > startIndex, `missing source block end: ${end}`);
-  return uiSource.slice(startIndex, endIndex);
+  return source.slice(startIndex, endIndex);
 }
 
 function assertClaimsBefore(block, mutation, label) {
@@ -480,13 +485,14 @@ test('explicit Context transitions claim the visual restore lane before transiti
   const helper = sourceBlock(
     '  _claimContextVisualAuthority() {',
     '  async _selectContextMode(mode, {',
+    contextModeMixinSource,
   );
   assert.ok(
     helper.includes("claimRestoreLane?.('visual')"),
     'the Context authority helper must claim the visual lane',
   );
 
-  const contextPanel = sourceBlock('  _initGlobalContextPanel() {', '  async _runUserFacingContextAction(');
+  const contextPanel = sourceBlock('  _initGlobalContextPanel() {', '  async _runUserFacingContextAction(', contextModeMixinSource);
   for (const [start, end, label] of [
     ["this._globalContextFlightsBtn?.addEventListener('click'", "this._globalContextMissionsBtn?.addEventListener('click'", 'Contacts tab'],
     ["this._globalContextMissionsBtn?.addEventListener('click'", 'CONTEXT_PANEL_END', 'Space Missions tab'],
@@ -530,7 +536,7 @@ test('explicit Context transitions claim the visual restore lane before transiti
 // detection: `_detectionUserOverridden` is what suppresses the military-style
 // auto-enable for the rest of the session. Contacts entry is not that.
 test('Context lane claims never set the session detection-override flag', () => {
-  const contextPanel = sourceBlock('  _initGlobalContextPanel() {', '  async _runUserFacingContextAction(');
+  const contextPanel = sourceBlock('  _initGlobalContextPanel() {', '  async _runUserFacingContextAction(', contextModeMixinSource);
   const facade = sourceBlock('  async setContextMode(mode, {', '  getCockpitState() {');
   for (const [block, label] of [
     [contextPanel, 'Context panel'],

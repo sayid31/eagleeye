@@ -27,6 +27,9 @@ import {
 import { canonicalizeDensity } from './data/detectionPolicy.js';
 
 const uiSource = fs.readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+// _syncContextModeButtons (the funnel every _contextMode mutation routes
+// through) moved into contextModeMixin.js; see that file's header on ui.js.
+const contextModeMixinSource = fs.readFileSync(new URL('./contextModeMixin.js', import.meta.url), 'utf8');
 
 /**
  * The tactical preset ui.js hands Contacts. Read out of the source so this test
@@ -290,7 +293,7 @@ test('detection is wired to the Contacts transaction, and cockpit no longer touc
     'ACTIVATION turns detection on REGARDLESS of the style-preset override flag',
   );
   assert.match(
-    uiSource,
+    contextModeMixinSource,
     /this\.cockpitView\?\.syncEntry\(\);[\s\S]{0,220}?this\._syncContactsDetection\(\);/,
     'called from _syncContextModeButtons, the funnel every _contextMode mutation routes through',
   );
