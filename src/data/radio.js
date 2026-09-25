@@ -32,16 +32,96 @@ import {
   projectEarthDiscToViewport,
 } from '../celestialRing.js';
 import { governorRequestRender } from '../renderGovernor.js';
+import {
+  buildRadioCategories,
+  buildRadioTunerBand,
+  buildRadioTunerTicks,
+  filterRadioStations,
+  isEnglishRadioStation,
+  markerPosition,
+  normalizeRadioTag,
+  radioCategoryColor,
+  radioClusterBadgeText,
+  radioClusterCategoryId,
+  radioGlobeNeedsRecentering,
+  radioGlobeRecenterHeight,
+  radioRequestIsCurrent,
+  radioSelectionBracketSvg,
+  radioStationCameraPlan,
+  radioStationCategoryId,
+  radioStationIdFromPick,
+  radioStationResolutionMatches,
+  radioTunerCommitSlot,
+  radioTunerPointerPosition,
+  radioTunerSlot,
+  radioTuningStaticShouldPlay,
+  radioViewIsGlobal,
+  rankRadioStationsForRequest,
+  rankRadioStationsForViewport,
+  stationMatchesRadioCategory,
+} from './radioTunerMath.js';
+import {
+  clampRadioVolume,
+  createRadioClusterOverlayEntry,
+  createRadioSelectedOverlayEntry,
+  createRadioSingletonOverlayEntry,
+  emptyRadioOverlayDiagnostics,
+  radioCameraPositionChanged,
+  radioGlobeLabel,
+  radioSingletonLabelLimit,
+  reconcileRadioClusterCandidates,
+  scheduleVolumeFrame,
+  selectRadioClusterCandidates,
+  selectRadioSingletonCandidates,
+  volumeClock,
+} from './radioOverlayEntries.js';
 
-const RADIO_PREFIX = 'radio:';
+export {
+  buildRadioCategories,
+  buildRadioTunerBand,
+  buildRadioTunerTicks,
+  filterRadioStations,
+  isEnglishRadioStation,
+  normalizeRadioTag,
+  radioCategoryColor,
+  radioClusterBadgeText,
+  radioClusterCategoryId,
+  radioGlobeNeedsRecentering,
+  radioGlobeRecenterHeight,
+  radioRequestIsCurrent,
+  radioSelectionBracketSvg,
+  radioStationCameraPlan,
+  radioStationCategoryId,
+  radioStationIdFromPick,
+  radioStationResolutionMatches,
+  radioTunerCommitSlot,
+  radioTunerPointerPosition,
+  radioTunerSlot,
+  radioTuningStaticShouldPlay,
+  radioViewIsGlobal,
+  rankRadioStationsForRequest,
+  rankRadioStationsForViewport,
+  stationMatchesRadioCategory,
+};
+export {
+  createRadioClusterOverlayEntry,
+  createRadioSelectedOverlayEntry,
+  createRadioSingletonOverlayEntry,
+  radioCameraPositionChanged,
+  radioGlobeLabel,
+  radioSingletonLabelLimit,
+  reconcileRadioClusterCandidates,
+  selectRadioClusterCandidates,
+  selectRadioSingletonCandidates,
+};
+
+export const RADIO_PREFIX = 'radio:';
 const DIRECTORY_ENDPOINT = '/api/radio/stations';
 const HORIZON_TICK_MS = 250;
-const HORIZON_CAMERA_MOVE_EPSILON_M = 1;
-const MARKER_LIFT_M = 2.5;
 const SELECTED_LIFT_M = 5;
 const RADIO_PICK_TOLERANCE_PX = 8;
-const RADIO_TUNER_DIRECTORY_LIMIT = 750;
-const RADIO_TUNER_STATION_LIMIT = RADIO_TUNER_DIRECTORY_LIMIT;
+export const RADIO_TUNER_DIRECTORY_LIMIT = 750;
+export const RADIO_TUNER_STATION_LIMIT = RADIO_TUNER_DIRECTORY_LIMIT;
 const RADIO_TUNER_STATIC_MAX_GAIN = 0.018;
 const RADIO_VOICE_PLAYBACK_TIMEOUT_MS = 12_000;
 const RADIO_DIRECTORY_STALE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -73,45 +153,7 @@ const _radioEarthScreenCenter = new Cesium.Cartesian2();
 const _radioEarthToCenter = new Cesium.Cartesian3();
 export const DEFAULT_RADIO_FILTER = 'all';
 export const GLOBAL_RADIO_ALTITUDE_M = 2_000_000;
-
-const MUSIC_GENRES = Object.freeze([
-  ['alternative', 'Alternative'],
-  ['ambient', 'Ambient'],
-  ['blues', 'Blues'],
-  ['classical', 'Classical'],
-  ['country', 'Country'],
-  ['dance', 'Dance'],
-  ['electronic', 'Electronic'],
-  ['folk', 'Folk'],
-  ['funk', 'Funk'],
-  ['hip hop', 'Hip-Hop'],
-  ['house', 'House'],
-  ['indie', 'Indie'],
-  ['jazz', 'Jazz'],
-  ['latin', 'Latin'],
-  ['metal', 'Metal'],
-  ['oldies', 'Oldies'],
-  ['pop', 'Pop'],
-  ['punk', 'Punk'],
-  ['r&b', 'R&B'],
-  ['reggae', 'Reggae'],
-  ['rock', 'Rock'],
-  ['soul', 'Soul'],
-  ['techno', 'Techno'],
-  ['trance', 'Trance'],
-  ['world', 'World'],
-]);
-
-const CATEGORY_MATCHERS = Object.freeze({
-  news: ['news', 'current affairs', 'journalism'],
-  talk: ['talk', 'spoken word', 'interview', 'podcast'],
-  weather: ['weather', 'emergency', 'noaa'],
-  'public-safety': ['public safety', 'scanner', 'police', 'fire', 'ems', 'dispatch', 'emergency'],
-  'aviation-marine': ['aviation', 'air traffic', 'atc', 'airport', 'marine', 'maritime', 'coast guard'],
-  'traffic-transit': ['traffic', 'transit', 'transport', 'rail', 'metro'],
-});
-
-const RADIO_CATEGORY_COLORS = Object.freeze({
+export const RADIO_CATEGORY_COLORS = Object.freeze({
   all: '#b9fbff',
   news: '#44adff',
   talk: '#f2b84b',
@@ -122,27 +164,6 @@ const RADIO_CATEGORY_COLORS = Object.freeze({
   music: '#54d17a',
   other: '#9aa7b3',
 });
-
-const RADIO_CLUSTER_LABELS = Object.freeze({
-  news: 'NEWS',
-  talk: 'TALK',
-  weather: 'WEATHER',
-  'public-safety': 'SAFETY',
-  'aviation-marine': 'AIR / SEA',
-  'traffic-transit': 'TRANSIT',
-  music: 'MUSIC',
-  other: 'OTHER',
-});
-
-const RADIO_MARKER_CATEGORY_ORDER = Object.freeze([
-  'news',
-  'public-safety',
-  'weather',
-  'aviation-marine',
-  'traffic-transit',
-  'talk',
-  'music',
-]);
 const DEFAULT_RADIO_VOLUME = 0.8;
 const EMPTY_ACCEPTED_CATALOG_SNAPSHOT = Object.freeze({
   instance: null,
@@ -334,349 +355,8 @@ function createAcceptedCatalogSnapshot(instance, generation, updatedAt, stations
   });
 }
 
-const RADIO_GLOBE_LABEL_MAX_CHARS = 30;
-const RADIO_LABEL_SEGMENTER = typeof Intl?.Segmenter === 'function'
-  ? new Intl.Segmenter(undefined, { granularity: 'grapheme' })
-  : null;
-
-function compactRadioLabelText(value, maxChars) {
-  const text = String(value || '').replace(/\s+/g, ' ').trim();
-  const graphemes = RADIO_LABEL_SEGMENTER
-    ? [...RADIO_LABEL_SEGMENTER.segment(text)].map((segment) => segment.segment)
-    : Array.from(text);
-  if (graphemes.length <= maxChars) return text;
-  return `${graphemes.slice(0, Math.max(1, maxChars - 1)).join('').trimEnd()}…`;
-}
-
-function cleanRadioLabelName(value) {
-  return String(value || '')
-    .replace(/^[\s|:·\-–—]+|[\s|:·\-–—]+$/g, '')
-    .replace(/\s+/g, ' ')
-    .replace(/\s+\([^()]{1,40}\)$/, '')
-    .replace(/\s+FM$/i, '')
-    .trim();
-}
-
-/** Return compact frequency-first text for a Radio globe label. */
-export function radioGlobeLabel(station) {
-  const fullName = String(station?.name || '').replace(/\s+/g, ' ').trim();
-  if (!fullName) return '';
-
-  let frequency = null;
-  let labelName = '';
-  const explicitMatches = [...fullName.matchAll(/(\d{2,3}(?:\.\d{1,2})?)\s*FM\b/gi)];
-  const explicit = explicitMatches.find((match) => {
-    const value = Number(match[1]);
-    return value >= 64 && value <= 108;
-  });
-  if (explicit) {
-    frequency = explicit[1];
-    const before = cleanRadioLabelName(fullName.slice(0, explicit.index));
-    const after = cleanRadioLabelName(fullName.slice(explicit.index + explicit[0].length));
-    labelName = before || after;
-  } else {
-    // Infer only a leading decimal in the conventional FM band. Integers such
-    // as "80's" or "100 GREATEST" and domains such as "1.fm" stay names.
-    const leading = fullName.match(/^(\d{2,3}\.\d{1,2})(?:\s+|\s*[-–—]\s*)(.+)$/);
-    const value = Number(leading?.[1]);
-    if (leading && value >= 87.5 && value <= 108) {
-      frequency = leading[1];
-      labelName = cleanRadioLabelName(leading[2].split(/\s+[-–—]\s+/)[0]);
-    }
-  }
-
-  if (!frequency) return compactRadioLabelText(fullName, RADIO_GLOBE_LABEL_MAX_CHARS);
-  const prefix = `${frequency} FM`;
-  if (!labelName) return prefix;
-  const nameBudget = RADIO_GLOBE_LABEL_MAX_CHARS - prefix.length - 3;
-  return `${prefix} — ${compactRadioLabelText(labelName, nameBudget)}`;
-}
-
-/** Build the protected selected-station text published through WorldOverlay. */
-export function createRadioSelectedOverlayEntry(station, position) {
-  if (!station?.id || !station?.name || !position) return null;
-  return {
-    id: `selected:${station.id}`,
-    position,
-    variant: 'selected',
-    selected: true,
-    protected: true,
-    paintLane: 'selected',
-    collisionGroup: 'ambient-label',
-    priority: Number.MAX_SAFE_INTEGER,
-    title: radioGlobeLabel(station),
-    accent: radioCategoryColor(radioStationCategoryId(station)),
-    interactive: false,
-    anchorRadiusPx: 20,
-    minAnchorGapPx: 8,
-    verticalOnly: true,
-    placement: 'above',
-    gapPx: 8,
-    edgeFade: 'keyhole',
-    horizonCull: true,
-    terrainOcclusion: false,
-    maxDistance: RADIO_GLOBE_INTERACTION_MAX_DISTANCE_M,
-  };
-}
-
-/** Build one bounded ambient cluster badge for the shared overlay host. */
-export function createRadioClusterOverlayEntry({ id, position, text, accent, stationCount }) {
-  if (!id || !position || !text) return null;
-  return {
-    id: `cluster:${id}`,
-    position,
-    variant: 'label',
-    paintLane: 'ambient-label',
-    collisionGroup: 'ambient-label',
-    priority: Math.max(1, Number(stationCount) || 1),
-    title: text,
-    accent: accent || RADIO_CATEGORY_COLORS.other,
-    interactive: false,
-    anchorRadiusPx: Math.min(13, 6 + Math.log2(Math.max(1, Number(stationCount) || 1)) * 0.8),
-    minAnchorGapPx: 4,
-    verticalOnly: true,
-    placement: 'above',
-    gapPx: 6,
-    // Cluster membership/counts update continuously while the camera moves.
-    // Paint them as hard-opacity incumbents so a replacement count never
-    // cross-fades with its predecessor or dims merely for leaving the keyhole.
-    // Collision, viewport rejection, and horizon culling remain host-owned.
-    stateless: true,
-    edgeFade: 'none',
-    horizonCull: true,
-    terrainOcclusion: false,
-    // The camera can sit above 24,000 km in the supported full-globe view, and
-    // horizon clusters are farther from it than the camera's surface altitude.
-    maxDistance: RADIO_GLOBE_INTERACTION_MAX_DISTANCE_M,
-    distanceScale: {
-      near: 100_000,
-      nearValue: 1.08,
-      far: RADIO_GLOBE_INTERACTION_MAX_DISTANCE_M,
-      farValue: 0.92,
-    },
-  };
-}
-
-/** Build one ambient station label while Cesium retains its point and picking. */
-export function createRadioSingletonOverlayEntry({ station, position, priority = 1 }) {
-  if (!station?.id || !station?.name || !position) return null;
-  return {
-    id: `station:${station.id}`,
-    position,
-    variant: 'label',
-    paintLane: 'ambient-label',
-    collisionGroup: 'ambient-label',
-    priority: Math.max(1, Number(priority) || 1),
-    title: radioGlobeLabel(station),
-    accent: radioCategoryColor(radioStationCategoryId(station)),
-    interactive: false,
-    anchorRadiusPx: 9,
-    minAnchorGapPx: 4,
-    verticalOnly: true,
-    placement: 'above',
-    gapPx: 5,
-    // Camera/filter changes replace this bounded cohort. Prevent the prior
-    // cohort from fading over the current visible points.
-    stateless: true,
-    edgeFade: 'keyhole',
-    horizonCull: true,
-    terrainOcclusion: false,
-    maxDistance: RADIO_GLOBE_INTERACTION_MAX_DISTANCE_M,
-    distanceScale: {
-      near: 100_000,
-      nearValue: 1,
-      far: RADIO_GLOBE_INTERACTION_MAX_DISTANCE_M,
-      farValue: 0.86,
-    },
-  };
-}
-
-/** Return the bounded singleton-label allowance for the current camera scale. */
-export function radioSingletonLabelLimit(cameraHeightM) {
-  const height = Math.max(0, Number(cameraHeightM) || 0);
-  if (height >= GLOBAL_RADIO_ALTITUDE_M) return RADIO_SINGLETON_GLOBAL_LIMIT;
-  if (height >= 250_000) return RADIO_SINGLETON_MID_LIMIT;
-  return RADIO_SINGLETON_NEAR_LIMIT;
-}
-
-/** Rank visible singleton stations by camera distance and stable station id. */
-export function selectRadioSingletonCandidates(candidates, limit = RADIO_SINGLETON_NEAR_LIMIT) {
-  const distance = (candidate) => {
-    const value = Number(candidate?.distanceM);
-    return Number.isFinite(value) ? value : Number.POSITIVE_INFINITY;
-  };
-  return [...(candidates || [])]
-    .sort((a, b) => (
-      distance(a) - distance(b)
-      || String(a?.station?.id || a?.id || '').localeCompare(String(b?.station?.id || b?.id || ''))
-    ))
-    .slice(0, Math.max(0, Math.floor(Number(limit) || 0)));
-}
-
-/** Rank and cap ambient Radio clusters before shared-host entry allocation. */
-export function selectRadioClusterCandidates(candidates, limit = RADIO_OVERLAY_COHORT_LIMIT) {
-  return [...(candidates || [])]
-    .sort((a, b) => (
-      (Number(b?.stationCount) || 0) - (Number(a?.stationCount) || 0)
-      || String(a?.id || '').localeCompare(String(b?.id || ''))
-    ))
-    .slice(0, Math.max(0, Math.floor(Number(limit) || 0)));
-}
-
-/**
- * Preserve one-to-one overlay identity for overlapping clusters.
- * Cesium clustering is screen-space, so a small camera move may alter exact
- * membership even when the same geographic cluster remains visible. Every
- * positive overlap participates in greatest-contributor discovery, while
- * inheritance remains mutual-best: a current cluster accepts only one of its
- * greatest contributors and a prior identity transfers only to one of its
- * strongest split children.
- */
-export function reconcileRadioClusterCandidates(candidates, previous = [], createId = null) {
-  const current = (Array.isArray(candidates) ? candidates : []).map((candidate, index) => {
-    const stationIds = [...new Set((candidate?.stationIds || []).map((id) => String(id)))].sort();
-    const membershipId = String(candidate?.id || `membership:${stationIds.join('|')}`);
-    return {
-      ...candidate,
-      _reconcileIndex: index,
-      _reconcileMembershipId: membershipId,
-      _reconcileCanonicalKey: `${membershipId}\u0000${stationIds.join('\u0000')}`,
-      stationIds,
-    };
-  });
-  const priorMembershipsByIdentity = new Map();
-  for (const candidate of Array.isArray(previous) ? previous : []) {
-    const identityId = String(candidate?.identityId || candidate?.id || '');
-    if (!identityId) continue;
-    if (!priorMembershipsByIdentity.has(identityId)) {
-      priorMembershipsByIdentity.set(identityId, new Set());
-    }
-    const membership = priorMembershipsByIdentity.get(identityId);
-    for (const stationId of candidate?.stationIds || []) membership.add(String(stationId));
-  }
-  const prior = [...priorMembershipsByIdentity]
-    .map(([identityId, stationIds]) => ({
-      identityId,
-      stationIds: [...stationIds].sort(),
-    }))
-    .filter((candidate) => candidate.stationIds.length)
-    .sort((a, b) => a.identityId.localeCompare(b.identityId));
-  const priorByStation = new Map();
-  for (let priorIndex = 0; priorIndex < prior.length; priorIndex += 1) {
-    for (const stationId of prior[priorIndex].stationIds) {
-      if (!priorByStation.has(stationId)) priorByStation.set(stationId, []);
-      priorByStation.get(stationId).push(priorIndex);
-    }
-  }
-
-  const edges = [];
-  const greatestOverlapByCurrent = new Map();
-  const greatestOverlapByPrior = new Map();
-  for (let currentIndex = 0; currentIndex < current.length; currentIndex += 1) {
-    const overlapByPrior = new Map();
-    for (const stationId of current[currentIndex].stationIds) {
-      for (const priorIndex of priorByStation.get(stationId) || []) {
-        overlapByPrior.set(priorIndex, (overlapByPrior.get(priorIndex) || 0) + 1);
-      }
-    }
-    for (const [priorIndex, overlap] of overlapByPrior) {
-      const union = current[currentIndex].stationIds.length + prior[priorIndex].stationIds.length - overlap;
-      const smaller = Math.min(current[currentIndex].stationIds.length, prior[priorIndex].stationIds.length);
-      const score = smaller > 0 ? overlap / smaller : 0;
-      const similarity = union > 0 ? overlap / union : 0;
-      edges.push({ currentIndex, priorIndex, overlap, score, similarity });
-      greatestOverlapByCurrent.set(
-        currentIndex,
-        Math.max(greatestOverlapByCurrent.get(currentIndex) || 0, overlap),
-      );
-      greatestOverlapByPrior.set(
-        priorIndex,
-        Math.max(greatestOverlapByPrior.get(priorIndex) || 0, overlap),
-      );
-    }
-  }
-  const eligibleEdges = edges.filter((edge) => (
-    edge.overlap === greatestOverlapByCurrent.get(edge.currentIndex)
-    && edge.overlap === greatestOverlapByPrior.get(edge.priorIndex)
-  ));
-  eligibleEdges.sort((a, b) => (
-    // Identity follows the contributor representing the largest share of the
-    // new cluster. Overlap-coefficient-first incorrectly lets a fully retained
-    // two-station minority beat a larger partial contributor during a merge.
-    b.overlap - a.overlap
-    || b.score - a.score
-    || b.similarity - a.similarity
-    || current[a.currentIndex]._reconcileCanonicalKey
-      .localeCompare(current[b.currentIndex]._reconcileCanonicalKey)
-    || prior[a.priorIndex].identityId.localeCompare(prior[b.priorIndex].identityId)
-  ));
-
-  const inheritedByCurrent = new Map();
-  const usedPriorIdentities = new Set();
-  for (const edge of eligibleEdges) {
-    const identityId = prior[edge.priorIndex].identityId;
-    if (inheritedByCurrent.has(edge.currentIndex) || usedPriorIdentities.has(identityId)) continue;
-    inheritedByCurrent.set(edge.currentIndex, prior[edge.priorIndex].identityId);
-    usedPriorIdentities.add(identityId);
-  }
-
-  const generatedByCurrent = new Map();
-  if (typeof createId === 'function') {
-    const freshIndices = current
-      .map((candidate, index) => ({ candidate, index }))
-      .filter(({ index }) => !inheritedByCurrent.has(index))
-      .sort((a, b) => (
-        a.candidate._reconcileCanonicalKey.localeCompare(b.candidate._reconcileCanonicalKey)
-      ));
-    for (const { candidate, index } of freshIndices) {
-      generatedByCurrent.set(index, String(createId(candidate, index) || ''));
-    }
-  }
-
-  return current.map((candidate, index) => {
-    const membershipId = candidate._reconcileMembershipId;
-    const inherited = inheritedByCurrent.get(index);
-    const generated = generatedByCurrent.get(index) || '';
-    const identityId = inherited || generated || membershipId;
-    const {
-      _reconcileIndex,
-      _reconcileMembershipId,
-      _reconcileCanonicalKey,
-      ...rest
-    } = candidate;
-    return { ...rest, membershipId, identityId, id: identityId };
-  });
-}
-
 function resetRadioClusterOverlayIdentities() {
   _clusterOverlayIdentities = [];
-}
-
-function emptyRadioOverlayDiagnostics() {
-  return {
-    entryCount: 0,
-    selectedCount: 0,
-    singletonTexts: [],
-    singletonIds: [],
-    clusterTexts: [],
-    clusterIds: [],
-    clusterMemberships: [],
-  };
-}
-
-function clampRadioVolume(value) {
-  return Math.min(1, Math.max(0, Number(value) || 0));
-}
-
-/** Return whether camera translation materially changes horizon visibility. */
-export function radioCameraPositionChanged(previous, current, epsilonM = HORIZON_CAMERA_MOVE_EPSILON_M) {
-  if (!previous || !current) return true;
-  const dx = Number(current.x) - Number(previous.x);
-  const dy = Number(current.y) - Number(previous.y);
-  const dz = Number(current.z) - Number(previous.z);
-  if (![dx, dy, dz].every(Number.isFinite)) return true;
-  const threshold = Math.max(0, Number(epsilonM) || 0);
-  return dx * dx + dy * dy + dz * dz > threshold * threshold;
 }
 
 function cancelRadioVolumeTransition() {
@@ -688,448 +368,6 @@ function cancelRadioVolumeTransition() {
     else clearTimeout(_volumeFadeFrame);
   }
   _volumeFadeFrame = null;
-}
-
-function scheduleVolumeFrame(callback) {
-  if (typeof requestAnimationFrame === 'function') return requestAnimationFrame(callback);
-  return setTimeout(() => callback(Date.now()), 16);
-}
-
-function volumeClock() {
-  return typeof performance !== 'undefined' && typeof performance.now === 'function'
-    ? performance.now()
-    : Date.now();
-}
-
-/** Normalize one directory tag to a stable, lower-case display token. */
-export function normalizeRadioTag(value) {
-  return String(value ?? '')
-    .trim()
-    .toLocaleLowerCase()
-    .replace(/[_-]+/g, ' ')
-    .replace(/\s+/g, ' ')
-    .slice(0, 80);
-}
-
-function stationTags(station) {
-  if (Array.isArray(station?.tags)) return station.tags.map(normalizeRadioTag).filter(Boolean);
-  return String(station?.tags ?? '')
-    .split(',')
-    .map(normalizeRadioTag)
-    .filter(Boolean);
-}
-
-function hasTag(station, needles) {
-  const tags = stationTags(station);
-  return needles.some((needle) => tags.some((tag) => tag === needle || tag.includes(needle)));
-}
-
-function detectedGenres(station) {
-  return MUSIC_GENRES.filter(([genre]) => hasTag(station, [genre])).map(([genre]) => genre);
-}
-
-/** Return whether a station belongs in a station-tag category. */
-export function stationMatchesRadioCategory(station, categoryId) {
-  if (categoryId === 'all') return true;
-  if (categoryId.startsWith('genre:')) {
-    return detectedGenres(station).includes(categoryId.slice('genre:'.length));
-  }
-  if (categoryId === 'music') {
-    return detectedGenres(station).length > 0
-      || hasTag(station, ['music', 'hits', 'songs']);
-  }
-  if (categoryId === 'other') {
-    return !Object.entries(CATEGORY_MATCHERS).some(([id]) => stationMatchesRadioCategory(station, id))
-      && !stationMatchesRadioCategory(station, 'music');
-  }
-  return hasTag(station, CATEGORY_MATCHERS[categoryId] || []);
-}
-
-/** Return the shared CSS color for a canonical or detected-genre category. */
-export function radioCategoryColor(categoryId = 'other') {
-  const normalized = String(categoryId || 'other');
-  const canonical = normalized.startsWith('genre:') ? 'music' : normalized;
-  return RADIO_CATEGORY_COLORS[canonical] || RADIO_CATEGORY_COLORS.other;
-}
-
-/** Format the concise count/category badge shown above a Radio cluster. */
-export function radioClusterBadgeText(categoryId = 'other', count = 0) {
-  const normalized = String(categoryId || 'other');
-  const canonical = normalized.startsWith('genre:') ? 'music' : normalized;
-  const label = RADIO_CLUSTER_LABELS[canonical] || RADIO_CLUSTER_LABELS.other;
-  const stationCount = Math.max(0, Math.floor(Number(count) || 0));
-  return `${stationCount} ${label}`;
-}
-
-/** Choose the category advertised by a cluster in the active station-tag view. */
-export function radioClusterCategoryId(stations, activeFilter = 'all') {
-  const filter = String(activeFilter || 'all');
-  if (filter !== 'all') {
-    if (filter.startsWith('genre:') || RADIO_MARKER_CATEGORY_ORDER.includes(filter) || filter === 'other') {
-      return filter;
-    }
-    return 'other';
-  }
-  const categoryCounts = new Map();
-  for (const station of Array.isArray(stations) ? stations : []) {
-    const categoryId = radioStationCategoryId(station);
-    categoryCounts.set(categoryId, (categoryCounts.get(categoryId) || 0) + 1);
-  }
-  let clusterCategory = 'other';
-  let clusterCategoryCount = 0;
-  for (const categoryId of RADIO_MARKER_CATEGORY_ORDER) {
-    const count = categoryCounts.get(categoryId) || 0;
-    if (count > clusterCategoryCount) {
-      clusterCategory = categoryId;
-      clusterCategoryCount = count;
-    }
-  }
-  if ((categoryCounts.get('other') || 0) > clusterCategoryCount) return 'other';
-  return clusterCategory;
-}
-
-/** Build the code-native four-corner bracket used by the selected station. */
-export function radioSelectionBracketSvg(color = RADIO_CATEGORY_COLORS.other) {
-  const stroke = /^#[0-9a-f]{6}$/i.test(String(color)) ? String(color) : RADIO_CATEGORY_COLORS.other;
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><path d="M2 13V2H13 M27 2H38V13 M38 27V38H27 M13 38H2V27" fill="none" stroke="${stroke}" stroke-width="2" stroke-linecap="square"/></svg>`;
-}
-
-/** Choose one stable display category for a station that may match several filters. */
-export function radioStationCategoryId(station) {
-  return RADIO_MARKER_CATEGORY_ORDER.find((categoryId) => (
-    stationMatchesRadioCategory(station, categoryId)
-  )) || 'other';
-}
-
-/** Build canonical and detected-genre categories from station-level tags. */
-export function buildRadioCategories(stations) {
-  const rows = Array.isArray(stations) ? stations : [];
-  const categories = [
-    { id: 'all', label: 'All' },
-    { id: 'news', label: 'News' },
-    { id: 'talk', label: 'Talk' },
-    { id: 'weather', label: 'Weather / Emergency' },
-    { id: 'public-safety', label: 'Public Safety' },
-    { id: 'aviation-marine', label: 'Aviation / Marine' },
-    { id: 'traffic-transit', label: 'Traffic / Transit' },
-    { id: 'music', label: 'Music' },
-  ];
-
-  for (const [genre, label] of MUSIC_GENRES) {
-    const id = `genre:${genre}`;
-    if (rows.some((station) => stationMatchesRadioCategory(station, id))) {
-      categories.push({ id, label });
-    }
-  }
-  categories.push({ id: 'other', label: 'Other' });
-  return categories.map((category) => ({
-    ...category,
-    color: radioCategoryColor(category.id),
-    count: rows.filter((station) => stationMatchesRadioCategory(station, category.id)).length,
-  }));
-}
-
-/** Filter stations without changing the active stream or selection. */
-export function filterRadioStations(stations, categoryId = 'all') {
-  return (Array.isArray(stations) ? stations : [])
-    .filter((station) => stationMatchesRadioCategory(station, categoryId));
-}
-
-/** Return whether Radio Browser metadata identifies a station as English-language. */
-export function isEnglishRadioStation(station) {
-  const languages = Array.isArray(station?.languages) ? station.languages : [];
-  return languages.some((language) => {
-    const normalized = normalizeRadioTag(language);
-    return normalized === 'en' || normalized === 'eng' || normalized.startsWith('english');
-  });
-}
-
-function radioAngularDistance(station, anchor) {
-  const lat1 = Cesium.Math.toRadians(Number(anchor?.lat));
-  const lon1 = Cesium.Math.toRadians(Number(anchor?.lon));
-  const lat2 = Cesium.Math.toRadians(Number(station?.lat));
-  const lon2 = Cesium.Math.toRadians(Number(station?.lon));
-  if (![lat1, lon1, lat2, lon2].every(Number.isFinite)) return Number.POSITIVE_INFINITY;
-  const deltaLat = lat2 - lat1;
-  const deltaLon = lon2 - lon1;
-  const haversine = Math.sin(deltaLat / 2) ** 2
-    + Math.cos(lat1) * Math.cos(lat2) * Math.sin(deltaLon / 2) ** 2;
-  return 2 * Math.asin(Math.min(1, Math.sqrt(Math.max(0, haversine))));
-}
-
-/** Rank a copied station list by viewport distance, with an optional English-first tier. */
-export function rankRadioStationsForViewport(stations, anchor, { preferEnglish = false } = {}) {
-  return (Array.isArray(stations) ? stations : [])
-    .map((station, index) => ({
-      station,
-      index,
-      distance: radioAngularDistance(station, anchor),
-      languageTier: preferEnglish && !isEnglishRadioStation(station) ? 1 : 0,
-    }))
-    .sort((a, b) => a.languageTier - b.languageTier || a.distance - b.distance || a.index - b.index)
-    .map(({ station }) => station);
-}
-
-/** Rank stations for an explicit voice/player request without moving the camera. */
-export function rankRadioStationsForRequest(stations, {
-  categoryId = 'all',
-  anchor = null,
-  country = '',
-  stationQuery = '',
-} = {}) {
-  const countryFilter = normalizeRadioCountryInput(country);
-  if (!countryFilter.valid) return [];
-  const query = normalizeRadioTag(stationQuery);
-  let matches = filterRadioStations(stations, categoryId);
-  if (countryFilter.code || countryFilter.name) {
-    matches = matches.filter((station) => {
-      const stationCode = String(station?.countryCode || '').trim().toUpperCase();
-      const stationCountry = normalizeRadioCountryInput(station?.country);
-      return (countryFilter.code && stationCode === countryFilter.code)
-        || (countryFilter.code && stationCountry.valid && stationCountry.code === countryFilter.code);
-    });
-  }
-  if (query) {
-    matches = matches.filter((station) => [
-      station?.id,
-      station?.name,
-      station?.state,
-      station?.country,
-      station?.countryCode,
-      ...(Array.isArray(station?.tags) ? station.tags : []),
-    ].some((value) => normalizeRadioTag(value).includes(query)));
-  }
-  return anchor
-    ? rankRadioStationsForViewport(matches, anchor)
-    : matches.slice();
-}
-
-/** Classify a globe-scale Radio view without flapping on Cesium height round-off. */
-export function radioViewIsGlobal(altitudeM) {
-  return Number.isFinite(altitudeM) && Math.round(altitudeM) >= GLOBAL_RADIO_ALTITUDE_M;
-}
-
-/** Pure stale-response guard shared by the async directory update path. */
-export function radioRequestIsCurrent(
-  generation,
-  currentGeneration,
-  enabled,
-  sessionGeneration = null,
-  currentSessionGeneration = sessionGeneration,
-) {
-  return generation === currentGeneration
-    && Boolean(enabled)
-    && sessionGeneration === currentSessionGeneration;
-}
-
-/** Resolve a station id from ordinary, selected, or Cesium cluster pick shapes. */
-export function radioStationIdFromPick(picked) {
-  const pending = [picked?.id, picked?.primitive?.id];
-  const seen = new Set();
-  while (pending.length) {
-    const value = pending.shift();
-    if (typeof value === 'string' || typeof value === 'number') {
-      const id = String(value);
-      if (id.startsWith(`${RADIO_PREFIX}selected:`)) return id.slice(`${RADIO_PREFIX}selected:`.length);
-      if (id.startsWith(RADIO_PREFIX)) return id.slice(RADIO_PREFIX.length);
-      continue;
-    }
-    if (!value || typeof value !== 'object' || seen.has(value)) continue;
-    seen.add(value);
-    if (Array.isArray(value)) pending.push(...value);
-    else {
-      pending.push(value.id);
-      if (value.primitive) pending.push(value.primitive.id);
-    }
-  }
-  return null;
-}
-
-/** Map an integer tuner slot directly to one available directory station. */
-export function radioTunerSlot(value, stationCount) {
-  const count = Math.max(0, Math.floor(Number(stationCount) || 0));
-  if (!count) return { slot: 0, max: 0, locked: false, stationIndex: -1, leftIndex: -1, rightIndex: -1 };
-  const max = Math.max(0, count - 1);
-  const slot = Math.min(max, Math.max(0, Math.round(Number(value) || 0)));
-  return {
-    slot,
-    max,
-    locked: true,
-    stationIndex: slot,
-    leftIndex: slot,
-    rightIndex: slot,
-  };
-}
-
-/** Snap a tuner release to the nearest available directory station. */
-export function radioTunerCommitSlot(value, stationCount) {
-  return radioTunerSlot(value, stationCount);
-}
-
-/** Map one pointer coordinate to continuous absolute directory progress. */
-export function radioTunerPointerPosition(clientX, left, width, stationCount, insetPx = 7) {
-  const count = Math.max(0, Math.floor(Number(stationCount) || 0));
-  if (!count) return { ratio: 0, coordinate: 0, stationIndex: -1 };
-  if (count === 1) return { ratio: 0.5, coordinate: 0, stationIndex: 0 };
-  const inset = Math.max(0, Number(insetPx) || 0);
-  const usableWidth = Math.max(1, (Number(width) || 0) - inset * 2);
-  const ratio = Math.min(1, Math.max(0, ((Number(clientX) || 0) - (Number(left) || 0) - inset) / usableWidth));
-  const coordinate = ratio * (count - 1);
-  return {
-    ratio,
-    coordinate,
-    stationIndex: Math.min(count - 1, Math.max(0, Math.floor(coordinate + 0.5))),
-  };
-}
-
-/** Build a bounded virtual tuner tape around one continuous directory coordinate. */
-export function buildRadioTunerTicks(coordinate, stationCount, width, {
-  insetPx = 7,
-  minPitchPx = 14,
-  speedFactor = 5,
-  overscan = 2,
-  labelStep = 6,
-} = {}) {
-  const count = Math.max(0, Math.floor(Number(stationCount) || 0));
-  const dialWidth = Math.max(0, Number(width) || 0);
-  const inset = Math.max(0, Number(insetPx) || 0);
-  const usableWidth = Math.max(0, dialWidth - inset * 2);
-  if (!count) return { ticks: [], needleX: inset, pitchPx: 0, ratio: 0 };
-  const value = Math.min(count - 1, Math.max(0, Number(coordinate) || 0));
-  if (count === 1) {
-    return {
-      ticks: [{ stationIndex: 0, channel: 1, xPx: inset + usableWidth / 2, current: true, label: '01' }],
-      needleX: inset + usableWidth / 2,
-      pitchPx: Math.max(1, Number(minPitchPx) || 14),
-      ratio: 0.5,
-    };
-  }
-  const directoryStep = usableWidth / (count - 1);
-  const pitchPx = Math.max(
-    Math.max(1, Number(minPitchPx) || 14),
-    directoryStep * Math.max(1, Number(speedFactor) || 5),
-  );
-  const needleX = inset + directoryStep * value;
-  const overscanPx = pitchPx * Math.max(0, Number(overscan) || 0);
-  const first = Math.max(0, Math.ceil(value + (-overscanPx - needleX) / pitchPx));
-  const last = Math.min(count - 1, Math.floor(value + (dialWidth + overscanPx - needleX) / pitchPx));
-  const currentIndex = Math.min(count - 1, Math.max(0, Math.floor(value + 0.5)));
-  const majorEvery = Math.max(1, Math.floor(Number(labelStep) || 6));
-  const labelWidth = Math.max(2, String(count).length);
-  const ticks = [];
-  for (let stationIndex = first; stationIndex <= last; stationIndex += 1) {
-    const channel = stationIndex + 1;
-    const current = stationIndex === currentIndex;
-    const labelled = current || stationIndex === 0 || stationIndex === count - 1 || channel % majorEvery === 0;
-    ticks.push({
-      stationIndex,
-      channel,
-      xPx: needleX + pitchPx * (stationIndex - value),
-      current,
-      label: labelled ? String(channel).padStart(labelWidth, '0') : '',
-    });
-  }
-  return { ticks, needleX, pitchPx, ratio: value / (count - 1) };
-}
-
-/** Plan a station-centered camera move that preserves altitude and view angle. */
-export function radioStationCameraPlan(station, cameraState = {}) {
-  const targetLat = Number(station?.lat);
-  const targetLon = Number(station?.lon);
-  const height = Math.max(1, Number(cameraState.height) || 1);
-  const heading = Number.isFinite(cameraState.heading) ? cameraState.heading : 0;
-  const pitch = Number.isFinite(cameraState.pitch) ? cameraState.pitch : -Math.PI / 2;
-  const roll = Number.isFinite(cameraState.roll) ? cameraState.roll : 0;
-  if (!Number.isFinite(targetLat) || !Number.isFinite(targetLon)) return null;
-
-  const downAngle = Math.min(Math.PI / 2, Math.max(0.08, Math.abs(Math.min(-0.001, pitch))));
-  const groundOffsetM = downAngle > Math.PI / 2 - 1e-6
-    ? 0
-    : Math.min(2_000_000, height / Math.max(0.08, Math.tan(downAngle)));
-  const angularDistance = groundOffsetM / 6_378_137;
-  const targetLatRad = targetLat * Math.PI / 180;
-  const cameraBearing = heading + Math.PI;
-  const cameraLatRad = Math.asin(
-    Math.sin(targetLatRad) * Math.cos(angularDistance)
-      + Math.cos(targetLatRad) * Math.sin(angularDistance) * Math.cos(cameraBearing),
-  );
-  const cameraLonRad = targetLon * Math.PI / 180 + Math.atan2(
-    Math.sin(cameraBearing) * Math.sin(angularDistance) * Math.cos(targetLatRad),
-    Math.cos(angularDistance) - Math.sin(targetLatRad) * Math.sin(cameraLatRad),
-  );
-  const cameraLon = ((cameraLonRad * 180 / Math.PI + 540) % 360) - 180;
-  return {
-    lat: cameraLatRad * 180 / Math.PI,
-    lon: cameraLon,
-    height,
-    heading,
-    pitch,
-    roll,
-  };
-}
-
-/**
- * Decide whether Radio navigation should first restore a centered Earth view.
- * Fit-capable clipped discs and closer views whose optical center has reached
- * the Earth limb use the staged path; ordinary centered local views stay direct.
- */
-export function radioGlobeNeedsRecentering(geometry) {
-  if (!geometry || isFullGlobeInsideKeyhole(geometry, false)) return false;
-  const centeredGeometry = {
-    ...geometry,
-    earthCenterX: geometry.keyholeCenterX,
-    earthCenterY: geometry.keyholeCenterY,
-  };
-  if (isFullGlobeInsideKeyhole(centeredGeometry, false)) return true;
-  const values = [
-    geometry.earthCenterX,
-    geometry.earthCenterY,
-    geometry.earthRadius,
-    geometry.keyholeCenterX,
-    geometry.keyholeCenterY,
-  ];
-  if (!values.every(Number.isFinite) || geometry.earthRadius <= 0) return false;
-  const centerOffset = Math.hypot(
-    geometry.earthCenterX - geometry.keyholeCenterX,
-    geometry.earthCenterY - geometry.keyholeCenterY,
-  );
-  return geometry.earthRadius - centerOffset < GLOBE_ENTER_CLEARANCE_PX;
-}
-
-/** Preserve closer zoom while capping an extreme full-globe recovery. */
-export function radioGlobeRecenterHeight(currentHeight, fullGlobeCapable) {
-  if (!Number.isFinite(currentHeight) || currentHeight < 0) return null;
-  return fullGlobeCapable
-    ? Math.min(currentHeight, RADIO_GLOBE_RECENTER_MAX_HEIGHT_M)
-    : currentHeight;
-}
-
-/** Bound one already ordered filtered directory without injecting outside selections. */
-export function buildRadioTunerBand(rankedStations, selected, limit = RADIO_TUNER_STATION_LIMIT) {
-  const boundedLimit = Math.min(
-    RADIO_TUNER_DIRECTORY_LIMIT,
-    Math.max(1, Math.floor(Number(limit) || RADIO_TUNER_STATION_LIMIT)),
-  );
-  return (Array.isArray(rankedStations) ? rankedStations : []).slice(0, boundedLimit);
-}
-
-/** Decide whether tuner static should be audible for the current handoff state. */
-export function radioTuningStaticShouldPlay({
-  tuningActive = false,
-  tuningStatic = false,
-  awaitingStationId = null,
-  voiceDucked = false,
-} = {}) {
-  return Boolean(tuningStatic && !voiceDucked && (tuningActive || awaitingStationId));
-}
-
-function markerPosition(station, liftM = MARKER_LIFT_M) {
-  const floor = cachedGroundFloor(station.lat, station.lon);
-  return Cesium.Cartesian3.fromDegrees(
-    station.lon,
-    station.lat,
-    (Number.isFinite(floor) ? floor : 0) + liftM,
-  );
 }
 
 function selectedStation() {
@@ -1177,23 +415,6 @@ function rankedVisibleStations() {
 /** Return the deeply immutable healthy catalog generation shared with tuner consumers. */
 export function getRadioAcceptedCatalogSnapshot() {
   return _acceptedCatalogSnapshot;
-}
-
-/** Compare every station field that determines tuner presentation and playback. */
-export function radioStationResolutionMatches(frozenStation, currentStation) {
-  if (!frozenStation || !currentStation) return false;
-  for (const key of [
-    'id', 'name', 'lat', 'lon', 'streamUrl', 'homepage', 'state', 'country',
-    'countryCode', 'metadataTrust', 'codec', 'bitrate',
-  ]) {
-    if (frozenStation[key] !== currentStation[key]) return false;
-  }
-  return ['tags', 'languages'].every((key) => {
-    const frozenValues = Array.isArray(frozenStation[key]) ? frozenStation[key] : [];
-    const currentValues = Array.isArray(currentStation[key]) ? currentStation[key] : [];
-    return frozenValues.length === currentValues.length
-      && frozenValues.every((value, index) => value === currentValues[index]);
-  });
 }
 
 function captureRadioTuningResolutionSnapshot() {
