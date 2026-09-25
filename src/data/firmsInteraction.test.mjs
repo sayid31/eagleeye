@@ -5,7 +5,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { createFirmsHeatmapLayer, applyFirmsOverlayPolicy, buildCellCard } from './firmsHeatmap.js';
+import { createFirmsHeatmapLayer } from './firmsHeatmap.js';
+import { applyFirmsOverlayPolicy, buildCellCard } from './firmsCards.js';
 import { fireDetectionKey } from './firmsLabels.js';
 import { registerPickOwner, unregisterPickOwner } from './pickRegistry.js';
 import { WORLD_FOCUS_REQUEST_EVENT } from '../worldFocus.js';

@@ -1,11 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import {
-  applyHorizonCull,
-  createFirmsHeatmapLayer,
-  fireCullPosition,
-} from './firmsHeatmap.js';
+import { applyHorizonCull, fireCullPosition } from './firmsHorizonCull.js';
+import { createFirmsHeatmapLayer } from './firmsHeatmap.js';
 import { FIRE_ANCHOR_LIFT_M } from './fireAnchors.js';
 import { FIRMS_AMBIENT_COHORT_LIMIT, FIRMS_OVERLAY_SOURCE_ID } from './firmsLabels.js';
 import {

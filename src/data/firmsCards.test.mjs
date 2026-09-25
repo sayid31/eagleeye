@@ -6,8 +6,8 @@ import {
   buildFireCard,
   buildCellCard,
   buildSelectedFireCard,
-  createFirmsHeatmapLayer,
-} from './firmsHeatmap.js';
+} from './firmsCards.js';
+import { createFirmsHeatmapLayer } from './firmsHeatmap.js';
 import {
   accentForSeverity,
   FIRMS_AMBIENT_COHORT_LIMIT,

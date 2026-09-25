@@ -14,7 +14,7 @@ import {
   FIRMS_AMBIENT_COHORT_LIMIT,
   FIRMS_OVERLAY_SOURCE_ID,
 } from '../data/firmsLabels.js';
-import { applyFirmsOverlayPolicy } from '../data/firmsHeatmap.js';
+import { applyFirmsOverlayPolicy } from '../data/firmsCards.js';
 import {
   applyVesselOverlayPolicy,
   VESSEL_OVERLAY_SOURCE_ID,
