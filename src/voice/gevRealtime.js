@@ -9,6 +9,48 @@ import {
   resolveVoiceModel,
   serializeCostLimits,
 } from './voiceCost.js';
+import {
+  captureViewportImage,
+  computeDownscale,
+  estimateDataUrlBytes,
+  hasStructuredViewIdentity,
+  isBenignViewportDeleteError,
+  renderFreshCesiumFrame,
+  shouldSendViewportImage,
+} from './gevRealtimeViewport.js';
+// Re-exported below for existing call sites (gevRealtime.test.mjs) that still
+// import these directly from this module — mechanical relocation, no
+// behavior change.
+export {
+  captureViewportImage,
+  computeDownscale,
+  estimateDataUrlBytes,
+  isBenignViewportDeleteError,
+  renderFreshCesiumFrame,
+} from './gevRealtimeViewport.js';
+import {
+  createVoiceControl,
+  gateVoiceVisualizerLevel,
+  isPushToTalkKey,
+  resetVoiceVisualizerBars,
+  resolveVoiceControlHint,
+  resolveVoiceVisualizerSpeaker,
+  selectVoiceVisualizerSignal,
+  shouldHandlePushToTalkKeyDown,
+  shouldIgnoreVoiceButtonClick,
+} from './gevRealtimeVoiceControlUi.js';
+// Re-exported below for existing call sites (gevRealtime.test.mjs,
+// voiceBackendSwitch.js) that still import these directly from this module —
+// mechanical relocation, no behavior change.
+export {
+  gateVoiceVisualizerLevel,
+  isPushToTalkKey,
+  resolveVoiceControlHint,
+  resolveVoiceVisualizerSpeaker,
+  selectVoiceVisualizerSignal,
+  shouldHandlePushToTalkKeyDown,
+  shouldIgnoreVoiceButtonClick,
+} from './gevRealtimeVoiceControlUi.js';
 
 const TOKEN_URL = '/api/realtime/token';
 const REALTIME_CALLS_URL = 'https://api.openai.com/v1/realtime/calls';
@@ -24,12 +66,6 @@ const CALL_DEDUPE_MS = 2500;
 // recovers on its own). Give it this long to return to 'connected' before we
 // treat it as a real drop (H8).
 const DISCONNECT_GRACE_MS = 6000;
-// Viewport-screenshot size guards (M13). The old code clamped WIDTH only, so a
-// tall portrait window produced an oversized capture whose dc.send could throw.
-// Cap total pixels (clamps both dimensions) and drop the image entirely if the
-// encoded data URL is still too big for the data channel.
-const VIEWPORT_MAX_PIXELS = 1200 * 900; // ~1.08 MP, matches the old 1200px-wide landscape budget
-const VIEWPORT_MAX_ENCODED_BYTES = 200 * 1024; // ~200 KB encoded ceiling
 const ERROR_LOG_LIMIT = 30;
 const ERROR_STORAGE_KEY = 'gev-realtime-errors';
 const DEBUG_LOG_URL = '/api/realtime/debug-log';
@@ -2012,19 +2048,6 @@ export class GevRealtimeController {
   }
 }
 
-function shouldSendViewportImage(viewScale) {
-  return viewScale === 'local';
-}
-
-function hasStructuredViewIdentity(result) {
-  return Boolean(
-    result.selected ||
-    result.visible?.length ||
-    result.scene?.basemap?.nearbyPlaces?.length ||
-    result.scene?.basemap?.knownLandmarks?.length
-  );
-}
-
 function responseInstructionForToolResult(result) {
   if (result?.action === 'control_radio' && result.radioPlaybackSuppressed) {
     if (result.audioState === 'paused') {
@@ -2177,132 +2200,6 @@ function isSecretLikeKey(key) {
   return /(?:api[_-]?key|authorization|bearer|client[_-]?secret|token|secret|password)/i.test(key);
 }
 
-async function captureViewportImage() {
-  const viewer = window.__godsEyeView?.viewer;
-  const source = viewer?.scene?.canvas || document.querySelector('#cesiumContainer .cesium-widget canvas');
-  if (!source || !source.width || !source.height) return null;
-  // No fresh frame (hidden, or the bounded render wait timed out) → no
-  // capture. The caller labels this image "Current"; a stale preserved
-  // frame would feed the model old entities as current context. (perf
-  // wave 2 fix)
-  const fresh = await renderFreshCesiumFrame(viewer);
-  if (!fresh) return null;
-
-  // Clamp BOTH dimensions by a total-pixel budget so tall portrait windows are
-  // downscaled too (the old width-only clamp let them through — M13).
-  const { width, height } = computeDownscale(source.width, source.height, VIEWPORT_MAX_PIXELS);
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return null;
-  try {
-    ctx.drawImage(source, 0, 0, width, height);
-    if (isNearlyBlackFrame(ctx, width, height)) {
-      console.warn('[GEV Voice] Skipped black Cesium viewport capture');
-      return null;
-    }
-    const dataUrl = canvas.toDataURL('image/jpeg', 0.74);
-    // Even after the pixel clamp, a busy frame can encode large. If the payload
-    // would still overflow the data channel, skip the image rather than let the
-    // send throw and strand the turn (M13). The caller falls through without it.
-    if (estimateDataUrlBytes(dataUrl) > VIEWPORT_MAX_ENCODED_BYTES) {
-      console.warn('[GEV Voice] Skipped oversized viewport capture', {
-        bytes: estimateDataUrlBytes(dataUrl),
-        limit: VIEWPORT_MAX_ENCODED_BYTES,
-      });
-      return null;
-    }
-    return dataUrl;
-  } catch {
-    return null;
-  }
-}
-
-// Scale (w, h) down so w*h <= maxPixels while preserving aspect ratio. Never
-// upscales. Both dimensions shrink together, so portrait and landscape are
-// treated equally (M13). Pure + deterministic → unit-tested (exported below).
-export function computeDownscale(width, height, maxPixels) {
-  const w = Math.max(1, Math.floor(width) || 0);
-  const h = Math.max(1, Math.floor(height) || 0);
-  const budget = Math.max(1, maxPixels || 0);
-  if (w * h <= budget) return { width: w, height: h };
-  const scale = Math.sqrt(budget / (w * h));
-  // Floor (not round) both dims so the result can never exceed the budget:
-  // floor(w*s) * floor(h*s) <= (w*s)(h*s) = budget. Rounding could push a
-  // narrow-tall frame back over the ceiling.
-  return {
-    width: Math.max(1, Math.floor(w * scale)),
-    height: Math.max(1, Math.floor(h * scale)),
-  };
-}
-
-// Approximate the decoded byte length of a base64 data URL without allocating
-// the buffer: strip the "data:...;base64," prefix, then base64 is 4 chars per
-// 3 bytes (minus any '=' padding). Exported for unit tests.
-export function estimateDataUrlBytes(dataUrl) {
-  if (typeof dataUrl !== 'string') return 0;
-  const commaIndex = dataUrl.indexOf(',');
-  const base64 = commaIndex >= 0 ? dataUrl.slice(commaIndex + 1) : dataUrl;
-  const padding = base64.endsWith('==') ? 2 : base64.endsWith('=') ? 1 : 0;
-  return Math.max(0, Math.floor((base64.length * 3) / 4) - padding);
-}
-
-/**
- * Ensure the canvas holds a CURRENT frame before capture.
- * @returns {Promise<boolean>} true only when a fresh frame was presented —
- *   false while hidden (render loop suspended; a capture would be stale) or
- *   when the bounded wait timed out. Callers must not label a non-fresh
- *   canvas as current. (perf wave 2)
- */
-export async function renderFreshCesiumFrame(viewer) {
-  const scene = viewer?.scene;
-  if (!scene) return false;
-  // While the document is hidden the render loop is suspended — don't
-  // secretly restart rendering for an optional screenshot, and don't pass
-  // the stale preserved frame off as current.
-  if (typeof document !== 'undefined' && document.hidden) return false;
-  try {
-    // Under the idle render governor a bare scene.render() doesn't
-    // necessarily draw — request a frame and await its postRender (bounded),
-    // which also covers the just-became-visible race.
-    const rendered = new Promise((resolve) => {
-      const remove = scene.postRender.addEventListener(() => { remove(); resolve(true); });
-      setTimeout(() => { remove(); resolve(false); }, 400);
-    });
-    scene.requestRender?.();
-    const fresh = await rendered;
-    // A tab switch during the bounded wait invalidates freshness.
-    if (typeof document !== 'undefined' && document.hidden) return false;
-    return fresh;
-  } catch {
-    return false;
-  }
-}
-
-function isNearlyBlackFrame(ctx, width, height) {
-  const sampleWidth = Math.min(48, width);
-  const sampleHeight = Math.min(32, height);
-  if (!sampleWidth || !sampleHeight) return true;
-
-  const sampleCanvas = document.createElement('canvas');
-  sampleCanvas.width = sampleWidth;
-  sampleCanvas.height = sampleHeight;
-  const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-  if (!sampleCtx) return false;
-  sampleCtx.drawImage(ctx.canvas, 0, 0, sampleWidth, sampleHeight);
-  const pixels = sampleCtx.getImageData(0, 0, sampleWidth, sampleHeight).data;
-  let visiblePixels = 0;
-  let luminanceTotal = 0;
-  for (let index = 0; index < pixels.length; index += 4) {
-    const alpha = pixels[index + 3];
-    if (alpha < 8) continue;
-    visiblePixels++;
-    luminanceTotal += pixels[index] * 0.2126 + pixels[index + 1] * 0.7152 + pixels[index + 2] * 0.0722;
-  }
-  return visiblePixels === 0 || luminanceTotal / visiblePixels < 2;
-}
-
 /**
  * Mint an ephemeral Realtime client secret.
  *
@@ -2352,19 +2249,6 @@ function extractFunctionCalls(event) {
   }
 
   return calls.filter((call) => call?.name);
-}
-
-// True when an error payload is the benign result of deleting a viewport
-// screenshot the server had already truncated (M14). Non-fatal if EITHER the
-// error code is item_not_found OR it echoes the event_id of a delete we issued.
-// The event_id match narrows the code-only whitelist so an unrelated
-// item_not_found (should one ever arise) still surfaces normally.
-export function isBenignViewportDeleteError(payload, pendingDeleteIds = null) {
-  if (!payload || payload.type !== 'error') return false;
-  const echoedId = payload.event_id;
-  if (echoedId && pendingDeleteIds && pendingDeleteIds.has(echoedId)) return true;
-  const code = payload.error?.code;
-  return code === 'item_not_found';
 }
 
 function callDedupeKeys(call) {
@@ -2445,168 +2329,3 @@ function storeErrors(errors) {
   }
 }
 
-/**
- * Returns whether a keyboard event represents the hold-Space voice shortcut.
- * @param {KeyboardEvent|object|null} event
- * @returns {boolean}
- */
-export function isPushToTalkKey(event) {
-  return event?.code === 'Space' || event?.key === ' ';
-}
-
-/**
- * Protects text entry and modified shortcuts from the global push-to-talk key.
- * @param {KeyboardEvent|object|null} event
- * @returns {boolean}
- */
-export function shouldHandlePushToTalkKeyDown(event) {
-  if (!isPushToTalkKey(event) || event.defaultPrevented) return false;
-  if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return false;
-  const target = event.target;
-  if (target?.isContentEditable) return false;
-  const editingControl = target?.closest?.('input, textarea, select, [contenteditable], [role="textbox"]');
-  return !editingControl;
-}
-
-/**
- * Avoids a click/Space race that could stop an active voice session mid-turn.
- * @param {boolean} spaceKeyHeld
- * @returns {boolean}
- */
-export function shouldIgnoreVoiceButtonClick(spaceKeyHeld) {
-  return Boolean(spaceKeyHeld);
-}
-
-/**
- * Selects input or output frequency data for the active voice speaker.
- * @param {'idle'|'user'|'ai'} speaker
- * @param {{analyser: AnalyserNode|null, data: Uint8Array|null}} input
- * @param {{analyser: AnalyserNode|null, data: Uint8Array|null}} output
- * @returns {{analyser: AnalyserNode, data: Uint8Array}|null}
- */
-export function selectVoiceVisualizerSignal(speaker, input, output) {
-  const signal = speaker === 'ai' ? output : input;
-  return signal?.analyser && signal?.data ? signal : null;
-}
-
-/**
- * Keeps analysing buffered assistant audio after the response-done control event.
- * @param {'idle'|'user'|'ai'} currentSpeaker
- * @param {'idle'|'user'|'ai'} nextSpeaker
- * @param {boolean} keepCurrent
- * @returns {'idle'|'user'|'ai'}
- */
-export function resolveVoiceVisualizerSpeaker(currentSpeaker, nextSpeaker, keepCurrent = false) {
-  if (keepCurrent && currentSpeaker === 'ai') return 'ai';
-  return nextSpeaker === 'user' || nextSpeaker === 'ai' ? nextSpeaker : 'idle';
-}
-
-/**
- * Resolves the in-app help tray copy for the current push-to-talk state.
- * @param {boolean} pushToTalkMode
- * @param {boolean} pushToTalkKeyHeld
- * @returns {string}
- */
-export function resolveVoiceControlHint(pushToTalkMode, pushToTalkKeyHeld) {
-  return pushToTalkMode && pushToTalkKeyHeld
-    ? 'Release Space to send'
-    : 'Hold Space to speak · click mic to toggle voice';
-}
-
-/**
- * Removes low-level room noise before it can animate the voice meter.
- * @param {number} level - Normalized frequency energy (0–1).
- * @param {number} threshold - Noise-floor cutoff (0–1).
- * @returns {number} Re-normalized audible level (0–1).
- */
-export function gateVoiceVisualizerLevel(level, threshold) {
-  const cleanLevel = Number.isFinite(level) ? Math.min(1, Math.max(0, level)) : 0;
-  const cleanThreshold = Number.isFinite(threshold) ? Math.min(0.95, Math.max(0, threshold)) : 0;
-  if (cleanLevel <= cleanThreshold) return 0;
-  return (cleanLevel - cleanThreshold) / (1 - cleanThreshold);
-}
-
-/**
- * Restores the CSS-owned standby baseline for every visualizer bar.
- * @param {Iterable<HTMLElement>|null|undefined} bars
- * @returns {void}
- */
-function resetVoiceVisualizerBars(bars) {
-  if (!bars) return;
-  for (const bar of bars) {
-    bar.style.removeProperty('--audio-level');
-    bar.style.removeProperty('--audio-opacity');
-  }
-}
-
-function createVoiceControl({ reset = false } = {}) {
-  let root = document.getElementById('gev-voice-control');
-  if (root && reset) {
-    root.remove();
-    root = null;
-  }
-  if (!root) {
-    root = document.createElement('div');
-    root.id = 'gev-voice-control';
-    root.dataset.status = 'idle';
-    root.dataset.speaker = 'idle';
-    root.innerHTML = `
-      <div class="gev-voice-heading">
-        <div class="gev-voice-kicker">AI AGENT</div>
-        <div id="gev-voice-status">OFF</div>
-        <div class="gev-voice-cost">
-          <button id="gev-voice-backend" class="gev-voice-tier-btn gev-voice-backend-btn" type="button" hidden aria-pressed="false" title="Voice backend">GPT</button>
-          <button id="gev-voice-tier" class="gev-voice-tier-btn" type="button" aria-pressed="false" title="Voice model tier — applies next session">STD</button>
-          <span id="gev-voice-cost-value" class="gev-voice-cost-value" data-level="ok" title="Estimated session cost">~$0.00</span>
-        </div>
-      </div>
-      <button id="gev-voice-button" type="button" aria-label="Voice control — hold Space to speak; click to toggle voice" aria-describedby="gev-voice-help">
-        <span class="gev-mic-orbit"><img src="/mic.svg" alt="" /></span>
-        <span class="gev-mic-label">ON/OFF</span>
-      </button>
-      <div class="gev-voice-visualizer" aria-hidden="true">
-        ${Array.from({ length: 15 }, (_, index) => `<span style="--bar:${index}"></span>`).join('')}
-      </div>
-      <div class="gev-voice-readout">
-        <div id="gev-voice-detail">VOICE STANDBY</div>
-      </div>
-      <div id="gev-voice-help" class="gev-voice-help-tray" role="tooltip">
-        <span class="gev-voice-help-kicker">VOICE CONTROL</span>
-        <span class="gev-voice-help-detail">Hold Space to speak · click mic to toggle voice</span>
-      </div>
-      <div class="gev-voice-error-tray" role="alert" aria-live="assertive">
-        <div class="gev-voice-error-header">
-          <span>VOICE SYSTEM ERROR</span>
-          <button class="gev-voice-error-dismiss" type="button">DISMISS</button>
-        </div>
-        <div id="gev-voice-error-detail"></div>
-        <div class="gev-voice-error-hint">Check microphone permission and network access, then try again.</div>
-      </div>
-    `;
-    const commandDock = document.getElementById('command-dock');
-    if (commandDock) {
-      const locationBar = document.getElementById('location-bar');
-      const controlPanel = document.getElementById('control-panel');
-      commandDock.appendChild(root);
-      if (locationBar) commandDock.insertBefore(locationBar, root);
-      if (controlPanel) commandDock.appendChild(controlPanel);
-    } else {
-      document.body.appendChild(root);
-    }
-    root.querySelector('.gev-voice-error-dismiss')?.addEventListener('click', () => {
-      root.classList.add('error-dismissed');
-    });
-  }
-  return {
-    root,
-    button: root.querySelector('#gev-voice-button'),
-    buttonLabel: root.querySelector('.gev-mic-label'),
-    status: root.querySelector('#gev-voice-status'),
-    detail: root.querySelector('#gev-voice-detail'),
-    helpDetail: root.querySelector('.gev-voice-help-detail'),
-    errorDetail: root.querySelector('#gev-voice-error-detail'),
-    tierButton: root.querySelector('#gev-voice-tier'),
-    costValue: root.querySelector('#gev-voice-cost-value'),
-    backendButton: root.querySelector('#gev-voice-backend'),
-  };
-}
