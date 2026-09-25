@@ -13,8 +13,9 @@ Realtime API over WebRTC) that can drive the whole console hands-free.
 `docs/CURRENT-STATE.md` is the **authoritative runtime reference** — read it
 before making non-trivial changes; it documents current behavior, not
 history. When conflicting, doc precedence is: `docs/CURRENT-STATE.md` →
-`docs/opensky-auth.md` → `CHANGELOG.md`. Historical planning docs may not
-match runtime behavior.
+`docs/DECISIONS.md` (design rationale / decision history — read this for
+WHY a value or behavior is what it is) → `docs/opensky-auth.md` →
+`CHANGELOG.md`. Historical planning docs may not match runtime behavior.
 
 ## Commands
 
@@ -165,8 +166,12 @@ printing credential values. Full key map and proxy-route ownership: `README.md`
 - Conventional-commit-style prefixes (`feat:`, `fix:`, `perf:`, `docs:`) are
   appreciated, not required by tooling.
 - If a change alters runtime behavior, update `docs/CURRENT-STATE.md` and
-  `CHANGELOG.md` in the same change set. If it adds/changes a data source,
-  update `DATA_SOURCES.md` with license/attribution — don't bundle
+  `CHANGELOG.md` in the same change set — state the new behavior in present
+  tense, don't append a dated entry. If the change has non-obvious rationale
+  (why this value/approach over an alternative), add it to
+  `docs/DECISIONS.md` instead, with a short pointer back from the relevant
+  `docs/CURRENT-STATE.md` section. If it adds/changes a data source, update
+  `DATA_SOURCES.md` with license/attribution — don't bundle
   redistribution-restricted data; fetch it at runtime instead.
 - Product boundary (enforced in review, not code): this project models
   events/assets/infrastructure/systems (aircraft, vessels, satellites, fires,
