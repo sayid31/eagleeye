@@ -22,7 +22,8 @@ const radioMixinSrc = readFileSync(fileURLToPath(new URL('./radioPanelMixin.js',
 // Global Context mode (session capture/restore, the mode state machine, the
 // layer-change reaction handler, panel button sync) now lives in
 // contextModeMixin.js — mechanical relocation, see that file's header.
-// setContextMode/getCockpitState/attachDataManager/dispose stay in ui.js.
+// setContextMode/attachDataManager/dispose stay in ui.js; getCockpitState
+// moved to cockpitControlMixin.js (see that file's header).
 const contextMixinSrc = readFileSync(fileURLToPath(new URL('./contextModeMixin.js', import.meta.url)), 'utf8');
 
 const handlerStart = contextMixinSrc.indexOf('_handleContextLayerChange(change) {');
@@ -281,9 +282,11 @@ test('a lost cross-mode switch says Context is off, and the state agrees', () =>
   // a bare "did not complete" while the operator's Context was silently gone.
   // Text and state are derived from the same verdict so they cannot disagree,
   // and the failed layer ids survive (Manjunath's honesty requirement).
+  // getCockpitState moved to cockpitControlMixin.js; _initRecordingOverlay
+  // (unrelated concern) still directly follows setContextMode in ui.js.
   const setter = src.slice(
     src.indexOf('  async setContextMode(mode, {'),
-    src.indexOf('  getCockpitState() {'),
+    src.indexOf('  _initRecordingOverlay() {'),
   );
   assert.match(setter, /const priorMode = this\._contextMode;/, 'the report knows what was lost');
   assert.match(
@@ -325,7 +328,7 @@ test('Context cancellation reaches isolation and restore lifecycle mutations', (
 test('Context facade preserves success when cancellation arrives after commit', () => {
   const setContextMode = src.slice(
     src.indexOf('async setContextMode('),
-    src.indexOf('getCockpitState()', src.indexOf('async setContextMode(')),
+    src.indexOf('_initRecordingOverlay()', src.indexOf('async setContextMode(')),
   );
   assert.match(
     setContextMode,
@@ -353,7 +356,7 @@ test('Context production rollback paths merge primary and restore failed-layer i
 test('stale Context cancellation preserves rollback failed-layer identities', () => {
   const setContextMode = src.slice(
     src.indexOf('async setContextMode('),
-    src.indexOf('getCockpitState()', src.indexOf('async setContextMode(')),
+    src.indexOf('_initRecordingOverlay()', src.indexOf('async setContextMode(')),
   );
   assert.match(
     setContextMode,

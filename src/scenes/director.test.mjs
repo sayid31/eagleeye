@@ -473,8 +473,10 @@ test('a newer LOAD aborts the previous LOAD transition rather than disowning it'
 
 test('applyVisualState gates the map-stack switch on both sides of its await', () => {
   // The other half of the contract, and the half these doubles cannot see.
-  // ui.js cannot be imported here (its mgrs dependency is CJS), so this pins
-  // the structure the way the repo pins other cross-module shape
+  // applyVisualState lives in cockpitControlMixin.js (moved out of ui.js —
+  // mechanical relocation, see that file's header), which cannot be imported
+  // here either (it imports ui.js's mgrs-dependent STYLES export), so this
+  // pins the structure the way the repo pins other cross-module shape
   // (cockpitMarkup.test.mjs), while qa-shots/scenes-audit.mjs proves the
   // BEHAVIOUR against the real StyleManager in a browser.
   //
@@ -483,9 +485,10 @@ test('applyVisualState gates the map-stack switch on both sides of its await', (
   // another setStack() arrives, and a winning state that omits `mapStack`
   // never issues one — every normalized scene shot omits it — so a stale
   // switch would otherwise stand on the globe.
-  const source = fs.readFileSync(new URL('../ui.js', import.meta.url), 'utf8');
-  const method = source.match(/\n {2}async applyVisualState\([\s\S]*?\n {2}\}\n/);
-  assert.ok(method, 'applyVisualState is missing from ui.js');
+  const source = fs.readFileSync(new URL('../cockpitControlMixin.js', import.meta.url), 'utf8');
+  // cockpitControlMixin.js is an object literal — methods end in `},`, not `}`.
+  const method = source.match(/\n {2}async applyVisualState\([\s\S]*?\n {2}\},?\n/);
+  assert.ok(method, 'applyVisualState is missing from cockpitControlMixin.js');
   assert.match(method[0], /async applyVisualState\(state = \{\}, \{ isCurrent = null \} = \{\}\)/);
 
   const mapStackBlock = method[0].match(/if \(state\.mapStack\) \{[\s\S]*?\n {4}\}/);

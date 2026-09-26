@@ -24,6 +24,11 @@ const cockpitTracking = fs.readFileSync(path.join(ROOT, 'src', 'cockpitTracking.
 // (_onCityPillClick, _onPoiClick, the search-handler body) now live in
 // navigationLocationMixin.js (mechanical relocation — see that file's header).
 const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin.js'), 'utf8');
+// Cockpit Control Facade (getCockpitState, _retargetCockpitEntryLayer,
+// controlCockpit, getControlState, getCameraState/applyCameraState,
+// getVisualState/applyVisualState) now lives in cockpitControlMixin.js —
+// mechanical relocation, see that file's header.
+const cockpitMixin = fs.readFileSync(path.join(ROOT, 'src', 'cockpitControlMixin.js'), 'utf8');
 
 function body(source, pattern, label) {
   const match = source.match(pattern);
@@ -128,7 +133,7 @@ test('voice Cockpit entry reaches the camera only through stamping seams', () =>
   );
   // Seam 2 is pinned by "Cockpit takeover invalidates deferred work" above.
   const control = body(
-    ui,
+    cockpitMixin,
     /if \(normalized === 'enter'\) \{([\s\S]*?)\n    \}/,
     'controlCockpit enter branch',
   );
@@ -163,7 +168,7 @@ test('voice Cockpit next/previous shares the manual Context navigation path', ()
     'this._adoptTrackedEntity(performance.now());',
   ], 'Cockpit Context navigation funnel');
   const navigate = body(
-    ui,
+    cockpitMixin,
     /if \(normalized === 'next' \|\| normalized === 'previous'\) \{([\s\S]*?)\n    \}/,
     'controlCockpit navigation branch',
   );
