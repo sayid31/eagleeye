@@ -15,13 +15,11 @@ import {
 } from './pickRegistry.js';
 import {
   applyVesselOverlayPolicy,
-  accentForVesselType,
   VESSEL_CARD_FADE_DISTANCE_M,
   VESSEL_LABEL_GRID_PX,
   VESSEL_OVERLAY_SOURCE_ID,
   vesselTypeCss,
   vesselOverlayCohortLimit,
-  normalizeVesselType,
 } from './vesselLabels.js';
 import {
   clearOverlaySource,
@@ -49,6 +47,40 @@ import {
   releaseContinuousRender,
   governorRequestRender,
 } from '../renderGovernor.js';
+import {
+  AIS_HEALTHY_STATUSES,
+  deriveAisFeedError,
+  classifyAisFeedSnapshot,
+} from './aisFeedClassify.js';
+import {
+  mapAnalystRecord,
+  vesselDatumHeightM,
+  reduceVesselSelection,
+} from './aisVesselRecords.js';
+import {
+  trimHudValue,
+  displayVesselName,
+  formatSpeed,
+  formatHeading,
+  formatPositionTime,
+  labelPriority,
+  buildVesselCard,
+  buildSelectedVesselCard,
+  cardScreenSeparated,
+} from './aisVesselCards.js';
+
+// Re-exported for this module's own test suite and any external caller that
+// still imports these from aisLiveVessels.js rather than their new home.
+export {
+  deriveAisFeedError,
+  classifyAisFeedSnapshot,
+  mapAnalystRecord,
+  vesselDatumHeightM,
+  reduceVesselSelection,
+  buildVesselCard,
+  buildSelectedVesselCard,
+  cardScreenSeparated,
+};
 
 const FOCUS_EVIDENCE_DEV = import.meta.env?.DEV === true;
 
@@ -107,35 +139,6 @@ let _aisRuntime = DEFAULT_AIS_RUNTIME;
 let _aisSessionSequence = 0;
 
 /**
- * Human-readable reasons for a non-'open' AISStream feed status, keyed to the
- * server's `_aisStreamStatus` values (see vite.config.js). Surfaced verbatim in
- * the layer chip so a dead feed reads "feed down" instead of a healthy-looking
- * "just now · 0 vessels".
- */
-const AIS_STATUS_REASON = {
-  'missing-key': 'AISSTREAM_API_KEY not set',
-  unsupported: 'live feed unsupported',
-  connecting: 'connecting to feed…',
-  closed: 'feed disconnected',
-  error: 'feed down',
-  idle: 'feed idle',
-};
-
-/**
- * Statuses in which fresh data is flowing. 'open' is the pre-watchdog spelling
- * and is still accepted so a cached bundle and a restarted server never
- * disagree about health.
- */
-const AIS_HEALTHY_STATUSES = new Set(['live', 'open']);
-
-/**
- * Server statuses meaning "the feed is not delivering right now". These are
- * surfaced even while cached vessels are still drawn: rows retained from
- * before the outage must never make a dead feed read as a healthy one.
- */
-const AIS_DEGRADED_STATUSES = new Set(['stale', 'reconnecting', 'down', 'auth-failed']);
-
-/**
  * Seconds until the server's next reconnect attempt, or 0 when none is
  * scheduled. Mirrors the flights layer's `retryInSec` chip affordance.
  * @returns {number}
@@ -149,120 +152,11 @@ function aisRetryInSec() {
   return Math.max(0, Math.ceil((at - _aisRuntime.now()) / 1000));
 }
 
-/**
- * Chip text for a feed the server has reported as not delivering.
- * @param {string} status - 'stale' | 'reconnecting' | 'down'
- * @param {Object} payload - Parsed /api/ais-live JSON.
- * @returns {string}
- */
-function describeDegradedAisFeed(status, payload) {
-  if (status === 'auth-failed') {
-    // Actionable, not a countdown: retrying cannot fix a rejected credential,
-    // so the chip asks the operator to do the one thing that can.
-    return 'API key rejected — check AISSTREAM_API_KEY';
-  }
-  if (status === 'stale') {
-    const silentSec = Math.round(Number(payload?.silentForMs) / 1000);
-    return Number.isFinite(silentSec) && silentSec > 0
-      ? `feed silent ${silentSec}s — no AIS data`
-      : 'feed silent — no AIS data';
-  }
-  const attempt = Number(payload?.reconnectAttempt);
-  const suffix = Number.isFinite(attempt) && attempt >= 1 ? ` (attempt ${attempt})` : '';
-  return status === 'down'
-    ? `feed down — retrying slowly${suffix}`
-    : `reconnecting to feed…${suffix}`;
-}
-
-/**
- * Derive a surfaced error string from an /api/ais-live payload, or null when the
- * feed has accepted product data. Socket transport, message receipt, and usable
- * vessel positions are separate health stages: an open socket with no message
- * or no accepted positions must not read as a fresh successful update.
- *
- * @param {Object|null|undefined} payload - Parsed /api/ais-live JSON.
- * @param {number} acceptedRowCount - Number of rows accepted by vessel normalization.
- * @returns {string|null} A short reason for the chip, or null if healthy.
- */
-export function deriveAisFeedError(payload, acceptedRowCount) {
-  const status = payload && typeof payload.status === 'string' ? payload.status : null;
-  // A feed the server reports as not delivering outranks the row count: the
-  // cached vessels on screen are exactly what makes an outage invisible.
-  if (status && AIS_DEGRADED_STATUSES.has(status)) {
-    return describeDegradedAisFeed(status, payload);
-  }
-  if (acceptedRowCount > 0) return null; // accepted rows may be stale while reconnecting, but remain usable
-  if (AIS_HEALTHY_STATUSES.has(status)) {
-    return payload?.lastMessageAt
-      ? 'awaiting usable AIS positions…'
-      : 'awaiting first AIS message…';
-  }
-  if (!status) return null;
-  const detail = typeof payload.error === 'string' && payload.error.trim() ? payload.error.trim() : '';
-  const reason = AIS_STATUS_REASON[status] || 'feed unavailable';
-  return detail && !AIS_STATUS_REASON[status] ? `${reason} (${detail})` : reason;
-}
-
-/** True when a raw AIS row can enter the production vessel normalizer. */
-function hasUsableVesselCoordinates(row) {
-  return Number.isFinite(Number(row?.lat)) && Number.isFinite(Number(row?.lon));
-}
-
-/**
- * Classify one server snapshot before any destructive reconciliation.
- * @param {Object|null|undefined} payload - Parsed /api/ais-live payload.
- * @returns {{transportStatus: string|null, lastMessageAt: number|string|null,
- *   rawRows: Array<Object>, acceptedRows: Array<Object>, rawRowCount: number,
- *   acceptedRowCount: number, error: string|null}}
- */
-export function classifyAisFeedSnapshot(payload) {
-  const rawRows = Array.isArray(payload?.rows) ? payload.rows : [];
-  const acceptedRows = rawRows.filter(hasUsableVesselCoordinates);
-  const transportStatus = typeof payload?.status === 'string' ? payload.status : null;
-  const lastMessageAt = payload?.lastMessageAt ?? null;
-  const acceptedRowCount = acceptedRows.length;
-  return {
-    transportStatus,
-    lastMessageAt,
-    rawRows,
-    acceptedRows,
-    rawRowCount: rawRows.length,
-    acceptedRowCount,
-    error: deriveAisFeedError(payload, acceptedRowCount)
-      || (acceptedRowCount === 0 ? 'awaiting usable AIS positions…' : null),
-  };
-}
-
-/**
- * Map one internal vessel record to a plain JSON-safe analyst record
- * (analyst query engine seam). Pure — no Cesium types. Missing/unknown
- * fields are null, never NaN/undefined. navStatus is always null: the
- * /api/ais-live proxy does not surface AIS NavigationalStatus, so it
- * cannot be derived client-side.
- * @param {Object|null|undefined} record - `state.vesselMap`/`state.vesselRecords` entry.
- * @returns {{id: string|null, mmsi: string|null, name: string|null,
- *   lat: number|null, lon: number|null, speedKts: number|null,
- *   courseDeg: number|null, shipType: string|null, destination: string|null,
- *   navStatus: null}}
- */
-export function mapAnalystRecord(record) {
-  const num = (v) => (Number.isFinite(v) ? v : null);
-  const text = (v) => { const t = String(v ?? '').trim(); return t || null; };
-  const mmsi = text(record?.mmsi);
-  const name = text(record?.name);
-  return {
-    id: name || mmsi,
-    mmsi,
-    name,
-    lat: num(record?.lat),
-    lon: num(record?.lon),
-    speedKts: num(record?.speed),
-    courseDeg: num(record?.course),
-    shipType: text(record?.type),
-    destination: text(record?.destination),
-    navStatus: null,
-  };
-}
+// AIS_HEALTHY_STATUSES, deriveAisFeedError, classifyAisFeedSnapshot now live
+// in ./aisFeedClassify.js (Wave 2 split #20) and are imported above.
+// mapAnalystRecord, vesselDatumHeightM, reduceVesselSelection now live in
+// ./aisVesselRecords.js (Wave 2 split #20) and are imported above. Re-exported
+// below (this module's own tests import them from aisLiveVessels.js).
 
 /**
  * True once the EGM96 geoid grid has loaded (fire-and-forget warm at
@@ -271,60 +165,6 @@ export function mapAnalystRecord(record) {
  * @type {boolean}
  */
 let _geoidReady = false;
-
-/**
- * Ellipsoidal render height (m) for a sea-surface object: the local geoid
- * undulation N plus a small lift. The sea surface ≈ the geoid, which sits
- * −106…+85 m off the WGS84 ellipsoid worldwide (Rotterdam ≈ +45 m — at
- * height 0 the tile sea mesh occludes every chevron; Houston ≈ −27 m).
- * Pure seam, exported for unit tests.
- * @param {number|null|undefined} geoidN - Undulation N (m), or null/undefined while the grid is cold.
- * @param {number} liftM - Lift above the sea surface (m).
- * @returns {number} Ellipsoidal height h = N + lift (N treated as 0 when absent).
- */
-export function vesselDatumHeightM(geoidN, liftM) {
-  return (Number.isFinite(geoidN) ? geoidN : 0) + liftM;
-}
-
-/**
- * Reduce one vessel-selection gesture to the layer-owned action it should
- * perform. The interaction handler reserves only vessel-record residuals and
- * trail picks as no-ops. The interaction wire also reserves sibling-owned
- * picks before this reducer so their camera action cannot mutate AIS state.
- *
- * @param {{selectedMmsi?: string|number|null, pickedMmsi?: string|number|null,
- *   gesture?: 'click'|'escape'}} input - Current selection plus owned pick.
- * @returns {{action: 'none'|'select'|'deselect'}}
- */
-export function reduceVesselSelection(input = {}) {
-  const selectedMmsi = normalizeSelectionMmsi(input.selectedMmsi);
-  const pickedMmsi = normalizeSelectionMmsi(input.pickedMmsi);
-  const gesture = input.gesture || 'click';
-
-  if (gesture === 'escape') {
-    return selectedMmsi
-      ? { action: 'deselect' }
-      : { action: 'none' };
-  }
-  if (gesture !== 'click') {
-    return { action: 'none' };
-  }
-  if (pickedMmsi) {
-    if (pickedMmsi === selectedMmsi) {
-      return { action: 'none' };
-    }
-    return { action: 'select' };
-  }
-  return selectedMmsi
-    ? { action: 'deselect' }
-    : { action: 'none' };
-}
-
-function normalizeSelectionMmsi(value) {
-  if (value === null || value === undefined) return null;
-  const text = String(value).trim();
-  return text || null;
-}
 
 /**
  * Geoid undulation N at (lat, lon), or null until the grid has loaded.
@@ -1478,21 +1318,6 @@ function publishVesselOverlayEntries(entries) {
   );
 }
 
-function labelPriority(record, selected) {
-  if (record === selected) return 100000;
-  let score = 0;
-  if (hasUsefulName(record)) score += 1000;
-  if (record.speed !== null) score += Math.min(400, Math.max(0, record.speed) * 20);
-  if (record.heading !== null || record.course !== null) score += 80;
-  if (record.type) score += 40;
-  return score;
-}
-
-function hasUsefulName(record) {
-  const text = String(record.name || '').trim();
-  return Boolean(text && text !== 'VESSEL' && !/^MMSI\s*\d+$/i.test(text) && text !== record.mmsi);
-}
-
 function installInteraction(viewer) {
   if (state.clickHandler || !viewer) return;
   const handler = state.interactionHandlerFactory
@@ -1844,125 +1669,11 @@ function resetSelectedVesselHud() {
   el.textContent = 'AIS: --';
 }
 
-function trimHudValue(value, maxLength) {
-  const text = String(value || '--').trim() || '--';
-  return text.length > maxLength ? `${text.slice(0, maxLength - 3)}...` : text;
-}
-
-/**
- * Card model for an ambient (decluttered-in) vessel — name title plus one
- * compact type/speed/heading detail line, anchored at the record's current
- * rendered position (height-datum caveat: no datum work here). Pure —
- * exported for unit tests.
- * @param {Object} record - Vessel record.
- * @returns {Object} vesselLabels entry.
- */
-export function buildVesselCard(record) {
-  const parts = [];
-  const type = vesselTypeShort(record);
-  if (type) parts.push(type);
-  if (record.speed !== null && record.speed !== undefined) parts.push(formatSpeed(record.speed));
-  const direction = record.heading ?? record.course;
-  if (Number.isFinite(direction)) parts.push(`${Math.round(direction)}°`);
-  return {
-    id: vesselOverlayEntryId(record),
-    actionable: Boolean(record?.mmsi),
-    position: record.billboard?.position || record.position,
-    gapPx: 10,
-    accent: accentForVesselType(record.type),
-    title: trimHudValue(displayVesselName(record), 26),
-    details: parts.length ? [parts.join(' · ')] : [],
-    selected: false,
-    priority: labelPriority(record, null),
-  };
-}
-
-/**
- * Card model for the click-selected vessel — the full-detail card, drawn last
- * (on top) and never distance-faded by the overlay. Pinned-but-vanished
- * vessels carry a STALE marker (mirrors the HUD readout). Pure — exported
- * for unit tests.
- * @param {Object} record - Selected vessel record.
- * @returns {Object} vesselLabels entry.
- */
-export function buildSelectedVesselCard(record) {
-  const direction = record.heading ?? record.course;
-  const details = [[
-    vesselTypeShort(record) || 'VESSEL',
-    formatSpeed(record.speed),
-    Number.isFinite(direction) ? `${Math.round(direction)}°` : '--°',
-  ].join(' · ')];
-  const destination = String(record.destination || '').trim();
-  if (destination) details.push(`→ ${trimHudValue(destination, 24)}`);
-  const stale = (record.missedRefreshes || 0) > 0;
-  details.push(`MMSI ${record.mmsi || '--'} · ${formatPositionTime(record)}${stale ? ' · STALE' : ''}`);
-  return {
-    id: vesselOverlayEntryId(record),
-    actionable: Boolean(record?.mmsi),
-    position: record.billboard?.position || record.position,
-    gapPx: 12,
-    accent: accentForVesselType(record.type),
-    title: trimHudValue(displayVesselName(record), 32),
-    details,
-    selected: true,
-    priority: 100000,
-  };
-}
-
-/** Stable overlay identity for MMSI-keyed and source-retained unkeyed rows. */
-function vesselOverlayEntryId(record) {
-  const mmsi = String(record?.mmsi || '').trim();
-  if (mmsi) return `vessel:${mmsi}`;
-  const name = String(record?.name || 'VESSEL').trim() || 'VESSEL';
-  const lat = Number.isFinite(record?.lat) ? record.lat.toFixed(5) : 'x';
-  const lon = Number.isFinite(record?.lon) ? record.lon.toFixed(5) : 'x';
-  return `vessel:unkeyed:${name}:${lat}:${lon}`;
-}
-
-/** Uppercased, card-width-bounded AIS type (empty string when unknown). */
-function vesselTypeShort(record) {
-  return normalizeVesselType(record.type).toUpperCase().slice(0, 14);
-}
-
-/**
- * True when `screen` is at least `minSepPx` away from every accepted screen
- * position (greedy card-declutter accept test, mirroring the FIRMS pass).
- * Exported for unit tests.
- * @param {Array<{x: number, y: number}>} accepted - Accepted card positions.
- * @param {{x: number, y: number}} screen - Candidate window coordinates.
- * @param {number} minSepPx - Minimum separation in pixels.
- * @returns {boolean}
- */
-export function cardScreenSeparated(accepted, screen, minSepPx) {
-  const minSq = minSepPx * minSepPx;
-  for (let i = 0; i < accepted.length; i += 1) {
-    const dx = screen.x - accepted[i].x;
-    const dy = screen.y - accepted[i].y;
-    if (dx * dx + dy * dy < minSq) return false;
-  }
-  return true;
-}
-
-function displayVesselName(record) {
-  const name = String(record.name || '').trim();
-  if (name && name !== 'VESSEL' && name !== record.mmsi) return name;
-  return record.mmsi ? `MMSI ${record.mmsi}` : 'VESSEL';
-}
-
-function formatSpeed(speed) {
-  return speed === null ? '--KT' : `${speed.toFixed(1)}KT`;
-}
-
-function formatHeading(heading) {
-  return Number.isFinite(heading) ? `${Math.round(heading)}DEG` : '--DEG';
-}
-
-function formatPositionTime(record) {
-  if (!record.lastPositionUtc) return 'POS: LIVE';
-  const date = new Date(record.lastPositionUtc);
-  if (Number.isNaN(date.getTime())) return 'POS: LIVE';
-  return `POS: ${date.toISOString().slice(11, 19)}Z`;
-}
+// trimHudValue, buildVesselCard, buildSelectedVesselCard, cardScreenSeparated,
+// displayVesselName, formatSpeed, formatHeading, formatPositionTime now live
+// in ./aisVesselCards.js (Wave 2 split #20) and are imported/re-exported
+// above. vesselOverlayEntryId/vesselTypeShort moved with them (only used by
+// the two card builders).
 
 function setVisible(show) {
   if (state.billboardCollection) {
