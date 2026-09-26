@@ -13,8 +13,14 @@ import {
   resolveTier,
   measureTrackLabel,
   nearFarScale,
-  rectIntersectsAny,
 } from './detectionDraw.js';
+import {
+  buildLabelPlacements,
+  clampDetectionValue,
+  detectionKey,
+  plateScaleForBackdrop,
+  semanticPriority,
+} from './detectionLabelGeometry.js';
 import {
   getKeyholeFadeTuning,
   keyholeLabelAlphaFromGeometry,
@@ -23,7 +29,6 @@ import { registerWorldOverlayPaintLane } from '../overlays/worldOverlay.js';
 import {
   DETECTION_STYLE,
   DETECTION_THEME_MAP,
-  SKY_PLATE_SCALE,
 } from '../overlays/worldOverlayTokens.js';
 import { skyBackdropFactor } from './iconOrientation.js';
 import { paintDetectionCallout } from '../overlays/worldOverlayDraw.js';
@@ -351,17 +356,6 @@ export function destroyDetection() {
   _lastPaintMs = 0;
   _lastSolveMs = 0;
   _throttleSkipCount = 0;
-}
-
-/**
- * Clamps a numeric value between min and max (inclusive).
- * @param {number} value - The value to clamp.
- * @param {number} min - Lower bound.
- * @param {number} max - Upper bound.
- * @returns {number} The clamped value.
- */
-function _clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
 }
 
 function _modeForDensity(densityPct = _densityPct) {
@@ -823,100 +817,6 @@ function _drawSparseFocusRing(width, height) {
   _ctx.restore();
 }
 
-function _detectionKey(layerId, sourceId) {
-  return `${layerId || 'unknown'}:${String(sourceId)}`;
-}
-
-function _semanticPriority(obj) {
-  if (obj.skipLabel) return 1000;
-  if (obj.tier === 'military') return 120;
-  if (obj.type === 'CAM') return 50;
-  if (obj.type === 'VEH') return 35;
-  if (obj.type === 'AIR') return 30;
-  if (obj.type === 'SAT') return 25;
-  if (obj.type === 'SEA') return 25;
-  return 10;
-}
-
-function _buildLabelPlacements(
-  sx,
-  sy,
-  halfW,
-  halfH,
-  card,
-  width,
-  height,
-  keyhole,
-  occlusionRects = [],
-) {
-  const gapX = 8;
-  const gapY = 12;
-  const margin = 4;
-  const raw = [
-    {
-      corner: 'NE',
-      cardX: sx + halfW + gapX,
-      cardY: sy - halfH - gapY - card.h,
-      leadFromX: sx + halfW,
-      leadFromY: sy - halfH,
-      leadToSide: 'SW',
-    },
-    {
-      corner: 'NW',
-      cardX: sx - halfW - gapX - card.w,
-      cardY: sy - halfH - gapY - card.h,
-      leadFromX: sx - halfW,
-      leadFromY: sy - halfH,
-      leadToSide: 'SE',
-    },
-    {
-      corner: 'SE',
-      cardX: sx + halfW + gapX,
-      cardY: sy + halfH + gapY,
-      leadFromX: sx + halfW,
-      leadFromY: sy + halfH,
-      leadToSide: 'NW',
-    },
-    {
-      corner: 'SW',
-      cardX: sx - halfW - gapX - card.w,
-      cardY: sy + halfH + gapY,
-      leadFromX: sx - halfW,
-      leadFromY: sy + halfH,
-      leadToSide: 'NE',
-    },
-  ];
-
-  const placements = [];
-  for (const placement of raw) {
-    const { cardX, cardY } = placement;
-    if (cardX < margin || cardY < margin || cardX + card.w > width - margin || cardY + card.h > height - margin) {
-      continue;
-    }
-    const cardRect = { x: cardX, y: cardY, w: card.w, h: card.h };
-    if (rectIntersectsAny(cardRect, occlusionRects)) continue;
-    const leadToX = placement.leadToSide.endsWith('E') ? cardX + card.w : cardX;
-    const leadToY = placement.leadToSide.startsWith('S') ? cardY + card.h : cardY;
-    const centerX = cardX + card.w * 0.5;
-    const centerY = cardY + card.h * 0.5;
-    const radialAlpha = keyholeLabelAlphaFromGeometry(centerX, centerY, keyhole);
-    if (radialAlpha <= 0) continue;
-    placements.push({
-      ...placement,
-      leadToX,
-      leadToY,
-      centerX,
-      centerY,
-      keyholeAlpha: radialAlpha,
-      rect: cardRect,
-      primaryX: cardX + card.primaryX,
-      microX: cardX + card.microX,
-      baseline: cardY + card.baseline,
-    });
-  }
-  return placements;
-}
-
 /**
  * Record one solved callout into the pooled replay buffer consumed by
  * `_paintCalloutLane`. Nothing is painted here: the sensor lane owns the
@@ -993,24 +893,12 @@ function _paintCalloutLane(frame) {
   ctx.globalAlpha = 1;
 }
 
-/**
- * Scale a callout's plate for what sits behind it. Ground keeps the full
- * per-theme plate; sky feathers down to `SKY_PLATE_SCALE` of it, because the
- * plate's whole job — holding small mono text off busy sunlit imagery — does
- * not exist against an empty horizon. See `SKY_PLATE_SCALE` for the taste call.
- * @param {number} skyFactor 0 (ground behind) … 1 (sky behind).
- * @returns {number} Multiplier applied to the plate fill only.
- */
-function _plateScaleForBackdrop(skyFactor) {
-  return 1 + (SKY_PLATE_SCALE - 1) * skyFactor;
-}
-
 /** Materialize one bounded rich-callout candidate for the existing arbiter. */
 function _materializeCandidate(obj, width, height, keyhole, occlusionRects, cameraPosition) {
   const primary = obj._candidatePrimary;
   const micro = obj._candidateMicro;
   const card = measureTrackLabel(primary, micro, _charWidth);
-  const placements = _buildLabelPlacements(
+  const placements = buildLabelPlacements(
     obj._candidateScreenX,
     obj._candidateScreenY,
     obj._candidateHalfW,
@@ -1034,7 +922,7 @@ function _materializeCandidate(obj, width, height, keyhole, occlusionRects, came
   const layerId = obj._layerId || 'unknown';
   const sourceId = obj._cohortSourceId;
   return {
-    key: _detectionKey(layerId, sourceId),
+    key: detectionKey(layerId, sourceId),
     layerId,
     sourceId,
     type: obj.type || 'UNK',
@@ -1048,7 +936,7 @@ function _materializeCandidate(obj, width, height, keyhole, occlusionRects, came
     // Costed here rather than in the object sweep: the sweep walks every
     // observation in view, while this runs only for callouts that actually
     // placed — a budgeted handful per frame.
-    plateScale: _plateScaleForBackdrop(skyBackdropFactor(cameraPosition, obj.position)),
+    plateScale: plateScaleForBackdrop(skyBackdropFactor(cameraPosition, obj.position)),
     primary,
     micro,
     hasMicro: card.hasMicro,
@@ -1215,8 +1103,8 @@ function _drawOverlay(frame) {
         Cesium.Cartesian3.distance(camPos, obj.position),
         BILL_NEAR, BILL_NEAR_SCALE, BILL_FAR, BILL_FAR_SCALE,
       );
-      halfW = _clamp((isTracked ? 14 : 9) * bscale, 7, 48);
-      halfH = _clamp((isTracked ? 11 : 7) * bscale, 5, 38);
+      halfW = clampDetectionValue((isTracked ? 14 : 9) * bscale, 7, 48);
+      halfH = clampDetectionValue((isTracked ? 11 : 7) * bscale, 5, 38);
     } else {
       halfW = _mode === MODE_DENSE ? (isTracked ? 28 : 11) : 16;
       halfH = _mode === MODE_DENSE ? (isTracked ? 22 : 7) : 10;
@@ -1253,7 +1141,7 @@ function _drawOverlay(frame) {
     if (!shouldSolve && !liveForRender) continue;
 
     obj._cohortSourceId = sourceId;
-    obj._cohortPriority = _semanticPriority(obj);
+    obj._cohortPriority = semanticPriority(obj);
     obj._cohortBand = bracketAlpha >= 0.999 ? 8 : Math.floor(bracketAlpha * 8);
     obj._cohortHash = stableIdentityHash(layerId, sourceId);
     obj._candidateScreenX = sx;
@@ -1302,7 +1190,7 @@ function _drawOverlay(frame) {
     for (const [layerId, builder] of cohortBuilders) {
       const cohort = builder.values(cohortCapForQuota(quotas.get(layerId) || 0));
       for (const obj of cohort) {
-        const key = _detectionKey(layerId, obj._cohortSourceId);
+        const key = detectionKey(layerId, obj._cohortSourceId);
         let candidate = candidateMap.get(key);
         if (!candidate) {
           placementBuildCount++;
