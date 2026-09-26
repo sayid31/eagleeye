@@ -33,6 +33,13 @@ import {
 import { holdContinuousRender, releaseContinuousRender, getRenderGovernorDiagnostics } from '../renderGovernor.js';
 import { isExplicitLayerStateOrigin } from './layerState.js';
 import { horizonOccluder } from './iconOrientation.js';
+import {
+  findSatelliteOrbitTrackInTle,
+  orbitTrackFromRecord,
+  scoreSatelliteNameMatch,
+} from './satelliteTleLookup.js';
+
+export { findSatelliteOrbitTrackInTle, orbitTrackFromRecord, scoreSatelliteNameMatch };
 
 /**
  * Satellite Orbits — Real-time positions via CelesTrak TLE + SGP4 propagation.
@@ -482,7 +489,7 @@ export function orbitFrameModelMatrix(
 /**
  * Parse TLE text into array of { name, line1, line2 } objects.
  */
-function parseTLE(text) {
+export function parseTLE(text) {
   const lines = text.trim().split('\n').map(l => l.trim()).filter(l => l.length > 0);
   const result = [];
   for (let i = 0; i < lines.length - 2; i += 3) {
@@ -501,7 +508,7 @@ function parseTLE(text) {
  * Returns geodetic position plus inertial speed from the same SGP4 propagation
  * epoch, or null on error.
  */
-function propagatePosition(satrec, date) {
+export function propagatePosition(satrec, date) {
   try {
     const posVel = propagate(satrec, date);
     if (!posVel.position || typeof posVel.position === 'boolean') return null;
@@ -526,7 +533,7 @@ function propagatePosition(satrec, date) {
   }
 }
 
-function orbitalPeriodSeconds(satrec) {
+export function orbitalPeriodSeconds(satrec) {
   const meanMotion = satrec.no * (1440 / (2 * Math.PI));
   return 86400 / Math.max(meanMotion, 0.1);
 }
@@ -535,7 +542,7 @@ function orbitalPeriodSeconds(satrec) {
  * Compute full orbital path as array of Cartesian3 positions.
  * Steps around one full orbit based on the satellite's mean motion.
  */
-function computeOrbitPath(satrec, referenceDate) {
+export function computeOrbitPath(satrec, referenceDate) {
   const periodSec = orbitalPeriodSeconds(satrec);
   const stepSec = periodSec / ORBIT_PATH_STEPS;
 
@@ -1671,7 +1678,6 @@ export function applySatellitePointFocusDeemphasis({
   return { writes, transitioning, activeCount, ran: true };
 }
 
-
 const satellitesLayer = {
   id: 'satellites',
   name: 'Satellites',
@@ -2442,103 +2448,11 @@ export function getNextIssPass({ latDeg, lonDeg, minElevDeg = 10 }) {
   return pass ? { status: 'ok', pass } : { status: 'none' };
 }
 
-/**
- * Score a mission-to-catalog name match. Compact identifier containment handles
- * names such as "Sirius SXM-11" → "SXM-11", while weak generic matches such as
- * "Starlink Group 17-40" → an arbitrary "STARLINK-1008" remain below the
- * acceptance threshold.
- * @param {string} query Mission or payload name.
- * @param {string} catalogName Satellite catalog name.
- * @returns {number} Match score; 0 means no useful relationship.
- */
-export function scoreSatelliteNameMatch(query, catalogName) {
-  const q = String(query || '').trim().toLowerCase();
-  const name = String(catalogName || '').trim().toLowerCase();
-  if (!q || !name) return 0;
-  const qCompact = q.replace(/[^a-z0-9]/g, '');
-  const nameCompact = name.replace(/[^a-z0-9]/g, '');
-  if (qCompact === nameCompact) return 1000;
-  let score = 0;
-  if (
-    Math.min(qCompact.length, nameCompact.length) >= 5
-    && (qCompact.includes(nameCompact) || nameCompact.includes(qCompact))
-  ) {
-    score += 200 + Math.min(qCompact.length, nameCompact.length);
-  }
-  const ignored = new Set(['group', 'block', 'mission', 'launch', 'falcon', 'rocket']);
-  const tokens = q.split(/[^a-z0-9]+/).filter((token) => token.length >= 4 && !ignored.has(token));
-  score += tokens.reduce((total, token) => total + (name.includes(token) ? token.length : 0), 0);
-  return score;
-}
-
 function internationalDesignatorYear(satrec) {
   const match = String(satrec?.intldesg || '').match(/^(\d{2})/);
   if (!match) return null;
   const shortYear = Number(match[1]);
   return shortYear >= 57 ? 1900 + shortYear : 2000 + shortYear;
-}
-
-let _lookupTleText = null;
-let _lookupTleEntries = [];
-
-function lookupTleEntries(tleText) {
-  if (tleText !== _lookupTleText) {
-    _lookupTleText = tleText;
-    _lookupTleEntries = parseTLE(tleText);
-  }
-  return _lookupTleEntries;
-}
-
-function tleLineLaunchYear(line1) {
-  const shortYear = Number(String(line1 || '').slice(9, 11));
-  if (!Number.isFinite(shortYear)) return null;
-  return shortYear >= 57 ? 1900 + shortYear : 2000 + shortYear;
-}
-
-function orbitTrackFromRecord(name, satrec) {
-  const referenceDate = new Date();
-  const current = propagatePosition(satrec, referenceDate);
-  if (!current) return null;
-  return {
-    noradId: Number(satrec.satnum),
-    name: String(name || '').trim(),
-    current,
-    periodSec: orbitalPeriodSeconds(satrec),
-    orbitPath: computeOrbitPath(satrec, referenceDate),
-    gmstAtBake: gstime(referenceDate),
-    positionAt: (date) => propagatePosition(satrec, date),
-  };
-}
-
-/**
- * Find and propagate a mission payload directly from a TLE catalog.
- * This supports newly launched payloads that are present in CelesTrak's active
- * feed but have not yet moved into a narrower operational group.
- * @param {string} tleText Three-line-element catalog text.
- * @param {string} query Mission or payload name.
- * @param {{launchTime?: string|null}} [options] Optional launch epoch for namesake rejection.
- * @returns {{noradId:number,name:string,current:object,periodSec:number,orbitPath:Cesium.Cartesian3[],positionAt:function(Date):object|null}|null}
- */
-export function findSatelliteOrbitTrackInTle(tleText, query, options = {}) {
-  const launchYear = Number.isFinite(Date.parse(options.launchTime))
-    ? new Date(options.launchTime).getUTCFullYear()
-    : null;
-  let bestEntry = null;
-  let bestScore = 0;
-  const catalogText = String(tleText || '');
-  for (const entry of lookupTleEntries(catalogText)) {
-    const designatorYear = tleLineLaunchYear(entry.line1);
-    if (launchYear !== null && designatorYear !== null && designatorYear !== launchYear) continue;
-    const score = scoreSatelliteNameMatch(query, entry.name);
-    if (score > bestScore) {
-      bestEntry = entry;
-      bestScore = score;
-    }
-  }
-  if (!bestEntry || bestScore < 12) return null;
-  const satrec = twoline2satrec(bestEntry.line1, bestEntry.line2);
-  if (!satrec || satrec.error !== 0) return null;
-  return orbitTrackFromRecord(bestEntry.name, satrec);
 }
 
 /**
