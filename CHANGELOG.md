@@ -5,6 +5,27 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Refactored
+
+- **`flights.js` and `militaryFlights.js` shared their dead-reckoning math as
+  two near-duplicate private copies; it is now one shared module.** Extracted
+  the ENU-frame extrapolation/interpolation engine (bracketing-fix
+  interpolation, constant-rate-turn extrapolation, warm-up detection) into
+  `src/data/deadReckoning.js` (`createDeadReckoning()`), using the same
+  per-layer factory-closure pattern already established by
+  `groundSnap.js`/`trailRenderer.js` — each layer creates its own instance
+  with its own `renderDelaySec` and field-name readers (OpenSky's
+  `velocity`/`true_track` vs. adsb.lol's `speedMps`/`track`), so the caches
+  stay per-layer while the math is shared. No behavior change: the
+  zero-allocation module-scratch discipline is preserved via a persistent
+  `last` object callers read immediately after calling `deadReckon()`, and
+  `flights.js`'s dev-only focus-evidence QA override becomes an optional
+  constructor param the military layer omits. Also moved `approxDistanceKm`
+  into the new module — it turned out to only ever exist in `flights.js`,
+  not duplicated in `militaryFlights.js` as originally scoped, so this makes
+  it available to both rather than de-duplicating it. `flights.js` drops
+  from 5,338 to 5,172 lines, `militaryFlights.js` from 3,876 to 3,744 lines.
+
 ### Fixed
 
 - **CCTV coverage wireframe green flicker, reported on a laptop GPU (not

@@ -54,11 +54,11 @@ import {
   trackedModelScaleForPixelCap,
 } from './trackedCamera.js';
 import {
-  courseBetweenCartesians, limitCourseStep, turnRateFromFixHistory, arcOffsetEnu,
-  lerpAngleDeg, speedRamp, courseSlewCapDps, displayedKinematics, staleCoastLimitSeconds,
+  limitCourseStep, turnRateFromFixHistory,
+  courseSlewCapDps, displayedKinematics,
   liftRepeatedGroundFix, synthesizeForwardKinematicsFix, corridorPathLatLon,
-  COURSE_HOLD_SPEED_MPS,
 } from './motionModel.js';
+import { createDeadReckoning, approxDistanceKm } from './deadReckoning.js';
 import { routePlausible } from './routePlausible.js';
 import { isMilitaryIcao, isMilitaryLayerActive, refreshMilitaryRegistryIfStale, onMilitaryLayerActiveChange } from './militaryRegistry.js';
 import { formatFlightLevel } from './detectionDraw.js';
@@ -630,19 +630,6 @@ const GROUND_FLOOR_CLAMP_RADIUS_KM = 150;
 let _missingPolls = new Map();
 
 /**
- * Cheap equirectangular distance (km) — plenty accurate for the ~150 km
- * ground-floor clamp gate; runs once per contact per poll, so no trig-heavy
- * haversine needed.
- * @param {number} lat1 @param {number} lon1 @param {number} lat2 @param {number} lon2
- * @returns {number} Approximate great-circle distance in km.
- */
-function _approxDistanceKm(lat1, lon1, lat2, lon2) {
-  const dLat = (lat2 - lat1) * 111.32;
-  const dLon = (lon2 - lon1) * 111.32 * Math.cos(((lat1 + lat2) / 2) * Math.PI / 180);
-  return Math.hypot(dLat, dLon);
-}
-
-/**
  * True when the aircraft's latest metadata reads "on or about the runway"
  * (low + slow) — see the landed fast-cull rationale above. Both gates must
  * hold, so a plane missing either datum keeps the normal grace.
@@ -704,20 +691,41 @@ let _milActiveChangeUnsub = null;
 // Scratch (reusable) variables — avoid per-frame heap allocation
 // ---------------------------------------------------------------------------
 
-const _scratchOffset = new Cesium.Cartesian3();
 const _scratchCarto = new Cesium.Cartographic();
-const _scratchEnu = new Cesium.Matrix4();
-const _scratchArc = { east: 0, north: 0, endCourseDeg: 0 };
-const _scratchRenderTime = new Cesium.JulianDate();
 const _scratchFleetPos = new Cesium.Cartesian3();
 const _scratchDrRaw = new Cesium.Cartesian3();
-const _scratchWarmupTime = new Cesium.JulianDate();
 const _trackedPosHolder = new Cesium.Cartesian3();
+/** Scratch for _startTrail's seed-render-time cutoff (outside deadReckoning.js's
+ *  own internal scratch of the same name — that one is private to the engine). */
+const _scratchTrailSeedTime = new Cesium.JulianDate();
+
+// ---------------------------------------------------------------------------
+// Shared dead-reckoning engine (deadReckoning.js — Wave 3 item #28 of the
+// file-split program). See that module's header for the reconciliation of
+// this layer's divergences from militaryFlights.js's copy: RENDER_DELAY_SEC
+// (per-layer constant, below), the FOCUS_EVIDENCE_DEV evidence-harness
+// override (this layer only), and the velocity/track field-name mapping
+// (`info.velocity`/`info.true_track` here vs. militaryFlights.js's
+// `info.speedMps`/`info.track`).
+// ---------------------------------------------------------------------------
+
+const _dr = createDeadReckoning({
+  renderDelaySec: RENDER_DELAY_SEC,
+  getPositionHistory: () => _positionHistory,
+  getFlightData: () => _flightData,
+  getTrackedIcao: () => _trackedIcao,
+  infoVelocity: (info) => info?.velocity,
+  infoTrack: (info) => info?.true_track,
+  focusEvidence: {
+    ids: _focusEvidenceIds,
+    getBillboardPosition: (icao24) => _billboards.get(icao24)?.position,
+  },
+});
 
 // ---------------------------------------------------------------------------
 // Per-frame cache for the tracked entity's dead-reckoned position.
 // The position, alignedAxis, and rotation CallbackProperties all fire each
-// render frame; caching avoids running _deadReckon three times.
+// render frame; caching avoids running _dr.deadReckon three times.
 // ---------------------------------------------------------------------------
 
 /** @type {Cesium.Cartesian3|null} */
@@ -725,23 +733,6 @@ let _cachedDRPosition = null;
 /** @type {number} Frame number for which _cachedDRPosition is valid */
 let _cachedDRFrame = -1;
 
-/** Course (deg) of the position `_deadReckon` most recently returned — set on
- *  every branch of `_deadReckon`, read IMMEDIATELY by the caller (same
- *  synchronous flow; module-scratch idiom, like the Cartesian scratches). */
-let _drCourseDeg = null;
-/** Sibling scratches of _drCourseDeg: the displayed ground speed of the motion
- *  `_deadReckon` just returned, and whether that motion is too slow for ANY
- *  course source to be trusted (hover/GPS drift — consumers HOLD their
- *  previous display course instead of chasing noise). */
-let _drSpeedMps = null;
-let _drCourseHold = false;
-/** Sibling scratch: whether the position `_deadReckon` just returned came from
- *  EXTRAPOLATION (coasting past the newest fix, or the pre-history warm-up)
- *  rather than interpolation between two known fixes. The display-floor
- *  corridor needs it — an interpolating contact is walking TOWARD its newest
- *  fix, a coasting one is walking AWAY from it along its course, and warming
- *  the wrong end leaves a coaster permanently ahead of its floor data. */
-let _drExtrapolating = false;
 /** Frame-cached course for the tracked aircraft (sibling of _cachedDRPosition). */
 let _cachedDRCourse = null;
 /** Frame-cached siblings of _cachedDRCourse (same discipline). */
@@ -987,7 +978,7 @@ function _refloorStaleGroundedContacts(currentIcaos) {
 }
 
 // ---------------------------------------------------------------------------
-// Tracked-display reconciliation. _deadReckon gives the RAW position from real
+// Tracked-display reconciliation. _dr.deadReckon gives the RAW position from real
 // fixes; at the warm-up→interpolation handoff (and on feed glitches / backfill
 // splices) that raw value can step discontinuously. We absorb a step into a
 // correction offset that decays to zero over DR_CORRECTION_MS, so the tracked
@@ -1083,166 +1074,9 @@ function _deriveOpenSkyAuthError({ detail, authMode, authReason }) {
   return 'OpenSky auth failed';
 }
 
-/**
- * Dead-reckon an aircraft's current position using ENU (East-North-Up) frame math.
- *
- * Projects forward from the last known API fix using the aircraft's ground
- * velocity and true_track heading.  The ENU transform avoids repeated lat/lon
- * trig, keeping the per-frame cost low.
- *
- * If this aircraft is the tracked target and a lerp is in progress (new API
- * fix just arrived), the function first blends from the old dead-reckoned
- * position toward the corrected fix before projecting forward.
- *
- * @param {string} icao24 - ICAO 24-bit transponder address of the aircraft.
- * @returns {Cesium.Cartesian3|null} Estimated ECEF position, or null if no history exists.
- */
-function _deadReckon(icao24, result) {
-  const info = _flightData.get(icao24);
-  if (FOCUS_EVIDENCE_DEV && _focusEvidenceIds.has(icao24)) {
-    const position = _billboards.get(icao24)?.position;
-    _drCourseDeg = info?.true_track || 0;
-    _drSpeedMps = info?.velocity || 0;
-    _drCourseHold = _drSpeedMps < COURSE_HOLD_SPEED_MPS;
-    _drExtrapolating = false;
-    return position ? Cesium.Cartesian3.clone(position, result || new Cesium.Cartesian3()) : null;
-  }
-  const history = _positionHistory.get(icao24);
-  if (!history || history.length === 0) {
-    _drCourseDeg = null; _drSpeedMps = null; _drCourseHold = false; _drExtrapolating = false;
-    return null;
-  }
-
-  const out = result || new Cesium.Cartesian3();
-  // Render one poll interval behind real time so we interpolate between
-  // two KNOWN fixes whenever possible (see RENDER_DELAY_SEC rationale).
-  const renderTime = Cesium.JulianDate.addSeconds(
-    Cesium.JulianDate.now(), -RENDER_DELAY_SEC, _scratchRenderTime
-  );
-
-  // Bracketing pair: interpolate — no extrapolation error, no snap-back.
-  for (let i = history.length - 1; i >= 1; i--) {
-    const a = history[i - 1];
-    const b = history[i];
-    if (
-      Cesium.JulianDate.lessThanOrEquals(a.time, renderTime) &&
-      Cesium.JulianDate.lessThanOrEquals(renderTime, b.time)
-    ) {
-      const span = Cesium.JulianDate.secondsDifference(b.time, a.time);
-      const t = span > 0
-        ? Cesium.JulianDate.secondsDifference(renderTime, a.time) / span
-        : 1.0;
-      // Course of the DISPLAYED motion. The chord is only trustworthy when the
-      // segment covers real ground (at hover its direction is GPS jitter; on a
-      // slow tight turn it STEPS the whole per-segment turn at each boundary),
-      // so it is blended against the reported per-fix track by displayed
-      // ground speed — and the track is TIME-INTERPOLATED between the fixes so
-      // a slow turner's nose advances continuously through the segment instead
-      // of snapping once per poll. Helicopters always use the reported track
-      // (rotorcraft chords are noise-dominated at their typical speeds).
-      const chordLenM = Cesium.Cartesian3.distance(a.position, b.position);
-      const segSpeed = span > 0 ? chordLenM / span : ((info && info.velocity) || 0);
-      const fallbackTrack = (info && info.true_track) || 0;
-      const trackFrom = Number.isFinite(a.track) ? a.track : fallbackTrack;
-      const trackTo = Number.isFinite(b.track) ? b.track : trackFrom;
-      const trackCourse = lerpAngleDeg(trackFrom, trackTo, t);
-      const w = (info && info.klass === 'helicopter') ? 0 : speedRamp(segSpeed);
-      const chordCourse = w > 0 ? courseBetweenCartesians(a.position, b.position) : null;
-      _drCourseDeg = chordCourse != null ? lerpAngleDeg(trackCourse, chordCourse, w) : trackCourse;
-      _drSpeedMps = segSpeed;
-      _drCourseHold = segSpeed < COURSE_HOLD_SPEED_MPS;
-      _drExtrapolating = false;
-      return Cesium.Cartesian3.lerp(a.position, b.position, t, out);
-    }
-  }
-
-  const newest = history[history.length - 1];
-  const elapsedSec = Cesium.JulianDate.secondsDifference(renderTime, newest.time);
-  if (elapsedSec <= 0) {
-    // Warm-up: renderTime predates ALL history (freshly seen / just-started-tracking
-    // aircraft, before RENDER_DELAY_SEC of history has accumulated, so no bracketing
-    // pair exists yet). Render at the DELAYED renderTime — preserving the 30s-behind
-    // invariant — by extrapolating the OLDEST fix BACKWARD to renderTime. As history
-    // fills, renderTime advances toward the first fix and the icon glides FORWARD into
-    // the bracketing interpolation above with NO freeze and NO backward snap. (Holding
-    // the oldest fix froze the icon; extrapolating the NEWEST fix to wall-clock now made
-    // the icon jump back ~one poll interval the instant interpolation took over.)
-    const oldest = history[0];
-    const lookbackSec = Cesium.JulianDate.secondsDifference(oldest.time, renderTime); // ≥ 0
-    return _extrapolateFix(oldest, info, -Math.min(lookbackSec, 60), out, (info && info.turnRateDps) || 0);
-  }
-
-  // Newest POSITION is older than renderTime. OpenSky can still be receiving
-  // fresh contact/kinematic messages for that aircraft; freezing at a hard
-  // 60 s-after-position boundary produced the visible stop → catch-up → stop
-  // cadence. Coast through the latest real contact plus a bounded grace
-  // window, with an absolute cap so a stale cached feed cannot drift forever.
-  const coastLimitSec = staleCoastLimitSeconds({
-    // `epochMs` is captured once when the poll is normalized. Avoid allocating
-    // a Date per aircraft on every 12 Hz fleet tick.
-    fixEpochMs: Number.isFinite(newest.epochMs)
-      ? newest.epochMs
-      : Cesium.JulianDate.toDate(newest.time).getTime(),
-    lastContactEpochMs: info?.lastContactEpochMs,
-    // Permit one minute of contact grace but cap any cached-feed drift at
-    // five minutes. Source backoff is exposed separately as a STALE cue.
-    minimumSec: 60,
-    maximumSec: 300,
-  });
-  return _extrapolateFix(
-    newest,
-    info,
-    Math.min(elapsedSec, coastLimitSec),
-    out,
-    (info && info.turnRateDps) || 0,
-  );
-}
-
-/**
- * Dead-reckon a fix along its own velocity/track by `dt` seconds, integrating a
- * constant-rate-turn arc when `turnRateDps` is significant (straight line
- * otherwise). Positive `dt` projects FORWARD (after the fix); negative `dt`
- * projects BACKWARD (before the fix) — used for warm-up, estimating where the
- * aircraft was before its first observed fix. ENU frame: east = +X, north = +Y,
- * up = +Z; heading 0 deg = north, 90 deg = east. Sets `_drCourseDeg` to the
- * arc's instantaneous end course on every path.
- * Arc math adapted from skylight (https://github.com/cpaczek/skylight, MIT).
- */
-function _extrapolateFix(fix, info, dt, out, turnRateDps = 0) {
-  const speed = Number.isFinite(fix.velocity) ? fix.velocity : ((info && info.velocity) || 0);
-  const heading = Number.isFinite(fix.track) ? fix.track : ((info && info.true_track) || 0);
-  _drSpeedMps = speed;
-  _drCourseHold = speed < COURSE_HOLD_SPEED_MPS;
-  _drExtrapolating = true;
-  if (speed === 0 || dt === 0) {
-    _drCourseDeg = heading;
-    return Cesium.Cartesian3.clone(fix.position, out);
-  }
-  // Constant-rate-turn arc (straight line when turnRateDps ≈ 0) — a plane in a
-  // standard-rate turn is ~90° of arc wrong per 30 s if extrapolated straight.
-  arcOffsetEnu(speed, heading, turnRateDps, dt, _scratchArc);
-  _drCourseDeg = _scratchArc.endCourseDeg;
-  Cesium.Cartesian3.fromElements(_scratchArc.east, _scratchArc.north, 0, _scratchOffset);
-  const enu = Cesium.Transforms.eastNorthUpToFixedFrame(fix.position, Cesium.Ellipsoid.WGS84, _scratchEnu);
-  return Cesium.Matrix4.multiplyByPoint(enu, _scratchOffset, out);
-}
-
-/**
- * True while the tracked aircraft's delayed display time (now − RENDER_DELAY_SEC)
- * predates its oldest real fix — i.e. _deadReckon is extrapolating backward, with no
- * real history yet sitting BEHIND the displayed icon. The trail must draw nothing in
- * this window (every accumulated point is ahead of the icon).
- * @returns {boolean}
- */
-function _isTrackWarmingUp() {
-  if (!_trackedIcao) return false;
-  const history = _positionHistory.get(_trackedIcao);
-  if (!history || history.length === 0) return true;
-  const renderTime = Cesium.JulianDate.addSeconds(
-    Cesium.JulianDate.now(), -RENDER_DELAY_SEC, _scratchWarmupTime
-  );
-  return Cesium.JulianDate.lessThan(renderTime, history[0].time);
-}
+// _deadReckon / _extrapolateFix / _isTrackWarmingUp moved to deadReckoning.js
+// (shared with militaryFlights.js) — see the `_dr` instance above. Call sites
+// below use `_dr.deadReckon(...)` / `_dr.isTrackWarmingUp()` / `_dr.last.*`.
 
 /** Resolve the selected aircraft's actual rendered square extent this frame. */
 function _trackedFocusSizePx(icao24, position) {
@@ -1292,10 +1126,10 @@ function _trackedDisplayPosition(icao24) {
   // Does the reconciliation state belong to THIS aircraft? (Capture before overwriting
   // _drReconcileIcao, so a track switch doesn't inherit the old plane's _drPrevRaw.)
   const sameTrack = _drReconcileValid && _drReconcileIcao === icao24;
-  const raw = _deadReckon(icao24, _scratchDrRaw);
-  _cachedDRCourse = _drCourseDeg;
-  _cachedDRSpeedMps = _drSpeedMps;
-  _cachedDRHold = _drCourseHold;
+  const raw = _dr.deadReckon(icao24, _scratchDrRaw);
+  _cachedDRCourse = _dr.last.courseDeg;
+  _cachedDRSpeedMps = _dr.last.speedMps;
+  _cachedDRHold = _dr.last.courseHold;
   _cachedDRFrame = frame;
   _drReconcileIcao = icao24;
   if (!raw) {
@@ -1442,7 +1276,7 @@ function _trackedTrailCached() {
 
 /** Smoothed world course for the tracked aircraft this frame. Reads the
  *  frame-cached course (set by _trackedDisplayPosition — the follow-camera's
- *  own computation), NEVER re-runs _deadReckon. Safe to call more than once
+ *  own computation), NEVER re-runs _dr.deadReckon. Safe to call more than once
  *  per frame: the second call sees dt≈0 and the limiter is a no-op.
  *
  *  The smoothed value lives in the SHARED per-icao _displayCourse entry (see
@@ -1940,7 +1774,7 @@ const FLOOR_EASE_EPSILON_M = 0.02;
  */
 function _heldDisplayFloorM(state, cell, nowMs) {
   if (state.heldTier && !(Number.isFinite(state.heldM) && state.heldCell
-    && _approxDistanceKm(cell.lat, cell.lon, state.heldCell.lat, state.heldCell.lon)
+    && approxDistanceKm(cell.lat, cell.lon, state.heldCell.lat, state.heldCell.lon)
       <= HELD_FLOOR_MAX_DRIFT_KM)) {
     // Out of range: the held value is no longer a measurement of anywhere this
     // contact has been. Drop it rather than stretch it.
@@ -2257,13 +2091,13 @@ function _collectDisplayCorridorCells(out, viewerLat, viewerLon) {
     // T7: a contact whose 3D model is the visual never reads a display floor.
     if (_modelOwnsVisual(icao24)) continue;
     if (!Number.isFinite(info.rawLat) || !Number.isFinite(info.rawLon)) continue;
-    if (_approxDistanceKm(viewerLat, viewerLon, info.rawLat, info.rawLon) > DISPLAY_CORRIDOR_RADIUS_KM) continue;
-    const dr = _deadReckon(icao24, _scratchCorridorPos);
+    if (approxDistanceKm(viewerLat, viewerLon, info.rawLat, info.rawLon) > DISPLAY_CORRIDOR_RADIUS_KM) continue;
+    const dr = _dr.deadReckon(icao24, _scratchCorridorPos);
     if (!dr) continue;
-    // Read the sibling scratches IMMEDIATELY, before any other _deadReckon call.
-    const extrapolating = _drExtrapolating;
-    const speedMps = Number.isFinite(_drSpeedMps) ? _drSpeedMps : (info.velocity || 0);
-    const courseDeg = _drCourseDeg != null ? _drCourseDeg : (info.true_track || 0);
+    // Read the sibling scratches IMMEDIATELY, before any other _dr.deadReckon call.
+    const extrapolating = _dr.last.extrapolating;
+    const speedMps = Number.isFinite(_dr.last.speedMps) ? _dr.last.speedMps : (info.velocity || 0);
+    const courseDeg = _dr.last.courseDeg != null ? _dr.last.courseDeg : (info.true_track || 0);
     const c = Cesium.Cartographic.fromCartesian(dr, Cesium.Ellipsoid.WGS84, _scratchCorridorCarto);
     const lat = Cesium.Math.toDegrees(c.latitude);
     const lon = Cesium.Math.toDegrees(c.longitude);
@@ -2712,7 +2546,7 @@ function _fleetTick() {
 
     const info = _flightData.get(icao24);
 
-    const dr = _deadReckon(icao24, _scratchFleetPos);
+    const dr = _dr.deadReckon(icao24, _scratchFleetPos);
     // The dead-reckoned point drifts away from the fix whose cell supplied the
     // height, so a grounded contact's sprite ends up under the mesh it taxied
     // (or coasted) over. Re-floor at the DISPLAYED coordinate — read-only, and
@@ -2793,18 +2627,18 @@ function _fleetTick() {
       }
     }
 
-    // Smoothed display course: the path direction _deadReckon just reported
-    // for THIS aircraft (nothing else calls _deadReckon in between), rate-
+    // Smoothed display course: the path direction _dr.deadReckon just reported
+    // for THIS aircraft (nothing else calls _dr.deadReckon in between), rate-
     // limited so segment-boundary course steps glide instead of snapping.
     // The slew cap eases toward COURSE_MIN_DPS at low speed, and a hovering
     // aircraft (hold flag) keeps its previous nose direction outright.
-    const rawCourse = _drCourseDeg != null ? _drCourseDeg : ((info && info.true_track) || 0);
+    const rawCourse = _dr.last.courseDeg != null ? _dr.last.courseDeg : ((info && info.true_track) || 0);
     const prevCourse = _displayCourse.get(icao24);
-    const course = (_drCourseHold && prevCourse != null)
+    const course = (_dr.last.courseHold && prevCourse != null)
       ? prevCourse
       : limitCourseStep(
         prevCourse, rawCourse,
-        courseSlewCapDps(_drSpeedMps != null ? _drSpeedMps : ((info && info.velocity) ?? NaN), COURSE_MAX_DPS),
+        courseSlewCapDps(_dr.last.speedMps != null ? _dr.last.speedMps : ((info && info.velocity) ?? NaN), COURSE_MAX_DPS),
         tickDtSec,
       );
     _displayCourse.set(icao24, course);
@@ -2874,11 +2708,11 @@ function _describeFlight(icao24) {
   // `_trackedDisplayPosition`). If that ever changes, floor this path too.
   const info = _flightData.get(icao24);
   const bb = _billboards.get(icao24);
-  const basePos = _deadReckon(icao24) || (bb ? bb.position : null);
+  const basePos = _dr.deadReckon(icao24) || (bb ? bb.position : null);
   if (!basePos) return null;
   const displayed = displayedKinematics({
-    derivedSpeedMps: _drSpeedMps,
-    derivedTrackDeg: _drCourseDeg,
+    derivedSpeedMps: _dr.last.speedMps,
+    derivedTrackDeg: _dr.last.courseDeg,
     reportedSpeedMps: info?.velocity,
     reportedTrackDeg: info?.true_track,
   });
@@ -2964,7 +2798,7 @@ function _startTrail(icao24) {
   // would draw the trail in front of the plane. They join the trail via _appendTrailFix
   // as they age past the delay.
   const seedRenderTime = Cesium.JulianDate.addSeconds(
-    Cesium.JulianDate.now(), -RENDER_DELAY_SEC, _scratchWarmupTime
+    Cesium.JulianDate.now(), -RENDER_DELAY_SEC, _scratchTrailSeedTime
   );
   for (const fix of history) {
     if (Cesium.JulianDate.lessThanOrEquals(fix.time, seedRenderTime)) {
@@ -2992,7 +2826,7 @@ function _startTrail(icao24) {
           // point would be the sole raw fix — which is ~now, AHEAD of the delayed icon —
           // so the segment would draw IN FRONT of the plane. Likewise during warm-up the
           // icon predates all real history, so there is no valid body point behind it.
-          if (!_trackedIcao || _trailPositions.length < 2 || _isTrackWarmingUp()) return [];
+          if (!_trackedIcao || _trailPositions.length < 2 || _dr.isTrackWarmingUp()) return [];
           const head = _trackedTrailCached() || _trackedDisplayPosition(_trackedIcao);
           if (!head) return [];
           // body[n−2] (last displayed body point) → delayed head: runs FORWARD, never a
@@ -3517,7 +3351,7 @@ function _routeIsPlausible(icao24, route) {
  *
  * Clears any existing tracked flight, hides its billboard, and creates a
  * new Entity with:
- *  - A CallbackProperty position driven by dead-reckoning (_deadReckon).
+ *  - A CallbackProperty position driven by dead-reckoning (_dr.deadReckon).
  *  - A CallbackProperty alignedAxis set to the surface normal at the
  *    dead-reckoned position (keeps the icon tangent to the earth).
  *  - A CallbackProperty rotation from the aircraft's true_track heading.
@@ -4262,7 +4096,7 @@ const flightsLayer = {
           // (the only ones whose exact height is visible; far contacts are
           // subpixel and always-on-top anyway).
           if (viewerLatDeg != null &&
-              _approxDistanceKm(viewerLatDeg, viewerLonDeg, lat, lon) <= GROUND_FLOOR_CLAMP_RADIUS_KM) {
+              approxDistanceKm(viewerLatDeg, viewerLonDeg, lat, lon) <= GROUND_FLOOR_CLAMP_RADIUS_KM) {
             floorWarmPoints.push({ lat, lon });
           }
           // Last synchronous resort for a BRAND-NEW grounded contact with NO
@@ -4332,7 +4166,7 @@ const flightsLayer = {
         if (!onGround && renderAltitudeM < GROUND_FLOOR_WARM_MAX_ALT_M &&
             (icao24 === _trackedIcao ||
               (viewerLatDeg != null &&
-                _approxDistanceKm(viewerLatDeg, viewerLonDeg, lat, lon) <= GROUND_FLOOR_CLAMP_RADIUS_KM))) {
+                approxDistanceKm(viewerLatDeg, viewerLonDeg, lat, lon) <= GROUND_FLOOR_CLAMP_RADIUS_KM))) {
           renderAltitudeM = floorAltitudeM(renderAltitudeM, cachedGroundFloor(lat, lon));
           floorWarmPoints.push({ lat, lon });
         }
