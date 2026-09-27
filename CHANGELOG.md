@@ -178,13 +178,40 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   now call into the registry's primitives and then do their own host-owned
   cleanup. No change to any of this module's ~8 existing public export names
   used by its 13 other importers. `worldOverlay.js`: 2393 → 1986 lines. New
-  `worldOverlaySourceRegistry.js`: 467 lines. Not merged/pushed pending
-  explicit instruction. A separate, previously unmentioned sibling branch,
+  `worldOverlaySourceRegistry.js`: 467 lines. A sibling branch,
   `refactor/worldoverlay-ui-occluder-tracking-split` (item #24, splitting
-  this same file's UI-occluder tracking into `worldOverlayOccluder.js`), also
-  exists unmerged from the same `main` commit — the two branches' changes
-  are very likely non-overlapping (this branch never touches the occluder
-  block) but that has not been confirmed by an actual merge attempt.
+  this same file's UI-occluder tracking into `worldOverlayOccluder.js`),
+  forked from the same `main` commit and independently touched the same
+  import block and constant-declaration region of `worldOverlay.js`; merging
+  both into `main` produced a genuine two-location merge conflict, resolved
+  by combining both sides' additions (both sets of imports/exports/the
+  `normalizeOverlayEntry` wrapper are needed simultaneously) and dropping
+  this branch's stale reintroduction of `OCCLUDER_PADDING_PX`/
+  `OCCLUDER_REFRESH_MS`, which item #24 had already relocated to
+  `worldOverlayOccluder.js`.
+- **Extracted `flights.js`'s adsbdb type/route enrichment queue into its own
+  module, `src/data/enrichmentQueue.js`.** File-split program, Wave 3 item
+  #31 — the plan's own wording called this the "OpenSky enrichment
+  queue/throttle," but the actual subsystem enriches via the community
+  **adsbdb** API (type/registration/route lookups), a distinct upstream from
+  OpenSky (which only supplies live position); the module and this entry are
+  named for what the code actually does. Unlike Wave 3 items #28-#30, this is
+  a `flights.js`-only relocation, not a two-file reconciliation:
+  `militaryFlights.js` carries no adsbdb enrichment code at all (its aircraft
+  are pre-classified from the military registry), confirmed via exhaustive
+  grep before starting. Moved verbatim: the bounded fan-out queue (max 4
+  concurrent, ≤5/s dispatch drip, priority lane for tracked/model-eligible
+  planes, per-session dedup), the rolling token-bucket ambient-sweep budget,
+  and the nearest-on-screen-first ambient fleet type-classification sweep.
+  Same per-layer factory-closure pattern as `groundSnap.js`/
+  `modelGroundHandoff.js`: `flights.js` instantiates its own
+  `createEnrichmentQueue()` via accessor closures for its reassignable state
+  (flight-data/billboard maps, tracked icao/entity, viewer, billboard
+  collection) plus its own `applyFleetBillboardPresentation`/
+  `syncModelToClass`/`updateTrackedLabelModel` callbacks. The
+  `window.__GEV_ENRICH_AMBIENT_QA` seam `scripts/qa-enrich-ambient.mjs` drives
+  is preserved unchanged. `flights.js`: 5338 → 5179 lines. New
+  `enrichmentQueue.js`: 273 lines.
 
 ### Changed
 
