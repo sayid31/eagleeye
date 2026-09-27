@@ -63,6 +63,7 @@ import { routePlausible } from './routePlausible.js';
 import { isMilitaryIcao, isMilitaryLayerActive, refreshMilitaryRegistryIfStale, onMilitaryLayerActiveChange } from './militaryRegistry.js';
 import { formatFlightLevel } from './detectionDraw.js';
 import { createGroundSnap } from './groundSnap.js';
+import { createEnrichmentQueue } from './enrichmentQueue.js';
 import { trackedModelZoomActive } from './trackedModelRegime.js';
 import { geoidSurfaceLastResortM, pickRenderAltitudeM } from './renderAltitude.js';
 import { allocateCorridorCells, cachedGroundFloor, cachedMeshFloor, coarseFloorCoord, corridorFloorCells, displayFloorHeightM, floorAltitudeM, neighborFloorM, stickyFloorCell, warmGroundFloor, resolveGroundFloorCellsBounded, GROUND_FLOOR_LIFT_M } from './groundFloor.js';
@@ -766,187 +767,30 @@ const COURSE_MAX_DPS = 60;
 /** Never spend a long render stall's full elapsed time in one visible course step. */
 const COURSE_SLEW_DT_MAX_SEC = 0.25;
 
-// ---------------------------------------------------------------------------
-// adsbdb enrichment (best-effort, fail-silent). Bounded fan-out: max 4
-// concurrent requests, dispatches dripped ≥ENRICH_DISPATCH_GAP_MS apart
-// (≤5/s — adsbdb is a free community API; the dev-server proxy additionally
-// caches per-key on disk forever, negative results included, so repeat
-// sessions never re-hit adsbdb). Each key is requested at most once per
-// session. Priority jobs (tracked plane, model-eligible planes) jump the
-// queue; the ambient fleet sweep (below) fills the back at poll cadence.
-// ---------------------------------------------------------------------------
-const ENRICH_MAX_INFLIGHT = 4;
-/** Min ms between request dispatches — the drip that bounds the fan-out to ≤5/s. */
-const ENRICH_DISPATCH_GAP_MS = 200;
-let _enrichActive = 0;
-let _enrichLastDispatchMs = 0;
-/** @type {ReturnType<typeof setTimeout>|null} pending drip wake-up */
-let _enrichDripTimer = null;
-const _enrichQueue = [];
-const _enrichSeen = new Set();
-
-function _enqueueEnrich(key, url, onData, priority = false) {
-  if (_enrichSeen.has(key)) return;
-  _enrichSeen.add(key);
-  const job = { url, onData };
-  // Priority (tracked / model-eligible) goes to the FRONT so a deep ambient
-  // backlog can never delay the plane the user just clicked or zoomed into.
-  if (priority) _enrichQueue.unshift(job); else _enrichQueue.push(job);
-  _drainEnrich();
-}
-
-function _drainEnrich() {
-  while (_enrichActive < ENRICH_MAX_INFLIGHT && _enrichQueue.length) {
-    // Drip: at most one dispatch per ENRICH_DISPATCH_GAP_MS. When the gap
-    // hasn't elapsed yet, park a single wake-up timer and stop — completions
-    // and enqueues in the meantime re-enter here harmlessly.
-    const wait = ENRICH_DISPATCH_GAP_MS - (Date.now() - _enrichLastDispatchMs);
-    if (wait > 0) {
-      if (!_enrichDripTimer) {
-        _enrichDripTimer = setTimeout(() => { _enrichDripTimer = null; _drainEnrich(); }, wait);
-      }
-      return;
-    }
-    _enrichLastDispatchMs = Date.now();
-    const job = _enrichQueue.shift();
-    _enrichActive += 1;
-    fetch(job.url)
-      .then((r) => (r.ok ? r.json() : null))
-      .then((data) => { if (data && data.found) job.onData(data); })
-      .catch(() => { /* enrichment never surfaces errors */ })
-      .finally(() => { _enrichActive -= 1; _drainEnrich(); });
-  }
-}
-
-function _requestTypeEnrichment(icao24, priority = false) {
-  if (!/^[0-9a-f]{6}$/i.test(icao24)) return;
-  _enqueueEnrich(`t:${icao24}`, `/api/adsbdb/type/${icao24.toLowerCase()}`, (data) => {
-    const meta = _flightData.get(icao24);
-    if (!meta) return; // evicted while the lookup was in flight
-    meta.typeCode = data.typeCode || meta.typeCode;
-    meta.typeName = data.typeName || meta.typeName;
-    meta.registration = data.registration || meta.registration;
-    if (meta.typeCode) {
-      const klass = classifyAircraft({ typeCode: meta.typeCode, category: meta.category });
-      if (klass !== meta.klass) {
-        meta.klass = klass;
-        const bb = _billboards.get(icao24);
-        if (bb) _applyFleetBillboardPresentation(icao24, bb);
-        // Hangar fleet: the class's GLB/scale may have changed — resync the
-        // live model, any in-flight load, and the tracked standalone model.
-        _syncModelToClass(icao24);
-      }
-    }
-    if (icao24 === _trackedIcao && _trackedEntity) _updateTrackedLabelModel(icao24);
-  }, priority);
-}
-
-function _requestRouteEnrichment(icao24) {
-  const cs = String(_flightData.get(icao24)?.callsign || '').trim().toUpperCase();
-  if (!/^[A-Z]{3}\d/.test(cs)) return; // airline-style callsigns only (LLL + digit); GA tails won't resolve
-  _enqueueEnrich(`r:${cs}`, `/api/adsbdb/route/${encodeURIComponent(cs)}`, (data) => {
-    const meta = _flightData.get(icao24);
-    if (!meta) return;
-    meta.airline = data.airline || meta.airline;
-    if (data.origin && data.destination) meta.route = { origin: data.origin, destination: data.destination };
-    if (icao24 === _trackedIcao && _trackedEntity) _updateTrackedLabelModel(icao24);
-  }, true); // route lookups only fire for the TRACKED plane — front of the queue
-}
-
-// ---------------------------------------------------------------------------
-// Ambient fleet type enrichment (2026-07-02 field data: OpenSky's live
-// category field is 0/"no info" for ~94% of planes, so ambient classification
-// defaulted nearly the whole fleet to the airliner silhouette). Each poll,
-// ON-SCREEN planes — same horizon-occluder + frustum tests the fleet tick's
-// model-eligibility pass uses; no new per-plane raycast — that haven't been
-// requested this session are enqueued NEAREST-TO-CAMERA FIRST, bounded by:
-//   - the shared queue's 4-concurrent / 200 ms-drip dispatch (above),
-//   - ≤ ENRICH_AMBIENT_PER_SWEEP new enqueues per poll (= one poll interval
-//     of drip, so the backlog can't outgrow a poll and re-sorts fresh), and
-//   - a ROLLING token-bucket budget (below) bounding the sustained ambient
-//     request rate (repeat sessions resolve instantly from the proxy's
-//     permanent disk cache).
-// Fail-silent by contract: the sweep never throws into the poll loop, never
-// blocks rendering, and never touches tracking state. When a type answer
-// lands, _requestTypeEnrichment's callback swaps the billboard glyph + scale
-// in place (bb.scale composes multiplicatively with scaleByDistance).
-// ---------------------------------------------------------------------------
-// Rolling ambient budget (2026-07-03 field fix). The old ONE-SHOT session cap
-// (300, refilled only in init) burned out in the first two polls of a busy
-// region and never recovered — an hours-long session showed airliner
-// monoculture in every NEW region until planes were clicked (the tracked path
-// is uncapped). Token bucket instead: starts full at the ceiling, refills
-// ENRICH_AMBIENT_REFILL_TOKENS every ENRICH_AMBIENT_REFILL_WINDOW_MS, clamped
-// at the ceiling (no banking beyond one bucket). Numbers: 150 / 5 min sustains
-// 0.5 req/s worst case — an order of magnitude under the 5/s drip that (with
-// the 4-concurrent limit + the proxy's permanent disk cache) is the REAL
-// politeness bound on adsbdb; the 300 ceiling preserves the old first-look
-// burst so a fresh region still classifies quickly.
-/** Bucket ceiling: max ambient tokens held at once (= the initial burst). */
-const ENRICH_AMBIENT_BUDGET_CEIL = 300;
-/** Tokens added back per refill window. */
-const ENRICH_AMBIENT_REFILL_TOKENS = 150;
-/** Refill window length (ms). */
-const ENRICH_AMBIENT_REFILL_WINDOW_MS = 5 * 60 * 1000;
-/** Max new ambient enqueues per poll sweep (≈ rate × poll interval). */
-const ENRICH_AMBIENT_PER_SWEEP = 150;
-let _enrichAmbientBudget = ENRICH_AMBIENT_BUDGET_CEIL;
-/** Epoch ms the bucket last accounted a refill window from (0 = unset). */
-let _enrichAmbientRefillAnchorMs = 0;
-
-/** QA seam: headless harnesses (scripts/qa-enrich-ambient.mjs) shrink the
- *  bucket knobs via window.__GEV_ENRICH_AMBIENT_QA = {ceil, refillTokens,
- *  windowMs} — they cannot wait out a real 5-minute window. Read lazily each
- *  refill so a pre-boot override (or a mid-run windowMs swap) applies.
- *  Production never sets this; the constants above are the defaults. */
-function _ambientBudgetKnobs() {
-  const o = (typeof window !== 'undefined' && window.__GEV_ENRICH_AMBIENT_QA) || null;
-  return {
-    ceil: Number.isFinite(o?.ceil) && o.ceil > 0 ? o.ceil : ENRICH_AMBIENT_BUDGET_CEIL,
-    refillTokens: Number.isFinite(o?.refillTokens) && o.refillTokens > 0 ? o.refillTokens : ENRICH_AMBIENT_REFILL_TOKENS,
-    windowMs: Number.isFinite(o?.windowMs) && o.windowMs > 0 ? o.windowMs : ENRICH_AMBIENT_REFILL_WINDOW_MS,
-  };
-}
-
-/** Advance the token bucket: add refillTokens per FULLY elapsed window since
- *  the anchor, clamp at the ceiling, and move the anchor forward by the whole
- *  windows consumed (while the bucket sits full this still advances, so idle
- *  time never banks more than one bucket's worth of burst). */
-function _refillAmbientBudget(nowMs) {
-  const { ceil, refillTokens, windowMs } = _ambientBudgetKnobs();
-  if (!_enrichAmbientRefillAnchorMs) { _enrichAmbientRefillAnchorMs = nowMs; return; }
-  const windows = Math.floor((nowMs - _enrichAmbientRefillAnchorMs) / windowMs);
-  if (windows <= 0) return;
-  _enrichAmbientBudget = Math.min(ceil, _enrichAmbientBudget + windows * refillTokens);
-  _enrichAmbientRefillAnchorMs += windows * windowMs;
-}
-
-function _sweepAmbientEnrichment() {
-  _refillAmbientBudget(Date.now());
-  if (_enrichAmbientBudget <= 0 || !_viewer || !_billboardCollection || !_billboardCollection.show) return;
-  try {
-    const camera = _viewer.camera;
-    const camPos = camera.positionWC;
-    const occluder = horizonOccluder(camera);
-    const cull = camera.frustum.computeCullingVolume(camPos, camera.directionWC, camera.upWC);
-    const cand = [];
-    for (const [icao24, bb] of _billboards) {
-      if (_enrichSeen.has(`t:${icao24}`)) continue; // answered / queued / negative this session
-      if (!/^[0-9a-f]{6}$/i.test(icao24)) continue; // adsbdb keys are 6-char hex only
-      if (_flightData.get(icao24)?.onGround) continue; // ground traffic never spends ambient budget (click-to-enrich still works)
-      if (!bb.position || !occluder.isPointVisible(bb.position)) continue; // beyond the limb
-      Cesium.Cartesian3.clone(bb.position, _scratchModelBS.center);
-      if (cull.computeVisibility(_scratchModelBS) === Cesium.Intersect.OUTSIDE) continue; // off-screen
-      cand.push([icao24, Cesium.Cartesian3.distanceSquared(camPos, bb.position)]);
-    }
-    cand.sort((a, b) => a[1] - b[1]); // nearest first — what the user is looking at resolves first
-    const n = Math.min(cand.length, ENRICH_AMBIENT_PER_SWEEP, _enrichAmbientBudget);
-    for (let i = 0; i < n; i++) {
-      _enrichAmbientBudget -= 1;
-      _requestTypeEnrichment(cand[i][0]); // non-priority: fills the back of the queue
-    }
-  } catch { /* ambient enrichment is best-effort — never disturb the poll loop */ }
-}
+// adsbdb enrichment (best-effort, fail-silent type/route lookups) now lives
+// once, in the shared src/data/enrichmentQueue.js engine (Wave 3 item #31 of
+// the file-split program) — militaryFlights.js has no counterpart (its
+// aircraft are pre-classified from the military registry), so this is a
+// straight relocation, not a two-file reconciliation like items #28-#30.
+// See that module's header for the bounded-fan-out / priority-lane / rolling
+// token-bucket design. The QA seam (window.__GEV_ENRICH_AMBIENT_QA, driven by
+// scripts/qa-enrich-ambient.mjs) is unchanged.
+const _enrichment = createEnrichmentQueue({
+  getFlightData: () => _flightData,
+  getBillboards: () => _billboards,
+  getViewer: () => _viewer,
+  getBillboardCollection: () => _billboardCollection,
+  getTrackedIcao: () => _trackedIcao,
+  getTrackedEntity: () => _trackedEntity,
+  classifyAircraft,
+  horizonOccluder,
+  applyFleetBillboardPresentation: _applyFleetBillboardPresentation,
+  syncModelToClass: _syncModelToClass,
+  updateTrackedLabelModel: _updateTrackedLabelModel,
+});
+const _requestTypeEnrichment = (icao24, priority = false) => _enrichment.requestTypeEnrichment(icao24, priority);
+const _requestRouteEnrichment = (icao24) => _enrichment.requestRouteEnrichment(icao24);
+const _sweepAmbientEnrichment = () => _enrichment.sweepAmbientEnrichment(_scratchModelBS);
 
 // Round 5: the old `_warmGroundedAircraftSurfaceCache` (global exact-5-decimal
 // warm for every grounded contact on Earth) is GONE. Parked-aircraft GPS
@@ -3941,8 +3785,7 @@ const flightsLayer = {
       window.addEventListener('gev:cockpit-mode-changed', _cockpitModeListener);
     }
     // Fresh session — full bucket, anchor re-seeded on the first sweep.
-    _enrichAmbientBudget = _ambientBudgetKnobs().ceil;
-    _enrichAmbientRefillAnchorMs = 0;
+    _enrichment.resetAmbientBudget();
 
     _installClickHandler(viewer);
 
@@ -4691,9 +4534,7 @@ const flightsLayer = {
     _displayCourse.clear();
     _groundSnap.clear();
     _displayFloorState.clear();
-    _enrichQueue.length = 0;
-    _enrichSeen.clear();
-    if (_enrichDripTimer) { clearTimeout(_enrichDripTimer); _enrichDripTimer = null; }
+    _enrichment.clear();
     _missingPolls.clear();
     _focusEvidenceIds.clear();
     _count = 0;

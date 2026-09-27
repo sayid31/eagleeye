@@ -67,6 +67,33 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   and NEXT). The popup now matches the CCTV panel's full content width
   instead (`src/cctvPanelMixin.js`).
 
+### Refactored
+
+- **Extracted `flights.js`'s adsbdb type/route enrichment queue into its own
+  module, `src/data/enrichmentQueue.js`.** File-split program, Wave 3 item
+  #31 — the plan's own wording called this the "OpenSky enrichment
+  queue/throttle," but the actual subsystem enriches via the community
+  **adsbdb** API (type/registration/route lookups), a distinct upstream from
+  OpenSky (which only supplies live position); the module and this entry are
+  named for what the code actually does. Unlike Wave 3 items #28-#30, this is
+  a `flights.js`-only relocation, not a two-file reconciliation:
+  `militaryFlights.js` carries no adsbdb enrichment code at all (its aircraft
+  are pre-classified from the military registry), confirmed via exhaustive
+  grep before starting. Moved verbatim: the bounded fan-out queue (max 4
+  concurrent, ≤5/s dispatch drip, priority lane for tracked/model-eligible
+  planes, per-session dedup), the rolling token-bucket ambient-sweep budget,
+  and the nearest-on-screen-first ambient fleet type-classification sweep.
+  Same per-layer factory-closure pattern as `groundSnap.js`/
+  `modelGroundHandoff.js`: `flights.js` instantiates its own
+  `createEnrichmentQueue()` via accessor closures for its reassignable state
+  (flight-data/billboard maps, tracked icao/entity, viewer, billboard
+  collection) plus its own `applyFleetBillboardPresentation`/
+  `syncModelToClass`/`updateTrackedLabelModel` callbacks. The
+  `window.__GEV_ENRICH_AMBIENT_QA` seam `scripts/qa-enrich-ambient.mjs` drives
+  is preserved unchanged. `flights.js`: 5338 → 5179 lines. New
+  `enrichmentQueue.js`: 273 lines. Not merged/pushed pending explicit
+  instruction.
+
 ### Changed
 
 - **Closed the remaining EagleEye View rebrand gaps.** A prior rebrand pass
