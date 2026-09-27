@@ -226,6 +226,13 @@ test('a conversion survives a poll refresh, in both the billboard and the tracke
 });
 
 test('both flight layers keep a converted contact 2D and visible (render invariants)', async () => {
+  // The TR-3B re-render path (refreshTr3bContact) — including the billboard
+  // visibility restore below — now lives once in the shared engine both
+  // layers call into, not duplicated per layer. See the
+  // flights/militaryFlights presentation-shared refactor.
+  const sharedPresentationSource = await readFile(
+    new URL('./aircraftPresentation.js', import.meta.url), 'utf8',
+  );
   for (const name of ['flights.js', 'militaryFlights.js']) {
     const source = await readFile(new URL(`./${name}`, import.meta.url), 'utf8');
 
@@ -242,8 +249,10 @@ test('both flight layers keep a converted contact 2D and visible (render invaria
 
     // 2. The billboard is never hidden by that suppression — it must keep
     //    satisfying the getNearby/getDetectableObjects visibility guards, so a
-    //    converted contact still works in Contacts and Cockpit.
-    assert.match(source, /if \(bb && id !== _trackedIcao\) bb\.show = true;|if \(modelled && id !== _trackedIcao\) modelled\.show = true;/,
+    //    converted contact still works in Contacts and Cockpit. This restore
+    //    now lives in the shared engine's refreshTr3bContact, called by both
+    //    layers' _refreshTr3bContact wrappers.
+    assert.match(sharedPresentationSource, /if \(bb && id !== trackedIcao\) bb\.show = true;/,
       `${name}: converting restores the billboard the model handoff had hidden`);
 
     // 3. Every aircraftIcon() CALL SITE routes through the kind resolver, so no

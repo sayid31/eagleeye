@@ -20,10 +20,14 @@ import { classifyAircraft, CLASS_SCALE_2D, CLASS_SCALE_3D, CLASS_MODEL_REAL } fr
 import { modelAnchorWorld, modelVisualAnchor, trailAnchorForModel, trailHeadStart, visualCenterForModel } from './modelVisualAnchor.js';
 import { aircraftIcon, TRACKED_ICON_PX } from './aircraftIcons.js';
 import {
-  isTr3b, tr3bAircraftClass, tr3bConvertedIds, tr3bIconKind, tr3bTypeLabel,
+  isTr3b, tr3bAircraftClass, tr3bTypeLabel,
 } from './tr3bRegistry.js';
-import { cockpitContactDotImage } from './cockpitContactDot.js';
 import { nextCockpitNearContacts } from './cockpitAirLod.js';
+import {
+  createAircraftPresentation,
+  normalBillboardScaleByDistance,
+  IR_UNLIT_SHADER,
+} from './aircraftPresentation.js';
 import {
   applyTrackedCameraFrame,
   trackedModelScaleForPixelCap,
@@ -378,52 +382,57 @@ function _isExplicitTrackingOrigin(origin) {
   return origin === 'user' || origin === 'voice' || origin === 'tool';
 }
 
-const COCKPIT_CONTACT_SIZE_PX = 6;
 const TRACKED_BILLBOARD_SCALE_BY_DISTANCE = new Cesium.NearFarScalar(
   1000, 3.0, 8000000, 0.5,
 );
 
-function _normalBillboardScaleByDistance() {
-  // Match commercial flights and preserve the established close-range 3×
-  // default. Smaller owner-visible scaling must be proposed separately.
-  return new Cesium.NearFarScalar(1000, 3.0, 8000000, 0.5);
+/** Fleet (untracked) billboard tint: unconditional amber — every contact this
+ *  layer owns already IS military (unlike flights.js's military/white split).
+ *  Passed to aircraftPresentation.js's shared engine as BOTH `resolveFleetColor`
+ *  and `cockpitFarColor` — this layer's cockpit-far dot has no separate
+ *  civilian branch to diverge into. */
+function _fleetBillboardColor() {
+  return MIL_ICON_COLOR;
 }
 
-function _cockpitBillboardScaleByDistance() {
-  return new Cesium.NearFarScalar(1000, 1.15, 8000000, 0.65);
+/** Fleet billboard scale: this layer's own BILLBOARD_SCALE base multiplier
+ *  (flights.js has no equivalent extra multiplier) × per-class scale,
+ *  ×GROUND_SCALE while grounded. Passed to aircraftPresentation.js's shared
+ *  engine as `resolveFleetScale`. */
+function _fleetBillboardScale(icao24, klass) {
+  return BILLBOARD_SCALE * (CLASS_SCALE_2D[klass] || 1) * (_flightData.get(icao24)?.onGround ? GROUND_SCALE : 1);
 }
 
-function _militaryBillboardScale(icao24) {
-  const meta = _flightData.get(icao24);
-  return BILLBOARD_SCALE * (CLASS_SCALE_2D[meta?.klass] || 1) * (meta?.onGround ? GROUND_SCALE : 1);
-}
-
-/** Apply the current normal/cockpit visual contract to one owned fleet billboard. */
-function _applyFleetBillboardPresentation(icao24, bb) {
-  if (!bb) return;
-  const limbScale = _billboardLimbScale.get(bb) ?? 1;
-  const isCockpitContact = _cockpitContactMode && icao24 !== _trackedIcao;
-  const isCockpitNear = isCockpitContact && _cockpitNearContacts.has(icao24);
-  if (isCockpitContact && !isCockpitNear) {
-    const freshnessAlpha = bb.color?.alpha ?? 1;
-    bb.image = cockpitContactDotImage();
-    bb.width = COCKPIT_CONTACT_SIZE_PX;
-    bb.height = COCKPIT_CONTACT_SIZE_PX;
-    bb.scale = limbScale;
-    bb.scaleByDistance = _cockpitBillboardScaleByDistance();
-    bb.color = MIL_ICON_COLOR.withAlpha(freshnessAlpha);
-    bb.rotation = 0;
-    return;
-  }
-
-  const meta = _flightData.get(icao24);
-  bb.image = aircraftIcon(_iconKind(icao24, meta?.klass), bb._gevIconLarge ? TRACKED_ICON_PX : undefined);
-  bb.width = icao24 === _trackedIcao ? 24 : 20;
-  bb.height = icao24 === _trackedIcao ? 24 : 20;
-  bb.scale = _militaryBillboardScale(icao24) * limbScale;
-  bb.scaleByDistance = _normalBillboardScaleByDistance();
-  bb.color = MIL_ICON_COLOR.withAlpha(bb.color?.alpha ?? 1);
-}
+/** Shared billboard/model presentation engine (aircraftPresentation.js, item
+ *  #29 of the file-split program) — see that module's header for the full
+ *  divergence-reconciliation rationale. This layer supplies its own
+ *  unconditional-amber color/scale resolvers and its 3-branch model-spec
+ *  table; the engine owns the fleet billboard repaint, the IR-boost
+ *  model-reload queue, and the TR-3B contact-refresh pair. */
+const _presentation = createAircraftPresentation({
+  getBillboards: () => _billboards,
+  models: _models,
+  modelPending: _modelPending,
+  modelGen: _modelGen,
+  billboardLimbScale: _billboardLimbScale,
+  getTrackedModel: () => _trackedModel,
+  getTrackedIcao: () => _trackedIcao,
+  getFlightData: () => _flightData,
+  getViewer: () => _viewer,
+  getCockpitContactMode: () => _cockpitContactMode,
+  getCockpitNearContacts: () => _cockpitNearContacts,
+  resolveFleetColor: _fleetBillboardColor,
+  resolveFleetScale: _fleetBillboardScale,
+  cockpitFarColor: _fleetBillboardColor,
+  getModelSpec: _modelSpec,
+  releaseModel: (icao24) => _releaseModel(icao24),
+  releaseTrackedModel: () => _releaseTrackedModel(),
+  syncTracked2dRotation: () => _syncTracked2dRotation(),
+  syncTrackedBillboardImage: () => _syncTrackedBillboardImage(),
+  updateTrackedLabelModel: (icao24) => _updateTrackedLabelModel(icao24),
+});
+const _iconKind = (icao24, klass) => _presentation.iconKind(icao24, klass);
+const _applyFleetBillboardPresentation = (icao24, bb) => _presentation.applyFleetBillboardPresentation(icao24, bb);
 
 /** Refresh the AIR-only Cockpit near band independently from model admission. */
 function _refreshCockpitNearContacts() {
@@ -737,13 +746,6 @@ function _updateTrackedLabelModel(icao24) {
   refreshTrackedSubjectContext(_contextSubjectMetadata(icao24));
 }
 
-/** Sprite kind for one contact's billboard. Identity for every aircraft except
- *  the ones the operator converted into a TR-3B (Easter egg), which draw the
- *  black-triangle glyph — its thermal-reactive variant while an IR style owns
- *  the scene. Routing EVERY `aircraftIcon()` call through this is what makes a
- *  conversion survive the poll reconciler and the two-tier raster swap. */
-const _iconKind = (icao24, klass) => tr3bIconKind(icao24, klass, { hot: _irBoost });
-
 /** Re-image the tracked entity's billboard from the current class/conversion. */
 function _syncTrackedBillboardImage() {
   if (!_trackedIcao || !_trackedEntity?.billboard) return;
@@ -755,38 +757,19 @@ function _syncTrackedBillboardImage() {
 
 /**
  * Re-render one contact after its TR-3B conversion (or the active IR style)
- * changed. Mirror of flights.js: converting drops any 3D model so the triangle
- * owns the visual, then the billboard, tracked entity, and card re-derive.
+ * changed — delegates to the shared engine. See aircraftPresentation.js's
+ * `refreshTr3bContact` for the full rationale.
  * @param {string} icao24 - ICAO 24-bit address.
  * @returns {boolean} True when the layer owns this contact.
  */
 function _refreshTr3bContact(icao24) {
-  const id = String(icao24 || '').trim().toLowerCase();
-  if (!id) return false;
-  if (isTr3b(id)) {
-    if (_models.has(id) || _modelPending.has(id)) _releaseModel(id);
-    const modelled = _billboards.get(id);
-    if (modelled && id !== _trackedIcao) modelled.show = true; // horizon cull re-asserts next tick
-    if (id === _trackedIcao) {
-      _releaseTrackedModel();
-      _syncTracked2dRotation();
-    }
-  }
-  const bb = _billboards.get(id);
-  if (bb) _applyFleetBillboardPresentation(id, bb);
-  if (id === _trackedIcao) {
-    _syncTrackedBillboardImage();
-    _updateTrackedLabelModel(id);
-  }
-  _viewer?.scene?.requestRender?.();
-  return _billboards.has(id) || id === _trackedIcao;
+  return _presentation.refreshTr3bContact(icao24);
 }
 
-/** Re-image every converted contact this layer owns (IR style flip). */
+/** Re-image every converted contact this layer owns (IR style flip) —
+ *  delegates to the shared engine. */
 function _refreshTr3bForStyle() {
-  for (const id of tr3bConvertedIds()) {
-    if (_billboards.has(id) || id === _trackedIcao) _refreshTr3bContact(id);
-  }
+  _presentation.refreshTr3bForStyle();
 }
 
 /**
@@ -1382,62 +1365,27 @@ function _modelIsRendering(model) {
 }
 
 /** Spec identity for a LOADED model — mirror of flights.js: URL and scale
- *  together (same-URL classes differ by scale). */
-const _specKeyFor = (klass) => {
-  const spec = _modelSpec(klass);
-  return `${spec.url}@${spec.scale}`;
-};
-/** Class-change model sync — mirror of flights.js: drop a live model or
- *  in-flight load whose spec no longer matches the class, re-showing the
- *  fleet billboard FIRST (gap-proof) and covering the tracked standalone. */
+ *  together (same-URL classes differ by scale) — delegates to the shared
+ *  engine (aircraftPresentation.js), bound to this layer's `_modelSpec` table. */
+const _specKeyFor = (klass) => _presentation.specKeyFor(klass);
+/** Class-change model sync (poll-path klass updates) — delegates to the
+ *  shared engine. See aircraftPresentation.js's `syncModelToClass` for the
+ *  full rationale. */
 function _syncModelToClass(icao24) {
-  const key = _specKeyFor(_flightData.get(icao24)?.klass);
-  const current = _models.get(icao24);
-  if ((current && current._gevSpecKey !== key) || (!current && _modelPending.has(icao24))) {
-    const bb = _billboards.get(icao24);
-    if (bb && icao24 !== _trackedIcao) bb.show = true;
-    _releaseModel(icao24);
-  }
-  if (icao24 === _trackedIcao && _trackedModel && _trackedModel._gevSpecKey !== key) {
-    _releaseTrackedModel();
-  }
+  _presentation.syncModelToClass(icao24);
 }
 
-/** IR hot-target mode — mirror of flights.js: under the luminance-mapped
- *  NVG/FLIR post-styles every model renders flat white (hottest); the dominant
- *  amber/tracked tint restores on style exit. */
-let _irBoost = false;
-/** Boosted models render UNLIT — mirror of flights.js (owner cockpit-FLIR
- *  field rounds): material-stage tint still sun-shades, so side-on planes
- *  read near-black under a high sun; UNLIT emits flat white regardless.
- *  customShader on a READY model is a silent no-op (field-verified), so the
- *  boost flips by release-and-reload — creation-time options carry it. */
-const _IR_UNLIT_SHADER = new Cesium.CustomShader({ lightingModel: Cesium.LightingModel.UNLIT });
-/** Boost flip = BATCHED release through the fleet tick (mirror of flights.js —
- *  destroying the whole fleet synchronously in the style handler stalls the
- *  render thread). Models tagged with their load-time boost state; stale queue
- *  entries skip; in-flight loads invalidated immediately; tracked reloads
- *  synchronously (single primitive). */
-const IR_RELOAD_BATCH = 40;
-let _irReloadQueue = null;
+/** Flip the whole 3D fleet's IR-boost state — delegates to the shared engine.
+ *  See aircraftPresentation.js's `reloadModelsForIrBoost` for the full
+ *  rationale (release-and-reload; a released model can't be re-tinted while
+ *  ready). */
 function _reloadModelsForIrBoost() {
-  _irReloadQueue = [..._models.keys()];
-  for (const icao of _modelPending) {
-    if (!_models.has(icao)) _modelGen.set(icao, (_modelGen.get(icao) || 0) + 1);
-  }
-  _releaseTrackedModel();
+  _presentation.reloadModelsForIrBoost();
 }
+/** Drain a bounded per-tick slice of the pending boost-flip reload queue —
+ *  delegates to the shared engine. */
 function _drainIrReloadQueue() {
-  if (!_irReloadQueue) return;
-  const batch = _irReloadQueue.splice(0, IR_RELOAD_BATCH);
-  for (const icao of batch) {
-    const model = _models.get(icao);
-    if (!model || model._gevIrBoost === _irBoost) continue; // already right state
-    const bb = _billboards.get(icao);
-    if (bb && icao !== _trackedIcao) bb.show = true;
-    _releaseModel(icao);
-  }
-  if (_irReloadQueue.length === 0) _irReloadQueue = null;
+  _presentation.drainIrReloadQueue();
 }
 
 /** Lazily create the glTF model for an aircraft (fire-and-forget; billboard shows until ready). */
@@ -1457,7 +1405,7 @@ async function _ensureModel(icao24) {
   // reclassification makes the post-await admission reject the stale asset.
   // Boost state likewise — creation options bake it in.
   const specKey = _specKeyFor(_flightData.get(icao24)?.klass);
-  const loadIrBoost = _irBoost;
+  const loadIrBoost = _presentation.irBoost;
   try {
     const spec = _modelSpec(_flightData.get(icao24)?.klass);
     model = await Cesium.Model.fromGltfAsync({
@@ -1465,11 +1413,11 @@ async function _ensureModel(icao24) {
       asynchronous: false,
       minimumPixelSize: MODEL_MIN_PX,
       scale: spec.scale,
-      color: _irBoost ? Cesium.Color.WHITE : _modelColor(icao24),
+      color: _presentation.irBoost ? Cesium.Color.WHITE : _modelColor(icao24),
       colorBlendMode: Cesium.ColorBlendMode.MIX,
       // near self-illuminated tint so planes read uniform near AND far; IR boost → flat UNLIT white (hot)
-      colorBlendAmount: _irBoost ? 1.0 : MODEL_COLOR_BLEND_AMOUNT,
-      customShader: _irBoost ? _IR_UNLIT_SHADER : undefined,
+      colorBlendAmount: _presentation.irBoost ? 1.0 : MODEL_COLOR_BLEND_AMOUNT,
+      customShader: _presentation.irBoost ? IR_UNLIT_SHADER : undefined,
       id: icao24, // so scene.pick returns the icao for click-to-track
     });
   } catch {
@@ -1494,7 +1442,7 @@ async function _ensureModel(icao24) {
     // Class reclassified mid-load → this GLB/scale is for the OLD class.
     || _specKeyFor(_flightData.get(icao24)?.klass) !== specKey
     // IR boost flipped mid-load → this model baked the wrong shader/tint.
-    || _irBoost !== loadIrBoost;
+    || _presentation.irBoost !== loadIrBoost;
   if (stale) {
     try { model.destroy(); } catch { /* already gone */ }
     _cleanupModelGen(icao24); // bound the map
@@ -1543,7 +1491,7 @@ function _cleanupModelGen(icao24) {
 
 /** Remove all live models (toggle-off / zoom-out); billboards take back over next tick. */
 function _releaseModels() {
-  _irReloadQueue = null; // a full release supersedes any pending boost-flip drain
+  _presentation.irReloadQueue = null; // a full release supersedes any pending boost-flip drain
   // Invalidate in-flight loads so a completion after this bulk release can't add a model.
   for (const icao of _modelPending) _modelGen.set(icao, (_modelGen.get(icao) || 0) + 1);
   if (_modelCollection && !_modelCollection.isDestroyed()) {
@@ -1579,17 +1527,17 @@ function _updateTrackedModel() {
     const gen = _trackedModelGen;
     const trackedSpec = _modelSpec(_flightData.get(_trackedIcao)?.klass);
     const trackedKey = _specKeyFor(_flightData.get(_trackedIcao)?.klass);
-    const trackedIrBoost = _irBoost;
+    const trackedIrBoost = _presentation.irBoost;
     Cesium.Model.fromGltfAsync({
       url: trackedSpec.url,
       asynchronous: false,
       minimumPixelSize: TRACKED_MODEL_MIN_PX,
       scale: trackedSpec.scale,
-      color: _irBoost ? Cesium.Color.WHITE : TRACKED_ICON_COLOR,
+      color: _presentation.irBoost ? Cesium.Color.WHITE : TRACKED_ICON_COLOR,
       colorBlendMode: Cesium.ColorBlendMode.MIX,
       // near self-illuminated tint so planes read uniform near AND far; IR boost → flat UNLIT white (hot)
-      colorBlendAmount: _irBoost ? 1.0 : MODEL_COLOR_BLEND_AMOUNT,
-      customShader: _irBoost ? _IR_UNLIT_SHADER : undefined,
+      colorBlendAmount: _presentation.irBoost ? 1.0 : MODEL_COLOR_BLEND_AMOUNT,
+      customShader: _presentation.irBoost ? IR_UNLIT_SHADER : undefined,
       // Pick id (H1): without it, clicking the very plane being tracked read as
       // EMPTY SPACE (scene.pick → primitive with no id) → an unintended
       // deselect. With the icao, the click handler recognizes it as ours.
@@ -1598,7 +1546,7 @@ function _updateTrackedModel() {
       if (gen !== _trackedModelGen || !_modelCollection || _modelCollection.isDestroyed()) { try { m.destroy(); } catch { /* gone */ } return; }
       // Class reclassified OR boost flipped mid-load (no release ran —
       // _trackedModel was still null): drop the stale asset; driver reloads.
-      if (_specKeyFor(_flightData.get(_trackedIcao)?.klass) !== trackedKey || _irBoost !== trackedIrBoost) {
+      if (_specKeyFor(_flightData.get(_trackedIcao)?.klass) !== trackedKey || _presentation.irBoost !== trackedIrBoost) {
         try { m.destroy(); } catch { /* gone */ }
         _trackedModelLoading = false;
         return;
@@ -1799,7 +1747,7 @@ function _fleetTick() {
     const isCockpitNear = _cockpitContactMode && _cockpitNearContacts.has(icao24);
     const treatment = applyAircraftBillboardTreatment({
       billboard: bb,
-      baseScale: _cockpitContactMode && !isCockpitNear ? 1 : _militaryBillboardScale(icao24),
+      baseScale: _cockpitContactMode && !isCockpitNear ? 1 : _fleetBillboardScale(icao24, info?.klass),
       baseAlpha: _missingPolls.get(icao24) ? 0.45 : 1,
       baseColor: MIL_ICON_COLOR,
       focusFactor: focus.factor,
@@ -1859,8 +1807,8 @@ function _fleetTick() {
             // IR boost must survive the per-tick treatment write; boosted
             // models also skip the recession fade (mirror of flights.js —
             // billboards keep their normal fade, hot MODELS stay full-strength).
-            baseColor: _irBoost ? Cesium.Color.WHITE : _modelColor(icao24),
-            alpha: _irBoost ? 1 : treatment.alpha,
+            baseColor: _presentation.irBoost ? Cesium.Color.WHITE : _modelColor(icao24),
+            alpha: _presentation.irBoost ? 1 : treatment.alpha,
           });
         },
       );
@@ -2209,15 +2157,15 @@ function _clearTracking(skipViewerUntrack = false, {
   // ROTATION_REFRESH_MS of a wrong (possibly reversed) nose on release.
   if (_billboards.has(_trackedIcao)) {
     const bb = _billboards.get(_trackedIcao);
-    const meta = _flightData.get(_trackedIcao);
     bb.show = true;
     bb.width = 20;
     bb.height = 20;
+    const restoreRotation = _lastTrackedRotation;
     // Ground-aware restore (a plane untracked while taxiing comes back at
-    // ground scale; tint is full amber on the ground and in the air).
-    bb.scale = BILLBOARD_SCALE * (CLASS_SCALE_2D[meta?.klass] || 1) * (meta?.onGround ? GROUND_SCALE : 1);
-    bb.color = MIL_ICON_COLOR;
-    bb.rotation = _lastTrackedRotation;
+    // ground scale; tint is full amber on the ground and in the air) —
+    // delegates to the shared presentation engine (mirror of flights.js).
+    _applyFleetBillboardPresentation(_trackedIcao, bb);
+    bb.rotation = restoreRotation;
   }
   _lastCamPoseSig = ''; // force a fleet rotation pass on the next tick
 
@@ -2963,13 +2911,13 @@ const militaryFlightsLayer = {
             image: aircraftIcon(_iconKind(icao24, meta.klass)),
             width: isTracked ? 24 : 20,
             height: isTracked ? 24 : 20,
-            scale: BILLBOARD_SCALE * (CLASS_SCALE_2D[meta.klass] || 1) * (meta.onGround ? GROUND_SCALE : 1),
+            scale: _fleetBillboardScale(icao24, meta.klass),
             // Screen-projected rotation lands on the next fleet tick.
             rotation: 0,
             alignedAxis: Cesium.Cartesian3.ZERO,
-            color: isTracked ? TRACKED_ICON_COLOR : MIL_ICON_COLOR,
+            color: isTracked ? TRACKED_ICON_COLOR : _fleetBillboardColor(icao24),
             sizeInMeters: false,
-            scaleByDistance: _normalBillboardScaleByDistance(),
+            scaleByDistance: normalBillboardScaleByDistance(),
             // Grounded/near-surface planes sit at/below the photoreal tile
             // surface — render them depth-test-free so they never vanish up
             // close (_groundDepthDistance).
@@ -3212,8 +3160,8 @@ const militaryFlightsLayer = {
         _lastFleetTickMs = 0;
       }
     }
-    if (typeof params.irBoost === 'boolean' && params.irBoost !== _irBoost) {
-      _irBoost = params.irBoost;
+    if (typeof params.irBoost === 'boolean' && params.irBoost !== _presentation.irBoost) {
+      _presentation.irBoost = params.irBoost;
       _reloadModelsForIrBoost();
       // Sprites don't reload with the models — swap the TR-3B glyph between its
       // cold and thermal-reactive variants directly (mirror of flights.js).
@@ -3239,7 +3187,7 @@ const militaryFlightsLayer = {
     return {
       models3d: _models3dEnabled,
       models3dMode: _models3dMode,
-      irBoost: _irBoost,
+      irBoost: _presentation.irBoost,
       selectedMilitaryTrackingId: _trackedIcao,
     };
   },
