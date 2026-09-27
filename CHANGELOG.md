@@ -5,6 +5,37 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Refactored
+
+- **`flights.js` and `militaryFlights.js` shared their billboard/model
+  presentation logic as two near-duplicate private copies; it is now one
+  shared module.** Extracted the fleet-billboard visual contract (normal
+  vs. Cockpit-far-dot rendering, rotation reset, TR-3B sprite-kind
+  resolution, IR-boost model reload batching, TR-3B re-render on
+  conversion/style change) into `src/data/aircraftPresentation.js`
+  (`createAircraftPresentation()`), using the same per-layer factory-closure
+  pattern as `deadReckoning.js`/`groundSnap.js`/`trailRenderer.js`: each
+  layer creates its own instance, passing accessor closures for
+  reassignable per-layer state (billboards/flight-data/tracked-icao maps
+  get replaced wholesale by test-reset/destroy paths, so a captured
+  reference would go stale) plus required callback params for genuine
+  behavioral divergence (`resolveFleetColor`, `resolveFleetScale`,
+  `cockpitFarColor`, `getModelSpec`). `militaryFlights.js` passes the same
+  function for both `resolveFleetColor` and `cockpitFarColor` — its
+  cockpit-far dot has no separate civilian-color branch, unlike
+  `flights.js`. Deliberately **not** moved: `_modelSpec`/`_modelColor`/
+  `_modelMatrix`/`_ensureModel`/`_updateTrackedModel` stay fully per-layer —
+  their branch structures and asset catalogs genuinely differ, so unifying
+  them would trade duplication for a leaky abstraction. As part of this
+  extraction, two pre-existing inline-duplicate call sites in
+  `militaryFlights.js` (the tracked-restore block in `_clearTracking`, and
+  the poll-path billboard-add block) were routed through the new shared
+  callbacks instead of being left as separately-flagged debt — this also
+  resolves a pre-existing inconsistency between those sites and the
+  layer's own fleet-tick presentation logic. `flights.js` drops from 5,338
+  to 5,263 lines, `militaryFlights.js` from 3,876 to 3,824 lines. New
+  `aircraftPresentation.js`: 294 lines.
+
 ### Fixed
 
 - **CCTV coverage wireframe green flicker, reported on a laptop GPU (not

@@ -366,13 +366,25 @@ function layerConstants(sourceFile) {
   return { modelScale: Number(scale[1]), bellyOffsetNative: Number(belly[1]) };
 }
 
-function normalBillboardScaleByDistance(sourceFile) {
-  const src = fs.readFileSync(path.join(ROOT, sourceFile), 'utf8');
-  const fn = src.match(/function _normalBillboardScaleByDistance\(\) \{([\s\S]*?)\n\}/);
-  assert.ok(fn, `${sourceFile}: _normalBillboardScaleByDistance not found`);
+// Both layers now share one billboard-scaling implementation
+// (aircraftPresentation.js, extracted in the flights/militaryFlights
+// presentation-shared refactor) rather than each owning its own
+// _normalBillboardScaleByDistance(). Assert the shared function's values
+// directly, and separately assert each layer actually imports it (so a
+// future layer-local reimplementation would fail loudly here).
+function sharedNormalBillboardScaleByDistance() {
+  const src = fs.readFileSync(path.join(ROOT, 'src/data/aircraftPresentation.js'), 'utf8');
+  const fn = src.match(/export function normalBillboardScaleByDistance\(\) \{([\s\S]*?)\n\}/);
+  assert.ok(fn, 'aircraftPresentation.js: normalBillboardScaleByDistance not found');
   const scalar = fn[1].match(/NearFarScalar\((\d+), ([\d.]+), (\d+), ([\d.]+)\)/);
-  assert.ok(scalar, `${sourceFile}: billboard NearFarScalar not found`);
+  assert.ok(scalar, 'aircraftPresentation.js: billboard NearFarScalar not found');
   return scalar.slice(1).map(Number);
+}
+
+function importsSharedNormalBillboardScaleByDistance(sourceFile) {
+  const src = fs.readFileSync(path.join(ROOT, sourceFile), 'utf8');
+  return /normalBillboardScaleByDistance,?\s*\n[\s\S]{0,200}from '\.\/aircraftPresentation\.js';/.test(src)
+    || /import \{[^}]*normalBillboardScaleByDistance[^}]*\} from '\.\/aircraftPresentation\.js';/.test(src);
 }
 
 const LAYERS = [
@@ -917,11 +929,15 @@ test('real per-class models remain origin-centred for visual anchoring', () => {
 });
 
 test('civilian and military globe-view aircraft retain the established 3.0 near scale and 0.5 floor', () => {
+  assert.deepEqual(
+    sharedNormalBillboardScaleByDistance(),
+    [1000, 3, 8000000, 0.5],
+    'aircraftPresentation.js: owner-established close sizing and the orbital floor must remain readable',
+  );
   for (const layer of LAYERS) {
-    assert.deepEqual(
-      normalBillboardScaleByDistance(layer.source),
-      [1000, 3, 8000000, 0.5],
-      `${layer.name}: owner-established close sizing and the orbital floor must remain readable`,
+    assert.ok(
+      importsSharedNormalBillboardScaleByDistance(layer.source),
+      `${layer.name}: must use the shared normalBillboardScaleByDistance() from aircraftPresentation.js, not a per-layer copy`,
     );
   }
 });

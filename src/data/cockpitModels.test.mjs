@@ -17,6 +17,18 @@ const LAYERS = [
   { name: 'militaryFlights', path: new URL('./militaryFlights.js', import.meta.url) },
 ];
 
+// The cockpit-far-dot / rotation-reset branch of the fleet-billboard-presentation
+// contract now lives once in the shared engine (aircraftPresentation.js's
+// applyFleetBillboardPresentation), not duplicated per layer — see the
+// flights/militaryFlights presentation-shared refactor. Both layers still own
+// their own near-contact hysteresis (`nextCockpitNearContacts`) and their own
+// fleet-tick class-icon fallback, so those assertions stay pointed at the
+// per-layer source below.
+const sharedPresentationSource = readFileSync(
+  new URL('./aircraftPresentation.js', import.meta.url),
+  'utf8',
+);
+
 /** Read a `const NAME = <number>;` declaration out of a module's source. */
 function numericConstant(source, name) {
   const match = new RegExp(`const ${name}\\s*=\\s*(\\d+(?:\\.\\d+)?)`).exec(source);
@@ -83,15 +95,21 @@ for (const layer of LAYERS) {
   test(`${layer.name}: near AIR state is independent from model admission`, () => {
     assert.match(source, /nextCockpitNearContacts\(/,
       'Cockpit derives a separate near-contact hysteresis set');
-    assert.match(source, /isCockpitContact && !isCockpitNear[\s\S]*cockpitContactDotImage\(\)/,
+    // The cockpit-far-dot branch (and its rotation reset) now lives once in
+    // the shared engine both layers call into — see the note above LAYERS.
+    assert.match(sharedPresentationSource, /isCockpitContact && !isCockpitNear[\s\S]*cockpitContactDotImage\(\)/,
       'only out-of-range Cockpit contacts become dots');
-    // `_iconKind` is identity for every unconverted contact (see
-    // tr3bRegistry.test.mjs) — it only swaps the glyph for a contact the
-    // operator explicitly converted into a TR-3B.
-    assert.match(source, /bb\.image = aircraftIcon\(_iconKind\(icao24, meta\?\.klass\)(, bb\._gevIconLarge \? TRACKED_ICON_PX : undefined)?\)/,
+    // `_iconKind`/`presentation.iconKind` is identity for every unconverted
+    // contact (see tr3bRegistry.test.mjs) — it only swaps the glyph for a
+    // contact the operator explicitly converted into a TR-3B. This exact
+    // fallback line also lives in the shared engine now.
+    assert.match(sharedPresentationSource, /bb\.image = aircraftIcon\(presentation\.iconKind\(icao24, meta\?\.klass\)(, bb\._gevIconLarge \? TRACKED_ICON_PX : undefined)?\)/,
       'near contacts and model fallbacks retain the class-derived aircraft silhouette');
-    assert.match(source, /bb\.rotation = 0;/,
+    assert.match(sharedPresentationSource, /bb\.rotation = 0;/,
       'far dots are reset to a rotation-free presentation');
+    // Fleet-tick class-icon fallback and course-projection gate stay per-layer.
+    assert.match(source, /bb\.image = aircraftIcon\(_iconKind\(icao24, .*?\?\.klass\), wantLarge \? TRACKED_ICON_PX : undefined\)/,
+      'the fleet tick keeps refreshing the class-derived aircraft silhouette');
     assert.match(source, /\(!_cockpitContactMode \|\| isCockpitNear\) && \(doRotations \|\| revealed\)/,
       'near 2D silhouettes continue to receive projected course');
     assert.match(source, /if \(bb\.show\) bb\.show = false; \/\/ hand off ONLY once the model renders/,
