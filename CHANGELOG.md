@@ -337,6 +337,24 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   `ui.js` drops to 7,754 lines. Shared panel-position constants moved to a
   new `src/panelPositionConstants.js`. Global Context panel intentionally
   not split this round (no dedicated QA gate; deferred).
+- Moved `src/cameraVerbs.js`'s `fly_route` cinematic dolly state machine
+  (`createRouteFlight`/`advanceRouteFlight`, and every route-only tuning
+  constant, scratch Cesium object, and helper they alone use — `arcPoint`,
+  `horizontalChord`, `signedTurnRad`, `routeCorridorCells`,
+  `warmRouteCorridor`, `routeColdSeedFloorM`, `acquireCorridorFloor`,
+  `probeMeshFloorM`) to a new sibling module, `src/cameraVerbsRouteFlight.js`.
+  A pure relocation, not a refactor: the state machine already took an
+  explicit `state` object as its first argument before the split, so no new
+  closure/factory pattern was introduced. `cameraVerbs.js` re-exports every
+  moved symbol `routeCinematics.test.mjs` imports from it, so no test or
+  external import changed. `ROUTE_M_S` (the speed-word lookup) is exported
+  from the new module and re-imported into `cameraVerbs.js`, since `flyRoute`
+  there still validates the speed word against the same table — single
+  source of truth, same pattern used for `DEFAULT_MOVING_SOLVE_MS` in the
+  `worldOverlay.js` split below. `cameraVerbs.js`'s tick loop, `_active`
+  motion slot, orbit/pan/tilt/rotate verbs, and `flyRoute` itself stay put.
+  `cameraVerbs.js`: 1007 → 426 lines. New `cameraVerbsRouteFlight.js`: 632
+  lines.
 
 ### Changed
 
