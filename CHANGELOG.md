@@ -573,6 +573,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   dedicated geocode found). Also added all 7 city ids to the `locationId`
   enum of the `fly_to_location`, `select_nearest_aircraft`, and
   `control_radio` voice tools in `vite.config.js`.
+- **Returning sessions and rich share links now restore layers through a
+  concurrency-limited, light-layers-first queue instead of loading
+  everything at once.** Previously, a returning user (or a share-link
+  recipient) with most/all data layers enabled had every one of them start
+  its full init/enable sequence simultaneously — CCTV cold activation,
+  satellite TLE fetches, and the bundled local datasets all firing in the
+  same tick. Light layers (flights, military, earthquakes, traffic,
+  military-installations, military-awareness) now restore first, with a cap
+  of 4 concurrent in-flight restores; heavier layers (CCTV, satellites,
+  radio, the bundled local-* datasets, submarine cables) fill in behind the
+  cap. Sessions with 4 or fewer enabled layers see no change in behavior.
 
 ### Added
 

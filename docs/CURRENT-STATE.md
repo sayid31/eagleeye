@@ -650,6 +650,19 @@ silently demoting every later lookup for the session.
   reject the layer payload; unknown option tokens are ignored. Restoration
   settles independently per layer so one failed or unavailable source cannot
   block its siblings.
+- Restoration is a concurrency-limited, priority-ordered queue
+  (`LAYER_RESTORE_CONCURRENCY = 4` in `src/data/layerState.js`), not an
+  unbounded fan-out: light layers (flights, military, earthquakes, traffic,
+  military-installations, military-awareness) dispatch first, moderate
+  layers (bikeshare, rocket-launches, ais-live-vessels) next, and heavy
+  layers (cctv, satellites, radio, the bundled local-* datasets, submarine
+  cables) are deferred behind the cap. This only changes behavior once a
+  session has more layers enabled at once than the cap — a returning user or
+  a rich share link with most/all 16 layers on no longer launches every
+  layer's init/enable/first-update sequence in the same tick. Small sessions
+  (at or under the cap) dispatch exactly as before, and every existing
+  per-layer isolation/supersession/abort guarantee is unaffected — the queue
+  only reorders WHEN a layer's restore call is made, never how it resolves.
 - Stable visible options are limited to aircraft 3D mode, selected civilian and
   military flight IDs, Satellite catalog and selection, CCTV coverage/projection/
   auto-hop, and Radio filter/volume. Playback and tuning, live-data health,
