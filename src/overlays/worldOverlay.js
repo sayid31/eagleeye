@@ -4,8 +4,7 @@ import {
   getKeyholeGeometry,
   keyholeLabelAlphaFromGeometry,
 } from '../celestialRing.js';
-import { BoundedCohort, stableIdentityHash } from '../data/detectionCohort.js';
-import { LabelArbiter, LABEL_ARBITER_TIMING } from '../data/labelArbiter.js';
+import { LABEL_ARBITER_TIMING } from '../data/labelArbiter.js';
 import {
   altitudeFade,
   destroyWorldOverlayDraw,
@@ -23,9 +22,44 @@ import {
   installUiOccluderObservers,
   scanUiOccluders,
 } from './worldOverlayOccluder.js';
-import { WORLD_OVERLAY_STYLE } from './worldOverlayTokens.js';
+import { WORLD_OVERLAY_PAINT_LANES, WORLD_OVERLAY_STYLE } from './worldOverlayTokens.js';
+import {
+  DEFAULT_MOVING_SOLVE_MS,
+  assertSourceId,
+  compareStableKeys,
+  entryKey,
+  getOrCreateDomain,
+  getOrCreateSource,
+  isProtected,
+  normalizeOverlayEntry as normalizeOverlayEntryRegistry,
+  paintLaneForOverlayEntry,
+  rebuildSourceCohorts,
+  registryDomainList,
+  registryDomains,
+  registrySourceList,
+  registrySources,
+  selectBoundedOverlayCohort,
+} from './worldOverlaySourceRegistry.js';
 
 export { WORLD_OVERLAY_OCCLUDER_SELECTORS };
+export { paintLaneForOverlayEntry, selectBoundedOverlayCohort } from './worldOverlaySourceRegistry.js';
+// `WORLD_OVERLAY_PAINT_LANES` itself now lives in `worldOverlayTokens.js` (see
+// that file's docstring for why); re-exported unchanged for `worldOverlay.test.mjs`
+// and any other existing external consumer of this module's public API.
+export { WORLD_OVERLAY_PAINT_LANES } from './worldOverlayTokens.js';
+
+/**
+ * Validate and copy a source entry into the shared presentation contract.
+ * Thin Cesium-bound wrapper over the registry's Cesium-agnostic normalizer
+ * (kept as a named export here — unchanged public API/signature for the 13
+ * external importers and `worldOverlay.test.mjs`).
+ * @param {string} sourceId
+ * @param {object} entry
+ * @returns {WorldOverlayEntry}
+ */
+export function normalizeOverlayEntry(sourceId, entry) {
+  return normalizeOverlayEntryRegistry(Cesium, sourceId, entry);
+}
 
 /**
  * @module worldOverlay
@@ -52,20 +86,10 @@ const DEFAULT_COLLISION_CAPACITY = 96;
 // work-conserving ceiling preserves every source's shipped cap; pinned and
 // active/protected entries bypass it.
 export const AMBIENT_CARD_COLLISION_CAPACITY = 1150;
-const DEFAULT_MOVING_SOLVE_MS = 125;
-const VALID_VARIANTS = new Set(['label', 'track', 'card', 'thumbnail', 'selected', 'tracked']);
 
-/** Stable logical bottom-to-top paint order across the host-owned surfaces. */
-export const WORLD_OVERLAY_PAINT_LANES = Object.freeze([
-  'detection',
-  'ambient-label',
-  'ambient-track',
-  'ambient-card',
-  'thumbnail',
-  'selected',
-  'tracked',
-]);
-
+// `WORLD_OVERLAY_PAINT_LANES` itself lives in `worldOverlayTokens.js` (see
+// that file's docstring for why) and is imported above; `worldOverlay.js`
+// re-exports it unchanged below for its existing external consumers.
 const PAINT_LANE_INDEX = new Map(WORLD_OVERLAY_PAINT_LANES.map((lane, index) => [lane, index]));
 
 /** @typedef {{x:number,y:number,w:number,h:number}} OverlayRect */
@@ -138,18 +162,10 @@ let _canvasDpr = 1;
  */
 let _frameStamp = 0;
 
-/** @type {Map<string, object>} */
-const _sources = new Map();
-/** @type {Array<object>} Append-only iteration order for `_sources`. */
-const _sourceList = [];
 /** @type {Map<string, object>} Source-owned painters hosted in fixed lanes. */
 const _customPaintLanes = new Map();
 /** @type {Array<object>} Stable registration order for custom painters. */
 const _customPaintLaneList = [];
-/** @type {Map<string, object>} */
-const _domains = new Map();
-/** @type {Array<object>} Append-only iteration order for `_domains`. */
-const _domainList = [];
 /** @type {Map<string, object>} */
 const _records = new Map();
 const _scratchViewProjection = new Cesium.Matrix4();
@@ -225,29 +241,6 @@ function nowMs() {
   return globalThis.performance?.now?.() ?? Date.now();
 }
 
-function clamp01(value, fallback = 1) {
-  return Number.isFinite(Number(value)) ? Math.max(0, Math.min(1, Number(value))) : fallback;
-}
-
-function assertSourceId(sourceId) {
-  if (typeof sourceId !== 'string' || !sourceId.trim()) {
-    throw new TypeError('WorldOverlay sourceId must be a non-empty string');
-  }
-  return sourceId.trim();
-}
-
-function entryKey(sourceId, entryId) {
-  return `${sourceId}\u0000${entryId}`;
-}
-
-function compareStableKeys(a, b) {
-  return a < b ? -1 : a > b ? 1 : 0;
-}
-
-function compareProtectedEntries(a, b) {
-  return b.priority - a.priority || compareStableKeys(a._overlayKey, b._overlayKey);
-}
-
 function compareProtectedCandidates(a, b) {
   return b.priority - a.priority || compareStableKeys(a.key, b.key);
 }
@@ -291,377 +284,8 @@ function pruneKeyedIndex(index, liveCount) {
   if (index.size > liveCount * 4 + 64) index.clear();
 }
 
-function defaultCollisionGroup(variant) {
-  if (variant === 'label') return 'ambient-label';
-  if (variant === 'track' || variant === 'tracked') return 'ambient-track';
-  return 'ambient-card';
-}
-
-/** Resolve an entry to one of the seven binding paint lanes. */
-export function paintLaneForOverlayEntry(entry = {}) {
-  if (PAINT_LANE_INDEX.has(entry.paintLane)) return PAINT_LANE_INDEX.get(entry.paintLane);
-  if (entry.tracked || entry.variant === 'tracked') return PAINT_LANE_INDEX.get('tracked');
-  if (entry.selected || entry.variant === 'selected') return PAINT_LANE_INDEX.get('selected');
-  if (entry.variant === 'thumbnail') return PAINT_LANE_INDEX.get('thumbnail');
-  if (entry.variant === 'card') return PAINT_LANE_INDEX.get('ambient-card');
-  if (entry.variant === 'track') return PAINT_LANE_INDEX.get('ambient-track');
-  return PAINT_LANE_INDEX.get('ambient-label');
-}
-
-/**
- * Validate and copy a source entry into the shared presentation contract.
- * Source-specific objects remain opaque in `metadata`; they are never read by
- * the renderer.
- * @param {string} sourceId
- * @param {object} entry
- * @returns {WorldOverlayEntry}
- */
-/**
- * Snapshot an entry's optional occlusion-test anchor into a host-owned
- * Cartesian3, mirroring the flights layer's `info.cullPosition || bb.position`
- * idiom: a source whose render anchor can land at or below the ellipsoid
- * (ground floor + lift in a negative-geoid region) supplies a LIFTED point
- * here so the horizon test judges the real surface instead of false-hiding it
- * near the limb. The render position stays datum-correct and untouched.
- *
- * Resolved exactly ONCE per setEntries and never re-read on the paint path:
- * - the property is read a single time, so an accessor-backed field is
- *   invoked once rather than once per validated component;
- * - a throwing accessor is contained here — it degrades that one entry to
- *   "no cull anchor" instead of aborting normalization for the whole source;
- * - the components are copied into a fresh Cartesian3, so a caller mutating
- *   or recycling its own vector after publishing cannot feed NaN (or a moved
- *   point) to the per-frame occluder.
- *
- * @param {object} entry - Raw source entry.
- * @returns {?Cesium.Cartesian3} Host-owned lifted anchor, or null.
- */
-function snapshotCullPosition(entry) {
-  let candidate;
-  try {
-    candidate = entry.cullPosition;
-  } catch {
-    return null; // a hostile/throwing accessor must not break the source
-  }
-  if (!candidate || typeof candidate !== 'object') return null;
-  const { x, y, z } = candidate;
-  if (!Number.isFinite(x) || !Number.isFinite(y) || !Number.isFinite(z)) return null;
-  return new Cesium.Cartesian3(x, y, z);
-}
-
-export function normalizeOverlayEntry(sourceId, entry) {
-  const source = assertSourceId(sourceId);
-  if (!entry || typeof entry !== 'object') throw new TypeError('WorldOverlay entry must be an object');
-  const id = typeof entry.id === 'string' ? entry.id.trim() : '';
-  if (!id) throw new TypeError('WorldOverlay entry.id must be a non-empty string');
-  const validPosition = typeof entry.position === 'function'
-    || (entry.position && Number.isFinite(entry.position.x)
-      && Number.isFinite(entry.position.y) && Number.isFinite(entry.position.z));
-  if (!validPosition) {
-    throw new TypeError(`WorldOverlay entry ${source}:${id} requires a Cartesian position or getter`);
-  }
-  const variant = String(entry.variant || 'label');
-  if (!VALID_VARIANTS.has(variant)) {
-    throw new TypeError(`Unsupported WorldOverlay variant: ${variant}`);
-  }
-  const normalized = {
-    id,
-    source,
-    position: entry.position,
-    cullPosition: snapshotCullPosition(entry),
-    variant,
-    title: String(entry.title ?? ''),
-    details: Array.isArray(entry.details) ? entry.details.map((line) => String(line)) : [],
-    accent: entry.accent || WORLD_OVERLAY_STYLE.accent,
-    paintLane: entry.paintLane,
-    priority: Number.isFinite(Number(entry.priority)) ? Number(entry.priority) : 0,
-    selected: entry.selected === true,
-    pinned: entry.pinned === true,
-    protected: entry.protected === true,
-    tracked: entry.tracked === true || variant === 'tracked',
-    active: entry.active === true,
-    collisionGroup: String(entry.collisionGroup || defaultCollisionGroup(variant)),
-    // Explicit field pick rather than `{ ...entry, variant }`: the lane
-    // resolver reads only these four, and a full spread re-invokes every
-    // accessor the source put on its entry (a throwing one would abort
-    // normalization for the whole batch).
-    zIndex: Number.isFinite(Number(entry.zIndex))
-      ? Number(entry.zIndex)
-      : paintLaneForOverlayEntry({
-        paintLane: entry.paintLane,
-        tracked: entry.tracked,
-        selected: entry.selected,
-        variant,
-      }) * 10,
-    interactive: entry.interactive === true,
-    accessibilityLabel: String(entry.accessibilityLabel || '').trim(),
-    activate: typeof entry.activate === 'function' ? entry.activate : null,
-    minDistance: Number.isFinite(Number(entry.minDistance)) ? Math.max(0, Number(entry.minDistance)) : 0,
-    maxDistance: Number.isFinite(Number(entry.maxDistance)) ? Math.max(0, Number(entry.maxDistance)) : Number.POSITIVE_INFINITY,
-    distanceFadeStartRatio: Number.isFinite(Number(entry.distanceFadeStartRatio))
-      ? Math.max(0, Math.min(1, Number(entry.distanceFadeStartRatio)))
-      : 0.7,
-    distanceScale: normalizeDistanceScale(entry.distanceScale),
-    altitudeScale: normalizeAltitudeScale(entry.altitudeScale),
-    minAltitude: Number.isFinite(Number(entry.minAltitude)) ? Number(entry.minAltitude) : Number.NEGATIVE_INFINITY,
-    altitudeFadeStart: Number.isFinite(Number(entry.altitudeFadeStart))
-      ? Number(entry.altitudeFadeStart)
-      : Number.POSITIVE_INFINITY,
-    altitudeFadeEnd: Number.isFinite(Number(entry.altitudeFadeEnd))
-      ? Number(entry.altitudeFadeEnd)
-      : Number.POSITIVE_INFINITY,
-    edgeFade: entry.edgeFade === false || entry.edgeFade === 'none' ? 'none' : 'keyhole',
-    horizonCull: entry.horizonCull !== false,
-    terrainOcclusion: entry.terrainOcclusion === true,
-    sourceAlpha: clamp01(entry.sourceAlpha ?? entry.alpha, 1),
-    temporalAlpha: clamp01(entry.temporalAlpha, 1),
-    gapPx: Number.isFinite(Number(entry.gapPx)) ? Math.max(0, Number(entry.gapPx)) : 12,
-    leaderOffsetPx: Number.isFinite(Number(entry.leaderOffsetPx))
-      ? Math.max(0, Number(entry.leaderOffsetPx))
-      : 0,
-    anchorRadiusPx: Number.isFinite(Number(entry.anchorRadiusPx))
-      ? Math.max(0, Number(entry.anchorRadiusPx))
-      : 0,
-    anchorRadiusScale: normalizeDistanceScale(entry.anchorRadiusScale),
-    minAnchorGapPx: Number.isFinite(Number(entry.minAnchorGapPx))
-      ? Math.max(0, Number(entry.minAnchorGapPx))
-      : 0,
-    anchorGapPaddingPx: Number.isFinite(Number(entry.anchorGapPaddingPx))
-      ? Math.max(0, Number(entry.anchorGapPaddingPx))
-      : 0,
-    verticalOnly: entry.verticalOnly === true,
-    // Opt out of the arbiter's statefulness (min-lifetime pinning, re-entry
-    // cooldown, enter/exit fades, sticky corner). Sources whose shipped
-    // behaviour was a stateless per-frame rebuild set this to keep that feel.
-    stateless: entry.stateless === true,
-    // Opt-in ANCHOR separation, in CSS px at scale 1, scaled by paintScale at
-    // projection. Rectangle overlap alone lets cards stack far denser than a
-    // shipped anchor-separation pass did, because the leader gap does not shrink
-    // with the card. 0 disables.
-    minAnchorSeparationPx: Number.isFinite(Number(entry.minAnchorSeparationPx))
-      ? Math.max(0, Number(entry.minAnchorSeparationPx))
-      : 0,
-    viewportMargin: Number.isFinite(Number(entry.viewportMargin))
-      ? Math.max(0, Number(entry.viewportMargin))
-      : 4,
-    viewportPadding: Number.isFinite(Number(entry.viewportPadding))
-      ? Math.max(0, Number(entry.viewportPadding))
-      : 64,
-    requireImage: entry.requireImage === true,
-    safeTopRatio: Number.isFinite(Number(entry.safeTopRatio))
-      ? Math.max(0, Number(entry.safeTopRatio))
-      : 0,
-    safeTopMaxPx: Number.isFinite(Number(entry.safeTopMaxPx))
-      ? Math.max(0, Number(entry.safeTopMaxPx))
-      : Number.POSITIVE_INFINITY,
-    pinnedBypassesSafeTop: entry.pinnedBypassesSafeTop === true,
-    placement: String(entry.placement || 'auto'),
-    cardStyle: entry.cardStyle,
-    image: entry.image ?? null,
-    metadata: entry.metadata ?? null,
-    thumbnailWidth: entry.thumbnailWidth,
-    thumbnailHeight: entry.thumbnailHeight,
-    thumbnailPadX: entry.thumbnailPadX,
-    thumbnailPadTop: entry.thumbnailPadTop,
-    thumbnailPadBottom: entry.thumbnailPadBottom,
-    thumbnailTitleGap: entry.thumbnailTitleGap,
-    thumbnailTitleHeight: entry.thumbnailTitleHeight,
-    thumbnailTitleChars: entry.thumbnailTitleChars,
-    thumbnailBackground: entry.thumbnailBackground,
-    thumbnailTitleColor: entry.thumbnailTitleColor,
-    thumbnailTitleFont: entry.thumbnailTitleFont,
-    thumbnailLeaderColor: entry.thumbnailLeaderColor,
-    thumbnailRuleColor: entry.thumbnailRuleColor,
-    thumbnailRuleHeight: entry.thumbnailRuleHeight,
-    thumbnailRadius: entry.thumbnailRadius,
-    _overlayTacticalAccentColors: null,
-    _overlayTrackDisplayTitle: null,
-    _overlayTrackDisplayDetail: null,
-    _overlayTrackDisplayText: '',
-    _overlayThumbnailTitle: variant === 'thumbnail'
-      ? String(entry.title ?? '').toUpperCase().slice(
-        0,
-        Math.max(0, Math.floor(Number(entry.thumbnailTitleChars) || 0)) || undefined,
-      )
-      : '',
-  };
-  normalized._overlayKey = entryKey(source, id);
-  normalized._cohortPriority = normalized.priority;
-  normalized._cohortBand = 0;
-  normalized._cohortHash = stableIdentityHash(source, id);
-  normalized._cohortSourceId = id;
-  normalized._overlayImageSlot = normalized.requireImage && normalized.image
-    && Object.prototype.hasOwnProperty.call(normalized.image, 'frame')
-    ? normalized.image
-    : null;
-  normalized._overlayLayout = {};
-  return normalized;
-}
-
-function normalizeDistanceScale(curve) {
-  if (!curve || typeof curve !== 'object') return null;
-  const values = [curve.near, curve.nearValue, curve.far, curve.farValue].map(Number);
-  if (!values.every(Number.isFinite)) return null;
-  const near = Math.max(0, values[0]);
-  const nearValue = Math.max(0, values[1]);
-  const far = Math.max(near, values[2]);
-  const farValue = Math.max(0, values[3]);
-  return { near, nearValue, far, farValue };
-}
-
-function normalizeAltitudeScale(curve) {
-  if (!curve || typeof curve !== 'object') return null;
-  const values = [curve.fullEnd, curve.midEnd, curve.end, curve.midValue, curve.endValue].map(Number);
-  if (!values.every(Number.isFinite)) return null;
-  const fullEnd = Math.max(0, values[0]);
-  const midEnd = Math.max(fullEnd, values[1]);
-  const end = Math.max(midEnd, values[2]);
-  return {
-    fullEnd,
-    midEnd,
-    end,
-    midValue: Math.max(0, values[3]),
-    endValue: Math.max(0, values[4]),
-    smoothToMid: curve.smoothToMid === true,
-  };
-}
-
-function normalizeSourceOptions(options = {}, previous = {}) {
-  const requestedCapacity = Number(options.collisionCapacity ?? previous.collisionCapacity);
-  return {
-    visible: options.visible !== undefined ? options.visible !== false : previous.visible !== false,
-    hideInCockpit: options.hideInCockpit !== undefined
-      ? options.hideInCockpit === true
-      : previous.hideInCockpit === true,
-    alpha: clamp01(options.alpha, previous.alpha ?? 1),
-    cohortLimit: Math.max(1, Math.min(
-      MAX_SOURCE_COHORT_LIMIT,
-      Math.floor(Number(options.cohortLimit ?? previous.cohortLimit) || DEFAULT_COHORT_LIMIT),
-    )),
-    collisionCapacity: Number.isFinite(requestedCapacity)
-      ? Math.max(0, Math.floor(requestedCapacity))
-      : DEFAULT_COLLISION_CAPACITY,
-    moving: options.moving !== undefined ? options.moving === true : previous.moving === true,
-    solveIntervalMs: Math.max(0, Number(
-      options.solveIntervalMs ?? previous.solveIntervalMs ?? DEFAULT_MOVING_SOLVE_MS,
-    ) || 0),
-  };
-}
-
-function isProtected(entry) {
-  return entry.selected || entry.pinned || entry.protected || entry.tracked
-    || paintLaneForOverlayEntry(entry) >= PAINT_LANE_INDEX.get('selected');
-}
-
-/**
- * Bound one source/domain's ambient surplus without evicting protected items.
- * `LabelArbiter` performs the later cross-source, screen-space selection.
- * @param {Array<WorldOverlayEntry>} entries
- * @param {number} limit
- * @param {Set<string>} [incumbentKeys]
- * @returns {Array<WorldOverlayEntry>}
- */
-export function selectBoundedOverlayCohort(entries, limit = DEFAULT_COHORT_LIMIT, incumbentKeys = new Set()) {
-  const cap = Math.max(1, Math.min(MAX_SOURCE_COHORT_LIMIT, Math.floor(Number(limit) || DEFAULT_COHORT_LIMIT)));
-  const protectedEntries = [];
-  const bounded = new BoundedCohort(cap, MAX_SOURCE_COHORT_LIMIT);
-  for (const entry of Array.isArray(entries) ? entries : []) {
-    if (!entry) continue;
-    if (isProtected(entry)) {
-      protectedEntries.push(entry);
-      continue;
-    }
-    bounded.consider(entry, incumbentKeys.has(entry._overlayKey) || incumbentKeys.has(entry.id));
-  }
-  protectedEntries.sort(compareProtectedEntries);
-  return protectedEntries.concat(bounded.values(cap));
-}
-
 function sourceActive(source) {
   return source.options.visible && !(_cockpitActive && source.options.hideInCockpit);
-}
-
-function getOrCreateDomain(domainId) {
-  let domain = _domains.get(domainId);
-  if (!domain) {
-    domain = {
-      id: domainId,
-      arbiter: new LabelArbiter(),
-      candidates: [],
-      candidateCount: 0,
-      candidateMap: new Map(),
-      protectedCandidates: [],
-      protectedCount: 0,
-      protectedRects: [],
-      protectedRectCount: 0,
-      // Pooled accepted-anchor ring for opt-in anchor separation. Parallel
-      // arrays instead of objects so the pass allocates nothing per frame.
-      sepX: [],
-      sepY: [],
-      sepR: [],
-      sepSource: [],
-      sepCount: 0,
-      renderEntries: [],
-      demandBySource: new Map(),
-      capacity: DEFAULT_COLLISION_CAPACITY,
-      lastSolveAt: Number.NEGATIVE_INFINITY,
-      moving: false,
-      solveIntervalMs: DEFAULT_MOVING_SOLVE_MS,
-    };
-    _domains.set(domainId, domain);
-    _domainList.push(domain);
-  }
-  return domain;
-}
-
-function rebuildSourceCohorts(source) {
-  const groups = new Map();
-  source.demandByDomain.clear();
-  for (const entry of source.entries.values()) {
-    if (!groups.has(entry.collisionGroup)) groups.set(entry.collisionGroup, []);
-    groups.get(entry.collisionGroup).push(entry);
-    if (!isProtected(entry)) {
-      source.demandByDomain.set(
-        entry.collisionGroup,
-        (source.demandByDomain.get(entry.collisionGroup) || 0) + 1,
-      );
-    }
-  }
-  let index = 0;
-  for (const [domainId, entries] of groups) {
-    const incumbentKeys = getOrCreateDomain(domainId).arbiter.selectedKeys;
-    source.cohortDomainIds[index] = domainId;
-    source.cohortLists[index] = selectBoundedOverlayCohort(
-      entries,
-      source.options.cohortLimit,
-      incumbentKeys,
-    );
-    index++;
-  }
-  source.cohortCount = index;
-  source.cohortDomainIds.length = index;
-  source.cohortLists.length = index;
-}
-
-function getOrCreateSource(sourceId, options = {}) {
-  const id = assertSourceId(sourceId);
-  let source = _sources.get(id);
-  if (!source) {
-    source = {
-      id,
-      entries: new Map(),
-      cohortDomainIds: [],
-      cohortLists: [],
-      cohortCount: 0,
-      demandByDomain: new Map(),
-      options: normalizeSourceOptions(options),
-    };
-    _sources.set(id, source);
-    _sourceList.push(source);
-  } else if (options && Object.keys(options).length > 0) {
-    source.options = normalizeSourceOptions(options, source.options);
-  }
-  return source;
 }
 
 function invalidateHost({ solve = true, layout = false } = {}) {
@@ -789,7 +413,7 @@ export function upsertOverlayEntry(sourceId, entry) {
  */
 export function removeOverlayEntry(sourceId, entryId) {
   if (_destroyed) return false;
-  const source = _sources.get(assertSourceId(sourceId));
+  const source = registrySources.get(assertSourceId(sourceId));
   if (!source) return false;
   const id = String(entryId);
   const removed = source.entries.delete(id);
@@ -808,7 +432,7 @@ export function removeOverlayEntry(sourceId, entryId) {
  */
 export function clearOverlaySource(sourceId) {
   if (_destroyed) return false;
-  const source = _sources.get(assertSourceId(sourceId));
+  const source = registrySources.get(assertSourceId(sourceId));
   if (!source) return false;
   for (const entry of source.entries.values()) _records.delete(entry._overlayKey);
   source.entries.clear();
@@ -838,11 +462,11 @@ export function setOverlaySourceVisible(sourceId, visible) {
 function updateEntryDiagnostics() {
   const entriesBySource = {};
   let entryCount = 0;
-  for (const [sourceId, source] of _sources) {
+  for (const [sourceId, source] of registrySources) {
     entriesBySource[sourceId] = source.entries.size;
     entryCount += source.entries.size;
   }
-  _diagnostics.sourceCount = _sources.size;
+  _diagnostics.sourceCount = registrySources.size;
   _diagnostics.entryCount = entryCount;
   _diagnostics.entriesBySource = entriesBySource;
 }
@@ -1134,8 +758,8 @@ function clearCanvas(clearMain = true, clearDetection = true) {
 
 function activeEntryCount() {
   let count = 0;
-  for (let i = 0; i < _sourceList.length; i++) {
-    const source = _sourceList[i];
+  for (let i = 0; i < registrySourceList.length; i++) {
+    const source = registrySourceList[i];
     if (sourceActive(source)) count += source.entries.size;
   }
   return count;
@@ -1152,8 +776,8 @@ function activeCustomPaintLaneCount(target = null) {
 
 function activeFadeCount(timestamp) {
   let count = 0;
-  for (let d = 0; d < _domainList.length; d++) {
-    const arbiter = _domainList[d].arbiter;
+  for (let d = 0; d < registryDomainList.length; d++) {
+    const arbiter = registryDomainList[d].arbiter;
     const stateCount = arbiter.activeStateCount();
     for (let i = 0; i < stateCount; i++) {
       const state = arbiter.activeStateAt(i);
@@ -1171,8 +795,8 @@ function overlayHasPaintWork(timestamp = nowMs()) {
   if (activeCustomPaintLaneCount() > 0) return true;
   if (activeEntryCount() > 0) return true;
   if (!_solveDirty) return activeFadeCount(timestamp) > 0;
-  for (let d = 0; d < _domainList.length; d++) {
-    if (_domainList[d].arbiter.states.size > 0) return true;
+  for (let d = 0; d < registryDomainList.length; d++) {
+    if (registryDomainList[d].arbiter.states.size > 0) return true;
   }
   return false;
 }
@@ -1279,8 +903,8 @@ function getProjectionRecord(entry) {
 }
 
 function resetFrameDomains() {
-  for (let d = 0; d < _domainList.length; d++) {
-    const domain = _domainList[d];
+  for (let d = 0; d < registryDomainList.length; d++) {
+    const domain = registryDomainList[d];
     // `candidateMap` keeps its table across frames; membership is expressed by
     // `candidate.frameStamp`, and demand tallies are zeroed rather than cleared
     // because `Map#clear` reallocates the backing hash table every call. Stale
@@ -1479,8 +1103,8 @@ function collectFrameCandidates(keyhole, viewProjection) {
   resetFrameDomains();
   let candidateCount = 0;
   let projectedCount = 0;
-  for (let s = 0; s < _sourceList.length; s++) {
-    const source = _sourceList[s];
+  for (let s = 0; s < registrySourceList.length; s++) {
+    const source = registrySourceList[s];
     if (!sourceActive(source)) continue;
     for (let c = 0; c < source.cohortCount; c++) {
       const domainId = source.cohortDomainIds[c];
@@ -1543,8 +1167,8 @@ function collectFrameCandidates(keyhole, viewProjection) {
     }
   }
 
-  for (let d = 0; d < _domainList.length; d++) {
-    const domain = _domainList[d];
+  for (let d = 0; d < registryDomainList.length; d++) {
+    const domain = registryDomainList[d];
     sortPooledRange(domain.protectedCandidates, domain.protectedCount, compareProtectedCandidates);
     for (let p = 0; p < domain.protectedCount; p++) {
       const candidate = domain.protectedCandidates[p];
@@ -1594,7 +1218,7 @@ function collectFrameCandidates(keyhole, viewProjection) {
     if (!Number.isFinite(domain.solveIntervalMs)) domain.solveIntervalMs = DEFAULT_MOVING_SOLVE_MS;
   }
   let candidateIndexSize = 0;
-  for (let d = 0; d < _domainList.length; d++) candidateIndexSize += _domainList[d].candidateMap.size;
+  for (let d = 0; d < registryDomainList.length; d++) candidateIndexSize += registryDomainList[d].candidateMap.size;
   _diagnostics.candidateIndexSize = candidateIndexSize;
   _diagnostics.candidateCount = candidateCount;
   _diagnostics.projectedCount = projectedCount;
@@ -1614,7 +1238,7 @@ function addPaintItem(record, placement, temporalAlpha, selected) {
 }
 
 function sourceCanPaint(sourceId) {
-  const source = _sources.get(sourceId);
+  const source = registrySources.get(sourceId);
   return !!source && sourceActive(source);
 }
 
@@ -1624,8 +1248,8 @@ function solveDomains(timestamp) {
   let selectedCount = 0;
   let fadingCount = 0;
   let solveRevision = 0;
-  for (let d = 0; d < _domainList.length; d++) {
-    const domain = _domainList[d];
+  for (let d = 0; d < registryDomainList.length; d++) {
+    const domain = registryDomainList[d];
     const movingSolveDue = domain.moving
       && timestamp - domain.lastSolveAt >= domain.solveIntervalMs;
     if (_solveDirty || movingSolveDue) {
@@ -2001,8 +1625,8 @@ export function destroyWorldOverlay() {
   if (typeof window !== 'undefined' && window.__gevWorldOverlay?.getDiagnostics === getWorldOverlayDiagnostics) {
     delete window.__gevWorldOverlay;
   }
-  _sources.clear();
-  _sourceList.length = 0;
+  registrySources.clear();
+  registrySourceList.length = 0;
   for (let i = 0; i < _customPaintLaneList.length; i++) {
     _customPaintLaneList[i].active = false;
     _customPaintLaneList[i].painter = null;
@@ -2010,8 +1634,8 @@ export function destroyWorldOverlay() {
   }
   _customPaintLanes.clear();
   _customPaintLaneList.length = 0;
-  _domains.clear();
-  _domainList.length = 0;
+  registryDomains.clear();
+  registryDomainList.length = 0;
   _records.clear();
   for (let i = 0; i < _paintItemPool.length; i++) {
     const item = _paintItemPool[i];
