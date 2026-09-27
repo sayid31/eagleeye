@@ -100,6 +100,7 @@ import {
 } from './contextStore.js';
 import { CONTACT_MATCH_TIER, contactMatchWins, rankContactMatch } from './contactMatch.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 const FOCUS_EVIDENCE_DEV = import.meta.env?.DEV === true;
 
@@ -3354,10 +3355,7 @@ function _focusEvidenceSnapshot() {
  * @type {object}
  */
 const flightsLayer = {
-  id: 'flights',
-  name: 'Live Flights',
-  icon: '✈️',
-  source: 'OpenSky Network',
+  ...LAYER_METADATA.flights,
   // Browser-harness seam: isolates synthetic display-floor scenarios without
   // changing any production lifecycle or cache policy.
   _clearDisplayFloorStateForTest,

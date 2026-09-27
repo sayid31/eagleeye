@@ -68,6 +68,7 @@ import {
   buildSelectedVesselCard,
   cardScreenSeparated,
 } from './aisVesselCards.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 // Re-exported for this module's own test suite and any external caller that
 // still imports these from aisLiveVessels.js rather than their new home.
@@ -180,10 +181,7 @@ function currentGeoidN(lat, lon) {
 const shipIconCache = new Map();
 
 const aisLiveVesselsLayer = {
-  id: 'ais-live-vessels',
-  name: 'Live AIS Vessels',
-  icon: '◭',
-  source: 'AISStream',
+  ...LAYER_METADATA['ais-live-vessels'],
   updateInterval: REFRESH_MS,
   statsRefreshInterval: 1000,
 

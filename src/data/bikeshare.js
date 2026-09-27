@@ -28,6 +28,7 @@ import {
   CITY_RANGE_BASE_KM,
   GBFS_CITY_REGISTRY,
 } from './bikeshareCities.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 export { MONITORED_CITIES_NO_FEED } from './bikeshareCities.js';
 
@@ -1070,10 +1071,7 @@ function onCameraChanged() {
  * @type {Object}
  */
 const bikeshareLayer = {
-  id: 'bikeshare',
-  name: 'Bikeshare',
-  icon: '🚲',
-  source: 'GBFS',
+  ...LAYER_METADATA.bikeshare,
   updateInterval: STATUS_POLL_MS,
 
   /**

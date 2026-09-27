@@ -67,6 +67,7 @@ import {
 } from './contextStore.js';
 import { CONTACT_MATCH_TIER, contactMatchWins, rankContactMatch } from './contactMatch.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 /**
  * @module militaryFlights
@@ -2389,10 +2390,7 @@ export function mapAnalystRecord(icao24, info) {
  * @type {Object}
  */
 const militaryFlightsLayer = {
-  id: 'military',
-  name: 'Military Flights',
-  icon: '🎖️',
-  source: 'adsb.lol',
+  ...LAYER_METADATA.military,
   /** @type {number} Polling interval in ms between API fetches */
   updateInterval: 15000,
 

@@ -36,6 +36,7 @@ import {
   historySubjectSnapshot,
   isFlightLayer,
 } from './militaryAwarenessPredicates.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 export {
   aircraftClassMatchesFilter,
@@ -1424,7 +1425,14 @@ async function enableDependencies(activationId = state.activationId) {
       // Register the ON intent synchronously. If Contacts is turned OFF in the
       // same turn, DataLayerManager then sees OFF as the newest intent and a
       // stale deferred ON cannot resurrect a released dependency.
-      pending = Promise.resolve(state.dataManager.setEnabled(layerId, true));
+      // restoreThrottle bounds the actual lifecycle work via the SAME shared
+      // cross-layer concurrency gate as page-load restore and Context-mode
+      // isolation — so a Contacts entry racing an in-flight bulk restore
+      // stays globally bounded (<=4 concurrent lifecycles across every
+      // source), not just locally bounded to 4 within this loop alone.
+      pending = Promise.resolve(state.dataManager.setEnabled(layerId, true, {
+        restoreThrottle: (task) => state.dataManager.runThroughRestoreQueue(task),
+      }));
     } catch (error) {
       pending = Promise.reject(error);
     }
@@ -1448,7 +1456,10 @@ function releaseOwnedDependencies(releaseActivationId) {
   const owned = [...state.ownedDependencies];
   state.ownedDependencies.clear();
   if (!state.dataManager || !owned.length) return Promise.resolve();
-  return Promise.allSettled(owned.map((layerId) => state.dataManager.setEnabled(layerId, false)))
+  // Same shared cross-layer concurrency gate as enableDependencies() above.
+  return Promise.allSettled(owned.map((layerId) => state.dataManager.setEnabled(layerId, false, {
+    restoreThrottle: (task) => state.dataManager.runThroughRestoreQueue(task),
+  })))
     .then(() => {
       if (state.enabled && state.activationId !== releaseActivationId) {
         return enableDependencies(state.activationId);
@@ -1544,12 +1555,7 @@ function focusAttentionTarget() {
 }
 
 const militaryAwarenessLayer = {
-  id: 'military-awareness',
-  name: 'Global Context',
-  icon: '◎',
-  source: 'Open-source proximity context',
-  // Context is entered from its dedicated right rail, not as a raw layer.
-  showInTogglePanel: false,
+  ...LAYER_METADATA['military-awareness'],
   updateInterval: 0,
   statsRefreshInterval: 1000,
   attachDataManager(dataManager) { state.dataManager = dataManager; },

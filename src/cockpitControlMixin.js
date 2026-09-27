@@ -1,8 +1,5 @@
 import * as Cesium from 'cesium';
 import { enterCockpitWithTracking } from './cockpitTracking.js';
-import flightsLayer from './data/flights.js';
-import militaryFlightsLayer from './data/militaryFlights.js';
-import militaryAwarenessLayer from './data/militaryAwareness.js';
 import { BLOOM_SCALE_VERSION, decodeBloomIntensity } from './bloom.js';
 import {
   getDetectionTuning,
@@ -49,9 +46,15 @@ import { STYLES } from './ui.js';
  *   sites (`setStyle`, share-state restore, `ShareLinkManager`'s
  *   style-param provider, `_updateSliderPanel`) stay in `ui.js` and read
  *   the same module-level const directly.
- * - `militaryAwarenessLayer`, `militaryFlightsLayer`, `flightsLayer` — also
- *   referenced directly by `initDetection`'s constructor wiring and the
- *   cockpit-exit/context-mode-change cleanup in `ui.js`, which stay there.
+ * `getCockpitState`/`_retargetCockpitEntryLayer`/the cockpit-entry branch of
+ * `controlCockpit` no longer import `militaryAwarenessLayer`/
+ * `militaryFlightsLayer`/`flightsLayer` directly (merged from the
+ * lazy-loading refactor, feat/lazy-layers-splash-crash-fix) — they route
+ * through `this._dataManager` (`getContextSnapshot`/`navigateNext`/
+ * `callLayerMethod`/`stopTracking`) instead, since a lazy-registered layer
+ * may not have a resolved module yet. `initDetection`'s constructor wiring
+ * and the cockpit-exit/context-mode-change cleanup in `ui.js` still import
+ * those layer modules directly for their own unrelated reasons.
  *
  * What stays in `ui.js`, and why:
  * - `getAircraftTrackingTarget` — already lives in `navigationLocationMixin.js`
@@ -64,7 +67,7 @@ export const cockpitControlMixin = {
    * @returns {{active:boolean, entryAllowed:boolean, visionMode:string, subject:{id:string,layerId:string}|null, navigation:{canPrevious:boolean,canNext:boolean,canFocus:boolean}|null, awareness?: object}|null}
    */
   getCockpitState() {
-    const snapshot = militaryAwarenessLayer.getContextSnapshot?.();
+    const snapshot = this._dataManager?.getContextSnapshot();
     const info = this.cockpitView?.readAircraftInfo?.();
     const active = Boolean(this.cockpitView?.active);
     const gateOpen = Boolean(this.cockpitView?.isEntryAllowed?.());
@@ -150,13 +153,11 @@ export const cockpitControlMixin = {
     const activeLayer = selectedTarget?.layerId || currentTarget?.layerId || null;
     const alreadyOnLayer = activeLayer === targetLayer;
     if (alreadyOnLayer && !aircraftClass) return { ok: true, retargeted: false };
-    const moved = militaryAwarenessLayer?.navigateNext
-      ? !!militaryAwarenessLayer.navigateNext({
-        targetLayer,
-        aircraftClass,
-        origin: 'voice',
-      })
-      : false;
+    const moved = !!this._dataManager?.navigateNext({
+      targetLayer,
+      aircraftClass,
+      origin: 'voice',
+    });
     if (moved) return { ok: true, retargeted: true };
     // A filter that matched nothing still enters, as long as the layer is
     // already right — the operator asked for that layer and is on it.
@@ -220,9 +221,18 @@ export const cockpitControlMixin = {
         };
       }
       let currentTarget = this.getAircraftTrackingTarget();
-      const layerForTarget = (target) => target?.layerId === 'military'
-        ? militaryFlightsLayer
-        : target?.layerId === 'flights' ? flightsLayer : null;
+      // enterCockpitWithTracking() (cockpitTracking.js) calls trackById()/
+      // stopTracking() on whatever "layer" it's handed — it has no
+      // dataManager of its own, so this thin per-layerId adapter is what
+      // routes those calls through the facade instead of a direct module
+      // reference, keeping cockpitTracking.js's pure-helper contract intact.
+      const layerFacade = (layerId) => (layerId ? {
+        trackById: (id, opts) => this._dataManager?.callLayerMethod(layerId, 'trackById', id, opts),
+        stopTracking: (opts) => this._dataManager?.stopTracking(layerId, opts),
+      } : null);
+      const layerForTarget = (target) => layerFacade(target?.layerId === 'military'
+        ? 'military'
+        : target?.layerId === 'flights' ? 'flights' : null);
       // A requested layer retargets BEFORE entry, through the same filtered
       // navigation NEXT uses. Ignoring it entered on whatever was already
       // tracked and reported success, so "cockpit in that military helicopter"
@@ -250,9 +260,9 @@ export const cockpitControlMixin = {
           currentTarget = this.getAircraftTrackingTarget();
         }
       }
-      const selectedLayer = selectedTarget?.layerId === 'military'
-        ? militaryFlightsLayer
-        : selectedTarget?.layerId === 'flights' ? flightsLayer : null;
+      const selectedLayer = layerFacade(selectedTarget?.layerId === 'military'
+        ? 'military'
+        : selectedTarget?.layerId === 'flights' ? 'flights' : null);
       const entry = enterCockpitWithTracking({
         cockpitView: this.cockpitView,
         selectedLayer,

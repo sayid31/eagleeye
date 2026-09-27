@@ -50,20 +50,6 @@ import {
   normalizeProfile,
   profileForDensity,
 } from './data/detectionPolicy.js';
-import flightsLayer from './data/flights.js';
-import militaryFlightsLayer from './data/militaryFlights.js';
-import satellitesLayer from './data/satellites.js';
-import cctvLayer from './data/cctv.js';
-import radioLayer from './data/radio.js';
-import bikeshareLayer from './data/bikeshare.js';
-import aisLiveVesselsLayer from './data/aisLiveVessels.js';
-import militaryAwarenessLayer from './data/militaryAwareness.js';
-import rocketLaunchesLayer from './data/rocketLaunches.js';
-// Used by the constructor's initDetection(...) wiring (stays here) — also
-// imported independently in navigationLocationMixin.js for the moved
-// world-jump-transition methods, matching the split-import pattern already
-// used for the other layer singletons above.
-import trafficLayer from './data/traffic.js';
 import {
   aggregateLayerLoading,
   canPresentDeferredStatusNotice,
@@ -654,8 +640,9 @@ export class StyleManager {
         const [layerId, ...idParts] = String(entity?.gevTrackedId || '').split(':');
         const trackedId = idParts.join(':');
         if (!trackedId) return false;
-        if (layerId === 'flights') return flightsLayer.refocusTrackedById?.(trackedId) === true;
-        if (layerId === 'military') return militaryFlightsLayer.refocusTrackedById?.(trackedId) === true;
+        if (layerId === 'flights' || layerId === 'military') {
+          return this._dataManager?.refocusTrackedById(layerId, trackedId) === true;
+        }
         return false;
       },
     });
@@ -815,9 +802,18 @@ export class StyleManager {
 
     // Initialize detection overlay BEFORE style stages so the composite
     // stage is first in the post-process pipeline
-    initDetection(viewer, [trafficLayer, flightsLayer, militaryFlightsLayer, satellitesLayer, cctvLayer, bikeshareLayer, aisLiveVesselsLayer], (modeLabel) => {
-      this._updateDetectionButton(modeLabel);
-    });
+    initDetection(
+      viewer,
+      ['traffic', 'flights', 'military', 'satellites', 'cctv', 'bikeshare', 'ais-live-vessels'],
+      // Read the live manager at call time, not a captured reference —
+      // initDetection runs from inside this constructor, before
+      // attachDataManager() has necessarily fired (same reasoning as
+      // CockpitViewController.getDataManager above).
+      () => this._dataManager,
+      (modeLabel) => {
+        this._updateDetectionButton(modeLabel);
+      },
+    );
     initTrackedReadout(viewer);
     setDetectionStyle(this.activeStyle);
     this._applyDetectionDensityFromUi();
@@ -936,7 +932,7 @@ export class StyleManager {
     this._cctvRequestFocusHandler = (event) => routeCctvFocusRequest(
       event,
       (activate, focus) => this._runExplicitCctvFocus(activate, focus),
-      (cameraId, durationSec) => cctvLayer.focusCamera(cameraId, durationSec),
+      (cameraId, durationSec) => this._dataManager?.focusCamera('cctv', cameraId, durationSec),
     );
     this._removeCctvRequestFocusListener = registerCctvFocusRequestListener(
       window,
@@ -2546,23 +2542,18 @@ export class StyleManager {
       this._cctvUnsubscribe();
       this._cctvUnsubscribe = null;
     }
-    if (typeof cctvLayer.subscribe === 'function') {
-      this._cctvUnsubscribe = cctvLayer.subscribe((state) => {
-        this._renderCctvState(state);
-      });
-    }
-    if (typeof cctvLayer.getUIState === 'function') {
-      this._renderCctvState(cctvLayer.getUIState());
-    }
+    this._cctvUnsubscribe = this._dataManager?.subscribeLayer('cctv', (state) => {
+      this._renderCctvState(state);
+    }) || null;
+    const cctvUiState = this._dataManager?.getLayerUIState('cctv');
+    if (cctvUiState) this._renderCctvState(cctvUiState);
     if (this._radioUnsubscribe) {
       this._radioUnsubscribe();
       this._radioUnsubscribe = null;
     }
-    if (typeof radioLayer.subscribe === 'function') {
-      this._radioUnsubscribe = radioLayer.subscribe((state) => {
-        this._renderRadioState(state);
-      });
-    }
+    this._radioUnsubscribe = this._dataManager?.subscribeLayer('radio', (state) => {
+      this._renderRadioState(state);
+    }) || null;
     if (!this._awarenessSelectedHandler) {
       this._awarenessSelectedHandler = (event) => this._persistAwarenessSelection(event, false);
       this._awarenessClearedHandler = (event) => this._persistAwarenessSelection(event, true);
@@ -3156,8 +3147,9 @@ export class StyleManager {
   // Cockpit Control Facade (getCockpitState, _retargetCockpitEntryLayer,
   // controlCockpit, getControlState, getCameraState/applyCameraState,
   // getVisualState/applyVisualState) now lives in cockpitControlMixin.js —
-  // mechanical relocation, see that file's header for the split-import
-  // rationale (STYLES, militaryAwarenessLayer/militaryFlightsLayer/flightsLayer).
+  // mechanical relocation, see that file's header. Layer access there is via
+  // the DataLayerManager facade (getContextSnapshot/navigateNext/
+  // callLayerMethod), not direct flights/military/militaryAwareness imports.
 
   /**
    * Resets the safe-frame overlay to its inactive state on init.
@@ -3784,15 +3776,15 @@ export class StyleManager {
     this._stopOrbit();
     this.cockpitView?.exit({ restoreTracking: false });
     try {
-      militaryAwarenessLayer.releaseCameraOwnership?.({ origin: 'tool' });
+      this._dataManager?.releaseCameraOwnership('military-awareness', { origin: 'tool' });
     } catch {
       // Keep reset available if Context has not initialized completely.
-      try { flightsLayer.stopTracking?.({ origin: 'tool' }); } catch { /* best-effort release */ }
-      try { militaryFlightsLayer.stopTracking?.({ origin: 'tool' }); } catch { /* best-effort release */ }
-      try { aisLiveVesselsLayer.clearSelection?.(); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('flights', { origin: 'tool' }); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('military', { origin: 'tool' }); } catch { /* best-effort release */ }
+      try { this._dataManager?.clearSelection('ais-live-vessels'); } catch { /* best-effort release */ }
     }
-    try { satellitesLayer.stopTracking?.({ origin: 'tool' }); } catch { /* best-effort release */ }
-    try { rocketLaunchesLayer.releaseCameraOwnership?.(); } catch { /* best-effort release */ }
+    try { this._dataManager?.stopTracking('satellites', { origin: 'tool' }); } catch { /* best-effort release */ }
+    try { this._dataManager?.releaseCameraOwnership('rocket-launches'); } catch { /* best-effort release */ }
     this.viewer.trackedEntity = undefined;
     this.viewer.camera.cancelFlight();
     this.viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
@@ -4381,7 +4373,7 @@ export class StyleManager {
     this._radioTunerCameraRemove = null;
     this._refreshRadioTunerBand = null;
     document.getElementById('title-bar')?.classList.remove('radio-broadcasting');
-    radioLayer.endTuning();
+    this._dataManager?.endTuning('radio');
     if (this._radioSelectedHandler) {
       document.removeEventListener('gev:radio-selected', this._radioSelectedHandler);
       this._radioSelectedHandler = null;
@@ -4429,5 +4421,6 @@ Object.assign(StyleManager.prototype, navigationLocationMixin);
 // Cockpit Control Facade (cockpit status/entry/exit/navigation, plus the
 // voice/scene control-state and visual-state snapshot/restore pair) lives
 // in cockpitControlMixin.js (see that file's header for the split-import
-// rationale on STYLES/militaryAwarenessLayer/militaryFlightsLayer/flightsLayer).
+// rationale on STYLES; layer access there is via the DataLayerManager
+// facade, not direct militaryAwareness/militaryFlights/flights imports).
 Object.assign(StyleManager.prototype, cockpitControlMixin);

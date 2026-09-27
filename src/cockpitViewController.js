@@ -3,6 +3,14 @@
  * class. This is a mechanical relocation, not a redesign: the class is
  * unchanged, only its file moved. See ui.js for how StyleManager wires it
  * (`new CockpitViewController(viewer, {...})`).
+ *
+ * Layer access is via the `getDataManager` facade callback (constructor
+ * option), not direct layer-module imports — merged from the lazy-loading
+ * refactor (feat/lazy-layers-splash-crash-fix). A lazy-registered layer may
+ * not have a resolved module yet, so calls route through
+ * `DataLayerManager`'s `getTrackedInfo`/`callLayerMethod`/`getContextSnapshot`
+ * facade instead of a captured `flightsLayer`/`militaryFlightsLayer`/
+ * `militaryAwarenessLayer` singleton.
  */
 import * as Cesium from 'cesium';
 import {
@@ -13,9 +21,6 @@ import {
   resolveCockpitUtilityAnchor,
   resolveCockpitUtilityLayout,
 } from './cockpitUtilityLayout.js';
-import flightsLayer from './data/flights.js';
-import militaryFlightsLayer from './data/militaryFlights.js';
-import militaryAwarenessLayer from './data/militaryAwareness.js';
 import { isTr3b, toggleTr3b } from './data/tr3bRegistry.js';
 import { formatAwarenessLabel } from './data/militaryAwarenessEngine.js';
 import {
@@ -224,8 +229,15 @@ export class CockpitViewController {
     onExited = null,
     getInheritedVisionLabel = null,
     restoreTrackingFrame = null,
+    getDataManager = null,
   } = {}) {
     this.viewer = viewer;
+    // Reads the owning StyleManager's live `_dataManager` field rather than
+    // capturing a snapshot — the controller is constructed before
+    // attachDataManager() runs (see StyleManager constructor), so a captured
+    // value would be permanently null. Facade calls (see file header), not
+    // direct layer-module imports.
+    this.getDataManager = typeof getDataManager === 'function' ? getDataManager : () => null;
     this.active = false;
     this.trackedEntity = null;
     this.trackedEntityWasShown = true;
@@ -390,7 +402,7 @@ export class CockpitViewController {
       const target = event.target.closest('button[data-signal-layer][data-signal-id]');
       if (!target) return;
       event.preventDefault();
-      militaryAwarenessLayer.focusTarget?.(
+      this.getDataManager()?.focusTarget(
         target.dataset.signalLayer,
         target.dataset.signalId,
         { origin: 'user' },
@@ -434,9 +446,10 @@ export class CockpitViewController {
     // In cockpit mode the controller takes the entity off `viewer.trackedEntity`
     // (see update()), so the cockpit's own handle is the tracked identity there.
     const trackedEntity = this.viewer?.trackedEntity || this.trackedEntity;
+    const dataManager = this.getDataManager();
     return resolveTrackedAircraftInfo({
-      civilian: flightsLayer.getTrackedInfo?.() || null,
-      military: militaryFlightsLayer.getTrackedInfo?.() || null,
+      civilian: dataManager?.getTrackedInfo('flights') || null,
+      military: dataManager?.getTrackedInfo('military') || null,
       trackedId: trackedEntity?.gevTrackedId || '',
     });
   }
@@ -464,8 +477,8 @@ export class CockpitViewController {
     const icao24 = String(info?.icao24 || '').trim();
     if (!icao24) return false;
     toggleTr3b(icao24);
-    const layer = info.layerId === 'military' ? militaryFlightsLayer : flightsLayer;
-    layer.refreshTr3b?.(icao24);
+    const layerId = info.layerId === 'military' ? 'military' : 'flights';
+    this.getDataManager()?.callLayerMethod(layerId, 'refreshTr3b', icao24);
     this._tr3bSignature = null; // force the chip to repaint on the next sync
     this.syncTr3bToggle(info);
     return true;
@@ -516,7 +529,7 @@ export class CockpitViewController {
     const wasActive = this.active;
     if (wasActive) this.contextNavigationDeadlineMs = performance.now() + 1500;
     const navigationOptions = wasActive ? { ...options, aircraftOnly: true } : options;
-    const changed = Boolean(militaryAwarenessLayer?.[method]?.(navigationOptions));
+    const changed = Boolean(this.getDataManager()?.callLayerMethod('military-awareness', method, navigationOptions));
     if (!changed) {
       this.contextNavigationDeadlineMs = 0;
       return false;
@@ -1082,7 +1095,7 @@ export class CockpitViewController {
 
   updateContext(info, heading) {
     if (!this.context) return;
-    const snapshot = militaryAwarenessLayer.getContextSnapshot?.() || null;
+    const snapshot = this.getDataManager()?.getContextSnapshot() || null;
     const trackedId = info.icao24 || info.id;
     const readout = resolveCockpitContextReadout({ snapshot, info });
     if (!readout.visible) {

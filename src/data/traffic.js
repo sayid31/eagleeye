@@ -20,6 +20,7 @@ import {
 import { cachedGroundFloor, warmGroundFloor, resolveGroundFloorCellsBounded } from './groundFloor.js';
 import { sampleMeshFloorCells } from './meshFloorSampler.js';
 import { OVERPASS_URL, buildOverpassQuery } from './trafficOverpassQuery.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 export { buildOverpassQuery } from './trafficOverpassQuery.js';
 
@@ -2314,10 +2315,7 @@ function clearDots() {
  * @type {Object}
  */
 const trafficLayer = {
-  id: 'traffic',
-  name: 'Street Traffic',
-  icon: '🚗',
-  source: 'OpenStreetMap',
+  ...LAYER_METADATA.traffic,
   /** @type {number} Zero — layer is self-managed via camera listener + preRender */
   updateInterval: 0,
 

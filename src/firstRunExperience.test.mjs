@@ -581,8 +581,13 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   assert.doesNotMatch(html, /data-first-run-choice="infrastructure"/,
     'the removed tile must leave no markup behind');
 
-  const startup = main.slice(main.indexOf('void Promise.all(['), main.indexOf('// Expose for debugging'));
+  // Splash-hide gate: a real first-painted-frame signal ANDed with the
+  // restore promise and a short minimum-visible floor (see splashGate.js),
+  // not a flat timer — composeSplashReadiness/waitForFirstFrame replaced the
+  // old inline `Promise.all([styleManager.initialRestorePromise, timeout(1000)])`.
+  const startup = main.slice(main.indexOf('void composeSplashReadiness('), main.indexOf('// Expose for debugging'));
   assert.match(startup, /styleManager\.initialRestorePromise/);
+  assert.match(startup, /waitForFirstFrame\(viewer\.scene\)/);
   assert.ok(startup.indexOf("loadingScreen.classList.add('hidden')") < startup.indexOf('initFirstRunExperience'));
   assert.match(startup, /initFirstRunExperience\(\{ styleManager, dataManager \}\)/);
 

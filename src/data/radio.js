@@ -75,6 +75,7 @@ import {
   selectRadioSingletonCandidates,
   volumeClock,
 } from './radioOverlayEntries.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 export {
   buildRadioCategories,
@@ -1803,10 +1804,7 @@ function removeInteraction() {
 
 /** Radio layer lifecycle implementation. */
 export const radioLayer = {
-  id: 'radio',
-  name: 'Radio',
-  icon: '◉',
-  source: 'Radio Browser',
+  ...LAYER_METADATA.radio,
   updateInterval: 45 * 60 * 1000,
 
   /** Initialize the Cesium data source and the single audio element. */

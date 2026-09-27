@@ -90,12 +90,15 @@ test('navigation clears dormant tracker IDs without aborting unrelated layer res
     'navigation authority stamp',
   );
   assert.doesNotMatch(stamp, /cancelPendingRestores\(\)/);
-  assert.match(stamp, /flightsLayer\.cancelPendingTrackingRestore\?\.\(\)/);
-  assert.match(stamp, /militaryFlightsLayer\.cancelPendingTrackingRestore\?\.\(\)/);
-  assert.match(stamp, /satellitesLayer\.cancelPendingTrackingRestore\?\.\(\)/);
-  assert.match(stamp, /if \(!passivelyClearedShareSelection && !flightsLayer\.getTrackedInfo\?\.\(\)\)[\s\S]*?selectedFlightsTrackingId: null/);
-  assert.match(stamp, /if \(!passivelyClearedShareSelection && !militaryFlightsLayer\.getTrackedInfo\?\.\(\)\)[\s\S]*?selectedMilitaryTrackingId: null/);
-  assert.match(stamp, /if \(!passivelyClearedShareSelection && !satellitesLayer\.getTrackedInfo\?\.\(\)\)[\s\S]*?selectedSatTrackingId: null/);
+  // Cross-layer tracking-restore cancellation and clearance now route through
+  // the DataLayerManager facade (lazy-loading refactor) instead of calling
+  // each layer module directly — same three layers, same behavior.
+  assert.match(stamp, /this\._dataManager\?\.cancelPendingTrackingRestore\('flights'\)/);
+  assert.match(stamp, /this\._dataManager\?\.cancelPendingTrackingRestore\('military'\)/);
+  assert.match(stamp, /this\._dataManager\?\.cancelPendingTrackingRestore\('satellites'\)/);
+  assert.match(stamp, /if \(!passivelyClearedShareSelection && !this\._dataManager\?\.getTrackedInfo\('flights'\)\)[\s\S]*?selectedFlightsTrackingId: null/);
+  assert.match(stamp, /if \(!passivelyClearedShareSelection && !this\._dataManager\?\.getTrackedInfo\('military'\)\)[\s\S]*?selectedMilitaryTrackingId: null/);
+  assert.match(stamp, /if \(!passivelyClearedShareSelection && !this\._dataManager\?\.getTrackedInfo\('satellites'\)\)[\s\S]*?selectedSatTrackingId: null/);
 });
 
 test('voice Cockpit entry reaches the camera only through stamping seams', () => {
@@ -164,7 +167,9 @@ test('voice Cockpit next/previous shares the manual Context navigation path', ()
   ordered(funnel, [
     "const method = direction < 0 ? 'navigatePrevious' : 'navigateNext';",
     'const navigationOptions = wasActive ? { ...options, aircraftOnly: true } : options;',
-    'militaryAwarenessLayer?.[method]?.(navigationOptions)',
+    // Routed through the DataLayerManager facade (lazy-loading refactor)
+    // instead of calling militaryAwarenessLayer directly.
+    "this.getDataManager()?.callLayerMethod('military-awareness', method, navigationOptions)",
     'this._adoptTrackedEntity(performance.now());',
   ], 'Cockpit Context navigation funnel');
   const navigate = body(
@@ -202,15 +207,18 @@ test('accepted navigation releases through PR15-aware ownership before flight', 
   );
   ordered(release, [
     'origin: trackingOrigin',
-    'satellitesLayer.stopTracking?.({ origin: trackingOrigin })',
-    'rocketLaunchesLayer.releaseCameraOwnership?.()',
+    // Every direct layer-module call below is routed through the
+    // DataLayerManager facade (lazy-loading refactor) — same layers, same
+    // ownership-release order, no behavior change.
+    "this._dataManager?.stopTracking('satellites', { origin: trackingOrigin })",
+    "this._dataManager?.releaseCameraOwnership('rocket-launches')",
     'this.viewer.trackedEntity = undefined;',
     "interruptCameraMotion('explicit-navigation')",
     'this.viewer.camera.cancelFlight();',
     'this.viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);',
   ], 'follow release');
-  assert.match(release, /flightsLayer\.stopTracking\?\.\(\{ origin: trackingOrigin \}\)/);
-  assert.match(release, /militaryFlightsLayer\.stopTracking\?\.\(\{ origin: trackingOrigin \}\)/);
+  assert.match(release, /this\._dataManager\?\.stopTracking\('flights', \{ origin: trackingOrigin \}\)/);
+  assert.match(release, /this\._dataManager\?\.stopTracking\('military', \{ origin: trackingOrigin \}\)/);
 });
 
 test('validated voice camera destinations share the UI navigation authority facade', () => {

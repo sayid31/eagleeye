@@ -1,5 +1,3 @@
-import militaryInstallationsLayer from './data/militaryInstallations.js';
-import radioLayer from './data/radio.js';
 import {
   contextAllowedLayerIds,
   contextRestoreLayerIds,
@@ -119,9 +117,9 @@ export const contextModeMixin = {
           notificationToken,
         });
         if (enabled === false || !this._dataManager.isEnabled('military-installations')) return false;
-        const searched = await militaryInstallationsLayer.searchNearby?.();
+        const searched = await this._dataManager?.searchNearby('military-installations');
         if (searched === false) return false;
-        const stats = militaryInstallationsLayer.getStats?.();
+        const stats = this._dataManager?.getLayerStatsRaw('military-installations');
         this._showToast(stats?.status === 'zoom-in'
           ? 'Zoom in to search mapped installations'
           : 'Nearby installations refreshed');
@@ -557,7 +555,7 @@ export const contextModeMixin = {
       'visibility-cancelled',
       'visibility-failed',
     ].includes(change.type)) {
-      this._renderRadioState(radioLayer.getUIState());
+      this._renderRadioState(this._dataManager?.getLayerUIState('radio'));
     }
     if (change?.type === 'visibility-transition') return;
     // The effective mode must be read BEFORE the entering flag is cleared:

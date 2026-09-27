@@ -1078,10 +1078,15 @@ async function main() {
         }
         manager.layers.get('flights').module.trackById('aaa001', { origin: 'user' });
         // Awareness recomputes on its own cadence; wait for a real snapshot.
-        const awareness = manager.layers.get('military-awareness')?.module;
+        // Read through the manager facade (not `.layers.get(...).module`
+        // directly) — military-awareness is now a lazy-loaded layer, so its
+        // module may still be mid-resolution here; a one-time direct `.module`
+        // read would capture a stale `null` and never see the layer once it
+        // finishes loading. `getContextSnapshot()` safely no-ops on an
+        // unresolved lazy layer and picks it up correctly once ready.
         let snapshot = null;
         for (let i = 0; i < 80; i += 1) {
-          snapshot = awareness?.getContextSnapshot?.() || null;
+          snapshot = manager.getContextSnapshot?.() || null;
           if (snapshot?.cohorts?.length) break;
           await new Promise((resolve) => setTimeout(resolve, 150));
         }

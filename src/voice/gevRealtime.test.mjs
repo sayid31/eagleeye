@@ -809,6 +809,12 @@ test('real Radio Select cannot enable or play after a same-response Disable comp
       if (!nextEnabled) state.audioState = 'stopped';
       return true;
     },
+    // Mirrors the real DataLayerManager facade (manager.js): delegates to
+    // the mocked radio module, same as production `controlRadio` expects.
+    getLayerUIState: (layerId) => (layerId === 'radio' ? radioLayer.getUIState() : null),
+    callLayerMethod: (layerId, methodName, ...args) => (
+      layerId === 'radio' ? radioLayer[methodName]?.(...args) : undefined
+    ),
   };
   const ui = {
     root: { dataset: {}, classList: { remove() {} }, querySelectorAll: () => [] },
@@ -1614,14 +1620,19 @@ test('failed same-response stop does not suppress a successful playback request'
     audioState: 'playing',
     volume: 0.8,
   };
+  const radioLayer = {
+    getUIState: () => ({ ...state }),
+    stopPlayback: () => false,
+  };
   const dataManager = {
-    layers: new Map([['radio', {
-      module: {
-        getUIState: () => ({ ...state }),
-        stopPlayback: () => false,
-      },
-    }]]),
+    layers: new Map([['radio', { module: radioLayer }]]),
     isEnabled: () => true,
+    // Mirrors the real DataLayerManager facade (manager.js): delegates to
+    // the mocked radio module, same as production `controlRadio` expects.
+    getLayerUIState: (layerId) => (layerId === 'radio' ? radioLayer.getUIState() : null),
+    callLayerMethod: (layerId, methodName, ...args) => (
+      layerId === 'radio' ? radioLayer[methodName]?.(...args) : undefined
+    ),
   };
   const ui = {
     root: { dataset: {}, classList: { remove() {} }, querySelectorAll: () => [] },
@@ -1801,13 +1812,12 @@ test('failed same-response Pause and Disable do not suppress valid older playbac
       };
       const requestListeners = new Set();
       const visibilityListeners = new Set();
+      const radioLayer = {
+        getUIState: () => ({ ...state }),
+        pause: () => false,
+      };
       const dataManager = {
-        layers: new Map([['radio', {
-          module: {
-            getUIState: () => ({ ...state }),
-            pause: () => false,
-          },
-        }]]),
+        layers: new Map([['radio', { module: radioLayer }]]),
         isEnabled: () => true,
         setEnabled: async () => false,
         subscribeVisibilityRequests(listener) {
@@ -1818,6 +1828,13 @@ test('failed same-response Pause and Disable do not suppress valid older playbac
           visibilityListeners.add(listener);
           return () => visibilityListeners.delete(listener);
         },
+        // Mirrors the real DataLayerManager facade (manager.js): delegates
+        // to the mocked radio module, same as production `controlRadio`
+        // expects.
+        getLayerUIState: (layerId) => (layerId === 'radio' ? radioLayer.getUIState() : null),
+        callLayerMethod: (layerId, methodName, ...args) => (
+          layerId === 'radio' ? radioLayer[methodName]?.(...args) : undefined
+        ),
       };
       const ui = {
         root: { dataset: {}, classList: { remove() {} }, querySelectorAll: () => [] },

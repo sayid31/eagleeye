@@ -83,12 +83,17 @@ export const managerTogglePanelMixin = {
       // Optional per-layer sub-controls (chips + color legend). The click
       // listener is delegated and attached once here, so it survives
       // _refreshTogglePanel — which only rewrites the container's contents.
-      const rowModule = this.layers.get(layer.id)?.module;
-      if (typeof rowModule?.getRowControls === 'function') {
+      // Container presence is gated on registration-time staticMeta (never
+      // force-resolves a not-yet-loaded lazy layer just to size the row);
+      // the actual getRowControls() call stays module-resolved-gated in
+      // _rowControlsFor below, since an unresolved layer has no controls to
+      // show regardless.
+      const rowEntry = this.layers.get(layer.id);
+      if (rowEntry?.staticMeta?.hasRowControls) {
         // A layer whose controls settle asynchronously (a chunked catalog load
         // that can also fail) pushes a re-render through this; nothing else
         // would repaint the row before its next scheduled refresh.
-        rowModule.setRowControlsListener?.(() => this._refreshTogglePanel());
+        rowEntry.module?.setRowControlsListener?.(() => this._refreshTogglePanel());
         const controls = document.createElement('div');
         controls.className = 'data-toggle-controls';
         controls.addEventListener('click', (event) => {

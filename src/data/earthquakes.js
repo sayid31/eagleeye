@@ -4,6 +4,7 @@ import {
   setOverlayEntries,
   setOverlaySourceVisible,
 } from '../overlays/worldOverlay.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 /**
  * USGS earthquake discs — last 24 hours, M2.5+.
@@ -129,10 +130,7 @@ export function createEarthquakesLayer({ overlayHost = DEFAULT_OVERLAY_HOST } = 
   let _enabled = false;
 
   const layer = {
-  id: 'earthquakes',
-  name: 'Earthquakes (24h)',
-  icon: '🌋',
-  source: 'USGS',
+  ...LAYER_METADATA.earthquakes,
   updateInterval: 60000,
 
   init(viewer) {

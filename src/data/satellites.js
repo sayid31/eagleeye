@@ -38,6 +38,7 @@ import {
   orbitTrackFromRecord,
   scoreSatelliteNameMatch,
 } from './satelliteTleLookup.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 export { findSatelliteOrbitTrackInTle, orbitTrackFromRecord, scoreSatelliteNameMatch };
 
@@ -1679,10 +1680,7 @@ export function applySatellitePointFocusDeemphasis({
 }
 
 const satellitesLayer = {
-  id: 'satellites',
-  name: 'Satellites',
-  icon: '🛰️',
-  source: 'CelesTrak',
+  ...LAYER_METADATA.satellites,
   updateInterval: 0, // We use preRender for real-time updates, not interval polling
   refreshInterval: 5 * 60 * 1000, // Catalog data refresh; propagation remains preRender-owned.
 

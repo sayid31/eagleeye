@@ -39,6 +39,10 @@ const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'u
 // managerTogglePanel.js — mechanical relocation, see that file's header.
 const managerTogglePanel = fs.readFileSync(path.join(ROOT, 'src', 'data', 'managerTogglePanel.js'), 'utf8');
 const contextLayer = fs.readFileSync(path.join(ROOT, 'src', 'data', 'militaryAwareness.js'), 'utf8');
+// military-awareness's showInTogglePanel:false now lives in layerMetadata.js
+// (single source of truth, plan §3.7) — militaryAwareness.js itself spreads
+// it in rather than declaring it inline.
+const layerMetadata = fs.readFileSync(path.join(ROOT, 'src', 'data', 'layerMetadata.js'), 'utf8');
 const voiceActions = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
 
 test('Cockpit has one reset action beside its bottom exit path', () => {
@@ -133,9 +137,14 @@ test('Cockpit Escape handling precedes form-control shortcut suppression and foc
   assert.match(exit[1], /focus\(\{ preventScroll: true \}\)/);
   assert.match(exit[1], /this\.restoreTrackingFrame\(entity\)/);
   assert.doesNotMatch(exit[1], /applyTrackedCameraFrame/);
+  // Cockpit exit routes camera-frame ownership back through the
+  // DataLayerManager facade (lazy-loading refactor) instead of calling
+  // flightsLayer/militaryFlightsLayer directly — both source layers
+  // (flights, military) still share the one refocus call, so Contact
+  // Focus still cannot accumulate a second owner.
   assert.match(
     ui,
-    /restoreTrackingFrame: \(entity\) => \{[\s\S]*?gevTrackedId[\s\S]*?flightsLayer\.refocusTrackedById[\s\S]*?militaryFlightsLayer\.refocusTrackedById/,
+    /restoreTrackingFrame: \(entity\) => \{[\s\S]*?gevTrackedId[\s\S]*?if \(layerId === 'flights' \|\| layerId === 'military'\) \{[\s\S]*?this\._dataManager\?\.refocusTrackedById\(layerId, trackedId\)/,
     'Cockpit exit must return camera-frame ownership through the source layer so Contact Focus cannot accumulate a second owner',
   );
 });
@@ -489,8 +498,10 @@ test('Cockpit hides the complete top-center globe action group', () => {
 
 test('Reset releases Contact camera ownership through its selection-preserving route', () => {
   const resetStart = ui.indexOf('resetToGlobeView()');
-  const contextRelease = ui.indexOf("militaryAwarenessLayer.releaseCameraOwnership?.({ origin: 'tool' })", resetStart);
-  const satelliteRelease = ui.indexOf("satellitesLayer.stopTracking?.({ origin: 'tool' })", resetStart);
+  // Routed through the DataLayerManager facade (lazy-loading refactor)
+  // instead of calling militaryAwarenessLayer/satellitesLayer directly.
+  const contextRelease = ui.indexOf("this._dataManager?.releaseCameraOwnership('military-awareness', { origin: 'tool' })", resetStart);
+  const satelliteRelease = ui.indexOf("this._dataManager?.stopTracking('satellites', { origin: 'tool' })", resetStart);
 
   assert.ok(resetStart >= 0);
   assert.ok(contextRelease > resetStart);
@@ -512,9 +523,12 @@ test('Location navigation releases immediate routes before flight and deferred r
   const voiceStart = voiceActions.indexOf('beginDeferredLocationNavigation');
 
   assert.ok(releaseStart >= 0, 'shared Location camera handoff is missing');
+  // Routed through the DataLayerManager facade (lazy-loading refactor)
+  // instead of calling militaryAwarenessLayer/satellitesLayer/
+  // rocketLaunchesLayer directly — same release order, same origin.
   assert.match(
     navMixin.slice(releaseStart, releaseStart + 1800),
-    /militaryAwarenessLayer\.releaseCameraOwnership\?\.\(\{[\s\S]*?origin: trackingOrigin[\s\S]*?\}\)[\s\S]*?satellitesLayer\.stopTracking\?\.\(\{ origin: trackingOrigin \}\)[\s\S]*?rocketLaunchesLayer\.releaseCameraOwnership\?\.\(\)/,
+    /this\._dataManager\?\.releaseCameraOwnership\('military-awareness', \{[\s\S]*?origin: trackingOrigin[\s\S]*?\}\)[\s\S]*?this\._dataManager\?\.stopTracking\('satellites', \{ origin: trackingOrigin \}\)[\s\S]*?this\._dataManager\?\.releaseCameraOwnership\('rocket-launches'\)/,
   );
   assert.match(
     navMixin.slice(locationFlight, locationFlight + 900),
@@ -532,7 +546,7 @@ test('Location navigation releases immediate routes before flight and deferred r
 test('Cockpit Radio station changes preserve first-person camera ownership', () => {
   const cycleHelper = radioMixin.match(/const cycleRadio = \(direction, \{ rotate = true \} = \{\}\) => \{([\s\S]*?)\n    \};/);
   assert.ok(cycleHelper, 'shared Radio cycle helper is missing');
-  assert.match(cycleHelper[1], /cycleStation\(direction, \{[\s\S]*?rotate,/);
+  assert.match(cycleHelper[1], /callLayerMethod\('radio', 'cycleStation', direction, \{[\s\S]*?rotate,/);
   assert.match(radioMixin, /_radioPrevBtn\?\.addEventListener\('click', \(\) => cycleRadio\(-1\)\)/);
   assert.match(radioMixin, /_contextRadioMiniNextBtn\?\.addEventListener\('click', \(\) => cycleRadio\(1\)\)/);
   assert.match(
@@ -777,7 +791,8 @@ test('Global Context names its mixed contact cycle without changing the stable m
 });
 
 test('Global Context uses its dedicated right rail without a duplicate Data Layers row', () => {
-  assert.match(contextLayer, /id:\s*'military-awareness'[\s\S]*?showInTogglePanel:\s*false/);
+  assert.match(layerMetadata, /'military-awareness':\s*Object\.freeze\(\{[\s\S]*?showInTogglePanel:\s*false/);
+  assert.match(contextLayer, /\.\.\.LAYER_METADATA\['military-awareness'\]/);
   assert.match(managerTogglePanel, /if \(!layer\.showInTogglePanel\) continue;/);
   assert.match(html, /id="global-context-panel"/);
   assert.match(html, /id="global-context-flights-btn"/);
@@ -845,9 +860,11 @@ test('voice Cockpit entry honours a requested contact layer before it enters', (
     cockpitMixin.indexOf('  _retargetCockpitEntryLayer({'),
     cockpitMixin.indexOf('   * Controls cockpit entry/exit and context navigation.'),
   );
+  // Routed through the DataLayerManager facade (lazy-loading refactor)
+  // instead of calling militaryAwarenessLayer.navigateNext directly.
   assert.match(
     retarget,
-    /militaryAwarenessLayer\.navigateNext\(\{\s*targetLayer,\s*aircraftClass,\s*origin: 'voice',\s*\}\)/,
+    /this\._dataManager\?\.navigateNext\(\{\s*targetLayer,\s*aircraftClass,\s*origin: 'voice',\s*\}\)/,
     'retargeting reuses filtered navigation with durable voice selection authority',
   );
   assert.match(retarget, /Cockpit flies aircraft only/, 'non-aircraft layers are refused by name');

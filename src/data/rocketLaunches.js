@@ -42,6 +42,7 @@ import {
   REPLAY_ORBIT_PULLBACK_FRACTION,
   smoothReplayCameraHeading,
 } from './rocketReplayCamera.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 export {
   approximateOrbitPath,
@@ -2696,10 +2697,7 @@ function requestMissionUpdate() {
 }
 
 const rocketLaunchesLayer = {
-  id: 'rocket-launches',
-  name: 'Space Missions (30d)',
-  icon: '🚀',
-  source: 'Launch Library 2',
+  ...LAYER_METADATA['rocket-launches'],
   updateInterval: 300000,
 
   init(viewer) {

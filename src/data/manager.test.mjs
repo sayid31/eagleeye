@@ -3098,3 +3098,478 @@ test('a layer that surrenders its row controls hides the block entirely', async 
     else globalThis.document = originalDocument;
   }
 });
+
+// ── Cross-layer restore concurrency gate (RESTORE_CONCURRENCY) ─────────────
+//
+// Root cause this section guards against: _setEnabledWithIntent() chains its
+// lifecycle work (runIntentTurn -> _doToggle -> module.init/enable/update)
+// onto entry.toggleChain THE INSTANT it is called, independent of when/
+// whether a caller awaits anything. A bulk fan-out that only gated "the wait
+// for the outcome" (rather than the actual init() call itself) was proven a
+// complete no-op during implementation: all N layers ran init() concurrently
+// regardless. restoreThrottle wraps the real _doToggle invocation instead —
+// these tests assert that wrapping is actually effective, not just present.
+
+/** A layer whose init() holds a concurrency counter open for a short real
+ *  delay, so overlapping restores are observable as concurrent counter peaks
+ *  without hand-rolled microtask draining (which deadlocks against p-queue's
+ *  own internal scheduling microtasks). */
+function makeConcurrencyTrackedLayer(id, counter, { delayMs = 20 } = {}) {
+  return {
+    id,
+    name: id,
+    icon: '',
+    source: 'test',
+    updateInterval: -1,
+    async init() {
+      counter.current += 1;
+      counter.max = Math.max(counter.max, counter.current);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+      counter.current -= 1;
+    },
+    enable() {},
+    disable() {},
+    async update() { await Promise.resolve(); },
+    setLifecyclePresentation() {},
+    getStats() { return { count: 0, lastUpdate: null }; },
+  };
+}
+
+test('restoreEnabledLayerIds bounds concurrent lifecycle starts to RESTORE_CONCURRENCY', async () => {
+  const mgr = new DataLayerManager({});
+  const counter = { current: 0, max: 0 };
+  const ids = Array.from({ length: 10 }, (_, i) => `restore-conc-${i}`);
+  for (const id of ids) mgr.register(makeConcurrencyTrackedLayer(id, counter));
+
+  await mgr.restoreEnabledLayerIds(new Set(ids), { origin: 'context-restore' });
+  assert.ok(counter.max <= 4, `expected max concurrent init() <= 4 (RESTORE_CONCURRENCY), got ${counter.max}`);
+  assert.ok(counter.max > 0, 'sanity: at least one layer actually started');
+  assert.ok(ids.every((id) => mgr.isEnabled(id)), 'every restored layer reaches its target enabled state');
+});
+
+test('an explicit setEnabled is not delayed by a saturated bulk-restore queue', async () => {
+  const mgr = new DataLayerManager({});
+  const bulkCounter = { current: 0, max: 0 };
+  // 8 layers at delayMs=30 against RESTORE_CONCURRENCY=4 takes ~2 waves
+  // (~60ms+) if correctly throttled — long enough to observe saturation.
+  const bulkIds = Array.from({ length: 8 }, (_, i) => `bulk-${i}`);
+  for (const id of bulkIds) mgr.register(makeConcurrencyTrackedLayer(id, bulkCounter, { delayMs: 30 }));
+
+  const explicitLayer = makeSlowLayer('explicit-target', { updateInterval: -1 });
+  mgr.register(explicitLayer.module);
+
+  // Saturate the shared restore queue — excludeLayerIds keeps the bulk
+  // restore from also touching the explicit-toggle layer
+  // (restoreEnabledLayerIds otherwise iterates every registered layer, not
+  // just the ids it was given).
+  const bulkRestoring = mgr.restoreEnabledLayerIds(new Set(bulkIds), {
+    origin: 'context-restore',
+    excludeLayerIds: ['explicit-target'],
+  });
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.equal(bulkCounter.current, 4, 'the bulk restore has saturated the shared concurrency gate');
+
+  // An ordinary explicit toggle must run unthrottled — it passes no
+  // restoreThrottle, so it never touches the saturated shared queue. Its
+  // own simulated init has no artificial delay, so it should resolve fast
+  // even while the bulk queue is fully saturated.
+  const start = Date.now();
+  const result = await mgr.setEnabled('explicit-target', true);
+  const elapsed = Date.now() - start;
+  assert.equal(result, true);
+  assert.equal(explicitLayer.calls.init, 1, 'explicit toggle is not blocked behind the bulk queue');
+  assert.ok(elapsed < 25, `explicit toggle should not be throttled by the bulk queue, took ${elapsed}ms`);
+
+  await bulkRestoring;
+});
+
+test('a still-queued restore entry can still be superseded by a later explicit toggle', async () => {
+  // Epoch reservation happens synchronously before restoreThrottle even gets
+  // a queue slot, so a competing explicit toggle on the SAME layer must still
+  // win over a restore entry that has not yet been dequeued.
+  const mgr = new DataLayerManager({});
+  const fillerCounter = { current: 0, max: 0 };
+  const fillerIds = Array.from({ length: 4 }, (_, i) => `filler-${i}`);
+  for (const id of fillerIds) mgr.register(makeConcurrencyTrackedLayer(id, fillerCounter, { delayMs: 40 }));
+
+  const contested = makeSlowLayer('contested', { updateInterval: -1 });
+  mgr.register(contested.module);
+
+  // Saturate all 4 concurrency slots with fillers so 'contested' (enabled via
+  // the same bulk restore) is forced to wait in queue, not run immediately.
+  const restoring = mgr.restoreEnabledLayerIds(new Set([...fillerIds, 'contested']), {
+    origin: 'context-restore',
+  });
+  await new Promise((resolve) => setTimeout(resolve, 5));
+  assert.equal(fillerCounter.current, 4, 'fillers hold every concurrency slot');
+  assert.equal(contested.calls.init, 0, 'contested is still queued, not yet running');
+
+  // Supersede with an explicit OFF while it's still queued for a throttle slot.
+  await mgr.setEnabled('contested', false);
+  assert.equal(mgr.isEnabled('contested'), false);
+
+  // The bulk restore's own target for 'contested' was true — since the
+  // explicit toggle correctly won, the restore's outcome for that one layer
+  // no longer matches what it asked for, so it legitimately rejects (an
+  // honest report of what actually happened, not a bug in either path).
+  await assert.rejects(restoring, (error) => {
+    assert.ok(error.failedLayerIds?.includes('contested'));
+    return true;
+  });
+  assert.equal(mgr.isEnabled('contested'), false, 'the later explicit toggle wins, not the stale queued restore');
+});
+
+// ---------------------------------------------------------------------
+// Cross-layer facade (lazy-loading refactor, plan §3.1/§3.8 step 1).
+//
+// Purely additive at this step — nothing in ui.js/gevActions.js calls
+// these yet. Each named method gets: a forward-call test (arguments/return
+// value pass through), a missing-method test (module exists but lacks the
+// method → safe default, no throw), and a missing-layer test (unregistered
+// id → safe default, no throw). `callLayerMethod`/`_callLayerMethod` also
+// get a throwing-method test since every other facade method funnels
+// through them.
+// ---------------------------------------------------------------------
+
+test('_callLayerMethod forwards arguments and return value', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  layer.module.echo = (...args) => ({ args });
+  mgr.register(layer.module);
+  assert.deepEqual(mgr.callLayerMethod('flights', 'echo', 1, 'two'), { args: [1, 'two'] });
+});
+
+test('_callLayerMethod returns the fallback for a missing method without throwing', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  mgr.register(layer.module);
+  assert.equal(mgr._callLayerMethod('flights', 'nope', [], { fallback: 'default' }), 'default');
+  assert.equal(mgr.callLayerMethod('flights', 'nope'), undefined);
+});
+
+test('_callLayerMethod returns the fallback for an unregistered layer without throwing', () => {
+  const mgr = new DataLayerManager({});
+  assert.equal(mgr._callLayerMethod('ghost', 'anything', [], { fallback: 'default' }), 'default');
+  assert.equal(mgr.callLayerMethod('ghost', 'anything'), undefined);
+});
+
+test('_callLayerMethod catches a synchronously-thrown error and returns the fallback', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  layer.module.explode = () => { throw new Error('boom'); };
+  mgr.register(layer.module);
+  assert.equal(mgr._callLayerMethod('flights', 'explode', [], { fallback: 'safe' }), 'safe');
+});
+
+test('callLayerMethod ignores a non-string methodName', () => {
+  const mgr = new DataLayerManager({});
+  assert.equal(mgr.callLayerMethod('flights', 123), undefined);
+});
+
+test('layerHasMethod reports presence without invoking the method', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  let calls = 0;
+  layer.module.trackById = () => { calls += 1; return true; };
+  mgr.register(layer.module);
+  assert.equal(mgr.layerHasMethod('flights', 'trackById'), true);
+  assert.equal(calls, 0, 'the probe must not call the method');
+});
+
+test('layerHasMethod returns false for a missing method or unregistered layer', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  mgr.register(layer.module);
+  assert.equal(mgr.layerHasMethod('flights', 'nope'), false);
+  assert.equal(mgr.layerHasMethod('ghost', 'trackById'), false);
+});
+
+test('facade named methods forward to the underlying module when present', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  layer.module.getTrackedInfo = () => ({ id: 'AC123' });
+  layer.module.stopTracking = (opts) => ({ stopped: true, opts });
+  layer.module.cancelPendingTrackingRestore = (opts) => ({ cancelled: true, opts });
+  layer.module.refocusTrackedById = (id) => id === 'AC123';
+  layer.module.clearSelection = () => 'cleared';
+  layer.module.releaseCameraOwnership = (opts) => ({ released: true, opts });
+  layer.module.beginWorldJump = () => 'began';
+  layer.module.endWorldJump = () => 'ended';
+  layer.module.searchNearby = () => ['result'];
+  layer.module.getStats = () => ({ count: 3 });
+  layer.module.focusCamera = (id, dur) => ({ id, dur });
+  layer.module.getUIState = () => ({ filter: 'all' });
+  layer.module.endTuning = () => 'tuned-off';
+  layer.module.getDetectableObjects = (opts) => [{ opts }];
+  mgr.register(layer.module);
+
+  assert.deepEqual(mgr.getTrackedInfo('flights'), { id: 'AC123' });
+  assert.deepEqual(mgr.stopTracking('flights', { origin: 'user' }), { stopped: true, opts: { origin: 'user' } });
+  assert.deepEqual(
+    mgr.cancelPendingTrackingRestore('flights', { reason: 'x' }),
+    { cancelled: true, opts: { reason: 'x' } },
+  );
+  assert.equal(mgr.refocusTrackedById('flights', 'AC123'), true);
+  assert.equal(mgr.clearSelection('flights'), 'cleared');
+  assert.deepEqual(mgr.releaseCameraOwnership('flights', { origin: 'voice' }), { released: true, opts: { origin: 'voice' } });
+  assert.equal(mgr.beginWorldJump('flights'), 'began');
+  assert.equal(mgr.endWorldJump('flights'), 'ended');
+  assert.deepEqual(mgr.searchNearby('flights'), ['result']);
+  assert.deepEqual(mgr.getLayerStatsRaw('flights'), { count: 3 });
+  assert.deepEqual(mgr.focusCamera('flights', 'cam1', 2.2), { id: 'cam1', dur: 2.2 });
+  assert.deepEqual(mgr.focusCamera('flights', 'cam1'), { id: 'cam1', dur: undefined });
+  assert.deepEqual(mgr.getLayerUIState('flights'), { filter: 'all' });
+  assert.equal(mgr.endTuning('flights'), 'tuned-off');
+  assert.deepEqual(mgr.getDetectableObjects('flights', { mode: 'sweep' }), [{ opts: { mode: 'sweep' } }]);
+});
+
+test('facade named methods return safe defaults for a missing method or unregistered layer', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  mgr.register(layer.module);
+
+  assert.equal(mgr.getTrackedInfo('flights'), null);
+  assert.equal(mgr.getTrackedInfo('ghost'), null);
+  assert.equal(mgr.stopTracking('flights'), undefined);
+  assert.equal(mgr.stopTracking('ghost'), undefined);
+  assert.equal(mgr.cancelPendingTrackingRestore('flights'), undefined);
+  assert.equal(mgr.refocusTrackedById('flights', 'x'), false);
+  assert.equal(mgr.refocusTrackedById('ghost', 'x'), false);
+  assert.equal(mgr.clearSelection('flights'), undefined);
+  assert.equal(mgr.releaseCameraOwnership('flights'), undefined);
+  assert.equal(mgr.beginWorldJump('flights'), undefined);
+  assert.equal(mgr.endWorldJump('flights'), undefined);
+  assert.equal(mgr.searchNearby('flights'), undefined);
+  // makeSlowLayer's module always defines getStats() (needed elsewhere in
+  // this suite), so this asserts passthrough rather than the missing-method
+  // fallback; the unregistered-layer case below covers the actual fallback.
+  assert.deepEqual(mgr.getLayerStatsRaw('flights'), { count: 0, lastUpdate: null });
+  assert.equal(mgr.getLayerStatsRaw('ghost'), null);
+  assert.equal(mgr.focusCamera('flights', 'cam1'), undefined);
+  assert.equal(mgr.getLayerUIState('flights'), null);
+  assert.equal(mgr.endTuning('flights'), undefined);
+  assert.equal(mgr.getDetectableObjects('flights'), null);
+  assert.equal(mgr.getDetectableObjects('ghost'), null);
+});
+
+test('getContextSnapshot/navigateNext/focusTarget are implicitly scoped to military-awareness', () => {
+  const mgr = new DataLayerManager({});
+  const awareness = makeSlowLayer('military-awareness', { updateInterval: -1 });
+  awareness.module.getContextSnapshot = () => ({ subject: 'x' });
+  awareness.module.navigateNext = (opts) => ({ navigated: opts });
+  awareness.module.focusTarget = (a, b) => ({ a, b });
+  const other = makeSlowLayer('flights', { updateInterval: -1 });
+  other.module.getContextSnapshot = () => ({ subject: 'wrong-layer' });
+  mgr.register(awareness.module);
+  mgr.register(other.module);
+
+  assert.deepEqual(mgr.getContextSnapshot(), { subject: 'x' });
+  assert.deepEqual(mgr.navigateNext({ dir: 1 }), { navigated: { dir: 1 } });
+  assert.deepEqual(mgr.focusTarget('id1', { zoom: true }), { a: 'id1', b: { zoom: true } });
+});
+
+test('getContextSnapshot returns null safely when military-awareness is not registered', () => {
+  const mgr = new DataLayerManager({});
+  assert.equal(mgr.getContextSnapshot(), null);
+  assert.equal(mgr.navigateNext(), undefined);
+  assert.equal(mgr.focusTarget(), undefined);
+});
+
+test('getLayerDisplayName reads staticMeta first, falls back to module.name, then raw id', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('flights', { updateInterval: -1 });
+  mgr.register(layer.module);
+  const entry = mgr.layers.get('flights');
+  assert.equal(mgr.getLayerDisplayName('flights'), 'flights', 'falls back to module.name (no staticMeta yet)');
+  entry.staticMeta = { name: 'Live Flights' };
+  assert.equal(mgr.getLayerDisplayName('flights'), 'Live Flights');
+  assert.equal(mgr.getLayerDisplayName('ghost-layer'), 'ghost-layer', 'falls back to the raw id');
+});
+
+test('subscribeLayer forwards directly to an already-resolved module', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('radio', { updateInterval: -1 });
+  let receivedCallback = null;
+  let unsubscribed = false;
+  layer.module.subscribe = (cb) => { receivedCallback = cb; return () => { unsubscribed = true; }; };
+  mgr.register(layer.module);
+
+  const cb = () => {};
+  const unsubscribe = mgr.subscribeLayer('radio', cb);
+  assert.equal(receivedCallback, cb);
+  unsubscribe();
+  assert.equal(unsubscribed, true);
+});
+
+test('subscribeLayer on a module without .subscribe queues the callback harmlessly', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('radio', { updateInterval: -1 });
+  mgr.register(layer.module);
+  const entry = mgr.layers.get('radio');
+
+  const cb = () => {};
+  const unsubscribe = mgr.subscribeLayer('radio', cb);
+  assert.ok(entry.pendingSubscribers?.has(cb), 'callback is queued on the entry, not dropped');
+  unsubscribe();
+  assert.equal(entry.pendingSubscribers?.has(cb), false, 'unsubscribe removes it from the pending queue');
+});
+
+test('subscribeLayer on an unregistered layer returns a harmless no-op unsubscribe', () => {
+  const mgr = new DataLayerManager({});
+  assert.doesNotThrow(() => mgr.subscribeLayer('ghost', () => {})());
+});
+
+test('subscribeLayer ignores a non-function callback', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeSlowLayer('radio', { updateInterval: -1 });
+  mgr.register(layer.module);
+  assert.doesNotThrow(() => mgr.subscribeLayer('radio', 'not-a-function')());
+});
+
+// --- Lazy registration (plan §3.2/§3.9 item 3) ---------------------------
+//
+// registerLazy()'s module is resolved on first lifecycle touch via
+// _ensureModuleResolved(), memoized so concurrent callers share one in-
+// flight promise. These tests prove: the loader never runs until a real
+// lifecycle-triggering call needs the module; every facade read on an
+// unresolved entry stays a safe default without ever calling the loader;
+// setEnabled resolves exactly once even under concurrent callers; and
+// setLayerParams on an unresolved entry queues instead of forcing a load.
+// Deliberately a distinct helper from makeSlowLayer so eager/lazy test
+// styles don't entangle (plan §3.10 risk register item 8).
+function makeLazyLayer(id, { updateInterval = -1, moduleOverrides = {} } = {}) {
+  const calls = { enable: 0, disable: 0, update: 0, init: 0, loader: 0, presentation: [] };
+  const module = {
+    id,
+    name: id,
+    icon: '',
+    source: 'test',
+    updateInterval,
+    async init() { calls.init++; await Promise.resolve(); },
+    enable() { calls.enable++; },
+    disable() { calls.disable++; },
+    async update() { calls.update++; await Promise.resolve(); },
+    setLifecyclePresentation(state) { calls.presentation.push({ ...state }); },
+    getStats() { return { count: 0, lastUpdate: null }; },
+    ...moduleOverrides,
+  };
+  let resolveLoader = null;
+  const loader = () => new Promise((resolve) => {
+    calls.loader++;
+    resolveLoader = () => resolve(module);
+    // Auto-resolve on the next microtask unless the test wants manual
+    // control (captured below via `deferred`).
+    if (!loader.manual) queueMicrotask(() => resolveLoader?.());
+  });
+  loader.manual = false;
+  loader.resolveNow = () => resolveLoader?.();
+  return {
+    calls,
+    module,
+    loader,
+    config: {
+      id, name: id, icon: '', source: 'test', showInTogglePanel: true, hasRowControls: false, loader,
+    },
+  };
+}
+
+test('registerLazy does not call the loader at registration time', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('flights');
+  mgr.registerLazy(layer.config);
+  assert.equal(layer.calls.loader, 0);
+  assert.equal(mgr.layers.get('flights').module, null);
+});
+
+test('getAll() on an unresolved lazy entry reads staticMeta without touching the loader', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('flights');
+  mgr.registerLazy(layer.config);
+  const row = mgr.getAll().find(({ id }) => id === 'flights');
+  assert.deepEqual(
+    { id: row.id, name: row.name, icon: row.icon, source: row.source, enabled: row.enabled },
+    { id: 'flights', name: 'flights', icon: '', source: 'test', enabled: false },
+  );
+  assert.equal(layer.calls.loader, 0);
+});
+
+test('facade calls against an unresolved lazy layer return safe defaults without triggering the loader', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('flights');
+  mgr.registerLazy(layer.config);
+  assert.equal(mgr.isEnabled('flights'), false);
+  assert.equal(mgr.layerHasMethod('flights', 'trackById'), false);
+  assert.equal(mgr.callLayerMethod('flights', 'getTrackedInfo'), undefined);
+  assert.equal(mgr.getLayerParams('flights'), null);
+  assert.equal(mgr.getLayerDisplayName('flights'), 'flights');
+  assert.equal(layer.calls.loader, 0, 'none of the above may force-load the module');
+});
+
+test('setEnabled on a lazy entry resolves the loader exactly once and proceeds through init/enable/update', async () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('flights');
+  mgr.registerLazy(layer.config);
+  const changed = await mgr.setEnabled('flights', true);
+  assert.equal(changed, true);
+  assert.equal(layer.calls.loader, 1);
+  assert.equal(layer.calls.init, 1);
+  assert.equal(layer.calls.enable, 1);
+  assert.equal(layer.calls.update, 1);
+  assert.equal(mgr.isEnabled('flights'), true);
+  assert.equal(mgr.layers.get('flights').module, layer.module);
+});
+
+test('concurrent enable triggers during resolution share the same in-flight loader call', async () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('flights');
+  mgr.registerLazy(layer.config);
+  // _setEnabledWithIntent supersedes even a same-target absolute request
+  // (a newer origin may carry intent that must own eventual settlement —
+  // see its own comment), so the FIRST call here is expected to resolve
+  // `false` (superseded) and only the second/latest settles `true`. What
+  // this test actually protects is the loader call-count: both requests
+  // must resolve onto the SAME in-flight _ensureModuleResolved promise,
+  // not trigger two separate dynamic imports.
+  await Promise.all([
+    mgr.setEnabled('flights', true),
+    mgr.setEnabled('flights', true),
+  ]);
+  assert.equal(layer.calls.loader, 1, 'both triggers must reuse the same resolvePromise');
+  assert.equal(mgr.isEnabled('flights'), true);
+});
+
+test('setLayerParams on an unresolved lazy entry queues pendingParams instead of forcing a load', () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('cctv', {
+    moduleOverrides: { setParams(p) { this._applied = p; return true; } },
+  });
+  mgr.registerLazy(layer.config);
+  const applied = mgr.setLayerParams('cctv', { coverageMode: 'on' }, { origin: 'user' });
+  assert.equal(applied, true, 'a queued-but-accepted params intent reports success');
+  assert.equal(layer.calls.loader, 0, 'queuing params must not force the module to load');
+  assert.deepEqual(mgr.layers.get('cctv').pendingParams, { coverageMode: 'on' });
+});
+
+test('queued pendingParams replay onto the module the moment it resolves', async () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('cctv', {
+    moduleOverrides: { setParams(p) { this._applied = p; return true; } },
+  });
+  mgr.registerLazy(layer.config);
+  mgr.setLayerParams('cctv', { coverageMode: 'on' }, { origin: 'user' });
+  await mgr.setEnabled('cctv', true);
+  assert.deepEqual(layer.module._applied, { coverageMode: 'on' });
+  assert.equal(mgr.layers.get('cctv').pendingParams, null);
+});
+
+test('resolve failure (invalid module) fails the enable transition cleanly and does not leave module set', async () => {
+  const mgr = new DataLayerManager({});
+  const badLoader = () => Promise.resolve({ id: 'wrong-id' });
+  mgr.registerLazy({ id: 'flights', name: 'flights', loader: badLoader });
+  const changed = await mgr.setEnabled('flights', true);
+  assert.equal(changed, false);
+  const entry = mgr.layers.get('flights');
+  assert.equal(entry.module, null);
+  assert.equal(entry.enabled, false);
+  assert.equal(entry.lifecycleUncertain, false);
+});

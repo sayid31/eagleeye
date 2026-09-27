@@ -128,8 +128,11 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
 
   const readRadioLifecycle = () => readLayerLifecycleSummary(dataManager, 'radio');
 
-  const radio = dataManager.layers.get('radio')?.module;
-  if (!radio) {
+  // Registration-existence check only — does NOT force-resolve a not-yet-
+  // loaded lazy Radio module just to answer "does this layer exist" (plan
+  // §3.2/§3.6). Every subsequent read/mutation below routes through the
+  // dataManager facade instead of a captured module reference.
+  if (!dataManager.layers.has('radio')) {
     return {
       ok: false,
       action: 'control_radio',
@@ -217,7 +220,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
   };
 
   const summarize = () => {
-    const state = radio.getUIState?.() || {};
+    const state = dataManager.getLayerUIState('radio') || {};
     return {
       radioAction: action,
       ...readRadioLifecycle(),
@@ -275,7 +278,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
     const volumeApplied = typeof dataManager.setLayerParams === 'function'
       ? dataManager.setLayerParams('radio', { volume: volumePct / 100 }, { origin: 'voice' })
-      : radio.setVolume(volumePct / 100);
+      : dataManager.callLayerMethod('radio', 'setVolume', volumePct / 100);
     if (volumeApplied === false) {
       return {
         ok: false,
@@ -290,7 +293,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
     let stopped = false;
     try {
-      stopped = await radio.stopPlayback({ origin: 'voice' });
+      stopped = await dataManager.callLayerMethod('radio', 'stopPlayback', { origin: 'voice' });
     } catch (error) {
       return {
         ok: false,
@@ -320,7 +323,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
       return { ok: true, action: 'control_radio', changed: false, ...summarize() };
     }
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
-    const paused = radio.pause?.({ origin: 'voice' }) || false;
+    const paused = dataManager.callLayerMethod('radio', 'pause', { origin: 'voice' }) || false;
     if (!paused) {
       return {
         ok: false,
@@ -351,7 +354,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
   if (!authorized) {
     return lifecycleFailure('Radio could not be enabled', summarize);
   }
-  const state = radio.getUIState?.() || {};
+  const state = dataManager.getLayerUIState('radio') || {};
   if (!radioActionIsCurrent(options)) return cancelled(summarize);
   if (!state.stationCount) {
     return { ok: false, action: 'control_radio', error: state.error || 'No healthy Radio stations are available', ...summarize() };
@@ -360,7 +363,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
     const prepared = state.selected
       ? true
-      : radio.cycleStation?.(1, { focus: false, autoplay: false });
+      : dataManager.callLayerMethod('radio', 'cycleStation', 1, { focus: false, autoplay: false });
     return {
       ok: Boolean(prepared),
       action: 'control_radio',
@@ -374,10 +377,10 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
       if (typeof dataManager.setLayerParams === 'function') {
         dataManager.setLayerParams('radio', { filter: String(args.category) }, { origin: 'voice' });
       } else {
-        radio.setFilter(String(args.category));
+        dataManager.callLayerMethod('radio', 'setFilter', String(args.category));
       }
     }
-    const selected = radio.cycleStation?.(action === 'next' ? 1 : -1, {
+    const selected = dataManager.callLayerMethod('radio', 'cycleStation', action === 'next' ? 1 : -1, {
       focus: false,
       autoplay: false,
     });
@@ -391,7 +394,7 @@ export async function controlRadio(viewer, dataManager, args = {}, options = {})
   if (action === 'select') {
     const location = resolvedLocation;
     if (!radioActionIsCurrent(options)) return cancelled(summarize);
-    const station = radio.selectRequestedStation?.({
+    const station = dataManager.callLayerMethod('radio', 'selectRequestedStation', {
       categoryId: String(args.category || 'all'),
       anchor: location ? { lat: location.lat, lon: location.lon } : null,
       country: normalizedCountry.empty

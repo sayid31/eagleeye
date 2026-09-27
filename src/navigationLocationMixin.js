@@ -1,11 +1,4 @@
 import * as Cesium from 'cesium';
-import flightsLayer from './data/flights.js';
-import militaryFlightsLayer from './data/militaryFlights.js';
-import satellitesLayer from './data/satellites.js';
-import militaryAwarenessLayer from './data/militaryAwareness.js';
-import rocketLaunchesLayer from './data/rocketLaunches.js';
-import aisLiveVesselsLayer from './data/aisLiveVessels.js';
-import trafficLayer from './data/traffic.js';
 import { CITY_POIS, flyToPresetLocation, flyToPOI, searchAndFlyTo } from './locations.js';
 import { locationMiniStatus } from './locationStatus.js';
 import { interruptCameraMotion } from './cameraVerbs.js';
@@ -88,22 +81,22 @@ export const navigationLocationMixin = {
           'superseded-by-explicit-navigation',
           { clearSelection: true },
         ) === true;
-      try { flightsLayer.cancelPendingTrackingRestore?.(); } catch { /* best effort */ }
-      try { militaryFlightsLayer.cancelPendingTrackingRestore?.(); } catch { /* best effort */ }
-      try { satellitesLayer.cancelPendingTrackingRestore?.(); } catch { /* best effort */ }
+      try { this._dataManager?.cancelPendingTrackingRestore('flights'); } catch { /* best effort */ }
+      try { this._dataManager?.cancelPendingTrackingRestore('military'); } catch { /* best effort */ }
+      try { this._dataManager?.cancelPendingTrackingRestore('satellites'); } catch { /* best effort */ }
       // A deliberate destination supersedes share-selected entities that have
       // not arrived yet. Active owners publish their clear when released.
-      if (!passivelyClearedShareSelection && !flightsLayer.getTrackedInfo?.()) {
+      if (!passivelyClearedShareSelection && !this._dataManager?.getTrackedInfo('flights')) {
         this._dataManager?.setLayerParams('flights', {
           selectedFlightsTrackingId: null,
         }, { origin: 'tool' });
       }
-      if (!passivelyClearedShareSelection && !militaryFlightsLayer.getTrackedInfo?.()) {
+      if (!passivelyClearedShareSelection && !this._dataManager?.getTrackedInfo('military')) {
         this._dataManager?.setLayerParams('military', {
           selectedMilitaryTrackingId: null,
         }, { origin: 'tool' });
       }
-      if (!passivelyClearedShareSelection && !satellitesLayer.getTrackedInfo?.()) {
+      if (!passivelyClearedShareSelection && !this._dataManager?.getTrackedInfo('satellites')) {
         this._dataManager?.setLayerParams('satellites', {
           selectedSatTrackingId: null,
         }, { origin: 'tool' });
@@ -133,20 +126,20 @@ export const navigationLocationMixin = {
     let contactSelected = false;
     try {
       contactSelected = Boolean(
-        militaryAwarenessLayer.releaseCameraOwnership?.({
+        this._dataManager?.releaseCameraOwnership('military-awareness', {
           preserveVesselSelection,
           origin: trackingOrigin,
         }),
       );
     } catch {
-      try { flightsLayer.stopTracking?.({ origin: trackingOrigin }); } catch { /* best-effort release */ }
-      try { militaryFlightsLayer.stopTracking?.({ origin: trackingOrigin }); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('flights', { origin: trackingOrigin }); } catch { /* best-effort release */ }
+      try { this._dataManager?.stopTracking('military', { origin: trackingOrigin }); } catch { /* best-effort release */ }
       if (!preserveVesselSelection) {
-        try { aisLiveVesselsLayer.clearSelection?.(); } catch { /* best-effort release */ }
+        try { this._dataManager?.clearSelection('ais-live-vessels'); } catch { /* best-effort release */ }
       }
     }
-    try { satellitesLayer.stopTracking?.({ origin: trackingOrigin }); } catch { /* best-effort release */ }
-    try { rocketLaunchesLayer.releaseCameraOwnership?.(); } catch { /* best-effort release */ }
+    try { this._dataManager?.stopTracking('satellites', { origin: trackingOrigin }); } catch { /* best-effort release */ }
+    try { this._dataManager?.releaseCameraOwnership('rocket-launches'); } catch { /* best-effort release */ }
     this.viewer.trackedEntity = undefined;
     interruptCameraMotion('explicit-navigation');
     this._stopOrbit();
@@ -341,7 +334,7 @@ export const navigationLocationMixin = {
    */
   _beginWorldJumpTransition() {
     clearTimeout(this._trafficTransitionTimer);
-    trafficLayer.beginWorldJump?.();
+    this._dataManager?.beginWorldJump('traffic');
     suspendDetection('intercity');
   },
 
@@ -352,7 +345,7 @@ export const navigationLocationMixin = {
    */
   _endWorldJumpTransition() {
     clearTimeout(this._trafficTransitionTimer);
-    trafficLayer.endWorldJump?.();
+    this._dataManager?.endWorldJump('traffic');
     resumeDetection();
     this._updateTrafficSyncChip(true);
   },

@@ -18,6 +18,7 @@ import {
 import { warmFireAnchorFloors } from './fireAnchors.js';
 import { normalizeMilitaryInstallations } from './militaryInstallationData.js';
 import { registerPickOwner, unregisterPickOwner } from './pickRegistry.js';
+import { LAYER_METADATA } from './layerMetadata.js';
 
 const LAYER_ID = 'military-installations';
 const REQUEST_DEBOUNCE_MS = 500;
@@ -514,10 +515,7 @@ async function loadInstallations() {
 }
 
 const militaryInstallationsLayer = {
-  id: LAYER_ID,
-  name: 'Mapped Installations',
-  icon: '⌖',
-  source: 'OpenStreetMap + optional Google Maps Places',
+  ...LAYER_METADATA['military-installations'],
   updateInterval: 0,
   statsRefreshInterval: 1000,
   init(viewer) {

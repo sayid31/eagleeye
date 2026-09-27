@@ -1,10 +1,9 @@
-import radioLayer from './data/radio.js';
 import {
   buildRadioTunerTicks,
   radioTunerCommitSlot,
   radioTunerPointerPosition,
   radioTunerSlot,
-} from './data/radio.js';
+} from './data/radioTuner.js';
 
 /**
  * Prototype mixin for StyleManager (see `ui.js`): Radio panel wiring (the main
@@ -126,7 +125,7 @@ export const radioPanelMixin = {
           ? `${station.name}, station ${slot.stationIndex + 1} of ${this._radioTunerStations.length}`
           : 'No station available');
       }
-      if (syncStatic) radioLayer.previewTuningStation(station?.id || null, { rotate });
+      if (syncStatic) this._dataManager?.callLayerMethod('radio', 'previewTuningStation', station?.id || null, { rotate });
       return station;
     };
     const setTunerDirectory = (pool) => {
@@ -142,7 +141,7 @@ export const radioPanelMixin = {
     const refreshTunerBand = ({ force = false } = {}) => {
       if (this._radioTunerDragging || this._radioTuner?.hidden || this._radioTunerSlider?.disabled) return false;
       const selectedId = this._radioState?.selected?.id || null;
-      const pool = radioLayer.getTunerStations(750);
+      const pool = this._dataManager?.callLayerMethod('radio', 'getTunerStations', 750) || [];
       const poolSignature = pool.map((station) => station.id).join('|');
       const currentPoolSignature = this._radioTunerPool.map((station) => station.id).join('|');
       if (!force && poolSignature === currentPoolSignature && selectedId === this._radioTunerSelectedId) return false;
@@ -159,7 +158,7 @@ export const radioPanelMixin = {
     const beginTuner = () => {
       if (this._radioTunerDragging || this._radioTunerSlider?.disabled) return false;
       refreshTunerBand();
-      if (!this._radioTunerStations.length || !radioLayer.beginTuning()) return false;
+      if (!this._radioTunerStations.length || !this._dataManager?.callLayerMethod('radio', 'beginTuning')) return false;
       // A tuner-owned camera preview must never replace the frozen directory.
       // Only an explicit globe pointer/wheel gesture releases camera pinning.
       this._radioTunerBandPinnedForNavigation = true;
@@ -217,11 +216,11 @@ export const radioPanelMixin = {
         // Keep the exact band used by the drag so the selected channel cannot
         // jump to a refreshed catalog slot while its camera flight settles.
         this._radioTunerBandPinnedForNavigation = true;
-        result = radioLayer.commitTuningStation(station.id, { origin: 'user' });
+        result = this._dataManager?.callLayerMethod('radio', 'commitTuningStation', station.id, { origin: 'user' });
       } else if (!commit) {
-        radioLayer.cancelTuning();
+        this._dataManager?.callLayerMethod('radio', 'cancelTuning');
       } else {
-        radioLayer.endTuning();
+        this._dataManager?.endTuning('radio');
       }
       // Radio emits selection/tuning state synchronously. Keep both the logical
       // drag and the no-transition class active until that state has settled,
@@ -250,7 +249,7 @@ export const radioPanelMixin = {
     const cycleRadio = (direction, { rotate = true } = {}) => {
       this._radioTunerBandPinnedForNavigation = true;
       const pool = this._radioTunerPool.length ? this._radioTunerPool : this._radioTunerStations;
-      const cycled = radioLayer.cycleStation(direction, {
+      const cycled = this._dataManager?.callLayerMethod('radio', 'cycleStation', direction, {
         rotate,
         stationIds: pool.map((station) => station.id),
         origin: 'user',
@@ -355,7 +354,7 @@ export const radioPanelMixin = {
       this.setPanelCollapsed('data-panel', true);
     }, tunerListenerOptions);
     this._radioFilter?.addEventListener('change', () => {
-      const presentation = radioLayer.getUIState();
+      const presentation = this._dataManager?.getLayerUIState('radio') || {};
       if (!presentation.presentationActive) {
         this._radioFilter.value = presentation.filter;
         return;
@@ -364,7 +363,7 @@ export const radioPanelMixin = {
       if (!this._dataManager?.setLayerParams('radio', {
         filter: this._radioFilter.value,
       }, { origin: 'user' })) {
-        this._radioFilter.value = radioLayer.getUIState().filter;
+        this._radioFilter.value = this._dataManager?.getLayerUIState('radio')?.filter;
         return;
       }
       this._radioTunerBandPinnedForNavigation = false;
@@ -373,8 +372,8 @@ export const radioPanelMixin = {
     });
     this._radioPrevBtn?.addEventListener('click', () => cycleRadio(-1));
     this._radioNextBtn?.addEventListener('click', () => cycleRadio(1));
-    this._radioPlayBtn?.addEventListener('click', () => void radioLayer.togglePlayback({ origin: 'user' }));
-    this._radioStopBtn?.addEventListener('click', () => radioLayer.stopPlayback({ origin: 'user' }));
+    this._radioPlayBtn?.addEventListener('click', () => void this._dataManager?.callLayerMethod('radio', 'togglePlayback', { origin: 'user' }));
+    this._radioStopBtn?.addEventListener('click', () => this._dataManager?.callLayerMethod('radio', 'stopPlayback', { origin: 'user' }));
     this._radioVolume?.addEventListener('input', () => {
       const value = Number(this._radioVolume.value);
       if (this._radioVolumeValue) this._radioVolumeValue.textContent = `${value}%`;
@@ -382,13 +381,13 @@ export const radioPanelMixin = {
     });
     this._contextRadioMiniPrevBtn?.addEventListener('click', () => cycleRadio(-1));
     this._contextRadioMiniNextBtn?.addEventListener('click', () => cycleRadio(1));
-    this._contextRadioMiniPlayBtn?.addEventListener('click', () => void radioLayer.togglePlayback({ origin: 'user' }));
+    this._contextRadioMiniPlayBtn?.addEventListener('click', () => void this._dataManager?.callLayerMethod('radio', 'togglePlayback', { origin: 'user' }));
     // Cockpit owns the Cesium camera even though it intentionally clears
     // viewer.trackedEntity. Station changes must never start the map-view
     // rotation/fallback flights that would compete with its preUpdate pose.
     this._cockpitRadioPrevBtn?.addEventListener('click', () => cycleRadio(-1, { rotate: false }));
     this._cockpitRadioNextBtn?.addEventListener('click', () => cycleRadio(1, { rotate: false }));
-    this._cockpitRadioPlayBtn?.addEventListener('click', () => void radioLayer.togglePlayback({ origin: 'user' }));
+    this._cockpitRadioPlayBtn?.addEventListener('click', () => void this._dataManager?.callLayerMethod('radio', 'togglePlayback', { origin: 'user' }));
     this._contextRadioMiniVolume?.addEventListener('input', () => {
       const value = Number(this._contextRadioMiniVolume.value);
       if (this._contextRadioMiniVolumeValue) this._contextRadioMiniVolumeValue.textContent = `${value}%`;
