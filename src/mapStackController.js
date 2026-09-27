@@ -33,6 +33,13 @@ export const MAP_STACKS = [
     requiresIon: false,
   },
   {
+    id: 'esri-dark-gray',
+    label: 'Esri Dark Gray',
+    shortLabel: 'DARK',
+    kind: 'esri-dark-gray',
+    requiresIon: false,
+  },
+  {
     id: 'osm',
     label: 'OSM',
     shortLabel: 'OSM',
@@ -52,11 +59,24 @@ const ESRI_WORLD_IMAGERY_URL =
   'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer';
 const ESRI_IMAGERY_CREDIT =
   'Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+// Esri Dark Gray Canvas — a second keyless classic ArcGIS Online service, same
+// no-key/attribution-required terms as World Imagery above (DATA_SOURCES.md).
+// A muted dark basemap meant to pair with this app's HUD visual styles rather
+// than compete with them the way a bright satellite image does.
+const ESRI_DARK_GRAY_URL =
+  'https://services.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer';
+const ESRI_DARK_GRAY_CREDIT = 'Powered by Esri — Source: Esri, HERE, Garmin, and the GIS User Community';
 // The on-screen notice Esri requires when a third-party library draws its
 // service. Rendered via an explicit static credit (see _syncEsriAttribution) —
 // the provider's own `credit` option is ignored for tiled ArcGIS servers.
 const ESRI_ATTRIBUTION_HTML =
   '<a href="https://www.esri.com" target="_blank" rel="noopener">Powered by Esri</a>';
+// Every stack that draws an Esri-hosted classic ArcGIS Online tile service —
+// shares one on-screen attribution credit and one OSM tile-failure fallback
+// watchdog (see _syncEsriAttribution / _watchEsriProvider). A stack id added
+// here automatically inherits both; omitting a real Esri stack would silently
+// leave it without either.
+const ESRI_ATTRIBUTED_STACK_IDS = new Set(['esri-imagery', 'esri-dark-gray']);
 
 // Keyless global ellipsoidal terrain (Re:Earth Terrain / Mapterhorn, CC BY 4.0,
 // EGM2008 geoid via NGA) — quantized-mesh 1.0, `ellipsoid` data-type. Fixes
@@ -332,7 +352,7 @@ export class MapStackController {
   _syncEsriAttribution(activeStackId) {
     const creditDisplay = this.viewer?.scene?.frameState?.creditDisplay;
     if (!creditDisplay) return;
-    const wanted = activeStackId === 'esri-imagery';
+    const wanted = ESRI_ATTRIBUTED_STACK_IDS.has(activeStackId);
     if (wanted === !!this._esriCreditShown) return;
     if (!this._esriCredit) {
       this._esriCredit = new Cesium.Credit(ESRI_ATTRIBUTION_HTML, true);
@@ -375,6 +395,21 @@ export class MapStackController {
         effectiveStackId = 'osm';
         fallbackMessage = 'Esri Satellite is unavailable; using OSM';
       }
+    } else if (stack.kind === 'esri-dark-gray') {
+      try {
+        provider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(ESRI_DARK_GRAY_URL, {
+          credit: ESRI_DARK_GRAY_CREDIT,
+          enablePickFeatures: false,
+        });
+      } catch (error) {
+        console.warn('[MapStack] Esri Dark Gray Canvas unavailable, falling back to OSM:', error?.message || error);
+        provider = new Cesium.OpenStreetMapImageryProvider({
+          url: 'https://tile.openstreetmap.org/',
+          credit: DEFAULT_OSM_CREDIT,
+        });
+        effectiveStackId = 'osm';
+        fallbackMessage = 'Esri Dark Gray is unavailable; using OSM';
+      }
     } else if (stack.kind === 'osm') {
       provider = new Cesium.OpenStreetMapImageryProvider({
         url: 'https://tile.openstreetmap.org/',
@@ -398,7 +433,7 @@ export class MapStackController {
    * as a construction failure; one transient error is left to Cesium's retry.
    */
   _watchEsriProvider(resolution, gen) {
-    if (resolution.effectiveStackId !== 'esri-imagery') return;
+    if (!ESRI_ATTRIBUTED_STACK_IDS.has(resolution.effectiveStackId)) return;
     const errorEvent = resolution.provider?.errorEvent;
     if (!errorEvent?.addEventListener) return;
     let failures = 0;
@@ -410,8 +445,9 @@ export class MapStackController {
         : failures + 1;
       if (failures < 2 || this._esriFallbackPending) return;
       this._esriFallbackPending = true;
-      const message = 'Esri Satellite tile requests failed; using OSM';
-      this._onError?.(message, this.getStack('esri-imagery'));
+      const failedStack = this.getStack(resolution.effectiveStackId);
+      const message = `${failedStack?.label || 'Esri'} tile requests failed; using OSM`;
+      this._onError?.(message, failedStack);
       void this.setStack('osm', { silent: true }).then((state) => {
         if (state?.activeId === 'osm') {
           this._lastError = message;

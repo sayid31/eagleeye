@@ -1,7 +1,7 @@
 // MAP STACK source chips — the always-visible replacement for the `<select>`
 // that used to sit in the Map Stack panel. One button per stack, rendered from
-// `MapStackController.getStacks()`. The four owner-approved sources below are
-// the whole shipped set; keeping the allowlist explicit means a stack added to
+// `MapStackController.getStacks()`. The owner-approved sources below are the
+// whole shipped set; keeping the allowlist explicit means a stack added to
 // `MAP_STACKS` for internal use cannot reach the tray until someone names it
 // here.
 //
@@ -16,6 +16,7 @@ export const PRESENTED_MAP_STACK_IDS = Object.freeze([
   'bing-aerial',
   'bing-labels',
   'esri-imagery',
+  'esri-dark-gray',
   'osm',
 ]);
 

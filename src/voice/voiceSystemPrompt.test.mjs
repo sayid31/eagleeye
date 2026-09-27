@@ -12,10 +12,16 @@ test('the OpenAI voice system prompt is byte-identical to the pre-refactor inlin
   // `instructions: [...].join('\n')` — see this module's header. Pinned so a
   // future edit to the persona/tool-usage contract is a loud, deliberate
   // change to voiceSystemPrompt.js, not a silent vite.config.js edit.
-  assert.equal(GEV_VOICE_SYSTEM_PROMPT.length, 18660, 'system prompt length drifted from the pinned release text');
+  // Re-pinned 2026-09-27: merging feature/esri-dark-gray-canvas-basemap
+  // (which itself re-pinned this on 2026-09-17 for the "dark gray"/"dark
+  // mode"/"dark canvas" disambiguation clause) into main alongside the
+  // rest of the split-program branches changed the prompt text again —
+  // see CHANGELOG.md "Esri Dark Gray Canvas" for the original rationale;
+  // this second re-pin has no independent content change of its own.
+  assert.equal(GEV_VOICE_SYSTEM_PROMPT.length, 18720, 'system prompt length drifted from the pinned release text');
   assert.equal(
     crypto.createHash('sha256').update(GEV_VOICE_SYSTEM_PROMPT).digest('hex'),
-    '26fea715dbaca8e70ca556fc90bc7f7d3c2afa92995d99108c5250dc6e0df7b8',
+    'f858b52b6e24f04ec807045e32e0c8fdd4f5d0bfcbe8afe52fce1c9d3d3addf8',
     'the relocated persona/tool-usage contract text must not silently drift',
   );
 });
