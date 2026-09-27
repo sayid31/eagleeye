@@ -1233,7 +1233,15 @@ test('CCTV null-active coverage, auto-hop, cycling, and panel targets stay hones
 
     const renderer = CCTV_MIXIN_SOURCE.match(/_renderCctvState\(state\) \{[\s\S]*?\n  \},\n/);
     assert.ok(renderer, '_renderCctvState is missing');
-    assert.match(renderer[0], /else if \(!activeId\)[\s\S]*?selectedIndex = -1/);
+    // Deselect-when-no-active-camera used to be a literal
+    // `this._cctvSelect.selectedIndex = -1` on the native <select> this panel
+    // rendered before the ARIA listbox rewrite (see cctvCameraListbox.js's
+    // header). That DOM is gone; the render function now delegates the same
+    // "no active camera → nothing shown selected" behavior to
+    // syncCctvCameraListboxState, which is asserted directly against
+    // activeId in cctvCameraListbox.test.mjs. Check the delegation wiring
+    // survives instead of the deleted DOM API.
+    assert.match(renderer[0], /syncCctvCameraListboxState\(\s*\{\s*trigger:\s*this\._cctvCameraTrigger,\s*listbox:\s*this\._cctvCameraListbox\s*\},\s*\{\s*cameras:\s*orderedCameras,\s*activeId,\s*enabled\s*\},?\s*\)/);
     assert.match(renderer[0], /_cctvFocusBtn\.disabled = !enabled \|\| cameras\.length === 0 \|\| !activeId/);
   } finally {
     cctvLayer.setParams({ autoHop: false });
