@@ -36,9 +36,10 @@ import {
 import { setMilitaryLayerActive, registerMilitaryIcaos } from './militaryRegistry.js';
 import { formatFlightLevel } from './detectionDraw.js';
 import { createGroundSnap } from './groundSnap.js';
+import { createModelGroundHandoff } from './modelGroundHandoff.js';
 import { trackedModelZoomActive } from './trackedModelRegime.js';
 import { pickRenderAltitudeM } from './renderAltitude.js';
-import { cachedGroundFloor, floorAltitudeM, warmGroundFloor, resolveGroundFloorCellsBounded, GROUND_FLOOR_LIFT_M } from './groundFloor.js';
+import { cachedGroundFloor, floorAltitudeM, warmGroundFloor, resolveGroundFloorCellsBounded } from './groundFloor.js';
 import { sampleMeshFloorCells } from './meshFloorSampler.js';
 import { ensureGeoidReady, geoidHeight } from './geoid.js';
 import {
@@ -199,8 +200,6 @@ function _modelSpec(klass) {
 const MODEL_BELLY_OFFSET_NATIVE = 5.631;
 /** One-shot cached tile-skin heights for MODELED grounded planes (see groundSnap.js). */
 const _groundSnap = createGroundSnap();
-const _scratchGroundCarto = new Cesium.Cartographic();
-const _scratchGroundPos = new Cesium.Cartesian3();
 /** @type {Cesium.PrimitiveCollection|null} */
 let _modelCollection = null;
 /** @type {Map<string, Cesium.Model>} icao24 → model */
@@ -231,8 +230,6 @@ let _planeModelLoaded = false;
 let _preloadModel = null;
 /** Amber fade target for the tracked billboard once the model takes over (mirrors flights.js CYAN_TRANSPARENT). */
 const AMBER_TRANSPARENT = MIL_ICON_COLOR.withAlpha(0);
-const _scratchModelHpr = new Cesium.HeadingPitchRoll(0, 0, 0);
-const _scratchModelMtx = new Cesium.Matrix4();
 const _scratchModelBS = new Cesium.BoundingSphere(new Cesium.Cartesian3(), 1.0); // frustum-visibility test
 /** Last limb taper per billboard, retained across class/ground/cockpit repaints. */
 const _billboardLimbScale = new WeakMap();
@@ -1418,53 +1415,46 @@ function _modelKeepDistM() {
   return _models3dMode === 'all' ? MODEL_ALL_KEEP_M : MODEL_PROX_KEEP_M;
 }
 
-/** World model matrix from a position + course heading (pitch/roll 0; ENU frame). Writes into
- *  `result` and returns it — pass each model's OWN `.modelMatrix` so models never share one mutable
- *  matrix object (see flights.js for the full rationale: sharing one scratch stacked every model on
- *  the last-written transform, and the per-frame tracked write made it flicker). */
-function _modelMatrix(pos, headingDeg, result = _scratchModelMtx, offsetDeg = MODEL_HEADING_OFFSET_DEG) {
-  _scratchModelHpr.heading = Cesium.Math.toRadians((headingDeg || 0) + offsetDeg);
-  _scratchModelHpr.pitch = 0;
-  _scratchModelHpr.roll = 0;
-  return Cesium.Transforms.headingPitchRollToFixedFrame(
-    pos, _scratchModelHpr, Cesium.Ellipsoid.WGS84, undefined, result,
-  );
-}
-
-/** Everything scene.sampleHeight must NOT hit when snapping a grounded model (mirror of
- *  flights.js): the vertical pick ray at a plane's own lat/lon otherwise lands on its
- *  (or a parked neighbor's) billboard/model instead of the tile skin. Exclusion matches
- *  picked-object IDs — every billboard AND model here carries its icao as `id` — plus
- *  the tracked entity object itself. Built lazily, only when a sample actually fires. */
-function _groundSampleExclusions() {
-  const out = [..._billboards.keys()];
-  if (_trackedEntity) out.push(_trackedEntity);
-  return out;
-}
-
-/** Position a 3D MODEL renders at (mirror of flights.js — see the full rationale there).
- *  Grounded planes ride a ONE-SHOT cached scene.sampleHeight of the photoreal tile skin
- *  (groundSnap.js; taxiing >50 m retires it to a bounded last-known) plus the belly
- *  offset so they sit on their
- *  gear; airborne planes pass through. Until the FIRST sample lands, callers keep the
- *  depth-test-free billboard visible and the model hidden while this returns null; a
- *  contact that has already resolved once holds that measurement through a later
- *  outage inside groundSnap's drift bound, so taxiing does not pop it back to 2D. */
-function _modelDisplayPosition(icao24, pos, result) {
-  const meta = _flightData.get(icao24);
-  if (!meta || !meta.onGround) return pos;
-  const h = _groundSnap.heightFor(_viewer, icao24, pos, _groundSampleExclusions);
-  if (h == null) return null;
-  const carto = Cesium.Cartographic.fromCartesian(pos, Cesium.Ellipsoid.WGS84, _scratchGroundCarto);
-  carto.height = h + _modelSpec(meta.klass).bellyM;
-  return Cesium.Cartesian3.fromRadians(carto.longitude, carto.latitude, carto.height, Cesium.Ellipsoid.WGS84, result);
-}
+/** Shared model-ground-handoff engine (modelGroundHandoff.js, item #30 of the
+ *  file-split program) — see that module's header for the full divergence-
+ *  reconciliation rationale, including flights.js's held-floor/corridor
+ *  system, which has no counterpart here and stays unshared by design. This
+ *  layer supplies its own model-spec table and default heading offset; the
+ *  fleet handoff below still passes a per-class heading override, exactly
+ *  as this layer's `_modelMatrix` always did. */
+const _modelGroundHandoff = createModelGroundHandoff({
+  getViewer: () => _viewer,
+  getFlightData: () => _flightData,
+  getBillboards: () => _billboards,
+  getPositionHistory: () => _positionHistory,
+  models: _models,
+  getTrackedEntity: () => _trackedEntity,
+  getTrackedIcao: () => _trackedIcao,
+  getTrackedModel: () => _trackedModel,
+  isTrackedModelRegimeActive: () => _trackedModelRegimeActive(),
+  groundSnap: _groundSnap,
+  getModelSpec: _modelSpec,
+  headingOffsetDeg: MODEL_HEADING_OFFSET_DEG,
+  // This layer's inline "Round 6" stale-re-floor loop already gated on model
+  // ownership (unlike flights.js's) — preserved verbatim, not reconciled,
+  // per modelGroundHandoff.js's "discovered gap" note.
+  gateStaleRefloorOnModelOwnsVisual: true,
+});
+const _scratchGroundPos = _modelGroundHandoff.scratchGroundPos;
+const _modelMatrix = (pos, headingDeg, result, offsetDeg) =>
+  _modelGroundHandoff.modelMatrix(pos, headingDeg, result, offsetDeg);
+const _modelDisplayPosition = (icao24, pos, result) => _modelGroundHandoff.modelDisplayPosition(icao24, pos, result);
+const _modelOwnsVisual = (icao24) => _modelGroundHandoff.modelOwnsVisual(icao24);
+const _refloorStaleGroundedContacts = (currentIcaos) => _modelGroundHandoff.refloorStaleGroundedContacts(currentIcaos);
 
 /** Atomically hand one fleet contact from its billboard to a safely placed,
  * ready 3D model. Missing/loading models and unresolved terrain always leave
  * the billboard owning the visual, so no render frame can hide both.
  * `beforeShow` runs only on the committing path — the per-tick model treatment
- * belongs to a model that is about to draw, not to one still waiting. */
+ * belongs to a model that is about to draw, not to one still waiting. This
+ * layer's only divergence from the shared engine's own `driveFleetModelHandoff`
+ * is the per-class heading override below, so it stays a thin wrapper here
+ * rather than moving `_modelSpec`'s branch structure into the shared module. */
 function _driveFleetModelHandoff(icao24, model, bb, pos, course, beforeShow) {
   if (!model) {
     bb.show = true;
@@ -1494,23 +1484,6 @@ function _driveFleetModelHandoff(icao24, model, bb, pos, course, beforeShow) {
   if (!model.show) model.show = true;
   if (bb.show) bb.show = false; // hand off ONLY once the model renders
   return true;
-}
-
-/** A model owns the visual only while it is ready, shown, and (for the tracked
- *  primitive) inside the tracked-model regime. Mere existence/loading is not ownership. */
-function _modelOwnsVisual(icao24) {
-  if (icao24 === _trackedIcao) {
-    return _trackedModelRegimeActive() && _modelIsRendering(_trackedModel);
-  }
-  return _modelIsRendering(_models.get(icao24));
-}
-
-/** `show` is sufficient evidence of a safe placement because only the handoff and
- *  the tracked driver ever set it true, and both do so after committing a matrix;
- *  everything else — admission, unresolved ground, an unready glTF, the limb cull,
- *  a regime exit — only ever clears it. Mirror of flights.js. */
-function _modelIsRendering(model) {
-  return !!model && model.ready === true && model.show === true;
 }
 
 /** Spec identity for a LOADED model — mirror of flights.js: URL and scale
@@ -3131,28 +3104,12 @@ const militaryFlightsLayer = {
       // synchronously by NEXT poll's clamp (same contract as flights.js's
       // grounded-surface warm).
       warmGroundFloor(_floorWarmPoints);
-      // Round 6: re-floor STALE grounded contacts (mirror of flights.js) —
-      // a parked contact whose feed went quiet froze at its pre-warm height.
-      // The model-ownership gate matches the live grounded-clamp path (a
-      // tileset-snapped model owns its visual; moving its billboard would
-      // disturb groundSnap's input — the T7 one-shot invariant).
-      for (const [icao24, info] of _flightData) {
-        if (!info?.onGround || currentIcaos.has(icao24)) continue;
-        if (_modelOwnsVisual(icao24)) continue;
-        if (!Number.isFinite(info.rawLat) || !Number.isFinite(info.rawLon)) continue;
-        const floor = cachedGroundFloor(info.rawLat, info.rawLon);
-        if (!Number.isFinite(floor)) continue;
-        const lifted = floor + GROUND_FLOOR_LIFT_M;
-        if (Number.isFinite(info.renderAltitudeM) && info.renderAltitudeM >= floor - 1) continue;
-        info.renderAltitudeM = lifted;
-        info.cullPosition = null;
-        const liftedPos = Cesium.Cartesian3.fromDegrees(info.rawLon, info.rawLat, lifted);
-        const hist = _positionHistory.get(icao24);
-        const newest = hist?.[hist.length - 1];
-        if (newest) newest.position = Cesium.Cartesian3.clone(liftedPos, newest.position);
-        const bbStale = _billboards.get(icao24);
-        if (bbStale) bbStale.position = liftedPos;
-      }
+      // Round 6: re-floor STALE grounded contacts — a parked contact whose
+      // feed went quiet froze at its pre-warm height. Now lives in the
+      // shared modelGroundHandoff.js engine's `refloorStaleGroundedContacts`
+      // (gated on model ownership here, matching this layer's original
+      // inline behavior — see `_modelGroundHandoff` above).
+      _refloorStaleGroundedContacts(currentIcaos);
       // Round 4: sample the RENDERED mesh for those cells (one-shot per cell,
       // budget-capped, viewer-proximate, google-3d regime only), excluding
       // this layer's own billboards/models from the probe.

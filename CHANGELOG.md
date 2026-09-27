@@ -5,6 +5,36 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Refactored
+
+- **`flights.js` and `militaryFlights.js` shared their model-ground-handoff
+  logic as two near-duplicate private copies; it is now one shared
+  module.** Extracted the world-transform builder, the ground-sample
+  exclusion list, the grounded display-position resolver, the gap-proof
+  billboard→model handoff, the model-ownership predicate pair, and the
+  stale-grounded-contact re-floor sweep into `src/data/modelGroundHandoff.js`
+  (`createModelGroundHandoff()`), using the same per-layer factory-closure
+  pattern as `deadReckoning.js`/`groundSnap.js`: each layer creates its own
+  instance via accessor closures for reassignable per-layer state
+  (billboards/flight-data/tracked-icao maps get replaced wholesale by
+  test-reset/destroy paths) plus required params for genuine divergence
+  (`headingOffsetDeg`, `getModelSpec`). `militaryFlights.js`'s fleet handoff
+  keeps a thin per-layer wrapper around the shared `driveFleetModelHandoff`
+  so it can still apply its own per-class heading override, which the
+  shared engine's default does not cover. The two files' stale-re-floor
+  sweeps had one discovered behavioral discrepancy —
+  `militaryFlights.js`'s inline "Round 6" loop skipped a contact a model
+  already owns, `flights.js`'s did not — preserved verbatim via a required
+  `gateStaleRefloorOnModelOwnsVisual` option rather than silently
+  reconciled; which behavior is correct is left as an open follow-up, not
+  decided by this extraction. Deliberately **not** moved: `flights.js`'s
+  held-floor/corridor-warming system, which has zero `militaryFlights.js`
+  counterpart and stays there, unshared, by design. As part of this
+  extraction, a dead `GROUND_FLOOR_LIFT_M` import in `militaryFlights.js`
+  (only used by the now-removed inline Round 6 loop) was trimmed.
+  `flights.js` drops from 5,338 to 5,210 lines, `militaryFlights.js` from
+  3,876 to 3,833 lines. New `modelGroundHandoff.js`: 265 lines.
+
 ### Fixed
 
 - **CCTV coverage wireframe green flicker, reported on a laptop GPU (not

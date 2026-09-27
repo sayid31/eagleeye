@@ -17,6 +17,17 @@ const LAYERS = [
   { name: 'militaryFlights', path: new URL('./militaryFlights.js', import.meta.url) },
 ];
 
+// The gap-proof billboard→model handoff now lives once in the shared
+// modelGroundHandoff.js engine (item #30 of the file-split program), not
+// duplicated per layer — see that module's header. Both layers still keep
+// their own thin `_driveFleetModelHandoff` wrapper (militaryFlights.js's
+// wraps it to apply a per-class heading override), so this assertion moves
+// to the shared source rather than either layer's.
+const sharedGroundHandoffSource = readFileSync(
+  new URL('./modelGroundHandoff.js', import.meta.url),
+  'utf8',
+);
+
 /** Read a `const NAME = <number>;` declaration out of a module's source. */
 function numericConstant(source, name) {
   const match = new RegExp(`const ${name}\\s*=\\s*(\\d+(?:\\.\\d+)?)`).exec(source);
@@ -94,7 +105,7 @@ for (const layer of LAYERS) {
       'far dots are reset to a rotation-free presentation');
     assert.match(source, /\(!_cockpitContactMode \|\| isCockpitNear\) && \(doRotations \|\| revealed\)/,
       'near 2D silhouettes continue to receive projected course');
-    assert.match(source, /if \(bb\.show\) bb\.show = false; \/\/ hand off ONLY once the model renders/,
+    assert.match(sharedGroundHandoffSource, /if \(bb\.show\) bb\.show = false; \/\/ hand off ONLY once the model renders/,
       'the gap-proof billboard-to-model handoff remains intact');
   });
 
