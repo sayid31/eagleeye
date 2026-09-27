@@ -6,6 +6,26 @@
  * presentation values.
  */
 
+/**
+ * Stable logical bottom-to-top paint order across the host-owned surfaces.
+ * Lives here (not in `worldOverlay.js`) because both the per-frame paint
+ * pipeline (`worldOverlay.js`) and the source/domain registry
+ * (`worldOverlaySourceRegistry.js`) need it, and `worldOverlay.js` imports
+ * FROM the registry — defining it in either of those two would make the
+ * other's import of it a cycle. `worldOverlay.js` re-exports this array
+ * unchanged so its existing public API (and `worldOverlay.test.mjs`'s
+ * import) is untouched.
+ */
+export const WORLD_OVERLAY_PAINT_LANES = Object.freeze([
+  'detection',
+  'ambient-label',
+  'ambient-track',
+  'ambient-card',
+  'thumbnail',
+  'selected',
+  'tracked',
+]);
+
 /** Shared visual tokens used by every world-overlay source. */
 export const WORLD_OVERLAY_STYLE = Object.freeze({
   background: 'rgba(4, 12, 16, 0.82)',

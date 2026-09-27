@@ -67,6 +67,49 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   and NEXT). The popup now matches the CCTV panel's full content width
   instead (`src/cctvPanelMixin.js`).
 
+### Refactored
+
+- **Extracted `worldOverlay.js`'s source/domain registry and entry-normalizing
+  validators into their own module, `src/overlays/worldOverlaySourceRegistry.js`.**
+  File-split program, Wave 3 item #32. Moved verbatim: the `_sources`/
+  `_domains` Maps and their append-only iteration-order lists (now exported
+  named bindings `registrySources`/`registrySourceList`/`registryDomains`/
+  `registryDomainList` — a stable `const` direct reference, not a per-layer
+  factory closure like items #28-#31, since `worldOverlay.js` is a true
+  module-level singleton and these bindings are never reassigned), every
+  pure entry-normalizing/validating helper (`normalizeOverlayEntry`,
+  `paintLaneForOverlayEntry`, `selectBoundedOverlayCohort`, `isProtected`,
+  `normalizeDistanceScale`, `normalizeAltitudeScale`, `normalizeSourceOptions`,
+  `snapshotCullPosition`, `assertSourceId`, `entryKey`, `compareStableKeys`),
+  and the registry's own CRUD (`getOrCreateSource`, `getOrCreateDomain`,
+  `rebuildSourceCohorts`). `normalizeOverlayEntry` is Cesium-agnostic in the
+  registry (the host's `Cesium` namespace is threaded through as an explicit
+  first argument rather than imported a second time); `worldOverlay.js` keeps
+  its existing public `normalizeOverlayEntry(sourceId, entry)` export and
+  signature as a one-line wrapper. `WORLD_OVERLAY_PAINT_LANES` moved to the
+  existing shared-tokens module, `src/overlays/worldOverlayTokens.js` (both
+  `worldOverlay.js`'s per-frame paint pipeline and the new registry need it,
+  and `worldOverlay.js` imports from the registry, so defining it in either
+  of those two would create an import cycle); `worldOverlay.js` re-exports it
+  unchanged for `worldOverlay.test.mjs` and any other existing consumer.
+  Host-owned state stays entirely in `worldOverlay.js` by design (see that
+  module's own "Scope note" and the registry's docstring): the per-frame
+  projection/solve/paint pipeline, `_records` (pooled paint-rect cache),
+  `_customPaintLanes`/`_customPaintLaneList` (source-owned painters in fixed
+  lanes), `invalidateHost`/`updateEntryDiagnostics`/`_diagnostics`, and the
+  five public entry-mutation exports (`setOverlayEntries`, `upsertOverlayEntry`,
+  `removeOverlayEntry`, `clearOverlaySource`, `setOverlaySourceVisible`), which
+  now call into the registry's primitives and then do their own host-owned
+  cleanup. No change to any of this module's ~8 existing public export names
+  used by its 13 other importers. `worldOverlay.js`: 2393 → 1986 lines. New
+  `worldOverlaySourceRegistry.js`: 467 lines. Not merged/pushed pending
+  explicit instruction. A separate, previously unmentioned sibling branch,
+  `refactor/worldoverlay-ui-occluder-tracking-split` (item #24, splitting
+  this same file's UI-occluder tracking into `worldOverlayOccluder.js`), also
+  exists unmerged from the same `main` commit — the two branches' changes
+  are very likely non-overlapping (this branch never touches the occluder
+  block) but that has not been confirmed by an actual merge attempt.
+
 ### Changed
 
 - **Closed the remaining EagleEye View rebrand gaps.** A prior rebrand pass
