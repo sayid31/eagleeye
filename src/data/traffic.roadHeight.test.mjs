@@ -14,7 +14,10 @@
 import { test, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { parseRoads, _setViewerForTest, DOT_HEIGHT_OFFSET, MAX_WAYPOINTS_PER_ROAD } from './traffic.js';
+import {
+  parseRoads, _setViewerForTest, DOT_HEIGHT_OFFSET, MAX_WAYPOINTS_PER_ROAD,
+  MAX_HEIGHT_FALLBACK_SAMPLES,
+} from './traffic.js';
 import {
   cachedGroundFloor, setMeshFloorPreferred, _clearMeshFloorCellsForTest,
   reportMeshFloorCell,
@@ -85,6 +88,46 @@ test('a waypoint whose cell never resolves falls back to the road\'s baseHeight,
     assert.ok(Math.abs(heightOf(wpSampled) - (42 + DOT_HEIGHT_OFFSET)) < 0.05);
     assert.ok(Math.abs(heightOf(wpUnresolved) - (42 + DOT_HEIGHT_OFFSET)) < 0.05,
       'the unresolved cell degrades to baseHeight (42), never a bare 0');
+  } finally {
+    _setViewerForTest(null);
+  }
+});
+
+test('the per-road sampleHeight fallback is capped, not called once per road unconditionally', async () => {
+  // Regression test for the "Page Unresponsive" freeze (2026-09): a dense
+  // city fetch of many ways each triggering an uncapped, synchronous
+  // scene.sampleHeight() raycast blocked the main thread. Every road here
+  // is a fresh, never-warmed cell, so ALL of them are candidates for the
+  // fallback sample — only MAX_HEIGHT_FALLBACK_SAMPLES may actually call it.
+  let sampleHeightCalls = 0;
+  const wayCount = MAX_HEIGHT_FALLBACK_SAMPLES + 20;
+  const viewer = {
+    scene: {
+      sampleHeightSupported: true,
+      sampleHeight: () => {
+        sampleHeightCalls += 1;
+        return 10;
+      },
+    },
+    camera: { positionCartographic: { latitude: 0, longitude: 0 } },
+  };
+  _setViewerForTest(viewer);
+  try {
+    const elements = Array.from({ length: wayCount }, (_, i) => way({
+      coords: [[-90 + i * 0.5, 10 + i * 0.5], [-90 + i * 0.5 + 0.01, 10 + i * 0.5 + 0.01]],
+    }));
+    const roads = await parseRoads({ elements });
+    assert.equal(roads.length, wayCount);
+    assert.equal(sampleHeightCalls, MAX_HEIGHT_FALLBACK_SAMPLES,
+      `sampleHeight must be called at most ${MAX_HEIGHT_FALLBACK_SAMPLES} times per parseRoads() call, got ${sampleHeightCalls}`);
+    // Roads past the cap never resolved a warm cell (unique/far-apart coords,
+    // never reported) and got no fallback sample either, so they degrade to
+    // the documented baseHeight=0 — not a crash, not a stale/incorrect value.
+    const uncappedRoad = roads[roads.length - 1];
+    for (const wp of uncappedRoad.waypoints) {
+      assert.ok(Math.abs(heightOf(wp) - DOT_HEIGHT_OFFSET) < 0.05,
+        'a road past the fallback-sample cap with a cold cell keeps baseHeight=0');
+    }
   } finally {
     _setViewerForTest(null);
   }

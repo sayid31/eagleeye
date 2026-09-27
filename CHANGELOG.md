@@ -118,6 +118,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   (`PROJECTION_VIDEO_SWAP_MS`) instead of image feeds' 1Hz. This entry
   supersedes and folds in the two prior "half frame" and repeat-GL-error
   changelog entries for the same root cause.
+- **Street Traffic could freeze the tab ("Page Unresponsive") when zoomed
+  into a dense city block.** The detailed road fetch (triggered close to the
+  ground, including residential streets) could return thousands of OSM ways;
+  the parser's cold-cell fallback height called a real, expensive raycast
+  (`scene.sampleHeight()`) synchronously once per road with no cap, unlike
+  every other scene query in the app. That fallback is now capped at 40 calls
+  per fetch (`MAX_HEIGHT_FALLBACK_SAMPLES` in `src/data/traffic.js`); roads
+  past the cap still get correct height moments later from the same batched
+  ground-floor resolution every other road already relies on. See
+  `docs/CURRENT-STATE.md` for details.
 - **CCTV camera picker rendered as a plain white dropdown on Windows.** The
   picker was a native `<select>`; its open `<option>` popup is rendered by
   the OS/browser and ignores author CSS — Windows Chrome rendered it opaque

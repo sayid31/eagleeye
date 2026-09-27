@@ -1086,25 +1086,27 @@ popup can't also fire style/POI hotkeys. Type-ahead-to-letter is not
 implemented (the list is unofficial-first ordered, not alphabetical, so it
 would be low value) — a known gap, not a silent omission.
 
-**Portal:** `#cctv-camera-listbox` is reparented
+**Portal (fixed 2026-09, follow-up):** `#cctv-camera-listbox` is reparented
 onto `document.body` in `_initCctvCameraListbox()` (`_cctvCameraListbox`
 stays cached from its original `index.html` location; only the live DOM
-node moves), because `.cctv-panel-inner` has `backdrop-filter`, and per the
-CSS Filter Effects spec any element with `backdrop-filter`/`filter`/`transform`
-becomes the *containing block* for its `position: fixed` descendants — left
-where `index.html` places it, the popup's viewport-relative
-`getBoundingClientRect()` coordinates would resolve against the panel's box
-instead of the screen. The portal is undone in
+node moves). `.cctv-panel-inner` has `backdrop-filter`, and per the CSS
+Filter Effects spec any element with `backdrop-filter`/`filter`/`transform`
+becomes the *containing block* for its `position: fixed` descendants — so
+left where `index.html` places it, the popup's viewport-relative
+`getBoundingClientRect()` coordinates resolved against the panel's box
+instead of the screen, rendering as a large mispositioned dark rectangle
+(field-reported same week as the initial ship). The portal is undone in
 `StyleManager.dispose()` (`this._cctvCameraListbox?.remove()`) so a
 re-instantiated instance can't find a stray node already on `document.body`.
 See `docs/DECISIONS.md` for the incident this fixed.
 
-**Width:** `_positionCctvListbox()` sizes the
+**Width (fixed 2026-09, follow-up):** `_positionCctvListbox()` sizes the
 popup to `.cctv-panel-inner`'s content width (panel width minus its own
-padding), not the trigger button's own width — the trigger sits between
-PREV/NEXT and is only ~1/3 of the panel's width, so the popup lines up with
-the panel's other full-width rows instead of truncating every camera label.
-See `docs/DECISIONS.md` for the incident this fixed.
+padding), not the trigger button's own width. The trigger sits between
+PREV/NEXT and is only ~1/3 of the panel's width, so a trigger-width popup
+truncated every camera label to a couple of characters (field-reported).
+The popup now lines up with the panel's other full-width rows. See
+`docs/DECISIONS.md` for the incident this fixed.
 
 ### Not Currently in Runtime
 
@@ -1340,6 +1342,21 @@ detection off by hand — would not have.
   (`flowMatch.js`), and rendered as green/amber/red dot color + speed/density
   scaling (`trafficFlowStyle.js`); closures spawn no dots; unmatched roads stay
   white. Road fetch bounds center on the camera look-at point (`trafficBounds.js`).
+- **`parseRoads()`'s per-road `sampleHeight` fallback is capped, not
+  unconditional (fixed 2026-09).** A dense-city detailed fetch (triggered
+  whenever camera altitude drops to/below `FAST_FETCH_ALTITUDE`, 4500 m,
+  including `residential`/`unclassified` roads) can return thousands of OSM
+  ways. The parser's cold-cell fallback height used to call the real
+  depth-buffer/tileset raycast `scene.sampleHeight()` synchronously once per
+  way with no cap, unlike `meshFloorSampler.js`'s own scene queries (rationed
+  to `MAX_SAMPLES_PER_CALL = 40`) — enough sustained main-thread blocking to
+  trigger Chrome's "Page Unresponsive" dialog. `MAX_HEIGHT_FALLBACK_SAMPLES`
+  (40, exported from `traffic.js`) now caps that raycast per `parseRoads()`
+  call; roads past the cap simply keep `baseHeight=0` until Phase 2/3's
+  batched, cached ground-floor resolution (`groundFloor.js`) fills in their
+  real per-waypoint height, which is the common case anyway — the fallback
+  raycast was already redundant for any road whose cell resolves in time.
+  Pinned in `src/data/traffic.roadHeight.test.mjs`.
 - Development captures opened with `?trafficDebug=1` mint an interaction anchor
   from the exact `camera.changed` event that arms each debounced load, then emit
   scheduling-correlated User Timing entries for production `response.json`, road
