@@ -1977,6 +1977,11 @@ function createProjectionRuntime(record) {
     lastFrameSignature: null,
     signatureCanvas: null,
     signatureCtx: null,
+    // Last-seen HTMLVideoElement.getVideoPlaybackQuality().totalVideoFrames —
+    // video mode's equivalent of lastFrameSignature (drawProjectionFrame skips
+    // the redraw/rebind when this hasn't advanced). null = "nothing known
+    // yet", which always redraws once.
+    lastVideoFrameCount: null,
     lastPlaceholderPaintAt: 0,
     // canvasStamp increments on every canvas write (frame blit / placeholder
     // paint); lastSwappedCanvasStamp trails it so refreshProjectionTextures
@@ -2194,6 +2199,33 @@ function drawProjectionFrame(record) {
   if (runtime.mode === 'video' && runtime.video) {
     const video = runtime.video;
     if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+      // Only redraw+rebind when the video has actually decoded a NEW frame
+      // since the last tick (owner report, 2026-09-28: monitor plane flickers
+      // during live playback, every map regime). Root cause: unlike the image
+      // path below (projectionFrameSignature dedup), this branch used to bump
+      // canvasStamp on every RAF tick unconditionally whenever readyState>=2 —
+      // every bump forces refreshProjectionTextures to swap the double buffer
+      // and reassign planeMaterial.image, and per this file's own 2026-07-04/
+      // 07-30 field-test finding (refreshProjectionTextures' docstring), every
+      // such reassignment is a flash opportunity while Cesium rebinds the
+      // texture. That made every tick a flash opportunity, including HLS
+      // stalls/buffering when nothing new was actually decoded — exactly when
+      // a needless rebind reads as a visible flicker against a frozen frame.
+      // getVideoPlaybackQuality().totalVideoFrames (Baseline widely available
+      // since 2020) is a cheap decoded-frame counter — pixel-hashing every
+      // tick like the image path does would be too costly at 12fps, so this
+      // uses the browser's own frame-identity signal instead, same dedup
+      // philosophy sized for video's cadence.
+      const frameCount = typeof video.getVideoPlaybackQuality === 'function'
+        ? video.getVideoPlaybackQuality().totalVideoFrames
+        : null;
+      if (frameCount !== null && frameCount === runtime.lastVideoFrameCount) {
+        // No new decoded frame since the last tick — leave the canvas and
+        // its bound texture untouched, exactly like the image path's
+        // identical-signature skip.
+        return;
+      }
+      runtime.lastVideoFrameCount = frameCount;
       // Always draws into the fixed-size canvas (drawImage auto-scales any
       // source resolution) rather than binding the plane material to the
       // video element directly — see refreshProjectionTextures' docstring
