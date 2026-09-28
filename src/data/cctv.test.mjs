@@ -842,6 +842,90 @@ test('drawProjectionFrame paints video frames onto the fixed-size canvas with no
   }
 });
 
+test('drawProjectionFrame skips the redraw/rebind when the video has not decoded a new frame (flicker fix, 2026-09-28)', () => {
+  // Root cause: this branch used to bump canvasStamp on every RAF tick
+  // whenever readyState>=2, even when the video hadn't actually decoded
+  // anything new (e.g. an HLS stall/buffer). Every bump forces
+  // refreshProjectionTextures to swap the double buffer and reassign
+  // planeMaterial.image, which the file's own field-test findings document
+  // as a flash opportunity — so a stalled video ticked a flash every RAF
+  // frame. Fix mirrors the image path's projectionFrameSignature dedup,
+  // using getVideoPlaybackQuality().totalVideoFrames as the cheap
+  // frame-identity signal (image mode's pixel-hash would be too costly at
+  // video's 12fps swap rate).
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane-frame-dedup') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.mode = 'video';
+    runtime.canvas = { marker: 'projection-canvas-mirror' };
+    useImagePlaneMaterial(runtime, runtime.canvas);
+    const drawImageCalls = [];
+    runtime.ctx = {
+      ...makeFake2dCtx(),
+      drawImage(...args) { drawImageCalls.push(args); },
+    };
+    let totalVideoFrames = 10;
+    runtime.video = {
+      readyState: 2,
+      videoWidth: 704,
+      videoHeight: 576,
+      getVideoPlaybackQuality() { return { totalVideoFrames }; },
+    };
+    runtime.canvasStamp = 0;
+
+    _drawProjectionFrameForTest(record);
+    assert.equal(drawImageCalls.length, 1, 'first tick always draws (nothing known yet)');
+    assert.equal(runtime.canvasStamp, 1);
+
+    // Same decoded-frame count on the next several ticks (stalled/buffering
+    // video, or simply ticking faster than the source publishes) — no new
+    // draw, no canvasStamp bump, no flash opportunity.
+    _drawProjectionFrameForTest(record);
+    _drawProjectionFrameForTest(record);
+    assert.equal(drawImageCalls.length, 1, 'no redraw while totalVideoFrames is unchanged');
+    assert.equal(runtime.canvasStamp, 1, 'no canvasStamp bump while stalled');
+
+    // A genuinely new decoded frame arrives — draws again.
+    totalVideoFrames += 1;
+    _drawProjectionFrameForTest(record);
+    assert.equal(drawImageCalls.length, 2, 'redraws once a new frame is actually decoded');
+    assert.equal(runtime.canvasStamp, 2);
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('drawProjectionFrame redraws every tick when getVideoPlaybackQuality is unavailable (back-compat, no regression)', () => {
+  // Browsers/environments without getVideoPlaybackQuality (or a stub video
+  // element in tests) must keep the pre-fix always-redraw behavior, not
+  // silently freeze the plane.
+  const viewer = makeDeselectViewer();
+  const record = { ...makeDeselectRecord('video-plane-no-pbq') };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.mode = 'video';
+    runtime.canvas = { marker: 'projection-canvas-mirror' };
+    useImagePlaneMaterial(runtime, runtime.canvas);
+    const drawImageCalls = [];
+    runtime.ctx = {
+      ...makeFake2dCtx(),
+      drawImage(...args) { drawImageCalls.push(args); },
+    };
+    runtime.video = { readyState: 2, videoWidth: 704, videoHeight: 576 };
+    runtime.canvasStamp = 0;
+
+    _drawProjectionFrameForTest(record);
+    _drawProjectionFrameForTest(record);
+    assert.equal(drawImageCalls.length, 2, 'no getVideoPlaybackQuality means no dedup signal — every tick draws');
+    assert.equal(runtime.canvasStamp, 2);
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
+
 test('refreshProjectionTextures swaps video-mode buffers at the faster ~12fps throttle, distinct from image mode\'s 1Hz', () => {
   // 2026-09-22 fix: video feeds now go through the SAME double-buffer swap
   // path as image feeds (refreshProjectionTextures no longer skips video

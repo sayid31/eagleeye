@@ -1112,6 +1112,19 @@ speech-to-speech API, so Claude is paired with the browser's own
   video element caused a GL texture-copy failure that three earlier
   size-guard variants could not fix — see `docs/DECISIONS.md` for the full
   root-cause history.
+- **Video-mode monitor plane deduplicates against the video's own decoded-frame
+  counter, not just readyState.** `drawProjectionFrame()`'s video branch skips
+  the redraw/rebind entirely when `video.getVideoPlaybackQuality().totalVideoFrames`
+  hasn't advanced since the last tick — mirroring the image path's
+  `projectionFrameSignature()` pixel-hash dedup, sized for video's faster
+  cadence (a per-tick pixel hash would be too costly at 12fps). Root cause of
+  the flicker this fixes: every `canvasStamp` bump forces
+  `refreshProjectionTextures()` to swap the double buffer and reassign
+  `planeMaterial.image`, and every such reassignment is a documented flash
+  opportunity while Cesium rebinds the texture (same finding the paragraph
+  above cites) — the video branch used to bump unconditionally on every RAF
+  tick whenever `readyState>=2`, including during an HLS stall/buffer when
+  nothing new had actually decoded, so a stalled feed flashed every frame.
 
 ### CCTV camera picker — custom ARIA listbox
 

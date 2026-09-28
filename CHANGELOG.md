@@ -83,6 +83,33 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **CCTV live-video monitor plane flickered/flashed during playback, in every
+  map regime.** Root cause: `drawProjectionFrame()`'s video branch bumped
+  `canvasStamp` on every RAF tick whenever `video.readyState>=2`, with no
+  check that the video had actually decoded a new frame since the last
+  tick — unlike the image-feed path, which only redraws when
+  `projectionFrameSignature()` detects genuinely different pixels. Every
+  `canvasStamp` bump forces a double-buffer swap and a `planeMaterial.image`
+  reassignment, and every such reassignment is a documented flash
+  opportunity while Cesium rebinds the texture (same root cause already
+  identified for image feeds' 2026-07 white-flash fix) — so a stalled/
+  buffering HLS segment (when nothing new had actually decoded) still
+  triggered a flash every single frame. Fixed by skipping the redraw/rebind
+  when `video.getVideoPlaybackQuality().totalVideoFrames` hasn't advanced
+  since the last tick — the same dedup philosophy as the image path, sized
+  for video's ~12fps swap cadence (a per-tick pixel hash, as image mode
+  uses, would be too costly at that rate). Falls back to the pre-fix
+  always-redraw behavior when `getVideoPlaybackQuality` is unavailable, so
+  nothing regresses on an environment without it.
+- **Investigated and ruled out: CCTV monitor plane appearing "half-filled" in
+  Google Photorealistic 3D Tiles mode (not reproducible in Esri satellite
+  mode).** Hypothesized root cause was 3D-tile depth-test occlusion of the
+  plane (it has no `disableDepthTestDistance` override, unlike the camera
+  billboard). Built and ran an empirical raycast probe against the exact
+  reported camera (Jakarta "JPO Gatot Subroto") sampling a 5×5 grid across
+  the live plane geometry in both map regimes: 0/25 points occluded in
+  `google-3d`, 0/25 in `esri-imagery` — identical, falsifying the occlusion
+  hypothesis. No fix applied for this symptom; root cause remains open.
 - **Splash screen ("Initializing photorealistic world...") stayed up for a
   flat, unconditional 1000ms on every ordinary boot**, even though the scene
   was already rendering well before that. Root cause: the loading-screen
