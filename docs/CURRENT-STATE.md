@@ -1087,9 +1087,12 @@ speech-to-speech API, so Claude is paired with the browser's own
   `MediaStream` from `cctvLayer.getProjectionMirrorStream(cameraId)`
   (`src/data/cctv.js`) — a `canvas.captureStream(12)` of the *same*
   offscreen projection canvas already being painted with decoded frames for
-  the 3D monitor plane, not a second hls.js/MSE connection. This is
-  deliberate: a second concurrent player per camera would double the load
-  against sources that already can't reliably serve one. Wiring lives in
+  the 3D monitor plane, not a second hls.js/MSE connection. This is the
+  same `MediaStream` the 3D plane's own proxy video consumes (one stream,
+  two `<video>` consumers — spec-safe); `getActiveProjectionMirrorStream()`
+  only lazily creates its own if the proxy video's eager creation didn't
+  already. This is deliberate: a second concurrent player per camera would
+  double the load against sources that already can't reliably serve one. Wiring lives in
   `_syncCctvVideoMirror()`/`_clearCctvVideoMirror()`
   (`src/cctvPanelMixin.js`); `_clearCctvFrame()` (the still-image cleanup)
   no longer touches the mirror element, since both run every render pass
@@ -1097,21 +1100,29 @@ speech-to-speech API, so Claude is paired with the browser's own
   simultaneously idle. Image-feed cameras are unaffected — the mirror is a
   no-op for them and the `<video>` element stays hidden
   (`opacity: 0`, `#cctv-frame-video` in `style.css`).
-- **The 3D monitor plane's material is bound to the projection canvas, never
-  to the raw `HTMLVideoElement`.** The plane's material is bound to the
-  projection canvas (`runtime.canvas`, the same fixed-size offscreen
-  double-buffer surface used for image feeds) from creation and never
-  rebinds to the raw `HTMLVideoElement`, for any decoded size, at any point —
-  `drawProjectionFrame()`'s video-mode branch draws the current video frame
-  onto that canvas via `ctx.drawImage(video, ...)` (auto-scales any decoded
-  size), and `refreshProjectionTextures()` swaps the double-buffer at a
-  mode-dependent throttle: `PROJECTION_VIDEO_SWAP_MS` (~83 ms / ~12fps,
-  matching the `captureStream(12)` budget the 2D panel mirror already uses)
-  for video, `PROJECTION_TEXTURE_SWAP_MS` (1000 ms / 1Hz) for image. This
-  architecture exists because binding the material directly to the live
-  video element caused a GL texture-copy failure that three earlier
-  size-guard variants could not fix — see `docs/DECISIONS.md` for the full
-  root-cause history.
+- **The 3D monitor plane's material is bound to the projection canvas (or a
+  proxy video of it), never to the raw `HTMLVideoElement`.** For image feeds,
+  the plane's material is bound to the projection canvas (`runtime.canvas`,
+  the fixed-size offscreen double-buffer surface) and `refreshProjectionTextures()`
+  swaps that double-buffer at `PROJECTION_TEXTURE_SWAP_MS` (1000 ms / 1Hz).
+  For video feeds, `createProjectionProxyVideo()` creates a hidden, muted
+  `<video>` fed by `canvas.captureStream(12)` and binds the plane's material
+  to it ONCE, at runtime creation (`proxyVideo`/`mirrorStream` on the
+  runtime) — Cesium's native `HTMLVideoElement` texture path does an
+  in-place `copyFrom` on every render tick instead of the destroy+recreate a
+  canvas-reference swap requires, eliminating the flash/flicker that
+  swap caused even at a throttled rate. `drawProjectionFrame()`'s video-mode
+  branch still draws the current video frame onto `runtime.canvas` via
+  `ctx.drawImage(video, ...)` (auto-scales any decoded size) exactly as
+  before — the proxy video's own source is that fixed-size canvas, so it can
+  never observe a mid-stream decoded-size change or MediaSource reset, the
+  two failure modes that ruled out binding the plane directly to the
+  upstream video element. If `canvas.captureStream` is unsupported,
+  `proxyVideo` stays null and video mode falls back to the same
+  double-buffer swap as image mode, just throttled to
+  `PROJECTION_VIDEO_SWAP_MS` (~83 ms / ~12fps) instead of 1Hz. See
+  `docs/DECISIONS.md` for the full root-cause history (direct video binding
+  → double-buffer swap → proxy video).
 - **Video-mode monitor plane deduplicates against the video's own decoded-frame
   counter, not just readyState.** `drawProjectionFrame()`'s video branch skips
   the redraw/rebind entirely when `video.getVideoPlaybackQuality().totalVideoFrames`

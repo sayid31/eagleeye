@@ -17,21 +17,32 @@
  *
  * - Monitor plane (v2): the live frame renders on a plane entity capping the
  *   far end of the frustum ("monitor at the end of the cone"), oriented
- *   perpendicular to the view axis (static — never billboarded). Both video
- *   and image feeds alternate two offscreen canvases so the texture
- *   re-uploads only on a fresh reference (video feeds at ~12fps, image feeds
- *   at <=1Hz) — see refreshProjectionTextures' docstring (2026-09-22 fix)
- *   for why video feeds no longer bind the plane material to the
- *   HTMLVideoElement directly: Cesium's Material.js unconditionally calls
- *   texture.copyFrom() on a video-backed uniform every tick with no size
- *   check, which throws glCopySubTextureCHROMIUM GL errors whenever hls.js
- *   resets the MediaSource (e.g. recoverMediaError()) without a matching
- *   videoWidth/videoHeight change — a window no JS-side size guard can ever
- *   close, since the resolution never actually changes. One live plane at
- *   a time. On
- *   activation a single scene.pickFromRay obstruction probe (§9.1 — the ONLY
- *   raycast in the subsystem) clamps the plane's range short of the first
- *   tile hit so the end cap never clips into buildings.
+ *   perpendicular to the view axis (static — never billboarded). Image feeds
+ *   alternate two offscreen canvases so the texture re-uploads only on a
+ *   fresh reference (<=1Hz) — see refreshProjectionTextures' docstring.
+ *   Video feeds instead bind the plane material ONCE, at creation, to an
+ *   internal proxy <video> fed by canvas.captureStream() (2026-09-28 fix,
+ *   see createProjectionProxyVideo) — this lets Cesium's own native
+ *   HTMLVideoElement texture path (an in-place copyFrom, no GPU
+ *   destroy/recreate) drive every frame update, instead of the
+ *   canvas-reference-swap trick image feeds use, whose every swap is a full
+ *   GPU texture destroy+recreate (confirmed against Cesium's own source)
+ *   and was still a visible flicker on live video even throttled to ~12fps.
+ *   The plane NEVER binds to the raw upstream HTMLVideoElement directly,
+ *   under either approach: only the fixed-size projection canvas (drawn
+ *   onto via ctx.drawImage, see drawProjectionFrame) ever receives real HLS
+ *   frames, and the proxy video's source is that canvas's OWN
+ *   captureStream, not the upstream — see createProjectionProxyVideo's
+ *   docstring for why this keeps the plane structurally immune to the
+ *   mid-stream decoded-size changes and hls.js MediaSource resets that made
+ *   a direct HTMLVideoElement binding unsafe in the first place (2026-09-22:
+ *   Cesium's Material.js unconditionally calls texture.copyFrom() on a
+ *   video-backed uniform every tick with no size check, which threw
+ *   glCopySubTextureCHROMIUM GL errors on either failure mode). One live
+ *   plane at a time. On activation a single scene.pickFromRay obstruction
+ *   probe (§9.1 — the ONLY raycast in the subsystem) clamps the plane's
+ *   range short of the first tile hit so the end cap never clips into
+ *   buildings.
  *
  * - Ambient card tier (2026-07-29 design): the LOD-selected nearby static
  *   cameras (cctvLod.js — zoom-scaled 16/24/32 budget, eviction grace)
@@ -162,11 +173,14 @@ export const CCTV_CALIBRATION_STORAGE_KEY_V2 = 'gev:cctv-calibration:v2';
 // object reference).
 const PROJECTION_TEXTURE_SWAP_MS = 1000;
 // Video-feed double-buffer swap rate (2026-09-22 fix — see
-// refreshProjectionTextures docstring). Matches the 12fps budget
-// getActiveProjectionMirrorStream already uses for this same canvas via
-// captureStream(12): plenty smooth for a monitor plane whose upstream is
-// already limited by ~7.5s HLS segment cadence, with no per-frame dependency
-// on the video's decoded resolution staying constant.
+// refreshProjectionTextures docstring). Since the 2026-09-28 proxy-video fix
+// (createProjectionProxyVideo), this only drives the FALLBACK path — used
+// when canvas.captureStream is unavailable and the plane still double-buffers
+// the canvas directly. Matches the 12fps budget getActiveProjectionMirrorStream
+// already uses for this same canvas via captureStream(12): plenty smooth for a
+// monitor plane whose upstream is already limited by ~7.5s HLS segment
+// cadence, with no per-frame dependency on the video's decoded resolution
+// staying constant.
 const PROJECTION_VIDEO_SWAP_MS = Math.round(1000 / 12);
 const PROJECTION_VERT_ASPECT = PROJECTION_CANVAS_WIDTH / PROJECTION_CANVAS_HEIGHT;
 // V2 frustum geometry (design §2a/§6): the far-cap center + corners never sink
@@ -1561,11 +1575,14 @@ function paintNextProjectionBuffer(runtime) {
 
 /**
  * Pushes fresh pixels into the monitor plane material. Called every
- * projection tick.
+ * projection tick. Image mode only — video mode's plane is bound once at
+ * creation to a proxy <video> (createProjectionProxyVideo, 2026-09-28 fix)
+ * and updates itself via Cesium's native video texture path, so this
+ * function returns immediately for a runtime with a live proxyVideo.
  *
- * Owner report 2026-09-22: video feeds used to skip this entirely, binding
- * the plane's material straight to the live HTMLVideoElement so Cesium could
- * update it per-frame natively (H5) — but that path re-copies the video's
+ * History (2026-09-22, then 2026-09-28): video feeds used to bind the
+ * plane's material straight to the live upstream HTMLVideoElement so Cesium
+ * could update it per-frame natively — but that path re-copies the video's
  * CURRENT decoded frame into the plane's EXISTING GPU texture every single
  * render tick (`Material`'s `texture.copyFrom({source: video})`, confirmed
  * against Cesium's own source), unconditionally, with no size check. These
@@ -1583,25 +1600,37 @@ function paintNextProjectionBuffer(runtime) {
  * match the texture" — the MediaSource-reset case has no size signal to
  * detect at all, so both were structurally unable to close every window.
  *
- * Fix: video feeds now go through the exact same double-buffer canvas path
- * as image feeds, just swapped far more often (throttled to
- * PROJECTION_VIDEO_SWAP_MS, ~12fps — already the framerate
- * `getActiveProjectionMirrorStream`'s captureStream budgets for this same
- * canvas) instead of image feeds' 1Hz. The canvas is always filled via
- * `ctx.drawImage(video, ...)`, which auto-scales any source resolution onto
- * the plane's fixed PROJECTION_CANVAS_WIDTH/HEIGHT — no per-frame size
- * dependency, so a mid-stream resolution change or an MSE reset is
- * invisible to this path by construction, not detected-and-routed-around.
- * Cesium only re-uploads a canvas-backed texture when the material's
- * `.image` reference itself changes (never on a `copyFrom` against a stale
- * size), which is the alternating-buffer trick this function already used
- * for image feeds — see its docstring above.
+ * 2026-09-22 fix: video feeds moved to the exact same double-buffer canvas
+ * path image feeds already used, just swapped far more often (throttled to
+ * PROJECTION_VIDEO_SWAP_MS, ~12fps) instead of image feeds' 1Hz. This closed
+ * the GL-error window (the canvas is always filled via
+ * `ctx.drawImage(video, ...)`, which auto-scales any source resolution, so
+ * a mid-stream resolution change or MSE reset is invisible to this path by
+ * construction) but every swap is still a full GPU texture destroy+recreate
+ * (Cesium only re-uploads a canvas-backed texture by tearing down the old
+ * one) — a real, if reduced, flash opportunity that was still visibly
+ * flickering on live video (owner report, 2026-09-28).
+ *
+ * 2026-09-28 fix: video mode instead binds the plane ONCE to a proxy
+ * <video> fed by `canvas.captureStream()` (createProjectionProxyVideo) —
+ * Cesium's native HTMLVideoElement path does an in-place `copyFrom`, no
+ * destroy/recreate, and the proxy's own source (the fixed-size canvas) is
+ * structurally immune to the two 2026-09-22 failure modes since it never
+ * reads the upstream directly. The double-buffer swap below now only
+ * fires for image mode, or for video mode on an environment where
+ * captureStream isn't supported (`proxyVideo` stayed null) — the pre-2026-
+ * 09-28 fallback, unchanged.
  *
  * @param {Object} record - Camera record with an initialized projection runtime.
  */
 function refreshProjectionTextures(record) {
   const runtime = record?.projection;
   if (!runtime) return;
+  // Video mode with a live proxy video: the plane already has its
+  // permanent binding (set once in createProjectionRuntime) and Cesium's
+  // native video texture path handles every frame update in-place — no
+  // buffer swap, no reference reassignment, nothing to do here.
+  if (runtime.mode === 'video' && runtime.proxyVideo) return;
   const now = Date.now();
   const swapIntervalMs = runtime.mode === 'video' ? PROJECTION_VIDEO_SWAP_MS : PROJECTION_TEXTURE_SWAP_MS;
   if (now - safeNumber(runtime.lastTextureSwapAt, 0) < swapIntervalMs) return;
@@ -1826,13 +1855,36 @@ export function _drawProjectionFrameForTest(record) {
 }
 
 /**
- * Test-only seam for refreshProjectionTextures (mode-dependent double-buffer
- * swap throttle — see its docstring for the video-vs-image swap rate split).
+ * Test-only seam for refreshProjectionTextures. Image mode still swaps its
+ * double buffer on a throttle; video mode is a no-op whenever a proxy video
+ * exists (2026-09-28 fix) and only falls back to the double-buffer swap when
+ * captureStream is unavailable — see its docstring for the full breakdown.
  * @param {Object} record - Camera record with an initialized projection runtime.
  * @returns {void}
  */
 export function _refreshProjectionTexturesForTest(record) {
   refreshProjectionTextures(record);
+}
+
+/**
+ * Test-only seam for createProjectionProxyVideo (2026-09-28 fix): creates
+ * the hidden video-mode proxy <video> bound to `runtime.canvas.captureStream()`
+ * and, on success, sets `runtime.proxyVideo`/`runtime.mirrorStream`.
+ * @param {Object} runtime - Projection runtime (mode === 'video').
+ * @returns {HTMLVideoElement|null} The proxy video, or null if unsupported.
+ */
+export function _createProjectionProxyVideoForTest(runtime) {
+  return createProjectionProxyVideo(runtime);
+}
+
+/**
+ * Test-only seam for destroyProjectionRuntime's teardown (hls.js detach,
+ * proxy video/mirrorStream stop, plane entity removal).
+ * @param {Object} runtime - Projection runtime to destroy.
+ * @returns {void}
+ */
+export function _destroyProjectionRuntimeForTest(runtime) {
+  destroyProjectionRuntime(runtime);
 }
 
 // Bounds on hls.js's own bounded internal retries (see below) before we give
@@ -1988,10 +2040,19 @@ function createProjectionRuntime(record) {
     // only re-uploads the plane texture when there is genuinely new content.
     canvasStamp: 1,
     lastSwappedCanvasStamp: 0,
-    // Lazily created by getActiveProjectionMirrorStream() — a captureStream()
-    // of `canvas` for the 2D panel's <video> preview. Stopped/cleared in
-    // destroyProjectionRuntime.
+    // Created eagerly by createProjectionProxyVideo() for video-mode
+    // runtimes (2026-09-28 fix) — a captureStream() of `canvas`, shared by
+    // BOTH the 2D panel's <video> preview (getActiveProjectionMirrorStream)
+    // AND this runtime's own proxyVideo below. Stopped/cleared in
+    // destroyProjectionRuntime. Stays null for image mode.
     mirrorStream: null,
+    // Video-mode only (2026-09-28 fix, see createProjectionProxyVideo):
+    // hidden <video> bound to `mirrorStream`, itself bound ONCE to
+    // planeMaterial.image so Cesium's native video texture path (an
+    // in-place copyFrom, not a destroy+recreate) drives frame updates. Null
+    // for image mode, and null for video mode if captureStream is
+    // unsupported (falls back to the double-buffer canvas swap below).
+    proxyVideo: null,
   };
 
   paintProjectionPlaceholder(ctx, record.camera);
@@ -2034,22 +2095,86 @@ function createProjectionRuntime(record) {
     runtime.image = img;
   }
 
-  // Monitor plane = the frustum's far cap: both video and image feeds start
-  // on the placeholder canvas and switch to double-buffer swaps once frames
-  // arrive (video at ~12fps, image at <=1Hz) — see refreshProjectionTextures'
-  // docstring for why video feeds no longer bind the plane to the
-  // HTMLVideoElement directly (2026-09-22).
+  // Monitor plane = the frustum's far cap: image feeds start on the
+  // placeholder canvas and switch to double-buffer swaps once frames arrive
+  // (<=1Hz, see refreshProjectionTextures' docstring). Video feeds get a
+  // proxy <video> (createProjectionProxyVideo, 2026-09-28 fix) bound ONCE
+  // below; if captureStream is unsupported, proxyVideo stays null and
+  // video mode falls back to the same double-buffer canvas swap as image
+  // mode (refreshProjectionTextures' video branch). Neither path ever
+  // binds the plane to the raw upstream HTMLVideoElement directly
+  // (2026-09-22).
+  const proxyVideo = mode === 'video' ? createProjectionProxyVideo(runtime) : null;
   const geometry = record.frustumGeometry
     || computeFrustumGeometry(record.camera, groundAltFor(record), record.probeClampRangeM);
   const positions = record.frustumPositions || frustumCartesians(geometry);
   runtime.planeMaterial = new Cesium.ImageMaterialProperty({
-    image: canvas,
+    image: proxyVideo || canvas,
     transparent: true,
     color: Cesium.Color.WHITE.withAlpha(0.95),
   });
   createProjectionPlane(record, runtime, geometry, positions);
 
   return runtime;
+}
+
+/**
+ * Creates and starts the video-mode proxy <video> that lets the monitor
+ * plane use Cesium's native HTMLVideoElement texture path instead of the
+ * double-buffer canvas-reference-swap trick (2026-09-28 fix).
+ *
+ * Why: Cesium's Material.update() re-uploads a canvas-backed
+ * ImageMaterialProperty.image by fully DESTROYING and RECREATING the GPU
+ * texture on every reference change (confirmed against Cesium's own
+ * source, Material.js's texture-update path) — refreshProjectionTextures'
+ * double-buffer swap does this on every genuinely new video frame (~12/sec
+ * live), and each destroy+recreate is a documented flash opportunity (see
+ * that function's docstring). Cesium's OWN native HTMLVideoElement binding
+ * instead calls texture.copyFrom({source: video}) — an in-place GPU update,
+ * no destroy/recreate — which is presumably why the 2D panel's <video>
+ * preview (bound directly to a real video element) never flickers.
+ *
+ * Binding the plane straight to the live upstream HTMLVideoElement was
+ * already tried and reverted (2026-09-22, see this file's module docstring
+ * and docs/DECISIONS.md): that copyFrom call has no size-consistency check
+ * at all, and two real failure modes broke it — a mid-segment decoded-size
+ * change, and hls.js's recoverMediaError() resetting the MediaSource with
+ * no corresponding videoWidth/videoHeight change (a window no size guard
+ * can ever detect). This function gets the same native-path benefit
+ * WITHOUT that risk: the proxy video's source is `runtime.canvas` itself
+ * (via captureStream()), whose size is the fixed PROJECTION_CANVAS_WIDTH/
+ * HEIGHT constants and never changes — real HLS frames still only reach
+ * the canvas via drawProjectionFrame's ctx.drawImage(video, ...), which
+ * already auto-scales any decoded size onto that fixed canvas. So the
+ * proxy video is structurally immune to both 2026-09-22 failure modes: its
+ * own source can neither change resolution mid-stream nor have its
+ * MediaSource reset, because it isn't reading the upstream at all.
+ *
+ * Reuses getActiveProjectionMirrorStream's exact captureStream(12)
+ * mechanism (shared MediaStream — a single stream safely feeds multiple
+ * <video> elements) rather than opening a second one, and the proxy
+ * <video> element itself reuses this file's existing HLS-video lifecycle
+ * pattern (create/play/pause/teardown), just with no hls.js/MSE attached —
+ * no new GPU-resource-management surface is introduced on our side; Cesium
+ * remains the sole owner of texture create/destroy/copyFrom, exactly as
+ * before this fix.
+ *
+ * @param {Object} runtime - Projection runtime (mode === 'video').
+ * @returns {HTMLVideoElement|null} The proxy video, or null if
+ *   canvas.captureStream is unsupported (caller falls back to the
+ *   double-buffer canvas swap).
+ */
+function createProjectionProxyVideo(runtime) {
+  if (typeof runtime.canvas.captureStream !== 'function') return null;
+  runtime.mirrorStream = runtime.canvas.captureStream(12);
+  const proxyVideo = document.createElement('video');
+  proxyVideo.muted = true;
+  proxyVideo.autoplay = true;
+  proxyVideo.playsInline = true;
+  proxyVideo.srcObject = runtime.mirrorStream;
+  proxyVideo.play().catch(() => {});
+  runtime.proxyVideo = proxyVideo;
+  return proxyVideo;
 }
 
 /**
@@ -2086,6 +2211,14 @@ function destroyProjectionRuntime(runtime) {
     runtime.video.removeAttribute('src');
     runtime.video.load();
   }
+  // Proxy video (2026-09-28 fix): detach it from mirrorStream here; the
+  // stream's own tracks are stopped just below (shared with the 2D panel
+  // preview via getActiveProjectionMirrorStream, so stopping happens once).
+  if (runtime.proxyVideo) {
+    runtime.proxyVideo.pause();
+    runtime.proxyVideo.srcObject = null;
+    runtime.proxyVideo = null;
+  }
   if (runtime.mirrorStream) {
     for (const track of runtime.mirrorStream.getTracks()) track.stop();
     runtime.mirrorStream = null;
@@ -2112,6 +2245,11 @@ function destroyProjectionRuntime(runtime) {
  * feeds mirror the canvas (which drawProjectionFrame keeps painted with the
  * live video element's frames); image feeds return null — the panel's
  * existing frameUrl/<img> path already covers them.
+ *
+ * Usually already created by createProjectionProxyVideo (2026-09-28 fix) at
+ * runtime creation — the 3D plane's own proxy video shares this exact
+ * stream. The lazy-create fallback here only fires if that failed (e.g. a
+ * captureStream support check race) or the runtime predates it.
  *
  * @param {string} cameraId
  * @returns {MediaStream|null}
@@ -2199,23 +2337,20 @@ function drawProjectionFrame(record) {
   if (runtime.mode === 'video' && runtime.video) {
     const video = runtime.video;
     if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
-      // Only redraw+rebind when the video has actually decoded a NEW frame
-      // since the last tick (owner report, 2026-09-28: monitor plane flickers
-      // during live playback, every map regime). Root cause: unlike the image
-      // path below (projectionFrameSignature dedup), this branch used to bump
-      // canvasStamp on every RAF tick unconditionally whenever readyState>=2 —
-      // every bump forces refreshProjectionTextures to swap the double buffer
-      // and reassign planeMaterial.image, and per this file's own 2026-07-04/
-      // 07-30 field-test finding (refreshProjectionTextures' docstring), every
-      // such reassignment is a flash opportunity while Cesium rebinds the
-      // texture. That made every tick a flash opportunity, including HLS
-      // stalls/buffering when nothing new was actually decoded — exactly when
-      // a needless rebind reads as a visible flicker against a frozen frame.
-      // getVideoPlaybackQuality().totalVideoFrames (Baseline widely available
-      // since 2020) is a cheap decoded-frame counter — pixel-hashing every
-      // tick like the image path does would be too costly at 12fps, so this
-      // uses the browser's own frame-identity signal instead, same dedup
-      // philosophy sized for video's cadence.
+      // Only redraw the canvas when the video has actually decoded a NEW
+      // frame since the last tick (owner report, 2026-09-28: monitor plane
+      // flickered during live playback, every map regime — root-caused and
+      // fixed architecturally below via the proxy video; this dedup stays
+      // as a real, separate win regardless: it skips a needless 1080p
+      // clearRect+drawImage on every RAF tick when the source has stalled/
+      // is buffering, whether or not a proxy video is bound). Unlike the
+      // image path below (projectionFrameSignature dedup), this branch used
+      // to bump canvasStamp on every RAF tick unconditionally whenever
+      // readyState>=2. getVideoPlaybackQuality().totalVideoFrames (Baseline
+      // widely available since 2020) is a cheap decoded-frame counter —
+      // pixel-hashing every tick like the image path does would be too
+      // costly at 12fps, so this uses the browser's own frame-identity
+      // signal instead, same dedup philosophy sized for video's cadence.
       const frameCount = typeof video.getVideoPlaybackQuality === 'function'
         ? video.getVideoPlaybackQuality().totalVideoFrames
         : null;
@@ -2228,13 +2363,15 @@ function drawProjectionFrame(record) {
       runtime.lastVideoFrameCount = frameCount;
       // Always draws into the fixed-size canvas (drawImage auto-scales any
       // source resolution) rather than binding the plane material to the
-      // video element directly — see refreshProjectionTextures' docstring
-      // (2026-09-22 fix) for why that's now structurally required, not just
-      // preferred: Cesium's copyFrom-based video texture path has no size
-      // check at all, so a mid-stream decode-size change or an hls.js
-      // MediaSource reset (recoverMediaError) reliably throws
-      // glCopySubTextureCHROMIUM GL errors on that path, and this canvas
-      // path is immune to both by construction.
+      // raw upstream video element directly — see
+      // createProjectionProxyVideo's docstring (2026-09-28 fix) for why
+      // that's structurally required, not just preferred: Cesium's
+      // copyFrom-based video texture path has no size check at all, so a
+      // mid-stream decode-size change or an hls.js MediaSource reset
+      // (recoverMediaError) reliably throws glCopySubTextureCHROMIUM GL
+      // errors on that path, and this canvas is immune to both by
+      // construction — the proxy video that DOES use the native copyFrom
+      // path reads this canvas's OWN captureStream, never the upstream.
       runtime.ctx.clearRect(0, 0, PROJECTION_CANVAS_WIDTH, PROJECTION_CANVAS_HEIGHT);
       runtime.ctx.drawImage(video, 0, 0, PROJECTION_CANVAS_WIDTH, PROJECTION_CANVAS_HEIGHT);
       runtime.canvasStamp = (runtime.canvasStamp || 0) + 1;

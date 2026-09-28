@@ -83,6 +83,25 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **CCTV live-video monitor plane still flickered during playback after the
+  decoded-frame dedup fix below.** Root cause: even deduped, every genuinely
+  new video frame still swapped the plane's canvas-backed double-buffer
+  texture, and Cesium fully destroys and recreates the GPU texture on every
+  such reference reassignment (confirmed against Cesium's own `Material.js`
+  source) — a real flash opportunity regardless of swap frequency. Fixed by
+  binding the plane's material ONCE, at creation, to a hidden proxy `<video>`
+  fed by `canvas.captureStream(12)` (`createProjectionProxyVideo()`) instead
+  of the canvas directly — Cesium's native `HTMLVideoElement` texture path
+  updates in place (`copyFrom`, no destroy/recreate) rather than swapping
+  references, matching the 2D panel's `<video>` preview, which never
+  flickered. The proxy's own source is the fixed-size projection canvas, so
+  it's structurally immune to the two failure modes that ruled out binding
+  the plane directly to the live upstream video (the 2026-09-22 fix below):
+  a mid-stream decoded-size change, or an hls.js `recoverMediaError()`
+  MediaSource reset. Falls back to the unchanged double-buffer swap if
+  `canvas.captureStream` is unavailable. See `docs/DECISIONS.md` (2026-09-28
+  entry) for the full root-cause history and the rejected higher-risk
+  alternative (a manual `Cesium.Texture` + `copyFrom`).
 - **CCTV live-video monitor plane flickered/flashed during playback, in every
   map regime.** Root cause: `drawProjectionFrame()`'s video branch bumped
   `canvasStamp` on every RAF tick whenever `video.readyState>=2`, with no

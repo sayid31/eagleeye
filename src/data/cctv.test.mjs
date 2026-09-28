@@ -23,6 +23,8 @@ import cctvLayer, {
   CCTV_PROJECTION_OVERLAY_SOURCE_OPTIONS,
   _buildCatalogFromSourcesForTest,
   _createCctvProjectionPlaneForTest,
+  _createProjectionProxyVideoForTest,
+  _destroyProjectionRuntimeForTest,
   _drawProjectionFrameForTest,
   _extractPickedCameraIdForTest,
   _getPublicCameraStateForTest,
@@ -926,12 +928,18 @@ test('drawProjectionFrame redraws every tick when getVideoPlaybackQuality is una
   }
 });
 
-test('refreshProjectionTextures swaps video-mode buffers at the faster ~12fps throttle, distinct from image mode\'s 1Hz', () => {
+test('refreshProjectionTextures swaps video-mode buffers at the faster ~12fps throttle, distinct from image mode\'s 1Hz (fallback path)', () => {
   // 2026-09-22 fix: video feeds now go through the SAME double-buffer swap
   // path as image feeds (refreshProjectionTextures no longer skips video
   // mode entirely) — just throttled far more often, matching the 12fps
   // budget getActiveProjectionMirrorStream already uses for this same
   // canvas via captureStream(12), instead of image feeds' 1Hz.
+  //
+  // 2026-09-28 note: this double-buffer swap is now only the FALLBACK path,
+  // used when canvas.captureStream is unavailable so no proxy video could be
+  // created (this test's fake canvas — {marker: ...} — has no captureStream
+  // method, which is exactly that case). See the "no-ops for video mode once
+  // a proxy video exists" test below for the primary path.
   const viewer = makeDeselectViewer();
   _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
   try {
@@ -970,6 +978,127 @@ test('refreshProjectionTextures swaps video-mode buffers at the faster ~12fps th
       stillImage,
       'image mode does not swap yet at 200ms — its throttle is 1000ms',
     );
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('createProjectionProxyVideo binds a hidden <video> to canvas.captureStream(12) and stores it on the runtime', () => {
+  // 2026-09-28 fix: the proxy video is what lets the monitor plane ride
+  // Cesium's native in-place copyFrom path instead of the double-buffer
+  // destroy+recreate swap. Fake canvas exposes captureStream so this
+  // exercises the primary (proxy) path, not the fallback.
+  const captureStreamCalls = [];
+  const fakeStream = { marker: 'mirror-stream', getTracks: () => [] };
+  const fakeCanvas = {
+    captureStream(fps) {
+      captureStreamCalls.push(fps);
+      return fakeStream;
+    },
+  };
+  const createdVideos = [];
+  const originalDocument = globalThis.document;
+  globalThis.document = {
+    createElement: (tag) => {
+      if (tag !== 'video') throw new Error(`unexpected createElement(${tag})`);
+      const video = {
+        muted: false,
+        autoplay: false,
+        playsInline: false,
+        srcObject: null,
+        play: () => Promise.resolve(),
+      };
+      createdVideos.push(video);
+      return video;
+    },
+  };
+  try {
+    const runtime = { canvas: fakeCanvas, mirrorStream: null, proxyVideo: null };
+    const proxyVideo = _createProjectionProxyVideoForTest(runtime);
+
+    assert.deepEqual(captureStreamCalls, [12], 'captureStream is called once at 12fps');
+    assert.equal(runtime.mirrorStream, fakeStream, 'the mirror stream is stored on the runtime');
+    assert.equal(createdVideos.length, 1, 'exactly one proxy <video> element is created');
+    assert.equal(proxyVideo, createdVideos[0]);
+    assert.equal(runtime.proxyVideo, proxyVideo, 'the proxy video is stored on the runtime');
+    assert.equal(proxyVideo.muted, true, 'proxy video is muted (no audible playback)');
+    assert.equal(proxyVideo.autoplay, true);
+    assert.equal(proxyVideo.playsInline, true);
+    assert.equal(proxyVideo.srcObject, fakeStream, 'proxy video is bound to the mirror stream, not the upstream');
+  } finally {
+    globalThis.document = originalDocument;
+  }
+});
+
+test('createProjectionProxyVideo returns null and leaves the runtime untouched when captureStream is unsupported', () => {
+  const runtime = { canvas: { marker: 'no-capture-stream' }, mirrorStream: null, proxyVideo: null };
+  const proxyVideo = _createProjectionProxyVideoForTest(runtime);
+  assert.equal(proxyVideo, null);
+  assert.equal(runtime.mirrorStream, null, 'no mirror stream is created on the unsupported fallback');
+  assert.equal(runtime.proxyVideo, null);
+});
+
+test('refreshProjectionTextures no-ops for video mode once a proxy video exists (primary path, 2026-09-28 fix)', () => {
+  // With a live proxyVideo, the plane's material was already bound once at
+  // creation — Cesium's native video-texture path (in-place copyFrom) drives
+  // all further updates, so the double-buffer swap must never fire again,
+  // no matter how much time has elapsed or how many times this is called.
+  const viewer = makeDeselectViewer();
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const record = { ...makeDeselectRecord('proxy-video-no-swap') };
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    runtime.planeEntity.show = true;
+    runtime.mode = 'video';
+    runtime.canvas = { marker: 'video-canvas' };
+    useImagePlaneMaterial(runtime, runtime.canvas);
+    runtime.proxyVideo = { marker: 'proxy-video' };
+    useImagePlaneMaterial(runtime, runtime.proxyVideo);
+    runtime.canvasStamp = 5;
+    runtime.lastSwappedCanvasStamp = 0;
+    // Far past even the fast video throttle — would swap immediately if the
+    // proxy-video early return were missing.
+    runtime.lastTextureSwapAt = Date.now() - 10_000;
+
+    const imageBefore = runtime.planeMaterial.image.getValue();
+    _refreshProjectionTexturesForTest(record);
+    assert.equal(
+      runtime.planeMaterial.image.getValue(),
+      imageBefore,
+      'planeMaterial.image stays the one-time proxy-video binding — no swap',
+    );
+
+    // Calling it repeatedly must stay inert too (not just "not yet due").
+    _refreshProjectionTexturesForTest(record);
+    _refreshProjectionTexturesForTest(record);
+    assert.equal(runtime.planeMaterial.image.getValue(), imageBefore);
+  } finally {
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('destroyProjectionRuntime tears down the proxy video and stops the mirror stream tracks', () => {
+  const viewer = makeDeselectViewer();
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const record = { ...makeDeselectRecord('proxy-video-teardown') };
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    let pauseCalls = 0;
+    runtime.proxyVideo = {
+      pause() { pauseCalls += 1; },
+      srcObject: { marker: 'mirror-stream' },
+    };
+    let stoppedTracks = 0;
+    runtime.mirrorStream = {
+      getTracks: () => [{ stop: () => { stoppedTracks += 1; } }, { stop: () => { stoppedTracks += 1; } }],
+    };
+
+    _destroyProjectionRuntimeForTest(runtime);
+
+    assert.equal(pauseCalls, 1, 'the proxy video is paused on teardown');
+    assert.equal(runtime.proxyVideo, null, 'the proxy video reference is cleared');
+    assert.equal(stoppedTracks, 2, 'every mirror-stream track is stopped');
+    assert.equal(runtime.mirrorStream, null, 'the mirror stream reference is cleared');
   } finally {
     _setCctvOverlayHostForTest();
   }
