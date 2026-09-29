@@ -51,7 +51,7 @@ import {
   viewScaleForAltitude,
 } from './detectionPolicy.js';
 import { detectionBracketOpacity } from './detectionPresentation.js';
-import { isOccludedByAnyPlane } from './detectionPlaneOcclusion.js';
+import { computeOcclusionPlaneScreenQuads, isPointMaskedByPlanesOnScreen } from './detectionPlaneOcclusion.js';
 
 /**
  * @module detection
@@ -104,6 +104,8 @@ const LABEL_SOLVE_INTERVAL_MS = 125;
 const BRACKET_ALPHA_STEPS = 4;
 /** Stable per-layer candidate safety cap; independent of density and camera bearing. */
 const LAYER_CANDIDATE_CAP = 2600;
+/** Shared empty-quad-list singleton for the no-CCTV-plane-showing case — avoids a fresh [] every paint. */
+const EMPTY_OCCLUSION_QUADS = Object.freeze([]);
 const LAYER_WEIGHTS = Object.freeze({
   military: 1.4,
   traffic: 1.15,
@@ -1068,13 +1070,6 @@ function _drawOverlay(frame) {
   const occluder = frame.occluder;
   const camPos = frame.cameraPosition;
   const keyhole = frame.keyhole;
-  // Scene-geometry occlusion (currently: the active CCTV monitor plane, if
-  // one is showing) — collected once per frame, re-evaluated fresh every
-  // frame so an object that moves out from behind the plane un-occludes on
-  // the very next paint. Empty in the overwhelmingly common case (no CCTV
-  // plane showing), so the per-object check below is a cheap empty-array
-  // no-op then.
-  const occlusionPlanes = _collectOcclusionPlanes();
   // Read the OUTSIDE setting ONCE per paint, from the same module state the
   // host's own keyhole alpha comes from, so a bracket and its callout can never
   // disagree about the operator's setting within a frame.
@@ -1092,6 +1087,26 @@ function _drawOverlay(frame) {
   const vp12 = viewProjection[12];
   const vp13 = viewProjection[13];
   const vp15 = viewProjection[15];
+  // Scene-geometry masking (currently: the active CCTV monitor plane, if one
+  // is showing) — the plane's screen-space rectangle is projected once per
+  // frame here (not per object), re-evaluated fresh every frame so an
+  // object that moves off the plane's screen rectangle un-masks on the very
+  // next paint. Screen-space containment, NOT 3D depth: a first attempt
+  // masked only objects whose line of sight passed BEHIND the plane's real
+  // 3D geometry, but CCTV planes sit at the real-world coordinates of the
+  // road they monitor, so most nearby VEH-XXXX dots are naturally at
+  // similar-or-nearer camera depth than the plane and were never masked,
+  // even though their on-screen position still visibly overlapped the
+  // plane's rectangle (2026-09 field report). Masking by screen containment
+  // instead hides anything overlapping the plane on screen regardless of
+  // depth — see `detectionPlaneOcclusion.js`'s module doc for why this is a
+  // provable superset of the old depth-only behavior. Empty in the
+  // overwhelmingly common case (no CCTV plane showing), so the per-object
+  // check below is a cheap empty-array no-op then.
+  const occlusionPlanes = _collectOcclusionPlanes();
+  const occlusionScreenQuads = occlusionPlanes.length > 0
+    ? computeOcclusionPlaneScreenQuads(occlusionPlanes, viewProjection, width, height)
+    : EMPTY_OCCLUSION_QUADS;
 
   // Brackets stay broad inside the keyhole, fade outside it, and batch by tier
   // color plus a 32-step alpha band. Text candidates are projected once and
@@ -1129,14 +1144,6 @@ function _drawOverlay(frame) {
     if (!obj.position) continue;
     // Skip objects occluded by the ellipsoid (behind the horizon)
     if (!occluder.isPointVisible(obj.position)) continue;
-    // Skip objects whose line of sight to the camera passes through the
-    // active CCTV monitor plane — matches the plane's real 3D depth instead
-    // of always compositing above it (2026-09 report: VEH-XXXX labels drew
-    // through the plane). Scoped to this one scene-geometry check only;
-    // every other layer's "see contacts through terrain" behavior
-    // (disableDepthTestDistance: POSITIVE_INFINITY elsewhere in the
-    // codebase) is untouched.
-    if (occlusionPlanes.length > 0 && isOccludedByAnyPlane(camPos, obj.position, occlusionPlanes)) continue;
 
     // This product renders in Cesium's 3D scene mode. Multiplying by the
     // once-per-frame view-projection matrix is equivalent to the general
@@ -1150,6 +1157,11 @@ function _drawOverlay(frame) {
     const invW = 1 / clipW;
     const sx = ((vp0 * px + vp4 * py + vp8 * pz + vp12) * invW * 0.5 + 0.5) * width;
     const sy = (0.5 - (vp1 * px + vp5 * py + vp9 * pz + vp13) * invW * 0.5) * height;
+    // Scene-geometry screen masking — see the comment above `occlusionPlanes`
+    // for why this runs by screen position, not 3D depth. Must run after sx/sy
+    // are known; every other CCTV-plane check in this loop was 3D-depth-based
+    // and ran earlier, this one can't.
+    if (occlusionScreenQuads.length > 0 && isPointMaskedByPlanesOnScreen(sx, sy, occlusionScreenQuads)) continue;
 
     // Tracked objects (skipLabel) get larger boxes. AIR reticles scale with the
     // plane's on-screen size (same scaleByDistance curve as the billboards) so

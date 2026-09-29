@@ -90,17 +90,28 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   horizon/ellipsoid occlusion (`EllipsoidalOccluder.isPointVisible`) — it had
   no awareness of any 3D scene geometry, so an object's on-screen bracket/
   label always composited above whatever 3D geometry happened to be in front
-  of it, including an active CCTV monitor plane. Fixed by adding a per-frame,
-  per-object line-of-sight test against the active CCTV plane's real
-  geometry: pure ray-vs-finite-rectangle intersection math
-  (`src/data/detectionPlaneOcclusion.js`, new) run against the plane's
-  already-cached corner/orientation data (`cctvLayer.getOcclusionPlanes()`,
-  `src/data/cctv.js`) — zero scene raycasts, preserving the CCTV subsystem's
-  existing "one raycast per activation, never per frame" invariant. Scoped
-  to this one check only; every other layer's intentional "see contacts
-  through terrain" behavior (`disableDepthTestDistance`) is unaffected. At
-  most one CCTV plane can ever be showing at a time, so the check is a
-  no-op (empty array) whenever no CCTV plane is active.
+  of it, including an active CCTV monitor plane. First fix attempt added a
+  per-frame, per-object 3D line-of-sight test against the plane's real
+  geometry (ray-vs-finite-rectangle intersection) — this correctly hid
+  objects strictly behind the plane, but CCTV planes sit at the real-world
+  coordinates of the road they're monitoring, so most nearby vehicle dots
+  are naturally at similar-or-nearer camera depth than the plane and stayed
+  unmasked, even while visibly overlapping it on screen (field report: the
+  contamination was still visible after the depth-based fix shipped).
+  Superseded with **screen-space masking**: the plane's four corners are
+  projected into 2D screen space once per frame
+  (`src/data/detectionPlaneOcclusion.js`, `projectPlaneScreenQuad`/
+  `computeOcclusionPlaneScreenQuads`), and any object whose own on-screen
+  position falls inside that projected rectangle (`isPointMaskedByPlanesOnScreen`)
+  is masked — regardless of its 3D depth relative to the plane. Still zero
+  scene raycasts (plane corners projected through the same per-frame
+  view-projection matrix `detection.js` already uses for every object's own
+  screen position), preserving the CCTV subsystem's existing "one raycast
+  per activation, never per frame" invariant. Scoped to this one check only;
+  every other layer's intentional "see contacts through terrain" behavior
+  (`disableDepthTestDistance`) is unaffected. At most one CCTV plane can
+  ever be showing at a time, so the check is a no-op whenever no CCTV plane
+  is active.
 - **CCTV live-video monitor plane still flickered during playback after the
   decoded-frame dedup fix below.** Root cause: even deduped, every genuinely
   new video frame still swapped the plane's canvas-backed double-buffer

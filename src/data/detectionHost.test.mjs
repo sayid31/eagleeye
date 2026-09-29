@@ -943,15 +943,16 @@ test('the backdrop feather reaches the canvas as a lighter plate against sky', (
   }
 });
 
-// ── CCTV monitor-plane occlusion (2026-09 VEH-XXXX-through-the-plane report) ─
+// ── CCTV monitor-plane masking (2026-09 VEH-XXXX-through-the-plane report) ──
 // Both objects sit at the same screen radius/altitude as `backdropLayer`'s
 // fixture (mock camera at (0,0,10 000 km), identity view-projection, so x/y
-// ARE NDC) — only their occlusion-plane relationship differs. The plane
-// geometry (`center` on the camera-to-origin axis at z=7 000 km, half-extents
-// 0.5) and the two object positions were verified independently against
-// `detectionPlaneOcclusion.js`'s real math before being pinned here: BEHIND
-// sits on the ray through the plane's rectangle, CLEAR sits outside its
-// halfWidth/halfHeight bounds on the same ray family.
+// ARE NDC) — only their on-screen relationship to the plane's projected
+// rectangle differs. The plane geometry (`center` on the camera-to-origin
+// axis at z=7 000 km, half-extents 0.5) projects to screen quad
+// [200,150]-[600,450] at the harness's default 800x600 viewport (verified
+// independently against `detectionPlaneOcclusion.js`'s real math before
+// being pinned here): MASKED projects to (240, 240), inside that quad;
+// CLEAR projects to (680, 360), outside it.
 function occludablePlaneLayer() {
   return {
     id: 'flights',
@@ -959,13 +960,32 @@ function occludablePlaneLayer() {
       return [
         {
           position: new Cesium.Cartesian3(-0.4, 0.2, 6_356_752),
-          sourceId: 'veh-behind', id: 'VEH-0001', metric: 'VEH', type: 'VEH',
+          sourceId: 'veh-masked', id: 'VEH-0001', metric: 'VEH', type: 'VEH',
         },
         {
           position: new Cesium.Cartesian3(0.7, -0.2, 6_356_752),
           sourceId: 'veh-clear', id: 'VEH-0002', metric: 'VEH', type: 'VEH',
         },
       ];
+    },
+  };
+}
+
+// VEH-0003 sits at the exact same screen position as VEH-0001 (fully inside
+// the plane's projected quad) but at z=6_900_000 — NEARER the camera than
+// the plane's z=7_000_000 depth. The old 3D-depth-only occlusion test could
+// never hide this (the field report this fix addresses: it's the common
+// case for CCTV planes placed at real-world road coordinates, not an edge
+// case). Screen-space masking hides it anyway, because masking depends only
+// on where it lands on screen, never on depth.
+function nearerButOverlappingLayer() {
+  return {
+    id: 'flights',
+    getDetectableObjects() {
+      return [{
+        position: new Cesium.Cartesian3(-0.4, 0.2, 6_900_000),
+        sourceId: 'veh-nearer-overlap', id: 'VEH-0003', metric: 'VEH', type: 'VEH',
+      }];
     },
   };
 }
@@ -979,7 +999,7 @@ const CCTV_TEST_PLANE = {
   halfHeight: 0.5,
 };
 
-test('a vehicle behind the active CCTV monitor plane does not paint its bracket or label', () => {
+test('a vehicle whose screen position overlaps the active CCTV monitor plane does not paint its bracket or label', () => {
   const env = installEnvironment();
   try {
     initWorldOverlay(env.viewer);
@@ -991,12 +1011,29 @@ test('a vehicle behind the active CCTV monitor plane does not paint its bracket 
     settleFrame(env);
 
     const painted = (text) => env.ctx.calls.some(([name, value]) => name === 'fillText' && value === text);
-    assert.ok(!painted('VEH-0001'), 'the occluded vehicle must not paint its callsign label');
-    assert.ok(painted('VEH-0002'), 'the un-occluded vehicle keeps painting normally');
+    assert.ok(!painted('VEH-0001'), 'the masked vehicle must not paint its callsign label');
+    assert.ok(painted('VEH-0002'), 'the clear vehicle keeps painting normally');
 
     const strokedForBoth = env.detectionCtx.calls.filter(([name, path]) => name === 'stroke'
       && path instanceof MockPath2D).length;
-    assert.ok(strokedForBoth > 0, 'the un-occluded vehicle still gets a bracket stroke');
+    assert.ok(strokedForBoth > 0, 'the clear vehicle still gets a bracket stroke');
+  } finally {
+    env.cleanup();
+  }
+});
+
+test('a vehicle nearer the camera than the plane, but overlapping it on screen, is still masked (the field-report case)', () => {
+  const env = installEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    initDetectionWithOcclusion(env, [nearerButOverlappingLayer()], [CCTV_TEST_PLANE], () => {});
+    setMode('DENSE');
+    settleFrame(env);
+    env.ctx.calls.length = 0;
+    settleFrame(env);
+
+    const painted = (text) => env.ctx.calls.some(([name, value]) => name === 'fillText' && value === text);
+    assert.ok(!painted('VEH-0003'), 'nearer-than-plane must not exempt an object from screen-space masking');
   } finally {
     env.cleanup();
   }
