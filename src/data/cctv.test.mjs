@@ -1966,3 +1966,140 @@ test('getPublicCameraState: frameUrl is populated for a still-image camera', () 
   const state = _getPublicCameraStateForTest(camera);
   assert.match(state.frameUrl, /^\/api\/cctv\/frame\/austin-cam-1\?/);
 });
+
+// cctvLayer.getOcclusionPlanes() — backs the Universal Detection Overlay's
+// per-frame CCTV-plane occlusion check (detectionPlaneOcclusion.js). Locks
+// the "at most one entry, only while the active plane is truly showing"
+// invariant documented on activeCctvOcclusionPlanes.
+function makeOcclusionRecord(id) {
+  return {
+    camera: {
+      ...UNCLAMPED_CAMERA,
+      id,
+      name: `Occlusion Camera ${id}`,
+      groundElevationM: UNCLAMPED_GROUND,
+    },
+    coverageEntities: [],
+    projection: null,
+  };
+}
+
+test('getOcclusionPlanes: disabled layer returns no planes', () => {
+  const record = makeOcclusionRecord('occl-disabled');
+  const viewer = { entities: new Cesium.EntityCollection() };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    _createCctvProjectionPlaneForTest(viewer, record);
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [record],
+      activeCameraId: record.camera.id,
+      enabled: false,
+      coverageMode: 'off',
+      showProjection: true,
+    });
+    refreshCoverageStyles();
+    assert.deepEqual(cctvLayer.getOcclusionPlanes(), []);
+  } finally {
+    _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('getOcclusionPlanes: enabled with no active camera returns no planes', () => {
+  const record = makeOcclusionRecord('occl-no-active');
+  const viewer = { entities: new Cesium.EntityCollection() };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    _createCctvProjectionPlaneForTest(viewer, record);
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [record],
+      activeCameraId: null,
+      enabled: true,
+      coverageMode: 'off',
+      showProjection: true,
+    });
+    refreshCoverageStyles();
+    assert.deepEqual(cctvLayer.getOcclusionPlanes(), []);
+  } finally {
+    _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('getOcclusionPlanes: active camera whose monitor plane is not showing returns no planes', () => {
+  const record = makeOcclusionRecord('occl-not-showing');
+  const viewer = { entities: new Cesium.EntityCollection() };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    _createCctvProjectionPlaneForTest(viewer, record);
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [record],
+      activeCameraId: record.camera.id,
+      enabled: true,
+      coverageMode: 'off',
+      showProjection: false, // projection off → plane never shows
+    });
+    refreshCoverageStyles();
+    assert.equal(record.projection.planeEntity.show, false);
+    assert.deepEqual(cctvLayer.getOcclusionPlanes(), []);
+  } finally {
+    _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});
+
+test('getOcclusionPlanes: active, showing plane returns one geometrically correct entry', () => {
+  const record = makeOcclusionRecord('occl-active-showing');
+  const viewer = { entities: new Cesium.EntityCollection() };
+  _setCctvOverlayHostForTest({ setEntries() {}, setVisible() {}, clearSource() {} });
+  try {
+    const runtime = _createCctvProjectionPlaneForTest(viewer, record);
+    _setCctvCoverageStateForTest({
+      viewer,
+      records: [record],
+      activeCameraId: record.camera.id,
+      enabled: true,
+      coverageMode: 'off',
+      showProjection: true,
+    });
+    refreshCoverageStyles();
+    assert.equal(runtime.planeEntity.show, true);
+
+    const planes = cctvLayer.getOcclusionPlanes();
+    assert.equal(planes.length, 1);
+    const plane = planes[0];
+
+    // Center matches the cached far-cap position exactly.
+    assert.ok(Cesium.Cartesian3.equals(plane.center, record.frustumPositions.capCenter));
+    // halfWidth/halfHeight match the cached geometry's half-extents.
+    assert.equal(plane.halfWidth, record.frustumGeometry.halfW);
+    assert.equal(plane.halfHeight, record.frustumGeometry.halfH);
+
+    // normal/right/up form a unit, mutually orthogonal basis.
+    const mag3 = (v) => Cesium.Cartesian3.magnitude(v);
+    assert.ok(Math.abs(mag3(plane.normal) - 1) < 1e-9, 'normal must be unit');
+    assert.ok(Math.abs(mag3(plane.right) - 1) < 1e-6, 'right must be unit');
+    assert.ok(Math.abs(mag3(plane.up) - 1) < 1e-9, 'up must be unit');
+    assert.ok(Math.abs(Cesium.Cartesian3.dot(plane.normal, plane.right)) < 1e-6, 'normal ⟂ right');
+    assert.ok(Math.abs(Cesium.Cartesian3.dot(plane.normal, plane.up)) < 1e-6, 'normal ⟂ up');
+    assert.ok(Math.abs(Cesium.Cartesian3.dot(plane.right, plane.up)) < 1e-6, 'right ⟂ up');
+
+    // normal points back toward the mount (it's the reverse view axis) —
+    // nudging capCenter along +normal must move it closer to the mount.
+    const mount = record.frustumPositions.mount;
+    const distCap = Cesium.Cartesian3.distance(record.frustumPositions.capCenter, mount);
+    const nudged = Cesium.Cartesian3.add(
+      record.frustumPositions.capCenter,
+      plane.normal,
+      new Cesium.Cartesian3(),
+    );
+    const distNudged = Cesium.Cartesian3.distance(nudged, mount);
+    assert.ok(distNudged < distCap, 'plane normal should point back toward the mount');
+  } finally {
+    _setCctvCoverageStateForTest({ enabled: false });
+    _setCctvOverlayHostForTest();
+  }
+});

@@ -3126,6 +3126,42 @@ function getActiveRecord() {
 }
 
 /**
+ * Occlusion geometry for whichever CCTV monitor plane is currently showing
+ * in the 3D scene — backs `cctvLayer.getOcclusionPlanes()`, the Universal
+ * Detection Overlay's per-frame occlusion test (`detectionPlaneOcclusion.js`
+ * — traffic/aircraft/vessel labels behind the plane don't paint, matching
+ * its real 3D depth). Only the active camera's plane can ever be showing at
+ * once (refreshCoverageStyles' §2c one-plane-at-a-time invariant), so this
+ * returns at most one entry — as an array so the caller needs no
+ * none-vs-one special-casing.
+ *
+ * Pure read of already-cached geometry (`frustumGeometry`/`frustumPositions`,
+ * rebuilt only on slider/save/activation, §2b) — no scene query, so the
+ * zero-raycast-in-steady-state invariant documented on
+ * `runActivationObstructionProbe` stays intact.
+ * @returns {Array<{center: Cesium.Cartesian3, normal: Cesium.Cartesian3,
+ *   right: Cesium.Cartesian3, up: Cesium.Cartesian3, halfWidth: number,
+ *   halfHeight: number}>}
+ */
+function activeCctvOcclusionPlanes() {
+  const record = getActiveRecord();
+  const runtime = record?.projection;
+  if (!runtime?.planeEntity?.show) return [];
+  const geometry = record.frustumGeometry;
+  const positions = record.frustumPositions;
+  if (!geometry || !positions) return [];
+  const frame = frustumFrameEcef(record.camera, positions.capCenter);
+  return [{
+    center: positions.capCenter,
+    normal: Cesium.Cartesian3.negate(frame.dir, new Cesium.Cartesian3()),
+    right: Cesium.Cartesian3.cross(frame.dir, frame.up, new Cesium.Cartesian3()),
+    up: frame.up,
+    halfWidth: geometry.halfW,
+    halfHeight: geometry.halfH,
+  }];
+}
+
+/**
  * Pauses video playback on all non-active camera projections and resumes
  * the active one (if projection is enabled).
  * @param {string|null} activeId - ID of the currently active camera.
@@ -5236,6 +5272,19 @@ const cctvLayer = {
         values: { ...normalizeCalibration(active.camera.calibration) },
       } : null,
     };
+  },
+
+  /**
+   * Occlusion geometry for the Universal Detection Overlay (`detection.js`):
+   * at most one entry (the active camera's monitor plane, only while it's
+   * actually showing) — see `activeCctvOcclusionPlanes` for why one plane
+   * is the architectural ceiling. Called once per detection paint frame;
+   * pure geometry read, no scene query.
+   * @returns {Array<Object>} See `activeCctvOcclusionPlanes`'s return shape.
+   */
+  getOcclusionPlanes() {
+    if (!_enabled) return [];
+    return activeCctvOcclusionPlanes();
   },
 
   /**

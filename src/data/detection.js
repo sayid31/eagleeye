@@ -51,6 +51,7 @@ import {
   viewScaleForAltitude,
 } from './detectionPolicy.js';
 import { detectionBracketOpacity } from './detectionPresentation.js';
+import { isOccludedByAnyPlane } from './detectionPlaneOcclusion.js';
 
 /**
  * @module detection
@@ -764,6 +765,27 @@ function _collectDetectableObjects() {
 }
 
 /**
+ * Occlusion planes for the current frame — currently just the CCTV layer's
+ * active monitor plane, if any is showing (`cctvLayer.getOcclusionPlanes()`,
+ * routed through the manager's generic `callLayerMethod` facade escape hatch
+ * rather than a purpose-named method, since this is the only consumer).
+ * Hardcoding the `'cctv'` layer id here mirrors this file's existing
+ * `LAYER_WEIGHTS`/`LAYER_CANDIDATE_CAP` concrete-id checks — the plane-
+ * occlusion behavior is inherently CCTV-specific, not a generic per-layer
+ * capability every layer is expected to implement.
+ *
+ * Defensive against a `dataManager` double that only implements
+ * `getDetectableObjects` (older/simpler test fakes) — missing
+ * `callLayerMethod` degrades to "no occlusion planes" rather than throwing.
+ * @returns {Array<Object>} See `detectionPlaneOcclusion.js`'s plane shape.
+ */
+function _collectOcclusionPlanes() {
+  const dataManager = _getDataManager();
+  if (!dataManager || typeof dataManager.callLayerMethod !== 'function') return [];
+  return dataManager.callLayerMethod('cctv', 'getOcclusionPlanes') || [];
+}
+
+/**
  * Draws a CRT-style scanline overlay across the entire canvas.
  *
  * The scroll offset comes from the CLOCK, not from `_frameCount`. Those look
@@ -1046,6 +1068,13 @@ function _drawOverlay(frame) {
   const occluder = frame.occluder;
   const camPos = frame.cameraPosition;
   const keyhole = frame.keyhole;
+  // Scene-geometry occlusion (currently: the active CCTV monitor plane, if
+  // one is showing) — collected once per frame, re-evaluated fresh every
+  // frame so an object that moves out from behind the plane un-occludes on
+  // the very next paint. Empty in the overwhelmingly common case (no CCTV
+  // plane showing), so the per-object check below is a cheap empty-array
+  // no-op then.
+  const occlusionPlanes = _collectOcclusionPlanes();
   // Read the OUTSIDE setting ONCE per paint, from the same module state the
   // host's own keyhole alpha comes from, so a bracket and its callout can never
   // disagree about the operator's setting within a frame.
@@ -1100,6 +1129,14 @@ function _drawOverlay(frame) {
     if (!obj.position) continue;
     // Skip objects occluded by the ellipsoid (behind the horizon)
     if (!occluder.isPointVisible(obj.position)) continue;
+    // Skip objects whose line of sight to the camera passes through the
+    // active CCTV monitor plane — matches the plane's real 3D depth instead
+    // of always compositing above it (2026-09 report: VEH-XXXX labels drew
+    // through the plane). Scoped to this one scene-geometry check only;
+    // every other layer's "see contacts through terrain" behavior
+    // (disableDepthTestDistance: POSITIVE_INFINITY elsewhere in the
+    // codebase) is untouched.
+    if (occlusionPlanes.length > 0 && isOccludedByAnyPlane(camPos, obj.position, occlusionPlanes)) continue;
 
     // This product renders in Cesium's 3D scene mode. Multiplying by the
     // once-per-frame view-projection matrix is equivalent to the general
