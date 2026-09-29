@@ -3128,12 +3128,13 @@ function getActiveRecord() {
 /**
  * Occlusion geometry for whichever CCTV monitor plane is currently showing
  * in the 3D scene — backs `cctvLayer.getOcclusionPlanes()`, the Universal
- * Detection Overlay's per-frame occlusion test (`detectionPlaneOcclusion.js`
- * — traffic/aircraft/vessel labels behind the plane don't paint, matching
- * its real 3D depth). Only the active camera's plane can ever be showing at
- * once (refreshCoverageStyles' §2c one-plane-at-a-time invariant), so this
- * returns at most one entry — as an array so the caller needs no
- * none-vs-one special-casing.
+ * Detection Overlay's per-frame screen-space masking
+ * (`detectionPlaneOcclusion.js` — traffic/aircraft/vessel labels whose
+ * on-screen position overlaps the plane's projected screen rectangle don't
+ * paint, regardless of 3D depth). Only the active camera's plane can ever
+ * be showing at once (refreshCoverageStyles' §2c one-plane-at-a-time
+ * invariant), so this returns at most one entry — as an array so the
+ * caller needs no none-vs-one special-casing.
  *
  * Pure read of already-cached geometry (`frustumGeometry`/`frustumPositions`,
  * rebuilt only on slider/save/activation, §2b) — no scene query, so the

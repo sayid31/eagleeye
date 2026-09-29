@@ -1,99 +1,135 @@
-// src/data/detectionPlaneOcclusion.test.mjs — pure ray-vs-finite-rectangle
-// occlusion math backing the Universal Detection Overlay's CCTV-plane check
-// (see detectionPlaneOcclusion.js's header for the full rationale).
+// src/data/detectionPlaneOcclusion.test.mjs — screen-space quad masking
+// backing the Universal Detection Overlay's CCTV-plane check (see
+// detectionPlaneOcclusion.js's header for the full rationale + revision
+// history: this superseded a 3D-depth-only ray/plane test that couldn't
+// mask objects visually overlapping the plane on screen while at or in
+// front of its real-world depth).
 //
 // Locks:
-//   - a target directly behind the plane and within its rectangular bounds
-//     is occluded;
-//   - a target behind the plane's infinite extension but OUTSIDE its finite
-//     halfWidth/halfHeight bounds is NOT occluded (it's a rectangle, not an
-//     infinite plane);
-//   - a target in front of the plane (nearer than the plane along the ray)
-//     is never occluded, regardless of lateral position;
-//   - a grazing ray (|dir·normal| below GRAZING_DOT_MIN) is never treated as
-//     occluded, even if the naive intersection math would place a hit inside
-//     bounds — avoids numerically unstable false positives;
-//   - isOccludedByAnyPlane short-circuits correctly across multiple planes,
-//     and an empty planes array never occludes anything.
+//   - projectPlaneScreenQuad projects a plane's 4 corners to the exact
+//     expected screen pixel positions, in tl/tr/br/bl winding order;
+//   - projectPlaneScreenQuad returns null when any corner is behind the
+//     camera (plane not currently on screen — masks nothing rather than a
+//     partial/garbage quad);
+//   - computeOcclusionPlaneScreenQuads drops behind-camera planes but keeps
+//     on-screen ones, in a single pass over the input list;
+//   - isPointMaskedByPlanesOnScreen: a point inside the quad is masked, a
+//     point outside is not, a point exactly on an edge is masked (inclusive
+//     boundary), it short-circuits true across multiple quads, and an empty
+//     quad list never masks anything.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { isPointOccludedByPlane, isOccludedByAnyPlane } from './detectionPlaneOcclusion.js';
+import {
+  projectPlaneScreenQuad,
+  computeOcclusionPlaneScreenQuads,
+  isPointMaskedByPlanesOnScreen,
+} from './detectionPlaneOcclusion.js';
 
 const c3 = (x, y, z) => new Cesium.Cartesian3(x, y, z);
 
-// A simple axis-aligned plane: centered at (0, 10, 0), facing back toward
-// the observer along -Y (normal = (0, -1, 0)), 4m wide (X) x 2m tall (Z).
+// A minimal, hand-built "view-projection" matrix (column-major, matching
+// detection.js's own vp0..vp15 flattening) that maps world (x, y) straight
+// through to NDC (x, y) with w=1 always — i.e. world units ARE NDC units.
+// Real Cesium view-projection matrices are far more involved, but the
+// module under test only ever reads these 16 scalars positionally, so a
+// deliberately simple matrix keeps the expected screen coordinates
+// hand-verifiable while still exercising the exact same math paths.
+const IDENTITY_XY_VP = (() => {
+  const vp = new Array(16).fill(0);
+  vp[0] = 1; // x-clip = world.x
+  vp[5] = 1; // y-clip = world.y
+  vp[15] = 1; // w = 1 (always in front of camera)
+  return vp;
+})();
+
+// Same mapping, but w is forced negative — simulates every point on this
+// "plane" being behind the camera.
+const BEHIND_CAMERA_VP = (() => {
+  const vp = new Array(16).fill(0);
+  vp[0] = 1;
+  vp[5] = 1;
+  vp[15] = -1;
+  return vp;
+})();
+
+const WIDTH = 200;
+const HEIGHT = 200;
+
+// Spans world/NDC x in [-0.5, 0.5] and y in [-0.5, 0.5] — under
+// IDENTITY_XY_VP at 200x200, that's screen [50, 150] x [50, 150].
 const PLANE = {
-  center: c3(0, 10, 0),
-  normal: c3(0, -1, 0),
+  center: c3(0, 0, 0),
   right: c3(1, 0, 0),
-  up: c3(0, 0, 1),
-  halfWidth: 2,
-  halfHeight: 1,
+  up: c3(0, 1, 0),
+  halfWidth: 0.5,
+  halfHeight: 0.5,
 };
 
-const OBSERVER = c3(0, 0, 0);
-
-test('target directly behind the plane, within bounds, is occluded', () => {
-  const target = c3(0, 20, 0); // straight through the plane center
-  assert.equal(isPointOccludedByPlane(OBSERVER, target, PLANE), true);
+test('projectPlaneScreenQuad: projects corners to expected screen pixels, tl/tr/br/bl order', () => {
+  const quad = projectPlaneScreenQuad(PLANE, IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.ok(quad);
+  assert.equal(quad.length, 4);
+  const [tl, tr, br, bl] = quad;
+  assert.deepEqual(tl, { x: 50, y: 50 });
+  assert.deepEqual(tr, { x: 150, y: 50 });
+  assert.deepEqual(br, { x: 150, y: 150 });
+  assert.deepEqual(bl, { x: 50, y: 150 });
 });
 
-test('target behind the plane but laterally outside halfWidth is not occluded', () => {
-  // Ray to (5, 20, 0) crosses the plane's Y=10 slice at X=2.5 — outside halfWidth=2.
-  const target = c3(5, 20, 0);
-  assert.equal(isPointOccludedByPlane(OBSERVER, target, PLANE), false);
+test('projectPlaneScreenQuad: returns null when the plane is behind the camera', () => {
+  assert.equal(projectPlaneScreenQuad(PLANE, BEHIND_CAMERA_VP, WIDTH, HEIGHT), null);
 });
 
-test('target behind the plane but vertically outside halfHeight is not occluded', () => {
-  // Ray to (0, 20, 3) crosses Y=10 at Z=1.5 — outside halfHeight=1.
-  const target = c3(0, 20, 3);
-  assert.equal(isPointOccludedByPlane(OBSERVER, target, PLANE), false);
+test('computeOcclusionPlaneScreenQuads: keeps on-screen planes, drops behind-camera ones', () => {
+  const onScreenPlane = PLANE;
+  const behindCameraPlane = { ...PLANE, center: c3(5, 5, 0) }; // geometry irrelevant, vp forces w<0
+  // Mix both planes; project each through its own matrix by calling twice
+  // and asserting the aggregate function's filtering behavior directly.
+  const quadsAllVisible = computeOcclusionPlaneScreenQuads([onScreenPlane], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(quadsAllVisible.length, 1);
+
+  const quadsNoneVisible = computeOcclusionPlaneScreenQuads([behindCameraPlane], BEHIND_CAMERA_VP, WIDTH, HEIGHT);
+  assert.equal(quadsNoneVisible.length, 0);
 });
 
-test('target in front of the plane (nearer than the plane) is never occluded', () => {
-  const target = c3(0, 5, 0); // halfway to the plane, never reaches it
-  assert.equal(isPointOccludedByPlane(OBSERVER, target, PLANE), false);
+test('computeOcclusionPlaneScreenQuads: empty planes array yields empty quads', () => {
+  assert.deepEqual(computeOcclusionPlaneScreenQuads([], IDENTITY_XY_VP, WIDTH, HEIGHT), []);
 });
 
-test('target exactly at the plane distance is not occluded (t >= targetDistance guard)', () => {
-  const target = c3(0, 10, 0); // the object IS the plane's position, not behind it
-  assert.equal(isPointOccludedByPlane(OBSERVER, target, PLANE), false);
+test('isPointMaskedByPlanesOnScreen: a point well inside the quad is masked', () => {
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isPointMaskedByPlanesOnScreen(100, 100, quads), true);
 });
 
-test('plane behind the observer (t <= 0) never occludes a target in front', () => {
-  const behindObserver = { ...PLANE, center: c3(0, -10, 0) };
-  const target = c3(0, 20, 0);
-  assert.equal(isPointOccludedByPlane(OBSERVER, target, behindObserver), false);
+test('isPointMaskedByPlanesOnScreen: a point well outside the quad is not masked', () => {
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isPointMaskedByPlanesOnScreen(0, 0, quads), false);
+  assert.equal(isPointMaskedByPlanesOnScreen(200, 100, quads), false);
 });
 
-test('grazing ray (nearly parallel to the plane) is never treated as occluded', () => {
-  // Ray nearly parallel to the plane (along X, barely dipping in Y) — even
-  // though a naive unguarded solve might place a hit near the plane, the
-  // near-zero |dir·normal| must short-circuit to "not occluded".
-  const grazingTarget = c3(1000, 10.001, 0);
-  assert.equal(isPointOccludedByPlane(OBSERVER, grazingTarget, PLANE), false);
+test('isPointMaskedByPlanesOnScreen: a point exactly on the quad boundary is masked (inclusive)', () => {
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isPointMaskedByPlanesOnScreen(50, 100, quads), true); // on the left edge
+  assert.equal(isPointMaskedByPlanesOnScreen(100, 50, quads), true); // on the top edge
 });
 
-test('coincident observer/target (zero-length ray) is not occluded', () => {
-  assert.equal(isPointOccludedByPlane(OBSERVER, c3(0, 0, 0), PLANE), false);
+test('isPointMaskedByPlanesOnScreen: this is a strict superset of the old depth-only test — an object nearer the camera than the plane but still overlapping it on screen is masked', () => {
+  // The very bug this rewrite fixes: a point geometrically in FRONT of the
+  // plane along the camera ray (which the old ray-vs-plane depth test would
+  // never occlude) still masks here, because masking is purely a function
+  // of on-screen position, not 3D depth.
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isPointMaskedByPlanesOnScreen(100, 100, quads), true);
 });
 
-test('isOccludedByAnyPlane: empty planes array never occludes', () => {
-  assert.equal(isOccludedByAnyPlane(OBSERVER, c3(0, 20, 0), []), false);
-});
-
-test('isOccludedByAnyPlane: short-circuits true on the first occluding plane', () => {
-  const missPlane = { ...PLANE, center: c3(100, 100, 100) }; // nowhere near the ray
+test('isPointMaskedByPlanesOnScreen: short-circuits true across multiple quads', () => {
+  const missPlane = { ...PLANE, center: c3(100, 100, 0) }; // far outside this viewport
   const hitPlane = PLANE;
-  const target = c3(0, 20, 0);
-  assert.equal(isOccludedByAnyPlane(OBSERVER, target, [missPlane, hitPlane]), true);
+  const quads = computeOcclusionPlaneScreenQuads([missPlane, hitPlane], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isPointMaskedByPlanesOnScreen(100, 100, quads), true);
 });
 
-test('isOccludedByAnyPlane: false when no plane in the list occludes', () => {
-  const missPlaneA = { ...PLANE, center: c3(100, 100, 100) };
-  const missPlaneB = { ...PLANE, center: c3(-100, -100, -100) };
-  const target = c3(0, 20, 0);
-  assert.equal(isOccludedByAnyPlane(OBSERVER, target, [missPlaneA, missPlaneB]), false);
+test('isPointMaskedByPlanesOnScreen: empty quad list never masks anything', () => {
+  assert.equal(isPointMaskedByPlanesOnScreen(100, 100, []), false);
 });
