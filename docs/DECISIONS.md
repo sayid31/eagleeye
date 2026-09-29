@@ -1854,6 +1854,37 @@ The active camera's own fill volume is skipped while its monitor plane is showin
 
 The 4 corner rays and mount point are lifted `WIREFRAME_ZFIGHT_LIFT_M` (0.75 m) off the true frustum geometry along the local ellipsoid surface normal before becoming entity positions — root-caused to laptop-GPU-only flicker where ray endpoints skim terrain/3D-tile depth near-coincidentally (the bottom corner pair can sit below ground per the ground-clamp behavior), compounded by `depthFailMaterial`'s `EXT_frag_depth` dependency on inconsistently-supported GPUs. Not reproducible on every machine, so this is a root-cause-driven mitigation pending field confirmation, not a confirmed-complete fix. Same fix family as `VESSEL_LIFT_M` (`src/data/aisLiveVessels.js`) and `GROUND_FLOOR_LIFT_M` (`src/data/groundFloor.js`).
 
+## 2026-09 — Detection-vs-CCTV-plane occlusion: pure geometry math, not `scene.pickFromRay`
+
+Root cause of the reported bug (`VEH-XXXX` traffic labels drawing through the
+3D CCTV monitor plane): the Universal Detection Overlay (`src/data/detection.js`)
+paints on a 2D canvas layered above the WebGL scene and only ever tested
+horizon/ellipsoid occlusion (`EllipsoidalOccluder.isPointVisible`) — it has no
+concept of 3D scene geometry at all, so a bracket/label always composited
+above whatever was actually in front of it in the 3D scene.
+
+The obvious fix — a per-object `scene.pickFromRay` against the plane each
+frame — was rejected. `cctv.js`'s `runActivationObstructionProbe` documents a
+**zero-raycast-in-steady-state invariant**: exactly one raycast, once per
+camera activation, never per frame. A live scene with dozens of traffic/
+aircraft/vessel candidates would mean dozens of `pickFromRay` calls every
+single frame, directly violating that invariant and adding real per-frame
+scene-query cost to a paint loop that is already latency-sensitive.
+
+Chosen fix instead: pure ray-vs-finite-rectangle intersection math
+(`src/data/detectionPlaneOcclusion.js`, `isPointOccludedByPlane`/
+`isOccludedByAnyPlane`) run against the plane's already-known
+center/orientation/half-extents, read once per frame from the CCTV layer's
+cached geometry (`cctvLayer.getOcclusionPlanes()`) — zero scene queries, same
+purity standard `cctvGizmo.js`'s drag math already holds. Since at most one
+CCTV monitor plane can ever be showing at a time (§2c one-plane-at-a-time
+invariant in `cctv.js`), `getOcclusionPlanes()` returns an array of at most
+one entry, making the per-object check a cheap empty-array no-op in the
+overwhelmingly common case of no CCTV plane active. A grazing-angle guard
+(`GRAZING_DOT_MIN`, mirroring `cctvGizmo.js`'s own guard for the same
+underlying formula) avoids numerically unstable false positives when the view
+ray is nearly parallel to the plane.
+
 ## 2026-07-29–2026-08-02 — CCTV citywide ambient cards build and shared-host migration
 
 The LOD-selected nearby static-camera thumbnail cards (20/28/40 by zoom, `cctvLod.js`) were built 2026-07-29 and migrated onto the shared world-overlay host 2026-08-02, replacing whatever presentation preceded the shared-host card pipeline.

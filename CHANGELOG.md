@@ -83,6 +83,24 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **Traffic/aircraft/vessel detection labels (e.g. `VEH-XXXX` vehicle IDs)
+  drew through the 3D CCTV monitor plane instead of being hidden behind
+  it.** Root cause: the Universal Detection Overlay (`src/data/detection.js`)
+  paints on a 2D canvas layered above the WebGL scene and only tested
+  horizon/ellipsoid occlusion (`EllipsoidalOccluder.isPointVisible`) — it had
+  no awareness of any 3D scene geometry, so an object's on-screen bracket/
+  label always composited above whatever 3D geometry happened to be in front
+  of it, including an active CCTV monitor plane. Fixed by adding a per-frame,
+  per-object line-of-sight test against the active CCTV plane's real
+  geometry: pure ray-vs-finite-rectangle intersection math
+  (`src/data/detectionPlaneOcclusion.js`, new) run against the plane's
+  already-cached corner/orientation data (`cctvLayer.getOcclusionPlanes()`,
+  `src/data/cctv.js`) — zero scene raycasts, preserving the CCTV subsystem's
+  existing "one raycast per activation, never per frame" invariant. Scoped
+  to this one check only; every other layer's intentional "see contacts
+  through terrain" behavior (`disableDepthTestDistance`) is unaffected. At
+  most one CCTV plane can ever be showing at a time, so the check is a
+  no-op (empty array) whenever no CCTV plane is active.
 - **CCTV live-video monitor plane still flickered during playback after the
   decoded-frame dedup fix below.** Root cause: even deduped, every genuinely
   new video frame still swapped the plane's canvas-backed double-buffer

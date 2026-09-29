@@ -367,6 +367,42 @@ function initDetectionWithLayers(env, layers, onModeChange) {
   initDetection(env.viewer, layers.map((layer) => layer.id), () => fakeDataManager(layers), onModeChange);
 }
 
+/**
+ * `fakeDataManager` extended with `callLayerMethod`, the seam
+ * `_collectOcclusionPlanes()` (detection.js) reads the active CCTV plane
+ * through. Only `('cctv', 'getOcclusionPlanes')` is meaningful here; any
+ * other (layerId, methodName) pair returns `undefined`, mirroring the real
+ * facade's "missing method" fallback.
+ * @param {Array<{id:string, getDetectableObjects?: Function}>} layers
+ * @param {Array<Object>} occlusionPlanes - Plane geometries returned for
+ *   `callLayerMethod('cctv', 'getOcclusionPlanes')`.
+ */
+function fakeDataManagerWithOcclusion(layers, occlusionPlanes) {
+  const base = fakeDataManager(layers);
+  return {
+    ...base,
+    callLayerMethod(layerId, methodName) {
+      if (layerId === 'cctv' && methodName === 'getOcclusionPlanes') return occlusionPlanes;
+      return undefined;
+    },
+  };
+}
+
+/**
+ * Same convenience as `initDetectionWithLayers`, but wires a data-manager
+ * double that also answers `callLayerMethod('cctv', 'getOcclusionPlanes')`
+ * — drives the real `_collectOcclusionPlanes()` → `isOccludedByAnyPlane()`
+ * path inside `_drawOverlay` end to end.
+ */
+function initDetectionWithOcclusion(env, layers, occlusionPlanes, onModeChange) {
+  initDetection(
+    env.viewer,
+    layers.map((layer) => layer.id),
+    () => fakeDataManagerWithOcclusion(layers, occlusionPlanes),
+    onModeChange,
+  );
+}
+
 /** Fill styles that actually reached the shared normal-blend canvas. */
 function sharedFillStyles(env) {
   return env.ctx.calls
@@ -902,6 +938,106 @@ test('the backdrop feather reaches the canvas as a lighter plate against sky', (
       lightest < heaviest * 0.5,
       `sky plate ${lightest} must be markedly lighter than ground plate ${heaviest}`,
     );
+  } finally {
+    env.cleanup();
+  }
+});
+
+// ── CCTV monitor-plane occlusion (2026-09 VEH-XXXX-through-the-plane report) ─
+// Both objects sit at the same screen radius/altitude as `backdropLayer`'s
+// fixture (mock camera at (0,0,10 000 km), identity view-projection, so x/y
+// ARE NDC) — only their occlusion-plane relationship differs. The plane
+// geometry (`center` on the camera-to-origin axis at z=7 000 km, half-extents
+// 0.5) and the two object positions were verified independently against
+// `detectionPlaneOcclusion.js`'s real math before being pinned here: BEHIND
+// sits on the ray through the plane's rectangle, CLEAR sits outside its
+// halfWidth/halfHeight bounds on the same ray family.
+function occludablePlaneLayer() {
+  return {
+    id: 'flights',
+    getDetectableObjects() {
+      return [
+        {
+          position: new Cesium.Cartesian3(-0.4, 0.2, 6_356_752),
+          sourceId: 'veh-behind', id: 'VEH-0001', metric: 'VEH', type: 'VEH',
+        },
+        {
+          position: new Cesium.Cartesian3(0.7, -0.2, 6_356_752),
+          sourceId: 'veh-clear', id: 'VEH-0002', metric: 'VEH', type: 'VEH',
+        },
+      ];
+    },
+  };
+}
+
+const CCTV_TEST_PLANE = {
+  center: new Cesium.Cartesian3(0, 0, 7_000_000),
+  normal: new Cesium.Cartesian3(0, 0, 1),
+  right: new Cesium.Cartesian3(1, 0, 0),
+  up: new Cesium.Cartesian3(0, 1, 0),
+  halfWidth: 0.5,
+  halfHeight: 0.5,
+};
+
+test('a vehicle behind the active CCTV monitor plane does not paint its bracket or label', () => {
+  const env = installEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    initDetectionWithOcclusion(env, [occludablePlaneLayer()], [CCTV_TEST_PLANE], () => {});
+    setMode('DENSE');
+    settleFrame(env);
+    env.ctx.calls.length = 0;
+    env.detectionCtx.calls.length = 0;
+    settleFrame(env);
+
+    const painted = (text) => env.ctx.calls.some(([name, value]) => name === 'fillText' && value === text);
+    assert.ok(!painted('VEH-0001'), 'the occluded vehicle must not paint its callsign label');
+    assert.ok(painted('VEH-0002'), 'the un-occluded vehicle keeps painting normally');
+
+    const strokedForBoth = env.detectionCtx.calls.filter(([name, path]) => name === 'stroke'
+      && path instanceof MockPath2D).length;
+    assert.ok(strokedForBoth > 0, 'the un-occluded vehicle still gets a bracket stroke');
+  } finally {
+    env.cleanup();
+  }
+});
+
+test('with no CCTV plane showing, both vehicles paint normally (regression guard)', () => {
+  const env = installEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    // Empty occlusion-plane array — same as `cctvLayer.getOcclusionPlanes()`
+    // returning [] when disabled/not-showing.
+    initDetectionWithOcclusion(env, [occludablePlaneLayer()], [], () => {});
+    setMode('DENSE');
+    settleFrame(env);
+    env.ctx.calls.length = 0;
+    settleFrame(env);
+
+    const painted = (text) => env.ctx.calls.some(([name, value]) => name === 'fillText' && value === text);
+    assert.ok(painted('VEH-0001'), 'with no active plane, the object formerly-behind paints too');
+    assert.ok(painted('VEH-0002'), 'the other object is unaffected either way');
+  } finally {
+    env.cleanup();
+  }
+});
+
+test('a dataManager double without callLayerMethod (older/simpler fakes) degrades safely to no occlusion', () => {
+  // Exercises the exact defensive branch _collectOcclusionPlanes() takes for
+  // a fakeDataManager that only implements getDetectableObjects — proves the
+  // pre-existing test double (and any real caller shaped like it) still
+  // works unmodified rather than throwing.
+  const env = installEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    initDetectionWithLayers(env, [occludablePlaneLayer()], () => {});
+    setMode('DENSE');
+    settleFrame(env);
+    env.ctx.calls.length = 0;
+    settleFrame(env);
+
+    const painted = (text) => env.ctx.calls.some(([name, value]) => name === 'fillText' && value === text);
+    assert.ok(painted('VEH-0001') && painted('VEH-0002'), 'no callLayerMethod means no occlusion, not a throw');
   } finally {
     env.cleanup();
   }
