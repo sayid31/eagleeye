@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import {
   _setTrackedOverlayHostForTest,
   cachedTrackedDisplayPosition,
@@ -244,7 +245,7 @@ test('tracking layers write gevLabelModel and expose only their cached display p
     'militaryFlights.js',
     'satellites.js',
     'militaryInstallations.js',
-  ].map(async (name) => [name, await readFile(new URL(`./${name}`, import.meta.url), 'utf8')]));
+  ].map(async (name) => [name, readLayerSourceText(new URL(`./${name}`, import.meta.url))]));
   const sources = Object.fromEntries(files);
   for (const [name, source] of files) {
     assert.ok(source.includes('.gevLabelModel ='), `${name} writes the explicit model directly`);
@@ -260,7 +261,7 @@ test('tracking layers write gevLabelModel and expose only their cached display p
 
 test('civilian and military trail heads use the lower-centre model anchor and weak-texture tint', async () => {
   const files = await Promise.all(['flights.js', 'militaryFlights.js'].map(async (name) => (
-    [name, await readFile(new URL(`./${name}`, import.meta.url), 'utf8')]
+    [name, readLayerSourceText(new URL(`./${name}`, import.meta.url))]
   )));
   for (const [name, source] of files) {
     assert.ok(

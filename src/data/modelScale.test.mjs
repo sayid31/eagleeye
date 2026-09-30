@@ -20,6 +20,7 @@ import { test } from 'node:test';
 import * as Cesium from 'cesium';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLASS_SCALE_3D, CLASS_MODEL_URL, CLASS_MODEL_REAL } from './aircraftClass.js';
@@ -358,7 +359,7 @@ function nativeVisualCenter(file) {
 // --- per-layer constants, read from source (see header) --------------------
 
 function layerConstants(sourceFile) {
-  const src = fs.readFileSync(path.join(ROOT, sourceFile), 'utf8');
+  const src = readLayerSourceText(path.join(ROOT, sourceFile));
   const scale = src.match(/\bconst MODEL_SCALE = ([\d.]+);/);
   assert.ok(scale, `${sourceFile}: MODEL_SCALE not found`);
   const belly = src.match(/\bconst MODEL_BELLY_OFFSET_NATIVE = ([\d.]+);/);
@@ -382,7 +383,7 @@ function sharedNormalBillboardScaleByDistance() {
 }
 
 function importsSharedNormalBillboardScaleByDistance(sourceFile) {
-  const src = fs.readFileSync(path.join(ROOT, sourceFile), 'utf8');
+  const src = readLayerSourceText(path.join(ROOT, sourceFile));
   return /normalBillboardScaleByDistance,?\s*\n[\s\S]{0,200}from '\.\/aircraftPresentation\.js';/.test(src)
     || /import \{[^}]*normalBillboardScaleByDistance[^}]*\} from '\.\/aircraftPresentation\.js';/.test(src);
 }

@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import {
   bindTrackingClickGesture,
   isTrackingClickGesture,
@@ -110,7 +111,7 @@ test('slow clean sprite clicks select, while long presses and orbit nudges canno
 
 test('civilian and military click handlers apply duration only at the deselect branch', () => {
   const sources = [
-    readFileSync(new URL('./flights.js', import.meta.url), 'utf8'),
+    readLayerSourceText(new URL('./flights.js', import.meta.url)),
     readFileSync(new URL('./militaryFlights.js', import.meta.url), 'utf8'),
   ];
   for (const source of sources) {

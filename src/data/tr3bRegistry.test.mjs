@@ -5,6 +5,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import * as Cesium from 'cesium';
 
 import {
@@ -234,7 +235,7 @@ test('both flight layers keep a converted contact 2D and visible (render invaria
     new URL('./aircraftPresentation.js', import.meta.url), 'utf8',
   );
   for (const name of ['flights.js', 'militaryFlights.js']) {
-    const source = await readFile(new URL(`./${name}`, import.meta.url), 'utf8');
+    const source = readLayerSourceText(new URL(`./${name}`, import.meta.url));
 
     // 1. The 3D model handoff is SUPPRESSED for a converted contact — there is
     //    no TR-3B GLB, so the triangle billboard stays the visual.
@@ -280,7 +281,7 @@ test('conversions are session-scoped and no lifecycle path clears them', async (
   // should still show the triangle. Only a page reload resets it — so no
   // production code may clear the registry.
   for (const name of ['flights.js', 'militaryFlights.js', '../ui.js']) {
-    const source = await readFile(new URL(`./${name}`, import.meta.url), 'utf8');
+    const source = readLayerSourceText(new URL(`./${name}`, import.meta.url));
     assert.doesNotMatch(source, /clearTr3bRegistry/,
       `${name}: teardown must not clear session conversions`);
   }
@@ -415,7 +416,7 @@ test('a converted contact never consumes a 3D model CAP SLOT', async () => {
   // in the fleet tick (no seam to drive headlessly), so this asserts the guard's
   // POSITION rather than replaying the four-pass selection.
   for (const name of ['flights.js', 'militaryFlights.js']) {
-    const source = await readFile(new URL(`./${name}`, import.meta.url), 'utf8');
+    const source = readLayerSourceText(new URL(`./${name}`, import.meta.url));
     // Anchor on the MODEL-eligibility loop (keepDistSq), not the unrelated
     // ambient-enrichment candidate loop that also builds a `cand`.
     const loop = /const cand = \[\];\s*\n\s*for \(const \[icao, bb\] of _billboards\)[\s\S]*?cand\.push\(/.exec(source)?.[0];

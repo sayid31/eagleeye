@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import * as Cesium from 'cesium';
 import flightsLayer, {
   _setCockpitDetectionSubjectForTest as setFlightsCockpitSubject,
@@ -19,7 +20,7 @@ const UI_SOURCE = readFileSync(new URL('../ui.js', import.meta.url), 'utf8');
 // relocation — see that file's header); dispatchCockpitModeChanged and its
 // call sites moved with it.
 const COCKPIT_SOURCE = readFileSync(new URL('../cockpitViewController.js', import.meta.url), 'utf8');
-const FLIGHTS_SOURCE = readFileSync(new URL('./flights.js', import.meta.url), 'utf8');
+const FLIGHTS_SOURCE = readLayerSourceText(new URL('./flights.js', import.meta.url));
 const MILITARY_SOURCE = readFileSync(new URL('./militaryFlights.js', import.meta.url), 'utf8');
 
 const LAYERS = [
