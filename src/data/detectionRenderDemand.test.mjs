@@ -429,8 +429,8 @@ test('the render-governor gate covers the parked case, with teeth on the painter
 test('aircraft brackets stay prompt because the aircraft layers hold the render loop', async () => {
   for (const file of ['./flights.js', './militaryFlights.js']) {
     const source = readLayerSourceText(new URL(file, import.meta.url));
-    // flights.js: enable() is the extracted enableFlightsLayer() function (flightsLifecycle.js).
-    const enable = /\n  enable\([\s\S]*?\n  \},|function enableFlightsLayer\([\s\S]*?\n\}/.exec(source)?.[0];
+    // Both layers: enable() is the extracted enable<Flights|MilitaryFlights>Layer() function (<layer>Lifecycle.js).
+    const enable = /\n  enable\([\s\S]*?\n  \},|function enable(?:Military)?FlightsLayer\([\s\S]*?\n\}/.exec(source)?.[0];
     assert.ok(enable, `${file}: enable() is still identifiable`);
     assert.match(
       enable,

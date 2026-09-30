@@ -1263,8 +1263,9 @@ test('hasContact declines while a layer is disabled, whatever its maps still hol
     // flights: hasContact() is the extracted flightsHasContact() function (flightsQueries.js).
     ['flights', readLayerSourceText(new URL('./flights.js', import.meta.url)),
       /flightsHasContact\(icao24\) \{\s*\n\s*if \(!_billboardCollection \|\| !_billboardCollection\.show \|\| _billboards\.size === 0\) return null;/],
-    ['militaryFlights', fs.readFileSync(new URL('./militaryFlights.js', import.meta.url), 'utf8'),
-      /hasContact\(icao24\) \{\s*\n\s*if \(!_billboardCollection \|\| !_billboardCollection\.show \|\| _billboards\.size === 0\) return null;/],
+    // militaryFlights: hasContact() is the extracted militaryFlightsHasContact() function (militaryFlightsQueries.js).
+    ['militaryFlights', readLayerSourceText(new URL('./militaryFlights.js', import.meta.url)),
+      /militaryFlightsHasContact\(icao24\) \{\s*\n\s*if \(!_billboardCollection \|\| !_billboardCollection\.show \|\| _billboards\.size === 0\) return null;/],
     ['aisLiveVessels', fs.readFileSync(new URL('./aisLiveVessels.js', import.meta.url), 'utf8'),
       /hasContact\(mmsi\) \{\s*\n\s*if \(!state\.enabled \|\| !state\.vesselMap \|\| state\.vesselMap\.size === 0\) return null;/],
   ]) {
@@ -1437,7 +1438,7 @@ test('production eviction sites actually tag their clears', () => {
   // The event contract above is worthless if the real cull paths never set the
   // origin, so pin the three production call sites.
   const flightsSource = readLayerSourceText(new URL('./flights.js', import.meta.url));
-  const militarySource = fs.readFileSync(new URL('./militaryFlights.js', import.meta.url), 'utf8');
+  const militarySource = readLayerSourceText(new URL('./militaryFlights.js', import.meta.url));
   const vesselsSource = fs.readFileSync(new URL('./aisLiveVessels.js', import.meta.url), 'utf8');
 
   for (const [name, source] of [['flights', flightsSource], ['militaryFlights', militarySource]]) {

@@ -367,10 +367,10 @@ test('a fresh boot starts 3D aircraft ON in proximity — codec, both layers, an
   const { readFile } = await import('node:fs/promises');
   for (const name of ['flights.js', 'militaryFlights.js']) {
     const source = readLayerSourceText(new URL(`./${name}`, import.meta.url));
-    // flights.js keeps this as a property of the shared state object (flightsState.js `S`),
-    // so its literal is `_models3dEnabled: true,` rather than a module-level `let`.
-    const armed = name === 'flights.js' ? /^\s*_models3dEnabled: true,$/m : /^let _models3dEnabled = true;$/m;
-    const proximity = name === 'flights.js' ? /^\s*_models3dMode: 'proximity',/m : /^let _models3dMode = 'proximity';/m;
+    // Both layers keep this as a property of the shared state object (`<layer>State.js` `S`),
+    // so the literal is `_models3dEnabled: true,` rather than a module-level `let`.
+    const armed = /^\s*_models3dEnabled: true,$/m;
+    const proximity = /^\s*_models3dMode: 'proximity',/m;
     assert.match(source, armed,
       `${name}: the fleet starts armed, matching the codec default`);
     assert.match(source, proximity,

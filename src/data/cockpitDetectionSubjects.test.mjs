@@ -21,7 +21,7 @@ const UI_SOURCE = readFileSync(new URL('../ui.js', import.meta.url), 'utf8');
 // call sites moved with it.
 const COCKPIT_SOURCE = readFileSync(new URL('../cockpitViewController.js', import.meta.url), 'utf8');
 const FLIGHTS_SOURCE = readLayerSourceText(new URL('./flights.js', import.meta.url));
-const MILITARY_SOURCE = readFileSync(new URL('./militaryFlights.js', import.meta.url), 'utf8');
+const MILITARY_SOURCE = readLayerSourceText(new URL('./militaryFlights.js', import.meta.url));
 
 const LAYERS = [
   {
