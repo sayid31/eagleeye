@@ -1,6 +1,7 @@
 import { keyholeLabelAlphaFromGeometry } from '../celestialRing.js';
 import { rectIntersectsAny } from './detectionDraw.js';
 import { SKY_PLATE_SCALE } from '../overlays/worldOverlayTokens.js';
+import { isRectMaskedByPlanesOnScreen } from './detectionPlaneOcclusion.js';
 
 /**
  * Pure label-placement and priority helpers behind the Universal Detection
@@ -75,9 +76,17 @@ export function semanticPriority(obj) {
 /**
  * Tries the four corner positions (NE, NW, SE, SW) around a bracket for a
  * label card, in that priority order, rejecting any that would clip the
- * viewport, collide with a reserved HUD rectangle, or fall fully outside the
- * keyhole's radial fade. Returns every corner that survives — the caller
- * picks based on stability/incumbency, not just the first hit.
+ * viewport, collide with a reserved HUD rectangle, overlap the active CCTV
+ * monitor plane's on-screen rectangle, or fall fully outside the keyhole's
+ * radial fade. Returns every corner that survives — the caller picks based
+ * on stability/incumbency, not just the first hit.
+ *
+ * The CCTV-plane check exists because the bracket ANCHOR (`sx`, `sy`) being
+ * clear of the plane does not mean the card is: a placement's rectangle
+ * sits `halfW`/`halfH` (bracket half-extent) + an 8-12px gap + the card's
+ * own width/height away from the anchor — field report: VEH-XXXX cards
+ * anchored just outside the plane still rendered their text INSIDE it. See
+ * `detectionPlaneOcclusion.js`'s module header for the full history.
  * @param {number} sx - Bracket center screen X.
  * @param {number} sy - Bracket center screen Y.
  * @param {number} halfW - Bracket half-width.
@@ -87,6 +96,8 @@ export function semanticPriority(obj) {
  * @param {number} height - Canvas height in pixels.
  * @param {{centerX:number,centerY:number,radius:number,featherPx:number}} keyhole - Frame keyhole geometry.
  * @param {Array<{x:number,y:number,w:number,h:number}>} [occlusionRects=[]] - Reserved HUD rectangles.
+ * @param {Array<Array<{x:number,y:number}>>} [occlusionScreenQuads=[]] - Active CCTV monitor-plane
+ *   screen quads, from `detectionPlaneOcclusion.js#computeOcclusionPlaneScreenQuads`.
  * @returns {Array<Object>} Surviving corner placements, each with lead-line and text-baseline geometry.
  */
 export function buildLabelPlacements(
@@ -99,6 +110,7 @@ export function buildLabelPlacements(
   height,
   keyhole,
   occlusionRects = [],
+  occlusionScreenQuads = [],
 ) {
   const gapX = 8;
   const gapY = 12;
@@ -146,6 +158,7 @@ export function buildLabelPlacements(
     }
     const cardRect = { x: cardX, y: cardY, w: card.w, h: card.h };
     if (rectIntersectsAny(cardRect, occlusionRects)) continue;
+    if (occlusionScreenQuads.length > 0 && isRectMaskedByPlanesOnScreen(cardRect, occlusionScreenQuads)) continue;
     const leadToX = placement.leadToSide.endsWith('E') ? cardX + card.w : cardX;
     const leadToY = placement.leadToSide.startsWith('S') ? cardY + card.h : cardY;
     const centerX = cardX + card.w * 0.5;

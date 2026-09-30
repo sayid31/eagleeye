@@ -51,7 +51,10 @@ import {
   viewScaleForAltitude,
 } from './detectionPolicy.js';
 import { detectionBracketOpacity } from './detectionPresentation.js';
-import { computeOcclusionPlaneScreenQuads, isPointMaskedByPlanesOnScreen } from './detectionPlaneOcclusion.js';
+import {
+  computeOcclusionPlaneScreenQuads,
+  isRectMaskedByPlanesOnScreen,
+} from './detectionPlaneOcclusion.js';
 
 /**
  * @module detection
@@ -940,7 +943,7 @@ function _paintCalloutLane(frame) {
 }
 
 /** Materialize one bounded rich-callout candidate for the existing arbiter. */
-function _materializeCandidate(obj, width, height, keyhole, occlusionRects, cameraPosition) {
+function _materializeCandidate(obj, width, height, keyhole, occlusionRects, cameraPosition, occlusionScreenQuads) {
   const primary = obj._candidatePrimary;
   const micro = obj._candidateMicro;
   const card = measureTrackLabel(primary, micro, _charWidth);
@@ -954,6 +957,7 @@ function _materializeCandidate(obj, width, height, keyhole, occlusionRects, came
     height,
     keyhole,
     occlusionRects,
+    occlusionScreenQuads,
   );
   if (placements.length === 0) return null;
   let centerDistance = Number.POSITIVE_INFINITY;
@@ -1157,11 +1161,6 @@ function _drawOverlay(frame) {
     const invW = 1 / clipW;
     const sx = ((vp0 * px + vp4 * py + vp8 * pz + vp12) * invW * 0.5 + 0.5) * width;
     const sy = (0.5 - (vp1 * px + vp5 * py + vp9 * pz + vp13) * invW * 0.5) * height;
-    // Scene-geometry screen masking — see the comment above `occlusionPlanes`
-    // for why this runs by screen position, not 3D depth. Must run after sx/sy
-    // are known; every other CCTV-plane check in this loop was 3D-depth-based
-    // and ran earlier, this one can't.
-    if (occlusionScreenQuads.length > 0 && isPointMaskedByPlanesOnScreen(sx, sy, occlusionScreenQuads)) continue;
 
     // Tracked objects (skipLabel) get larger boxes. AIR reticles scale with the
     // plane's on-screen size (same scaleByDistance curve as the billboards) so
@@ -1180,6 +1179,18 @@ function _drawOverlay(frame) {
       halfW = _mode === MODE_DENSE ? (isTracked ? 28 : 11) : 16;
       halfH = _mode === MODE_DENSE ? (isTracked ? 22 : 7) : 10;
     }
+
+    // Scene-geometry screen masking — see the comment above `occlusionPlanes`
+    // for why this runs by screen position, not 3D depth. Must run after
+    // sx/sy AND halfW/halfH are known: this tests the bracket's full drawn
+    // RECTANGLE against the plane's quad, not just the anchor point — an
+    // anchor just outside the plane can still have a bracket corner spike
+    // into it (halfW/halfH extend past the anchor on every side). Every
+    // other CCTV-plane check in this loop was 3D-depth-based and ran
+    // earlier; this one can't.
+    const bracketRect = { x: sx - halfW, y: sy - halfH, w: halfW * 2, h: halfH * 2 };
+    if (occlusionScreenQuads.length > 0 && isRectMaskedByPlanesOnScreen(bracketRect, occlusionScreenQuads)) continue;
+
     // Viewport bounds check with padding
     if (sx < -halfW || sx > width + halfW || sy < -halfH || sy > height + halfH) continue;
 
@@ -1239,6 +1250,7 @@ function _drawOverlay(frame) {
         keyhole,
         calloutOcclusionRects,
         camPos,
+        occlusionScreenQuads,
       );
       if (candidate && !candidateMap.has(candidate.key)) candidateMap.set(candidate.key, candidate);
     }
@@ -1272,6 +1284,7 @@ function _drawOverlay(frame) {
             keyhole,
             calloutOcclusionRects,
             camPos,
+            occlusionScreenQuads,
           );
           if (candidate) candidateMap.set(candidate.key, candidate);
         }

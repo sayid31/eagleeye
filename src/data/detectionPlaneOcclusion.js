@@ -38,6 +38,29 @@ import * as Cesium from 'cesium';
  * frame (at most one plane can be showing at a time — see
  * `cctv.js#activeCctvOcclusionPlanes`), not once per object — preserving
  * `cctv.js`'s zero-raycast-in-steady-state invariant.
+ *
+ * Second revision (2026-09, later): the screen-quad rewrite above still only
+ * tested each object's raw bracket-ANCHOR point — the single `(sx, sy)`
+ * screen position an object projects to. That masks the anchor correctly,
+ * but neither the bracket's own rendered rectangle (which extends `halfW`/
+ * `halfH` px past the anchor) nor the label CARD's placed rectangle (which
+ * `detectionLabelGeometry.js#buildLabelPlacements` offsets even further —
+ * bracket half-extent, plus an 8-12px gap, plus the card's own width/height —
+ * easily 40-100+ px from the anchor) were ever tested against the plane's
+ * quad. Field report: dense-traffic VEH-XXXX cards, anchored just outside
+ * the plane's screen rectangle, still rendered their text CARD inside it —
+ * the anchor-only test is correct but insufficient once anything is drawn
+ * off-anchor. `isRectMaskedByPlanesOnScreen` below closes this by testing an
+ * arbitrary axis-aligned screen rectangle (bracket bounds, or a label card's
+ * placed `rect`) for full polygon overlap against the plane quad, not just
+ * whether one point lands inside it — a proper convex-polygon intersection
+ * (separating-axis test), since an off-angle CCTV plane's screen quad is not
+ * itself axis-aligned, so a simple AABB-overlap shortcut would be wrong.
+ * `isPointMaskedByPlanesOnScreen` stays as its own fast path (it runs once
+ * per detectable object, every frame — the hottest call site in this
+ * module); the rect test only runs for the much smaller set of objects that
+ * actually reach bracket-draw and label-card-placement, so the extra cost of
+ * a full polygon-overlap test there is negligible.
  */
 
 /**
@@ -173,6 +196,95 @@ function isPointInScreenQuad(x, y, quad) {
 export function isPointMaskedByPlanesOnScreen(x, y, screenQuads) {
   for (let i = 0; i < screenQuads.length; i++) {
     if (isPointInScreenQuad(x, y, screenQuads[i])) return true;
+  }
+  return false;
+}
+
+/**
+ * The four corners of an axis-aligned screen rectangle, in the same
+ * consistent winding order `projectPlaneScreenQuad` produces (tl, tr, br,
+ * bl) — so `polygonsOverlap` can treat a rect and a plane quad identically.
+ * @param {{x:number,y:number,w:number,h:number}} rect
+ * @returns {Array<{x:number,y:number}>}
+ */
+function rectCorners(rect) {
+  return [
+    { x: rect.x, y: rect.y },
+    { x: rect.x + rect.w, y: rect.y },
+    { x: rect.x + rect.w, y: rect.y + rect.h },
+    { x: rect.x, y: rect.y + rect.h },
+  ];
+}
+
+/**
+ * Projects a convex polygon's corners onto a single axis, returning the
+ * resulting interval's min/max. Helper for `polygonsOverlap`'s
+ * separating-axis test.
+ * @param {Array<{x:number,y:number}>} corners
+ * @param {number} axisX
+ * @param {number} axisY
+ * @returns {{min:number,max:number}}
+ */
+function projectOntoAxis(corners, axisX, axisY) {
+  let min = Infinity;
+  let max = -Infinity;
+  for (let i = 0; i < corners.length; i++) {
+    const dot = corners[i].x * axisX + corners[i].y * axisY;
+    if (dot < min) min = dot;
+    if (dot > max) max = dot;
+  }
+  return { min, max };
+}
+
+/**
+ * Separating-axis test for two convex quadrilaterals. Neither the CCTV
+ * plane's screen quad (an off-angle plane's rectangle rarely projects
+ * axis-aligned) nor a label/bracket rectangle can be assumed axis-aligned
+ * relative to each other, so a plain AABB-overlap shortcut would be wrong —
+ * this checks every candidate separating axis from BOTH polygons' edges
+ * (the full, correct SAT for two convex 4-gons). Touching edges count as
+ * overlapping (inclusive), matching `isPointInScreenQuad`'s boundary
+ * handling.
+ * @param {Array<{x:number,y:number}>} polyA - Exactly 4 points.
+ * @param {Array<{x:number,y:number}>} polyB - Exactly 4 points.
+ * @returns {boolean}
+ */
+function polygonsOverlap(polyA, polyB) {
+  for (const poly of [polyA, polyB]) {
+    for (let i = 0; i < poly.length; i++) {
+      const a = poly[i];
+      const b = poly[(i + 1) % poly.length];
+      // Outward normal of edge (a -> b): a candidate separating axis.
+      const axisX = -(b.y - a.y);
+      const axisY = b.x - a.x;
+      const rangeA = projectOntoAxis(polyA, axisX, axisY);
+      const rangeB = projectOntoAxis(polyB, axisX, axisY);
+      if (rangeA.max < rangeB.min || rangeB.max < rangeA.min) return false; // separated
+    }
+  }
+  return true;
+}
+
+/**
+ * Tests whether an axis-aligned screen rectangle (a bracket's drawn bounds,
+ * or a label card's placed `rect`) overlaps ANY of the given precomputed
+ * occlusion-plane screen quads. Complements `isPointMaskedByPlanesOnScreen`
+ * — that one tests a single anchor point (cheap, runs once per detectable
+ * object every frame); this one tests the actual rendered footprint, which
+ * can sit well off the anchor once a bracket half-extent or a label card's
+ * gap+size offset is applied. See this module's header for why the
+ * anchor-only test alone let label cards escape masking. An empty
+ * `screenQuads` array never masks anything.
+ * @param {{x:number,y:number,w:number,h:number}} rect
+ * @param {Array<Array<{x:number,y:number}>>} screenQuads - From
+ *   `computeOcclusionPlaneScreenQuads`.
+ * @returns {boolean}
+ */
+export function isRectMaskedByPlanesOnScreen(rect, screenQuads) {
+  if (screenQuads.length === 0) return false;
+  const corners = rectCorners(rect);
+  for (let i = 0; i < screenQuads.length; i++) {
+    if (polygonsOverlap(corners, screenQuads[i])) return true;
   }
   return false;
 }
