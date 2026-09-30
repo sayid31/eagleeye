@@ -999,6 +999,31 @@ const CCTV_TEST_PLANE = {
   halfHeight: 0.5,
 };
 
+// VEH-0004 sits at screen (188, 300) — just outside CCTV_TEST_PLANE's quad
+// (screen [200,150]-[600,450], see above) on its LEFT edge, close enough
+// that its bracket rect (halfW=11, halfH=7 for a non-tracked VEH in DENSE
+// mode; range [177,199]) still clears the quad, but `buildLabelPlacements`
+// tries corners in NE, NW, SE, SW order — and NE/SE (`cardX = sx + halfW +
+// gapX` = 188+11+8 = 207, card 84px wide under this harness's 6px mock
+// charWidth) land at x-range [207,291], squarely INSIDE the quad's
+// [200,600] span, i.e. exactly the two corners `firstFreePlacement` (in
+// `labelArbiter.js`) tries FIRST. Without the plane-quad rejection, NE
+// wins and the label paints inside the plane — precisely the field
+// report. Only NW/SW (`cardX = sx - halfW - gapX - card.w` = 169, range
+// [169,-8→85,169]) land clear, at x-range [85,169]. The fix must exclude
+// NE/SE so the arbiter falls through to NW/SW instead.
+function edgeAdjacentVehicleLayer() {
+  return {
+    id: 'flights',
+    getDetectableObjects() {
+      return [{
+        position: new Cesium.Cartesian3(-0.53, 0, 6_356_752),
+        sourceId: 'veh-edge-card', id: 'VEH-0004', metric: 'VEH', type: 'VEH',
+      }];
+    },
+  };
+}
+
 test('a vehicle whose screen position overlaps the active CCTV monitor plane does not paint its bracket or label', () => {
   const env = installEnvironment();
   try {
@@ -1034,6 +1059,30 @@ test('a vehicle nearer the camera than the plane, but overlapping it on screen, 
 
     const painted = (text) => env.ctx.calls.some(([name, value]) => name === 'fillText' && value === text);
     assert.ok(!painted('VEH-0003'), 'nearer-than-plane must not exempt an object from screen-space masking');
+  } finally {
+    env.cleanup();
+  }
+});
+
+test('a label card whose ANCHOR clears the CCTV plane but whose preferred corner would still render the text inside it is repositioned to a clear corner, not left overlapping (2026-09 VEH-XXXX field report, full pipeline)', () => {
+  const env = installEnvironment();
+  try {
+    initWorldOverlay(env.viewer);
+    initDetectionWithOcclusion(env, [edgeAdjacentVehicleLayer()], [CCTV_TEST_PLANE], () => {});
+    setMode('DENSE');
+    settleFrame(env);
+    env.ctx.calls.length = 0;
+    settleFrame(env);
+
+    const textCall = env.ctx.calls.find(([name, value]) => name === 'fillText' && value === 'VEH-0004');
+    assert.ok(textCall, 'the anchor/bracket is clear of the plane, so the label must still paint — this is not a masking-everything regression');
+    const [, , primaryX] = textCall;
+    // NE/SE (tried FIRST by the arbiter, see edgeAdjacentVehicleLayer's
+    // comment) land inside the plane's quad [200,600] and must have been
+    // excluded by buildLabelPlacements' plane-quad rejection — otherwise
+    // the arbiter would have picked NE and painted text inside the plane,
+    // which is exactly the reported bug. Only NW/SW clear it.
+    assert.ok(primaryX < 200, `label text must clear the plane's left edge (200), got primaryX=${primaryX}`);
   } finally {
     env.cleanup();
   }

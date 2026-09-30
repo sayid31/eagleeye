@@ -17,6 +17,14 @@
 //     point outside is not, a point exactly on an edge is masked (inclusive
 //     boundary), it short-circuits true across multiple quads, and an empty
 //     quad list never masks anything.
+//   - isRectMaskedByPlanesOnScreen (2026-09, second revision — see this
+//     module's header): a rectangle wholly inside the quad, wholly
+//     containing the quad, or merely overlapping an edge/corner of it is
+//     masked; a rectangle whose ANCHOR corner is outside the quad but whose
+//     body still overlaps it is masked too (this is the exact gap the
+//     point-only test left open — the field report this revision fixes);
+//     a rectangle entirely clear of the quad is not masked; empty quad list
+//     never masks anything.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
@@ -24,6 +32,7 @@ import {
   projectPlaneScreenQuad,
   computeOcclusionPlaneScreenQuads,
   isPointMaskedByPlanesOnScreen,
+  isRectMaskedByPlanesOnScreen,
 } from './detectionPlaneOcclusion.js';
 
 const c3 = (x, y, z) => new Cesium.Cartesian3(x, y, z);
@@ -132,4 +141,53 @@ test('isPointMaskedByPlanesOnScreen: short-circuits true across multiple quads',
 
 test('isPointMaskedByPlanesOnScreen: empty quad list never masks anything', () => {
   assert.equal(isPointMaskedByPlanesOnScreen(100, 100, []), false);
+});
+
+// The plane's quad spans screen [50,150] x [50,150] under IDENTITY_XY_VP
+// (see PLANE's comment above).
+
+test('isRectMaskedByPlanesOnScreen: a rect wholly inside the quad is masked', () => {
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isRectMaskedByPlanesOnScreen({ x: 80, y: 80, w: 20, h: 20 }, quads), true);
+});
+
+test('isRectMaskedByPlanesOnScreen: a rect wholly clear of the quad is not masked', () => {
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isRectMaskedByPlanesOnScreen({ x: 160, y: 160, w: 20, h: 20 }, quads), false);
+});
+
+test('isRectMaskedByPlanesOnScreen: this is the fix for the exact gap the anchor-point-only test left open — a rect whose own corner/anchor sits OUTSIDE the quad, but whose body still overlaps it, is masked', () => {
+  // Anchored at (140, 140) — outside the quad's [50,150] far edge by nothing,
+  // actually let's anchor further out: (170, 170) is clearly outside
+  // [50,150]x[50,150]. A 40x40 rect there still overlaps the quad's bottom-
+  // right corner region. This mirrors exactly the reported bug: a label
+  // card's top-left corner (its "anchor" in rect terms) lands outside the
+  // CCTV plane's screen quad, but the card's body still overlaps it.
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  const anchorOutsideQuad = { x: 170, y: 170, w: 1, h: 1 };
+  assert.equal(isPointMaskedByPlanesOnScreen(170, 170, quads), false, 'sanity: the anchor point itself is not masked');
+  const cardOverlappingQuad = { x: 130, y: 130, w: 40, h: 40 };
+  assert.equal(isRectMaskedByPlanesOnScreen(cardOverlappingQuad, quads), true);
+});
+
+test('isRectMaskedByPlanesOnScreen: touching edges count as overlapping (inclusive)', () => {
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  // Rect's left edge sits exactly on the quad's right edge (x=150).
+  assert.equal(isRectMaskedByPlanesOnScreen({ x: 150, y: 80, w: 20, h: 20 }, quads), true);
+});
+
+test('isRectMaskedByPlanesOnScreen: a rect wholly containing the quad is masked', () => {
+  const quads = computeOcclusionPlaneScreenQuads([PLANE], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isRectMaskedByPlanesOnScreen({ x: 0, y: 0, w: 200, h: 200 }, quads), true);
+});
+
+test('isRectMaskedByPlanesOnScreen: short-circuits true across multiple quads', () => {
+  const missPlane = { ...PLANE, center: c3(100, 100, 0) };
+  const hitPlane = PLANE;
+  const quads = computeOcclusionPlaneScreenQuads([missPlane, hitPlane], IDENTITY_XY_VP, WIDTH, HEIGHT);
+  assert.equal(isRectMaskedByPlanesOnScreen({ x: 80, y: 80, w: 20, h: 20 }, quads), true);
+});
+
+test('isRectMaskedByPlanesOnScreen: empty quad list never masks anything', () => {
+  assert.equal(isRectMaskedByPlanesOnScreen({ x: 80, y: 80, w: 20, h: 20 }, []), false);
 });

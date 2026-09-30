@@ -112,6 +112,28 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   (`disableDepthTestDistance`) is unaffected. At most one CCTV plane can
   ever be showing at a time, so the check is a no-op whenever no CCTV plane
   is active.
+- **Traffic/aircraft/vessel label CARDS (the text callout, not the bracket)
+  still rendered inside the CCTV monitor plane after the screen-space-quad
+  fix above shipped.** Field report: on the Jakarta "CCTV-DISKOMINFOTIK
+  #JagaJakarta" (Gatot Subroto) camera, `VEH-XXXX` label cards still drew
+  inside the plane's rectangle — reproducible on any camera/city, not
+  specific to that one feed. Root cause: the screen-space-quad fix only
+  ever tested a detectable object's raw bracket-anchor POINT against the
+  plane's quad; it never tested the bracket's own drawn rectangle, nor the
+  label card's own placed rectangle. A card is offset from its anchor by
+  the bracket's half-extent plus an 8-12px gap plus the card's own width/
+  height — routinely 40-100+ px away — so an anchor correctly outside the
+  plane left the card free to still land on top of it. Fixed by adding
+  `isRectMaskedByPlanesOnScreen()` (`src/data/detectionPlaneOcclusion.js`),
+  a proper Separating Axis Theorem convex-polygon overlap test (an
+  off-angle CCTV plane's screen quad is not necessarily axis-aligned, so a
+  plain AABB check would be wrong), applied at both levels that were
+  missing it: the bracket's own drawn rectangle (`detection.js`'s per-object
+  loop) and every candidate corner placement's card rectangle inside
+  `buildLabelPlacements()` (`src/data/detectionLabelGeometry.js`) — the
+  latter is the actual fix for the reported bug. A label whose every corner
+  is blocked by the plane is dropped for that frame rather than forced onto
+  a corner that still overlaps it.
 - **CCTV live-video monitor plane still flickered during playback after the
   decoded-frame dedup fix below.** Root cause: even deduped, every genuinely
   new video frame still swapped the plane's canvas-backed double-buffer
