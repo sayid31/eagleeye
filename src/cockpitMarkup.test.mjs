@@ -34,7 +34,7 @@ const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin
 const cockpitMixin = fs.readFileSync(path.join(ROOT, 'src', 'cockpitControlMixin.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
-const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
+const manager = readLayerSourceText(path.join(ROOT, 'src', 'data', 'manager.js'));
 // Toggle-panel DOM rendering (buildTogglePanel/_renderToggles/etc., including
 // the showInTogglePanel filter checked below) now lives in
 // managerTogglePanel.js — mechanical relocation, see that file's header.

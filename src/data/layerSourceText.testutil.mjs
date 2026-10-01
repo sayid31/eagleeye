@@ -8,9 +8,10 @@ import { fileURLToPath } from 'node:url';
 
 /** Modules (layers and gevActions) whose source is split across `<name>*.js` siblings. */
 /** Split classes: mixin sibling suffixes in original member order, re-flattened to class-member layout. */
-const MIXIN_CLASSES = new Map([['cockpitViewController', ['Controls', 'Frame', 'Hud', 'Brief', 'Signals']]]);
+const MIXIN_CLASSES = new Map([['cockpitViewController', ['Controls', 'Frame', 'Hud', 'Brief', 'Signals']],
+  ['manager', ['Registration', 'Update', 'Params', 'LifecycleQueries', 'Delegates', 'Subscriptions']]]);
 
-const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches', 'gevActions', 'traffic', 'satellites', 'gevRealtime', 'radio', 'aisLiveVessels', 'militaryAwareness', 'cockpitViewController']);
+const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches', 'gevActions', 'traffic', 'satellites', 'gevRealtime', 'radio', 'aisLiveVessels', 'militaryAwareness', 'cockpitViewController', 'manager']);
 
 /**
  * Return the normalized source text of a layer module.
