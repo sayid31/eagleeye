@@ -19,7 +19,7 @@ const radio = readFileSync(new URL('./data/radio.js', import.meta.url), 'utf8');
 // wiring moved with it.
 const cockpitSrc = readFileSync(new URL('./cockpitViewController.js', import.meta.url), 'utf8');
 const rocketLaunches = readLayerSourceText(new URL('./data/rocketLaunches.js', import.meta.url));
-const realtime = readFileSync(new URL('./voice/gevRealtime.js', import.meta.url), 'utf8');
+const realtime = readLayerSourceText(new URL('./voice/gevRealtime.js', import.meta.url));
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
 const toolSchemasSrc = readFileSync(new URL('./voice/toolSchemas.js', import.meta.url), 'utf8');
 // Instruction text now lives in voiceSystemPrompt.js (mechanical relocation
