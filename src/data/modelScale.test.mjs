@@ -20,6 +20,7 @@ import { test } from 'node:test';
 import * as Cesium from 'cesium';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { CLASS_SCALE_3D, CLASS_MODEL_URL, CLASS_MODEL_REAL } from './aircraftClass.js';
@@ -358,7 +359,7 @@ function nativeVisualCenter(file) {
 // --- per-layer constants, read from source (see header) --------------------
 
 function layerConstants(sourceFile) {
-  const src = fs.readFileSync(path.join(ROOT, sourceFile), 'utf8');
+  const src = readLayerSourceText(path.join(ROOT, sourceFile));
   const scale = src.match(/\bconst MODEL_SCALE = ([\d.]+);/);
   assert.ok(scale, `${sourceFile}: MODEL_SCALE not found`);
   const belly = src.match(/\bconst MODEL_BELLY_OFFSET_NATIVE = ([\d.]+);/);
@@ -382,7 +383,7 @@ function sharedNormalBillboardScaleByDistance() {
 }
 
 function importsSharedNormalBillboardScaleByDistance(sourceFile) {
-  const src = fs.readFileSync(path.join(ROOT, sourceFile), 'utf8');
+  const src = readLayerSourceText(path.join(ROOT, sourceFile));
   return /normalBillboardScaleByDistance,?\s*\n[\s\S]{0,200}from '\.\/aircraftPresentation\.js';/.test(src)
     || /import \{[^}]*normalBillboardScaleByDistance[^}]*\} from '\.\/aircraftPresentation\.js';/.test(src);
 }
@@ -403,7 +404,7 @@ const LAYERS = [
     name: 'military',
     source: 'src/data/militaryFlights.js',
     asset: (() => {
-      const src = fs.readFileSync(path.join(ROOT, 'src/data/militaryFlights.js'), 'utf8');
+      const src = readLayerSourceText(path.join(ROOT, 'src/data/militaryFlights.js'));
       const m = src.match(/\bconst JET_MODEL_URL = '([^']+)';/);
       assert.ok(m, 'militaryFlights.js: JET_MODEL_URL not found');
       return m[1];
@@ -503,7 +504,7 @@ for (const [klass, spec] of Object.entries(CLASS_MODEL_REAL)) {
 // PLANE_* constants — pin them to the measured meter-scale GLB + flights'
 // calibration so the copies cannot drift.
 test('military layer airplane.glb constants match the measured GLB and flights calibration', () => {
-  const src = fs.readFileSync(path.join(ROOT, 'src/data/militaryFlights.js'), 'utf8');
+  const src = readLayerSourceText(path.join(ROOT, 'src/data/militaryFlights.js'));
   const grab = (name) => {
     const m = src.match(new RegExp(`\\bconst ${name} = ([\\d.]+);`));
     assert.ok(m, `militaryFlights.js: ${name} not found`);

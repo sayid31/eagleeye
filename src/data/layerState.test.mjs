@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import assert from 'node:assert/strict';
 
 import { DataLayerManager } from './manager.js';
@@ -365,10 +366,14 @@ test('a fresh boot starts 3D aircraft ON in proximity — codec, both layers, an
   // first-run session actually boots from.
   const { readFile } = await import('node:fs/promises');
   for (const name of ['flights.js', 'militaryFlights.js']) {
-    const source = await readFile(new URL(`./${name}`, import.meta.url), 'utf8');
-    assert.match(source, /^let _models3dEnabled = true;$/m,
+    const source = readLayerSourceText(new URL(`./${name}`, import.meta.url));
+    // Both layers keep this as a property of the shared state object (`<layer>State.js` `S`),
+    // so the literal is `_models3dEnabled: true,` rather than a module-level `let`.
+    const armed = /^\s*_models3dEnabled: true,$/m;
+    const proximity = /^\s*_models3dMode: 'proximity',/m;
+    assert.match(source, armed,
       `${name}: the fleet starts armed, matching the codec default`);
-    assert.match(source, /^let _models3dMode = 'proximity';/m,
+    assert.match(source, proximity,
       `${name}: and starts in proximity, matching the codec default`);
   }
   const ui = await readFile(new URL('../ui.js', import.meta.url), 'utf8');

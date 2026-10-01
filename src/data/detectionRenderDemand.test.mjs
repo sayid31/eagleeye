@@ -33,6 +33,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 
 import {
   DETECTION_ENABLE_FADE_MS,
@@ -427,8 +428,9 @@ test('the render-governor gate covers the parked case, with teeth on the painter
 // promptness goes with them, silently. This test is where that shows up.
 test('aircraft brackets stay prompt because the aircraft layers hold the render loop', async () => {
   for (const file of ['./flights.js', './militaryFlights.js']) {
-    const source = await readFile(new URL(file, import.meta.url), 'utf8');
-    const enable = /\n  enable\([\s\S]*?\n  \},/.exec(source)?.[0];
+    const source = readLayerSourceText(new URL(file, import.meta.url));
+    // Both layers: enable() is the extracted enable<Flights|MilitaryFlights>Layer() function (<layer>Lifecycle.js).
+    const enable = /\n  enable\([\s\S]*?\n  \},|function enable(?:Military)?FlightsLayer\([\s\S]*?\n\}/.exec(source)?.[0];
     assert.ok(enable, `${file}: enable() is still identifiable`);
     assert.match(
       enable,

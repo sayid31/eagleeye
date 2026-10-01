@@ -16,6 +16,7 @@
 //     model with the fleet `models3d` toggle OFF (the whole point of the
 //     feature), that cockpit and TR-3B suppression survived the rewrite, and
 //     that deselecting drops the regime.
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -931,7 +932,7 @@ for (const fixture of LAYERS) {
 test('both layers gate the tracked-model load and record its failures', async () => {
   const { readFile } = await import('node:fs/promises');
   for (const name of ['flights.js', 'militaryFlights.js']) {
-    const source = await readFile(new URL(`./${name}`, import.meta.url), 'utf8');
+    const source = readLayerSourceText(new URL(`./${name}`, import.meta.url));
     assert.match(source, /!_trackedModel && !_trackedModelLoading && _trackedModelLoadAllowed\(\)/,
       `${name}: the driver asks permission before starting another tracked-model load`);
     assert.match(source, /_noteTrackedModelLoadFailure\(trackedSpec\.url, err\)/,
@@ -947,7 +948,7 @@ test('both layers gate the tracked-model load and record its failures', async ()
 test('the tracked regime never consults the fleet models3d toggle', async () => {
   const { readFile } = await import('node:fs/promises');
   for (const name of ['flights.js', 'militaryFlights.js']) {
-    const source = await readFile(new URL(`./${name}`, import.meta.url), 'utf8');
+    const source = readLayerSourceText(new URL(`./${name}`, import.meta.url));
     const regime = /function _trackedModelRegimeActive\(\) \{[\s\S]*?\n\}/.exec(source)?.[0];
     assert.ok(regime, `${name}: _trackedModelRegimeActive is defined`);
     assert.doesNotMatch(regime, /_models3dEnabled|_modelRegimeActive\(\)/,

@@ -25,7 +25,7 @@ const TESTS = [
   'src/data/renderAltitude.test.mjs',
 ];
 
-const FLIGHTS = 'src/data/flights.js';
+const FLIGHTS = 'src/data/flightsDisplayFloor.js'; // display-floor hold moved here by the flights split
 const FLOOR = 'src/data/groundFloor.js';
 const ALT = 'src/data/renderAltitude.js';
 

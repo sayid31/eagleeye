@@ -212,7 +212,7 @@ test('geometry drain coalesces 40 progress ticks and always publishes the final 
   assert.match(productionDrain, /processCctvGeometryDrainBatch/);
   assert.match(productionDrain, /_geoProgressNotifier\?\.progress\(\)/);
   assert.match(productionDrain, /_geoProgressNotifier\?\.finish\(\)/);
-  assert.doesNotMatch(productionDrain, /if \(_geoLoading\) notifyListeners\(\)/);
+  assert.doesNotMatch(productionDrain, /if \(S\._geoLoading\) notifyListeners\(\)/);
 });
 
 test('lazy coverage inserts nothing at catalog init, then materializes only eligible records', () => {
@@ -243,7 +243,7 @@ test('lazy coverage inserts nothing at catalog init, then materializes only elig
   assert.equal(coverageOn.length, 14 * 5);
   assert.equal(insertCount, 15 * 5, 'COVERAGE ON builds only remaining visible/eligible sets');
   assert.equal(records.filter((record) => record.coverageEntities.length > 0).length, 15);
-  assert.match(refreshCoverageStyles.toString(), /ensureVisibleCoverageEntities\(_records, coverageVisible\)/);
+  assert.match(refreshCoverageStyles.toString(), /ensureVisibleCoverageEntities\(S\._records, coverageVisible\)/);
   assert.equal(
     materializeCctvVisibleCoverageEntities(records, visibleIds, build).length,
     0,
@@ -1237,7 +1237,7 @@ test('CCTV repeated in-world clicks dispatch focus only for the one real activat
 
   assert.deepEqual(activated, ['atx-cam-3', 'atx-cam-3', 'atx-cam-3']);
   assert.deepEqual(requests, [{ cameraId: 'atx-cam-3' }]);
-  assert.match(cctvLayer.init.toString(), /bindCctvWorldClickGesture\(_clickHandler/);
+  assert.match(cctvLayer.init.toString(), /bindCctvWorldClickGesture\(S\._clickHandler/);
   assert.match(cctvLayer.init.toString(), /_cctvOverlayHost\.hitTest/);
   assert.match(cctvLayer.init.toString(), /sourceId: CCTV_OVERLAY_SOURCE_ID/);
   assert.match(cctvLayer.init.toString(), /activateCctvCameraFromWorldClick\(cameraId, setActiveCamera\)/);
@@ -1314,8 +1314,8 @@ test('CCTV empty-click gate excludes every identified scene object, ADJUST, and 
       < initSource.indexOf('_cctvOverlayHost.hitTest'),
     'every identified sibling must win before an overlapping CCTV card hit test',
   );
-  assert.match(initSource, /activeCameraId: _activeCameraId/);
-  assert.match(initSource, /calibrationMode: _calibrationMode/);
+  assert.match(initSource, /activeCameraId: S\._activeCameraId/);
+  assert.match(initSource, /calibrationMode: S\._calibrationMode/);
 });
 
 test('CCTV camera extraction requires layer ownership, not a colliding sibling ID', () => {
