@@ -17,7 +17,7 @@ const radioMixin = fs.readFileSync(path.join(ROOT, 'src', 'radioPanelMixin.js'),
 // CockpitViewController (the whole cockpit view/camera controller class) now
 // lives in cockpitViewController.js — mechanical relocation, see that file's
 // header.
-const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
+const cockpitSrc = readLayerSourceText(path.join(ROOT, 'src', 'cockpitViewController.js'));
 // Global Context mode (session capture/restore, the mode state machine, the
 // layer-change reaction handler, panel button sync) now lives in
 // contextModeMixin.js — mechanical relocation, see that file's header.
@@ -578,7 +578,7 @@ test('Cockpit panel corridors reserve the owned topline readouts', () => {
     'the right margin must not borrow the left accordion corridor: it is solved '
       + 'against left-lane obstacles and put the strip through the briefing card',
   );
-  const signalLayout = cockpitSrc.match(/syncSignalLayout\(\) \{([\s\S]*?)\n  \}\n\n  dispose\(\)/);
+  const signalLayout = cockpitSrc.match(/syncSignalLayout\(\) \{([\s\S]*?)\n  \}\n/);
   assert.ok(signalLayout, 'Cockpit signal layout method is missing');
   assert.match(
     signalLayout[1],

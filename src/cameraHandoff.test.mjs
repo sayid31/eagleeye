@@ -14,7 +14,7 @@ const cctvMixin = fs.readFileSync(path.join(ROOT, 'src', 'cctvPanelMixin.js'), '
 // CockpitViewController now lives in cockpitViewController.js (mechanical
 // relocation — see that file's header). Its methods (enter/exit,
 // navigateContext, the context-prev/next listeners) moved with it.
-const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
+const cockpitSrc = readLayerSourceText(path.join(ROOT, 'src', 'cockpitViewController.js'));
 const firms = fs.readFileSync(path.join(ROOT, 'src', 'data', 'firmsHeatmap.js'), 'utf8');
 const vessels = readLayerSourceText(path.join(ROOT, 'src', 'data', 'aisLiveVessels.js'));
 const voice = readLayerSourceText(path.join(ROOT, 'src', 'voice', 'gevActions.js'));

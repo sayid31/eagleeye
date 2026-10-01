@@ -17,7 +17,7 @@ const radio = readLayerSourceText(new URL('./data/radio.js', import.meta.url));
 // CockpitViewController now lives in cockpitViewController.js (mechanical
 // relocation — see that file's header); its aria-expanded/hidden-toggle
 // wiring moved with it.
-const cockpitSrc = readFileSync(new URL('./cockpitViewController.js', import.meta.url), 'utf8');
+const cockpitSrc = readLayerSourceText(new URL('./cockpitViewController.js', import.meta.url));
 const rocketLaunches = readLayerSourceText(new URL('./data/rocketLaunches.js', import.meta.url));
 const realtime = readLayerSourceText(new URL('./voice/gevRealtime.js', import.meta.url));
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
