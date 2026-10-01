@@ -1484,7 +1484,7 @@ async function main() {
           }
           v.scene.requestRender();
         });
-        const timer = setTimeout(finish, Math.max(15000, frames * 1500));
+        const timer = setTimeout(finish, Math.max(60000, frames * 10000));
         v.scene.requestRender();
       });
       remove();
@@ -1668,7 +1668,7 @@ async function main() {
             }
             v.scene.requestRender();
           });
-          const timer = setTimeout(finish, Math.max(15000, frames * 1500));
+          const timer = setTimeout(finish, Math.max(60000, frames * 10000));
           v.scene.requestRender();
         });
         return heights;
@@ -1759,7 +1759,7 @@ async function main() {
           }
           v.scene.requestRender();
         });
-        const timer = setTimeout(finish, Math.max(15000, frames * 1500));
+        const timer = setTimeout(finish, Math.max(60000, frames * 10000));
         v.scene.requestRender();
       });
       return heights;
@@ -2408,7 +2408,7 @@ async function main() {
               }
               v.scene.requestRender();
             });
-            const timer = setTimeout(finish, Math.max(15000, frames * 1500));
+            const timer = setTimeout(finish, Math.max(60000, frames * 10000));
             v.scene.requestRender();
           });
           return out;
@@ -2698,7 +2698,7 @@ async function main() {
           }
           v.scene.requestRender();
         });
-        const timer = setTimeout(finish, Math.max(10000, n * 1500));
+        const timer = setTimeout(finish, Math.max(60000, n * 10000));
         v.scene.requestRender();
       });
       // Park the camera straight above the flights cluster (lift a live
@@ -2857,10 +2857,13 @@ async function main() {
       };
       // The fleet pass is rate-limited, so counting raw frames under-waits.
       window.__dfSettle = (ms) => new Promise((res) => {
-        let done = false;
+        let done = false; let frames = 0; let elapsed = false;
+        const rm = v.scene.postRender.addEventListener(() => { frames++; if (elapsed && frames >= 4) fin(); });
+        const fin = () => { if (done) return; done = true; rm(); res(); };
         const tick = () => { if (done) return; v.scene.requestRender(); setTimeout(tick, 30); };
         tick();
-        setTimeout(() => { done = true; res(); }, ms);
+        setTimeout(() => { elapsed = true; if (frames >= 4) fin(); }, ms);
+        setTimeout(fin, Math.max(30000, ms * 20));
       });
       // Cesium Models in the scene, split by visibility (duck-typed the same
       // way the harness excludes them from height probes).
@@ -4030,7 +4033,7 @@ async function sampleFrames(page, count, sampleFn, ...args) {
       const timer = setTimeout(() => {
         timedOut = true;
         finish();
-      }, Math.max(15000, n * 1500));
+      }, Math.max(60000, n * 10000));
       v.scene.requestRender();
     });
     return { values: out, timedOut };
