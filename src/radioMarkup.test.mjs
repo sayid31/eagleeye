@@ -13,7 +13,7 @@ const radioMixin = readFileSync(new URL('./radioPanelMixin.js', import.meta.url)
 // panelAdaptiveLayoutMixin.js (mechanical relocation from an earlier step —
 // see that file's header).
 const adaptiveLayoutMixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
-const radio = readFileSync(new URL('./data/radio.js', import.meta.url), 'utf8');
+const radio = readLayerSourceText(new URL('./data/radio.js', import.meta.url));
 // CockpitViewController now lives in cockpitViewController.js (mechanical
 // relocation — see that file's header); its aria-expanded/hidden-toggle
 // wiring moved with it.
@@ -368,7 +368,7 @@ test('Radio disclosure is explicit, starts closed while off, and preserves playb
 });
 
 test('successful explicit user playback hands the speaker from voice to Radio', () => {
-  const playStart = radio.indexOf('export async function playSelectedRadio');
+  const playStart = radio.indexOf('async function playSelectedRadio');
   const playMethod = radio.slice(playStart, radio.indexOf('\n/**', playStart + 10));
   const confirmedPlaying = playMethod.indexOf("_audioState = 'playing'");
   const takeoverSignal = playMethod.indexOf("if (origin === 'user') emitPlaybackControl('play', origin, ownedAttemptId)");
