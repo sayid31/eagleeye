@@ -1,0 +1,26 @@
+export default {
+  file: 'src/data/traffic.js',
+  prefix: 'traffic',
+  layerName: 'trafficLayer',
+  map: {
+    trafficStyle: 'presetProfileActive activeSizeDelta baseDotSize refreshBucketColors applyOutline restyleDotsInPlace setStylePreset jamDensityOn heatlineOn',
+    trafficTiming: 'getTrafficTimingDiagnostics trafficTimingPass trafficTimingDetail trafficTimingMark trafficTimingMeasure trafficTimingAggregate clearTrafficTimingEntries trafficTimingCameraChangeMarkName markTrafficTimingCameraChange markTrafficTimingMoveEnd trafficTimingRenderState scheduleTrafficTimingPostRender parseRoadsTimed loadRoadsForBoundsTimed',
+    trafficParse: 'fetchRoads parseRoads estimateRoadLengthDeg',
+    trafficDots: 'computeDotCount allocateRoadDotBudgets spawnDotsForRoad animate trafficNeedsContinuousRender syncTrafficRenderHold maybeStopLight clearDots',
+    trafficView: 'getCameraAltitude getViewBounds getFetchCenter getBoundsCenter distanceKm boundsOverlap clampBounds onCameraChanged cancelActiveFetch',
+    trafficFlow: 'deriveTrafficFlowError trafficFeedPresentation ensureFlowStatus applyFlowToRoads applyFlowThenRender recolorDotsInPlace',
+    trafficRender: 'visibleRoadsForAltitude removeHeatLines rebuildHeatLines renderRoadsForAltitude',
+    trafficLoad: 'loadRoadsForBounds',
+    trafficTestHooks: '_setViewerForTest _renderRoadsForAltitudeForTest',
+  },
+  layerMethods: {
+    init: { fn: 'initTrafficLayer', mod: 'trafficLifecycle' },
+    enable: { fn: 'enableTrafficLayer', mod: 'trafficLifecycle' },
+    disable: { fn: 'disableTrafficLayer', mod: 'trafficLifecycle' },
+    getStats: { fn: 'getTrafficStats', mod: 'trafficLifecycle' },
+    update: { fn: 'updateTrafficLayer', mod: 'trafficApi' },
+    setParams: { fn: 'setTrafficParams', mod: 'trafficApi' },
+    getDetectableObjects: { fn: 'getTrafficDetectableObjects', mod: 'trafficApi' },
+  },
+  headers: {},
+};
