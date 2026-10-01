@@ -7,6 +7,24 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Refactored
 
+- **Sixteen oversized source files are now small modules with no behavior
+  change.** `cctv`, `flights`, `militaryFlights`, `rocketLaunches`, `traffic`,
+  `satellites`, `radio`, `aisLiveVessels`, `militaryAwareness`, `worldOverlay`,
+  `gevRealtime`, `cockpitViewController`, `manager`, `ui`, `gevActions` and
+  `annotationResolver` each become a thin parent (94–1,121 lines, e.g.
+  `cctv.js` 5,453 → 446, `flights.js` 4,808 → 312, `ui.js` 4,426 → 809) plus
+  sibling modules. Layer state moves into one `S` object per layer, classes
+  use mixins, and every export and `*ForTest` hook stays on the parent.
+  Source-text tests read the parent plus its modules through
+  `readLayerSourceText`. The one-shot codemods used for the split are
+  archived in `archive/split-codemods-2026/` and should not be rerun without
+  review. See `docs/CURRENT-STATE.md` §Source layout.
+- **`npm run test:track` no longer fails spuriously on a loaded machine.**
+  Its frame-sampling windows and render-settle waits assumed a render rate
+  that headless software GL does not reach at machine load above 8, which
+  produced 2–9 false failures per run (ground-3d sampling windows, weld,
+  display-floor). Windows now scale with real frame time; assertions are
+  unchanged and three consecutive runs at load 9–11 passed 108/108.
 - **`flights.js` and `militaryFlights.js` shared their dead-reckoning math as
   two near-duplicate private copies; it is now one shared module.** Extracted
   the ENU-frame extrapolation/interpolation engine (bracketing-fix

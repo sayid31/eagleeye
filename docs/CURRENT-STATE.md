@@ -1,6 +1,6 @@
 # EagleEye View Current State
 
-Updated: September 24, 2026
+Updated: October 1, 2026
 
 ## Canonical Docs Order
 
@@ -111,6 +111,44 @@ Historical planning documents may not match runtime behavior.
   flights/military/vessel data anyway, so the larger chunk lands on exactly
   the users who need it. Do not "fix" this by force-converting these
   imports to dynamic without re-deriving the same purity analysis first.
+
+### Source layout: layers and large classes are split into small modules
+
+- Every large layer and class is a thin parent file plus sibling modules in
+  the same directory, so a change is read and made in one 100–700 line file
+  instead of a 2,000–5,000 line one. The public contract does not change: the
+  parent keeps the layer interface (`init/enable/disable/update/destroy/
+  getStats/getDetectableObjects`), every export, and every `*ForTest` hook,
+  and importers keep importing the parent.
+- **Layers with module-level state** (`cctv`, `flights`, `militaryFlights`,
+  `rocketLaunches`, `traffic`, `satellites`, `radio`, `aisLiveVessels`,
+  `militaryAwareness`, and `overlays/worldOverlay`) keep that state in one
+  exported object `S` in `<layer>State.js` (`worldOverlayCoreState.js` for the
+  overlay). Sibling modules `import { S }` and read/write `S._x`; no sibling
+  redeclares state. New layers follow the same shape rather than growing a
+  single file.
+- **Classes** (`StyleManager` in `ui.js`, `DataLayerManager`,
+  `gevRealtime`, `cockpitViewController`) are split into mixin modules
+  (`uiStyleStages.js`, `managerUpdate.js`, …) applied with
+  `Object.assign(Class.prototype, …)` in the parent; a method name defined in
+  two mixins is won by the later assignment, so a name is defined once. The
+  `StyleManager` constructor stays whole in `ui.js` (809 lines).
+- `gevActions.js` (668 lines) and `annotations/annotationResolver.js`
+  (446 lines) are plain function-cluster extractions with no shared state.
+- **Source-text tests** do not read the parent directly: they call
+  `readLayerSourceText(file)` from `src/data/layerSourceText.testutil.mjs`,
+  which concatenates the parent and its sibling modules (mixins first, in
+  the order the parent assigns them; `S._x` normalized back to `_x`) so an
+  assertion about a method body holds wherever the method lives. A newly
+  split file is registered there.
+- Parent sizes (lines): `cctv.js` 446, `flights.js` 312, `militaryFlights.js`
+  233, `rocketLaunches.js` 284, `traffic.js` 137, `satellites.js` 181,
+  `radio.js` 184, `aisLiveVessels.js` 129, `militaryAwareness.js` 94,
+  `worldOverlay.js` 206, `cockpitViewController.js` 310, `gevRealtime.js` 284,
+  `manager.js` 1,121, `ui.js` 809. See `docs/DECISIONS.md` for why state
+  moved into `S`, why the manager state machine and the `StyleManager`
+  constructor stay whole, and why the old one-shot codemods are archived in
+  `archive/split-codemods-2026/`.
 
 ### Render Governor and Scope Mask
 
@@ -1515,7 +1553,7 @@ Replay transport uses one Play/Pause toggle plus Cancel. During ascent only the 
 - `tools/streetview-headings.mjs`: heading sweep capture; supports neighbor traversal.
 - `tools/pano-pinhole.mjs`: equirectangular-to-pinhole reprojection.
 - `tools/sat-ortho.mjs`: Map Tiles ortho stitch and centered crop with georef corners.
-- `scripts/track-regression.mjs`: headless real-app regression harness for aircraft tracking/model/detection invariants (`npm run test:track`).
+- `scripts/track-regression.mjs`: headless real-app regression harness for aircraft tracking/model/detection invariants (`npm run test:track`) Its frame-sampling windows allow up to 10 s per frame (minimum 60 s) and its `__dfSettle` waits for at least 4 real render frames, because a SwiftShader frame takes 0.5–5 s on a loaded machine.
 - `scripts/qa-map-source-tray.mjs`: browser proof for the four-source Map Source
   tray — presentation, keyboard disclosure, responsive bounds, unpinned
   auto-dismiss, ACQUIRING status, and retired/unknown stack-id restore

@@ -6,6 +6,46 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-01 — Large files split into small modules; track-regression timing made frame-adaptive
+
+Sixteen files of 1,700–5,400 lines (`cctv`, `flights`, `militaryFlights`,
+`rocketLaunches`, `traffic`, `satellites`, `radio`, `aisLiveVessels`,
+`militaryAwareness`, `worldOverlay`, `gevRealtime`, `cockpitViewController`,
+`manager`, `ui`, `gevActions`, `annotationResolver`) were split with no
+behavior change. The goal was that a future change reads one small module,
+not a whole file. Moving pure helpers out was tried first and rejected:
+`cctv.js` only fell to ~4,150 lines because 58 module-level `let` variables
+were shared across every cluster.
+
+- **State into `S`.** Layers are object-literal singletons without `this`, so
+  mixins do not apply. Module-level `let` state moved into one exported
+  object (`<layer>State.js`) and `_x` became `S._x`, mechanically and scope
+  aware; after that, functions move to any module that imports `S`. Cost is
+  one property lookup on a monomorphic object in hot paths such as the 12 Hz
+  fleet tick, which is not measurable. Classes keep the repo's existing
+  mixin pattern instead.
+- **What stays whole.** `DataLayerManager`'s toggle/lifecycle state machine
+  stays in `manager.js` (1,121 lines) because the race-guard ordering is the
+  documented bug class. The `StyleManager` constructor stays in `ui.js`
+  (809 lines): splitting it into ordered `_initXxx()` methods would change
+  the constructor's shape, and its order carries invariants ("before style
+  stages", "before panel chrome"), for a gain judged not worth that risk.
+- **Equivalence proof.** Each split was checked by moving code verbatim
+  (position slices, not rewrites), a free-variable scan of every module, a
+  standalone `import()` of each module, and an esbuild bundle comparison,
+  then `npm test` and `npm run build`. The one-shot codemods are kept in
+  `archive/split-codemods-2026/` for traceability; their paths and `--write`
+  behavior make them unsafe to rerun without manual review.
+- **Why `test:track` showed 2–9 failures at machine load above 8, on the
+  unsplit build as well.** The harness assumed a render rate the headless
+  SwiftShader browser does not have. Frame windows allowed 1.5 s per frame
+  and `__dfSettle(900)` waited 900 ms of wall clock, but a frame takes
+  0.5–5 s under load (measured median 1.3–2.1 s) and only 1 frame rendered in
+  900 ms, so windows timed out (`frames=18/30`) and `display-floor`
+  assertions read a stale, not-yet-recomputed value. Windows now allow 10 s
+  per frame and settle waits for 4 real frames; assertions are unchanged.
+  Three consecutive runs at load 9–11 passed 108/108.
+
 ## 2026-08-23 — First-run mission launcher
 
 `src/firstRunExperience.js` (`#first-run-launcher`, styles at the tail of
