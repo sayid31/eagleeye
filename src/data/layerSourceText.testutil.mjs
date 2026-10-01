@@ -6,8 +6,8 @@ import { readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-/** Layers whose source is split across `<name>*.js` siblings. */
-const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches']);
+/** Modules (layers and gevActions) whose source is split across `<name>*.js` siblings. */
+const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches', 'gevActions']);
 
 /**
  * Return the normalized source text of a layer module.

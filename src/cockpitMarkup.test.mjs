@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -43,7 +44,7 @@ const contextLayer = fs.readFileSync(path.join(ROOT, 'src', 'data', 'militaryAwa
 // (single source of truth, plan §3.7) — militaryAwareness.js itself spreads
 // it in rather than declaring it inline.
 const layerMetadata = fs.readFileSync(path.join(ROOT, 'src', 'data', 'layerMetadata.js'), 'utf8');
-const voiceActions = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
+const voiceActions = readLayerSourceText(path.join(ROOT, 'src', 'voice', 'gevActions.js'));
 
 test('Cockpit has one reset action beside its bottom exit path', () => {
   assert.doesNotMatch(html, /id="cockpit-quick-entry"/);
