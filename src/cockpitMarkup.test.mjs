@@ -8,7 +8,7 @@ import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+const ui = readLayerSourceText(path.join(ROOT, 'src', 'ui.js'));
 const mixin = fs.readFileSync(path.join(ROOT, 'src', 'panelAdaptiveLayoutMixin.js'), 'utf8');
 // Radio panel wiring (cockpit disclosure toggles, cycleRadio helper, the
 // click-outside/Escape guards) now lives in radioPanelMixin.js — mechanical

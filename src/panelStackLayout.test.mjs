@@ -7,6 +7,7 @@ import {
   resolveLeftStackBottomBoundary,
   resolvePanelStackCorridor,
 } from './panelStackLayout.js';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 // Measured in Cockpit at 1512x790: CONTACT card at y541, HUD corner at y659,
 // Cesium credits at y758, viewport inset boundary at y758.4. Every surface is
@@ -188,7 +189,7 @@ test('desktop panel lanes use per-panel allocations and presentation-only auto-c
 test('share-panel state excludes responsive collapse and preserves recipient preferences', () => {
   // _buildSharePanelState/_restorePanelState/setPanelCollapsed live in the
   // adaptive-layout mixin; _setCommandDockPanelPinState stays in ui.js.
-  const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const ui = readLayerSourceText(new URL('./ui.js', import.meta.url));
   const mixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
   const sharelink = readFileSync(new URL('./sharelink.js', import.meta.url), 'utf8');
 
@@ -217,7 +218,7 @@ test('share-panel state excludes responsive collapse and preserves recipient pre
 });
 
 test('parameterized Display presets keep one stable scroll owner', () => {
-  const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const ui = readLayerSourceText(new URL('./ui.js', import.meta.url));
   const mixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
   const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
 

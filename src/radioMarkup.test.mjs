@@ -5,7 +5,7 @@ import test from 'node:test';
 import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+const ui = readLayerSourceText(new URL('./ui.js', import.meta.url));
 // Radio panel wiring (tuner interaction, disclosure, panel render) now lives
 // in radioPanelMixin.js (mechanical relocation — see that file's header).
 const radioMixin = readFileSync(new URL('./radioPanelMixin.js', import.meta.url), 'utf8');

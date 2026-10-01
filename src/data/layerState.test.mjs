@@ -376,7 +376,7 @@ test('a fresh boot starts 3D aircraft ON in proximity — codec, both layers, an
     assert.match(source, proximity,
       `${name}: and starts in proximity, matching the codec default`);
   }
-  const ui = await readFile(new URL('../ui.js', import.meta.url), 'utf8');
+  const ui = readLayerSourceText(new URL('../ui.js', import.meta.url));
   assert.match(ui, /^\s*this\._models3dEnabled = true;$/m,
     'ui.js: the DISPLAY rail believes 3D is on before any layer-state sync arrives');
   assert.match(ui, /this\._models3dMode = 'proximity';/,

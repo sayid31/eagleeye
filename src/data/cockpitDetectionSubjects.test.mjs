@@ -15,7 +15,7 @@ import militaryFlightsLayer, {
 const SUBJECT = 'abc123';
 const NEXT_SUBJECT = 'def456';
 
-const UI_SOURCE = readFileSync(new URL('../ui.js', import.meta.url), 'utf8');
+const UI_SOURCE = readLayerSourceText(new URL('../ui.js', import.meta.url));
 // CockpitViewController now lives in cockpitViewController.js (mechanical
 // relocation — see that file's header); dispatchCockpitModeChanged and its
 // call sites moved with it.

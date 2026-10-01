@@ -78,11 +78,9 @@ import {
   activateCctvCameraFromWorldClick,
 } from '../cctvFocusRequest.js';
 import { viewshedColors } from './cctvViewshed.js';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 
-const UI_SOURCE = fs.readFileSync(
-  path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'ui.js'),
-  'utf8',
-);
+const UI_SOURCE = readLayerSourceText(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'ui.js'));
 // _renderCctvState now lives in cctvPanelMixin.js (mechanical relocation —
 // see that file's header), as an object-shorthand property (comma-terminated)
 // rather than a class method (brace-terminated).

@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+const ui = readLayerSourceText(path.join(ROOT, 'src', 'ui.js'));
 // _runExplicitCctvFocus now lives in cctvPanelMixin.js (mechanical relocation
 // — see that file's header) as an object-shorthand property (comma-terminated)
 // rather than a class method (brace-terminated).

@@ -25,8 +25,9 @@ import {
   setMode as setDetectionModeByLabel,
 } from './data/detection.js';
 import { canonicalizeDensity } from './data/detectionPolicy.js';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
-const uiSource = fs.readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+const uiSource = readLayerSourceText(new URL('./ui.js', import.meta.url));
 // _syncContextModeButtons (the funnel every _contextMode mutation routes
 // through) moved into contextModeMixin.js; see that file's header on ui.js.
 const contextModeMixinSource = fs.readFileSync(new URL('./contextModeMixin.js', import.meta.url), 'utf8');

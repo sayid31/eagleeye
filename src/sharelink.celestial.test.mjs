@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import { ShareLinkManager, decodeShareCreatedAtMs } from './sharelink.js';
 import { createDefaultLayerState } from './data/layerState.js';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
-const uiSource = fs.readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+const uiSource = readLayerSourceText(new URL('./ui.js', import.meta.url));
 // Global Context mode (_initGlobalContextPanel, _claimContextVisualAuthority,
 // _selectContextMode, _runUserFacingContextAction, ...) moved into
 // contextModeMixin.js; setContextMode itself (the voice/state-sync facade)
@@ -563,7 +564,7 @@ test('every explicit visual control facade claims restore authority before mutat
     ['  setHudLayout(variantName) {', '  getDetectionState() {', 'this._setHudVariant(', 'setHudLayout'],
     ['  setDetection({ enabled, mode, densityPct, allocationStrategy, fadePct, outsideOpacityPct } = {}) {', '  async setMapStack(stackId) {', 'this._setDetectionAllocation(', 'setDetection'],
     ['  setBloom({ enabled, intensityPct } = {}) {', '  setSharpen({ enabled, intensityPct } = {}) {', 'this._setBloomIntensity(', 'setBloom'],
-    ['  setSharpen({ enabled, intensityPct } = {}) {', '  get celestialRingEnabled() {', 'this._applySharpenIntensity(', 'setSharpen'],
+    ['  setSharpen({ enabled, intensityPct } = {}) {', '  setCelestialRingEnabled(', 'this._applySharpenIntensity(', 'setSharpen'],
     ['  setCelestialRingEnabled(enabled, { syncShare = true, focus = false } = {}) {', '  setOrbit(enabled) {', 'this.celestialRing?.setEnabled(', 'setCelestialRingEnabled'],
   ];
   for (const [start, end, mutation, label] of facadeRoutes) {
@@ -593,7 +594,7 @@ test('public visual facades reject the complete invalid request before authority
     },
     {
       label: 'setSharpen',
-      block: sourceBlock('  setSharpen({ enabled, intensityPct } = {}) {', '  get celestialRingEnabled() {'),
+      block: sourceBlock('  setSharpen({ enabled, intensityPct } = {}) {', '  setCelestialRingEnabled('),
       validations: ['Invalid sharpen enabled value', 'Invalid sharpen intensity'],
     },
     {

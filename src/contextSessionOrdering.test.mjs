@@ -14,8 +14,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
-const src = readFileSync(fileURLToPath(new URL('./ui.js', import.meta.url)), 'utf8');
+const src = readLayerSourceText(fileURLToPath(new URL('./ui.js', import.meta.url)));
 // toggleRadio (the Radio panel's Enable/Disable gesture handler) now lives in
 // radioPanelMixin.js (mechanical relocation — see that file's header).
 const radioMixinSrc = readFileSync(fileURLToPath(new URL('./radioPanelMixin.js', import.meta.url)), 'utf8');
