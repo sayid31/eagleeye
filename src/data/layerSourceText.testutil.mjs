@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 /** Modules (layers and gevActions) whose source is split across `<name>*.js` siblings. */
-const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches', 'gevActions']);
+const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches', 'gevActions', 'traffic']);
 
 /**
  * Return the normalized source text of a layer module.

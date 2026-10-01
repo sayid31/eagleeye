@@ -4,8 +4,9 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { getTrafficTimingDiagnostics } from './traffic.js';
+import { readLayerSourceText } from './layerSourceText.testutil.mjs';
 
-const SOURCE = readFileSync(new URL('./traffic.js', import.meta.url), 'utf8');
+const SOURCE = readLayerSourceText(new URL('./traffic.js', import.meta.url));
 
 function functionBody(name) {
   const declaration = `function ${name}(`;
@@ -167,8 +168,10 @@ test('traffic timing pairs real ordering to the scheduling change and guards re-
         name: 'traffic-timing-test-hooks',
         transform(code, id) {
           if (!id.endsWith('/src/data/traffic.js')) return null;
-          return `${code}\nexport const __trafficTimingTestHooks = {\n` +
-            `  currentAnchor: () => _trafficTimingCurrentAnchor,\n};\n`;
+          // The anchor lives on the shared state object `S` since the layer split.
+          return `${code}\nimport { S as __trafficState } from './trafficState.js';\n` +
+            `export const __trafficTimingTestHooks = {\n` +
+            `  currentAnchor: () => __trafficState._trafficTimingCurrentAnchor,\n};\n`;
         },
       }],
     });
