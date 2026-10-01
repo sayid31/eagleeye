@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
@@ -17,7 +18,7 @@ const radio = readFileSync(new URL('./data/radio.js', import.meta.url), 'utf8');
 // relocation — see that file's header); its aria-expanded/hidden-toggle
 // wiring moved with it.
 const cockpitSrc = readFileSync(new URL('./cockpitViewController.js', import.meta.url), 'utf8');
-const rocketLaunches = readFileSync(new URL('./data/rocketLaunches.js', import.meta.url), 'utf8');
+const rocketLaunches = readLayerSourceText(new URL('./data/rocketLaunches.js', import.meta.url));
 const realtime = readFileSync(new URL('./voice/gevRealtime.js', import.meta.url), 'utf8');
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
 const toolSchemasSrc = readFileSync(new URL('./voice/toolSchemas.js', import.meta.url), 'utf8');
