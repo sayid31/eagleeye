@@ -7,6 +7,7 @@ import {
   registerCctvFocusRequestListener,
   routeCctvFocusRequest,
 } from './cctvFocusRequest.js';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 test('UI CCTV request route uses the explicit focus policy with the clicked id', () => {
   const calls = [];
@@ -57,7 +58,7 @@ test('UI CCTV focus listener registration disposes the exact added callback once
   assert.strictEqual(added[0].callback, listener);
   assert.strictEqual(removed[0].callback, added[0].callback);
 
-  const uiSource = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const uiSource = readLayerSourceText(new URL('./ui.js', import.meta.url));
   assert.match(
     uiSource,
     /_removeCctvRequestFocusListener = registerCctvFocusRequestListener\([\s\S]+this\._cctvRequestFocusHandler/,

@@ -17,6 +17,7 @@ import {
   renderMapStackChips,
   syncMapStackChips,
 } from './mapStackChips.js';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 /** Minimal element stand-in — the row only needs create/append/attr/class. */
 function makeElement(tagName = 'div') {
@@ -332,7 +333,7 @@ test('the keyboard focus ring survives on the ACTIVE chip', () => {
 
 test('the Visual Presets tray owns Map Source and the retired left panel is absent', () => {
   const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-  const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+  const ui = readLayerSourceText(new URL('./ui.js', import.meta.url));
 
   assert.doesNotMatch(html, /map-stack-select/, 'the SOURCE dropdown is replaced by the chip row');
   assert.match(

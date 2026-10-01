@@ -3,9 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+const ui = readLayerSourceText(path.join(ROOT, 'src', 'ui.js'));
 // _runExplicitCctvFocus now lives in cctvPanelMixin.js (mechanical relocation
 // — see that file's header) as an object-shorthand property (comma-terminated)
 // rather than a class method (brace-terminated).
@@ -13,10 +14,10 @@ const cctvMixin = fs.readFileSync(path.join(ROOT, 'src', 'cctvPanelMixin.js'), '
 // CockpitViewController now lives in cockpitViewController.js (mechanical
 // relocation — see that file's header). Its methods (enter/exit,
 // navigateContext, the context-prev/next listeners) moved with it.
-const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
+const cockpitSrc = readLayerSourceText(path.join(ROOT, 'src', 'cockpitViewController.js'));
 const firms = fs.readFileSync(path.join(ROOT, 'src', 'data', 'firmsHeatmap.js'), 'utf8');
-const vessels = fs.readFileSync(path.join(ROOT, 'src', 'data', 'aisLiveVessels.js'), 'utf8');
-const voice = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
+const vessels = readLayerSourceText(path.join(ROOT, 'src', 'data', 'aisLiveVessels.js'));
+const voice = readLayerSourceText(path.join(ROOT, 'src', 'voice', 'gevActions.js'));
 const cameraVerbs = fs.readFileSync(path.join(ROOT, 'src', 'cameraVerbs.js'), 'utf8');
 const cockpitTracking = fs.readFileSync(path.join(ROOT, 'src', 'cockpitTracking.js'), 'utf8');
 // Navigation Authority (_stampNavigation, _runExplicitNavigation,

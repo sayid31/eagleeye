@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { readLayerSourceText } from '../data/layerSourceText.testutil.mjs';
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
 
-const realtime = readFileSync(new URL('./gevRealtime.js', import.meta.url), 'utf8');
+const realtime = readLayerSourceText(new URL('./gevRealtime.js', import.meta.url));
 
 test('aircraft identity narration acknowledges missing enrichment', () => {
   // Instruction text now lives in voiceSystemPrompt.js (mechanical relocation

@@ -1,0 +1,20 @@
+export default {
+  file: 'src/ui.js',
+  className: 'StyleManager',
+  prefix: 'ui',
+  parentKeeps: '',
+  mixins: {
+    uiStyleStages: { exportName: 'styleStagesMixin', methods: '_initStages _setStageIntensity _syncStagesEnabledFromIntensity _syncContactsDetection _setCockpitVision _syncIrBoost _syncCockpitInheritedStyle _revealCockpitStyleParameters _initBloomSharpen _getBloomIntensity _syncBloomStageEnabled _setBloomIntensity _applyBloomIntensity _setBloomEnabled _applySharpenIntensity _setSharpenEnabled _startTransition setStyle', header: 'StyleManager post-process stages: style crossfades, cockpit vision, bloom and sharpen.' },
+    uiDetection: { exportName: 'detectionUiMixin', methods: '_applyDetectionDensityFromUi _applyDetectionFadeFromUi _setDetectionAllocation _syncDetectionUiFromEngine _setDetectionMode _setHudVariant  _updateDetectionButton', header: 'StyleManager detection overlay UI: mode, density, fade, allocation and presets.' },
+    uiPresets: { exportName: 'presetDefaultsMixin', methods: '_applyStylePresetDefaults _applyDetectionPreset _applyGlobalPostDefaults applyCinematicPreset setRecordingMode', header: 'StyleManager style/global preset defaults, cinematic preset and recording mode.' },
+    uiShareState: { exportName: 'shareStateMixin', methods: '_shareableDetectionState _syncShareState _updateTrafficSyncChip _updateCctvSyncChip _persistAwarenessSelection _handleShareTrackingRestoreStatus _initShareButton _settleInitialShareRestore', header: 'StyleManager share-link state, sync chips and initial restore settlement.' },
+    uiPanelChrome: { exportName: 'panelChromeMixin', methods: '_reclampDraggablePanels _scheduleAdaptivePanelLayout _initPanelChrome _initCommandDockPins _setCommandDockPanelPinState _initCommandDockTrayMetrics _updateCommandDockTrayStack _maybeNotifyLayoutReset _initAutoHoverPanel _initPanelDrag _layoutRightPanels _syncCctvPanelViewport', header: 'StyleManager panel chrome: command dock, auto-hover, drag and right-rail layout.' },
+    uiDataManager: { exportName: 'dataManagerAttachMixin', methods: 'attachDataManager _setModels3dParams _syncModels3dFromLayerState _initModels3dToggle _setModels3dEnabled _setModels3dMode _syncModels3dButtonState', header: 'StyleManager data-manager attachment and the 3D-models display toggle.' },
+    uiHudPortal: { exportName: 'hudPortalMixin', methods: '_initUI _updateSliderPanel _revealStyleParameters _initHUDToggle _initCockpitDisplayPortal _setCockpitDisplayPortalActive _updateHudButtonState', header: 'StyleManager UI wiring, slider panel, HUD toggle and the Cockpit display portal.' },
+    uiPublicApi: { exportName: 'publicApiMixin', methods: 'toggleCleanView setHudVisible setHudLayout getDetectionState getDetectionDiagnostics setDetection _initMapStackControl _setMapStack _renderMapStackState setMapStack setBloom setSharpen setCelestialRingEnabled setOrbit setContextMode _initRecordingOverlay _initOrbit _toggleOrbit _stopOrbit', header: 'StyleManager public control API: HUD, map stack, bloom/sharpen, celestial ring, orbit, context mode.' },
+    uiCleanView: { exportName: 'cleanViewMixin', methods: 'setCleanView _initResetGlobeButton _initClearSelectedLayersButton clearSelectedLayers resetToGlobeView', header: 'StyleManager clean view, globe reset and clear-selected-layers.' },
+    uiLoadingFeedback: { exportName: 'loadingFeedbackMixin', methods: '_updateGlobalLoadingFeedback _showGlobalStatusNotice _startAnimationLoop _startTrafficChipTicker _armLoadingFeedbackTicker _stopLoadingFeedbackTicker _showToast', header: 'StyleManager global loading feedback, animation loop and toasts.' },
+    uiDispose: { exportName: 'disposeMixin', methods: 'dispose', header: 'StyleManager teardown.' },
+  },
+  helpers: {},
+};

@@ -3,9 +3,10 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+const ui = readLayerSourceText(path.join(ROOT, 'src', 'ui.js'));
 const director = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 // Navigation Authority + Location Bar (_stampNavigation,
 // _beginDeferredNavigation, _reassertNavigationHandoff, the free-text search

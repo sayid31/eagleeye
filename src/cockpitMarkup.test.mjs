@@ -3,11 +3,12 @@ import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
-const ui = fs.readFileSync(path.join(ROOT, 'src', 'ui.js'), 'utf8');
+const ui = readLayerSourceText(path.join(ROOT, 'src', 'ui.js'));
 const mixin = fs.readFileSync(path.join(ROOT, 'src', 'panelAdaptiveLayoutMixin.js'), 'utf8');
 // Radio panel wiring (cockpit disclosure toggles, cycleRadio helper, the
 // click-outside/Escape guards) now lives in radioPanelMixin.js — mechanical
@@ -16,7 +17,7 @@ const radioMixin = fs.readFileSync(path.join(ROOT, 'src', 'radioPanelMixin.js'),
 // CockpitViewController (the whole cockpit view/camera controller class) now
 // lives in cockpitViewController.js — mechanical relocation, see that file's
 // header.
-const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
+const cockpitSrc = readLayerSourceText(path.join(ROOT, 'src', 'cockpitViewController.js'));
 // Global Context mode (session capture/restore, the mode state machine, the
 // layer-change reaction handler, panel button sync) now lives in
 // contextModeMixin.js — mechanical relocation, see that file's header.
@@ -33,17 +34,17 @@ const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin
 const cockpitMixin = fs.readFileSync(path.join(ROOT, 'src', 'cockpitControlMixin.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
-const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'utf8');
+const manager = readLayerSourceText(path.join(ROOT, 'src', 'data', 'manager.js'));
 // Toggle-panel DOM rendering (buildTogglePanel/_renderToggles/etc., including
 // the showInTogglePanel filter checked below) now lives in
 // managerTogglePanel.js — mechanical relocation, see that file's header.
 const managerTogglePanel = fs.readFileSync(path.join(ROOT, 'src', 'data', 'managerTogglePanel.js'), 'utf8');
-const contextLayer = fs.readFileSync(path.join(ROOT, 'src', 'data', 'militaryAwareness.js'), 'utf8');
+const contextLayer = readLayerSourceText(path.join(ROOT, 'src', 'data', 'militaryAwareness.js'));
 // military-awareness's showInTogglePanel:false now lives in layerMetadata.js
 // (single source of truth, plan §3.7) — militaryAwareness.js itself spreads
 // it in rather than declaring it inline.
 const layerMetadata = fs.readFileSync(path.join(ROOT, 'src', 'data', 'layerMetadata.js'), 'utf8');
-const voiceActions = fs.readFileSync(path.join(ROOT, 'src', 'voice', 'gevActions.js'), 'utf8');
+const voiceActions = readLayerSourceText(path.join(ROOT, 'src', 'voice', 'gevActions.js'));
 
 test('Cockpit has one reset action beside its bottom exit path', () => {
   assert.doesNotMatch(html, /id="cockpit-quick-entry"/);
@@ -577,7 +578,7 @@ test('Cockpit panel corridors reserve the owned topline readouts', () => {
     'the right margin must not borrow the left accordion corridor: it is solved '
       + 'against left-lane obstacles and put the strip through the briefing card',
   );
-  const signalLayout = cockpitSrc.match(/syncSignalLayout\(\) \{([\s\S]*?)\n  \}\n\n  dispose\(\)/);
+  const signalLayout = cockpitSrc.match(/syncSignalLayout\(\) \{([\s\S]*?)\n  \}\n/);
   assert.ok(signalLayout, 'Cockpit signal layout method is missing');
   assert.match(
     signalLayout[1],

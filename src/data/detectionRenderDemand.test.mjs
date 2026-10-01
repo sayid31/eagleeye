@@ -359,7 +359,7 @@ test('a layer whose detectable set changed dirties the solve', async () => {
   assert.match(hook, /if \(_mode === MODE_OFF\) return;/,
     'and it stays inert while detection is off');
 
-  const manager = await readFile(new URL('./manager.js', import.meta.url), 'utf8');
+  const manager = readLayerSourceText(new URL('./manager.js', import.meta.url));
   assert.match(manager, /import \{ markDetectionSourcesChanged \} from '\.\/detection\.js';/);
   // Both discrete events that can change the detectable set, next to the render
   // request each already made.

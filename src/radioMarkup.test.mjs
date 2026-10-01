@@ -2,9 +2,10 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import test from 'node:test';
+import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 const html = readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-const ui = readFileSync(new URL('./ui.js', import.meta.url), 'utf8');
+const ui = readLayerSourceText(new URL('./ui.js', import.meta.url));
 // Radio panel wiring (tuner interaction, disclosure, panel render) now lives
 // in radioPanelMixin.js (mechanical relocation — see that file's header).
 const radioMixin = readFileSync(new URL('./radioPanelMixin.js', import.meta.url), 'utf8');
@@ -12,13 +13,13 @@ const radioMixin = readFileSync(new URL('./radioPanelMixin.js', import.meta.url)
 // panelAdaptiveLayoutMixin.js (mechanical relocation from an earlier step —
 // see that file's header).
 const adaptiveLayoutMixin = readFileSync(new URL('./panelAdaptiveLayoutMixin.js', import.meta.url), 'utf8');
-const radio = readFileSync(new URL('./data/radio.js', import.meta.url), 'utf8');
+const radio = readLayerSourceText(new URL('./data/radio.js', import.meta.url));
 // CockpitViewController now lives in cockpitViewController.js (mechanical
 // relocation — see that file's header); its aria-expanded/hidden-toggle
 // wiring moved with it.
-const cockpitSrc = readFileSync(new URL('./cockpitViewController.js', import.meta.url), 'utf8');
-const rocketLaunches = readFileSync(new URL('./data/rocketLaunches.js', import.meta.url), 'utf8');
-const realtime = readFileSync(new URL('./voice/gevRealtime.js', import.meta.url), 'utf8');
+const cockpitSrc = readLayerSourceText(new URL('./cockpitViewController.js', import.meta.url));
+const rocketLaunches = readLayerSourceText(new URL('./data/rocketLaunches.js', import.meta.url));
+const realtime = readLayerSourceText(new URL('./voice/gevRealtime.js', import.meta.url));
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
 const toolSchemasSrc = readFileSync(new URL('./voice/toolSchemas.js', import.meta.url), 'utf8');
 // Instruction text now lives in voiceSystemPrompt.js (mechanical relocation
@@ -367,7 +368,7 @@ test('Radio disclosure is explicit, starts closed while off, and preserves playb
 });
 
 test('successful explicit user playback hands the speaker from voice to Radio', () => {
-  const playStart = radio.indexOf('export async function playSelectedRadio');
+  const playStart = radio.indexOf('async function playSelectedRadio');
   const playMethod = radio.slice(playStart, radio.indexOf('\n/**', playStart + 10));
   const confirmedPlaying = playMethod.indexOf("_audioState = 'playing'");
   const takeoverSignal = playMethod.indexOf("if (origin === 'user') emitPlaybackControl('play', origin, ownedAttemptId)");
