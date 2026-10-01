@@ -16,7 +16,7 @@ const cctvMixin = fs.readFileSync(path.join(ROOT, 'src', 'cctvPanelMixin.js'), '
 // navigateContext, the context-prev/next listeners) moved with it.
 const cockpitSrc = fs.readFileSync(path.join(ROOT, 'src', 'cockpitViewController.js'), 'utf8');
 const firms = fs.readFileSync(path.join(ROOT, 'src', 'data', 'firmsHeatmap.js'), 'utf8');
-const vessels = fs.readFileSync(path.join(ROOT, 'src', 'data', 'aisLiveVessels.js'), 'utf8');
+const vessels = readLayerSourceText(path.join(ROOT, 'src', 'data', 'aisLiveVessels.js'));
 const voice = readLayerSourceText(path.join(ROOT, 'src', 'voice', 'gevActions.js'));
 const cameraVerbs = fs.readFileSync(path.join(ROOT, 'src', 'cameraVerbs.js'), 'utf8');
 const cockpitTracking = fs.readFileSync(path.join(ROOT, 'src', 'cockpitTracking.js'), 'utf8');
