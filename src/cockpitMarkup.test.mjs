@@ -39,7 +39,7 @@ const manager = fs.readFileSync(path.join(ROOT, 'src', 'data', 'manager.js'), 'u
 // the showInTogglePanel filter checked below) now lives in
 // managerTogglePanel.js — mechanical relocation, see that file's header.
 const managerTogglePanel = fs.readFileSync(path.join(ROOT, 'src', 'data', 'managerTogglePanel.js'), 'utf8');
-const contextLayer = fs.readFileSync(path.join(ROOT, 'src', 'data', 'militaryAwareness.js'), 'utf8');
+const contextLayer = readLayerSourceText(path.join(ROOT, 'src', 'data', 'militaryAwareness.js'));
 // military-awareness's showInTogglePanel:false now lives in layerMetadata.js
 // (single source of truth, plan §3.7) — militaryAwareness.js itself spreads
 // it in rather than declaring it inline.
