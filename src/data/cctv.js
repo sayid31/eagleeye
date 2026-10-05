@@ -74,6 +74,7 @@ import { restoreSpriteOrder } from './spriteOrder.js';
 import { releaseContinuousRender } from '../renderGovernor.js';
 import { CCTV_ACTIVATION_RESULT } from '../cctvFocusRequest.js';
 import { CCTV_FOCUS_RESULT } from './cctvFocusResult.js';
+import { pickDefaultCameraId } from './cctvDefaultCamera.js';
 import { cctvCycleIndex, focusCamera, maybeAutoHop, setActiveCamera } from './cctvActivation.js';
 import { refreshAmbientCards, setCctvCardPresentationOptions, startCardFrameLoop, teardownAmbientCards } from './cctvAmbientCards.js';
 import { normalizeCalibration } from './cctvCalibrationStore.js';
@@ -144,7 +145,8 @@ const cctvLayer = {
       return Boolean(coverage && S._recordById.has(coverage[1]));
     });
     if (!S._activeCameraId && S._records.length) {
-      S._activeCameraId = S._records[0].camera.id;
+      S._activeCameraId = pickDefaultCameraId(S._records);
+      S._defaultCameraPending = true;
       S._autoHopSuspended = false;
     }
     const activeRecord = getActiveRecord();
@@ -440,6 +442,26 @@ const cctvLayer = {
       focusCamera(nearest, options.durationSec || 1.8);
     }
     return nearest;
+  },
+
+  /**
+   * True while the active camera is only the catalog default (nothing was
+   * ever selected), i.e. the first enable should fly to it.
+   * @returns {boolean}
+   */
+  isDefaultCameraPending() {
+    return S._defaultCameraPending === true && !!S._activeCameraId;
+  },
+
+  /**
+   * Activates the catalog default camera (live Denpasar camera, see
+   * `pickDefaultCameraId`) without moving the view; the caller flies.
+   * @returns {string|null} Activated camera ID, or null when no default is pending.
+   */
+  activateDefaultCamera() {
+    if (!this.isDefaultCameraPending()) return null;
+    const id = S._activeCameraId;
+    return setActiveCamera(id) === CCTV_ACTIVATION_RESULT.NOT_FOUND ? null : id;
   },
 };
 

@@ -25,6 +25,9 @@ export const S = {
   _projectionEntities: [],
   _enabled: false,
   _activeCameraId: null,
+  // True while `_activeCameraId` is only the catalog default (no user/voice selection):
+  // the first enable flies to it. Cleared by any real activation or deselect.
+  _defaultCameraPending: false,
   _coverageMode: 'on', // 'off' | 'on' (wireframes) | 'viewshed' (color-coded volumes)
   _showProjection: true,
   _autoHop: false,

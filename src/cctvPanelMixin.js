@@ -748,8 +748,10 @@ export const cctvPanelMixin = {
         trackedEntity: this.viewer?.trackedEntity,
         cockpitActive: !!this.cockpitView?.active,
       }),
-      shouldFocus: () => !this._cctvState?.activeCameraId,
-      activate: () => this._dataManager?.callLayerMethod('cctv', 'focusNearest', { focus: false }),
+      shouldFocus: () => !this._cctvState?.activeCameraId
+        || this._dataManager?.callLayerMethod('cctv', 'isDefaultCameraPending') === true,
+      activate: () => this._dataManager?.callLayerMethod('cctv', 'activateDefaultCamera')
+        || this._dataManager?.callLayerMethod('cctv', 'focusNearest', { focus: false }),
       fly: (cameraId) => this._runExplicitCctvFocus(
         () => cameraId,
         (selectedId) => this._dataManager?.focusCamera('cctv', selectedId, 1.6),
