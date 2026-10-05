@@ -1190,7 +1190,14 @@ The Scenes panel's scene-recipe picker (`src/scenes/scenePicker.js`) uses the
 same custom listbox pattern (button trigger + body-portaled `position: fixed`
 `<ul role="listbox">`, dark blurred popup, cyan scrollbar, keyboard support
 shared with `handleCctvListboxKeydown`) instead of a native `<select>`. It is
-disabled while a scene runs.
+disabled while a scene runs. The popup's width is a minimum (the button's
+width) and grows to fit the longest scene name, capped at the viewport edge,
+so labels are not clipped.
+
+Brand logo: `public/logo.svg` is the static cyan (`#00d4ff`) eagle (source art
+`Logo_EagleEye.svg`), used by the title bar, the loading screen and the favicon.
+`.brand-logo` uses a 288:513 aspect ratio. `logoGaze.js` still runs but finds no
+`#globe`/`#globe_cage` parts in the eagle, so it is a no-op.
 
 The CCTV panel's camera picker is a custom-built `role="listbox"`
 control (not a native `<select>`) so the open popup is ordinary page

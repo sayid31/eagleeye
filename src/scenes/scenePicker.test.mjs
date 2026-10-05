@@ -35,6 +35,7 @@ function setup() {
   doc.createElement = makeEl;
   const win = makeEl('window');
   win.innerHeight = 800;
+  win.innerWidth = 1280;
   const trigger = makeEl('button');
   trigger.attrs['aria-expanded'] = 'false';
   const listbox = makeEl('ul');
@@ -57,6 +58,16 @@ test('placement opens downward with room, upward when cramped, and clamps height
   assert.equal(up.top, undefined);
   const tiny = computeScenePopupPlacement({ left: 0, top: 10, bottom: 40, width: 50 }, 60);
   assert.equal(tiny.maxHeight, 120);
+});
+
+test('placement width is a minimum (trigger width) that may grow up to the viewport edge', () => {
+  const roomy = computeScenePopupPlacement({ left: 40, top: 100, bottom: 130, width: 200 }, 800, 1000);
+  assert.equal(roomy.minWidth, 200);
+  assert.equal(roomy.maxWidth, 952);
+  const edge = computeScenePopupPlacement({ left: 40, top: 100, bottom: 130, width: 200 }, 800, 240);
+  assert.equal(edge.maxWidth, 200, 'never narrower than the trigger');
+  const unknown = computeScenePopupPlacement({ left: 40, top: 100, bottom: 130, width: 200 }, 800);
+  assert.ok(unknown.maxWidth >= 200);
 });
 
 test('render builds role=option items, marks the selection, and labels the trigger', () => {

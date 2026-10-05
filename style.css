@@ -472,7 +472,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
 #title-bar .title-logo {
   position: relative;
   display: block;
-  width: 52px;
+  width: 30px;
   height: auto;
   filter: drop-shadow(0 0 12px rgba(0, 246, 255, 0.5));
 }
@@ -530,7 +530,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
 }
 
 .brand-logo {
-  aspect-ratio: 775 / 520;
+  aspect-ratio: 288 / 513;
   overflow: visible;
   pointer-events: none;
 }
@@ -853,7 +853,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
 
 .loader-logo {
   display: block;
-  width: 128px;
+  width: 72px;
   height: auto;
   margin: 0 auto 24px;
   filter: drop-shadow(0 0 24px rgba(0, 246, 255, 0.42));
@@ -6190,6 +6190,9 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 .cctv-camera-listbox {
   position: fixed;
   z-index: 310;
+  /* Width is set by scenePicker.js as a *minimum* (the trigger's width); the
+     popup grows to fit the longest scene name so labels are never clipped. */
+  width: max-content;
   margin: 0;
   padding: 4px;
   list-style: none;
@@ -6659,8 +6662,6 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   font-size: 12px;
   cursor: pointer;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .scene-picker-option.highlighted {
@@ -7002,7 +7003,7 @@ body.scene-playback-mode :is(#clear-selected-layers, #reset-globe-view) {
   }
 
   #title-bar .title-logo {
-    width: 36px;
+    width: 22px;
   }
 
   #location-bar {
