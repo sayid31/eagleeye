@@ -5,6 +5,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Added
+
+- **60 more live Bandung CCTV cameras (UNOFFICIAL SOURCE, demo only)** from
+  pelindung.bandung.go.id, spread across the city. They carry the same amber
+  `⚠ UNOFFICIAL SOURCE` badge as the other Indonesian cameras and can be
+  switched off with `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`. Camera heading is
+  unknown, so their view cones are rough placeholders.
+
 ### Changed
 
 - **Scenes dropdown is shorter and closes on scroll.** The popup is capped at

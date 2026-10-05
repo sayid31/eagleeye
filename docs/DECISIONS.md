@@ -2019,3 +2019,9 @@ The reasonable-defaults batch landed 2026-08-22, was extended and partly revised
 - **3D aircraft models** moved from `OFF` to `ON` in `proximity` mode as part of the same batch.
 
 The `scf` / `ko` PARSE fallbacks deliberately do NOT move with the live defaults: they answer what an OLD LINK that omits the field meant, authored under that era's default (`scf` → 35, `ko` → 5); every link since carries both fields explicitly, so no era whose default later changed depends on a fallback either way.
+
+## 2026-10-05 — Indonesia unofficial pack: Pelindung Bandung as a curated 60-camera subset
+
+pelindung.bandung.go.id exposes an unauthenticated catalog (`:8443/api/cek`, 436 cameras) and live HLS streams (`:3443/video/...`), ~270 of which were serving fresh segments when probed. The pack takes **60** of them, not all: the global `DEFAULT_CCTV_MAX_SOURCES` cap is 900 and shared with Austin/Caltrans/TfL, every camera is an unofficial stream with no agreement behind it (a smaller footprint is easier to revoke and defend), and this is a demo. Selection = live at generation time, inside the Bandung bounding box, coordinate-deduped (42 duplicate-coordinate groups upstream), then farthest-point sampling for city-wide spread; malformed `https:/` URLs were normalized. Heading is unknown upstream, so `headingDeg: 0` with `headingConfidence: 'low'`.
+
+Why Pelindung over ATCS Bandung: the ATCS catalog is reachable but every `:1990/<name>/index.m3u8` returns 404 (mediamtx, no publisher), including the 3 older Bandung rows, which remain in the pack but show no video. Bali Tower (`cctv.balitower.co.id`) timed out on 80/443 from the dev network and was not included. Bina Marga, BPJT, RTTMC and smartcity.jakarta.go.id were not probed in this change.
