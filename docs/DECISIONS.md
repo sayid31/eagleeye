@@ -1961,6 +1961,22 @@ The tracked contact's 2D↔3D handoff became default behavior, driven by camera 
 
 The swap distance was set by playtesting: a first pass at 1,000,000 m switched too early; 2D reads correctly at ~600 km and the handoff belongs at ~150 km. Consequence, recorded on purpose: the tracked contact now enters 3D nearer than the FLEET does (`MODEL_ALT_CEIL_M` = 800,000 m, unchanged), so with the DISPLAY-rail `3D` toggle on, 150–800 km draws surrounding contacts as models while the selected one is still a glyph. The two enter/exit thresholds are asymmetric on purpose — a single threshold makes a tracked orbit sitting on the boundary strobe billboard↔model as the camera's altitude wobbles across it.
 
+## 2026-10-05 — Scope intensity defaults to 0, shared themed scrollbar, scene popup scroll-close
+
+- **Scope intensity first-run default is 0 (`SCOPE_INTENSITY_DEFAULT`), but the
+  `sci` PARSE fallback stays 100.** Same split as feather (`scf` 35) and outside
+  opacity (`ko` 5): a fresh boot with nothing said gets the new default; an old
+  link with no `sci` was authored against a 100% mask and must still look that
+  way.
+- **Scene popup closes on any outside scroll instead of tracking its trigger.**
+  The portaled popup is `position: fixed`; repositioning on every scroll would
+  need a listener on every scrollable ancestor, whereas closing is one capturing
+  `scroll` listener on the document. Popup height is capped at ~5 rows so it
+  never overlaps the shot list.
+- **One selector group carries the CCTV scrollbar look to the other panel
+  scrollers** rather than duplicating the block per panel. The `#cesium-credits`
+  lightbox list and the first-run/key-setup lists keep their own styling.
+
 ## 2026-10-05 — Esri Satellite boot basemap, Denpasar default CCTV camera
 
 - **Boot basemap is `DEFAULT_BOOT_STACK = 'esri-imagery'` even when the Google

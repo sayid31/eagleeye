@@ -8,13 +8,15 @@ import {
   setScopeMaskOpacity,
   getScopeMaskOpacity,
   resolvePaintedAlpha,
+  SCOPE_INTENSITY_DEFAULT,
   _resetScopeMaskForTest,
 } from './scopeMask.js';
 
 beforeEach(() => _resetScopeMaskForTest());
 
-test('the intensity dial defaults to 1 (today\'s shipped look, unchanged)', () => {
-  assert.equal(getScopeMaskOpacity(), 1);
+test('the intensity dial defaults to 0 on a first run (mask starts fully transparent)', () => {
+  assert.equal(SCOPE_INTENSITY_DEFAULT, 0);
+  assert.equal(getScopeMaskOpacity(), 0);
 });
 
 test('setScopeMaskOpacity clamps into [0,1]', () => {

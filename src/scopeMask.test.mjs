@@ -15,6 +15,7 @@ import {
   destroyScopeMask,
   setScopeMaskEnabled,
   setScopeMaskFeather,
+  setScopeMaskOpacity,
   SCOPE_TERMINUS_MIN_PCT,
   SCOPE_TERMINUS_MAX_PCT,
   SCOPE_FEATHER_RATIO_DEFAULT,
@@ -338,6 +339,7 @@ test('the hard-crop (feather 0) path honors the same terminus alpha', () => {
   const dom = stubScopeMaskDom({ width: 1000, height: 800, dpr: 1 });
   try {
     installScopeMask({ container: dom.container });
+    setScopeMaskOpacity(1); // the first-run intensity is 0, which paints nothing to assert on
     updateScopeTerminusForHeight(SCOPE_TERMINUS_FAR_M + 5_000_000); // true full-globe view
     setScopeMaskFeather(0); // hard crop — the evenodd rect-minus-circle path
     // The globe-scale seed paint is legitimately in the history, so assert on

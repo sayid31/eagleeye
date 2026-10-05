@@ -7,6 +7,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Scenes dropdown is shorter and closes on scroll.** The popup is capped at
+  about five rows (longer lists scroll inside it) so it no longer covers the
+  shot list, and scrolling the panel or page closes it instead of leaving it
+  floating.
+- **Panel scrollbars now use the CCTV panel's cyan style** (Scenes panel and
+  shot list, Context and Contacts panels, and the left/right panel stacks)
+  instead of the native white bar.
+- **Scope Intensity starts at 0%** on a fresh open (was 100%). Links that
+  already carry an intensity value, and old links with none, restore as before.
 - **New eagle logo** in the title bar, the loading screen and the browser tab
   icon, recolored cyan so it reads on the dark background. The old eye logo's
   pointer-following gaze effect no longer applies (the eagle is static).

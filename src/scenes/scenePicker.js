@@ -9,7 +9,8 @@
 import { handleCctvListboxKeydown } from '../cctvCameraListbox.js';
 
 export const SCENE_OPTION_CLASS = 'scene-picker-option';
-const POPUP_MAX_HEIGHT_PX = 260;
+// ~5 rows: keeps the popup from covering the shot list below the picker; longer lists scroll.
+const POPUP_MAX_HEIGHT_PX = 150;
 const POPUP_MIN_HEIGHT_PX = 120;
 const POPUP_EDGE_GAP_PX = 8;
 const POPUP_VIEWPORT_MARGIN_PX = 8;
@@ -172,6 +173,15 @@ export function createScenePicker({ trigger, listbox, onSelect, doc = globalThis
   }, { capture: true, signal });
 
   win.addEventListener('resize', () => { if (isOpen()) position(); }, { signal });
+
+  // The popup is `position: fixed`, so it would stay put while the panel scrolls
+  // away beneath it. Any scroll outside the popup itself closes it. Scroll does
+  // not bubble, hence the capture phase on the document.
+  doc.addEventListener('scroll', (event) => {
+    if (!isOpen()) return;
+    if (event.target === listbox) return;
+    close();
+  }, { capture: true, signal });
 
   return {
     render,

@@ -35,7 +35,10 @@ import { KEYHOLE_OUTER_RADIUS, KEYHOLE_OUTSIDE_OPACITY_DEFAULT, KEYHOLE_LABEL_FE
 import { AIRCRAFT_BRACKET_FLOOR_ANCHOR } from './data/detectionPolicy.js';
 import {
   SCOPE_FEATHER_RATIO_DEFAULT,
+  SCOPE_INTENSITY_DEFAULT,
   getScopeMaskFeather,
+  getScopeMaskOpacity,
+  setScopeMaskOpacity,
   scopeMaskGeometry,
   setScopeMaskFeather,
 } from './scopeMask.js';
@@ -275,4 +278,31 @@ test('a share link that carries detection OFF still restores OFF', () => {
   const dense = managerForHash('#lat=10&lon=20&dm=DENSE&dd=75').parseInitialHash();
   assert.equal(dense.detectionMode, 'DENSE');
   assert.equal(dense.detectionDensity, 75);
+});
+
+// ---------------------------------------------------------------------------
+// 5. Scope intensity — the mask starts fully transparent on a first run
+// ---------------------------------------------------------------------------
+
+test('first run opens with scope intensity at 0, at every surface that decides it', () => {
+  assert.equal(SCOPE_INTENSITY_DEFAULT, 0, 'owner directive 2026-10-05: first open shows intensity 0, not 100%');
+  assert.equal(getScopeMaskOpacity(), 0, 'the live module starts there too');
+  assert.match(indexHtml, /id="scope-intensity-slider"[^>]*\svalue="0"/,
+    'index.html: the intensity slider ships at 0');
+  assert.match(indexHtml, /id="scope-intensity-value"[^>]*>0%</,
+    'index.html: and its readout agrees with the handle');
+  assert.match(shareSource, /this\._scopeIntensityPct = 0;/,
+    'sharelink.js: the generator starts from the same value the mask starts at');
+});
+
+test('an explicit intensity still wins, and a link without sci keeps its author\'s 100', () => {
+  assert.equal(managerForHash('#lat=10&lon=20&sci=62').parseInitialHash().scopeIntensityPct, 62);
+  assert.equal(managerForHash('#lat=10&lon=20&sci=0').parseInitialHash().scopeIntensityPct, 0);
+  // Parsing an archived link is not the same question as booting fresh: links
+  // from before the default moved to 0 were authored against a 100% mask.
+  assert.equal(managerForHash('#lat=10&lon=20&style=normal').parseInitialHash().scopeIntensityPct, 100,
+    'a pre-sci link restores the author\'s view, not the new default');
+  setScopeMaskOpacity(1);
+  assert.equal(getScopeMaskOpacity(), 1, 'the dial still reaches 100%');
+  setScopeMaskOpacity(SCOPE_INTENSITY_DEFAULT);
 });

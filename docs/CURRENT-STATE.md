@@ -1192,7 +1192,16 @@ same custom listbox pattern (button trigger + body-portaled `position: fixed`
 shared with `handleCctvListboxKeydown`) instead of a native `<select>`. It is
 disabled while a scene runs. The popup's width is a minimum (the button's
 width) and grows to fit the longest scene name, capped at the viewport edge,
-so labels are not clipped.
+so labels are not clipped. Its height is capped (~5 rows, `POPUP_MAX_HEIGHT_PX`)
+so it stops above the shot list, and longer lists scroll inside the popup.
+Because the popup is `position: fixed`, any scroll outside it (panel, page)
+closes it rather than leaving it floating.
+
+Scrolling panels share the CCTV panel's cyan themed scrollbar (8px, cyan
+gradient thumb) instead of the OS-native white bar: the Scenes panel, its shot
+list, the Context and Contacts panels, and the left/right panel stacks. The
+selector group lives next to `.cctv-panel-inner` in `style.css`; add new
+scrolling panels to it.
 
 Brand logo: `public/logo.svg` is the static cyan (`#00d4ff`) eagle (source art
 `Logo_EagleEye.svg`), used by the title bar, the loading screen and the favicon.
@@ -1381,7 +1390,7 @@ First-run defaults move together as one coherent console presentation. Every
 one is a FIRST-RUN baseline only: a share link or the operator's own hand
 still wins over it, and none of them sets the `_detectionUserOverridden` /
 explicit-intent flags that would suppress a separate landed behaviour.
-Pinned in `src/reasonableDefaults.test.mjs` (feather, detection, OUTSIDE
+Pinned in `src/reasonableDefaults.test.mjs` (feather, intensity, detection, OUTSIDE
 opacity) and `src/data/layerState.test.mjs` (3D). See `docs/DECISIONS.md`
 for why these specific values were chosen.
 
@@ -1395,6 +1404,7 @@ for why these specific values were chosen.
 | Detection Fade | `7%` | Label/card fading band around the keyhole. |
 | Detection OUTSIDE opacity | `1%` | `KEYHOLE_OUTSIDE_OPACITY_DEFAULT` in `src/celestialRing.js`, mirrored by `#detection-opacity-slider`'s markup value AND readout, `GLOBAL_POST_DEFAULTS.detectionOutsideOpacityPct` in `ui.js`, and `_detectionOutsideOpacityPct` in `sharelink.js`. Slider `step` is `1`. `AIRCRAFT_BRACKET_FLOOR_ANCHOR` in `src/data/detectionPolicy.js` moves with it — calibrated so `AIRCRAFT_BRACKET_ALPHA_FLOOR` (0.35) lands exactly at the default. The `ko` PARSE fallback stays at `5` (see `docs/DECISIONS.md`). |
 | Scope feather | `11%` | Soft scope-mask edge. `SCOPE_FEATHER_RATIO_DEFAULT` in `src/scopeMask.js`, mirrored by `#scope-feather-slider`'s markup value AND readout and `_scopeFeatherPct` in `sharelink.js`. The slider spans 0–100; an explicit `0` is the hard-crop path. The `scf` PARSE fallback stays at `35` (see `docs/DECISIONS.md`). |
+| Scope intensity | `0%` | Scope-mask intensity dial starts fully transparent. `SCOPE_INTENSITY_DEFAULT` in `src/scopeMask.js`, mirrored by `#scope-intensity-slider`'s markup value AND readout and `_scopeIntensityPct` in `sharelink.js`. The slider spans 0–100. The `sci` PARSE fallback stays at `100` (see `docs/DECISIONS.md`). |
 | 3D aircraft models | `ON`, mode `proximity` | See 3D Aircraft + Tracking section above and the DISPLAY-rail entry below. |
 | Style shader params | CRT/NVG/FLIR pixelation `1.2` (just above the native `1.0` floor) | Thermal/FLIR ships an optional Ironbow "Predator" palette (`palette` uniform, default `0` = accurate grayscale). |
 
