@@ -12,21 +12,26 @@ export const SCENE_OPTION_CLASS = 'scene-picker-option';
 const POPUP_MAX_HEIGHT_PX = 260;
 const POPUP_MIN_HEIGHT_PX = 120;
 const POPUP_EDGE_GAP_PX = 8;
+const POPUP_VIEWPORT_MARGIN_PX = 8;
 const EMPTY_LABEL = 'No scenes';
 
 /**
  * Popup placement under (or, if cramped, above) the trigger.
+ * `minWidth` is the trigger width; the popup may grow past it (up to `maxWidth`,
+ * the room left of the viewport edge) so long scene names aren't clipped.
  * @param {{left: number, bottom: number, top: number, width: number}} triggerRect
  * @param {number} viewportHeight
- * @returns {{left: number, width: number, maxHeight: number, openUpward: boolean, top?: number, bottom?: number}}
+ * @param {number} [viewportWidth]
+ * @returns {{left: number, minWidth: number, maxWidth: number, maxHeight: number, openUpward: boolean, top?: number, bottom?: number}}
  */
-export function computeScenePopupPlacement(triggerRect, viewportHeight) {
+export function computeScenePopupPlacement(triggerRect, viewportHeight, viewportWidth = Infinity) {
   const spaceBelow = viewportHeight - triggerRect.bottom;
   const openUpward = spaceBelow < POPUP_MAX_HEIGHT_PX && triggerRect.top > spaceBelow;
   const room = (openUpward ? triggerRect.top : spaceBelow) - POPUP_EDGE_GAP_PX;
   const placement = {
     left: Math.round(triggerRect.left),
-    width: Math.round(triggerRect.width),
+    minWidth: Math.round(triggerRect.width),
+    maxWidth: Math.round(Math.max(triggerRect.width, viewportWidth - triggerRect.left - POPUP_VIEWPORT_MARGIN_PX)),
     maxHeight: Math.round(Math.max(POPUP_MIN_HEIGHT_PX, Math.min(POPUP_MAX_HEIGHT_PX, room))),
     openUpward,
   };
@@ -57,9 +62,10 @@ export function createScenePicker({ trigger, listbox, onSelect, doc = globalThis
   const optionIds = () => Array.from(listbox.children).map((li) => li.dataset.sceneId).filter(Boolean);
 
   function position() {
-    const placement = computeScenePopupPlacement(trigger.getBoundingClientRect(), win.innerHeight);
+    const placement = computeScenePopupPlacement(trigger.getBoundingClientRect(), win.innerHeight, win.innerWidth);
     listbox.style.left = `${placement.left}px`;
-    listbox.style.width = `${placement.width}px`;
+    listbox.style.minWidth = `${placement.minWidth}px`;
+    listbox.style.maxWidth = `${placement.maxWidth}px`;
     listbox.style.maxHeight = `${placement.maxHeight}px`;
     listbox.style.top = placement.openUpward ? '' : `${placement.top}px`;
     listbox.style.bottom = placement.openUpward ? `${placement.bottom}px` : '';

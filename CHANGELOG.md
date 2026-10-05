@@ -7,6 +7,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **New eagle logo** in the title bar, the loading screen and the browser tab
+  icon, recolored cyan so it reads on the dark background. The old eye logo's
+  pointer-following gaze effect no longer applies (the eagle is static).
+- **Scene dropdown no longer clips long scene names.** The popup is at least
+  as wide as the button and grows to fit the longest name.
 - **A fresh start now opens on Esri Satellite instead of Google 3D.** Google
   3D is still available from the map-source row; its tiles stay hidden (and
   do not stream) until you pick it. Links without a `map=` choice also mean
