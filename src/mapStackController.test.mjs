@@ -16,7 +16,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import * as Cesium from 'cesium';
-import { MapStackController } from './mapStackController.js';
+import { DEFAULT_BOOT_STACK, MapStackController } from './mapStackController.js';
 
 const SETTLE_MS = 500; // mirrors COVERAGE_SAMPLE_SETTLE_MS
 const MIN_INTERVAL_MS = 2000; // mirrors COVERAGE_SAMPLE_MIN_INTERVAL_MS
@@ -344,4 +344,13 @@ test('Esri unreachable at fallback time still stamps lastError and fires the toa
   } finally {
     h.restore();
   }
+});
+
+test('a fresh controller boots on Esri Satellite even when the Google tileset loaded', () => {
+  const viewer = { scene: { globe: { show: true } }, imageryLayers: {}, camera: {} };
+  const controller = new MapStackController(viewer, { googleTileset: { show: false } });
+  assert.equal(DEFAULT_BOOT_STACK, 'esri-imagery');
+  assert.equal(controller.getActiveId(), 'esri-imagery');
+  // Google 3D stays selectable: the tileset exists, so the stack is available.
+  assert.equal(controller.isStackAvailable('photoreal'), true);
 });

@@ -116,11 +116,17 @@ const COVERAGE_BLANK_VARIANCE_MAX = 12;
  * the cinematic default, while Cesium ion world imagery and OSM run as globe
  * imagery stacks.
  */
+/**
+ * Basemap a fresh boot lands on. Keyless Esri Satellite, even when the Google
+ * 3D tileset loaded: Google 3D (a hidden tileset does not stream) is opt-in.
+ */
+export const DEFAULT_BOOT_STACK = 'esri-imagery';
+
 export class MapStackController {
   constructor(viewer, {
     googleTileset = null,
     cesiumToken = '',
-    initialStack = 'photoreal',
+    initialStack = DEFAULT_BOOT_STACK,
     onChange = null,
     onError = null,
   } = {}) {
@@ -129,7 +135,7 @@ export class MapStackController {
     this.cesiumToken = String(cesiumToken || '').trim();
     this._onChange = onChange;
     this._onError = onError;
-    this._activeId = googleTileset ? initialStack : 'esri-imagery';
+    this._activeId = googleTileset ? initialStack : DEFAULT_BOOT_STACK;
     this._imageryLayer = null;
     this._activeImageryProvider = null;
     this._removeImageryErrorListener = null;
@@ -166,7 +172,7 @@ export class MapStackController {
     this._switchGen = 0;
 
     if (!this.getStack(this._activeId) || !this.isStackAvailable(this._activeId)) {
-      this._activeId = googleTileset ? 'photoreal' : 'esri-imagery';
+      this._activeId = DEFAULT_BOOT_STACK;
     }
   }
 
