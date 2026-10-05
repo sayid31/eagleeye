@@ -1071,19 +1071,27 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 5 hardcoded cameras — Jakarta (1), Bandung (3: Samsat/Buahbatu/Pasteur),
-  Denpasar (1) — configured in
-  `config/cctv_sources.indonesia_unofficial.json`, loaded independently of
-  every other CCTV pack by `loadIndonesiaUnofficialSources()`
-  (`vite.config.js`) so it can never disable the Austin/Caltrans/TfL live
+- 65 hardcoded cameras — Jakarta (1), Bandung (63: 3 ATCS Samsat/Buahbatu/
+  Pasteur + 60 `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar
+  (1) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+  loaded independently of every other CCTV pack by
+  `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
   **Static config only — no auto-discovery or crawling of Indonesian ATCS
   portals; adding another city means manually adding another row.**
 - **UNOFFICIAL, not for public/commercial deployment**: stream URLs were
   reverse-engineered via manual browser network inspection of public city
   CCTV portals. There is no formal data-sharing agreement with DKI Jakarta,
-  Bandung Dishub, or Denpasar ATCS. See `DATA_SOURCES.md` for the full
+  Bandung Dishub, Pemkot Bandung/Diskominfo (Pelindung), or Denpasar ATCS. See `DATA_SOURCES.md` for the full
   disclosure and each row's `license` field for the per-camera text.
+- **Pelindung Bandung rows** are a curated, geographically spread subset
+  (60 of ~270 streams that looked live when probed; coordinate-deduped,
+  `headingDeg` unknown so `headingConfidence: 'low'`). Streams are
+  `https://pelindung.bandung.go.id:3443/video/<vendor>/<name>.m3u8`
+  (HLS v3, 14 s segments). Streams can go offline at any time. The 3 ATCS
+  Bandung rows currently return 404 upstream (mediamtx has no publisher);
+  Bali Tower (Jakarta) was unreachable from the dev network and is not
+  included. Rationale: `docs/DECISIONS.md`.
 - All 3 upstreams serve **multi-level relative-path HLS manifests**
   (master playlist → sub-playlist → segments). A byte-for-byte proxy pipe
   breaks this (relative URIs resolve against our own origin, not
