@@ -45,3 +45,23 @@ test('Pelindung Bandung rows are a bounded, coordinate-deduped, low-confidence-h
     assert.equal(row.cityId, 'bandung', row.id);
   }
 });
+
+const binamarga = pack.filter((row) => row.id.startsWith('binamarga-unofficial-'));
+
+test('Bina Marga tol rows are bounded and always labelled APPROXIMATE LOCATION in name, provider and license', () => {
+  assert.ok(binamarga.length >= 10 && binamarga.length <= 20, `count ${binamarga.length}`);
+  for (const row of binamarga) {
+    assert.match(row.name, /APPROX\. LOCATION/, row.id);
+    assert.match(row.provider, /APPROXIMATE LOCATION/, row.id);
+    assert.match(row.license, /APPROXIMATE LOCATION/, row.id);
+    assert.equal(row.headingConfidence, 'low', row.id);
+  }
+});
+
+test('Bina Marga rows sit inside Jakarta and none use the Cipali host (incomplete TLS chain, rejected by Node)', () => {
+  for (const row of binamarga) {
+    assert.equal(row.cityId, 'jakarta', row.id);
+    assert.ok(row.lat > -6.35 && row.lat < -6.05 && row.lon > 106.8 && row.lon < 107.05, row.id);
+    assert.doesNotMatch(row.url, /lintasmarga\.com/, row.id);
+  }
+});
