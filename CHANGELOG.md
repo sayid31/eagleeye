@@ -7,8 +7,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
-- **10 live Jakarta toll-road cameras (UNOFFICIAL SOURCE, demo only)** from the
-  Bina Marga CCTV Tol page (Akses Tanjung Priok and Becakayu). The source has
+- **14 live Jakarta toll-road cameras (UNOFFICIAL SOURCE, demo only)** from the
+  Bina Marga CCTV Tol page (Akses Tanjung Priok and Becakayu; four Becakayu ramp cameras are placed even more roughly). The source has
   no coordinates, so their positions are **approximate** (interpolated from
   the KM marker, off by about 2 km or more) and every name says
   `APPROX. LOCATION`.

@@ -1071,7 +1071,7 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 75 hardcoded cameras — Jakarta (11: 1 JPO + 10 `binamarga-unofficial-*`
+- 79 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
   toll cameras), Bandung (63: 3 ATCS Samsat/Buahbatu/Pasteur + 60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (1) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1092,8 +1092,9 @@ speech-to-speech API, so Claude is paired with the browser's own
   Bandung rows currently return 404 upstream (mediamtx has no publisher);
   Bali Tower (Jakarta) was unreachable from the dev network and is not
   included. Rationale: `docs/DECISIONS.md`.
-- **Bina Marga toll rows (APPROXIMATE LOCATION)**: 10 cameras (Akses
-  Tanjung Priok ×5, Becakayu ×5) whose stream URLs come from the
+- **Bina Marga toll rows (APPROXIMATE LOCATION)**: 14 cameras (Akses
+  Tanjung Priok ×5, Becakayu ×9 — 4 of them ramps/loop whose KM is guessed
+  from the street name, so even less precise) whose stream URLs come from the
   binamarga.pu.go.id CCTV Tol ruas pages (hosts `pub2.hk-opt.com`,
   `cctv.kkdm.co.id` — operated by toll concessionaires, not Bina Marga).
   The source gives names only, so lat/lon are interpolated from the KM
