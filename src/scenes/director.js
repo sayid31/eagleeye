@@ -14,6 +14,7 @@
 
 import * as Cesium from 'cesium';
 import { sceneLayerPlan, sceneRequiresContextModeExit } from './scenePolicy.js';
+import { createScenePicker } from './scenePicker.js';
 import {
   createDefaultProject,
   DEFAULT_HOLD_SEC,
@@ -83,7 +84,9 @@ export class SceneDirector {
 
     // Cache DOM element references for the scene panel UI
     this._scenePanel = document.getElementById('scene-panel');
-    this._sceneSelect = document.getElementById('scene-select');
+    this._sceneTrigger = document.getElementById('scene-picker-trigger');
+    this._sceneListbox = document.getElementById('scene-picker-listbox');
+    this._scenePicker = null;
     this._sceneNewBtn = document.getElementById('scene-new-btn');
     this._sceneDeleteBtn = document.getElementById('scene-delete-btn');
     this._sceneCaptureBtn = document.getElementById('scene-capture-btn');
@@ -151,20 +154,24 @@ export class SceneDirector {
 
   /**
    * Wire up all scene-panel DOM event listeners and render the initial UI state.
-   * Exits silently if the scene-select element is missing (headless/test mode).
+   * Exits silently if the scene picker elements are missing (headless/test mode).
    */
   _initUI() {
-    if (!this._sceneSelect) return;
+    if (!this._sceneTrigger || !this._sceneListbox) return;
 
+    this._scenePicker = createScenePicker({
+      trigger: this._sceneTrigger,
+      listbox: this._sceneListbox,
+      onSelect: (sceneId) => {
+        this._selectedSceneId = sceneId;
+        const scene = this._getSelectedScene();
+        this._selectedShotId = scene?.shots[0]?.id || null;
+        this._renderSceneSelect();
+        this._renderShotList();
+      },
+    });
     this._renderSceneSelect();
     this._renderShotList();
-
-    this._sceneSelect.addEventListener('change', () => {
-      this._selectedSceneId = this._sceneSelect.value;
-      const scene = this._getSelectedScene();
-      this._selectedShotId = scene?.shots[0]?.id || null;
-      this._renderShotList();
-    });
 
     this._sceneNewBtn?.addEventListener('click', () => this._createScene());
     this._sceneDeleteBtn?.addEventListener('click', () => this._deleteSelectedScene());
@@ -213,24 +220,14 @@ export class SceneDirector {
 
   /** Rebuild the scene dropdown options and sync the selected value. */
   _renderSceneSelect() {
-    if (!this._sceneSelect) return;
-
-    this._sceneSelect.innerHTML = '';
-    for (const scene of this._project.scenes) {
-      const option = document.createElement('option');
-      option.value = scene.id;
-      option.textContent = scene.title;
-      this._sceneSelect.appendChild(option);
-    }
+    if (!this._scenePicker) return;
 
     // Reset selection if the previously selected scene no longer exists
     if (!this._project.scenes.some((scene) => scene.id === this._selectedSceneId)) {
       this._selectedSceneId = this._project.scenes[0]?.id || null;
     }
 
-    if (this._selectedSceneId) {
-      this._sceneSelect.value = this._selectedSceneId;
-    }
+    this._scenePicker.render(this._project.scenes, this._selectedSceneId);
   }
 
   /**
@@ -1083,7 +1080,7 @@ export class SceneDirector {
   _setButtons(isRunning) {
     if (this._sceneStartBtn) this._sceneStartBtn.disabled = isRunning;
     if (this._sceneNextBtn) this._sceneNextBtn.disabled = isRunning;
-    if (this._sceneSelect) this._sceneSelect.disabled = isRunning;
+    this._scenePicker?.setDisabled(isRunning);
 
     if (this._sceneNewBtn) this._sceneNewBtn.disabled = isRunning;
     if (this._sceneDeleteBtn) this._sceneDeleteBtn.disabled = isRunning;

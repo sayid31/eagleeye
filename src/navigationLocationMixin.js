@@ -255,7 +255,7 @@ export const navigationLocationMixin = {
       if (!this._expandedCityId) return;
       // Bail while a form control is focused so POI hotkeys don't fire from a
       // <select> dropdown's type-ahead or while typing in a field (M9).
-      const isFormControl = e.target?.matches?.('select, input, textarea')
+      const isFormControl = e.target?.matches?.('select, input, textarea, .scene-picker-trigger')
         || e.target === this._locationSearch
         || this._isCctvListboxOpen?.();
       if (isFormControl) return;
