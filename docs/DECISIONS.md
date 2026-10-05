@@ -2041,3 +2041,7 @@ The operator supplied 37 `…/stream/<ID>/stream.m3u8` URLs copied from the publ
 ## 2026-10-05 — ATCS Denpasar batch 2: 58 more streams, same labelling
 
 The operator sent 58 further `…/stream/<ID>/stream.m3u8` URLs from the same Network-tab capture (no Authorization header). All 58 served advancing live HLS (media sequence moved between two probes 20 s apart; segments fetched 200). Three entries arrived malformed and were normalised to the standard form: `A075PASARSATRIAPTZ` (URL truncated at `stream.m3`), `A101BATUKARU-RINJANIPTZ` (double slash after `/stream/`), and `A102UDAYANA-BELITON` (no `PTZ` suffix; kept as given, it works). Positions follow the batch-1 two-tier scheme: 38 street/intersection guesses (`APPROX. LOCATION`) and 20 unidentifiable ones on a ring (`CITY-LEVEL ONLY`). The batch-2 ring is wider (~830 m) and rotated half a step so its markers never coincide with batch-1 ring markers. IDs contain hyphens for intersections, so the pack test's URL pattern now allows `-`.
+
+## 2026-10-05 — Removed the 3 dead ATCS Bandung rows
+
+`bandung-unofficial-samsat/buahbatu/pasteur` (`atcs-dishub.bandung.go.id:1990`) returned 404 on every probe since the pack landed (mediamtx had no publisher), so they could never play and only added dead entries to the unofficial-first camera list. Removed at the operator's request; re-add a row if the Dishub streams come back. Proxy tests that use `Samsat` URLs as sample inputs are unaffected (they exercise URL resolution, not the pack).

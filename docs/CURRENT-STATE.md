@@ -1071,8 +1071,8 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 174 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
-  toll cameras), Bandung (63: 3 ATCS Samsat/Buahbatu/Pasteur + 60
+- 171 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+  toll cameras), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1083,14 +1083,15 @@ speech-to-speech API, so Claude is paired with the browser's own
 - **UNOFFICIAL, not for public/commercial deployment**: stream URLs were
   reverse-engineered via manual browser network inspection of public city
   CCTV portals. There is no formal data-sharing agreement with DKI Jakarta,
-  Bandung Dishub, Pemkot Bandung/Diskominfo (Pelindung), or Denpasar ATCS. See `DATA_SOURCES.md` for the full
+  Pemkot Bandung/Diskominfo (Pelindung), or Denpasar ATCS. See `DATA_SOURCES.md` for the full
   disclosure and each row's `license` field for the per-camera text.
 - **Pelindung Bandung rows** are a curated, geographically spread subset
   (60 of ~270 streams that looked live when probed; coordinate-deduped,
   `headingDeg` unknown so `headingConfidence: 'low'`). Streams are
   `https://pelindung.bandung.go.id:3443/video/<vendor>/<name>.m3u8`
   (HLS v3, 14 s segments). Streams can go offline at any time. The 3 ATCS
-  Bandung rows currently return 404 upstream (mediamtx has no publisher);
+  Bandung rows (Samsat/Buahbatu/Pasteur, `atcs-dishub.bandung.go.id`) were
+  removed because they returned 404 upstream (mediamtx had no publisher);
   Bali Tower (Jakarta) was unreachable from the dev network and is not
   included. Rationale: `docs/DECISIONS.md`.
 - **Bina Marga toll rows (APPROXIMATE LOCATION)**: 14 cameras (Akses
