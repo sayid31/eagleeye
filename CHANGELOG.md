@@ -5,6 +5,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Removed
+
+- The 3 ATCS Bandung demo cameras (Samsat, Buahbatu, Pasteur) were removed from
+  the unofficial Indonesia pack: their upstream streams return 404 and no
+  longer play.
+
 ### Added
 
 - **58 more live Denpasar CCTV cameras (UNOFFICIAL SOURCE, demo only)** from the

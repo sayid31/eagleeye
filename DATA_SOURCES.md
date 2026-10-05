@@ -41,9 +41,9 @@ How to read this:
 
 ### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar)
 
-174 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+171 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
-city CCTV portals (`jakcctv.jakarta.go.id`, `atcs-dishub.bandung.go.id`,
+city CCTV portals (`jakcctv.jakarta.go.id`,
 `pelindung.bandung.go.id`, `binamarga.pu.go.id` CCTV Tol page,
 `atcs.denpasarkota.go.id`). The 14 Bina Marga toll cameras carry
 **approximate, interpolated positions** (the source publishes no
@@ -52,7 +52,7 @@ streams were captured by the operator from the public page's Network tab;
 their positions are guesses (street-name or city-ring only) and are labelled
 `APPROX. LOCATION` / `CITY-LEVEL ONLY`. **Unlike every other row in this table, there is
 no open-data program, published ToS, or formal agreement with DKI Jakarta,
-Bandung Dishub, Pemkot Bandung (Pelindung), or Denpasar ATCS covering this use.** This pack exists for
+Pemkot Bandung (Pelindung), or Denpasar ATCS covering this use.** This pack exists for
 one internal demo and is explicitly **not vetted for public or commercial
 deployment or redistribution**. The UI always shows a
 `⚠ UNOFFICIAL SOURCE` badge on these cameras (never folds into the generic
