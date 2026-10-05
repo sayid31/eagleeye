@@ -7,6 +7,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- **58 more live Denpasar CCTV cameras (UNOFFICIAL SOURCE, demo only)** from the
+  public ATCS Denpasar page (95 ATCS Denpasar cameras in total). Positions are
+  guesses, as before: 38 are placed from the street or intersection name
+  (`APPROX. LOCATION`), and 20 whose street is unknown sit on a ring around
+  central Denpasar (`CITY-LEVEL ONLY`).
 - **37 more live Denpasar CCTV cameras (UNOFFICIAL SOURCE, demo only)** from the
   public ATCS Denpasar page. Their positions are guesses: 21 are placed from
   the street name (`APPROX. LOCATION`), and 16 whose street is unknown sit on

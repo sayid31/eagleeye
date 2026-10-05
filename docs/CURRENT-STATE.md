@@ -1071,10 +1071,10 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 116 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+- 174 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
   toll cameras), Bandung (63: 3 ATCS Samsat/Buahbatu/Pasteur + 60
-  `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (38: 1
-  Gunung Agung + 37 `denpasar-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+  `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
+  Gunung Agung + 95 `denpasar-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
   `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
@@ -1106,13 +1106,13 @@ speech-to-speech API, so Claude is paired with the browser's own
   deliberately excluded: that host serves an incomplete TLS chain, so Node
   rejects it (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) and the proxy returns 502
   — fixing it would mean disabling certificate verification.
-- **ATCS Denpasar rows (37, positions guessed)**: stream URLs
+- **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
   the operator from the browser Network tab of the public ATCS page (requests
   succeeded with no Authorization header); the repo never calls the site's
   authenticated device API. The source gives no coordinates, so positions are
-  guesses: 21 rows are placed from the street name in the camera ID
-  (`APPROX. LOCATION`, ~1-3 km or worse) and 16 rows whose street could not
+  guesses: 59 rows are placed from the street name in the camera ID
+  (`APPROX. LOCATION`, ~1-3 km or worse) and 36 rows whose street could not
   be identified sit on a ring around central Denpasar (`CITY-LEVEL ONLY` —
   the marker means "somewhere in Denpasar", not a location). Heading unknown.
   Rationale: `docs/DECISIONS.md`.
