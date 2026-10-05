@@ -1961,6 +1961,24 @@ The tracked contact's 2D↔3D handoff became default behavior, driven by camera 
 
 The swap distance was set by playtesting: a first pass at 1,000,000 m switched too early; 2D reads correctly at ~600 km and the handoff belongs at ~150 km. Consequence, recorded on purpose: the tracked contact now enters 3D nearer than the FLEET does (`MODEL_ALT_CEIL_M` = 800,000 m, unchanged), so with the DISPLAY-rail `3D` toggle on, 150–800 km draws surrounding contacts as models while the selected one is still a glyph. The two enter/exit thresholds are asymmetric on purpose — a single threshold makes a tracked orbit sitting on the boundary strobe billboard↔model as the camera's altitude wobbles across it.
 
+## 2026-10-05 — Esri Satellite boot basemap, Denpasar default CCTV camera
+
+- **Boot basemap is `DEFAULT_BOOT_STACK = 'esri-imagery'` even when the Google
+  tileset loads.** The tileset is still created (so choosing Google 3D is
+  instant and `isStackAvailable('photoreal')` stays true) but is added with
+  `show = false`. Cesium's `Cesium3DTileset.update` only runs while `show` is
+  true, so a hidden tileset requests no tiles; deferring the load itself was
+  not needed.
+- **CCTV default is chosen at catalog init and `enable()`, not by "nearest to
+  the camera".** The old default was `records[0]`, an Austin camera, because
+  the live Austin source loads first; `enable()` filled it in before the panel's
+  focus flow ran, so the fly-to never fired. A pending-default flag lets the
+  panel's enable flow both activate and fly to the default exactly once, while
+  a real selection or deselect clears it.
+- **The scene picker is a second copy of the CCTV listbox pattern, not a shared
+  component,** to avoid refactoring the shipped CCTV picker in the same change.
+  Unify when a third picker appears.
+
 ## 2026-08-23 — Grounded 3D handoff made terrain-validity gated
 
 A ready civilian or military glTF does not own the visual until `groundSnap` can answer with a MEASURED photoreal-surface height. Two states matter: COLD (nothing has ever resolved for this icao — model stays hidden, billboard stays floored) and WARM (a snap resolved and then a >`MOVE_INVALIDATE_M` (50 m) taxi move stopped it answering directly — the measurement is demoted to a bounded last-known rather than deleted, bounded by `HELD_SNAP_MAX_DRIFT_M` = 250 m, deliberately a quarter of the billboard chain's `HELD_FLOOR_MAX_DRIFT_KM` because a held snap IS the model's placement rather than only ever raising a sprite).

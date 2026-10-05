@@ -5,6 +5,18 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- **A fresh start now opens on Esri Satellite instead of Google 3D.** Google
+  3D is still available from the map-source row; its tiles stay hidden (and
+  do not stream) until you pick it. Links without a `map=` choice also mean
+  Esri.
+- **Turning CCTV ON with no camera selected now lands on the live Denpasar
+  camera instead of Austin.** If the catalog has no live Denpasar camera it
+  uses a Denpasar seed, then the first camera.
+- **The Scenes panel's scene dropdown now matches the CCTV camera dropdown**
+  (dark, blurred, themed scrollbar) instead of the native white OS popup.
+
 ### Refactored
 
 - **Sixteen oversized source files are now small modules with no behavior
