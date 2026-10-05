@@ -60,6 +60,8 @@ const SCOPE_OUTSIDE_COLOR = { r: 5, g: 5, b: 8 };
  * Pinned in reasonableDefaults.test.mjs.
  */
 export const SCOPE_FEATHER_RATIO_DEFAULT = 0.11;
+/** First-run intensity dial value [0,1]: the mask starts fully transparent. */
+export const SCOPE_INTENSITY_DEFAULT = 0;
 /**
  * Terminus opacity at/above SCOPE_TERMINUS_FAR_M — slightly translucent so
  * faint stars survive in the corners at globe scale.
@@ -105,15 +107,15 @@ let _enabled = true;
 let _featherRatio = SCOPE_FEATHER_RATIO_DEFAULT;
 /**
  * Intensity dial [0,1] — a plain multiplier on the painted outside alpha,
- * independent of the terminus/override system above. 1 = today's shipped
- * look (no change); 0 = the mask paints nothing extra beyond what the
+ * independent of the terminus/override system above. 1 = the full shipped
+ * mask look; 0 (the first-run default, SCOPE_INTENSITY_DEFAULT) = the mask paints nothing extra beyond what the
  * `#scope-toggle` binary off already achieves. Deliberately separate from
  * `_terminusOverride`/`SCOPE_TERMINUS_MIN_PCT`: that band stays 94..100 by
  * design ("a fully transparent terminus is a hole in the mask, not a
  * scope"), so a genuine slide-to-zero dial had to live outside it rather
  * than loosen that clamp. See resolvePaintedAlpha() below.
  */
-let _maskOpacityScale = 1;
+let _maskOpacityScale = SCOPE_INTENSITY_DEFAULT;
 let _resizeObserver = null;
 let _dprQuery = null;
 let _dprListener = null;
@@ -560,7 +562,7 @@ export function _resetScopeMaskForTest() {
   _viewer = null;
   _enabled = true;
   _featherRatio = SCOPE_FEATHER_RATIO_DEFAULT;
-  _maskOpacityScale = 1;
+  _maskOpacityScale = SCOPE_INTENSITY_DEFAULT;
   _terminusAlpha = SCOPE_OUTSIDE_ALPHA;
   _terminusOverride = null;
   _terminusRepaints = 0;

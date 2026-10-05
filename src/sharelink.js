@@ -122,8 +122,10 @@ export class ShareLinkManager {
     this._scopeFeatherPct = 11;
     // Intensity dial, [0,100] — independent of the terminus/override band
     // above (that stays 94..100 by design). 100 = today's shipped look, 0 =
-    // the mask paints nothing extra beyond the toggle's off state. (`sci`)
-    this._scopeIntensityPct = 100;
+    // the mask paints nothing extra beyond the toggle's off state. A fresh boot
+    // starts at 0 — mirrors SCOPE_INTENSITY_DEFAULT and the slider's markup
+    // value; a link with no `sci` still parses as 100 (see parseInitialHash). (`sci`)
+    this._scopeIntensityPct = 0;
     // null = the altitude-adaptive terminus (the default). A number pins the
     // outside-fill opacity as a percent, 94..100. (`sce`, 2026-08-17)
     this._scopeTerminusPct = null;

@@ -51,7 +51,7 @@ test('placement opens downward with room, upward when cramped, and clamps height
   const down = computeScenePopupPlacement({ left: 10, top: 100, bottom: 130, width: 200 }, 800);
   assert.equal(down.openUpward, false);
   assert.equal(down.top, 130);
-  assert.equal(down.maxHeight, 260);
+  assert.equal(down.maxHeight, 150, 'capped to ~5 rows so it stops above the shot list');
   const up = computeScenePopupPlacement({ left: 10, top: 700, bottom: 730, width: 200 }, 800);
   assert.equal(up.openUpward, true);
   assert.equal(up.bottom, 100);
@@ -157,5 +157,23 @@ test('re-render while open closes the popup so stale options never linger', () =
   const { picker, scenes } = setup();
   picker.open();
   picker.render(scenes, 'b');
+  assert.equal(picker.isOpen(), false);
+});
+
+test('popup height is capped and scrolls (overflow) instead of growing with the scene count', () => {
+  const { picker, listbox } = setup();
+  picker.open();
+  assert.equal(listbox.style.maxHeight, '150px');
+});
+
+test('scrolling anywhere outside the popup closes it; scrolling the popup itself does not', () => {
+  const { trigger, doc, listbox, picker } = setup();
+  trigger.emit('click');
+  doc.emit('scroll', { target: listbox });
+  assert.equal(picker.isOpen(), true);
+  doc.emit('scroll', { target: {} });
+  assert.equal(picker.isOpen(), false);
+  assert.equal(listbox.hidden, true);
+  doc.emit('scroll', { target: {} });
   assert.equal(picker.isOpen(), false);
 });
