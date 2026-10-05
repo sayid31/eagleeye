@@ -65,3 +65,18 @@ test('Bina Marga rows sit inside Jakarta and none use the Cipali host (incomplet
     assert.doesNotMatch(row.url, /lintasmarga\.com/, row.id);
   }
 });
+
+const denpasarAtcs = pack.filter((row) => row.id.startsWith('denpasar-atcs-'));
+
+test('ATCS Denpasar rows never present a guessed position as precise', () => {
+  assert.ok(denpasarAtcs.length >= 30, `count ${denpasarAtcs.length}`);
+  for (const row of denpasarAtcs) {
+    assert.match(row.name, /APPROX\. LOCATION|CITY-LEVEL ONLY/, row.id);
+    assert.match(row.provider, /APPROX\. LOCATION|CITY-LEVEL ONLY/, row.id);
+    assert.match(row.license, /APPROXIMATE LOCATION|CITY-LEVEL LOCATION ONLY/, row.id);
+    assert.match(row.url, /^https:\/\/atcs\.denpasarkota\.go\.id\/stream\/[A-Z0-9]+\/stream\.m3u8$/, row.id);
+    assert.equal(row.cityId, 'denpasar', row.id);
+    assert.equal(row.headingConfidence, 'low', row.id);
+    assert.ok(row.lat > -8.78 && row.lat < -8.60 && row.lon > 115.10 && row.lon < 115.32, `${row.id} outside Denpasar view bounds`);
+  }
+});
