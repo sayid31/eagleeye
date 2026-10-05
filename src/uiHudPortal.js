@@ -30,7 +30,7 @@ export const hudPortalMixin = {
       // hotkeys ('1'-'7', 'h', 'o', 'v', 'd', 'c', 'f') otherwise fire while a
       // <select> dropdown (e.g. HUD layout) is focused and its native
       // type-ahead is in use, or while typing in a text field (M9).
-      const isFormControl = e.target?.matches?.('select, input, textarea')
+      const isFormControl = e.target?.matches?.('select, input, textarea, .scene-picker-trigger')
         || e.target === this._locationSearch
         || this._isCctvListboxOpen?.();
       if (isFormControl && e.key !== 'Escape') return;

@@ -11,6 +11,7 @@ import {
 import { isExplicitLayerStateOrigin } from './data/layerState.js';
 import { setSplitFlapText } from './splitFlap.js';
 import { shareableDetectionState } from './contactsDetectionPolicy.js';
+import { DEFAULT_BOOT_STACK } from './mapStackController.js';
 
 export const shareStateMixin = {
 /**
@@ -60,7 +61,7 @@ _syncShareState() {
       scopeTerminusPct: getScopeTerminusOverride() == null
         ? null
         : Math.round(getScopeTerminusOverride() * 100),
-      mapStack: this.mapStackController?.getActiveId?.() || 'photoreal',
+      mapStack: this.mapStackController?.getActiveId?.() || DEFAULT_BOOT_STACK,
     });
   },
 

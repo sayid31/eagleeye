@@ -16,6 +16,7 @@ import { destroyCoverageEntities, getActiveRecord, refreshCoverageStyles } from 
 import { ensureCameraPose } from './cctvGeometry.js';
 import { stopGeometryLoadQueue } from './cctvGeometryQueue.js';
 import { applyLateGroundPriors, currentSurfaceRegime, handleMapStackChanged, refreshHorizonCulling, resolveCommittedGroundAnchor, resolveGroundPriors } from './cctvGround.js';
+import { pickDefaultCameraId } from './cctvDefaultCamera.js';
 import { clamp } from './cctvMath.js';
 import { refreshProjectionImage } from './cctvProjectionFrames.js';
 import { ensureProjectionRuntime, startProjectionLoop, stopProjectionLoop } from './cctvProjectionRuntime.js';
@@ -27,6 +28,7 @@ export async function initCctvLayer(viewer) {
     clearRuntimeState();
     S._enabled = false;
     S._activeCameraId = null;
+    S._defaultCameraPending = false;
     S._autoHopSuspended = false;
     S._lastHopAt = 0;
     S._lastViewContext = '';
@@ -150,7 +152,8 @@ export async function initCctvLayer(viewer) {
     if (S._records.length > 0) {
       // Projection runtime + first frame fetch are deferred to enable() so
       // initializing the catalog stays render-cheap.
-      S._activeCameraId = S._records[0].camera.id;
+      S._activeCameraId = pickDefaultCameraId(S._records);
+      S._defaultCameraPending = true;
     }
 
     // Task 5: if the prior batch lost init's bounded race, apply it post-hoc

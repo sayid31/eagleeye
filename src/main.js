@@ -8,7 +8,7 @@ import { LAYER_STATE_REGISTRY } from './data/layerState.js';
 import { registerDataCredits } from './data/dataCredits.js';
 import { SceneDirector } from './scenes/director.js';
 import { initGevVoiceBackendSwitch } from './voice/voiceBackendSwitch.js';
-import { MapStackController } from './mapStackController.js';
+import { DEFAULT_BOOT_STACK, MapStackController } from './mapStackController.js';
 import { initAnnotations } from './annotations/index.js';
 import { initLogoGaze } from './logoGaze.js';
 import { initCockpitCloudEffects } from './cockpitCloudEffects.js';
@@ -129,9 +129,10 @@ async function init() {
     // clutter the on-globe line. See docs/pre-ship-audit-2026-07-01.md H11.
     registerDataCredits(viewer);
 
-    // Hide Cesium's default globe — Google Photorealistic 3D Tiles provide their own
-    // globe at all LODs (street level → orbital). The default globe's 2D imagery
-    // clips through 3D tile buildings at close range.
+    // Hide Cesium's default globe until the boot stack is applied below: while
+    // Google Photorealistic 3D is the active stack it provides its own globe at
+    // all LODs, and the default globe's 2D imagery clips through 3D tile
+    // buildings at close range. (Esri/OSM stacks turn the globe back on.)
     viewer.scene.globe.show = false;
 
     // Keep a sky behind Google 3D Tiles, but soften Cesium's high-intensity
@@ -151,10 +152,13 @@ async function init() {
     });
     const tileset = photoreal.tileset;
     if (tileset) {
+      // Hidden from the start: the boot basemap is Esri Satellite (below), and
+      // a hidden tileset does not stream, so Google 3D costs nothing until the
+      // user picks it.
+      tileset.show = false;
       viewer.scene.primitives.add(tileset);
       // NOTE: Cesium World Terrain intentionally disabled — conflicts with Google 3D Tiles at high zoom.
       // Google Photorealistic 3D Tiles provide their own terrain/elevation.
-      viewer.scene.globe.show = false;
       console.info(`[Init] Google 3D Tiles loaded via ${photoreal.route}.`);
     } else {
       if (photoreal.errors.length) {
@@ -171,7 +175,7 @@ async function init() {
     const mapStackController = new MapStackController(viewer, {
       googleTileset: tileset,
       cesiumToken,
-      initialStack: tileset ? 'photoreal' : 'esri-imagery',
+      initialStack: DEFAULT_BOOT_STACK,
       // Task 5 (height-datum fix): rebroadcast stack changes as a window
       // CustomEvent so data layers (CCTV per-regime ground resolution) can
       // react without coupling MapStackController to layer modules. Fires on
@@ -182,7 +186,7 @@ async function init() {
       },
       onError: (message) => console.warn('[MapStack]', message),
     });
-    await mapStackController.setStack(tileset ? 'photoreal' : 'esri-imagery', { silent: true });
+    await mapStackController.setStack(DEFAULT_BOOT_STACK, { silent: true });
 
     // Initialize the style manager (post-processing, HUD, locations, share links)
     const styleManager = new StyleManager(viewer, { mapStackController });

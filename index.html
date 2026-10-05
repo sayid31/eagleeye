@@ -675,7 +675,13 @@
         <button class="panel-collapse-btn" data-collapse-target="scene-panel" title="Collapse panel">+</button>
       </div>
       <div class="scene-controls">
-        <select id="scene-select" aria-label="Scene recipe"></select>
+        <div class="scene-picker">
+          <button type="button" id="scene-picker-trigger" class="scene-picker-trigger"
+            aria-haspopup="listbox" aria-expanded="false"
+            aria-controls="scene-picker-listbox" aria-label="Scene recipe">Select scene</button>
+          <ul id="scene-picker-listbox" class="scene-picker-listbox" role="listbox"
+            aria-label="Scene recipe" hidden></ul>
+        </div>
         <button id="scene-new-btn" class="scene-btn">NEW</button>
         <button id="scene-delete-btn" class="scene-btn scene-btn-danger">DEL</button>
       </div>

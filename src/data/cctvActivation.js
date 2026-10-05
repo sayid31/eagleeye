@@ -159,6 +159,7 @@ export function setActiveCamera(cameraId) {
     return CCTV_ACTIVATION_RESULT.UNCHANGED;
   }
   S._activeCameraId = cameraId;
+  S._defaultCameraPending = false;
   S._autoHopSuspended = false;
   // A real activation creates projection work — wake the self-stopping loop.
   startProjectionLoop();
@@ -227,6 +228,7 @@ export function deactivateActiveCamera() {
   const record = S._activeCameraId ? S._recordById.get(S._activeCameraId) : null;
   if (!record) return false;
   S._activeCameraId = null;
+  S._defaultCameraPending = false;
   S._autoHopSuspended = true;
   record.activationDone = false;
   clearProbeClampOnDeactivation(record, (previous) => {
