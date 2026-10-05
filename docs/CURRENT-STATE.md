@@ -1071,9 +1071,9 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 65 hardcoded cameras — Jakarta (1), Bandung (63: 3 ATCS Samsat/Buahbatu/
-  Pasteur + 60 `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar
-  (1) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+- 75 hardcoded cameras — Jakarta (11: 1 JPO + 10 `binamarga-unofficial-*`
+  toll cameras), Bandung (63: 3 ATCS Samsat/Buahbatu/Pasteur + 60
+  `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (1) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
   `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
@@ -1092,6 +1092,18 @@ speech-to-speech API, so Claude is paired with the browser's own
   Bandung rows currently return 404 upstream (mediamtx has no publisher);
   Bali Tower (Jakarta) was unreachable from the dev network and is not
   included. Rationale: `docs/DECISIONS.md`.
+- **Bina Marga toll rows (APPROXIMATE LOCATION)**: 10 cameras (Akses
+  Tanjung Priok ×5, Becakayu ×5) whose stream URLs come from the
+  binamarga.pu.go.id CCTV Tol ruas pages (hosts `pub2.hk-opt.com`,
+  `cctv.kkdm.co.id` — operated by toll concessionaires, not Bina Marga).
+  The source gives names only, so lat/lon are interpolated from the KM
+  marker along a hand-drawn two-to-four-point route polyline (error roughly
+  2 km or more) and heading is the assumed road bearing. Every such row says
+  `APPROX. LOCATION` in its name, provider and license; do not treat these
+  as surveyed positions. Cipali (`cctvastra.lintasmarga.com`) streams are
+  deliberately excluded: that host serves an incomplete TLS chain, so Node
+  rejects it (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) and the proxy returns 502
+  — fixing it would mean disabling certificate verification.
 - All 3 upstreams serve **multi-level relative-path HLS manifests**
   (master playlist → sub-playlist → segments). A byte-for-byte proxy pipe
   breaks this (relative URIs resolve against our own origin, not

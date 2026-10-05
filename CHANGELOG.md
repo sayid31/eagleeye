@@ -7,6 +7,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- **10 live Jakarta toll-road cameras (UNOFFICIAL SOURCE, demo only)** from the
+  Bina Marga CCTV Tol page (Akses Tanjung Priok and Becakayu). The source has
+  no coordinates, so their positions are **approximate** (interpolated from
+  the KM marker, off by about 2 km or more) and every name says
+  `APPROX. LOCATION`.
 - **60 more live Bandung CCTV cameras (UNOFFICIAL SOURCE, demo only)** from
   pelindung.bandung.go.id, spread across the city. They carry the same amber
   `⚠ UNOFFICIAL SOURCE` badge as the other Indonesian cameras and can be
