@@ -41,13 +41,13 @@ How to read this:
 
 ### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar)
 
-116 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+174 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
 city CCTV portals (`jakcctv.jakarta.go.id`, `atcs-dishub.bandung.go.id`,
 `pelindung.bandung.go.id`, `binamarga.pu.go.id` CCTV Tol page,
 `atcs.denpasarkota.go.id`). The 14 Bina Marga toll cameras carry
 **approximate, interpolated positions** (the source publishes no
-coordinates) and say so in their name and license. The 37 ATCS Denpasar
+coordinates) and say so in their name and license. The 95 ATCS Denpasar
 streams were captured by the operator from the public page's Network tab;
 their positions are guesses (street-name or city-ring only) and are labelled
 `APPROX. LOCATION` / `CITY-LEVEL ONLY`. **Unlike every other row in this table, there is
