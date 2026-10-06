@@ -669,7 +669,10 @@ silently demoting every later lookup for the session.
   wireframe and **no** viewshed fill is drawn — neither the active camera's own nor any
   neighbor's. The fill is welded to the plane's far-cap corners and renders both faces
   (`cull: { enabled: false }`), so it would sit opaque over the live video texture, and neighbor
-  lines/fills drawn across the plane contaminate the frame. Idle cameras show only their icon.
+  lines/fills drawn across the plane contaminate the frame. Idle cameras show only their icon,
+  and an icon whose screen position falls inside the plane's on-screen quad is hidden too
+  (icons are always-on-top billboards, so the depth test cannot do it; `cctvPlaneIconOcclusion.js`,
+  refreshed at 80 ms in the projection loop, restored when the plane stops showing).
   The one exception is **ADJUST** (calibration) mode, where the active camera's wireframe stays
   visible because the frustum is what is being edited. Policy lives in the pure
   `cctvCoverageVisibility.js`; the entities stay materialized (hidden), so deselecting restores

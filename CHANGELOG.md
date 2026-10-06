@@ -10,7 +10,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - With a CCTV camera selected, its live monitor frame is now shown clean: no
   frustum wireframe or viewshed fill from the selected camera or its neighbors
   is drawn across it, and other cameras show only their icon. ADJUST mode still
-  shows the selected camera's frustum so it can be edited.
+  shows the selected camera's frustum so it can be edited. Camera icons that
+  would be drawn on top of the live frame are hidden as well, and reappear when
+  they move outside it or the camera is deselected.
 
 ### Removed
 
