@@ -6,6 +6,7 @@ import { resolveEllipsoidalGround } from './terrainHeights.js';
 import { horizonOccluder } from './iconOrientation.js';
 import { refreshCoverageStyles } from './cctvCoverage.js';
 import { applyFrustumGeometry, updateRecordGeometry } from './cctvGeometry.js';
+import { iconShouldShow } from './cctvPlaneIconOcclusion.js';
 import { notifyListeners } from './cctvPublicState.js';
 import { S } from './cctvState.js';
 
@@ -312,7 +313,8 @@ export function refreshHorizonCulling() {
   for (const record of S._records) {
     const bb = record.billboard;
     if (!bb) continue;
-    const visible = occluder.isPointVisible(bb.position);
+    record.horizonVisible = occluder.isPointVisible(bb.position);
+    const visible = iconShouldShow(record);
     if (bb.show !== visible) bb.show = visible;
   }
 }

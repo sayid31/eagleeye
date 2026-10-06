@@ -9,6 +9,7 @@ import { computeFrustumGeometry, frustumCartesians, frustumFrameEcef } from './c
 import { groundPriorAltFor } from './cctvGround.js';
 import { haversineKm } from './cctvMath.js';
 import { clearProjectionOverlay, setPlaneVisible } from './cctvProjectionPlane.js';
+import { restoreIconsUnderPlane } from './cctvPlaneIconOcclusion.js';
 import { isLivePlaneOn, shouldShowCoverageWireframe, shouldShowViewshedVolume } from './cctvCoverageVisibility.js';
 import { destroyProjectionRuntime, ensureProjectionRuntime, pauseInactiveProjectionFeeds } from './cctvProjectionRuntime.js';
 import { S, _scratchFocusScreen } from './cctvState.js';
@@ -262,6 +263,8 @@ export function refreshCoverageStyles() {
   if (coverageOn) {
     ensureVisibleCoverageEntities(S._records, coverageVisible);
   }
+  // Icons hidden under the live plane come back the moment it stops showing.
+  if (!livePlaneOn) restoreIconsUnderPlane(S._records);
   for (const record of S._records) {
     const isActive = record.camera.id === activeId;
     if (record.billboard) {

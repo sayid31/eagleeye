@@ -9,6 +9,7 @@ import { getActiveRecord, refreshCctvFocusStyles } from './cctvCoverage.js';
 import { computeFrustumGeometry, frustumCartesians } from './cctvGeometry.js';
 import { groundAltFor } from './cctvGround.js';
 import { drawProjectionFrame, mediaUrlFor, paintProjectionPlaceholder, refreshProjectionTextures } from './cctvProjectionFrames.js';
+import { refreshPlaneIconOcclusion } from './cctvPlaneIconRefresh.js';
 import { clearProjectionOverlay, createProjectionPlane } from './cctvProjectionPlane.js';
 import { S } from './cctvState.js';
 
@@ -416,6 +417,7 @@ export function startProjectionLoop() {
     }
 
     refreshCctvFocusStyles(performance.now());
+    refreshPlaneIconOcclusion(performance.now());
 
     const active = getActiveRecord();
     if (S._enabled && S._showProjection && active) {
