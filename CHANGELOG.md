@@ -5,6 +5,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- With a CCTV camera selected, its live monitor frame is now shown clean: no
+  frustum wireframe or viewshed fill from the selected camera or its neighbors
+  is drawn across it, and other cameras show only their icon. ADJUST mode still
+  shows the selected camera's frustum so it can be edited.
+
 ### Removed
 
 - The 3 ATCS Bandung demo cameras (Samsat, Buahbatu, Pasteur) were removed from

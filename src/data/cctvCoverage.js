@@ -9,6 +9,7 @@ import { computeFrustumGeometry, frustumCartesians, frustumFrameEcef } from './c
 import { groundPriorAltFor } from './cctvGround.js';
 import { haversineKm } from './cctvMath.js';
 import { clearProjectionOverlay, setPlaneVisible } from './cctvProjectionPlane.js';
+import { isLivePlaneOn, shouldShowCoverageWireframe, shouldShowViewshedVolume } from './cctvCoverageVisibility.js';
 import { destroyProjectionRuntime, ensureProjectionRuntime, pauseInactiveProjectionFeeds } from './cctvProjectionRuntime.js';
 import { S, _scratchFocusScreen } from './cctvState.js';
 
@@ -255,6 +256,9 @@ export function refreshCoverageStyles() {
   const coverageVisible = buildCoverageVisibleSet(activeRecord);
   const coverageOn = S._coverageMode !== 'off';
   const viewshedOn = S._coverageMode === 'viewshed';
+  const livePlaneOn = isLivePlaneOn({
+    enabled: S._enabled, showProjection: S._showProjection, hasActive: !!activeRecord,
+  });
   if (coverageOn) {
     ensureVisibleCoverageEntities(S._records, coverageVisible);
   }
@@ -271,16 +275,16 @@ export function refreshCoverageStyles() {
       ensureProjectionRuntime(record);
     }
     // One live plane in the world at a time (§2c): only the active camera's
-    // far cap carries the monitor plane; idle neighbors get the faint
-    // wireframe only.
+    // far cap carries the monitor plane. While it shows, no frustum lines or
+    // viewshed fills are drawn across it (see cctvCoverageVisibility.js).
     const planeShowing = !!(S._enabled && S._showProjection && isActive);
 
     const inVisibleSet = coverageVisible.has(record.camera.id);
     for (const entity of record.coverageEntities || []) {
-      // The frustum wireframe is part of the projection representation —
-      // force it on for the active camera and let it read through geometry
-      // via depthFailMaterial (polylines have no disableDepthTestDistance).
-      entity.show = !!(S._enabled && ((coverageOn && inVisibleSet) || planeShowing));
+      entity.show = shouldShowCoverageWireframe({
+        enabled: S._enabled, livePlaneOn, calibrating: S._calibrationMode,
+        isActive, coverageOn, inVisibleSet,
+      });
       if (!entity.polyline) continue;
       // Viewshed mode swaps the cyan/green scheme for the camera's own hue so
       // adjacent cones read as distinct coverage claims (design §3b); the
@@ -306,24 +310,15 @@ export function refreshCoverageStyles() {
     }
 
     // Viewshed volume lifecycle: exists iff enabled + viewshed mode + in the
-    // visible set. Rebuild on active-tint flips (rare); otherwise leave the
-    // primitive alone so idle refreshes never churn geometry.
-    //
-    // Excluded when the active camera's monitor plane is showing: the fill
-    // volume is welded to the exact same far-cap corners as the plane
-    // (frustumVolumeGeometryData / createProjectionPlane share one frustum
-    // geometry source), so its cull-disabled, translucent faces render
-    // coincident with the plane's live video texture — stacking up to a
-    // near-opaque hue-colored block that hides the feed entirely (owner
-    // report 2026-09-14: Bandung "Buahbatu" camera showed solid red with
-    // Viewshed ON instead of live video; that camera's golden-angle hue
-    // happens to land near 0deg/red). The wireframe (still hue-tinted above)
-    // already carries the coverage-color identity without occluding the
-    // plane, so only the fill is skipped — not the whole viewshed presence.
-    const wantVolume = !!(
-      S._enabled && viewshedOn && inVisibleSet && record.frustumPositions
-      && !(isActive && planeShowing)
-    );
+    // visible set + no live plane showing. Rebuild on active-tint flips
+    // (rare); otherwise leave the primitive alone so idle refreshes never
+    // churn geometry. The fill is welded to the plane's far-cap corners, so
+    // while the plane shows it would stack into a near-opaque block hiding
+    // the feed (owner report 2026-09-14), and neighbor fills tint the frame.
+    const wantVolume = shouldShowViewshedVolume({
+      enabled: S._enabled, livePlaneOn, viewshedOn, inVisibleSet,
+      hasGeometry: !!record.frustumPositions,
+    });
     if (wantVolume) {
       if (!record.viewshedPrimitive || record.viewshedActiveTint !== isActive) {
         rebuildViewshedVolume(record, isActive);
