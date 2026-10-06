@@ -665,11 +665,15 @@ silently demoting every later lookup for the session.
   tri-state cycle `OFF → ON → VIEWSHED`; viewshed mode renders each visible camera's frustum
   as a translucent **color-coded volume** (golden-angle hue per camera, `cctvViewshed.js`)
   welded to the same 5 points as the wireframe — zero new scene queries or update cadences.
-  **Exception:** the active camera's own fill volume is skipped while its
-  monitor plane is showing — the fill is welded to the same far-cap corners as the plane and
-  renders both faces (`cull: { enabled: false }`), so it would otherwise sit opaque over the live
-  video texture. The hue-tinted wireframe still renders for the active camera in this state, so
-  the coverage-color identity isn't lost, just the occluding fill.
+  **Clean live plane:** while the active camera's monitor plane is showing, **no** frustum
+  wireframe and **no** viewshed fill is drawn — neither the active camera's own nor any
+  neighbor's. The fill is welded to the plane's far-cap corners and renders both faces
+  (`cull: { enabled: false }`), so it would sit opaque over the live video texture, and neighbor
+  lines/fills drawn across the plane contaminate the frame. Idle cameras show only their icon.
+  The one exception is **ADJUST** (calibration) mode, where the active camera's wireframe stays
+  visible because the frustum is what is being edited. Policy lives in the pure
+  `cctvCoverageVisibility.js`; the entities stay materialized (hidden), so deselecting restores
+  the normal COVERAGE/VIEWSHED presentation instantly.
   **Wireframe/viewshed-volume z-fight guard:** the 4 corner
   rays and mount point are lifted `WIREFRAME_ZFIGHT_LIFT_M` (0.75 m) off
   the true frustum geometry along the local ellipsoid surface normal before

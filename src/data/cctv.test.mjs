@@ -304,8 +304,8 @@ test('default COVERAGE refresh materializes the active and visible camera frustu
     refreshCoverageStyles();
     assert.equal(projectionOnly.coverageEntities.length, 5);
     assert.ok(
-      projectionOnly.coverageEntities.every((entity) => entity.show),
-      'COVERAGE OFF keeps the active projection frustum materialized and visible',
+      projectionOnly.coverageEntities.every((entity) => !entity.show),
+      'COVERAGE OFF keeps the active frustum materialized (geometry/ADJUST) but hidden while the live plane shows',
     );
   } finally {
     _setCctvCoverageStateForTest({ enabled: false });
@@ -669,7 +669,7 @@ test('Viewshed mode skips the active camera\'s fill volume while its monitor pla
 
     assert.ok(!active.viewshedPrimitive, 'active camera with a live plane gets no fill volume');
     assert.equal(active.projection.planeEntity.show, true, 'the monitor plane itself is unaffected');
-    assert.ok(idle.viewshedPrimitive, 'idle cameras keep their normal viewshed fill volume');
+    assert.ok(!idle.viewshedPrimitive, 'neighbor fills are dropped too while the live plane shows — they would tint the frame');
     assert.ok(
       added.every((primitive) => primitive._gevViewshed !== active.camera.id),
       'no fill-volume primitive was ever added for the active camera',
@@ -687,6 +687,7 @@ test('Viewshed mode skips the active camera\'s fill volume while its monitor pla
     });
     refreshCoverageStyles();
     assert.ok(active.viewshedPrimitive, 'without a showing plane, the active camera gets its fill volume back');
+    assert.ok(idle.viewshedPrimitive, 'without a showing plane, neighbors get their fill volume back');
   } finally {
     _setCctvCoverageStateForTest({ enabled: false });
     _setCctvOverlayHostForTest();
