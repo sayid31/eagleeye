@@ -123,6 +123,12 @@ const BMTOL_CORRIDORS = [
   { prefix: 'jsb', cityId: 'tol-semarang-batang', min: 12, lat: [-7.01, -6.91], lon: [109.74, 110.38], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'balsam', cityId: 'tol-balikpapan-samarinda', min: 10, lat: [-1.24, -0.52], lon: [116.88, 117.21], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'permai', cityId: 'tol-pekanbaru-dumai', min: 15, lat: [0.62, 1.40], lon: [101.20, 101.46], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'jmkt', cityId: 'tol-medan-tebing-tinggi', min: 10, lat: [3.40, 3.60], lon: [98.95, 99.20], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'bengtab', cityId: 'tol-bengkulu-taba-penanjung', min: 15, lat: [-3.90, -3.78], lon: [102.34, 102.45], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'pacin', cityId: 'tol-padang-sicincin', min: 10, lat: [-0.81, -0.74], lon: [100.28, 100.35], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'palindra', cityId: 'tol-palembang-indralaya', min: 8, lat: [-3.25, -3.04], lon: [104.65, 104.78], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'indraprabu', cityId: 'tol-indralaya-prabumulih', min: 8, lat: [-3.30, -3.21], lon: [104.63, 104.70], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'pekbang', cityId: 'tol-pekanbaru-bangkinang', min: 8, lat: [0.38, 0.45], lon: [101.20, 101.28], host: /^https:\/\/pub2?\.hk-opt\.com\// },
 ];
 
 for (const c of BMTOL_CORRIDORS) {
