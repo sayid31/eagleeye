@@ -1078,8 +1078,8 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 587 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
-  toll cameras), Bina Marga toll corridors (416 `bmtol-unofficial-*` across 23 corridors, listed below), Bandung (60
+- 607 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+  toll cameras), Bina Marga toll corridors (436 `bmtol-unofficial-*` across 24 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1114,7 +1114,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   deliberately excluded: that host serves an incomplete TLS chain, so Node
   rejects it (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) and the proxy returns 502
   — fixing it would mean disabling certificate verification.
-- **Bina Marga toll corridor rows (416, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
+- **Bina Marga toll corridor rows (436, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
   corridor: `tol-jakarta-cikampek` 42 `jakcik`, `tol-serpong-balaraja` 41 `sebal`, `tol-jalan-layang-mbz` 43 `mbz`,
   `tol-jorr-selatan` 21 `jorrs`, `tol-akses-tanjung-priok` 20 `atp`, `tol-jagorawi` 22 `jagorawi`,
   `tol-jorr-timur` 23 `jorre`, `tol-cipularang` 16 `cipul`, `tol-sedyatmo` 12 `sedyatmo`, `tol-jakarta-tangerang` 10 `janger`,
@@ -1122,7 +1122,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   `tol-pekanbaru-dumai` 21 `permai`, `tol-medan-tebing-tinggi` 11 `jmkt`, `tol-bengkulu-taba-penanjung` 18 `bengtab`,
   `tol-padang-sicincin` 11 `pacin`, `tol-palembang-indralaya` 10 `palindra`, `tol-indralaya-prabumulih` 9 `indraprabu`,
   `tol-pekanbaru-bangkinang` 10 `pekbang`, `tol-sigli-banda-aceh` 11 `sibanceh`, `tol-indrapura-kisaran` 18 `inkis`,
-  `tol-binjai-langsa` 10 `binsa`, from the matching binamarga.pu.go.id CCTV Tol
+  `tol-binjai-langsa` 10 `binsa`, `tol-dalam-kota-jakarta` 20 `jtc`, from the matching binamarga.pu.go.id CCTV Tol
   ruas pages (hosts `jmlive.jasamarga.com`, `pub2.hk-opt.com`, `pub.hk-opt.com`, `info.serbaraja-tollroad.co.id:20443`).
   Only cameras whose name carries a `KM nn+nnn` marker AND whose stream returned
   a real video segment when probed are included; gate/ramp/rest-area names have
@@ -1133,14 +1133,15 @@ speech-to-speech API, so Claude is paired with the browser's own
   Cikampek end; Akses Tanjung Priok: KM 58 at the Cakung end; MBZ: same KM axis as Jakarta-Cikampek,
   snapped to the MBZ viaduct; Sedyatmo: KM 19.0 at the JORR crossing; Padaleunyi: KM 122 at Padalarang;
   Semarang-Batang: KM 347.4 at Semarang; Indrapura-Kisaran: KM 86.9 offset so KM 125-132 sits near Kisaran;
+  Dalam Kota (JTC): Cawang to Pluit via Tomang, the camera KM scaled linearly onto the 18.3 km OSM chain as if the road were 20 km (Wikipedia interchange KMs disagree with that by up to ~1 km);
   Binjai-Langsa: KM 17.0 at Binjai; Sigli-Banda Aceh: chain from the Banda Aceh end, KM = chain km; the Sumatra and
   Kalimantan corridors use the portal's own KM against the OSM chain from the toll start). All origins are assumptions,
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 1200 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvProxy.mjs`) and the full catalog now sits near 1090 rows. Why only the densest ruas:
-  `docs/DECISIONS.md` ("Bina Marga toll batches 4-6"). Revoke with the `bmtol-unofficial-*` prefix.
+  `src/data/cctvProxy.mjs`) and the full catalog now sits near 1110 rows. Why only the densest ruas:
+  `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
   the operator from the browser Network tab of the public ATCS page (requests

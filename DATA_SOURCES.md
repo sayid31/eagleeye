@@ -41,11 +41,11 @@ How to read this:
 
 ### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar)
 
-587 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+607 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
 city CCTV portals (`jakcctv.jakarta.go.id`,
 `pelindung.bandung.go.id`, `binamarga.pu.go.id` CCTV Tol page,
-`atcs.denpasarkota.go.id`). The 14 + 416 Bina Marga toll cameras (the 416 `bmtol-unofficial-*` ones on 23 toll corridors, from Jakarta-Cikampek to Sigli-Banda Aceh and
+`atcs.denpasarkota.go.id`). The 14 + 436 Bina Marga toll cameras (the 436 `bmtol-unofficial-*` ones on 24 toll corridors, from Jakarta-Cikampek to Sigli-Banda Aceh and
 Binjai-Langsa, are placed by KM along the OpenStreetMap (ODbL)
 motorway centerline) carry
 **approximate, interpolated positions** (the source publishes no
