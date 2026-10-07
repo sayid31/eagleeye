@@ -41,7 +41,7 @@ How to read this:
 
 ### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar, Surabaya)
 
-746 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+748 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
 city CCTV portals (`jakcctv.jakarta.go.id`,
 `pelindung.bandung.go.id`, `binamarga.pu.go.id` CCTV Tol page,
@@ -52,7 +52,7 @@ motorway centerline) carry
 coordinates) and say so in their name and license. The 95 ATCS Denpasar
 streams were captured by the operator from the public page's Network tab;
 their positions are guesses (street-name or city-ring only) and are labelled
-`APPROX. LOCATION` / `CITY-LEVEL ONLY`. The 139 ATCS Surabaya streams (`sby-atcs-*`) were captured the same way and are positioned the same way. **Unlike every other row in this table, there is
+`APPROX. LOCATION` / `CITY-LEVEL ONLY`. The 141 ATCS Surabaya streams (`sby-atcs-*`) were captured the same way and are positioned the same way. **Unlike every other row in this table, there is
 no open-data program, published ToS, or formal agreement with DKI Jakarta,
 Pemkot Bandung (Pelindung), Denpasar ATCS, or Pemkot Surabaya covering this use.** This pack exists for
 one internal demo and is explicitly **not vetted for public or commercial
