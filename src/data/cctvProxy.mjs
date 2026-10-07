@@ -104,7 +104,7 @@ const DEFAULT_AUSTIN_ROWS_URL = 'https://data.austintexas.gov/api/views/b4k4-adk
 /** Default cap on Austin cameras after distance-based prioritization. */
 const DEFAULT_AUSTIN_MAX_SOURCES = 250;
 /** Global cap on total CCTV sources served by the proxy. */
-const DEFAULT_CCTV_MAX_SOURCES = 1200;
+const DEFAULT_CCTV_MAX_SOURCES = 1400;
 /** Reference point for Austin camera prioritization (Congress & 6th). */
 const AUSTIN_DOWNTOWN = { lat: 30.2672, lon: -97.7431 };
 /** Caltrans CCTV: one JSON feed per district, identical schema statewide. */
@@ -897,7 +897,7 @@ async function refreshCctvSources() {
 
   const mergedSources = Array.from(byId.values());
   const maxRaw = Number(process.env.CCTV_MAX_SOURCES || DEFAULT_CCTV_MAX_SOURCES);
-  const maxCount = Number.isFinite(maxRaw) ? Math.max(8, Math.min(1200, Math.floor(maxRaw))) : DEFAULT_CCTV_MAX_SOURCES;
+  const maxCount = Number.isFinite(maxRaw) ? Math.max(8, Math.min(1400, Math.floor(maxRaw))) : DEFAULT_CCTV_MAX_SOURCES;
   if (mergedSources.length > maxCount) {
     console.warn(`[CCTV] source catalog ${mergedSources.length} exceeds cap ${maxCount}; keeping the first ${maxCount} (raise CCTV_MAX_SOURCES or lower a per-pack cap to change which).`);
   }
@@ -1040,7 +1040,7 @@ export function cctvProxy() {
   /** @type {Map<string,{id:string,status:string,sourceKind:string,label:string,message:string,updatedAt:number}>} */
   const health = new Map();
   /** Cap on health map entries to prevent unbounded growth. Sized to cover the
-   * full served catalog (CCTV_MAX_SOURCES hard-bounds at 1200) so health/status
+   * full served catalog (CCTV_MAX_SOURCES hard-bounds at 1400) so health/status
    * observability isn't silently evicted for a default 800-camera catalog. */
   const HEALTH_MAX_ENTRIES = 1200;
 

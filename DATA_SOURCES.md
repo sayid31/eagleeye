@@ -39,22 +39,22 @@ How to read this:
 | **Radio Browser** | Geolocated internet-radio station directory and station-level tags | Public-domain directory data under PDDL 1.0; individual broadcaster stream terms apply | "Radio Browser" plus a link to the selected broadcaster |
 | **Re:Earth Terrain** (Mapterhorn) | Terrain (keyless globe stacks — OSM etc. — + `/api/terrain/heights` ellipsoidal-height lookups) | Terrain mesh: CC BY 4.0; geoid: EGM2008 (NGA, public domain) | "Terrain (keyless globe stacks): Re:Earth Terrain / Mapterhorn (CC BY 4.0) / EGM2008 (NGA)" |
 
-### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar)
+### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar, Surabaya)
 
-607 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+746 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
 city CCTV portals (`jakcctv.jakarta.go.id`,
 `pelindung.bandung.go.id`, `binamarga.pu.go.id` CCTV Tol page,
-`atcs.denpasarkota.go.id`). The 14 + 436 Bina Marga toll cameras (the 436 `bmtol-unofficial-*` ones on 24 toll corridors, from Jakarta-Cikampek to Sigli-Banda Aceh and
+`atcs.denpasarkota.go.id`, the Surabaya ATCS stream host `36.66.208.101:5000`). The 14 + 436 Bina Marga toll cameras (the 436 `bmtol-unofficial-*` ones on 24 toll corridors, from Jakarta-Cikampek to Sigli-Banda Aceh and
 Binjai-Langsa, are placed by KM along the OpenStreetMap (ODbL)
 motorway centerline) carry
 **approximate, interpolated positions** (the source publishes no
 coordinates) and say so in their name and license. The 95 ATCS Denpasar
 streams were captured by the operator from the public page's Network tab;
 their positions are guesses (street-name or city-ring only) and are labelled
-`APPROX. LOCATION` / `CITY-LEVEL ONLY`. **Unlike every other row in this table, there is
+`APPROX. LOCATION` / `CITY-LEVEL ONLY`. The 139 ATCS Surabaya streams (`sby-atcs-*`) were captured the same way and are positioned the same way. **Unlike every other row in this table, there is
 no open-data program, published ToS, or formal agreement with DKI Jakarta,
-Pemkot Bandung (Pelindung), or Denpasar ATCS covering this use.** This pack exists for
+Pemkot Bandung (Pelindung), Denpasar ATCS, or Pemkot Surabaya covering this use.** This pack exists for
 one internal demo and is explicitly **not vetted for public or commercial
 deployment or redistribution**. The UI always shows a
 `⚠ UNOFFICIAL SOURCE` badge on these cameras (never folds into the generic

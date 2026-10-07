@@ -7,13 +7,21 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 139 live Surabaya city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
+  public Surabaya ATCS portal. 131 are placed from the street or intersection
+  in their label (`APPROX. LOCATION`, roughly 1-3 km of error); 8 whose street
+  could not be identified sit on a ring around central Surabaya
+  (`CITY-LEVEL ONLY`). 18 of the 157 supplied URLs were left out (7 return 404,
+  10 never advance, 1 is a duplicate), and the single Cianjur URL was not added
+  because its server did not answer. The default camera catalog cap rises from
+  1200 to 1400 to fit them.
 - 436 live toll cameras from the Bina Marga CCTV Tol portal (24 corridors,
   including Jakarta-Cikampek, Serpong-Balaraja, Jalan Layang MBZ, JORR, Jagorawi,
   Cipularang, Semarang-Batang, Balikpapan-Samarinda, Pekanbaru-Dumai, Medan-Tebing
   Tinggi, Palembang-Indralaya, Sigli-Banda Aceh, Binjai-Langsa and Jakarta Dalam Kota) are
   now in the unofficial Indonesia pack. They are labelled UNOFFICIAL and
   APPROX. LOCATION: positions are placed by KM along the toll centerline, not
-  surveyed. The default camera catalog cap rises from 900 to 1200 to fit them.
+  surveyed. The default camera catalog cap rises from 900 to 1200 to fit them (later 1400, see below).
 
 ### Changed
 

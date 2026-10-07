@@ -26,12 +26,18 @@ test('pack ids are unique and coordinates are finite and inside Indonesia', () =
   }
 });
 
-test('pack stream URLs are well-formed https and pass the HLS rel-origin guard for their own host', () => {
+// The Surabaya ATCS origin only serves plain http on a bare IP:5000 (fetched server-side by
+// the proxy, so no mixed-content issue); every other row must be https.
+const PLAIN_HTTP_HOST = /^http:\/\/36\.66\.208\.101:5000\//;
+
+test('pack stream URLs are well-formed https (one pinned plain-http host) and pass the HLS rel-origin guard for their own host', () => {
   for (const row of pack) {
-    assert.match(row.url, /^https:\/\/[^/]/, `${row.id} malformed url`);
+    const plainHttpOk = row.id.startsWith('sby-atcs-') && PLAIN_HTTP_HOST.test(row.url);
+    assert.ok(plainHttpOk || /^https:\/\/[^/]/.test(row.url), `${row.id} malformed url`);
     const sibling = new URL('seg0.ts', row.url).href;
     assert.equal(isAllowedRelOrigin(sibling, row.url), true, row.id);
     assert.equal(isAllowedRelOrigin('https://evil.example/seg0.ts', row.url), false, row.id);
+    assert.equal(isAllowedRelOrigin('http://evil.example/seg0.ts', row.url), false, row.id);
   }
 });
 
@@ -78,6 +84,23 @@ test('ATCS Denpasar rows never present a guessed position as precise', () => {
     assert.equal(row.cityId, 'denpasar', row.id);
     assert.equal(row.headingConfidence, 'low', row.id);
     assert.ok(row.lat > -8.78 && row.lat < -8.60 && row.lon > 115.10 && row.lon < 115.32, `${row.id} outside Denpasar view bounds`);
+  }
+});
+
+const surabayaAtcs = pack.filter((row) => row.id.startsWith('sby-atcs-'));
+
+test('ATCS Surabaya rows never present a guessed position as precise', () => {
+  assert.ok(surabayaAtcs.length >= 100, `count ${surabayaAtcs.length}`);
+  assert.equal(new Set(surabayaAtcs.map((row) => row.url)).size, surabayaAtcs.length, 'duplicate stream url');
+  for (const row of surabayaAtcs) {
+    assert.match(row.name, /APPROX\. LOCATION|CITY-LEVEL ONLY/, row.id);
+    assert.match(row.provider, /APPROX\. LOCATION|CITY-LEVEL ONLY/, row.id);
+    assert.match(row.license, /APPROXIMATE LOCATION|CITY-LEVEL LOCATION ONLY/, row.id);
+    assert.match(row.license, /sby-atcs-\*/, `${row.id} revoke hint must name this prefix`);
+    assert.match(row.url, /^http:\/\/36\.66\.208\.101:5000\/hls\/cctv_\d+\/stream\.m3u8$/, row.id);
+    assert.equal(row.cityId, 'surabaya', row.id);
+    assert.equal(row.headingConfidence, 'low', row.id);
+    assert.ok(row.lat > -7.40 && row.lat < -7.15 && row.lon > 112.60 && row.lon < 112.85, `${row.id} outside Surabaya view bounds`);
   }
 });
 
