@@ -80,3 +80,31 @@ test('ATCS Denpasar rows never present a guessed position as precise', () => {
     assert.ok(row.lat > -8.78 && row.lat < -8.60 && row.lon > 115.10 && row.lon < 115.32, `${row.id} outside Denpasar view bounds`);
   }
 });
+
+const bmtol = pack.filter((row) => row.id.startsWith('bmtol-unofficial-'));
+
+test('Bina Marga CCTV Tol batch rows are bounded, approximate-labelled, and unique per stream', () => {
+  assert.ok(bmtol.length >= 30 && bmtol.length <= 100, `count ${bmtol.length}`);
+  assert.equal(new Set(bmtol.map((row) => row.url)).size, bmtol.length, 'duplicate stream url');
+  for (const row of bmtol) {
+    assert.match(row.name, /APPROX\. LOCATION/, row.id);
+    assert.match(row.provider, /APPROXIMATE LOCATION/, row.id);
+    assert.match(row.license, /APPROXIMATE LOCATION/, row.id);
+    assert.match(row.license, /bmtol-unofficial-\*/, `${row.id} revoke hint must name this prefix`);
+    assert.equal(row.headingConfidence, 'low', row.id);
+  }
+});
+
+test('Jakarta-Cikampek rows lie along the corridor between Cawang and Cikampek', () => {
+  const jakcik = bmtol.filter((row) => row.id.startsWith('bmtol-unofficial-jakcik-'));
+  assert.ok(jakcik.length >= 30, `count ${jakcik.length}`);
+  for (const row of jakcik) {
+    assert.equal(row.cityId, 'tol-jakarta-cikampek', row.id);
+    assert.ok(row.lat > -6.5 && row.lat < -6.2, `${row.id} lat`);
+    assert.ok(row.lon > 106.85 && row.lon < 107.5, `${row.id} lon`);
+    assert.match(row.url, /^https:\/\/(jmlive\.jasamarga\.com|pub2?\.hk-opt\.com)\//, row.id);
+  }
+  const kmOf = (row) => Number(row.id.match(/km-(\d+)-(\d+)/).slice(1).join('.'));
+  const ordered = [...jakcik].sort((a, b) => kmOf(a) - kmOf(b));
+  assert.ok(ordered[0].lon < ordered.at(-1).lon, 'higher KM must be further east');
+});

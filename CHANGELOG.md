@@ -5,6 +5,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Added
+
+- 42 live Jakarta-Cikampek toll cameras from the Bina Marga CCTV Tol portal are
+  now in the unofficial Indonesia pack. They are labelled UNOFFICIAL and
+  APPROX. LOCATION: positions are placed by KM along the toll centerline, not
+  surveyed.
+
 ### Changed
 
 - With a CCTV camera selected, its live monitor frame is now shown clean: no

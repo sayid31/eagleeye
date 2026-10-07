@@ -1078,8 +1078,8 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 171 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
-  toll cameras), Bandung (60
+- 213 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+  toll cameras), Jakarta-Cikampek toll (42 `bmtol-unofficial-jakcik-*`), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1114,6 +1114,16 @@ speech-to-speech API, so Claude is paired with the browser's own
   deliberately excluded: that host serves an incomplete TLS chain, so Node
   rejects it (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) and the proxy returns 502
   — fixing it would mean disabling certificate verification.
+- **Jakarta-Cikampek toll rows (42, APPROXIMATE LOCATION)**: `bmtol-unofficial-jakcik-*`,
+  `cityId: 'tol-jakarta-cikampek'`, from the same binamarga.pu.go.id CCTV Tol
+  ruas page (`jakarta-cikampek`; hosts `jmlive.jasamarga.com`, `pub2.hk-opt.com`).
+  Only cameras whose name carries a `KM nn+nnn` marker AND whose stream returned
+  a real video segment when probed are included; gate/ramp/rest-area names have
+  no KM so they are left out. Position = KM measured along the eastbound
+  OpenStreetMap motorway centerline (ODbL) from the Cawang end, heading = the
+  local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
+  time. The other 81 ruas published on that portal (about 1,100 more streams) are
+  deliberately not added yet. Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
   the operator from the browser Network tab of the public ATCS page (requests
