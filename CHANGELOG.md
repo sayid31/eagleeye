@@ -7,6 +7,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 12 live Mataram (Lombok) city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
+  public Mataram ATCS portal. 6 are placed from the intersection name
+  (`APPROX. LOCATION`), 6 sit on a small ring around central Mataram
+  (`CITY-LEVEL ONLY`).
 - 1 live Cianjur city CCTV camera (UNOFFICIAL SOURCE, demo only) from the public
   Cianjur ATCS page. The street could not be identified, so it sits at the centre of
   Cianjur town and is labelled `CITY-LEVEL ONLY`.
@@ -24,6 +28,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   now in the unofficial Indonesia pack. They are labelled UNOFFICIAL and
   APPROX. LOCATION: positions are placed by KM along the toll centerline, not
   surveyed. The default camera catalog cap rises from 900 to 1200 to fit them (later 1400, see below).
+
+### Fixed
+
+- Mataram's low-latency HLS playlists no longer make the player hammer the stream
+  with reloads: the CCTV proxy now serves them as plain live playlists.
 
 ### Changed
 

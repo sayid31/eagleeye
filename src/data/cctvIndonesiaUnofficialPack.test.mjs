@@ -120,6 +120,24 @@ test('ATCS Cianjur row is labelled city-level only and stays inside Cianjur town
   }
 });
 
+const mataramAtcs = pack.filter((row) => row.id.startsWith('mataram-atcs-'));
+
+test('ATCS Mataram rows are labelled with their position tier, unique, and stay inside Mataram', () => {
+  assert.equal(mataramAtcs.length, 12);
+  assert.equal(new Set(mataramAtcs.map((row) => row.url)).size, mataramAtcs.length, 'duplicate Mataram stream URL');
+  for (const row of mataramAtcs) {
+    const tier = row.name.includes('CITY-LEVEL ONLY') ? 'CITY-LEVEL ONLY' : 'APPROX. LOCATION';
+    assert.ok(row.name.includes(tier), row.id);
+    assert.ok(row.provider.includes(tier), row.id);
+    assert.match(row.license, tier === 'CITY-LEVEL ONLY' ? /CITY-LEVEL LOCATION ONLY/ : /APPROXIMATE LOCATION/, row.id);
+    assert.match(row.license, /mataram-atcs-\*/, `${row.id} revoke hint must name this prefix`);
+    assert.match(row.url, /^https:\/\/relay-cctv\.mataramkota\.go\.id\/[a-z0-9-]+\/video1_stream\.m3u8$/, row.id);
+    assert.equal(row.cityId, 'mataram', row.id);
+    assert.equal(row.headingConfidence, 'low', row.id);
+    assert.ok(row.lat > -8.65 && row.lat < -8.55 && row.lon > 116.05 && row.lon < 116.20, `${row.id} outside Mataram view bounds`);
+  }
+});
+
 const bmtol = pack.filter((row) => row.id.startsWith('bmtol-unofficial-'));
 
 test('Bina Marga CCTV Tol batch rows are bounded, approximate-labelled, and unique per stream', () => {
