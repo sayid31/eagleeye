@@ -7,12 +7,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
-- 228 live toll cameras from the Bina Marga CCTV Tol portal (Jakarta-Cikampek,
-  Serpong-Balaraja, Jalan Layang MBZ, JORR South, Akses Tanjung Priok,
-  Jagorawi, JORR East, Cipularang) are
+- 416 live toll cameras from the Bina Marga CCTV Tol portal (23 corridors,
+  including Jakarta-Cikampek, Serpong-Balaraja, Jalan Layang MBZ, JORR, Jagorawi,
+  Cipularang, Semarang-Batang, Balikpapan-Samarinda, Pekanbaru-Dumai, Medan-Tebing
+  Tinggi, Palembang-Indralaya, Sigli-Banda Aceh and Binjai-Langsa) are
   now in the unofficial Indonesia pack. They are labelled UNOFFICIAL and
   APPROX. LOCATION: positions are placed by KM along the toll centerline, not
-  surveyed.
+  surveyed. The default camera catalog cap rises from 900 to 1200 to fit them.
 
 ### Changed
 
