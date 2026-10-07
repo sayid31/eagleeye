@@ -1078,10 +1078,10 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 746 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+- 748 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
   toll cameras), Bina Marga toll corridors (436 `bmtol-unofficial-*` across 24 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
-  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (139 `sby-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
   `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
@@ -1152,11 +1152,11 @@ speech-to-speech API, so Claude is paired with the browser's own
   be identified sit on a ring around central Denpasar (`CITY-LEVEL ONLY` —
   the marker means "somewhere in Denpasar", not a location). Heading unknown.
   Rationale: `docs/DECISIONS.md`.
-- **ATCS Surabaya rows (139, positions guessed)**: stream URLs
+- **ATCS Surabaya rows (141, positions guessed)**: stream URLs
   (`http://36.66.208.101:5000/hls/cctv_<N>/stream.m3u8`, plain http on a bare IP; the
   proxy fetches server-side and only the registered origin is allowed for
   nested segments) were copied by the operator from the browser Network tab
-  (no Authorization header). 131 rows are placed from the street/intersection in
+  (no Authorization header). 133 rows are placed from the street/intersection in
   the label (`APPROX. LOCATION`), 8 unidentifiable ones sit on a ~900 m ring
   around central Surabaya (`CITY-LEVEL ONLY`). Heading unknown. Only streams
   whose media sequence advanced across several probes were kept. The single
