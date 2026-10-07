@@ -129,10 +129,13 @@ const BMTOL_CORRIDORS = [
   { prefix: 'palindra', cityId: 'tol-palembang-indralaya', min: 8, lat: [-3.25, -3.04], lon: [104.65, 104.78], host: /^https:\/\/pub2?\.hk-opt\.com\// },
   { prefix: 'indraprabu', cityId: 'tol-indralaya-prabumulih', min: 8, lat: [-3.30, -3.21], lon: [104.63, 104.70], host: /^https:\/\/pub2?\.hk-opt\.com\// },
   { prefix: 'pekbang', cityId: 'tol-pekanbaru-bangkinang', min: 8, lat: [0.38, 0.45], lon: [101.20, 101.28], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'sibanceh', cityId: 'tol-sigli-banda-aceh', min: 10, lat: [5.44, 5.56], lon: [95.42, 95.49], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'inkis', cityId: 'tol-indrapura-kisaran', min: 15, lat: [3.10, 3.19], lon: [99.37, 99.49], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'binsa', cityId: 'tol-binjai-langsa', min: 8, lat: [3.67, 3.74], lon: [98.48, 98.56], host: /^https:\/\/pub2?\.hk-opt\.com\// },
 ];
 
 for (const c of BMTOL_CORRIDORS) {
-  test(`Bina Marga toll batches 2-5: ${c.prefix} rows sit on their own corridor`, () => {
+  test(`Bina Marga toll batches 2-6: ${c.prefix} rows sit on their own corridor`, () => {
     const rows = bmtol.filter((row) => row.id.startsWith(`bmtol-unofficial-${c.prefix}-`));
     assert.ok(rows.length >= c.min, `count ${rows.length}`);
     for (const row of rows) {
