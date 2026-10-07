@@ -7,7 +7,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
-- 42 live Jakarta-Cikampek toll cameras from the Bina Marga CCTV Tol portal are
+- 167 live toll cameras from the Bina Marga CCTV Tol portal (Jakarta-Cikampek,
+  Serpong-Balaraja, Jalan Layang MBZ, JORR South, Akses Tanjung Priok) are
   now in the unofficial Indonesia pack. They are labelled UNOFFICIAL and
   APPROX. LOCATION: positions are placed by KM along the toll centerline, not
   surveyed.

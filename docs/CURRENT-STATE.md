@@ -1078,8 +1078,9 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 213 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
-  toll cameras), Jakarta-Cikampek toll (42 `bmtol-unofficial-jakcik-*`), Bandung (60
+- 338 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+  toll cameras), Bina Marga toll corridors (167 `bmtol-unofficial-*`: Jakarta-Cikampek 42, Serpong-Balaraja 41, Jalan Layang MBZ 43,
+  JORR South 21, Akses Tanjung Priok 20), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1114,15 +1115,18 @@ speech-to-speech API, so Claude is paired with the browser's own
   deliberately excluded: that host serves an incomplete TLS chain, so Node
   rejects it (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) and the proxy returns 502
   — fixing it would mean disabling certificate verification.
-- **Jakarta-Cikampek toll rows (42, APPROXIMATE LOCATION)**: `bmtol-unofficial-jakcik-*`,
-  `cityId: 'tol-jakarta-cikampek'`, from the same binamarga.pu.go.id CCTV Tol
-  ruas page (`jakarta-cikampek`; hosts `jmlive.jasamarga.com`, `pub2.hk-opt.com`).
+- **Bina Marga toll corridor rows (167, APPROXIMATE LOCATION)**: `bmtol-unofficial-<corridor>-*`, one `cityId` per
+  corridor (`tol-jakarta-cikampek` 42 `jakcik`, `tol-serpong-balaraja` 41 `sebal`, `tol-jalan-layang-mbz` 43 `mbz`,
+  `tol-jorr-selatan` 21 `jorrs`, `tol-akses-tanjung-priok` 20 `atp`), from the matching binamarga.pu.go.id CCTV Tol
+  ruas pages (hosts `jmlive.jasamarga.com`, `pub2.hk-opt.com`, `info.serbaraja-tollroad.co.id:20443`).
   Only cameras whose name carries a `KM nn+nnn` marker AND whose stream returned
   a real video segment when probed are included; gate/ramp/rest-area names have
-  no KM so they are left out. Position = KM measured along the eastbound
-  OpenStreetMap motorway centerline (ODbL) from the Cawang end, heading = the
+  no KM so they are left out. Position = KM measured along the OpenStreetMap motorway centerline (ODbL) from a
+  per-corridor origin (Jakarta-Cikampek: Cawang end; Serpong-Balaraja: KM 12.7 at the Serpong end; JORR South:
+  KM 20 at Pondok Pinang; Akses Tanjung Priok: KM 58 at the Cakung end; MBZ: same KM axis as Jakarta-Cikampek,
+  snapped to the MBZ viaduct), assumed not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
-  time. The other 81 ruas published on that portal (about 1,100 more streams) are
+  time. The other 77 ruas published on that portal (about 900 more streams) are
   deliberately not added yet. Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by

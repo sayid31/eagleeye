@@ -84,7 +84,7 @@ test('ATCS Denpasar rows never present a guessed position as precise', () => {
 const bmtol = pack.filter((row) => row.id.startsWith('bmtol-unofficial-'));
 
 test('Bina Marga CCTV Tol batch rows are bounded, approximate-labelled, and unique per stream', () => {
-  assert.ok(bmtol.length >= 30 && bmtol.length <= 100, `count ${bmtol.length}`);
+  assert.ok(bmtol.length >= 30 && bmtol.length <= 250, `count ${bmtol.length}`);
   assert.equal(new Set(bmtol.map((row) => row.url)).size, bmtol.length, 'duplicate stream url');
   for (const row of bmtol) {
     assert.match(row.name, /APPROX\. LOCATION/, row.id);
@@ -107,4 +107,30 @@ test('Jakarta-Cikampek rows lie along the corridor between Cawang and Cikampek',
   const kmOf = (row) => Number(row.id.match(/km-(\d+)-(\d+)/).slice(1).join('.'));
   const ordered = [...jakcik].sort((a, b) => kmOf(a) - kmOf(b));
   assert.ok(ordered[0].lon < ordered.at(-1).lon, 'higher KM must be further east');
+});
+
+const BMTOL_CORRIDORS = [
+  { prefix: 'sebal', cityId: 'tol-serpong-balaraja', min: 30, lat: [-6.34, -6.29], lon: [106.59, 106.69], host: /^https:\/\/info\.serbaraja-tollroad\.co\.id:20443\// },
+  { prefix: 'mbz', cityId: 'tol-jalan-layang-mbz', min: 30, lat: [-6.40, -6.22], lon: [106.93, 107.30], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'jorrs', cityId: 'tol-jorr-selatan', min: 15, lat: [-6.33, -6.27], lon: [106.76, 106.93], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'atp', cityId: 'tol-akses-tanjung-priok', min: 15, lat: [-6.15, -6.10], lon: [106.88, 106.95], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+];
+
+for (const c of BMTOL_CORRIDORS) {
+  test(`Bina Marga toll batch 2: ${c.prefix} rows sit on their own corridor`, () => {
+    const rows = bmtol.filter((row) => row.id.startsWith(`bmtol-unofficial-${c.prefix}-`));
+    assert.ok(rows.length >= c.min, `count ${rows.length}`);
+    for (const row of rows) {
+      assert.equal(row.cityId, c.cityId, row.id);
+      assert.ok(row.lat > c.lat[0] && row.lat < c.lat[1], `${row.id} lat ${row.lat}`);
+      assert.ok(row.lon > c.lon[0] && row.lon < c.lon[1], `${row.id} lon ${row.lon}`);
+      assert.match(row.url, c.host, row.id);
+      assert.ok(row.headingDeg >= 0 && row.headingDeg < 360, row.id);
+    }
+  });
+}
+
+test('Bina Marga toll batch 2 never duplicates a stream already used by a binamarga-unofficial row', () => {
+  const earlier = new Set(pack.filter((row) => row.id.startsWith('binamarga-unofficial-')).map((row) => row.url));
+  for (const row of bmtol) assert.equal(earlier.has(row.url), false, row.id);
 });
