@@ -2069,3 +2069,7 @@ Capacity: the catalog held 1107 rows against a hard cap of 1200, so 139+ more wo
 The one Cianjur URL (`atcs.cianjurkab.go.id:5443/LieApp/...`) was not added: the host timed out on every attempt (including its root), so liveness could not be shown. It can be added later with the same method.
 
 Re-probe of the 10 "frozen" streams (single connection, 4 passes 25 s apart): `cctv_194` and `cctv_78` had resumed and advanced in every pass, so they were added (141 total). The other 8 stay out: 7 returned an identical media sequence in all four passes (119, 285, 463, 455, 483, 387, 350; 350 reports sequence 0), and `cctv_484` now returns 404. A frozen playlist means the encoder is stalled, which a viewer would see as a still frame, so excluding it is deliberate.
+
+## 2026-10-07 — ATCS Cianjur: one stream, city-level position
+
+The Cianjur URL timed out on every attempt during the Surabaya batch (even the site root), so it was held back rather than added unproven. A retry later the same day answered 200 three times in a row; the media sequence advanced (3102 → 3106 over 20 s), a segment fetch returned 200 `video/MP2T`, and the same checks passed through `/api/cctv/media/:id` and its `/rel` path. It uses the standard HTTPS row shape (non-443 port 5443 needed no proxy change). The stream name `liliarahsuroso` does not identify a street, so the single row is `CITY-LEVEL ONLY`, at the centre of Cianjur town; the earlier timeout looks like an intermittent host, so the stream may drop out again.

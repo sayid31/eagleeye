@@ -14958,5 +14958,25 @@
     "mountHeightM": 9,
     "groundElevationM": 5,
     "license": "UNOFFICIAL SOURCE — stream URL taken by the operator from the browser Network tab of the public Surabaya ATCS portal (request succeeded without any Authorization header). No formal data-sharing agreement with Pemerintah Kota Surabaya. APPROXIMATE LOCATION — the source publishes no coordinates; the position is a guess from the street name in the camera label (error roughly 1-3 km, possibly more), not a surveyed point. Heading is unknown (placeholder, low confidence). Internal demo use only — not vetted for redistribution or public/commercial deployment. Revoke by removing the sby-atcs-* entries from config/cctv_sources.indonesia_unofficial.json or setting CCTV_INDONESIA_UNOFFICIAL_ENABLED=0."
+  },
+  {
+    "id": "cianjur-atcs-liliarahsuroso",
+    "name": "ATCS Liliarahsuroso (CITY-LEVEL ONLY — Live — Unofficial)",
+    "city": "Cianjur",
+    "cityId": "cianjur",
+    "provider": "UNOFFICIAL — ATCS Kabupaten Cianjur (Internal Demo Only, CITY-LEVEL ONLY)",
+    "sourceKind": "unofficial-hls-id",
+    "feedType": "hls",
+    "url": "https://atcs.cianjurkab.go.id:5443/LieApp/streams/liliarahsuroso.m3u8",
+    "lat": -6.8208,
+    "lon": 107.1425,
+    "headingDeg": 0,
+    "headingConfidence": "low",
+    "pitchDeg": -14,
+    "fovDeg": 68,
+    "rangeM": 350,
+    "mountHeightM": 9,
+    "groundElevationM": 450,
+    "license": "UNOFFICIAL SOURCE — stream URL taken by the operator from the browser Network tab of the public Cianjur ATCS page (request succeeded without any Authorization header). No formal data-sharing agreement with Pemerintah Kabupaten Cianjur. CITY-LEVEL LOCATION ONLY — the street in the stream name could not be identified, so the marker sits at the centre of Cianjur town and says nothing about where the camera really is. Heading is unknown (placeholder, low confidence). Internal demo use only — not vetted for redistribution or public/commercial deployment. Revoke by removing the cianjur-atcs-* entries from config/cctv_sources.indonesia_unofficial.json or setting CCTV_INDONESIA_UNOFFICIAL_ENABLED=0."
   }
 ]
