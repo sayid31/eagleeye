@@ -7,13 +7,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 1 live Cianjur city CCTV camera (UNOFFICIAL SOURCE, demo only) from the public
+  Cianjur ATCS page. The street could not be identified, so it sits at the centre of
+  Cianjur town and is labelled `CITY-LEVEL ONLY`.
 - 141 live Surabaya city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
   public Surabaya ATCS portal. 133 are placed from the street or intersection
   in their label (`APPROX. LOCATION`, roughly 1-3 km of error); 8 whose street
   could not be identified sit on a ring around central Surabaya
   (`CITY-LEVEL ONLY`). 16 of the 157 supplied URLs were left out (7 return 404,
-  8 never advance, 1 is a duplicate), and the single Cianjur URL was not added
-  because its server did not answer. The default camera catalog cap rises from
+  8 never advance, 1 is a duplicate), and the Cianjur URL was added separately once its server answered. The default camera catalog cap rises from
   1200 to 1400 to fit them.
 - 436 live toll cameras from the Bina Marga CCTV Tol portal (24 corridors,
   including Jakarta-Cikampek, Serpong-Balaraja, Jalan Layang MBZ, JORR, Jagorawi,

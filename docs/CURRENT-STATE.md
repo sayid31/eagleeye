@@ -1078,10 +1078,10 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 748 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+- 749 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
   toll cameras), Bina Marga toll corridors (436 `bmtol-unofficial-*` across 24 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
-  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
   `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
@@ -1160,8 +1160,13 @@ speech-to-speech API, so Claude is paired with the browser's own
   the label (`APPROX. LOCATION`), 8 unidentifiable ones sit on a ~900 m ring
   around central Surabaya (`CITY-LEVEL ONLY`). Heading unknown. Only streams
   whose media sequence advanced across several probes were kept. The single
-  Cianjur URL was not added (host timed out). Rationale: `docs/DECISIONS.md`
+  Rationale: `docs/DECISIONS.md`
   ("ATCS Surabaya"). Revoke with the `sby-atcs-*` prefix.
+- **ATCS Cianjur row (1, position unknown)**: `https://atcs.cianjurkab.go.id:5443/LieApp/streams/liliarahsuroso.m3u8`,
+  copied by the operator from the Network tab (no Authorization header). The stream name gives no
+  identifiable street, so the marker is placed at the centre of Cianjur town and labelled
+  `CITY-LEVEL ONLY`. Relative segment names resolve through the same HLS manifest proxy. Revoke with
+  the `cianjur-atcs-*` prefix.
 - All 3 upstreams serve **multi-level relative-path HLS manifests**
   (master playlist → sub-playlist → segments). A byte-for-byte proxy pipe
   breaks this (relative URIs resolve against our own origin, not
