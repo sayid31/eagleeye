@@ -1078,10 +1078,10 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 749 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+- 761 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
   toll cameras), Bina Marga toll corridors (436 `bmtol-unofficial-*` across 24 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
-  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
   `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
@@ -1140,7 +1140,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 1400 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvProxy.mjs`) and the full catalog now sits near 1250 rows. Why only the densest ruas:
+  `src/data/cctvProxy.mjs`) and the full catalog now sits near 1260 rows. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1167,6 +1167,12 @@ speech-to-speech API, so Claude is paired with the browser's own
   identifiable street, so the marker is placed at the centre of Cianjur town and labelled
   `CITY-LEVEL ONLY`. Relative segment names resolve through the same HLS manifest proxy. Revoke with
   the `cianjur-atcs-*` prefix.
+- **ATCS Mataram rows (12)**: `https://relay-cctv.mataramkota.go.id/<slug>/video1_stream.m3u8`,
+  copied by the operator from the Network tab (no Authorization header). 6 rows are placed from the
+  intersection name (`APPROX. LOCATION`), 6 sit on a ~600 m ring around central Mataram
+  (`CITY-LEVEL ONLY`). The streams are low-latency HLS (fMP4); the manifest proxy drops the LL-HLS
+  tags (`EXT-X-PART`, `PRELOAD-HINT`, `RENDITION-REPORT`, `SERVER-CONTROL`) and serves a plain live
+  playlist. Rationale: `docs/DECISIONS.md` ("ATCS Mataram"). Revoke with the `mataram-atcs-*` prefix.
 - All 3 upstreams serve **multi-level relative-path HLS manifests**
   (master playlist → sub-playlist → segments). A byte-for-byte proxy pipe
   breaks this (relative URIs resolve against our own origin, not

@@ -21,6 +21,9 @@
  * see hlsManifestProxy.test.mjs.
  */
 
+/** Low-Latency HLS tag prefixes that only make sense with blocking reloads. */
+const LL_HLS_TAG_RE = /^#EXT-X-(?:PART|PART-INF|PRELOAD-HINT|RENDITION-REPORT|SERVER-CONTROL):/;
+
 /** Matches a `URI="..."` attribute inside an #EXT-X-MAP or #EXT-X-KEY tag. */
 const QUOTED_URI_RE = /URI="([^"]*)"/;
 
@@ -100,6 +103,13 @@ export function isAllowedRelOrigin(absoluteUpstreamUrl, registeredSourceUrl) {
  *    rewritten in place, rest of the tag preserved verbatim.
  *  - Any other non-`#`, non-blank line — a sub-playlist or segment
  *    reference, rewritten.
+ *  - Low-Latency HLS tags (`#EXT-X-PART`, `#EXT-X-PART-INF`,
+ *    `#EXT-X-PRELOAD-HINT`, `#EXT-X-RENDITION-REPORT`,
+ *    `#EXT-X-SERVER-CONTROL`) — DROPPED. The proxy fetches the plain playlist
+ *    and cannot hold a blocking reload (`_HLS_msn`/`_HLS_part`) open, so a
+ *    client that believed the stream was LL-HLS would hammer it with
+ *    reloads that never block. Dropping them leaves a standard live playlist
+ *    of complete segments, which any HLS client plays normally.
  *  - All other `#EXT-*` tag lines and blank lines — passed through
  *    unchanged.
  *
@@ -117,7 +127,7 @@ export function rewriteHlsManifest(manifestText, upstreamManifestUrl, cameraId) 
   if (!text) return text;
 
   const hasTrailingNewline = /\r?\n$/.test(text);
-  const lines = text.split(/\r?\n/);
+  const lines = text.split(/\r?\n/).filter((line) => !LL_HLS_TAG_RE.test(line));
   // split() on a trailing newline yields a final empty string element; strip
   // it here and re-append the newline at the end so line-by-line rewriting
   // doesn't have to special-case it.

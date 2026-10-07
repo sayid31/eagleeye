@@ -287,3 +287,29 @@ test('rewriteHlsManifest: does not throw on a malformed base URL', () => {
   // Unresolvable line is left unchanged rather than throwing.
   assert.equal(out, text);
 });
+
+test('rewriteHlsManifest: Mataram LL-HLS playlist drops low-latency tags and keeps complete segments', () => {
+  const id = 'mataram-atcs-sp4-sweta-ptz';
+  const base = 'https://relay-cctv.mataramkota.go.id/sp4-sweta-ptz/video1_stream.m3u8';
+  const input = [
+    '#EXTM3U',
+    '#EXT-X-VERSION:10',
+    '#EXT-X-TARGETDURATION:2',
+    '#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK=0.7,CAN-SKIP-UNTIL=24.0',
+    '#EXT-X-PART-INF:PART-TARGET=0.28',
+    '#EXT-X-MEDIA-SEQUENCE:7578',
+    '#EXT-X-MAP:URI="abc_video1_init.mp4"',
+    '#EXTINF:2.00000,',
+    'abc_video1_seg7578.mp4',
+    '#EXT-X-PART:DURATION=0.28,URI="abc_video1_part1.mp4",INDEPENDENT=YES',
+    '#EXT-X-PRELOAD-HINT:TYPE=PART,URI="abc_video1_part2.mp4"',
+    '#EXT-X-RENDITION-REPORT:URI="other.m3u8",LAST-MSN=7578',
+    '',
+  ].join('\n');
+  const out = rewriteHlsManifest(input, base, id);
+  assert.equal(/EXT-X-PART|PRELOAD-HINT|RENDITION-REPORT|SERVER-CONTROL/.test(out), false);
+  assert.ok(out.includes('#EXT-X-MEDIA-SEQUENCE:7578'));
+  assert.ok(out.includes(`#EXT-X-MAP:URI="${buildProxyRelUrl(id, 'https://relay-cctv.mataramkota.go.id/sp4-sweta-ptz/abc_video1_init.mp4')}"`));
+  assert.ok(out.includes(buildProxyRelUrl(id, 'https://relay-cctv.mataramkota.go.id/sp4-sweta-ptz/abc_video1_seg7578.mp4')));
+  assert.ok(out.endsWith('\n'));
+});
