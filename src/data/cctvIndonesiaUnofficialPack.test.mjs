@@ -84,7 +84,7 @@ test('ATCS Denpasar rows never present a guessed position as precise', () => {
 const bmtol = pack.filter((row) => row.id.startsWith('bmtol-unofficial-'));
 
 test('Bina Marga CCTV Tol batch rows are bounded, approximate-labelled, and unique per stream', () => {
-  assert.ok(bmtol.length >= 30 && bmtol.length <= 250, `count ${bmtol.length}`);
+  assert.ok(bmtol.length >= 30 && bmtol.length <= 400, `count ${bmtol.length}`);
   assert.equal(new Set(bmtol.map((row) => row.url)).size, bmtol.length, 'duplicate stream url');
   for (const row of bmtol) {
     assert.match(row.name, /APPROX\. LOCATION/, row.id);
@@ -114,10 +114,13 @@ const BMTOL_CORRIDORS = [
   { prefix: 'mbz', cityId: 'tol-jalan-layang-mbz', min: 30, lat: [-6.40, -6.22], lon: [106.93, 107.30], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'jorrs', cityId: 'tol-jorr-selatan', min: 15, lat: [-6.33, -6.27], lon: [106.76, 106.93], host: /^https:\/\/pub2?\.hk-opt\.com\// },
   { prefix: 'atp', cityId: 'tol-akses-tanjung-priok', min: 15, lat: [-6.15, -6.10], lon: [106.88, 106.95], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'jagorawi', cityId: 'tol-jagorawi', min: 15, lat: [-6.70, -6.25], lon: [106.80, 106.93], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'jorre', cityId: 'tol-jorr-timur', min: 15, lat: [-6.35, -6.12], lon: [106.88, 106.98], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'cipul', cityId: 'tol-cipularang', min: 10, lat: [-6.87, -6.40], lon: [107.38, 107.52], host: /^https:\/\/jmlive\.jasamarga\.com\// },
 ];
 
 for (const c of BMTOL_CORRIDORS) {
-  test(`Bina Marga toll batch 2: ${c.prefix} rows sit on their own corridor`, () => {
+  test(`Bina Marga toll batches 2-3: ${c.prefix} rows sit on their own corridor`, () => {
     const rows = bmtol.filter((row) => row.id.startsWith(`bmtol-unofficial-${c.prefix}-`));
     assert.ok(rows.length >= c.min, `count ${rows.length}`);
     for (const row of rows) {
