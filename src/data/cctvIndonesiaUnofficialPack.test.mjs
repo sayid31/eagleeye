@@ -84,7 +84,7 @@ test('ATCS Denpasar rows never present a guessed position as precise', () => {
 const bmtol = pack.filter((row) => row.id.startsWith('bmtol-unofficial-'));
 
 test('Bina Marga CCTV Tol batch rows are bounded, approximate-labelled, and unique per stream', () => {
-  assert.ok(bmtol.length >= 30 && bmtol.length <= 400, `count ${bmtol.length}`);
+  assert.ok(bmtol.length >= 30 && bmtol.length <= 700, `count ${bmtol.length}`);
   assert.equal(new Set(bmtol.map((row) => row.url)).size, bmtol.length, 'duplicate stream url');
   for (const row of bmtol) {
     assert.match(row.name, /APPROX\. LOCATION/, row.id);
@@ -117,10 +117,16 @@ const BMTOL_CORRIDORS = [
   { prefix: 'jagorawi', cityId: 'tol-jagorawi', min: 15, lat: [-6.70, -6.25], lon: [106.80, 106.93], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'jorre', cityId: 'tol-jorr-timur', min: 15, lat: [-6.35, -6.12], lon: [106.88, 106.98], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'cipul', cityId: 'tol-cipularang', min: 10, lat: [-6.87, -6.40], lon: [107.38, 107.52], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'sedyatmo', cityId: 'tol-sedyatmo', min: 10, lat: [-6.14, -6.08], lon: [106.67, 106.79], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'janger', cityId: 'tol-jakarta-tangerang', min: 8, lat: [-6.24, -6.17], lon: [106.55, 106.80], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'padcil', cityId: 'tol-padaleunyi', min: 7, lat: [-7.00, -6.84], lon: [107.49, 107.75], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'jsb', cityId: 'tol-semarang-batang', min: 12, lat: [-7.01, -6.91], lon: [109.74, 110.38], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'balsam', cityId: 'tol-balikpapan-samarinda', min: 10, lat: [-1.24, -0.52], lon: [116.88, 117.21], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'permai', cityId: 'tol-pekanbaru-dumai', min: 15, lat: [0.62, 1.40], lon: [101.20, 101.46], host: /^https:\/\/pub2?\.hk-opt\.com\// },
 ];
 
 for (const c of BMTOL_CORRIDORS) {
-  test(`Bina Marga toll batches 2-3: ${c.prefix} rows sit on their own corridor`, () => {
+  test(`Bina Marga toll batches 2-5: ${c.prefix} rows sit on their own corridor`, () => {
     const rows = bmtol.filter((row) => row.id.startsWith(`bmtol-unofficial-${c.prefix}-`));
     assert.ok(rows.length >= c.min, `count ${rows.length}`);
     for (const row of rows) {
