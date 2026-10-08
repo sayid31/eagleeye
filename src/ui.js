@@ -55,6 +55,7 @@ import { publicApiMixin } from './uiPublicApi.js';
 import { cleanViewMixin } from './uiCleanView.js';
 import { loadingFeedbackMixin } from './uiLoadingFeedback.js';
 import { disposeMixin } from './uiDispose.js';
+import { createSettleOnce } from './settleOnce.js';
 import { COCKPIT_ENTRY_COLLAPSE_PANEL_IDS, DETECTION_ALLOCATION_STORAGE_KEY, STYLES, STYLE_STATUS_LABELS } from './uiConstants.js';
 export { STYLES } from './uiConstants.js';
 
@@ -465,7 +466,6 @@ export class StyleManager {
           scopeFeatherPct,
           scopeIntensityPct,
           scopeTerminusPct,
-          mapStack,
           panelState,
           styleParams,
         } = state || {};
@@ -541,11 +541,11 @@ export class StyleManager {
           const pinned = clampScopeTerminusPct(scopeTerminusPct);
           setScopeTerminusOverride(pinned == null ? null : pinned / 100);
         }
-        const mapStackRestore = mapStack
-          ? this._setMapStack(mapStack, { syncShare: false })
-          : Promise.resolve();
+        // The basemap is deliberately NOT restored from the link or the reloaded
+        // hash: boot already activated Esri (DEFAULT_BOOT_STACK), and re-applying
+        // a persisted `map=photoreal` would load Google 3D right behind it.
+        // Google 3D (and every other stack) stays a manual in-session choice.
         if (panelState) this._restorePanelState(panelState);
-        await mapStackRestore;
         this._syncShareState();
       },
       isNavigationCurrent: (generation) => generation === this._navigationGeneration,
@@ -633,6 +633,11 @@ export class StyleManager {
     this._initialShareRestorePromise = savedState
       ? new Promise((resolve) => { this._resolveInitialShareRestore = resolve; })
       : Promise.resolve({ status: 'not-requested', share: null, layers: [] });
+    // Narrower than the aggregate above: settles once the shared camera and
+    // visual/panel callback finish, WITHOUT waiting for saved layers. The
+    // startup splash gates on this one so a heavy layer (CCTV) restores behind
+    // the visible app instead of holding the cover.
+    this._initialViewReadyGate = savedState ? createSettleOnce() : null;
     if (savedState) {
       this._hasShareState = true;
       // Reserve camera authority now; the delayed mesh-friendly flight may
@@ -653,6 +658,9 @@ export class StyleManager {
               applyCamera,
               navigationToken: generation,
             });
+            // Camera + visual/panel restore is done; saved layers continue
+            // behind the visible app (hash writes stay suppressed below).
+            this._initialViewReadyGate?.settle({ status: 'settled', share });
             const layers = await (this._layerStateRestorePromise || Promise.resolve([]));
             const tracking = share.camera === 'applied'
               ? await this._layerStateCoordinator?.restoreShareTrackingSelection?.()
@@ -757,6 +765,16 @@ export class StyleManager {
   /** Whether a share link was used to load the page */
   get hasShareState() {
     return !!this._hasShareState;
+  }
+
+  /**
+   * Terminal result for the shared camera + visual/panel restore only — the
+   * startup splash gates on this. Saved layers keep restoring afterwards; use
+   * `initialRestorePromise` for the complete aggregate.
+   */
+  get initialViewReadyPromise() {
+    return this._initialViewReadyGate?.promise
+      || Promise.resolve({ status: 'not-requested', share: null });
   }
 
   /** Terminal result for the complete initial share restoration. */

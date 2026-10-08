@@ -60,19 +60,20 @@ export function waitForFirstFrame(
 }
 
 /**
- * Compose the splash-hide readiness signal: waits for the share/layer
- * restore lane AND the first painted frame, then holds for at least
+ * Compose the splash-hide readiness signal: waits for the shared camera /
+ * visual restore (NOT the saved-layer restore, which continues behind the
+ * visible app) AND the first painted frame, then holds for at least
  * `minVisibleMs` beyond whenever composition started.
- * @param {{initialRestorePromise: Promise<*>, firstFramePromise: Promise<*>,
+ * @param {{viewReadyPromise: Promise<*>, firstFramePromise: Promise<*>,
  *   minVisibleMs?: number, setTimeoutFn?: Function}} options
  * @returns {Promise<void>}
  */
 export function composeSplashReadiness({
-  initialRestorePromise,
+  viewReadyPromise,
   firstFramePromise,
   minVisibleMs = MIN_SPLASH_VISIBLE_MS,
   setTimeoutFn = setTimeout,
 }) {
   const minVisiblePromise = new Promise((resolve) => setTimeoutFn(resolve, minVisibleMs));
-  return Promise.all([initialRestorePromise, firstFramePromise, minVisiblePromise]).then(() => undefined);
+  return Promise.all([viewReadyPromise, firstFramePromise, minVisiblePromise]).then(() => undefined);
 }

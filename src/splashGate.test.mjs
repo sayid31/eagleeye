@@ -101,7 +101,7 @@ test('waitForFirstFrame ignores a late postRender fire after the fallback alread
 test('composeSplashReadiness waits for both the restore promise and the first frame', async () => {
   const timers = makeFakeTimers();
   let restoreResolve;
-  const initialRestorePromise = new Promise((resolve) => {
+  const viewReadyPromise = new Promise((resolve) => {
     restoreResolve = resolve;
   });
   let frameResolve;
@@ -110,7 +110,7 @@ test('composeSplashReadiness waits for both the restore promise and the first fr
   });
   let settled = false;
   const readiness = composeSplashReadiness({
-    initialRestorePromise,
+    viewReadyPromise,
     firstFramePromise,
     minVisibleMs: 0,
     setTimeoutFn: timers.setTimeoutFn,
@@ -135,7 +135,7 @@ test('composeSplashReadiness still waits out minVisibleMs even when both promise
   const timers = makeFakeTimers();
   let settled = false;
   const readiness = composeSplashReadiness({
-    initialRestorePromise: Promise.resolve(),
+    viewReadyPromise: Promise.resolve(),
     firstFramePromise: Promise.resolve(),
     minVisibleMs: 999,
     setTimeoutFn: timers.setTimeoutFn,

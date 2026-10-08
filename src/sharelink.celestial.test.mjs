@@ -413,7 +413,7 @@ test('newer visual, map, and individual panel actions suppress only their owned 
   const result = await manager.applyState(state, { navigationToken: 1 });
 
   assert.equal(restored.style, undefined);
-  assert.equal(restored.mapStack, undefined);
+  assert.equal('mapStack' in restored, false);
   assert.deepEqual(restored.panelState, {
     specs: [{ id: 'data-panel', collapsed: false, pinned: null }],
   });
@@ -709,4 +709,25 @@ test('destroy cancels only a still-owned share flight and ignores delayed comple
   generation = 8;
   newerManager.destroy();
   assert.equal(cancellations, 1, 'newer navigation must not be cancelled');
+});
+
+// Basemap policy: every load lands on keyless Esri (boot activates it), so the
+// hash neither carries nor restores a stack. A persisted `map=photoreal` used to
+// load Google 3D right behind the Esri boot activation; Google 3D is now a
+// manual in-session choice only.
+test('a link carrying map=photoreal does not request a basemap restore', async () => {
+  let restored = null;
+  const manager = makeManager('#v=2&lat=40&lon=-74&map=photoreal');
+  manager._onRestore = (state) => { restored = state; };
+  manager._isNavigationCurrent = () => false;
+  const state = manager.parseInitialHash();
+  assert.equal('mapStack' in state, false);
+  await manager.applyState(state, { navigationToken: 1 });
+  assert.equal('mapStack' in restored, false);
+});
+
+test('the generated hash never persists a map stack', () => {
+  const manager = makeManager('');
+  manager.onToggleChange(false, false, { mapStack: 'photoreal' });
+  assert.equal(manager._buildHashParams().has('map'), false);
 });

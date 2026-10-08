@@ -286,13 +286,15 @@ async function init() {
     // Initialize the voice "whiteboard" annotation engine (world-space renderer)
     const annotations = initAnnotations({ viewer, tileset });
 
-    // Keep startup chrome truthful: a share is not restored until camera,
-    // visual/map/panel lanes, and every requested layer have terminated —
-    // ANDed with the scene's actual first painted frame (not a flat timer;
-    // see splashGate.js for why) plus a short minimum-visible floor so the
-    // splash never flashes on an unusually fast boot.
+    // Keep startup chrome truthful: the cover lifts once the shared camera and
+    // visual/panel restore have finished — ANDed with the scene's actual first
+    // painted frame (not a flat timer; see splashGate.js for why) plus a short
+    // minimum-visible floor so the splash never flashes on an unusually fast
+    // boot. Saved layers (CCTV etc.) are deliberately NOT part of this gate:
+    // they keep restoring behind the visible app, with their own loading chips,
+    // until the full `initialRestorePromise` aggregate settles.
     void composeSplashReadiness({
-      initialRestorePromise: styleManager.initialRestorePromise,
+      viewReadyPromise: styleManager.initialViewReadyPromise,
       firstFramePromise: waitForFirstFrame(viewer.scene),
     }).finally(() => {
       loadingScreen.classList.add('hidden');

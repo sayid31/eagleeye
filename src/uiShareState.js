@@ -11,7 +11,6 @@ import {
 import { isExplicitLayerStateOrigin } from './data/layerState.js';
 import { setSplitFlapText } from './splitFlap.js';
 import { shareableDetectionState } from './contactsDetectionPolicy.js';
-import { DEFAULT_BOOT_STACK } from './mapStackController.js';
 
 export const shareStateMixin = {
 /**
@@ -61,7 +60,6 @@ _syncShareState() {
       scopeTerminusPct: getScopeTerminusOverride() == null
         ? null
         : Math.round(getScopeTerminusOverride() * 100),
-      mapStack: this.mapStackController?.getActiveId?.() || DEFAULT_BOOT_STACK,
     });
   },
 
@@ -278,6 +276,8 @@ _handleShareTrackingRestoreStatus(result) {
 
 _settleInitialShareRestore(result) {
     if (!this._resolveInitialShareRestore) return;
+    // Any terminal path (failure, dispose) must also release the splash gate.
+    this._initialViewReadyGate?.settle({ status: result?.status ?? 'settled', share: result?.share ?? null });
     const resolve = this._resolveInitialShareRestore;
     this._resolveInitialShareRestore = null;
     resolve(result);

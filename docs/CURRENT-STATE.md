@@ -787,10 +787,14 @@ silently demoting every later lookup for the session.
   and selected-subject Follow without aborting unrelated layer visibility or
   display-option restoration.
 - The initial restore has one terminal promise spanning the camera flight,
-  visual/map/panel callback work, every production layer result, and the
+  visual/panel callback work, every production layer result, and the
   destination-scoped selected-subject Follow result. Hash writes remain
-  suppressed and the startup screen continues to read `Restoring shared view...`
-  until that aggregate settles. Destroy settles it as destroyed rather than
+  suppressed until that aggregate settles. The startup screen does **not** wait
+  for it: it lifts on `initialViewReadyPromise` (shared camera flight plus
+  visual/panel callback, first painted frame, 250 ms floor), and saved layers
+  such as CCTV keep restoring behind the visible app with their own loading
+  chips (`Refreshing live data`, `LOADING FRAMES`). Any failure or destroy
+  also releases the view-ready promise, so the cover can never hang on it. Destroy settles it as destroyed rather than
   permitting late mutation. A superseded shared visibility intent follows
   the authoritative successor chain to a terminal lifecycle result, including a
   same-target re-enable or opposite-target disable, before releasing the layer
@@ -1002,11 +1006,11 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### Map Stack Switcher (June 2026)
 
-- `src/mapStackController.js` switches between Google Photorealistic 3D (`photoreal`, opt-in: the tileset loads when a Google or ion key is present but starts hidden and only shows when the user picks it), keyless Esri World Imagery (`DEFAULT_BOOT_STACK`, the landing basemap on every fresh boot with or without keys, with keyless terrain), keyless Esri Dark Gray Canvas (a muted dark basemap for pairing with HUD visual styles), Bing Aerial / Aerial-with-Labels via Cesium ion world imagery (require `CESIUM_ION_TOKEN`), and OSM tile fallback. Bing Road is **retired**: it is gone from `MAP_STACKS`, from the `set_map_stack` enum, and from the voice aliases (road phrasings now resolve to OSM, the one shipped road basemap). An old `map=bing-road` link is simply an unknown id and takes `setStack()`'s existing photoreal fallback with the Google 3D tile lit — pinned live in `scripts/qa-map-source-tray.mjs`. The two Esri stacks (`esri-imagery`, `esri-dark-gray`) share one on-screen "Powered by Esri" attribution credit and one OSM tile-failure fallback watchdog, gated on the `ESRI_ATTRIBUTED_STACK_IDS` set rather than either id alone.
+- `src/mapStackController.js` switches between Google Photorealistic 3D (`photoreal`, opt-in: the tileset loads when a Google or ion key is present but starts hidden and only shows when the user picks it), keyless Esri World Imagery (`DEFAULT_BOOT_STACK`, the landing basemap on every fresh boot with or without keys, with keyless terrain), keyless Esri Dark Gray Canvas (a muted dark basemap for pairing with HUD visual styles), Bing Aerial / Aerial-with-Labels via Cesium ion world imagery (require `CESIUM_ION_TOKEN`), and OSM tile fallback. Bing Road is **retired**: it is gone from `MAP_STACKS`, from the `set_map_stack` enum, and from the voice aliases (road phrasings now resolve to OSM, the one shipped road basemap). The share hash carries no basemap (see below), so an old `map=bing-road` / `map=photoreal` link is simply ignored and lands on Esri — pinned live in `scripts/qa-map-source-tray.mjs`. The two Esri stacks (`esri-imagery`, `esri-dark-gray`) share one on-screen "Powered by Esri" attribution credit and one OSM tile-failure fallback watchdog, gated on the `ESRI_ATTRIBUTED_STACK_IDS` set rather than either id alone.
 - The bottom Visual Presets tray presents a **six-tile MAP SOURCE row** (`#map-stack-chips`, `src/mapStackChips.js`): Google 3D, Esri Satellite, Esri Dark Gray, Bing Aerial, Bing Labels, and OSM. The duplicate left `#stack-panel` is retired. The six tiles share one row on desktop and two rows on narrow screens, carry `aria-pressed` on the active source, and remain keyboard-reachable with a visible focus outline.
 - The lit tile follows controller state, not the click: a rejected switch (no ion token) or a superseded one (rapid A→B) leaves the genuinely active source lit, and the tray heading keeps its short-label status readout (`...` while switching, amber on `lastError`).
 - Ion stacks remain visible and keyboard-focusable when no ion token is configured, but expose `aria-disabled="true"` and do not switch. Their accessible label and tooltip quote `getStacks().unavailableReason` — the same string `setStack()` puts in the toast. OSM works keyless. The `ION` badge is gated on the stack's own `requiresIon`, so a `photoreal` chip unavailable because the Google tileset failed says so instead of falsely demanding an ion token.
-- Stack choice participates in share links (`src/sharelink.js`) and falls back to the best available stack when the requested one is unavailable (every fresh boot lands on Esri Satellite; a share link without a `map=` key also means Esri; OSM takes over automatically if Esri is unreachable). Share-link restore, the `set_map_stack` voice tool, and the chip row all land on the same `_setMapStack()` path.
+- Stack choice does **not** participate in share links or the live hash: no `map=` key is written, and a `map=` key in an incoming link is ignored. Every load and reload lands on Esri Satellite (booted once by `main.js`; OSM takes over automatically if Esri is unreachable) with no second basemap activation behind it. Google 3D and the other stacks are manual in-session choices via the chip row or the `set_map_stack` voice tool, which share the `_setMapStack()` path, and are not remembered across reloads. Rationale: `docs/DECISIONS.md` § 2026-10-08 startup restore.
 - **Photoreal coverage-gap auto-fallback (2026-09).** Google Photorealistic 3D Tiles only ship photo-textured "surface" mesh for ~2,500 cities; elsewhere the tileset streams bare, untextured terrain that reads as a flat near-white viewport, and no Cesium/Google API exposes a per-view "has coverage" flag. While `photoreal` is active, `MapStackController` samples the rendered canvas ~500 ms after each `camera.moveEnd` settles (never per-frame — this codebase's render-loop discipline forbids that); a sample is "blank" when it is near-white AND near-uniform (luminance alone would false-positive on legitimately bright real scenery like snow or desert). Two consecutive blank samples (throttled to at most one sample per 2 s) trigger a silent `setStack('esri-imagery')`, mirroring the existing `_watchEsriProvider` tile-failure fallback: one-way per episode, re-arms with a fresh strike count the next time photoreal becomes active, reuses the same `lastError`/amber-chip plumbing, and also shows a one-shot toast (`consumeCoverageFallbackFlag()`) since losing photoreal at a spot the user deliberately flew to is visually obvious.
 - **Photoreal tileset LOD tuning (2026-09, performance audit).** `src/mapStartup.js`'s `loadPhotorealisticTileset()` previously called `Cesium.createGooglePhotorealistic3DTileset({ onlyUsingWithGoogleGeocoder: true })` with zero LOD tuning — Cesium's own default `maximumScreenSpaceError` (16px) targets near-photographic fidelity assuming the tileset has the GPU to itself, but this app runs the tileset alongside fleet 3D models (draw-call-per-model, no instancing — up to 700 concurrent in "all" mode), the panoptic detection overlay, and a GLSL post-process style, all potentially active at once. It now passes `maximumScreenSpaceError: PHOTOREAL_MAXIMUM_SCREEN_SPACE_ERROR` (`24`, exported so tests/tuning stay in one place) and `dynamicScreenSpaceError: true` explicit (already Cesium's own default as of 1.138, pinned here so an upstream default change can't silently alter this app's behavior) — trading a small amount of distant-tile crispness for GPU headroom under combined-layer load. Esri/OSM/Bing stacks are unaffected (they aren't `Cesium3DTileset`-based).
 
@@ -1542,14 +1546,17 @@ detection off by hand — would not have.
 - **Splash screen ("Initializing photorealistic world...") hides on real
   render readiness, not a flat timer.** `src/splashGate.js`'s
   `composeSplashReadiness()` gates hiding `#loading-screen` on
-  `Promise.all([initialRestorePromise, firstFramePromise, minVisibleMs])`:
+  `Promise.all([viewReadyPromise, firstFramePromise, minVisibleMs])`
+  (`viewReadyPromise` = `styleManager.initialViewReadyPromise`, the shared
+  camera + visual/panel restore only — never the saved-layer restore):
   `firstFramePromise` resolves on the scene's own one-shot
   `postRender` event (bounded by a 5s `FIRST_FRAME_FALLBACK_MS` fallback
   for WebGL context loss / headless environments), and
   `MIN_SPLASH_VISIBLE_MS = 250` is a pure UX floor against flashing on an
   unusually fast boot — not a readiness gate. The share-link recipient
   path's own separate, deliberate ~1500ms `_initialShareRestoreTimeout` in
-  `ui.js` is unrelated and unchanged.
+  `ui.js` still runs before the shared camera flight (see below for what the
+  splash waits on).
 - **Bulk cross-layer restore is throttled to `RESTORE_CONCURRENCY = 4`
   concurrent layer lifecycles**, via one `p-queue` instance owned by
   `DataLayerManager` (`runThroughRestoreQueue()`). This applies at every

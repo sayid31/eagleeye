@@ -2097,3 +2097,17 @@ Symptom: `denpasar-unofficial-gunung-agung` `/rel` returned 404 for `seg19122` w
 Chosen: on `visibilitychange` back to visible after ≥10 s hidden (`HLS_RELOAD_AFTER_HIDDEN_MS`, above the shortest measured live window of ~7.5 s), call `hls.loadSource(hls.url)` on the active camera's instance. On an attached instance that is a clean restart: `MANIFEST_LOADING` resets `startFragRequested`, `lastCurrentTime` and the levels, the media source is rebuilt, and the new playlist puts the playhead at the live edge. `startLoad(-1)` was rejected: it overrides the start position with the stale `lastCurrentTime`, i.e. the same bad position. Only the active camera is reloaded; inactive ones are paused and are handled by the deferred stop-loading-on-deselect work.
 
 Status: the cause is inferred from the hls.js source and upstream probes and has **not been reproduced in a browser**. Expected check: hide the tab for several minutes on a Denpasar camera and confirm no `/rel` 404 on return. A separate, confirmed upstream behaviour (the oldest listed segment already deleted, encoder restarts changing the segment prefix and sequence) still yields occasional single 404s that this change does not address; the existing bounded `startLoad()` recovery covers those.
+
+## 2026-10-08 — Startup restore: splash waits for the view, basemap is never restored
+
+Symptoms (reported with screenshots): after a reload the "Restoring shared view..." splash stayed up for a long time while the CCTV chip counted `LOADING FRAMES`, and the app came back on Google 3D instead of Esri.
+
+Causes (read from code; per-stage timings were not measured): every reload of the same tab is a share restore, because the hash is written continuously. The splash waited on `initialRestorePromise`, the aggregate of the 1.5 s pre-flight timer, the 3 s camera flight, and the lifecycle of every saved layer, so a heavy layer (CCTV) held the cover. Separately, `main.js` activates Esri at boot and the hash `map=photoreal` was then applied on top, so Google 3D loaded second.
+
+Chosen:
+- The splash gates on a narrower `initialViewReadyPromise` (camera + visual/panel callback). Saved layers still restore, still hold hash-write suppression via the full aggregate, and show their own chips. The 1.5 s timer and 3 s flight stay: they exist so a recipient sees the shared pose animate in, and they are small next to layer restore.
+- The basemap leaves the share/hash contract entirely (not written, not parsed, not restored), instead of "restore only Esri". Ignoring `map=` makes Esri the only load path with no second activation; a half-honoured key would still need the hash to be rewritten on every reload.
+
+Trade-off: a user who prefers Google 3D re-selects it after each reload, and shared links no longer reproduce the sender's basemap. Chosen explicitly by the owner (Google 3D is opt-in).
+
+Not done: restoring layers lazily after first interaction, or lowering the 1.5 s timer. Both would change when saved layers start and were not requested.
