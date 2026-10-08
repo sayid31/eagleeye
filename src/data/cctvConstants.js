@@ -261,3 +261,9 @@ export const WIREFRAME_ZFIGHT_LIFT_M = 0.75;
 export const HLS_MAX_NETWORK_ERROR_RECOVERIES = 5;
 
 export const HLS_MAX_MEDIA_ERROR_RECOVERIES = 3;
+
+// A tab hidden at least this long gets its active HLS feed restarted on return
+// (cctvHlsVisibility.js). Set above the shortest measured upstream live window
+// (~7.5 s, Surabaya) so a hide long enough to outlive the playlist always
+// reloads, while a quick tab flick does not cost a rebuffer.
+export const HLS_RELOAD_AFTER_HIDDEN_MS = 10_000;

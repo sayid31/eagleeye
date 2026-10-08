@@ -1205,7 +1205,12 @@ speech-to-speech API, so Claude is paired with the browser's own
   `src/data/cctvHlsConfig.js`, no override), because a larger fixed count
   puts 2 s-segment hosts (Denpasar, Mataram) 10 s behind a 14 s window and
   the segment being fetched 404s once it rolls off — rationale in
-  `docs/DECISIONS.md` ("CCTV HLS live-sync distance"). The `Hls.Events.ERROR` handler runs a bounded recovery loop
+  `docs/DECISIONS.md` ("CCTV HLS live-sync distance"). While the projection loop runs,
+  `src/data/cctvHlsVisibility.js` restarts the active camera's hls.js feed
+  (`loadSource()` on the attached instance) when the tab becomes visible after being
+  hidden at least `HLS_RELOAD_AFTER_HIDDEN_MS` (10 s); shorter hides and inactive
+  cameras are untouched ("CCTV HLS: reload on tab return" in `docs/DECISIONS.md`).
+  The `Hls.Events.ERROR` handler runs a bounded recovery loop
   (`hls.startLoad()` for `NETWORK_ERROR`, `hls.recoverMediaError()` for
   `MEDIA_ERROR`, retry counters reset on the next successful
   `FRAG_BUFFERED`) instead of destroying the player on the first fatal

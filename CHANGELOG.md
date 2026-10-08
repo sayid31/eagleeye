@@ -31,6 +31,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- CCTV live video now restarts from the live edge when the tab comes back after being
+  hidden for 10 s or more. A hidden tab throttles the player's timers, so on return it
+  asked the stream for segments that had been deleted in the meantime (404 and a freeze).
+  Only the selected camera's feed is reloaded.
 - CCTV live video no longer sits so far behind the live edge on short-segment streams
   (Denpasar, Mataram and several toll feeds): the fixed 5-segment live-sync distance
   left only a few seconds before the segment being fetched rolled off the upstream

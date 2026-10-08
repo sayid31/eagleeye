@@ -6,6 +6,7 @@ import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor
 import { isVideoFeedType, normalizeFeedType } from './cctvCatalog.js';
 import { HLS_MAX_MEDIA_ERROR_RECOVERIES, HLS_MAX_NETWORK_ERROR_RECOVERIES, PROJECTION_CANVAS_HEIGHT, PROJECTION_CANVAS_WIDTH } from './cctvConstants.js';
 import { CCTV_HLS_CONFIG } from './cctvHlsConfig.js';
+import { installHlsTabReturnReload } from './cctvHlsVisibility.js';
 import { getActiveRecord, refreshCctvFocusStyles } from './cctvCoverage.js';
 import { computeFrustumGeometry, frustumCartesians } from './cctvGeometry.js';
 import { groundAltFor } from './cctvGround.js';
@@ -377,6 +378,24 @@ export function getActiveProjectionMirrorStream(cameraId) {
  * Starts the requestAnimationFrame loop that drives projection canvas updates
  * (frame draw + texture swap) for the active camera.
  */
+let uninstallTabReturn = null;
+
+/** Restart the active camera's hls.js feed when the tab returns from a long hide. */
+function installTabReturnReload() {
+  if (uninstallTabReturn || typeof document === 'undefined') return;
+  uninstallTabReturn = installHlsTabReturnReload({
+    doc: document,
+    getHls: () => (S._enabled && S._showProjection
+      ? getActiveRecord()?.projection?.hlsInstance ?? null
+      : null),
+  });
+}
+
+function uninstallTabReturnReload() {
+  uninstallTabReturn?.();
+  uninstallTabReturn = null;
+}
+
 /**
  * The projection rAF has real work only while a camera is actively projected
  * or a focus fade is in flight — otherwise it burned a wakeup + style poll
@@ -395,6 +414,7 @@ function projectionLoopIsNeeded() {
 export function startProjectionLoop() {
   if (S._projectionRaf) return;
   if (!projectionLoopIsNeeded()) return;
+  installTabReturnReload();
   // The armed projection loop uploads video textures / runs focus fades per
   // frame — the scene must render continuously while it runs. Released when
   // the tick self-stops. (perf wave 2)
@@ -403,6 +423,7 @@ export function startProjectionLoop() {
   const tick = () => {
     if (!S._viewer || !projectionLoopIsNeeded()) {
       S._projectionRaf = 0;
+      uninstallTabReturnReload();
       releaseContinuousRender('cctv-projection');
       return;
     }
@@ -434,6 +455,7 @@ export function stopProjectionLoop() {
     cancelAnimationFrame(S._projectionRaf);
     S._projectionRaf = 0;
   }
+  uninstallTabReturnReload();
   releaseContinuousRender('cctv-projection');
 }
 
