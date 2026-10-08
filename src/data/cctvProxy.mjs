@@ -23,6 +23,13 @@ import {
   isAllowedRelOrigin,
 } from '../server/hlsManifestProxy.mjs';
 import { readCappedResponseText, proxyMediaResponse } from '../server/proxyInfra.mjs';
+import {
+  SOURCE_OFFLINE_STATUS,
+  describeOfflineSource,
+  isExpectedVideoMedia,
+  isUpstreamGoneStatus,
+  isUpstreamUnreachableError,
+} from './cctvSourceHealth.mjs';
 
 // Config-file paths below were resolved against vite.config.js's own
 // module-relative `__dirname` (the repo root, since vite.config.js lives
@@ -1248,18 +1255,24 @@ export function cctvProxy() {
               });
               const contentType = upstream.headers.get('content-type') || '';
               if (!upstream.ok) {
+                // 404/410 = the provider removed the feed: flag it "offline"
+                // so the UI says the camera is down at the source instead of
+                // looking like a failure on our side.
+                const gone = isUpstreamGoneStatus(upstream.status);
                 setHealth(cameraId, {
-                  status: 'degraded',
+                  status: gone ? SOURCE_OFFLINE_STATUS : 'degraded',
                   sourceKind: 'upstream',
                   label: source?.provider || 'Configured source',
-                  message: `Upstream HTTP ${upstream.status}`,
+                  message: gone
+                    ? describeOfflineSource({ status: upstream.status })
+                    : `Upstream HTTP ${upstream.status}`,
                 });
                 res.writeHead(upstream.status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ error: `Upstream returned ${upstream.status}` }));
                 return;
               }
 
-              if (isVideoFeedType(feedType) && !(contentType.startsWith('video/') || contentType.includes('mpegurl'))) {
+              if (isVideoFeedType(feedType) && !isExpectedVideoMedia(contentType, mediaUrl)) {
                 setHealth(cameraId, {
                   status: 'degraded',
                   sourceKind: 'upstream',
@@ -1302,11 +1315,14 @@ export function cctvProxy() {
               });
               return;
             } catch (error) {
+              const unreachable = isUpstreamUnreachableError(error);
               setHealth(cameraId, {
-                status: 'degraded',
+                status: unreachable ? SOURCE_OFFLINE_STATUS : 'degraded',
                 sourceKind: 'upstream',
                 label: source?.provider || 'Configured source',
-                message: error?.message || 'Media fetch failed',
+                message: unreachable
+                  ? describeOfflineSource({ unreachable: true })
+                  : (error?.message || 'Media fetch failed'),
               });
               res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
               res.end(JSON.stringify({ error: 'Media proxy failed' }));

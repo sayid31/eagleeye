@@ -36,3 +36,16 @@ test('CCTV upstream frame fetch returns a valid image response', async () => {
   assert.equal(result?.contentType, 'image/jpeg');
   assert.deepEqual(result?.body, Buffer.from([1, 2, 3]));
 });
+
+// Wiring guard: the /media/:id health writes must use the shared classifiers.
+// (The handler is a closure inside the Vite plugin, so it is asserted
+// structurally, like the other proxy-wiring tests in this repo.)
+test('media route classifies media type and dead sources via cctvSourceHealth', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const src = await readFile(new URL('./cctvProxy.mjs', import.meta.url), 'utf8');
+  assert.match(src, /!isExpectedVideoMedia\(contentType, mediaUrl\)/);
+  assert.doesNotMatch(src, /contentType\.includes\('mpegurl'\)/, 'case-sensitive check must not return');
+  assert.match(src, /isUpstreamGoneStatus\(upstream\.status\)/);
+  assert.match(src, /isUpstreamUnreachableError\(error\)/);
+  assert.match(src, /SOURCE_OFFLINE_STATUS/);
+});

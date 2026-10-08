@@ -39,6 +39,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- CCTV: a camera whose provider has taken the feed down (the stream URL answers
+  404/410, or the host no longer exists) is now labelled `⛔ CAMERA OFFLINE ·
+  SOURCE DOWN` instead of a generic degraded/error state, so a dead source is no
+  longer mistaken for a fault in the app.
+- CCTV: working streams no longer show `UPSTREAM · DEGRADED … Unexpected media
+  type application/x-mpegURL`. The media-type check was case-sensitive and
+  rejected the mixed-case type that the Bandung (Pelindung) servers send, and it
+  also rejected `.m3u8` feeds that omit Content-Type.
 - The "Restoring shared view..." startup screen no longer waits for every saved
   layer to finish restoring. It lifts once the shared camera, visual settings and
   first rendered frame are ready; heavy layers such as CCTV keep loading behind the
