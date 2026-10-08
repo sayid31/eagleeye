@@ -37,3 +37,22 @@ test('badge appears only for non-healthy player states', () => {
   assert.equal(playbackBadge('retrying').frameState, 'stalled');
   assert.match(playbackBadge('connecting').text, /CONNECTING/);
 });
+
+import { EMPTY_PLAYLIST_MESSAGE } from './cctvSourceHealth.mjs';
+
+test('an empty playlist from the source is named on the plane and the badge', () => {
+  const health = { status: 'degraded', message: EMPTY_PLAYLIST_MESSAGE };
+  assert.match(videoPlaceholderHealth(health, { state: 'connecting' }).message, /empty playlist/i);
+  assert.match(playbackBadge('connecting', { sourceMessage: EMPTY_PLAYLIST_MESSAGE }).text, /EMPTY PLAYLIST/);
+});
+
+test('a stale empty-playlist message never overrides a feed that is actually live', () => {
+  assert.equal(playbackBadge('live', { sourceMessage: EMPTY_PLAYLIST_MESSAGE }), null);
+});
+
+test('a connect timeout is reported as no data from the source', () => {
+  const playback = { state: 'retrying', attempt: 2, reason: 'no-data' };
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, playback).message, /no data from source.*#2/i);
+  assert.match(playbackBadge('retrying', { reason: 'no-data' }).text, /NO DATA FROM SOURCE/);
+  assert.match(playbackBadge('retrying').text, /STALLED/);
+});

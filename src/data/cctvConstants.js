@@ -282,3 +282,12 @@ export const HLS_REATTACH_OFFLINE_MAX_DELAY_MS = 120_000;
 // the proxy (14 s, 2026-09-14) plus one 10 s target duration of slack.
 export const HLS_STALL_RESTART_MS = 25_000;
 export const HLS_STALL_CHECK_MS = 5_000;
+
+// Above the slowest measured segment fetch through the proxy (14 s, 2026-09-14)
+// so a slow but working feed is not rebuilt in a loop.
+// A feed that has been connecting or recovering this long without a single
+// fragment reaching the buffer is reported as "no data from source" and the
+// player is rebuilt. Covers sources that answer 200 with an empty playlist
+// (jmlive.jasamarga.com, measured 2026-10-08), where hls.js / the native player
+// can sit waiting without ever raising an error.
+export const HLS_CONNECT_TIMEOUT_MS = 20_000;

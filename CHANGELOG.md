@@ -44,6 +44,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   (2 s up to 30 s; up to 120 s for a source reported offline). A network error now
   restarts from the live edge (fresh playlist) instead of resuming from the stale
   playhead, and a feed whose playhead stops for 25 s is restarted automatically.
+- CCTV cameras whose source answers 200 with an empty playlist (all 236 toll cameras on
+  `jmlive.jasamarga.com` measured 2026-10-08) are no longer reported "Live stream
+  connected". The proxy marks them `degraded` ("Source sent an empty playlist") and
+  answers 502; the plane and badge say `SOURCE SENT EMPTY PLAYLIST` instead of waiting
+  forever. A feed that buffers nothing for 20 s is reported `NO DATA FROM SOURCE ·
+  RETRYING` and rebuilt with backoff, for hls.js and for natively played HLS alike.
 - CCTV monitor plane and panel badge no longer claim "Live stream connected" over a
   dark plane. The plane reads `WAITING FOR VIDEO`, `STREAM INTERRUPTED · RECOVERING`
   or `STREAM STALLED · RETRYING (#n)`, and the panel badge follows (`STREAM ·

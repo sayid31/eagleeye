@@ -30,7 +30,19 @@ not reproduced in a browser, so treat the restart choice as unproven mitigation.
 **Why the backoff is slower for `offline` sources.** A provider-removed feed will
 not come back in seconds; probing it every 2-30 s only adds proxy load.
 
-**Not done.** Proxy hardening (timeouts on `/media/:id` and `/rel`, retry on a
+**Follow-up (same day): empty playlists.** The owner saw `WAITING FOR VIDEO` for a
+long time on `bmtol-unofficial-jakcik-km-67-000`. Cause: `jmlive.jasamarga.com`
+answers every playlist request with 200 and 0 bytes (or 502); the proxy still wrote
+`ok`, and neither hls.js nor a native `<video>` raised a fatal error, so `connecting`
+never ended. Fixes: the proxy validates `#EXTM3U` before writing `ok`; the player
+treats `HLS_CONNECT_TIMEOUT_MS` (20 s, above the slowest measured segment fetch of
+14 s) without a buffered fragment as "no data" and rebuilds. Why the source is
+empty is unknown (server down vs. blocking outside clients); headers (Referer,
+Origin, User-Agent, Accept) made no difference. These cameras are not marked
+`offline`: the cause is not proven permanent. Whether Chrome 150 plays HLS natively
+(which would bypass hls.js) was not verified; the native watcher covers both.
+
+**Not done.** Remaining proxy hardening (timeouts on `/media/:id` and `/rel`, retry on a
 refused connection, zero-byte segment to 502, `/rel` failures into health) is a
 separate change. Whether zero-byte segments stall hls.js is still unproven.
 

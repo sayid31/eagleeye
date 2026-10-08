@@ -43,7 +43,7 @@ function harness(overrides = {}) {
     url: '/api/cctv/media/x',
     video,
     onPlayer: (p) => { current.player = p; },
-    onState: (state, info) => states.push([state, info.attempt]),
+    onState: (state, info) => states.push([state, info.attempt, info.reason]),
     now: () => clock.t,
     timers: {
       setTimeout: (fn, ms) => { const h = { fn, ms, cleared: false }; timeouts.push(h); return h; },
@@ -69,7 +69,7 @@ test('start attaches one player and reports connecting then live', () => {
   assert.equal(h.players.length, 1);
   assert.deepEqual(h.players[0].calls, [['loadSource', '/api/cctv/media/x'], ['attachMedia']]);
   h.players[0].fire('frag');
-  assert.deepEqual(h.states, [['connecting', 0], ['live', 0]]);
+  assert.deepEqual(h.states, [['connecting', 0, null], ['live', 0, null]]);
 });
 
 test('fatal network error restarts from the live edge with loadSource, not startLoad', () => {
@@ -180,9 +180,10 @@ test('stop destroys the player, cancels the pending rebuild, and ignores late ev
 test('watchdog restarts a feed whose playhead never moves', () => {
   const h = harness();
   h.heal.start();
+  h.players[0].fire('frag');
   const tick = () => { h.clock.t += HLS_STALL_CHECK_MS; h.intervals[0].fn(); };
   while (h.clock.t < HLS_STALL_RESTART_MS - HLS_STALL_CHECK_MS) tick();
-  assert.equal(h.heal.getState(), 'connecting');
+  assert.equal(h.heal.getState(), 'live');
   tick();
   tick();
   assert.equal(h.heal.getState(), 'recovering');
@@ -192,15 +193,48 @@ test('watchdog restarts a feed whose playhead never moves', () => {
 test('watchdog stays quiet while the playhead advances, the video is paused, or the page is hidden', () => {
   const h = harness({ isPageVisible: () => false });
   h.heal.start();
+  h.players[0].fire('frag');
   for (let i = 0; i < 20; i += 1) { h.clock.t += HLS_STALL_CHECK_MS; h.intervals[0].fn(); }
-  assert.equal(h.heal.getState(), 'connecting');
+  assert.equal(h.heal.getState(), 'live');
 
   const moving = harness();
   moving.heal.start();
+  moving.players[0].fire('frag');
   for (let i = 0; i < 20; i += 1) {
     moving.clock.t += HLS_STALL_CHECK_MS;
     moving.video.currentTime += 1;
     moving.intervals[0].fn();
   }
-  assert.equal(moving.heal.getState(), 'connecting');
+  assert.equal(moving.heal.getState(), 'live');
+});
+
+import { HLS_CONNECT_TIMEOUT_MS } from './cctvConstants.js';
+
+test('a player that never buffers anything is rebuilt as no-data, with no error raised', () => {
+  const h = harness();
+  h.heal.start();
+  const tick = () => { h.clock.t += HLS_STALL_CHECK_MS; h.intervals[0].fn(); };
+  while (h.clock.t < HLS_CONNECT_TIMEOUT_MS - HLS_STALL_CHECK_MS) tick();
+  assert.equal(h.heal.getState(), 'connecting');
+  tick();
+  tick();
+  assert.equal(h.heal.getState(), 'retrying');
+  assert.deepEqual(h.states.at(-1), ['retrying', 1, 'no-data']);
+  assert.equal(h.players[0].calls.at(-1)[0], 'destroy');
+});
+
+test('the connect timeout does not run while the camera is inactive or the tab hidden', () => {
+  const h = harness({ isPageVisible: () => false });
+  h.heal.start();
+  for (let i = 0; i < 20; i += 1) { h.clock.t += HLS_STALL_CHECK_MS; h.intervals[0].fn(); }
+  assert.equal(h.heal.getState(), 'connecting');
+});
+
+test('the no-data reason clears once a fragment arrives', () => {
+  const h = harness();
+  h.heal.start();
+  while (h.heal.getState() !== 'retrying') { h.clock.t += HLS_STALL_CHECK_MS; h.intervals[0].fn(); }
+  h.timeouts.at(-1).fn();
+  h.players[1].fire('frag');
+  assert.deepEqual(h.states.at(-1), ['live', 0, null]);
 });

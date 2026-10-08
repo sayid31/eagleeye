@@ -1219,6 +1219,17 @@ speech-to-speech API, so Claude is paired with the browser's own
   budgets. A watchdog (every `HLS_STALL_CHECK_MS`) restarts a feed whose playhead
   has not moved for `HLS_STALL_RESTART_MS` while the tab is visible and the video
   is playing.
+- Empty playlists: `/api/cctv/media/:id` only writes `ok` after the manifest body
+  starts with `#EXTM3U` (`isValidHlsPlaylist`). A 200 with an empty or non-playlist
+  body is `degraded` ("Source sent an empty playlist") and answered 502. Measured
+  2026-10-08: every `jmlive.jasamarga.com` camera (236) returns an empty 200 or a
+  502, whatever headers are sent.
+- No-data timeout: a feed in `connecting`/`recovering` with no fragment buffered for
+  `HLS_CONNECT_TIMEOUT_MS` (20 s, paused while the tab is hidden or the camera is
+  inactive) is rebuilt and reported with `reason: 'no-data'` (plane `NO DATA FROM
+  SOURCE · RETRYING (#n)`, badge `⚠ NO DATA FROM SOURCE · RETRYING`). Natively played
+  HLS gets the same through `src/data/cctvNativeHlsWatch.js` (reload on timeout or
+  `error`, same backoff; reset on `playing`).
 - Playback state (`runtime.playback`, exposed as `playbackState` in the public
   camera state): `connecting`, `live`, `recovering`, `retrying`, `unavailable`.
   `ok` health only means the playlist is reachable, so the monitor-plane

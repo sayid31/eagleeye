@@ -56,3 +56,14 @@ test('isSourceOffline only matches the offline status', () => {
     assert.equal(isSourceOffline(status), false);
   }
 });
+
+import { EMPTY_PLAYLIST_MESSAGE, isValidHlsPlaylist } from './cctvSourceHealth.mjs';
+
+test('isValidHlsPlaylist rejects empty and non-playlist bodies', () => {
+  assert.equal(isValidHlsPlaylist(''), false);
+  assert.equal(isValidHlsPlaylist(null), false);
+  assert.equal(isValidHlsPlaylist('<html>error</html>'), false);
+  assert.equal(isValidHlsPlaylist('#EXTM3U\n#EXT-X-VERSION:3\n'), true);
+  assert.equal(isValidHlsPlaylist('\n#EXTM3U\n'), true);
+  assert.match(EMPTY_PLAYLIST_MESSAGE, /empty playlist/);
+});

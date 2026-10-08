@@ -12,6 +12,7 @@
 import {
   HLS_MAX_MEDIA_ERROR_RECOVERIES,
   HLS_MAX_NETWORK_ERROR_RECOVERIES,
+  HLS_CONNECT_TIMEOUT_MS,
   HLS_REATTACH_BASE_DELAY_MS,
   HLS_REATTACH_MAX_DELAY_MS,
   HLS_REATTACH_OFFLINE_MAX_DELAY_MS,
@@ -43,7 +44,7 @@ export function nextReattachDelayMs(attempt, { baseMs, maxMs }) {
  * @param {string} options.url - Proxied manifest URL.
  * @param {HTMLVideoElement} options.video
  * @param {(player: Object|null) => void} options.onPlayer - Current player (null once destroyed).
- * @param {(state: string, info: {attempt: number}) => void} options.onState
+ * @param {(state: string, info: {attempt: number, reason: string|null}) => void} options.onState
  * @param {() => boolean} [options.canRun] - False while the feed should stay idle (inactive camera).
  * @param {() => boolean} [options.isSourceOffline] - True when the proxy reports the camera dead.
  * @param {() => boolean} [options.isPageVisible]
@@ -78,13 +79,17 @@ export function createHlsSelfHeal({
   let attempt = 0;
   let lastProgressAt = now();
   let lastPlayhead = null;
+  // When the current connecting/recovering stretch began, and why the last
+  // rebuild happened ('no-data' = nothing buffered within the connect timeout).
+  let connectStartedAt = now();
+  let reason = null;
   let retryTimer = null;
   let watchdog = null;
 
   function setState(next) {
     if (next === state && next !== 'retrying') return;
     state = next;
-    onState(next, { attempt });
+    onState(next, { attempt, reason });
   }
 
   function destroyPlayer() {
@@ -103,7 +108,8 @@ export function createHlsSelfHeal({
     retryTimer = setTimeoutFn(() => attach(), delayMs);
   }
 
-  function rebuild() {
+  function rebuild(why = null) {
+    reason = why;
     destroyPlayer();
     attempt += 1;
     setState('retrying');
@@ -113,6 +119,7 @@ export function createHlsSelfHeal({
 
   function recover(hls, type) {
     lastProgressAt = now();
+    connectStartedAt = now();
     try {
       if (type === errorTypes.MEDIA_ERROR && mediaRecoveries < HLS_MAX_MEDIA_ERROR_RECOVERIES) {
         mediaRecoveries += 1;
@@ -140,6 +147,7 @@ export function createHlsSelfHeal({
       networkRecoveries = 0;
       mediaRecoveries = 0;
       attempt = 0;
+      reason = null;
       lastProgressAt = now();
       setState('live');
     });
@@ -165,6 +173,7 @@ export function createHlsSelfHeal({
     networkRecoveries = 0;
     mediaRecoveries = 0;
     lastProgressAt = now();
+    connectStartedAt = now();
     lastPlayhead = null;
     const hls = createPlayer();
     player = hls;
@@ -177,6 +186,14 @@ export function createHlsSelfHeal({
 
   function checkStall() {
     if (stopped || !player) return;
+    if (state === 'connecting' || state === 'recovering') {
+      // Nothing has reached the buffer yet. Empty playlists never raise a fatal
+      // error, and `video.paused` is true until the first play(), so the
+      // playhead check below cannot see this case.
+      if (!canRun() || !isPageVisible()) connectStartedAt = now();
+      else if (now() - connectStartedAt >= HLS_CONNECT_TIMEOUT_MS) rebuild('no-data');
+      return;
+    }
     const idle = !canRun() || !isPageVisible() || video.paused;
     const playhead = video.currentTime;
     if (idle || playhead !== lastPlayhead) {

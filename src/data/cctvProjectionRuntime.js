@@ -7,6 +7,7 @@ import { isVideoFeedType, normalizeFeedType } from './cctvCatalog.js';
 import { PROJECTION_CANVAS_HEIGHT, PROJECTION_CANVAS_WIDTH } from './cctvConstants.js';
 import { CCTV_HLS_CONFIG } from './cctvHlsConfig.js';
 import { createHlsSelfHeal } from './cctvHlsSelfHeal.js';
+import { watchNativeHls } from './cctvNativeHlsWatch.js';
 import { isSourceOffline } from './cctvSourceHealth.mjs';
 import { notifyListeners } from './cctvPublicState.js';
 import { installHlsTabReturnReload } from './cctvHlsVisibility.js';
@@ -50,7 +51,7 @@ function attachHlsJs(runtime, video, url) {
         url,
         video,
         onPlayer: (player) => { runtime.hlsInstance = player; },
-        onState: (state, { attempt }) => setPlayback(runtime, state, attempt),
+        onState: (state, { attempt, reason }) => setPlayback(runtime, state, attempt, reason),
         canRun: () => runtime.cameraId === S._activeCameraId,
         isSourceOffline: () => isSourceOffline(S._healthById.get(runtime.cameraId)?.status),
         isPageVisible: () => document.visibilityState !== 'hidden',
@@ -71,9 +72,10 @@ function attachHlsJs(runtime, video, url) {
  * @param {Object} runtime
  * @param {string} state
  * @param {number} attempt
+ * @param {string|null} [reason] - 'no-data' when nothing arrived from the source.
  */
-function setPlayback(runtime, state, attempt) {
-  runtime.playback = { state, attempt };
+function setPlayback(runtime, state, attempt, reason = null) {
+  runtime.playback = { state, attempt, reason };
   runtime.lastPlaceholderPaintAt = 0;
   notifyListeners();
 }
@@ -109,6 +111,7 @@ function createProjectionRuntime(record) {
     video: null,
     hlsInstance: null,
     hlsHeal: null,
+    stopNativeWatch: null,
     // Player state from cctvHlsSelfHeal.js ({state, attempt}); null until an
     // hls.js player reports in (native-HLS and image runtimes never do).
     playback: null,
@@ -179,6 +182,12 @@ function createProjectionRuntime(record) {
       video.addEventListener('canplay', () => {
         video.play().catch(() => {});
       });
+      if (feedType === 'hls') {
+        runtime.stopNativeWatch = watchNativeHls(video, {
+          onState: (state, { attempt, reason }) => setPlayback(runtime, state, attempt, reason),
+          canRun: () => runtime.cameraId === S._activeCameraId,
+        });
+      }
     }
     runtime.video = video;
   } else {
@@ -304,6 +313,10 @@ export function destroyProjectionRuntime(runtime) {
   if (!runtime) return;
   runtime.destroyed = true;
   // hls.js recommends detaching before clearing the video's src.
+  if (runtime.stopNativeWatch) {
+    runtime.stopNativeWatch();
+    runtime.stopNativeWatch = null;
+  }
   if (runtime.hlsHeal) {
     runtime.hlsHeal.stop();
     runtime.hlsHeal = null;

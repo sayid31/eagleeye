@@ -24,11 +24,13 @@ import {
 } from '../server/hlsManifestProxy.mjs';
 import { readCappedResponseText, proxyMediaResponse } from '../server/proxyInfra.mjs';
 import {
+  EMPTY_PLAYLIST_MESSAGE,
   SOURCE_OFFLINE_STATUS,
   describeOfflineSource,
   isExpectedVideoMedia,
   isUpstreamGoneStatus,
   isUpstreamUnreachableError,
+  isValidHlsPlaylist,
 } from './cctvSourceHealth.mjs';
 
 // Config-file paths below were resolved against vite.config.js's own
@@ -1299,6 +1301,19 @@ export function cctvProxy() {
                 if (tooLarge) {
                   res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                   res.end(JSON.stringify({ error: 'Upstream manifest exceeds size cap' }));
+                  return;
+                }
+                if (!isValidHlsPlaylist(text)) {
+                  // 200 + empty body: the playlist fetch alone must not read as
+                  // a connected stream. Overrides the "ok" written above.
+                  setHealth(cameraId, {
+                    status: 'degraded',
+                    sourceKind: 'upstream',
+                    label: source?.provider || 'Configured source',
+                    message: EMPTY_PLAYLIST_MESSAGE,
+                  });
+                  res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                  res.end(JSON.stringify({ error: EMPTY_PLAYLIST_MESSAGE }));
                   return;
                 }
                 const rewritten = rewriteHlsManifest(text, mediaUrl, cameraId);

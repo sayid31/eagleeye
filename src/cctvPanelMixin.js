@@ -626,7 +626,10 @@ export const cctvPanelMixin = {
     }
     // Playlist reachable is not the same as video playing: while the player is
     // still connecting, recovering or has stalled, say that instead of "OK".
-    const streamBadge = playbackBadge(activeCamera.playbackState);
+    const streamBadge = playbackBadge(activeCamera.playbackState, {
+      reason: activeCamera.playbackReason,
+      sourceMessage: activeCamera.sourceMessage,
+    });
     if (streamBadge) {
       this._cctvSourceBadge.textContent = streamBadge.text;
       this._cctvSourceBadge.dataset.frameState = streamBadge.frameState;
