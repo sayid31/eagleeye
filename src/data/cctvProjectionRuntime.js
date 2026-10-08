@@ -5,6 +5,7 @@ import { focusPassIsNeeded, getFocusTarget } from './focusDeemphasis.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
 import { isVideoFeedType, normalizeFeedType } from './cctvCatalog.js';
 import { HLS_MAX_MEDIA_ERROR_RECOVERIES, HLS_MAX_NETWORK_ERROR_RECOVERIES, PROJECTION_CANVAS_HEIGHT, PROJECTION_CANVAS_WIDTH } from './cctvConstants.js';
+import { CCTV_HLS_CONFIG } from './cctvHlsConfig.js';
 import { getActiveRecord, refreshCctvFocusStyles } from './cctvCoverage.js';
 import { computeFrustumGeometry, frustumCartesians } from './cctvGeometry.js';
 import { groundAltFor } from './cctvGround.js';
@@ -35,17 +36,7 @@ function attachHlsJs(runtime, video, url) {
       // Runtime may have been torn down while the dynamic import was in flight.
       if (runtime.destroyed) return;
       if (!Hls.isSupported()) return;
-      const hls = new Hls({
-        // Sit further back from the live edge than hls.js's default (3
-        // segments, ~22s at this upstream's ~7.5s segment duration). These
-        // proxied unofficial feeds have uneven round-trip latency (measured
-        // 1-14s per segment) and a short live window (~4 segments listed at
-        // once) — sitting closer to the edge leaves no margin before a slow
-        // fetch requests a segment that has already rolled off the upstream
-        // playlist and 404s. More lag from true live is an acceptable
-        // trade-off for an internal demo; a frozen frame is not.
-        liveSyncDurationCount: 5,
-      });
+      const hls = new Hls({ ...CCTV_HLS_CONFIG });
       let networkErrorRecoveries = 0;
       let mediaErrorRecoveries = 0;
       // A fragment actually reaching the buffer means the stream is

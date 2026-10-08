@@ -1200,9 +1200,12 @@ speech-to-speech API, so Claude is paired with the browser's own
   measurements against the Jakarta source found segment download times
   ranging 1–14s against a ~7.5s segment duration — sometimes exceeding the
   segment's own playback window, both through our proxy and fetched
-  directly. `attachHlsJs()` (`src/data/cctv.js`) accounts for this two ways:
-  `liveSyncDurationCount: 5` (up from hls.js's default 3) buys extra buffer
-  headroom, and the `Hls.Events.ERROR` handler runs a bounded recovery loop
+  directly. `attachHlsJs()` (`src/data/cctvProjectionRuntime.js`) accounts for this:
+  the player keeps hls.js's default live-sync distance (3 segments; options in
+  `src/data/cctvHlsConfig.js`, no override), because a larger fixed count
+  puts 2 s-segment hosts (Denpasar, Mataram) 10 s behind a 14 s window and
+  the segment being fetched 404s once it rolls off — rationale in
+  `docs/DECISIONS.md` ("CCTV HLS live-sync distance"). The `Hls.Events.ERROR` handler runs a bounded recovery loop
   (`hls.startLoad()` for `NETWORK_ERROR`, `hls.recoverMediaError()` for
   `MEDIA_ERROR`, retry counters reset on the next successful
   `FRAG_BUFFERED`) instead of destroying the player on the first fatal
