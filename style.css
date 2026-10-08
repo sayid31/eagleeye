@@ -6467,6 +6467,16 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   background: rgba(255, 72, 72, 0.11);
 }
 
+/* The provider removed the feed (HTTP 404/410 / host gone). Muted grey-red,
+   distinct from the bright 'error' state: the camera is down at its source,
+   nothing is broken on our side. */
+#cctv-source-badge[data-frame-state='offline'] {
+  color: #d9b3b3;
+  border-color: rgba(200, 120, 120, 0.5);
+  background: rgba(120, 60, 60, 0.18);
+  font-weight: 600;
+}
+
 /* Reverse-engineered/unofficial government camera endpoints (internal demo
    only — see DATA_SOURCES.md). Amber, distinct from the error state, so the
    disclosure reads as "handle with care" rather than "broken". */

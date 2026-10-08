@@ -1,4 +1,5 @@
 import { runCctvLayerEnableTransition } from './cctvFocusPolicy.js';
+import { isSourceOffline } from './data/cctvSourceHealth.mjs';
 import {
   shouldRebuildCctvCameraListbox,
   renderCctvCameraListboxOptions,
@@ -612,6 +613,14 @@ export const cctvPanelMixin = {
     if (this._cctvFrame?.dataset.error === 'true' && !hasDisplayedFrame) {
       this._cctvSourceBadge.textContent = 'FRAME · UNAVAILABLE';
       this._cctvSourceBadge.dataset.frameState = 'error';
+      return;
+    }
+    // The provider took this feed down (HTTP 404/410 or host gone): say so
+    // plainly, ahead of the generic status, so a dead source is never read as
+    // a fault in this app.
+    if (isSourceOffline(activeCamera.sourceStatus)) {
+      this._cctvSourceBadge.textContent = '⛔ CAMERA OFFLINE · SOURCE DOWN';
+      this._cctvSourceBadge.dataset.frameState = 'offline';
       return;
     }
     const status = String(activeCamera.sourceStatus || 'unknown').toUpperCase();

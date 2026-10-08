@@ -6,6 +6,29 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-08 — CCTV: a dead source is `offline`, not `degraded`
+
+**Decision.** `/api/cctv/media/:id` writes health status `offline` (not
+`degraded`) when the provider answers 404/410 or the host is unresolvable
+(`ENOTFOUND`/`ECONNREFUSED`); the panel badge says `CAMERA OFFLINE · SOURCE DOWN`.
+
+**Why.** Dead Bandung feeds (HTTP 404) and "playing but mislabelled" feeds both
+showed the same `UPSTREAM · DEGRADED`, so the owner read provider outages as app
+bugs. A separate status lets the UI say whose fault it is.
+
+**Why only 404/410 and DNS/refused.** 5xx, 401/403/429 and timeouts are
+indistinguishable from a transient or throttled upstream; calling those "offline"
+would hide recoverable problems and mislead. Unproven cases stay `degraded`.
+
+**Also fixed.** The media-type check was `contentType.includes('mpegurl')`,
+case-sensitive, so the Pelindung type `application/x-mpegURL` was flagged
+"Unexpected media type" even though the manifest branch (case-insensitive)
+played it. Both now share `isManifestContentType`.
+
+**Not done (unproven).** Zero-byte / in-place-overwritten ring-buffer segments
+on the Pelindung servers may stall hls.js; not reproduced in a browser, so the
+proxy is unchanged for them.
+
 ## 2026-10-01 — Large files split into small modules; track-regression timing made frame-adaptive
 
 Sixteen files of 1,700–5,400 lines (`cctv`, `flights`, `militaryFlights`,

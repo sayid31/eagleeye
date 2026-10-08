@@ -1196,6 +1196,17 @@ speech-to-speech API, so Claude is paired with the browser's own
   (amber, `[data-frame-state='unofficial']` in `style.css`) for every camera
   in this pack, and the meta line shows the config's short `provider`
   disclaimer string automatically (`src/cctvPanelMixin.js`).
+- Source health (`/api/cctv/health`, classifiers in
+  `src/data/cctvSourceHealth.mjs`): a video camera is `ok` when the playlist
+  answers with a video/mpegURL type (compared case-insensitively; a missing
+  Content-Type is accepted for an `.m3u8` URL). `degraded` is reserved for
+  transient trouble (5xx, 401/403/429, timeouts, wrong media type). `offline`
+  means the provider removed the feed: HTTP 404/410, or the host is
+  unresolvable/refusing (`ENOTFOUND`/`ECONNREFUSED`). The panel badge then
+  reads `⛔ CAMERA OFFLINE · SOURCE DOWN` (`[data-frame-state='offline']`) in
+  place of the generic KIND · STATUS label, and the meta line / monitor-plane
+  placeholder carry `Camera offline at source (…)`. Status is per request, so a
+  feed that comes back flips to `ok` on its next successful fetch.
 - **Revocation** (either is sufficient): set
   `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`, or delete
   `config/cctv_sources.indonesia_unofficial.json` (or the file pointed to by
