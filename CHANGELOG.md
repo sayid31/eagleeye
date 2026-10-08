@@ -31,6 +31,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- CCTV live video no longer sits so far behind the live edge on short-segment streams
+  (Denpasar, Mataram and several toll feeds), which caused occasional 404s on segments
+  that had already rolled off the upstream playlist and a brief freeze before recovery.
 - Mataram's low-latency HLS playlists no longer make the player hammer the stream
   with reloads: the CCTV proxy now serves them as plain live playlists.
 
