@@ -78,6 +78,10 @@ function getPublicCameraState(record, activeId = null) {
     sourceStatus: health?.status || 'unknown',
     sourceMessage: health?.message || '',
     sourceLabel: health?.label || camera.provider || '',
+    // What the hls.js player is really doing (connecting/live/recovering/
+    // retrying/unavailable); null for image and native-HLS feeds. Health "ok"
+    // only proves the playlist is reachable, not that video is decoding.
+    playbackState: record.projection?.playback?.state || null,
     calibration: { ...normalizeCalibration(camera.calibration) },
     // Save-gated persistence (design §3e): true while the live pose carries
     // edits that have not been SAVEd (or RESET). Drives the CAL · EDITED chip.

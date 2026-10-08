@@ -2,6 +2,7 @@
 
 import { ACTIVE_FRAME_REFRESH_MS, FRAME_ENDPOINT, FRAME_SIGNATURE_H, FRAME_SIGNATURE_W, MEDIA_ENDPOINT, PLACEHOLDER_REPAINT_MS, PROJECTION_ACTIVE_REFRESH_MS, PROJECTION_CANVAS_HEIGHT, PROJECTION_CANVAS_WIDTH, PROJECTION_IDLE_REFRESH_MS, PROJECTION_TEXTURE_SWAP_MS, PROJECTION_VIDEO_SWAP_MS } from './cctvConstants.js';
 import { safeNumber } from './cctvMath.js';
+import { isPlaybackStalled, videoPlaceholderHealth } from './cctvPlaybackStatus.js';
 import { S } from './cctvState.js';
 
 /**
@@ -311,7 +312,10 @@ export function drawProjectionFrame(record) {
 
   if (runtime.mode === 'video' && runtime.video) {
     const video = runtime.video;
-    if (video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
+    const playbackStalled = isPlaybackStalled(runtime.playback);
+    // A stalled player keeps its last decoded frame in the video element; it
+    // must not keep passing for live, so the plane switches to the placeholder.
+    if (!playbackStalled && video.readyState >= 2 && video.videoWidth > 0 && video.videoHeight > 0) {
       // Only redraw the canvas when the video has actually decoded a NEW
       // frame since the last tick (owner report, 2026-09-28: monitor plane
       // flickered during live playback, every map regime — root-caused and
@@ -352,7 +356,9 @@ export function drawProjectionFrame(record) {
       runtime.canvasStamp = (runtime.canvasStamp || 0) + 1;
       return;
     }
-    paintPlaceholderThrottled(record, runtime, health);
+    // Playlist health alone says nothing about decoded video, so the text on
+    // the plane comes from the player state, not from "Live stream connected".
+    paintPlaceholderThrottled(record, runtime, videoPlaceholderHealth(health, runtime.playback));
     return;
   }
 

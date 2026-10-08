@@ -39,6 +39,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- CCTV HLS video no longer stays black until the camera is reselected. After hls.js
+  exhausts its in-place recoveries the player is rebuilt with exponential backoff
+  (2 s up to 30 s; up to 120 s for a source reported offline). A network error now
+  restarts from the live edge (fresh playlist) instead of resuming from the stale
+  playhead, and a feed whose playhead stops for 25 s is restarted automatically.
+- CCTV monitor plane and panel badge no longer claim "Live stream connected" over a
+  dark plane. The plane reads `WAITING FOR VIDEO`, `STREAM INTERRUPTED · RECOVERING`
+  or `STREAM STALLED · RETRYING (#n)`, and the panel badge follows (`STREAM ·
+  CONNECTING`, `⚠ STREAM STALLED · RETRYING`). A frozen last frame is no longer shown
+  as live while the player is retrying.
+
 - CCTV: a camera whose provider has taken the feed down (the stream URL answers
   404/410, or the host no longer exists) is now labelled `⛔ CAMERA OFFLINE ·
   SOURCE DOWN` instead of a generic degraded/error state, so a dead source is no

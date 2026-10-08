@@ -4,8 +4,11 @@ import * as Cesium from 'cesium';
 import { focusPassIsNeeded, getFocusTarget } from './focusDeemphasis.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
 import { isVideoFeedType, normalizeFeedType } from './cctvCatalog.js';
-import { HLS_MAX_MEDIA_ERROR_RECOVERIES, HLS_MAX_NETWORK_ERROR_RECOVERIES, PROJECTION_CANVAS_HEIGHT, PROJECTION_CANVAS_WIDTH } from './cctvConstants.js';
+import { PROJECTION_CANVAS_HEIGHT, PROJECTION_CANVAS_WIDTH } from './cctvConstants.js';
 import { CCTV_HLS_CONFIG } from './cctvHlsConfig.js';
+import { createHlsSelfHeal } from './cctvHlsSelfHeal.js';
+import { isSourceOffline } from './cctvSourceHealth.mjs';
+import { notifyListeners } from './cctvPublicState.js';
 import { installHlsTabReturnReload } from './cctvHlsVisibility.js';
 import { getActiveRecord, refreshCctvFocusStyles } from './cctvCoverage.js';
 import { computeFrustumGeometry, frustumCartesians } from './cctvGeometry.js';
@@ -16,18 +19,18 @@ import { clearProjectionOverlay, createProjectionPlane } from './cctvProjectionP
 import { S } from './cctvState.js';
 
 /**
- * Attach an hls.js (MSE-based) player to a <video> element for browsers
- * without native HLS support. Dynamically imports hls.js so it's only ever
- * loaded when a non-Safari browser actually activates an HLS camera
- * (code-split — Safari's native-HLS path above never triggers this import).
+ * Attach a self-healing hls.js (MSE-based) player to a <video> element for
+ * browsers without native HLS support. Dynamically imports hls.js so it's only
+ * ever loaded when a non-Safari browser actually activates an HLS camera
+ * (code-split — Safari's native-HLS path never triggers this import).
  *
- * Bails out quietly (leaves the video with no source) if hls.js reports the
- * browser lacks MSE support at all — the existing placeholder-paint path in
- * the draw loop already handles "no frame ever arrives" gracefully via the
- * video.readyState gate, so there's no separate error UI needed here.
+ * Recovery, rebuild-with-backoff and the stall watchdog live in
+ * cctvHlsSelfHeal.js; the player state it reports is stored on
+ * `runtime.playback` so the draw loop and the panel can say what is really
+ * happening instead of repainting the playlist health over a dark plane.
  *
- * @param {Object} runtime - Projection runtime; the created Hls instance is
- *   stored on `runtime.hlsInstance` for destroyProjectionRuntime to tear down.
+ * @param {Object} runtime - Projection runtime; the live Hls instance is kept
+ *   on `runtime.hlsInstance` and the controller on `runtime.hlsHeal`.
  * @param {HTMLVideoElement} video
  * @param {string} url - Proxied manifest URL (/api/cctv/media/:id).
  */
@@ -36,54 +39,43 @@ function attachHlsJs(runtime, video, url) {
     .then(({ default: Hls }) => {
       // Runtime may have been torn down while the dynamic import was in flight.
       if (runtime.destroyed) return;
-      if (!Hls.isSupported()) return;
-      const hls = new Hls({ ...CCTV_HLS_CONFIG });
-      let networkErrorRecoveries = 0;
-      let mediaErrorRecoveries = 0;
-      // A fragment actually reaching the buffer means the stream is
-      // healthy again — reset both counters so a later, unrelated blip
-      // gets its own full retry budget instead of inheriting an old one.
-      hls.on(Hls.Events.FRAG_BUFFERED, () => {
-        networkErrorRecoveries = 0;
-        mediaErrorRecoveries = 0;
+      if (!Hls.isSupported()) {
+        setPlayback(runtime, 'unavailable', 0);
+        return;
+      }
+      runtime.hlsHeal = createHlsSelfHeal({
+        createPlayer: () => new Hls({ ...CCTV_HLS_CONFIG }),
+        events: Hls.Events,
+        errorTypes: Hls.ErrorTypes,
+        url,
+        video,
+        onPlayer: (player) => { runtime.hlsInstance = player; },
+        onState: (state, { attempt }) => setPlayback(runtime, state, attempt),
+        canRun: () => runtime.cameraId === S._activeCameraId,
+        isSourceOffline: () => isSourceOffline(S._healthById.get(runtime.cameraId)?.status),
+        isPageVisible: () => document.visibilityState !== 'hidden',
       });
-      hls.on(Hls.Events.MANIFEST_PARSED, () => {
-        video.play().catch(() => {});
-      });
-      // Fatal errors are not surfaced as a console error — an unofficial
-      // upstream having a rough moment is an expected, not exceptional,
-      // condition here. Network/media fatals get hls.js's own recommended
-      // bounded recovery (startLoad / recoverMediaError) rather than an
-      // immediate destroy, since most observed fatals on these feeds are
-      // transient segment-timing misses, not real outages. Any other fatal
-      // type (or exceeding the recovery budget) still tears the player down;
-      // the placeholder frame already covers "no video arriving" in the draw
-      // loop, so there's no separate error UI needed here.
-      hls.on(Hls.Events.ERROR, (_event, data) => {
-        if (!data?.fatal) return;
-        if (data.type === Hls.ErrorTypes.NETWORK_ERROR
-          && networkErrorRecoveries < HLS_MAX_NETWORK_ERROR_RECOVERIES) {
-          networkErrorRecoveries += 1;
-          hls.startLoad();
-          return;
-        }
-        if (data.type === Hls.ErrorTypes.MEDIA_ERROR
-          && mediaErrorRecoveries < HLS_MAX_MEDIA_ERROR_RECOVERIES) {
-          mediaErrorRecoveries += 1;
-          hls.recoverMediaError();
-          return;
-        }
-        hls.destroy();
-        if (runtime.hlsInstance === hls) runtime.hlsInstance = null;
-      });
-      hls.loadSource(url);
-      hls.attachMedia(video);
-      runtime.hlsInstance = hls;
+      runtime.hlsHeal.start();
     })
-    .catch(() => {
-      // hls.js failed to load (offline, blocked bundle chunk, etc.) — leave
-      // the video without a source; placeholder frame covers this case too.
+    .catch((error) => {
+      // hls.js failed to load (offline, blocked bundle chunk, etc.): say so on
+      // the plane rather than leaving it on "waiting" forever.
+      console.warn('[CCTV] hls.js failed to load:', error);
+      if (!runtime.destroyed) setPlayback(runtime, 'unavailable', 0);
     });
+}
+
+/**
+ * Records the HLS player state on the runtime and tells panel subscribers when
+ * it changed, so the badge can follow the plane.
+ * @param {Object} runtime
+ * @param {string} state
+ * @param {number} attempt
+ */
+function setPlayback(runtime, state, attempt) {
+  runtime.playback = { state, attempt };
+  runtime.lastPlaceholderPaintAt = 0;
+  notifyListeners();
 }
 
 /**
@@ -116,6 +108,10 @@ function createProjectionRuntime(record) {
     image: null,
     video: null,
     hlsInstance: null,
+    hlsHeal: null,
+    // Player state from cctvHlsSelfHeal.js ({state, attempt}); null until an
+    // hls.js player reports in (native-HLS and image runtimes never do).
+    playback: null,
     destroyed: false,
     planeEntity: null,
     cameraId: String(record.camera.id),
@@ -308,6 +304,10 @@ export function destroyProjectionRuntime(runtime) {
   if (!runtime) return;
   runtime.destroyed = true;
   // hls.js recommends detaching before clearing the video's src.
+  if (runtime.hlsHeal) {
+    runtime.hlsHeal.stop();
+    runtime.hlsHeal = null;
+  }
   if (runtime.hlsInstance) {
     runtime.hlsInstance.destroy();
     runtime.hlsInstance = null;
