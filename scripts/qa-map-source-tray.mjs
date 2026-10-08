@@ -683,21 +683,14 @@ try {
   check('coarse-pointer tap opens the compact wing', touchOpen === 'true', `aria-expanded=${touchOpen}`);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
 
-  // Retired and unknown stack ids take the SAME path. `bing-road` was the fifth
-  // source behind the retired left Map Stack panel; deleting it from
-  // `MAP_STACKS` (no build carrying it ever shipped publicly, so no link is
-  // owed anything) means an old `map=bing-road` link is now simply an
-  // unrecognized id, and `setStack()`'s `getStack(id) || getStack('photoreal')`
-  // fallback requests Google 3D. A keyed run lands there; a keyless run keeps
-  // its truthful OSM recovery. Either way, the active tile must reflect the
-  // rendered source — never a hidden fifth source with a ROAD status.
+  // The share hash neither carries nor restores a basemap: every load lands on
+  // keyless Esri (the boot stack). Old links with `map=photoreal` (which used to
+  // load Google 3D behind the Esri boot activation), retired ids like
+  // `bing-road`, and garbage all take the SAME path and must end on Esri with
+  // its tile lit. Google 3D remains a manual in-session pick.
   await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });
-  const photorealAvailable = await page.$eval(
-    '[data-stack-id="photoreal"]',
-    (chip) => chip.getAttribute('aria-disabled') !== 'true',
-  );
-  const expectedLegacyActive = photorealAvailable ? 'photoreal' : 'osm';
-  for (const legacyId of ['bing-road', 'garbage']) {
+  const expectedLegacyActive = 'esri-imagery';
+  for (const legacyId of ['photoreal', 'bing-road', 'garbage']) {
     if (forceKeyless) {
       // Keep the forced-keyless seam alive. A full reload would rebuild the
       // controller from the keyed server before this in-page override exists,
@@ -734,9 +727,9 @@ try {
         .map((chip) => chip.dataset.stackId),
     }));
     check(
-      `a map=${legacyId} link restores to the best available fallback with its tile lit`,
+      `a map=${legacyId} link lands on Esri with its tile lit`,
       restored.activeId === expectedLegacyActive
-        && (photorealAvailable ? restored.lastError === null : /unavailable/i.test(restored.lastError || ''))
+        && restored.lastError === null
         && JSON.stringify(restored.pressed) === JSON.stringify([expectedLegacyActive]),
       JSON.stringify(restored),
     );

@@ -29,8 +29,20 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   APPROX. LOCATION: positions are placed by KM along the toll centerline, not
   surveyed. The default camera catalog cap rises from 900 to 1200 to fit them (later 1400, see below).
 
+### Changed
+
+- Every load and reload now lands on Esri Satellite. The URL hash no longer stores
+  or restores the basemap (`map=`), so a tab that was last on Google 3D no longer
+  loads Esri and then Google 3D on top of it. Google 3D and the other basemaps are
+  still one click (or one voice command) away, but are no longer remembered across
+  reloads, and an old link carrying `map=photoreal` opens on Esri.
+
 ### Fixed
 
+- The "Restoring shared view..." startup screen no longer waits for every saved
+  layer to finish restoring. It lifts once the shared camera, visual settings and
+  first rendered frame are ready; heavy layers such as CCTV keep loading behind the
+  visible app with their existing loading chip.
 - CCTV live video now restarts from the live edge when the tab comes back after being
   hidden for 10 s or more. A hidden tab throttles the player's timers, so on return it
   asked the stream for segments that had been deleted in the meantime (404 and a freeze).

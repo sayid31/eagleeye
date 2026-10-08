@@ -586,7 +586,9 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   // not a flat timer — composeSplashReadiness/waitForFirstFrame replaced the
   // old inline `Promise.all([styleManager.initialRestorePromise, timeout(1000)])`.
   const startup = main.slice(main.indexOf('void composeSplashReadiness('), main.indexOf('// Expose for debugging'));
-  assert.match(startup, /styleManager\.initialRestorePromise/);
+  assert.match(startup, /styleManager\.initialViewReadyPromise/);
+  assert.doesNotMatch(startup, /styleManager\.initialRestorePromise/,
+    'saved layers must not hold the splash');
   assert.match(startup, /waitForFirstFrame\(viewer\.scene\)/);
   assert.ok(startup.indexOf("loadingScreen.classList.add('hidden')") < startup.indexOf('initFirstRunExperience'));
   assert.match(startup, /initFirstRunExperience\(\{ styleManager, dataManager \}\)/);
