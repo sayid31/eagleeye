@@ -61,6 +61,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- CCTV live HLS video no longer freezes a few seconds after it starts on
+  current Chrome. The player was picked by `canPlayType()`, which Chrome now
+  answers "maybe" even though its native HLS engine cannot parse these feeds, so
+  hls.js (and its recovery) was never used. hls.js is now always tried first;
+  the native engine is only the fallback when hls.js cannot run.
 - Pasuruan streams (and any other host that sends an incomplete TLS certificate
   chain) no longer fail with "Media proxy failed" in the dev proxy. Browsers
   repair the missing intermediate certificate on their own; Node did not.
