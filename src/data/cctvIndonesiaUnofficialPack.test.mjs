@@ -218,6 +218,8 @@ const REGENCY_PACKS = [
     url: /^https:\/\/dishub\.pasuruankab\.go\.id:5444\/LiveApp\/streams\/[A-Z0-9_-]+\.m3u8$/ },
   { prefix: 'sumedang-atcs-', cityId: 'sumedang', count: 35, lat: [-6.95, -6.75], lon: [107.8, 108.0],
     url: /^https:\/\/shinobi\.sumedangkab\.go\.id\/[A-Za-z0-9]+\/hls\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/s\.m3u8$/ },
+  { prefix: 'malang-atcs-', cityId: 'malang', count: 199, lat: [-8.06, -7.9], lon: [112.58, 112.7],
+    url: /^https:\/\/cctv\.malangkota\.go\.id\/cctv-stream\/streams\/\d{24}\.m3u8$/ },
 ];
 
 for (const c of REGENCY_PACKS) {
@@ -245,4 +247,18 @@ test('Pasuruan pack omits the two streams the origin answers 404 for (measured 2
   const urls = new Set(pack.map((row) => row.url));
   assert.equal(urls.has('https://dishub.pasuruankab.go.id:5444/LiveApp/streams/EXIT_TOL_PURWODADI.m3u8'), false);
   assert.equal(urls.has('https://dishub.pasuruankab.go.id:5444/LiveApp/streams/EXIT_TOL_GEMPOL.m3u8'), false);
+});
+
+test('Malang rows opt into the anonymous portal session; no other pack row does', () => {
+  for (const row of pack) {
+    if (row.id.startsWith('malang-atcs-')) {
+      assert.deepEqual(row.portalSession, {
+        bootstrapUrl: 'https://cctv.malangkota.go.id/',
+        referer: 'https://cctv.malangkota.go.id/sebaran-cctv',
+      }, row.id);
+      assert.ok(row.license.includes('no login'), `${row.id} license must say the session is anonymous`);
+    } else {
+      assert.equal(row.portalSession, undefined, row.id);
+    }
+  }
 });

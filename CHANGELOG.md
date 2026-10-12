@@ -7,6 +7,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 199 live Malang city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the public
+  Malang ATCS portal. The portal refuses its streams (403) unless the page was
+  visited first, so the dev proxy now fetches that page anonymously, keeps the
+  cookie it receives for up to 30 minutes and replays it with a `Referer` (no
+  login, no credential; opt-in per source with `portalSession`). Positions are
+  guesses from the street in the label: 167 are anchored on a place search
+  (`APPROX. LOCATION`), 32 sit on a ring around central Malang
+  (`CITY-LEVEL ONLY`). The operator's ~210 lines held 199 distinct URLs (10 URLs
+  carried two different labels; the first is used). The default camera catalog
+  cap rises from 1400 to 1600 (it truncated Malang to 73 cameras at 1526 rows).
 - 31 live Pasuruan (Kabupaten) and 35 live Sumedang city CCTV cameras (UNOFFICIAL
   SOURCE, demo only) from the public Dishub ATCS streams. Positions are guesses
   from the label: 44 are anchored on a place search (`APPROX. LOCATION`), 22 sit
@@ -36,6 +46,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Internal: `cctvProjectionRuntime.js` (489 lines) and `cctvHlsSelfHeal.js` (223
+  lines) were split below the project size limits (`cctvProjectionVideo.js`,
+  `cctvHlsStall.js`, `cctvHlsBackoff.js`). No behavior change.
 - Every load and reload now lands on Esri Satellite. The URL hash no longer stores
   or restores the basemap (`map=`), so a tab that was last on Google 3D no longer
   loads Esri and then Google 3D on top of it. Google 3D and the other basemaps are

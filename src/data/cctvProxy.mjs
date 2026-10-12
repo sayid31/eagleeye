@@ -24,6 +24,7 @@ import {
 } from '../server/hlsManifestProxy.mjs';
 import { readCappedResponseText, proxyMediaResponse } from '../server/proxyInfra.mjs';
 import { installIntermediateCaTrust } from '../server/intermediateCaTrust.mjs';
+import { createPortalSessionStore, normalizePortalSession } from '../server/portalSession.mjs';
 import {
   EMPTY_PLAYLIST_MESSAGE,
   SOURCE_OFFLINE_STATUS,
@@ -33,6 +34,9 @@ import {
   isUpstreamUnreachableError,
   isValidHlsPlaylist,
 } from './cctvSourceHealth.mjs';
+
+/** User-Agent for every upstream request; portal sessions are bound to it by the host. */
+const CCTV_PROXY_USER_AGENT = 'eagleeye-view-cctv-proxy/1.0';
 
 // Config-file paths below were resolved against vite.config.js's own
 // module-relative `__dirname` (the repo root, since vite.config.js lives
@@ -113,8 +117,9 @@ const DEFAULT_CCTV_INDONESIA_UNOFFICIAL_FILE = 'config/cctv_sources.indonesia_un
 const DEFAULT_AUSTIN_ROWS_URL = 'https://data.austintexas.gov/api/views/b4k4-adkb/rows.json?accessType=DOWNLOAD';
 /** Default cap on Austin cameras after distance-based prioritization. */
 const DEFAULT_AUSTIN_MAX_SOURCES = 250;
-/** Global cap on total CCTV sources served by the proxy. */
-const DEFAULT_CCTV_MAX_SOURCES = 1400;
+/** Global cap on total CCTV sources served by the proxy. Also the hard clamp for
+ * CCTV_MAX_SOURCES and the size of the per-camera health map. */
+const DEFAULT_CCTV_MAX_SOURCES = 1600;
 /** Reference point for Austin camera prioritization (Congress & 6th). */
 const AUSTIN_DOWNTOWN = { lat: 30.2672, lon: -97.7431 };
 /** Caltrans CCTV: one JSON feed per district, identical schema statewide. */
@@ -823,6 +828,8 @@ function normalizeSourceItem(item) {
     groundElevationM: toFiniteNumber(item.groundElevationM),
     feedType: normalizeFeedType(item.feedType || item.type || ''),
     url: typeof item.url === 'string' ? item.url : '',
+    // Optional: hosts that 403 streams until the city portal was visited (see portalSession.mjs).
+    portalSession: normalizePortalSession(item.portalSession, typeof item.url === 'string' ? item.url : ''),
     snapshotUrl: typeof item.snapshotUrl === 'string' ? item.snapshotUrl : '',
     license: String(item.license || item.licenseNote || ''),
     sourceKind: String(item.sourceKind || item.kind || 'configured'),
@@ -907,7 +914,7 @@ async function refreshCctvSources() {
 
   const mergedSources = Array.from(byId.values());
   const maxRaw = Number(process.env.CCTV_MAX_SOURCES || DEFAULT_CCTV_MAX_SOURCES);
-  const maxCount = Number.isFinite(maxRaw) ? Math.max(8, Math.min(1400, Math.floor(maxRaw))) : DEFAULT_CCTV_MAX_SOURCES;
+  const maxCount = Number.isFinite(maxRaw) ? Math.max(8, Math.min(DEFAULT_CCTV_MAX_SOURCES, Math.floor(maxRaw))) : DEFAULT_CCTV_MAX_SOURCES;
   if (mergedSources.length > maxCount) {
     console.warn(`[CCTV] source catalog ${mergedSources.length} exceeds cap ${maxCount}; keeping the first ${maxCount} (raise CCTV_MAX_SOURCES or lower a per-pack cap to change which).`);
   }
@@ -1016,7 +1023,7 @@ export async function fetchCctvImageFromUpstream(url, {
   }, timeoutMs);
   try {
     const upstream = await fetchImpl(url, {
-      headers: { 'User-Agent': 'eagleeye-view-cctv-proxy/1.0' },
+      headers: { 'User-Agent': CCTV_PROXY_USER_AGENT },
       signal: controller.signal,
     });
     const contentType = upstream.headers.get('content-type') || '';
@@ -1050,12 +1057,13 @@ export function cctvProxy() {
   // Some ATCS hosts (e.g. dishub.pasuruankab.go.id) omit their TLS intermediate;
   // browsers repair that via AIA, Node's fetch does not. See intermediateCaTrust.mjs.
   installIntermediateCaTrust();
+  const portalSessions = createPortalSessionStore({ userAgent: CCTV_PROXY_USER_AGENT });
   /** @type {Map<string,{id:string,status:string,sourceKind:string,label:string,message:string,updatedAt:number}>} */
   const health = new Map();
   /** Cap on health map entries to prevent unbounded growth. Sized to cover the
-   * full served catalog (CCTV_MAX_SOURCES hard-bounds at 1400) so health/status
-   * observability isn't silently evicted for a default 800-camera catalog. */
-  const HEALTH_MAX_ENTRIES = 1200;
+   * full served catalog (CCTV_MAX_SOURCES hard-bounds at DEFAULT_CCTV_MAX_SOURCES)
+   * so health/status observability isn't silently evicted. */
+  const HEALTH_MAX_ENTRIES = DEFAULT_CCTV_MAX_SOURCES;
 
   /** Update the health entry for a camera, evicting the oldest entry if at capacity. */
   const setHealth = (cameraId, patch) => {
@@ -1109,7 +1117,7 @@ export function cctvProxy() {
       sv.searchParams.set('key', streetViewKey);
 
       const svResp = await fetch(sv.toString(), {
-        headers: { 'User-Agent': 'eagleeye-view-cctv-proxy/1.0' },
+        headers: { 'User-Agent': CCTV_PROXY_USER_AGENT },
         signal: AbortSignal.timeout(CCTV_FRAME_FETCH_TIMEOUT_MS),
       });
       const svType = svResp.headers.get('content-type') || '';
@@ -1197,10 +1205,10 @@ export function cctvProxy() {
             }
 
             try {
-              const upstreamHeaders = { 'User-Agent': 'eagleeye-view-cctv-proxy/1.0' };
+              const upstreamHeaders = { 'User-Agent': CCTV_PROXY_USER_AGENT };
               const requestRange = req.headers?.range;
               if (requestRange) upstreamHeaders.Range = requestRange;
-              const upstream = await fetch(relUrl, { headers: upstreamHeaders });
+              const upstream = await portalSessions.fetchWithSession(source.portalSession, relUrl, { headers: upstreamHeaders });
               if (!upstream.ok) {
                 res.writeHead(upstream.status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
                 res.end(JSON.stringify({ error: `Upstream returned ${upstream.status}` }));
@@ -1253,10 +1261,10 @@ export function cctvProxy() {
             }
 
             try {
-              const upstreamHeaders = { 'User-Agent': 'eagleeye-view-cctv-proxy/1.0' };
+              const upstreamHeaders = { 'User-Agent': CCTV_PROXY_USER_AGENT };
               const requestRange = req.headers?.range;
               if (requestRange) upstreamHeaders.Range = requestRange;
-              const upstream = await fetch(mediaUrl, {
+              const upstream = await portalSessions.fetchWithSession(source.portalSession, mediaUrl, {
                 headers: upstreamHeaders,
               });
               const contentType = upstream.headers.get('content-type') || '';

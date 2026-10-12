@@ -1082,10 +1082,10 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 827 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+- 1026 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
   toll cameras), Bina Marga toll corridors (436 `bmtol-unofficial-*` across 24 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
-  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`), Pasuruan (31 `pasuruan-atcs-*`), Sumedang (35 `sumedang-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`), Pasuruan (31 `pasuruan-atcs-*`), Sumedang (35 `sumedang-atcs-*`), Malang (199 `malang-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
   `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
@@ -1143,8 +1143,8 @@ speech-to-speech API, so Claude is paired with the browser's own
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
-  are deliberately not added; the global catalog cap is 1400 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvProxy.mjs`) and the full catalog now sits near 1260 rows. Why only the densest ruas:
+  are deliberately not added; the global catalog cap is 1600 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
+  `src/data/cctvProxy.mjs`, which also sizes the health map) and the full catalog now sits near 1526 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1185,6 +1185,17 @@ speech-to-speech API, so Claude is paired with the browser's own
   public DigiCert intermediate in `config/ca/` (`src/server/intermediateCaTrust.mjs`, installed once by
   `cctvProxy()`); verification stays on. Rationale: `docs/DECISIONS.md` ("ATCS Pasuruan and Sumedang").
   Revoke with the `pasuruan-atcs-*` / `sumedang-atcs-*` prefixes.
+- **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
+  answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
+  `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5
+  same-origin redirects, keeps the cookies in memory for `min(Max-Age, 30 min)` and attaches them plus the `Referer`
+  to the `/media` and `/rel` upstream fetches. The cookie is bound to the User-Agent that obtained it, so the
+  bootstrap and the stream requests both use the proxy UA (`eagleeye-view-cctv-proxy/1.0`). A 403 triggers one
+  refresh and one retry (forced refresh rate-limited to once per 30 s). Off-origin redirects are rejected and
+  `portalSession` is never sent to the browser. The origin also omits its TLS intermediate; the bundled
+  GeoTrust TLS RSA CA G1 in `config/ca/` covers it (leaf expires 2026-11-09). 167 rows `APPROX. LOCATION` / 32
+  `CITY-LEVEL ONLY`. Dev proxy only — a static deployment has no session layer. Rationale: `docs/DECISIONS.md`
+  ("ATCS Malang"). Revoke with the `malang-atcs-*` prefix.
 - All 3 upstreams serve **multi-level relative-path HLS manifests**
   (master playlist → sub-playlist → segments). A byte-for-byte proxy pipe
   breaks this (relative URIs resolve against our own origin, not

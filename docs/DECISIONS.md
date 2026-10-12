@@ -2145,7 +2145,7 @@ The playlists are Low-Latency HLS (`EXT-X-PART`, `PRELOAD-HINT`, `SERVER-CONTROL
 
 Positions follow the Denpasar/Surabaya tiers. 6 rows (Gajah Mada, Pelican Udayana, BI, Taman, Pagesangan x2) are anchored on OpenStreetMap place searches and labelled `APPROX. LOCATION` (error ~1–3 km); the 6 where no place resolved (Tanah Aji, Sweta, Turide, Golkar x3) sit on a ring around the centre of Mataram as `CITY-LEVEL ONLY`.
 
-## 2026-10-12 — ATCS Pasuruan and Sumedang: 66 streams, one scoped TLS fix, Malang held back
+## 2026-10-12 — ATCS Pasuruan and Sumedang: 66 streams, one scoped TLS fix (Malang: see next entry)
 
 The operator's lists were Pasuruan 33 lines (WARUNGDOWO_TENGAH twice), Sumedang 36, Malang ~210. Pasuruan: 2 URLs (Exit Tol Purwodadi, Exit Tol Gempol) return 404, so 31 rows. Sumedang: 35 distinct URLs. All 66 return a valid `#EXTM3U` playlist and a first segment through the proxy.
 
@@ -2153,7 +2153,19 @@ Pasuruan first failed with 502 on every camera. Cause: the origin sends its leaf
 
 Positions are guesses from the street label (OSM place search): 21 + 23 `APPROX. LOCATION`, 10 + 12 `CITY-LEVEL ONLY`. Sumedang's URL path embeds a token that looks like a Shinobi API/group key; it is a public-page URL copied from the browser, but it can be rotated by the provider, which would break those 35 rows (revoke by prefix).
 
-Malang was not added. Its streams answer 403 ("Akses Ditolak") without a session; they only return 200 after visiting the portal, which sets cookies (`ci_session`, `NANCY_TOKEN_*`) and sending a Referer. That contradicts "no credentials" and needs a cookie-bootstrap step in the proxy, which is a separate decision.
+Malang was held back in this entry and added in the next one.
+
+## 2026-10-12 — ATCS Malang: 199 streams behind an anonymous portal session
+
+The ~210 lines the operator supplied held 199 distinct URLs; 10 URLs appeared with two different labels (the first is used). The streams answer 403 ("Akses Ditolak") without a session. Measured: only the cookie `nancy_auth_v1c` plus `Referer: https://cctv.malangkota.go.id/sebaran-cctv` are needed (`NANCY_TOKEN_Q/W` and `ci_session` are not), and the cookie is bound to the User-Agent that obtained it. A plain GET of the portal root (307 to `/sebaran-cctv`, `Set-Cookie` on each hop, Max-Age 3 h) issues it with no login, so this is the same access the public page gives any visitor, not a credential; it is still unofficial and revocable by prefix.
+
+Design (`src/server/portalSession.mjs`): opt-in per catalog row (`portalSession`), so no other source changes behavior; same-origin validation of the bootstrap URL and of every redirect (≤5 hops); cookies held in memory per origin, never logged or sent to the browser; TTL = min(cookie Max-Age, 30 min) so a revoked cookie is not trusted for hours; concurrent bootstraps coalesced; a 403 forces one refresh and one retry, with forced refreshes rate-limited to once per 30 s so a dead origin cannot make the proxy hammer the portal. Using one fixed proxy UA for bootstrap and streams is what keeps the UA-bound cookie valid. Rejected: copying the operator's browser cookie into config (a secret that expires in hours) and replaying it from the browser (the cookie is host-bound and would need CORS).
+
+Malang also omits its TLS intermediate (GeoTrust TLS RSA CA G1, from the AIA URL, valid to 2027-11-02, SHA-256 C0:6E:30:7F…:23:0E). It joins the DigiCert one in `config/ca/` under the same scoped-trust reasoning as Pasuruan. The leaf expires 2026-11-09.
+
+Positions: 100 of 127 distinct streets resolved through an OSM place search (167 rows `APPROX. LOCATION`, same-street cameras spread ~40 m); 32 rows sit on a ring around central Malang (`CITY-LEVEL ONLY`). Capacity: the merged catalog reached 1526 rows against a cap of 1400, which silently kept only 73 of the 199 Malang rows. The cap (`DEFAULT_CCTV_MAX_SOURCES`, its `Math.min` clamp and the health-map size, now one constant) was raised to 1600. The cost is a heavier CCTV layer when everything is shown. Verified through the dev proxy: 199/199 playlists and a first segment (HTTP 200, MPEG-TS), Pasuruan 31/31, Sumedang 35/35.
+
+Mitigasi sementara: the session approach rests on the portal's present behavior (cookie name, UA binding, Referer check); if Pemkot Malang changes it, all 199 rows 403 until `portalSession.mjs` is adapted.
 
 ## 2026-10-08 — CCTV HLS live-sync distance: back to hls.js default (3 segments)
 
