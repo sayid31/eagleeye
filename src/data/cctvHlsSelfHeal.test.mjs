@@ -9,7 +9,8 @@ import {
   HLS_STALL_CHECK_MS,
   HLS_STALL_RESTART_MS,
 } from './cctvConstants.js';
-import { createHlsSelfHeal, nextReattachDelayMs } from './cctvHlsSelfHeal.js';
+import { createHlsSelfHeal } from './cctvHlsSelfHeal.js';
+import { nextReattachDelayMs } from './cctvHlsBackoff.js';
 
 const EVENTS = { FRAG_BUFFERED: 'frag', MANIFEST_PARSED: 'manifest', ERROR: 'error' };
 const ERROR_TYPES = { NETWORK_ERROR: 'net', MEDIA_ERROR: 'media', OTHER_ERROR: 'other' };
