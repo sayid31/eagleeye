@@ -1188,9 +1188,13 @@ speech-to-speech API, so Claude is paired with the browser's own
   and `https://shinobi.sumedangkab.go.id/<path-token>/hls/<group>/<id>/s.m3u8`, copied by the operator
   from the Network tab (no Authorization header). Positions come from the label: Pasuruan 21
   `APPROX. LOCATION` / 10 `CITY-LEVEL ONLY`, Sumedang 23 / 12; the city-level ones sit on a ring around the
-  regency centre. Pasuruan's server omits its TLS intermediate certificate, so the dev proxy trusts the bundled
-  public DigiCert intermediate in `config/ca/` (`src/server/intermediateCaTrust.mjs`, installed once by
-  `cctvProxy()`); verification stays on. Rationale: `docs/DECISIONS.md` ("ATCS Pasuruan and Sumedang").
+  regency centre. Pasuruan's server used to omit its TLS intermediate certificate, so the dev proxy trusts the
+  bundled public DigiCert intermediate in `config/ca/` (`src/server/intermediateCaTrust.mjs`, installed once by
+  `cctvProxy()`); verification stays on. Pasuruan has since moved to a Let's Encrypt chain that Node verifies
+  on its own, so that file is now only a harmless spare. What is trusted is the intermediate, never a leaf: a
+  leaf renewal needs no action. A new `UNABLE_TO_VERIFY_LEAF_SIGNATURE` / "fetch failed" on a host means its
+  issuer changed; add the new public intermediate to `config/ca/`. Rationale: `docs/DECISIONS.md` ("ATCS
+  Pasuruan and Sumedang").
   Revoke with the `pasuruan-atcs-*` / `sumedang-atcs-*` prefixes.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
