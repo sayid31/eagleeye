@@ -1087,7 +1087,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`), Pasuruan (31 `pasuruan-atcs-*`), Sumedang (35 `sumedang-atcs-*`), Malang (199 `malang-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
-  `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
+  `loadIndonesiaUnofficialSources()` (`src/data/cctvSourceCatalog.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
   **Static config only — no auto-discovery or crawling of Indonesian ATCS
   portals; adding another city means manually adding another row.**
@@ -1144,7 +1144,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 1600 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvProxy.mjs`, which also sizes the health map) and the full catalog now sits near 1526 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1526 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by

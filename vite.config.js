@@ -24,7 +24,8 @@
  *     effects (imports rate-limit/cache helpers back from this file; see
  *     that module's header for why).
  *   - src/data/cctvProxy.mjs — traffic-camera frames, media streams, and
- *     fallback SVG.
+ *     fallback SVG (catalog assembly lives in cctvSourceCatalog.mjs,
+ *     live packs in cctvOpenDataSources.mjs).
  *   - src/data/radioBrowserProxy.mjs, rocketLaunchesProxy.mjs,
  *     googlePlacesContextProxy.mjs — station directory, launch metadata,
  *     keyless place context.
