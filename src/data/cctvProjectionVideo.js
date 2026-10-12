@@ -7,15 +7,46 @@
 
 import { CCTV_HLS_CONFIG } from './cctvHlsConfig.js';
 import { createHlsSelfHeal } from './cctvHlsSelfHeal.js';
+import { watchNativeHls } from './cctvNativeHlsWatch.js';
 import { isSourceOffline } from './cctvSourceHealth.mjs';
 import { notifyListeners } from './cctvPublicState.js';
 import { S } from './cctvState.js';
 
 /**
- * Attach a self-healing hls.js (MSE-based) player to a <video> element for
- * browsers without native HLS support. Dynamically imports hls.js so it's only
- * ever loaded when a non-Safari browser actually activates an HLS camera
- * (code-split — Safari's native-HLS path never triggers this import).
+ * Plays an HLS feed through the browser's own engine, with the no-data watchdog
+ * from cctvNativeHlsWatch.js. Only used when hls.js cannot run (no MSE, or its
+ * bundle chunk failed to load): Safari plays HLS natively, and a native
+ * <video> raises no errors an hls.js controller could recover from.
+ * @param {Object} runtime
+ * @param {HTMLVideoElement} video
+ * @param {string} url - Proxied manifest URL (/api/cctv/media/:id).
+ */
+export function attachNativeHls(runtime, video, url) {
+  if (runtime.destroyed) return;
+  video.src = url;
+  video.addEventListener('canplay', () => {
+    video.play().catch(() => {});
+  });
+  runtime.stopNativeWatch = watchNativeHls(video, {
+    onState: (state, { attempt, reason }) => setPlayback(runtime, state, attempt, reason),
+    canRun: () => runtime.cameraId === S._activeCameraId,
+  });
+}
+
+/**
+ * Attach a self-healing hls.js (MSE-based) player to a <video> element, falling
+ * back to native playback only when hls.js reports it cannot run. Dynamically
+ * imports hls.js so it is only loaded when an HLS camera is activated
+ * (code-split).
+ *
+ * hls.js is tried first and NOT gated on
+ * `video.canPlayType('application/vnd.apple.mpegurl')`: Chrome 147+ answers
+ * "maybe" to that too, yet its native HLS engine fails on these unofficial
+ * feeds (PipelineStatus::DEMUXER_ERROR_COULD_NOT_PARSE a few seconds in), and
+ * since no hls.js instance exists on that path the error never reaches any
+ * recovery logic and the frame freezes for good. `Hls.isSupported()` (an MSE
+ * capability check) is hls.js's own recommended discriminator
+ * (https://github.com/video-dev/hls.js/issues/7827).
  *
  * Recovery, rebuild-with-backoff and the stall watchdog live in
  * cctvHlsSelfHeal.js; the player state it reports is stored on
@@ -26,14 +57,17 @@ import { S } from './cctvState.js';
  *   on `runtime.hlsInstance` and the controller on `runtime.hlsHeal`.
  * @param {HTMLVideoElement} video
  * @param {string} url - Proxied manifest URL (/api/cctv/media/:id).
+ * @param {() => Promise<{default: Function}>} [loadHlsModule] - Injectable in
+ *   tests; defaults to the real dynamic import.
+ * @returns {Promise<void>} Settles once the async wiring is done.
  */
-export function attachHlsJs(runtime, video, url) {
-  import('hls.js')
+export function attachHlsJs(runtime, video, url, loadHlsModule = () => import('hls.js')) {
+  return loadHlsModule()
     .then(({ default: Hls }) => {
       // Runtime may have been torn down while the dynamic import was in flight.
       if (runtime.destroyed) return;
       if (!Hls.isSupported()) {
-        setPlayback(runtime, 'unavailable', 0);
+        attachNativeHls(runtime, video, url);
         return;
       }
       runtime.hlsHeal = createHlsSelfHeal({
@@ -51,10 +85,11 @@ export function attachHlsJs(runtime, video, url) {
       runtime.hlsHeal.start();
     })
     .catch((error) => {
-      // hls.js failed to load (offline, blocked bundle chunk, etc.): say so on
-      // the plane rather than leaving it on "waiting" forever.
-      console.warn('[CCTV] hls.js failed to load:', error);
-      if (!runtime.destroyed) setPlayback(runtime, 'unavailable', 0);
+      // hls.js failed to load (offline, blocked bundle chunk, etc.): last
+      // resort is the browser's own HLS engine, which reports its own
+      // no-data state if that fails too.
+      console.warn('[CCTV] hls.js failed to load, trying native HLS:', error);
+      attachNativeHls(runtime, video, url);
     });
 }
 

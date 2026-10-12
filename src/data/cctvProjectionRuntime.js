@@ -5,7 +5,6 @@ import { focusPassIsNeeded, getFocusTarget } from './focusDeemphasis.js';
 import { holdContinuousRender, releaseContinuousRender } from '../renderGovernor.js';
 import { isVideoFeedType, normalizeFeedType } from './cctvCatalog.js';
 import { PROJECTION_CANVAS_HEIGHT, PROJECTION_CANVAS_WIDTH } from './cctvConstants.js';
-import { watchNativeHls } from './cctvNativeHlsWatch.js';
 import { installHlsTabReturnReload } from './cctvHlsVisibility.js';
 import { getActiveRecord, refreshCctvFocusStyles } from './cctvCoverage.js';
 import { computeFrustumGeometry, frustumCartesians } from './cctvGeometry.js';
@@ -109,21 +108,14 @@ function createProjectionRuntime(record) {
     video.crossOrigin = 'anonymous';
     video.preload = 'auto';
     const mediaUrl = mediaUrlFor(record.camera);
-    if (feedType === 'hls' && !video.canPlayType('application/vnd.apple.mpegurl')) {
-      // No native HLS support (every non-Safari browser) — attach hls.js
-      // (MSE-based) instead of a plain video.src assignment.
+    if (feedType === 'hls') {
+      // hls.js first, native HLS only as its fallback — see attachHlsJs.
       attachHlsJs(runtime, video, mediaUrl);
     } else {
       video.src = mediaUrl;
       video.addEventListener('canplay', () => {
         video.play().catch(() => {});
       });
-      if (feedType === 'hls') {
-        runtime.stopNativeWatch = watchNativeHls(video, {
-          onState: (state, { attempt, reason }) => setPlayback(runtime, state, attempt, reason),
-          canRun: () => runtime.cameraId === S._activeCameraId,
-        });
-      }
     }
     runtime.video = video;
   } else {

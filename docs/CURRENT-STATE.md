@@ -1213,11 +1213,17 @@ speech-to-speech API, so Claude is paired with the browser's own
   host is never exposed to the client; the `/rel` route only ever fetches a
   URL whose origin matches the camera's own registered `source.url`
   (`isAllowedRelOrigin` — SSRF guard).
-- Client playback: `createProjectionRuntime()` (`src/data/cctv.js`)
-  feature-detects native HLS (`video.canPlayType(...)`) and falls back to a
-  dynamically-imported `hls.js` (code-split, only loaded for non-Safari
-  browsers activating an HLS camera). `destroyProjectionRuntime()` tears
-  down the `Hls` instance before clearing `video.src`.
+- Client playback: `createProjectionRuntime()` (`src/data/cctvProjectionRuntime.js`)
+  always tries a dynamically-imported `hls.js` first (`attachHlsJs()` in
+  `src/data/cctvProjectionVideo.js`, code-split, loaded when an HLS camera is
+  activated). The browser's own HLS engine (`attachNativeHls()`, watched by
+  `cctvNativeHlsWatch.js`) is only the fallback, used when `Hls.isSupported()`
+  is false or the hls.js chunk fails to load. It is deliberately not chosen via
+  `video.canPlayType('application/vnd.apple.mpegurl')`: current Chrome answers
+  "maybe" there too, yet its native engine fails on these feeds and no hls.js
+  instance exists to recover. Rationale: `docs/DECISIONS.md`.
+  `destroyProjectionRuntime()` tears down the `Hls` instance before clearing
+  `video.src`.
 - UI: the CCTV panel source badge reads `⚠ UNOFFICIAL SOURCE · <STATUS>`
   (amber, `[data-frame-state='unofficial']` in `style.css`) for every camera
   in this pack, and the meta line shows the config's short `provider`

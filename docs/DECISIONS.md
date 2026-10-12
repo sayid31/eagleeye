@@ -6,6 +6,25 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-12 — CCTV: hls.js first, native HLS only as its fallback
+
+**Decision.** `attachHlsJs` is the single entry for HLS feeds. It tries hls.js
+(`Hls.isSupported()`, an MSE capability check); only when that is false, or the
+hls.js chunk fails to load, does `attachNativeHls` hand the URL to the browser's
+own engine, with the `cctvNativeHlsWatch.js` no-data watchdog.
+
+**Why.** The old rule used `video.canPlayType('application/vnd.apple.mpegurl')`.
+Chrome 147+ returns "maybe" for it, yet the native engine failed on these
+unofficial feeds (`PipelineStatus::DEMUXER_ERROR_COULD_NOT_PARSE` after about 30 s,
+seen in a probe on two machines). With no hls.js instance on that path the error
+reached no recovery code and the frame froze for good. hls.js documents
+`Hls.isSupported()` as the discriminator (video-dev/hls.js#7827, not re-checked
+online when this was merged: the web tools were unavailable).
+
+**Trade-off.** Safari now also runs hls.js when it has MSE; if that proves worse
+there, the fallback order is the one line to revisit. Unproven on real hardware
+here: the fix is covered by unit tests with a fake Hls, not by a browser run.
+
 ## 2026-10-08 — CCTV: self-healing HLS player and honest playback status
 
 **Decision.** `attachHlsJs` delegates to `createHlsSelfHeal`
