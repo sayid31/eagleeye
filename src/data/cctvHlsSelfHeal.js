@@ -1,34 +1,17 @@
 // Keeps one camera's hls.js player alive: bounded in-place recovery first, then
 // a full rebuild with exponential backoff, plus a watchdog for streams that go
-// quiet without ever raising an error.
-//
-// The previous behaviour destroyed the player once hls.js's recovery budget was
-// spent and never re-attached it, so a feed that hiccuped for a minute stayed
-// black until the camera was reselected. Network recovery also used
-// `startLoad()`, which resumes from the stale playhead and asks the upstream
-// for segments that already left its short live window (404). `loadSource()`
-// re-fetches the playlist and rejoins the live edge, so it is used instead.
+// quiet without ever raising an error. Network recovery uses `loadSource()`
+// (re-fetches the playlist, rejoins the live edge) rather than `startLoad()`,
+// which resumes from a stale playhead whose segments already left the window.
 
 import {
-  HLS_MAX_MEDIA_ERROR_RECOVERIES,
-  HLS_MAX_NETWORK_ERROR_RECOVERIES,
-  HLS_CONNECT_TIMEOUT_MS,
   HLS_REATTACH_BASE_DELAY_MS,
   HLS_REATTACH_MAX_DELAY_MS,
   HLS_REATTACH_OFFLINE_MAX_DELAY_MS,
   HLS_STALL_CHECK_MS,
-  HLS_STALL_RESTART_MS,
 } from './cctvConstants.js';
-
-/**
- * Exponential backoff for the nth consecutive rebuild (1-based).
- * @param {number} attempt
- * @param {{baseMs: number, maxMs: number}} limits
- * @returns {number} Delay in milliseconds.
- */
-export function nextReattachDelayMs(attempt, { baseMs, maxMs }) {
-  return Math.min(maxMs, baseMs * 2 ** Math.max(0, attempt - 1));
-}
+import { nextReattachDelayMs } from './cctvHlsBackoff.js';
+import { chooseRecovery, evaluateStall } from './cctvHlsStall.js';
 
 /**
  * Creates the self-healing controller for one camera's HLS feed.
@@ -120,14 +103,15 @@ export function createHlsSelfHeal({
   function recover(hls, type) {
     lastProgressAt = now();
     connectStartedAt = now();
+    const kind = chooseRecovery(type, { networkRecoveries, mediaRecoveries }, errorTypes);
     try {
-      if (type === errorTypes.MEDIA_ERROR && mediaRecoveries < HLS_MAX_MEDIA_ERROR_RECOVERIES) {
+      if (kind === 'media') {
         mediaRecoveries += 1;
         setState('recovering');
         hls.recoverMediaError();
         return;
       }
-      if (type === errorTypes.NETWORK_ERROR && networkRecoveries < HLS_MAX_NETWORK_ERROR_RECOVERIES) {
+      if (kind === 'network') {
         networkRecoveries += 1;
         setState('recovering');
         hls.loadSource(url);
@@ -186,22 +170,14 @@ export function createHlsSelfHeal({
 
   function checkStall() {
     if (stopped || !player) return;
-    if (state === 'connecting' || state === 'recovering') {
-      // Nothing has reached the buffer yet. Empty playlists never raise a fatal
-      // error, and `video.paused` is true until the first play(), so the
-      // playhead check below cannot see this case.
-      if (!canRun() || !isPageVisible()) connectStartedAt = now();
-      else if (now() - connectStartedAt >= HLS_CONNECT_TIMEOUT_MS) rebuild('no-data');
-      return;
-    }
-    const idle = !canRun() || !isPageVisible() || video.paused;
-    const playhead = video.currentTime;
-    if (idle || playhead !== lastPlayhead) {
-      lastPlayhead = playhead;
-      lastProgressAt = now();
-      return;
-    }
-    if (now() - lastProgressAt >= HLS_STALL_RESTART_MS) recover(player, errorTypes.NETWORK_ERROR);
+    const connecting = state === 'connecting' || state === 'recovering';
+    const idle = !canRun() || !isPageVisible() || (!connecting && video.paused);
+    const verdict = evaluateStall({
+      state, idle, now: now(), connectStartedAt, lastProgressAt, playhead: video.currentTime, lastPlayhead,
+    });
+    ({ connectStartedAt, lastProgressAt, lastPlayhead } = verdict);
+    if (verdict.action === 'rebuild-no-data') rebuild('no-data');
+    else if (verdict.action === 'recover') recover(player, errorTypes.NETWORK_ERROR);
   }
 
   return {

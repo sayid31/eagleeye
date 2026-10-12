@@ -5,7 +5,8 @@ import { CCTV_PROJECTION_OVERLAY_SOURCE_ID, CCTV_PROJECTION_OVERLAY_SOURCE_OPTIO
 import { computeFrustumGeometry, frustumCartesians, planeOrientationFor } from './cctvGeometry.js';
 import { groundAltFor } from './cctvGround.js';
 import { drawProjectionFrame, refreshProjectionTextures } from './cctvProjectionFrames.js';
-import { createProjectionProxyVideo, destroyProjectionRuntime } from './cctvProjectionRuntime.js';
+import { destroyProjectionRuntime } from './cctvProjectionRuntime.js';
+import { createProjectionProxyVideo } from './cctvProjectionVideo.js';
 import { S } from './cctvState.js';
 
 /**

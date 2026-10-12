@@ -4,7 +4,7 @@
 // a timeout reloads the source with backoff and reports what is happening.
 
 import { HLS_CONNECT_TIMEOUT_MS, HLS_REATTACH_BASE_DELAY_MS, HLS_REATTACH_MAX_DELAY_MS } from './cctvConstants.js';
-import { nextReattachDelayMs } from './cctvHlsSelfHeal.js';
+import { nextReattachDelayMs } from './cctvHlsBackoff.js';
 
 /**
  * Watches a natively-played HLS <video> and reloads it when no data arrives.
