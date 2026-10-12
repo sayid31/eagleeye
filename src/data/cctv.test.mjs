@@ -1883,6 +1883,11 @@ test("isVideoFeedType: 'hls' requires a <video> element like mp4/webm", () => {
   assert.equal(_isVideoFeedTypeForTest('hls'), true);
 });
 
+test("normalizeFeedType: 'flv' passes through and requires a <video> element (Surakarta ATCS)", () => {
+  assert.equal(_normalizeFeedTypeForTest('FLV'), 'flv');
+  assert.equal(_isVideoFeedTypeForTest('flv'), true);
+});
+
 test("isVideoFeedType: 'image' does not require a <video> element", () => {
   assert.equal(_isVideoFeedTypeForTest('image'), false);
 });

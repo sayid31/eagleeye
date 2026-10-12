@@ -23,6 +23,12 @@ test('isExpectedVideoMedia accepts a missing content type when the URL is an .m3
   assert.equal(isExpectedVideoMedia('', 'https://h/index.m3u8?token=1'), true);
 });
 
+test('isExpectedVideoMedia accepts a missing content type when the URL is an .flv (Surakarta ATCS)', () => {
+  assert.equal(isExpectedVideoMedia('', 'https://surakarta.example:8086/camera/Agas.flv'), true);
+  assert.equal(isExpectedVideoMedia('', 'https://h/camera/Agas.flv?x=1'), true);
+  assert.equal(isExpectedVideoMedia('', 'https://h/camera/flvx'), false);
+});
+
 test('isExpectedVideoMedia still rejects genuinely wrong media', () => {
   assert.equal(isExpectedVideoMedia('text/html; charset=utf-8', 'https://h/login'), false);
   assert.equal(isExpectedVideoMedia('', 'https://h/stream'), false);

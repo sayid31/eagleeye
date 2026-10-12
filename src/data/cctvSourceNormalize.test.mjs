@@ -31,8 +31,9 @@ test('hashSeed is deterministic and fallbackHeadingFromId lands on a 22.5 degree
   assert.ok(heading >= 0 && heading < 360);
 });
 
-test('feed type helpers only treat hls/video as video feeds', () => {
+test('feed type helpers only treat hls/flv/video as video feeds', () => {
   assert.equal(isVideoFeedType(normalizeFeedType('HLS')), true);
+  assert.equal(isVideoFeedType(normalizeFeedType('FLV')), true);
   assert.equal(isVideoFeedType(normalizeFeedType('snapshot')), false);
   assert.equal(isVideoFeedType(normalizeFeedType('')), false);
 });

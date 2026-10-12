@@ -46,8 +46,8 @@ export function describeOfflineSource({ status, unreachable } = {}) {
 
 /**
  * Whether a video-feed upstream response looks like playable media. Mirrors
- * the manifest branch of the proxy (case-insensitive, `.m3u8` URL accepted when
- * the provider omits Content-Type) so a stream that plays is never labelled
+ * the manifest branch of the proxy (case-insensitive, `.m3u8`/`.flv` URL accepted
+ * when the provider omits Content-Type) so a stream that plays is never labelled
  * "unexpected media type".
  * @param {string} contentType
  * @param {string} mediaUrl
@@ -55,7 +55,9 @@ export function describeOfflineSource({ status, unreachable } = {}) {
  */
 export function isExpectedVideoMedia(contentType, mediaUrl) {
   const type = String(contentType || '').toLowerCase();
-  return type.startsWith('video/') || isManifestContentType(type, mediaUrl);
+  // FLV sources (Surakarta ATCS) send no Content-Type, so the .flv path counts.
+  return type.startsWith('video/') || isManifestContentType(type, mediaUrl)
+    || /\.flv(\?|#|$)/i.test(String(mediaUrl || ''));
 }
 
 /**

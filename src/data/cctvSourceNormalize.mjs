@@ -24,7 +24,7 @@ export function hashSeed(text) {
 
 /**
  * Canonicalize a CCTV feed type string to one of:
- * 'image', 'mjpeg', 'mp4', 'webm', 'hls', or pass-through.
+ * 'image', 'mjpeg', 'mp4', 'webm', 'hls', 'flv', or pass-through.
  *
  * @param {string} value - Raw feed type (e.g. 'jpeg', 'mjpg', 'video', 'stream').
  * @returns {string} Normalized feed type.
@@ -46,7 +46,7 @@ export function normalizeFeedType(value) {
  * @returns {boolean}
  */
 export function isVideoFeedType(feedType) {
-  return feedType === 'mp4' || feedType === 'webm' || feedType === 'hls';
+  return feedType === 'mp4' || feedType === 'webm' || feedType === 'hls' || feedType === 'flv';
 }
 
 /**

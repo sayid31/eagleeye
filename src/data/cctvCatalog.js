@@ -71,7 +71,7 @@ const CAMERA_SEEDS = [
 ];
 
 /**
- * Normalizes a raw feed-type string to a canonical type (image, mjpeg, mp4, hls, webm).
+ * Normalizes a raw feed-type string to a canonical type (image, mjpeg, mp4, hls, webm, flv).
  * @param {string|*} value - Raw feed type from source config.
  * @returns {string} Canonical feed type.
  */
@@ -94,7 +94,7 @@ export function normalizeFeedType(value) {
  * @returns {boolean}
  */
 export function isVideoFeedType(feedType) {
-  return feedType === 'mp4' || feedType === 'hls' || feedType === 'webm';
+  return feedType === 'mp4' || feedType === 'hls' || feedType === 'webm' || feedType === 'flv';
 }
 
 /**

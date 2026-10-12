@@ -7,11 +7,14 @@ import { isAllowedRelOrigin } from '../server/hlsManifestProxy.mjs';
 const pack = JSON.parse(readFileSync(new URL('../../config/cctv_sources.indonesia_unofficial.json', import.meta.url), 'utf8'));
 const pelindung = pack.filter((row) => row.id.startsWith('bandung-pelindung-'));
 
-test('every pack row is flagged unofficial HLS with a revocable UNOFFICIAL SOURCE license', () => {
+// Surakarta is the one pack served as HTTP-FLV (played by mpegts.js); everything else is HLS.
+const isFlvRow = (row) => row.id.startsWith('surakarta-atcs-');
+
+test('every pack row is flagged unofficial HLS (Surakarta: FLV) with a revocable UNOFFICIAL SOURCE license', () => {
   assert.ok(pack.length > 0);
   for (const row of pack) {
-    assert.equal(row.sourceKind, 'unofficial-hls-id', row.id);
-    assert.equal(row.feedType, 'hls', row.id);
+    assert.equal(row.sourceKind, isFlvRow(row) ? 'unofficial-flv-id' : 'unofficial-hls-id', row.id);
+    assert.equal(row.feedType, isFlvRow(row) ? 'flv' : 'hls', row.id);
     assert.match(row.license, /UNOFFICIAL SOURCE/, row.id);
     assert.match(row.license, /CCTV_INDONESIA_UNOFFICIAL_ENABLED=0/, row.id);
     assert.match(row.provider, /^UNOFFICIAL/, row.id);
@@ -222,6 +225,8 @@ const REGENCY_PACKS = [
     url: /^https:\/\/cctv\.malangkota\.go\.id\/cctv-stream\/streams\/\d{24}\.m3u8$/ },
   { prefix: 'jogja-atcs-', cityId: 'yogyakarta', count: 131, lat: [-7.86, -7.72], lon: [110.32, 110.43],
     url: /^https:\/\/cctvjss\.jogjakota\.go\.id\/[a-z-]+\/[A-Za-z0-9_%.-]+\.stream\/playlist\.m3u8$/ },
+  { prefix: 'surakarta-atcs-', cityId: 'surakarta', count: 76, lat: [-7.62, -7.52], lon: [110.76, 110.87],
+    url: /^https:\/\/surakarta\.atcsindonesia\.info:8086\/camera\/[A-Za-z0-9]+\.flv$/ },
 ];
 
 for (const c of REGENCY_PACKS) {
@@ -275,4 +280,22 @@ test('Yogyakarta pack omits the two streams that failed the liveness probe (meas
   const urls = new Set(pack.map((row) => row.url));
   assert.equal(urls.has('https://cctvjss.jogjakota.go.id/atcs/ATCS_Lampu_Merah_JoktengWetan.stream/playlist.m3u8'), false);
   assert.equal(urls.has('https://cctvjss.jogjakota.go.id/rthp/rthp_pakudaya_pakuncen_2.stream/playlist.m3u8'), false);
+});
+
+test('Surakarta pack omits the 19 streams that never answered, even with a 25 s wait (measured 2026-10-12)', () => {
+  const urls = new Set(pack.map((row) => row.url));
+  const dead = ['PalangJoglo', 'DawungSelatan', 'DPRD', 'Genengan', 'GiriMulyo01', 'JembatanMojo', 'MasjidAgung',
+    'Mlipahan', 'PasarBeling', 'PasarKlewer', 'PasarkKliwon', 'PasarLegi', 'PasarNongko', 'PengadilanSriwedari',
+    'GedungSerbagunaPucangsawit', 'Sekip', 'Singosaren', 'Sudirman', 'Timuran'];
+  assert.equal(dead.length, 19);
+  for (const name of dead) {
+    assert.equal(urls.has(`https://surakarta.atcsindonesia.info:8086/camera/${name}.flv`), false, name);
+  }
+});
+
+test('Surakarta rows never carry credentials or a portal session: the source is anonymous', () => {
+  for (const row of pack.filter(isFlvRow)) {
+    assert.equal(row.portalSession, undefined, row.id);
+    assert.doesNotMatch(row.url, /[?@]/, row.id);
+  }
 });

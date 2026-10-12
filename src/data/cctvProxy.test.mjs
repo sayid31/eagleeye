@@ -61,3 +61,13 @@ test('media proxy answers 502 and marks degraded when a manifest body is not a p
   assert.match(block, /EMPTY_PLAYLIST_MESSAGE/);
   assert.match(block, /writeHead\(502/);
 });
+
+test('media route streams flv feeds through the live pipe, aborts with the browser, and never forwards Range', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const src = await readFile(new URL('./cctvProxy.mjs', import.meta.url), 'utf8');
+  assert.match(src, /feedType === 'flv' \? createLiveUpstreamAbort\(res\)/);
+  assert.match(src, /if \(requestRange && !liveAbort\)/);
+  assert.match(src, /signal: liveAbort\.signal/);
+  assert.match(src, /pipeLiveStream\(res, upstream\)/);
+  assert.match(src, /if \(liveAbort\?\.clientGone\(\)\) return;/);
+});

@@ -2237,4 +2237,16 @@ Positions follow the Pasuruan scheme: 97 rows `APPROX. LOCATION` from an OSM Nom
 
 Capacity: the merged catalog reached 1657 rows against a cap of 1600, which silently cut Yogyakarta to 74 cameras. The cap (`DEFAULT_CCTV_MAX_SOURCES`) is now 2000; the cost is a heavier CCTV layer when everything is shown.
 
-Not added: Surakarta (95 FLV URLs, 74 of which answered with a valid FLV header). hls.js cannot play FLV, so adding it needs a new player dependency (`mpegts.js`) plus a proxy path for unbounded streams; that is a separate decision.
+Not added here: Surakarta (FLV, hls.js cannot play it); see the next entry.
+
+## 2026-10-12 — ATCS Surakarta: FLV via mpegts.js and an unbounded-stream proxy path
+
+Surakarta serves 95 anonymous HTTP-FLV URLs (`surakarta.atcsindonesia.info:8086/camera/<Name>.flv`): Express, chunked, no Content-Type, body starting `FLV\x01`, never ends. hls.js cannot play it and the existing proxy buffers or range-reads, so two things were added.
+
+Player: `mpegts.js` ^1.8.2 (Apache-2.0, deps `es6-promise` + `events`, MSE based). Alternative `flv.js` is abandoned; `<video src>` cannot play FLV in any current browser. It is imported dynamically so it only costs a ~277 kB chunk when an FLV camera is opened. mpegts.js offers no in-place recovery, so the self-heal is a full rebuild with backoff (`cctvFlvSelfHeal.js`), reusing `evaluateStall` and `nextReattachDelayMs` from the HLS path rather than a second set of timings.
+
+Proxy: for `feedType: 'flv'` the media route aborts the upstream fetch when the browser closes (otherwise every closed tab would leave an endless upstream download running), forwards no `Range`, forces `video/x-flv` and `no-store`, and applies a 15 s header timeout. The 15 s value comes from probing: reachable cameras answer within seconds, the dead ones never answer, so a long timeout only delays the offline mark.
+
+Pack: of 95 URLs, 76 answered (a first 8 s probe showed 74; a 25 s re-probe recovered 2 slow ones, Ngapeman01 and Nonongan); 19 never answer and are excluded. Positions use the Yogyakarta scheme: 56 `APPROX. LOCATION` from a Nominatim search bounded to Kota Surakarta, 20 `CITY-LEVEL ONLY` on a ring. Generic names (shop, apartment, food stall, neighbourhood polygon) matched wrong places, so those hits were demoted to the ring. Catalog is now 1733 rows, under the 2000 cap.
+
+Not verified: real-browser FLV playback (no browser run was requested). Verified: unit tests, build, and the proxy against the live upstream (200, `video/x-flv`, body `FLV\x01`, no upstream socket left after the client closes).
