@@ -2174,6 +2174,19 @@ Positions are guesses from the street label (OSM place search): 21 + 23 `APPROX.
 
 Malang was held back in this entry and added in the next one.
 
+## 2026-10-12 — TLS trust: only intermediates are bundled, and Pasuruan no longer needs its
+
+Re-checked against the live hosts: Pasuruan (`dishub.pasuruankab.go.id`) now serves a Let's Encrypt
+chain (leaf, YR1, Root YR, ISRG Root X1) and verifies with Node's default CAs; Malang still omits its
+intermediate and needs the bundled GeoTrust one (verified: `authorized=true` only with
+`installIntermediateCaTrust()`). The DigiCert file stays: it is public, scoped to chain-building and
+costs nothing, and removing it would break Pasuruan if the operator switches back.
+
+Leaf expiry (Malang 2026-11-09) needs no action here, because only intermediates are trusted; the
+earlier note listing leaf dates as a risk was wrong. The real failure mode is an issuer change on a
+host, which shows as `UNABLE_TO_VERIFY_LEAF_SIGNATURE` (502 "fetch failed"). The existing test fails
+when a bundled intermediate expires (GeoTrust 2027-11-02, DigiCert 2031-03-29).
+
 ## 2026-10-12 — ATCS Malang: 199 streams behind an anonymous portal session
 
 The ~210 lines the operator supplied held 199 distinct URLs; 10 URLs appeared with two different labels (the first is used). The streams answer 403 ("Akses Ditolak") without a session. Measured: only the cookie `nancy_auth_v1c` plus `Referer: https://cctv.malangkota.go.id/sebaran-cctv` are needed (`NANCY_TOKEN_Q/W` and `ci_session` are not), and the cookie is bound to the User-Agent that obtained it. A plain GET of the portal root (307 to `/sebaran-cctv`, `Set-Cookie` on each hop, Max-Age 3 h) issues it with no login, so this is the same access the public page gives any visitor, not a credential; it is still unofficial and revocable by prefix.
