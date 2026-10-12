@@ -1150,8 +1150,8 @@ speech-to-speech API, so Claude is paired with the browser's own
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
-  are deliberately not added; the global catalog cap is 1600 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1526 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  are deliberately not added; the global catalog cap is 2000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1657 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1196,6 +1196,12 @@ speech-to-speech API, so Claude is paired with the browser's own
   issuer changed; add the new public intermediate to `config/ca/`. Rationale: `docs/DECISIONS.md` ("ATCS
   Pasuruan and Sumedang").
   Revoke with the `pasuruan-atcs-*` / `sumedang-atcs-*` prefixes.
+- **ATCS Yogyakarta rows (131)**: `https://cctvjss.jogjakota.go.id/<folder>/<name>.stream/playlist.m3u8`
+  (Wowza, plain HLS, no cookie, no portal session, standard public TLS chain). The pack stores the stable
+  `playlist.m3u8`; the `chunklist_wNNN.m3u8` URL seen in DevTools carries a per-session id and must not be
+  stored. Positions come from the label: 97 `APPROX. LOCATION` / 34 `CITY-LEVEL ONLY`. Revoke with the
+  `jogja-atcs-*` prefix. Surakarta (FLV, `surakarta.atcsindonesia.info:8086`) is not added: the player is
+  hls.js only.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5

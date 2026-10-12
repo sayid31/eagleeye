@@ -7,6 +7,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 131 live Yogyakarta city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
+  public JSS portal (`cctvjss.jogjakota.go.id`, plain HLS, no cookie or login).
+  The operator's 137 URLs held 133 distinct streams; 2 failed a liveness probe
+  and were left out. The pack uses each stream's stable `playlist.m3u8`, not the
+  `chunklist_wNNN` URL the browser shows (that number is a per-session id and
+  changes on every request). Positions are guesses from the label: 97 anchored
+  on a place search (`APPROX. LOCATION`), 34 on a ring around central Yogyakarta
+  (`CITY-LEVEL ONLY`). The default camera catalog cap rises from 1600 to 2000
+  (the catalog is 1657 rows; at 1600 it truncated Yogyakarta to 74 cameras).
 - 199 live Malang city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the public
   Malang ATCS portal. The portal refuses its streams (403) unless the page was
   visited first, so the dev proxy now fetches that page anonymously, keeps the
