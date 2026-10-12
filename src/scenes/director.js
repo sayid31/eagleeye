@@ -24,6 +24,7 @@ import {
   PROJECT_VERSION,
   uid,
 } from './sceneProjectSchema.js';
+import { sceneExportIoMixin } from './sceneExportIo.js';
 
 /** @constant {string} Key code used to abort a running scene */
 const ESCAPE_KEY = 'Escape';
@@ -802,60 +803,6 @@ export class SceneDirector {
     this._logEvent('scene_stopped', { reason });
   }
 
-  /** Export the entire project as a timestamped JSON file download. */
-  exportProject() {
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `scene-presets-${stamp}.json`;
-    const payload = JSON.stringify(this._project, null, 2);
-    // Trigger a browser download via a temporary anchor element
-    const blob = new Blob([payload], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
-  /**
-   * Import a project from a user-selected JSON file, replacing the current project.
-   * The file is normalized/migrated on load; invalid JSON shows an error status.
-   * @param {File} file - Browser File object from an <input type="file">
-   */
-  async importProjectFile(file) {
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      this._project = normalizeProject(parsed);
-      this._selectedSceneId = this._project.scenes[0]?.id || null;
-      this._selectedShotId = this._project.scenes[0]?.shots[0]?.id || null;
-      this._saveProject();
-      this._renderSceneSelect();
-      this._renderShotList();
-      this._updateStatus(`Imported ${file.name}`);
-    } catch {
-      this._updateStatus('Import failed (invalid JSON)');
-    }
-  }
-
-  /** Download the telemetry metadata from the most recent completed run as JSON. */
-  downloadLastRunMetadata() {
-    if (!this._lastRunJson) return;
-    const stamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const fileName = `scene-run-${stamp}.json`;
-    const blob = new Blob([this._lastRunJson], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    URL.revokeObjectURL(url);
-  }
-
   /**
    * Reconcile data layer states to match the shot's target configuration.
    * Only layers the shot declares are touched — see src/scenes/scenePolicy.js
@@ -1147,3 +1094,5 @@ export class SceneDirector {
     }
   }
 }
+
+Object.assign(SceneDirector.prototype, sceneExportIoMixin);
