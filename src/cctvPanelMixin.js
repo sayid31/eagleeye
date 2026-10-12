@@ -1,4 +1,5 @@
 import { runCctvLayerEnableTransition } from './cctvFocusPolicy.js';
+import { playbackBadge } from './data/cctvPlaybackStatus.js';
 import { isSourceOffline } from './data/cctvSourceHealth.mjs';
 import {
   shouldRebuildCctvCameraListbox,
@@ -621,6 +622,17 @@ export const cctvPanelMixin = {
     if (isSourceOffline(activeCamera.sourceStatus)) {
       this._cctvSourceBadge.textContent = '⛔ CAMERA OFFLINE · SOURCE DOWN';
       this._cctvSourceBadge.dataset.frameState = 'offline';
+      return;
+    }
+    // Playlist reachable is not the same as video playing: while the player is
+    // still connecting, recovering or has stalled, say that instead of "OK".
+    const streamBadge = playbackBadge(activeCamera.playbackState, {
+      reason: activeCamera.playbackReason,
+      sourceMessage: activeCamera.sourceMessage,
+    });
+    if (streamBadge) {
+      this._cctvSourceBadge.textContent = streamBadge.text;
+      this._cctvSourceBadge.dataset.frameState = streamBadge.frameState;
       return;
     }
     const status = String(activeCamera.sourceStatus || 'unknown').toUpperCase();

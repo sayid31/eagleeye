@@ -65,3 +65,16 @@ export function isExpectedVideoMedia(contentType, mediaUrl) {
 export function isSourceOffline(status) {
   return status === SOURCE_OFFLINE_STATUS;
 }
+
+/** Health message for a source that answers 200 but sends no playlist. */
+export const EMPTY_PLAYLIST_MESSAGE = 'Source sent an empty playlist';
+
+/**
+ * Whether an HLS manifest body is a playlist at all. A 200 with an empty or
+ * non-M3U8 body would otherwise be reported "Live stream connected".
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function isValidHlsPlaylist(text) {
+  return String(text || '').trimStart().startsWith('#EXTM3U');
+}

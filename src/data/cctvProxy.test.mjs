@@ -49,3 +49,15 @@ test('media route classifies media type and dead sources via cctvSourceHealth', 
   assert.match(src, /isUpstreamUnreachableError\(error\)/);
   assert.match(src, /SOURCE_OFFLINE_STATUS/);
 });
+
+test('media proxy answers 502 and marks degraded when a manifest body is not a playlist', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const src = await readFile(new URL('./cctvProxy.mjs', import.meta.url), 'utf8');
+  const guardAt = src.indexOf('!isValidHlsPlaylist(text)');
+  const rewriteAt = src.indexOf('rewriteHlsManifest(text, mediaUrl, cameraId)');
+  assert.ok(guardAt > 0 && guardAt < rewriteAt, 'guard runs before the manifest is rewritten');
+  const block = src.slice(guardAt, rewriteAt);
+  assert.match(block, /status: 'degraded'/);
+  assert.match(block, /EMPTY_PLAYLIST_MESSAGE/);
+  assert.match(block, /writeHead\(502/);
+});

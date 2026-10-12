@@ -267,3 +267,27 @@ export const HLS_MAX_MEDIA_ERROR_RECOVERIES = 3;
 // (~7.5 s, Surabaya) so a hide long enough to outlive the playlist always
 // reloads, while a quick tab flick does not cost a rebuffer.
 export const HLS_RELOAD_AFTER_HIDDEN_MS = 10_000;
+
+// Self-healing HLS player (cctvHlsSelfHeal.js). Once hls.js's own bounded
+// recoveries above are spent the player is rebuilt from scratch instead of
+// being left dead until the camera is reselected, with exponential backoff so
+// a camera that is really down is probed gently. A camera the proxy already
+// reports as offline is probed even more slowly.
+export const HLS_REATTACH_BASE_DELAY_MS = 2_000;
+export const HLS_REATTACH_MAX_DELAY_MS = 30_000;
+export const HLS_REATTACH_OFFLINE_MAX_DELAY_MS = 120_000;
+
+// A playing feed that buffers no fragment and advances no playhead for this
+// long is treated as stalled. Above the slowest measured segment fetch through
+// the proxy (14 s, 2026-09-14) plus one 10 s target duration of slack.
+export const HLS_STALL_RESTART_MS = 25_000;
+export const HLS_STALL_CHECK_MS = 5_000;
+
+// Above the slowest measured segment fetch through the proxy (14 s, 2026-09-14)
+// so a slow but working feed is not rebuilt in a loop.
+// A feed that has been connecting or recovering this long without a single
+// fragment reaching the buffer is reported as "no data from source" and the
+// player is rebuilt. Covers sources that answer 200 with an empty playlist
+// (jmlive.jasamarga.com, measured 2026-10-08), where hls.js / the native player
+// can sit waiting without ever raising an error.
+export const HLS_CONNECT_TIMEOUT_MS = 20_000;

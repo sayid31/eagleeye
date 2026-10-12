@@ -6477,6 +6477,15 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   font-weight: 600;
 }
 
+/* Playlist is reachable but the player stopped decoding and is rebuilding.
+   Amber-red: a live fault worth noticing, unlike the muted 'offline' state. */
+#cctv-source-badge[data-frame-state='stalled'] {
+  color: #ffd2a0;
+  border-color: rgba(255, 160, 80, 0.55);
+  background: rgba(160, 90, 30, 0.2);
+  font-weight: 600;
+}
+
 /* Reverse-engineered/unofficial government camera endpoints (internal demo
    only — see DATA_SOURCES.md). Amber, distinct from the error state, so the
    disclosure reads as "handle with care" rather than "broken". */

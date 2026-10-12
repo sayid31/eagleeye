@@ -1207,6 +1207,39 @@ speech-to-speech API, so Claude is paired with the browser's own
   place of the generic KIND · STATUS label, and the meta line / monitor-plane
   placeholder carry `Camera offline at source (…)`. Status is per request, so a
   feed that comes back flips to `ok` on its next successful fetch.
+- HLS playback (browsers using hls.js; controller in
+  `src/data/cctvHlsSelfHeal.js`, wired in `attachHlsJs`): a fatal network error
+  restarts via `loadSource(url)` (fresh playlist, live edge) up to
+  `HLS_MAX_NETWORK_ERROR_RECOVERIES`; a fatal media error uses
+  `recoverMediaError()` up to `HLS_MAX_MEDIA_ERROR_RECOVERIES`. When a budget is
+  spent the player is destroyed and rebuilt after an exponential delay
+  (`HLS_REATTACH_BASE_DELAY_MS` 2 s doubling to `HLS_REATTACH_MAX_DELAY_MS` 30 s,
+  `HLS_REATTACH_OFFLINE_MAX_DELAY_MS` 120 s for an `offline` source); a rebuild
+  waits while the camera is not the active one. A buffered fragment resets all
+  budgets. A watchdog (every `HLS_STALL_CHECK_MS`) restarts a feed whose playhead
+  has not moved for `HLS_STALL_RESTART_MS` while the tab is visible and the video
+  is playing.
+- Empty playlists: `/api/cctv/media/:id` only writes `ok` after the manifest body
+  starts with `#EXTM3U` (`isValidHlsPlaylist`). A 200 with an empty or non-playlist
+  body is `degraded` ("Source sent an empty playlist") and answered 502. Measured
+  2026-10-08: every `jmlive.jasamarga.com` camera (236) returns an empty 200 or a
+  502, whatever headers are sent.
+- No-data timeout: a feed in `connecting`/`recovering` with no fragment buffered for
+  `HLS_CONNECT_TIMEOUT_MS` (20 s, paused while the tab is hidden or the camera is
+  inactive) is rebuilt and reported with `reason: 'no-data'` (plane `NO DATA FROM
+  SOURCE · RETRYING (#n)`, badge `⚠ NO DATA FROM SOURCE · RETRYING`). Natively played
+  HLS gets the same through `src/data/cctvNativeHlsWatch.js` (reload on timeout or
+  `error`, same backoff; reset on `playing`).
+- Playback state (`runtime.playback`, exposed as `playbackState` in the public
+  camera state): `connecting`, `live`, `recovering`, `retrying`, `unavailable`.
+  `ok` health only means the playlist is reachable, so the monitor-plane
+  placeholder (`videoPlaceholderHealth` in `src/data/cctvPlaybackStatus.js`)
+  shows `WAITING FOR VIDEO` / `STREAM INTERRUPTED · RECOVERING` /
+  `STREAM STALLED · RETRYING (#n)` instead of the health message, `offline`
+  keeps its own wording, and while `retrying` the plane shows the placeholder
+  rather than the frozen last frame. The panel badge shows `STREAM · CONNECTING`,
+  `STREAM · RECOVERING` or `⚠ STREAM STALLED · RETRYING`
+  (`[data-frame-state='stalled']`) between the offline and generic labels.
 - **Revocation** (either is sufficient): set
   `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`, or delete
   `config/cctv_sources.indonesia_unofficial.json` (or the file pointed to by

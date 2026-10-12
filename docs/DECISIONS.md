@@ -6,6 +6,46 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-08 — CCTV: self-healing HLS player and honest playback status
+
+**Decision.** `attachHlsJs` delegates to `createHlsSelfHeal`
+(`src/data/cctvHlsSelfHeal.js`): in-place recovery first, then destroy and rebuild
+the player with exponential backoff instead of giving up for good. Network
+recovery calls `loadSource(url)` instead of `startLoad()`. The runtime records
+the player state and the plane/badge show it instead of the health message.
+
+**Why.** Reports of "status ok but live not shown" on active cameras. `ok` is set
+from the playlist fetch only, so it says nothing about decoded video; the plane
+then painted "Live stream connected" over black. Separately the old handler
+destroyed the player after the recovery budget with no re-attach, so one bad
+minute meant black until reselection.
+
+**Why `loadSource` over `startLoad`.** `startLoad()` resumes from the last
+playhead; on these 7-30 s live windows that position has usually left the
+playlist, giving a segment 404 hls.js will not retry. `loadSource` is the same
+clean restart the tab-return reload already uses (`cctvHlsVisibility.js`).
+Suspected from hls.js source and one Denpasar 404 (`seg3537` vs live edge ~3650);
+not reproduced in a browser, so treat the restart choice as unproven mitigation.
+
+**Why the backoff is slower for `offline` sources.** A provider-removed feed will
+not come back in seconds; probing it every 2-30 s only adds proxy load.
+
+**Follow-up (same day): empty playlists.** The owner saw `WAITING FOR VIDEO` for a
+long time on `bmtol-unofficial-jakcik-km-67-000`. Cause: `jmlive.jasamarga.com`
+answers every playlist request with 200 and 0 bytes (or 502); the proxy still wrote
+`ok`, and neither hls.js nor a native `<video>` raised a fatal error, so `connecting`
+never ended. Fixes: the proxy validates `#EXTM3U` before writing `ok`; the player
+treats `HLS_CONNECT_TIMEOUT_MS` (20 s, above the slowest measured segment fetch of
+14 s) without a buffered fragment as "no data" and rebuilds. Why the source is
+empty is unknown (server down vs. blocking outside clients); headers (Referer,
+Origin, User-Agent, Accept) made no difference. These cameras are not marked
+`offline`: the cause is not proven permanent. Whether Chrome 150 plays HLS natively
+(which would bypass hls.js) was not verified; the native watcher covers both.
+
+**Not done.** Remaining proxy hardening (timeouts on `/media/:id` and `/rel`, retry on a
+refused connection, zero-byte segment to 502, `/rel` failures into health) is a
+separate change. Whether zero-byte segments stall hls.js is still unproven.
+
 ## 2026-10-08 — CCTV: a dead source is `offline`, not `degraded`
 
 **Decision.** `/api/cctv/media/:id` writes health status `offline` (not
