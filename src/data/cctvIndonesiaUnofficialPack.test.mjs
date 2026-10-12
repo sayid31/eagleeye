@@ -220,6 +220,8 @@ const REGENCY_PACKS = [
     url: /^https:\/\/shinobi\.sumedangkab\.go\.id\/[A-Za-z0-9]+\/hls\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/s\.m3u8$/ },
   { prefix: 'malang-atcs-', cityId: 'malang', count: 199, lat: [-8.06, -7.9], lon: [112.58, 112.7],
     url: /^https:\/\/cctv\.malangkota\.go\.id\/cctv-stream\/streams\/\d{24}\.m3u8$/ },
+  { prefix: 'jogja-atcs-', cityId: 'yogyakarta', count: 131, lat: [-7.86, -7.72], lon: [110.32, 110.43],
+    url: /^https:\/\/cctvjss\.jogjakota\.go\.id\/[a-z-]+\/[A-Za-z0-9_%.-]+\.stream\/playlist\.m3u8$/ },
 ];
 
 for (const c of REGENCY_PACKS) {
@@ -261,4 +263,16 @@ test('Malang rows opt into the anonymous portal session; no other pack row does'
       assert.equal(row.portalSession, undefined, row.id);
     }
   }
+});
+
+test('Yogyakarta rows use the stable master playlist, never the per-session chunklist_wNNN URL', () => {
+  const rows = pack.filter((row) => row.id.startsWith('jogja-atcs-'));
+  assert.equal(rows.length, 131);
+  for (const row of rows) assert.doesNotMatch(row.url, /chunklist_w\d+/, row.id);
+});
+
+test('Yogyakarta pack omits the two streams that failed the liveness probe (measured 2026-10-12)', () => {
+  const urls = new Set(pack.map((row) => row.url));
+  assert.equal(urls.has('https://cctvjss.jogjakota.go.id/atcs/ATCS_Lampu_Merah_JoktengWetan.stream/playlist.m3u8'), false);
+  assert.equal(urls.has('https://cctvjss.jogjakota.go.id/rthp/rthp_pakudaya_pakuncen_2.stream/playlist.m3u8'), false);
 });

@@ -2228,3 +2228,13 @@ Chosen:
 Trade-off: a user who prefers Google 3D re-selects it after each reload, and shared links no longer reproduce the sender's basemap. Chosen explicitly by the owner (Google 3D is opt-in).
 
 Not done: restoring layers lazily after first interaction, or lowering the 1.5 s timer. Both would change when saved layers start and were not requested.
+
+## 2026-10-12 — ATCS Yogyakarta: store playlist.m3u8, raise the catalog cap to 2000
+
+The operator's DevTools list held `chunklist_wNNN.m3u8` URLs. The Wowza origin hands out a fresh `wNNN` for every request (three requests for one camera returned three different numbers), so a stored chunklist URL would be dead on the next fetch. Every stream also answers `<name>.stream/playlist.m3u8`, a stable master that points at the current chunklist, so the pack stores that and the existing HLS rewrite proxy follows it; no proxy change was needed. The 137 URLs held 133 distinct stream paths (4 pairs shared a path under two labels; the first label is kept). A liveness probe (master → chunklist → first segment, one retry) dropped 2: `ATCS_Lampu_Merah_JoktengWetan` (timeout) and `rthp_pakudaya_pakuncen_2` (master 404). 15 of 15 sampled rows then played through `/api/cctv/media`.
+
+Positions follow the Pasuruan scheme: 97 rows `APPROX. LOCATION` from an OSM Nominatim search bounded to Kota Yogyakarta (same-place cameras spread ~40 m), 34 rows `CITY-LEVEL ONLY` on a ~700 m ring. Two geocoder hits landed outside the city (Bumen in Bantul, Karang Tunggal in Sleman) and were demoted to the ring instead of being trusted. Accuracy is unverified and the labels say so.
+
+Capacity: the merged catalog reached 1657 rows against a cap of 1600, which silently cut Yogyakarta to 74 cameras. The cap (`DEFAULT_CCTV_MAX_SOURCES`) is now 2000; the cost is a heavier CCTV layer when everything is shown.
+
+Not added: Surakarta (95 FLV URLs, 74 of which answered with a valid FLV header). hls.js cannot play FLV, so adding it needs a new player dependency (`mpegts.js`) plus a proxy path for unbounded streams; that is a separate decision.
