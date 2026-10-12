@@ -1082,10 +1082,10 @@ speech-to-speech API, so Claude is paired with the browser's own
 
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
-- 761 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
+- 827 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
   toll cameras), Bina Marga toll corridors (436 `bmtol-unofficial-*` across 24 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
-  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
+  Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`), Pasuruan (31 `pasuruan-atcs-*`), Sumedang (35 `sumedang-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
   `loadIndonesiaUnofficialSources()` (`src/data/cctvProxy.mjs`) so it can never disable the Austin/Caltrans/TfL live
   open-data packs. `sourceKind: 'unofficial-hls-id'` on every row.
@@ -1177,6 +1177,14 @@ speech-to-speech API, so Claude is paired with the browser's own
   (`CITY-LEVEL ONLY`). The streams are low-latency HLS (fMP4); the manifest proxy drops the LL-HLS
   tags (`EXT-X-PART`, `PRELOAD-HINT`, `RENDITION-REPORT`, `SERVER-CONTROL`) and serves a plain live
   playlist. Rationale: `docs/DECISIONS.md` ("ATCS Mataram"). Revoke with the `mataram-atcs-*` prefix.
+- **ATCS Pasuruan (31) and Sumedang (35) rows**: `https://dishub.pasuruankab.go.id:5444/LiveApp/streams/<NAME>.m3u8`
+  and `https://shinobi.sumedangkab.go.id/<path-token>/hls/<group>/<id>/s.m3u8`, copied by the operator
+  from the Network tab (no Authorization header). Positions come from the label: Pasuruan 21
+  `APPROX. LOCATION` / 10 `CITY-LEVEL ONLY`, Sumedang 23 / 12; the city-level ones sit on a ring around the
+  regency centre. Pasuruan's server omits its TLS intermediate certificate, so the dev proxy trusts the bundled
+  public DigiCert intermediate in `config/ca/` (`src/server/intermediateCaTrust.mjs`, installed once by
+  `cctvProxy()`); verification stays on. Rationale: `docs/DECISIONS.md` ("ATCS Pasuruan and Sumedang").
+  Revoke with the `pasuruan-atcs-*` / `sumedang-atcs-*` prefixes.
 - All 3 upstreams serve **multi-level relative-path HLS manifests**
   (master playlist → sub-playlist → segments). A byte-for-byte proxy pipe
   breaks this (relative URIs resolve against our own origin, not

@@ -23,6 +23,7 @@ import {
   isAllowedRelOrigin,
 } from '../server/hlsManifestProxy.mjs';
 import { readCappedResponseText, proxyMediaResponse } from '../server/proxyInfra.mjs';
+import { installIntermediateCaTrust } from '../server/intermediateCaTrust.mjs';
 import {
   EMPTY_PLAYLIST_MESSAGE,
   SOURCE_OFFLINE_STATUS,
@@ -1046,6 +1047,9 @@ export async function fetchCctvImageFromUpstream(url, {
  * @returns {import('vite').Plugin}
  */
 export function cctvProxy() {
+  // Some ATCS hosts (e.g. dishub.pasuruankab.go.id) omit their TLS intermediate;
+  // browsers repair that via AIA, Node's fetch does not. See intermediateCaTrust.mjs.
+  installIntermediateCaTrust();
   /** @type {Map<string,{id:string,status:string,sourceKind:string,label:string,message:string,updatedAt:number}>} */
   const health = new Map();
   /** Cap on health map entries to prevent unbounded growth. Sized to cover the

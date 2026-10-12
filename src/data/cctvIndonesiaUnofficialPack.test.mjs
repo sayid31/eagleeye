@@ -210,3 +210,39 @@ test('Bina Marga toll batch 2 never duplicates a stream already used by a binama
   const earlier = new Set(pack.filter((row) => row.id.startsWith('binamarga-unofficial-')).map((row) => row.url));
   for (const row of bmtol) assert.equal(earlier.has(row.url), false, row.id);
 });
+
+const TIER_RE = /\((APPROX\. LOCATION|CITY-LEVEL ONLY) — Live — Unofficial\)$/;
+
+const REGENCY_PACKS = [
+  { prefix: 'pasuruan-atcs-', cityId: 'pasuruan', count: 31, lat: [-7.85, -7.5], lon: [112.6, 113.1],
+    url: /^https:\/\/dishub\.pasuruankab\.go\.id:5444\/LiveApp\/streams\/[A-Z0-9_-]+\.m3u8$/ },
+  { prefix: 'sumedang-atcs-', cityId: 'sumedang', count: 35, lat: [-6.95, -6.75], lon: [107.8, 108.0],
+    url: /^https:\/\/shinobi\.sumedangkab\.go\.id\/[A-Za-z0-9]+\/hls\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/s\.m3u8$/ },
+];
+
+for (const c of REGENCY_PACKS) {
+  test(`${c.cityId} ATCS rows are labelled with their position tier, unique, and stay inside the regency`, () => {
+    const rows = pack.filter((row) => row.id.startsWith(c.prefix));
+    assert.equal(rows.length, c.count);
+    assert.equal(new Set(rows.map((row) => row.url)).size, rows.length, 'duplicate stream URL');
+    assert.equal(new Set(rows.map((row) => `${row.lat},${row.lon}`)).size, rows.length, 'two markers share one position');
+    for (const row of rows) {
+      const tier = row.name.match(TIER_RE)?.[1];
+      assert.ok(tier, `${row.id} name lacks a position tier`);
+      assert.ok(row.provider.includes(tier), row.id);
+      assert.match(row.license, tier === 'CITY-LEVEL ONLY' ? /CITY-LEVEL LOCATION ONLY/ : /APPROXIMATE LOCATION/, row.id);
+      assert.ok(row.license.includes(`${c.prefix}*`), `${row.id} revoke hint must name this prefix`);
+      assert.match(row.url, c.url, row.id);
+      assert.equal(row.cityId, c.cityId, row.id);
+      assert.equal(row.headingConfidence, 'low', row.id);
+      assert.ok(row.lat > c.lat[0] && row.lat < c.lat[1], `${row.id} lat ${row.lat}`);
+      assert.ok(row.lon > c.lon[0] && row.lon < c.lon[1], `${row.id} lon ${row.lon}`);
+    }
+  });
+}
+
+test('Pasuruan pack omits the two streams the origin answers 404 for (measured 2026-10-12)', () => {
+  const urls = new Set(pack.map((row) => row.url));
+  assert.equal(urls.has('https://dishub.pasuruankab.go.id:5444/LiveApp/streams/EXIT_TOL_PURWODADI.m3u8'), false);
+  assert.equal(urls.has('https://dishub.pasuruankab.go.id:5444/LiveApp/streams/EXIT_TOL_GEMPOL.m3u8'), false);
+});
