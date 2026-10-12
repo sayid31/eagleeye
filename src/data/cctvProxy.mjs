@@ -21,6 +21,7 @@ import {
   isAllowedRelOrigin,
 } from '../server/hlsManifestProxy.mjs';
 import { readCappedResponseText, proxyMediaResponse } from '../server/proxyInfra.mjs';
+import { createLiveUpstreamAbort, pipeLiveStream } from '../server/liveStreamProxy.mjs';
 import { installIntermediateCaTrust } from '../server/intermediateCaTrust.mjs';
 import { createPortalSessionStore } from '../server/portalSession.mjs';
 import {
@@ -261,13 +262,17 @@ export function cctvProxy() {
               return;
             }
 
+            // A live FLV body never ends: the upstream read must stop with the browser.
+            const liveAbort = feedType === 'flv' ? createLiveUpstreamAbort(res) : null;
             try {
               const upstreamHeaders = { 'User-Agent': CCTV_PROXY_USER_AGENT };
               const requestRange = req.headers?.range;
-              if (requestRange) upstreamHeaders.Range = requestRange;
+              if (requestRange && !liveAbort) upstreamHeaders.Range = requestRange;
               const upstream = await portalSessions.fetchWithSession(source.portalSession, mediaUrl, {
                 headers: upstreamHeaders,
+                ...(liveAbort ? { signal: liveAbort.signal } : {}),
               });
+              liveAbort?.headersReceived();
               const contentType = upstream.headers.get('content-type') || '';
               if (!upstream.ok) {
                 // 404/410 = the provider removed the feed: flag it "offline"
@@ -301,6 +306,11 @@ export function cctvProxy() {
                   label: source?.provider || 'Configured source',
                   message: isVideoFeedType(feedType) ? 'Live stream connected' : 'Snapshot feed connected',
                 });
+              }
+
+              if (liveAbort) {
+                pipeLiveStream(res, upstream);
+                return;
               }
 
               // Manifest responses (feedType 'hls', or any content-type/path
@@ -343,7 +353,9 @@ export function cctvProxy() {
               });
               return;
             } catch (error) {
-              const unreachable = isUpstreamUnreachableError(error);
+              // The browser closed before the source answered: not a source fault.
+              if (liveAbort?.clientGone()) return;
+              const unreachable = isUpstreamUnreachableError(error) || Boolean(liveAbort?.timedOut());
               setHealth(cameraId, {
                 status: unreachable ? SOURCE_OFFLINE_STATUS : 'degraded',
                 sourceKind: 'upstream',

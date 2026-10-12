@@ -1151,7 +1151,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 2000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1657 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1733 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1200,8 +1200,12 @@ speech-to-speech API, so Claude is paired with the browser's own
   (Wowza, plain HLS, no cookie, no portal session, standard public TLS chain). The pack stores the stable
   `playlist.m3u8`; the `chunklist_wNNN.m3u8` URL seen in DevTools carries a per-session id and must not be
   stored. Positions come from the label: 97 `APPROX. LOCATION` / 34 `CITY-LEVEL ONLY`. Revoke with the
-  `jogja-atcs-*` prefix. Surakarta (FLV, `surakarta.atcsindonesia.info:8086`) is not added: the player is
-  hls.js only.
+  `jogja-atcs-*` prefix.
+- **ATCS Surakarta rows (76, FLV)**: `https://surakarta.atcsindonesia.info:8086/camera/<Name>.flv` (anonymous
+  HTTP-FLV, one unbounded chunked stream per camera, no cookie or login). Of the operator's 95 URLs, 76 answered
+  with a valid `FLV` header (re-probed with a 25 s timeout); 19 never answer and are left out. Rows carry
+  `feedType: 'flv'`, `sourceKind: 'unofficial-flv-id'`, positions guessed from the label: 56 `APPROX. LOCATION` /
+  20 `CITY-LEVEL ONLY`. Revoke with the `surakarta-atcs-*` prefix. Playback and proxy: see "FLV playback" below.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5
@@ -1249,6 +1253,19 @@ speech-to-speech API, so Claude is paired with the browser's own
   place of the generic KIND · STATUS label, and the meta line / monitor-plane
   placeholder carry `Camera offline at source (…)`. Status is per request, so a
   feed that comes back flips to `ok` on its next successful fetch.
+- FLV playback (`feedType: 'flv'`, Surakarta): `src/data/cctvFlvPlayback.js` dynamically imports `mpegts.js`
+  (own code-split chunk, loaded only when an FLV camera is shown) and plays the stream in the same `<video>`
+  that feeds the canvas, so the monitor plane still never binds to the element directly. Browsers without MSE
+  (`mpegts.isSupported()` false) or a failed chunk load report playback `unavailable`; there is no native FLV
+  fallback. `mpegts.js` has no in-place recovery, so `src/data/cctvFlvSelfHeal.js` rebuilds the player on any
+  mpegts error, on `no-data` (nothing within the connect timeout) and on a stalled playhead, with the same
+  exponential backoff and offline cap as HLS; a `playing` event resets the attempt counter. Live latency is
+  chased (`liveBufferLatencyChasing`, max 3 s). Looping is disabled for FLV. Proxy side
+  (`src/server/liveStreamProxy.mjs`, used by `/api/cctv/media/` for `feedType: 'flv'`): `Range` is not
+  forwarded, the response is forced to `video/x-flv` with `Cache-Control: no-store`, the body is piped
+  unbuffered, the upstream fetch is aborted the moment the browser disconnects, and an upstream that sends no
+  headers within 15 s (`LIVE_STREAM_HEADER_TIMEOUT_MS`) is cut and the camera is marked offline. Rationale:
+  `docs/DECISIONS.md` ("ATCS Surakarta: FLV via mpegts.js").
 - HLS playback (browsers using hls.js; controller in
   `src/data/cctvHlsSelfHeal.js`, wired in `attachHlsJs`): a fatal network error
   restarts via `loadSource(url)` (fresh playlist, live edge) up to

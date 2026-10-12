@@ -13,6 +13,7 @@ import { drawProjectionFrame, mediaUrlFor, paintProjectionPlaceholder, refreshPr
 import { refreshPlaneIconOcclusion } from './cctvPlaneIconRefresh.js';
 import { clearProjectionOverlay, createProjectionPlane } from './cctvProjectionPlane.js';
 import { S } from './cctvState.js';
+import { attachMpegtsFlv } from './cctvFlvPlayback.js';
 import { attachHlsJs, createProjectionProxyVideo, setPlayback } from './cctvProjectionVideo.js';
 
 /**
@@ -46,6 +47,7 @@ function createProjectionRuntime(record) {
     video: null,
     hlsInstance: null,
     hlsHeal: null,
+    flvHeal: null,
     stopNativeWatch: null,
     // Player state from cctvHlsSelfHeal.js ({state, attempt}); null until an
     // hls.js player reports in (native-HLS and image runtimes never do).
@@ -100,9 +102,9 @@ function createProjectionRuntime(record) {
   if (mode === 'video') {
     const video = document.createElement('video');
     video.muted = true;
-    // Live HLS streams are not loops (there's no "end" to wrap back to) —
+    // Live HLS/FLV streams are not loops (there's no "end" to wrap back to) —
     // only the looping mp4/webm sample clips use native loop playback.
-    video.loop = feedType !== 'hls';
+    video.loop = feedType !== 'hls' && feedType !== 'flv';
     video.autoplay = true;
     video.playsInline = true;
     video.crossOrigin = 'anonymous';
@@ -111,6 +113,8 @@ function createProjectionRuntime(record) {
     if (feedType === 'hls') {
       // hls.js first, native HLS only as its fallback — see attachHlsJs.
       attachHlsJs(runtime, video, mediaUrl);
+    } else if (feedType === 'flv') {
+      attachMpegtsFlv(runtime, video, mediaUrl);
     } else {
       video.src = mediaUrl;
       video.addEventListener('canplay', () => {
@@ -190,6 +194,10 @@ export function destroyProjectionRuntime(runtime) {
   if (runtime.hlsHeal) {
     runtime.hlsHeal.stop();
     runtime.hlsHeal = null;
+  }
+  if (runtime.flvHeal) {
+    runtime.flvHeal.stop();
+    runtime.flvHeal = null;
   }
   if (runtime.hlsInstance) {
     runtime.hlsInstance.destroy();

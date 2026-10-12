@@ -7,6 +7,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 76 live Surakarta city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
+  public ATCS Kota Surakarta streams (anonymous HTTP-FLV, no cookie or login).
+  They play in the same CCTV panel and 3D monitor as the HLS cameras, using the
+  new `mpegts.js` player (loaded only when an FLV camera is shown) with the same
+  self-healing reconnect as HLS. The operator's 95 URLs held 76 that answer; 19
+  never respond and were left out. Positions are guesses from the label: 56
+  anchored on a place search (`APPROX. LOCATION`), 20 on a ring around central
+  Surakarta (`CITY-LEVEL ONLY`). The proxy gained a path for endless streams
+  (closes the upstream when you close the camera, cuts a silent upstream after
+  15 s). Real-browser playback has not been exercised yet.
 - 131 live Yogyakarta city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
   public JSS portal (`cctvjss.jogjakota.go.id`, plain HLS, no cookie or login).
   The operator's 137 URLs held 133 distinct streams; 2 failed a liveness probe
