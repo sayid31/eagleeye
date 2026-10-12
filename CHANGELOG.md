@@ -46,6 +46,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Internal: `cctvProxy.mjs` (1445 lines) was split into `cctvSourceCatalog`,
+  `cctvOpenDataSources`, `cctvAustinParse`, `cctvSourceNormalize`, `cctvFrameFetch`
+  and `cctvSyntheticFrame` (446 lines left: the route handlers). No behavior
+  change; the extracted parsers gained unit tests.
 - Internal: `cctvProjectionRuntime.js` (489 lines) and `cctvHlsSelfHeal.js` (223
   lines) were split below the project size limits (`cctvProjectionVideo.js`,
   `cctvHlsStall.js`, `cctvHlsBackoff.js`). No behavior change.
