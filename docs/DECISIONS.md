@@ -90,7 +90,7 @@ were shared across every cluster.
 - **What stays whole.** `DataLayerManager`'s toggle/lifecycle state machine
   stays in `manager.js` (1,121 lines) because the race-guard ordering is the
   documented bug class. The `StyleManager` constructor stays in `ui.js`
-  (809 lines): splitting it into ordered `_initXxx()` methods would change
+  (about 800 lines): splitting it into ordered `_initXxx()` methods would change
   the constructor's shape, and its order carries invariants ("before style
   stages", "before panel chrome"), for a gain judged not worth that risk.
 - **Equivalence proof.** Each split was checked by moving code verbatim
