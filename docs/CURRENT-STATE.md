@@ -132,20 +132,27 @@ Historical planning documents may not match runtime behavior.
   (`uiStyleStages.js`, `managerUpdate.js`, …) applied with
   `Object.assign(Class.prototype, …)` in the parent; a method name defined in
   two mixins is won by the later assignment, so a name is defined once. The
-  `StyleManager` constructor stays whole in `ui.js` (809 lines).
-- `gevActions.js` (668 lines) and `annotations/annotationResolver.js`
-  (446 lines) are plain function-cluster extractions with no shared state.
+  `StyleManager` constructor stays whole in `ui.js`.
+- `gevActions.js` and `annotations/annotationResolver.js` are plain
+  function-cluster extractions with no shared state.
+- CCTV follows the same rule beyond the layer itself: the dev-server proxy
+  `cctvProxy.mjs` keeps request handling and delegates to
+  `cctvSourceCatalog.mjs` (source loading), `cctvSourceNormalize.mjs`
+  (record normalization) and `cctvSyntheticFrame.mjs` (placeholder frames),
+  and the projection runtime and HLS self-heal split into
+  `cctvProjectionPlane/Frames/Video.js` and `cctvHlsBackoff/Config/Stall/
+  SelfHeal/Visibility.js`. A new module in these families is added beside
+  its siblings instead of growing the parent.
 - **Source-text tests** do not read the parent directly: they call
   `readLayerSourceText(file)` from `src/data/layerSourceText.testutil.mjs`,
   which concatenates the parent and its sibling modules (mixins first, in
   the order the parent assigns them; `S._x` normalized back to `_x`) so an
   assertion about a method body holds wherever the method lives. A newly
   split file is registered there.
-- Parent sizes (lines): `cctv.js` 446, `flights.js` 312, `militaryFlights.js`
-  233, `rocketLaunches.js` 284, `traffic.js` 137, `satellites.js` 181,
-  `radio.js` 184, `aisLiveVessels.js` 129, `militaryAwareness.js` 94,
-  `worldOverlay.js` 206, `cockpitViewController.js` 310, `gevRealtime.js` 284,
-  `manager.js` 1,121, `ui.js` 809. See `docs/DECISIONS.md` for why state
+- Parent files stay small: most layer parents are 100–500 lines, and the two
+  largest, `manager.js` and `ui.js`, are about 1,100 and 800 lines. Exact
+  sizes drift with every feature, so `envman health` is the source of truth
+  rather than this file. See `docs/DECISIONS.md` for why state
   moved into `S`, why the manager state machine and the `StyleManager`
   constructor stay whole, and why the old one-shot codemods are archived in
   `archive/split-codemods-2026/`.
