@@ -9,10 +9,10 @@ const pack = JSON.parse(readFileSync(new URL('../../config/cctv_sources.indonesi
 const rows = pack.filter((row) => row.id.startsWith('bandungbarat-atcs-'));
 const URL_RE = /^https:\/\/atcs-dishubkbb\.urbanaccess\.net\/memfs\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.m3u8$/;
 
-test('Bandung Barat contributes 43 unique HLS rows inside the regency', () => {
-  assert.equal(rows.length, 43);
-  assert.equal(new Set(rows.map((row) => row.id)).size, 43);
-  assert.equal(new Set(rows.map((row) => row.url)).size, 43);
+test('Bandung Barat contributes 45 unique HLS rows inside the regency', () => {
+  assert.equal(rows.length, 45);
+  assert.equal(new Set(rows.map((row) => row.id)).size, 45);
+  assert.equal(new Set(rows.map((row) => row.url)).size, 45);
   for (const row of rows) {
     assert.equal(row.cityId, 'bandungbarat', row.id);
     assert.equal(row.feedType, 'hls', row.id);
@@ -50,18 +50,32 @@ test('Bandung Barat elevation follows the terrain: lowland Padalarang below Lemb
   assert.ok(Math.max(...padalarang) < 800, 'Padalarang cameras sit below 800 m');
 });
 
-test('Bandung Barat omits the 15 cameras the source answers 404 for (measured 2026-10-13)', () => {
+test('Bandung Barat omits the 13 cameras the source answers 404 for (measured 2026-10-13)', () => {
   const dead = [
     'CITUNJUNG - CIMAREME', 'LEMBANG BATAS - KOTA BDG', 'LEMBANG DARUL HIKAM - SESPIM', 'LEMBANG DARUL HIKAM - KAYU AMBON',
     'LEMBANG - PARATAG - CIMAHI', 'LEMBANG - PARATAG - LEMBANG', 'LEMBANG - TOKO INTIMETAL - CIJERUK', 'LEMBANG - PASAR LEMBANG',
     'PADALARANG - JL. SUNDIAL KBP - KBP TAGOG', 'PADALARANG - JL. SUNDIAL KBP - TOL', 'PADALARANG FLYOVER (PINTU TOL KELUAR)',
     'CIHAMPELAS - SAYURAN', 'CIHAMPELAS - BBS',
-    // Served in the first two probes, then answered 404 in every later one (direct and through the proxy).
-    'PADALARANG FLYOVER - CIMAREME', 'PADALARANG FLYOVER - KBP',
   ];
-  assert.equal(dead.length, 15);
+  assert.equal(dead.length, 13);
   const names = new Set(rows.map((row) => row.name.replace(/^ATCS /, '').replace(/ \(SOURCE-PUBLISHED.*$/, '')));
   for (const label of dead) assert.equal(names.has(label), false, label);
+});
+
+test('Bandung Barat lists the two Padalarang Flyover cameras that came back, each 45 m or more from its neighbours', () => {
+  const flyover = rows.filter((row) => /^bandungbarat-atcs-padalarang-flyover-/.test(row.id));
+  assert.deepEqual(flyover.map((row) => row.id).sort(), [
+    'bandungbarat-atcs-padalarang-flyover-cimareme',
+    'bandungbarat-atcs-padalarang-flyover-kbp',
+  ]);
+  for (const camera of flyover) {
+    assert.match(camera.license, /flip between 404 and live/, camera.id);
+    for (const other of rows) {
+      if (other.id === camera.id) continue;
+      const metres = Math.hypot((camera.lat - other.lat) * 111000, (camera.lon - other.lon) * 110000);
+      assert.ok(metres >= 45, `${camera.id} is only ${Math.round(metres)} m from ${other.id}`);
+    }
+  }
 });
 
 test('Bandung Barat has no leftover seed camera and adds no Kota Bandung (Pelindung) overlap', () => {

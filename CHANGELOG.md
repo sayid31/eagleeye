@@ -15,11 +15,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
-- 43 live Kabupaten Bandung Barat CCTV cameras (UNOFFICIAL SOURCE, demo only) from
+- 45 live Kabupaten Bandung Barat CCTV cameras (UNOFFICIAL SOURCE, demo only) from
   the Dishub KBB ATCS page, all plain HLS with no login or cookie. The source
   publishes each camera's coordinates, so they carry the `SOURCE-PUBLISHED LOCATION`
-  label (heading unknown). 15 of its 58 cameras are left out because their streams
-  answer 404.
+  label (heading unknown). 13 of its 58 cameras are left out because their streams
+  answer 404. The two Padalarang Flyover cameras (Cimareme, KBP) flip between 404
+  and live; they are included because they served in every probe just before
+  they were added, and they may drop out again.
 - 106 live West Sumatra city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
   Sumbar disaster dashboard's list of city portals: Bukittinggi 39, Padang 28,
   Solok 18, Padang Panjang 14, Pesisir Selatan 7. All plain HLS, no login or
