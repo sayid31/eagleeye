@@ -108,6 +108,17 @@ setelah sebelumnya 404 di setiap probe. Keduanya kamera yang timbul-tenggelam, j
 
 Bukan kamera, tetapi sempat dibahas: layer Google My Maps (58 tempat evakuasi + 86 sirene tsunami) masih sebatas ide dan lisensinya belum jelas.
 
+## Verifikasi pemutaran
+
+Pada 2026-10-13, 149 kamera Sumatera Barat dan Bandung Barat diputar di Chrome headless (hls.js, lewat proxy `/api/cctv/media`),
+dengan syarat video punya dimensi dan `currentTime` maju lebih dari 1 detik. **147 dari 149 berhasil diputar** (Bukittinggi 39/39,
+Solok 18/18, Padang Panjang 14/14, Pesisir Selatan 7/7, Padang 27/28, Bandung Barat 42/43).
+22 kamera gagal pada putaran pertama (batas 30 detik) dan 20 di antaranya berhasil pada putaran kedua (batas 75 detik): origin lambat
+atau flaky, jadi sebagian kamera butuh waktu lama sebelum frame pertama muncul. Dua sisanya gagal saat dicek tetapi manifest-nya menjawab 200 pada
+cek ulang lewat proxy, jadi tampak sementara: `padang-atcs-balaikota-pintu-keluar` (LL-HLS; beberapa segmen awal di playlist kosong 0 byte sehingga
+gagal diurai) dan `bandungbarat-atcs-langensari-cibodas` (manifest 404 sesaat). Pemeriksaan ini memakai player hls.js biasa di browser headless,
+bukan panel CCTV aplikasi, jadi belum mencakup tampilan di globe.
+
 ## Catatan
 
 - Katalog gabungan saat ini 1911 kamera (batas 2000). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
