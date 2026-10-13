@@ -5,6 +5,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Fixed
+
+- The empty green placeholder cards (for example "Malioboro North" beside live
+  Yogyakarta cameras) no longer appear in cities that have live cameras. The 10
+  synthetic seed cameras for Jakarta, Bandung, Denpasar, Surabaya and Yogyakarta
+  were removed; Medan, Semarang and Makassar keep theirs because they have no live
+  source yet. `cctvLive.md` lists every live camera by city.
+
 ### Added
 
 - 76 live Surakarta city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
