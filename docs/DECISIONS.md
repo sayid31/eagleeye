@@ -2272,3 +2272,13 @@ Padang serves Low-Latency HLS with fMP4 (`EXT-X-MAP`, `EXT-X-PART`). `hlsManifes
 TLS: `mtx.padangpanjang.go.id` sends only its leaf certificate. The missing public Sectigo Public Server Authentication CA DV R36 (fetched from the leaf's AIA URL, valid to 2036) is added to `config/ca/`; verification stays on, same mechanism as the DigiCert and GeoTrust intermediates.
 
 Not added: Padang Pariaman (its 14 URLs are PLN iSee `i-see.iconpln.co.id/avadx/media?session=…`, all HTTP 502, expired certificate, and session-bound tokens) and Payakumbuh (two YouTube embeds, no stream). Not verified: real in-browser playback; the checks were probes plus the proxy.
+
+## 2026-10-13 — ATCS Bandung Barat: the ?session= token is dropped, and cameras that stop answering are dropped too
+
+`atcs.bandungbaratkab.go.id/get-cctv` is a public JSON list (name, coordinates, an iframe link) of 58 cameras, each a datarhei Restreamer page on `atcs-dishubkbb.urbanaccess.net`. The page's `config.js` gives the manifest `memfs/<uuid>.m3u8`. That master playlist and its variant carry a `?session=` query that the server invents on every request. Segments answered 200 with and without it, with the same size, so it is neither an authorisation nor a stable identifier; storing it would only bake in an expiring value. The row URL is the bare manifest, the existing HLS proxy resolves the relative variant and segment URIs, and no portal session is needed.
+
+Which rows: same rule as Pekanbaru and Sumbar (a valid first segment, two probes), but a final check through `/api/cctv/media` caught two cameras (Padalarang Flyover - Cimareme and - KBP) that passed both earlier probes and then answered 404 from the source on every later try, directly and via the proxy. They were removed, giving 43 rows rather than the 45 first measured. Lesson: re-probe immediately before committing a pack, not only at discovery time. Farmhouse - Lembang failed once in the proxy run, then passed four times in a row through the proxy, so it stays.
+
+Tier: the list publishes coordinates per camera, so rows use `SOURCE-PUBLISHED LOCATION` (see the West Sumatra entry above). Three coordinate pairs repeat across cameras; those sites are spread on a 45 m ring. Elevation is per camera from Open-Meteo, because the regency spans 611 m (Padalarang) to 1366 m (Lembang), so a single value like the earlier packs' would be wrong by hundreds of metres.
+
+Licence: the player config says `CC BY 4.0`, author DISHUB KBB. That is the Restreamer default text rather than a data policy, so it is recorded but no permission is assumed; rows stay UNOFFICIAL, internal demo only. Not verified: real in-browser playback.

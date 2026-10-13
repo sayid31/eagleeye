@@ -352,7 +352,7 @@ test('West Sumatra packs list only cameras that served a valid segment in a prob
 test('source-published coordinates are used as given and only by packs whose source publishes them', () => {
   const published = pack.filter((row) => row.name.includes('(SOURCE-PUBLISHED LOCATION'));
   const owners = new Set(published.map((row) => row.cityId));
-  assert.deepEqual([...owners].sort(), ['bukittinggi', 'padangpanjang', 'pesisirselatan']);
+  assert.deepEqual([...owners].sort(), ['bandungbarat', 'bukittinggi', 'padangpanjang', 'pesisirselatan']);
   for (const row of published) assert.match(row.license, /publishes the coordinates/, row.id);
   // Padang and Solok publish no coordinates, so none of their rows may claim a published position.
   assert.equal(pack.some((row) => /^(padang|solok)-atcs-/.test(row.id) && row.name.includes('SOURCE-PUBLISHED')), false);
