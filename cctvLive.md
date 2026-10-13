@@ -7,18 +7,18 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1233** |
-| Kota (11 kota) | 797 |
+| **Total kamera video live** | **1262** |
+| Kota (12 kota) | 826 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1157 |
+| Format HLS | 1186 |
 | Format FLV (Surakarta) | 76 |
 
 Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data:
 
 | Label posisi | Kamera | Arti |
 |---|---:|---|
-| `APPROX. LOCATION` | 1012 | 576 kamera kota (dicari dari nama jalan/tempat) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `CITY-LEVEL ONLY` | 159 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
+| `APPROX. LOCATION` | 1035 | 599 kamera kota (dicari dari nama jalan/tempat) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
+| `CITY-LEVEL ONLY` | 165 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
 ## Kota
@@ -33,9 +33,10 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 6 | Bandung | 60 | HLS |
 | 7 | Sumedang | 35 | HLS |
 | 8 | Pasuruan | 31 | HLS |
-| 9 | Jakarta | 15 | HLS |
-| 10 | Mataram | 12 | HLS |
-| 11 | Cianjur | 1 | HLS |
+| 9 | Pekanbaru | 29 | HLS |
+| 10 | Jakarta | 15 | HLS |
+| 11 | Mataram | 12 | HLS |
+| 12 | Cianjur | 1 | HLS |
 
 ## Jalan tol
 
@@ -75,5 +76,5 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 
 ## Catatan
 
-- Katalog gabungan saat ini 1733 kamera (batas 2000). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
+- Katalog gabungan saat ini 1762 kamera (batas 2000). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
 - Hapus per kota dengan prefiks id-nya (misalnya `surakarta-atcs-*`), atau matikan seluruh paket dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.

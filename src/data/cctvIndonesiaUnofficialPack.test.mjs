@@ -228,6 +228,8 @@ const REGENCY_PACKS = [
     url: /^https:\/\/cctvjss\.jogjakota\.go\.id\/[a-z-]+\/[A-Za-z0-9_%.-]+\.stream\/playlist\.m3u8$/ },
   { prefix: 'surakarta-atcs-', cityId: 'surakarta', count: 76, lat: [-7.62, -7.52], lon: [110.76, 110.87],
     url: /^https:\/\/surakarta\.atcsindonesia\.info:8086\/camera\/[A-Za-z0-9]+\.flv$/ },
+  { prefix: 'pekanbaru-atcs-', cityId: 'pekanbaru', count: 29, lat: [0.38, 0.66], lon: [101.33, 101.6],
+    url: /^https:\/\/cctv\.pekanbaru\.go\.id\/hls\/cam-10\.200\.\d{1,3}\.\d{1,3}\/index\.m3u8$/ },
 ];
 
 for (const c of REGENCY_PACKS) {
@@ -296,6 +298,21 @@ test('Surakarta pack omits the 19 streams that never answered, even with a 25 s 
 
 test('Surakarta rows never carry credentials or a portal session: the source is anonymous', () => {
   for (const row of pack.filter(isFlvRow)) {
+    assert.equal(row.portalSession, undefined, row.id);
+    assert.doesNotMatch(row.url, /[?@]/, row.id);
+  }
+});
+
+test('Pekanbaru pack lists only cameras that served a valid segment in a probe (2026-10-13), once each', () => {
+  const rows = pack.filter((row) => row.id.startsWith('pekanbaru-atcs-'));
+  const urls = new Set(rows.map((row) => row.url));
+  // Answered 404 on every probe, or the page card carries no id (cam-/index.m3u8).
+  for (const dead of ['cam-10.200.50.3', 'cam-10.200.49.4', 'cam-10.200.50.2', 'cam-']) {
+    assert.equal(urls.has(`https://cctv.pekanbaru.go.id/hls/${dead}/index.m3u8`), false, dead);
+  }
+  // The two Sudirman-Nangka flyover cameras share one label; the IP keeps their ids apart.
+  assert.equal(rows.filter((row) => row.name.includes('Flyover Sudirman - Nangka')).length, 2);
+  for (const row of rows) {
     assert.equal(row.portalSession, undefined, row.id);
     assert.doesNotMatch(row.url, /[?@]/, row.id);
   }
