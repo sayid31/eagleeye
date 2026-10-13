@@ -7,10 +7,10 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1411** |
-| Kota (18 kota) | 975 |
+| **Total kamera video live** | **1413** |
+| Kota (18 kota) | 977 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1335 |
+| Format HLS | 1337 |
 | Format FLV (Surakarta) | 76 |
 
 Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data:
@@ -18,7 +18,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | Label posisi | Kamera | Arti |
 |---|---:|---|
 | `APPROX. LOCATION` | 1068 | 632 kamera kota (dicari dari nama jalan/tempat) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 103 | koordinat dipublikasikan sumbernya sendiri (Bandung Barat 43, Bukittinggi 39, Padang Panjang 14, Pesisir Selatan 7), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `SOURCE-PUBLISHED LOCATION` | 105 | koordinat dipublikasikan sumbernya sendiri (Bandung Barat 45, Bukittinggi 39, Padang Panjang 14, Pesisir Selatan 7), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
 | `CITY-LEVEL ONLY` | 178 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
@@ -32,7 +32,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 4 | Denpasar | 96 | HLS |
 | 5 | Surakarta | 76 | FLV |
 | 6 | Bandung | 60 | HLS |
-| 7 | Bandung Barat | 43 | HLS |
+| 7 | Bandung Barat | 45 | HLS |
 | 8 | Bukittinggi | 39 | HLS |
 | 9 | Sumedang | 35 | HLS |
 | 10 | Pasuruan | 31 | HLS |
@@ -92,7 +92,7 @@ Pengecekan terakhir 2026-10-13.
 | Pekanbaru | 57 | 55 manifest 404, 2 tidak pernah menghasilkan segmen (SEBERANG MPP 1, SUDIRMAN - TUANKU TAMBUSAI 1) | tetap mati |
 | Surakarta | 19 | tidak pernah menjawab, bahkan dengan tunggu 25 detik | belum dicek ulang |
 | Surabaya | sekitar 15 | urutan media beku atau playlist kosong, dan 404 terus; 2 kamera sempat pulih dan sudah dimasukkan | belum dicek ulang |
-| Bandung Barat | 15 | 13 selalu 404; Padalarang Flyover (Cimareme dan KBP) sempat lolos lalu 404, kini hidup lagi | 13 tetap mati, 2 hidup (lihat bawah) |
+| Bandung Barat | 13 | selalu 404 | dicek 3 kali pada 2026-10-13, tetap mati |
 | Bukittinggi | 8 | 404 / "File Not Found" | belum dicek ulang |
 | Yogyakarta | 2 | gagal uji liveness | belum dicek ulang |
 | Pasuruan | 2 | origin menjawab 404 | belum dicek ulang |
@@ -103,8 +103,9 @@ Pengecekan terakhir 2026-10-13.
 | Banyuwangi | tidak diketahui | `live.banyuwangikab.go.id` diblokir Cloudflare | butuh keputusan owner |
 | Sumber lain | tidak diketahui | BPJT (path 404), RTTMC (DNS gagal), smartcity.jakarta (butuh inspeksi browser), Bali Tower (host tidak terjangkau), ATCS Bandung (404) | belum dicek ulang |
 
-Dua kamera **Padalarang Flyover - Cimareme** dan **- KBP** lolos 5 probe berturut-turut (jeda 20 detik) pada 2026-10-13
-setelah sebelumnya 404 di setiap probe. Keduanya kamera yang timbul-tenggelam, jadi belum dimasukkan; cek lagi sebelum menambahkannya.
+Dua kamera **Padalarang Flyover - Cimareme** dan **- KBP** sempat 404, lalu lolos 5 probe berturut-turut dan 3 probe ulang tepat sebelum
+dimasukkan (2026-10-13), jadi sekarang ada di pack. Keduanya kamera yang timbul-tenggelam: bisa hilang lagi, dan kalau itu terjadi
+cukup dibiarkan atau dihapus per id (`bandungbarat-atcs-padalarang-flyover-*`).
 
 Bukan kamera, tetapi sempat dibahas: layer Google My Maps (58 tempat evakuasi + 86 sirene tsunami) masih sebatas ide dan lisensinya belum jelas.
 
@@ -112,14 +113,23 @@ Bukan kamera, tetapi sempat dibahas: layer Google My Maps (58 tempat evakuasi + 
 
 Pada 2026-10-13, 149 kamera Sumatera Barat dan Bandung Barat diputar di Chrome headless (hls.js, lewat proxy `/api/cctv/media`),
 dengan syarat video punya dimensi dan `currentTime` maju lebih dari 1 detik. **147 dari 149 berhasil diputar** (Bukittinggi 39/39,
-Solok 18/18, Padang Panjang 14/14, Pesisir Selatan 7/7, Padang 27/28, Bandung Barat 42/43).
+Solok 18/18, Padang Panjang 14/14, Pesisir Selatan 7/7, Padang 27/28, Bandung Barat 42/43; dua kamera Flyover ditambahkan sesudahnya dan diputar terpisah lewat pengendali self-heal aplikasi: 10 dari 10 berhasil, tetapi satu putaran Cimareme baru siap setelah 53 detik karena origin sempat putus).
 22 kamera gagal pada putaran pertama (batas 30 detik) dan 20 di antaranya berhasil pada putaran kedua (batas 75 detik): origin lambat
 atau flaky, jadi sebagian kamera butuh waktu lama sebelum frame pertama muncul. Dua sisanya gagal saat dicek tetapi manifest-nya menjawab 200 pada
-cek ulang lewat proxy, jadi tampak sementara: `padang-atcs-balaikota-pintu-keluar` (LL-HLS; beberapa segmen awal di playlist kosong 0 byte sehingga
-gagal diurai) dan `bandungbarat-atcs-langensari-cibodas` (manifest 404 sesaat). Pemeriksaan ini memakai player hls.js biasa di browser headless,
+cek ulang lewat proxy, jadi tampak sementara: `padang-atcs-balaikota-pintu-keluar` (LL-HLS, gagal diurai sekali) dan `bandungbarat-atcs-langensari-cibodas` (manifest 404 sesaat).
+Pengecekan ulang: kedua kamera itu lolos 4 dari 4 putaran, jadi tidak ada kamera yang tetap rusak. Pemeriksaan ini memakai player hls.js biasa di browser headless,
 bukan panel CCTV aplikasi, jadi belum mencakup tampilan di globe.
+
+### Kamera Padang (LL-HLS) kadang gagal di putaran pertama
+
+Kamera Padang memakai LL-HLS (`.../hlsll/live/index.m3u8`). Proxy membuang tag PART karena tidak bisa menahan blocking reload, sehingga yang
+tersisa hanya segmen yang sudah lengkap. Hasil pengukuran 2026-10-13: segmen di window upstream selalu berisi 135-145 KB (dugaan awal tentang
+segmen awal yang kosong **tidak terbukti**). Yang terlihat adalah dua gejala langka: playlist yang untuk sesaat belum punya satu pun segmen lengkap
+(2 dari 118 polling di `padang-atcs-balaikota-bundaran`, 0 dari 120 di `-pintu-keluar`; hls.js melapor `levelEmptyError`) dan sekali `fragParsingError`
+pada segmen yang baru muncul. Dua-duanya hilang dengan sendirinya; lewat pengendali self-heal aplikasi (`createHlsSelfHeal`) 20 dari 20 pemutaran
+berhasil, satu di antaranya baru siap setelah 13 detik. Tidak ada perubahan kode.
 
 ## Catatan
 
-- Katalog gabungan saat ini 1911 kamera (batas 2000). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
+- Katalog gabungan saat ini 1913 kamera (batas 2000). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
 - Hapus per kota dengan prefiks id-nya (misalnya `surakarta-atcs-*`), atau matikan seluruh paket dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.

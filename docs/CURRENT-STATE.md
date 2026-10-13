@@ -1156,7 +1156,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 2000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1911 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1913 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1240,13 +1240,14 @@ speech-to-speech API, so Claude is paired with the browser's own
   - Not included: Padang Pariaman (its 14 streams are `i-see.iconpln.co.id` session URLs, all answering 502 with an expired
     TLS certificate) and Payakumbuh (two YouTube embeds, no HLS). No seeds exist for these cities.
   Revoke with the matching `<city>-atcs-*` prefix.
-- **ATCS Kabupaten Bandung Barat rows (43)**, `bandungbarat-atcs-*`, from `atcs.bandungbaratkab.go.id` (Dishub KBB). Its public
+- **ATCS Kabupaten Bandung Barat rows (45)**, `bandungbarat-atcs-*`, from `atcs.bandungbaratkab.go.id` (Dishub KBB). Its public
   `/get-cctv` JSON lists 58 cameras with a name and coordinates; each one is a datarhei Restreamer page on
   `atcs-dishubkbb.urbanaccess.net`, whose `channels/<uuid>/config.js` names the manifest `memfs/<uuid>.m3u8` (master playlist, 720p,
   MPEG-TS, 2 s segments). The `?session=` token the playlists carry is not required (segments answer 200 without it), so only the
   bare manifest URL is stored and no `portalSession` is needed. Coordinates are the source's own (tier `SOURCE-PUBLISHED LOCATION`,
-  heading unknown), shared sites are spread ~45 m, and elevation is per camera (611-1366 m, Open-Meteo). 15 cameras are left out:
-  13 answered 404 on every probe and 2 (Padalarang Flyover - Cimareme / - KBP) served early but answered 404 afterwards. TLS is a
+  heading unknown), shared sites are spread ~45 m, and elevation is per camera (611-1366 m, Open-Meteo). 13 cameras are left out
+  because they answered 404 on every probe. Two Padalarang Flyover cameras (Cimareme / KBP) flip between 404 and live; they are
+  listed since they served in every probe of the latest re-check, and may drop out again. TLS is a
   complete Let's Encrypt chain, so nothing was added to `config/ca/`.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
