@@ -15,6 +15,18 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 106 live West Sumatra city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
+  Sumbar disaster dashboard's list of city portals: Bukittinggi 39, Padang 28,
+  Solok 18, Padang Panjang 14, Pesisir Selatan 7. All plain HLS, no login or
+  cookie. Only cameras that served a video segment in a probe are included.
+  Bukittinggi, Padang Panjang and Pesisir Selatan publish the coordinates of each
+  site, so those rows are labelled `SOURCE-PUBLISHED LOCATION` (the source's own
+  position, not surveyed; heading unknown); Padang and Solok publish none
+  (`APPROX. LOCATION` / `CITY-LEVEL ONLY`). Padang's Low-Latency HLS plays through
+  the existing proxy. Padang Panjang's server sends an incomplete TLS chain, so
+  the missing public Sectigo intermediate was added to `config/ca/`. Padang
+  Pariaman (PLN session URLs, all 502) and Payakumbuh (YouTube only) are not
+  included.
 - 29 live Pekanbaru city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
   public city page `cctv.pekanbaru.go.id/cam` (plain HLS, no cookie or login, no
   new dependency or proxy change). The page lists 86 cameras but its origin is
