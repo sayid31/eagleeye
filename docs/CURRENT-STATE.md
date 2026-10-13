@@ -138,8 +138,10 @@ Historical planning documents may not match runtime behavior.
 - CCTV follows the same rule beyond the layer itself: the dev-server proxy
   `cctvProxy.mjs` keeps request handling and delegates to
   `cctvSourceCatalog.mjs` (source loading), `cctvSourceNormalize.mjs`
-  (record normalization) and `cctvSyntheticFrame.mjs` (placeholder frames),
-  and the projection runtime and HLS self-heal split into
+  (record normalization), `cctvSyntheticFrame.mjs` (placeholder frames),
+  `cctvHealthStore.mjs` (bounded per-camera health), `cctvProxyPayloads.mjs`
+  (`/sources` and `/stream` JSON shapes) and `cctvStreetView.mjs` (Street View
+  fallback frame), and the projection runtime and HLS self-heal split into
   `cctvProjectionPlane/Frames/Video.js` and `cctvHlsBackoff/Config/Stall/
   SelfHeal/Visibility.js`. A new module in these families is added beside
   its siblings instead of growing the parent.

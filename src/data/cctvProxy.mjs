@@ -34,6 +34,9 @@ import {
   isValidHlsPlaylist,
 } from './cctvSourceHealth.mjs';
 import { normalizeFeedType, isVideoFeedType } from './cctvSourceNormalize.mjs';
+import { createCctvHealthStore } from './cctvHealthStore.mjs';
+import { buildStreamPayload, toPublicSource } from './cctvProxyPayloads.mjs';
+import { fetchStreetViewFrame } from './cctvStreetView.mjs';
 import { getCctvSources, DEFAULT_CCTV_MAX_SOURCES } from './cctvSourceCatalog.mjs';
 import { CCTV_PROXY_USER_AGENT, CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream } from './cctvFrameFetch.mjs';
 import { buildSyntheticCctvSvg } from './cctvSyntheticFrame.mjs';
@@ -60,80 +63,11 @@ export function cctvProxy() {
   // browsers repair that via AIA, Node's fetch does not. See intermediateCaTrust.mjs.
   installIntermediateCaTrust();
   const portalSessions = createPortalSessionStore({ userAgent: CCTV_PROXY_USER_AGENT });
-  /** @type {Map<string,{id:string,status:string,sourceKind:string,label:string,message:string,updatedAt:number}>} */
-  const health = new Map();
-  /** Cap on health map entries to prevent unbounded growth. Sized to cover the
-   * full served catalog (CCTV_MAX_SOURCES hard-bounds at DEFAULT_CCTV_MAX_SOURCES)
-   * so health/status observability isn't silently evicted. */
-  const HEALTH_MAX_ENTRIES = DEFAULT_CCTV_MAX_SOURCES;
-
-  /** Update the health entry for a camera, evicting the oldest entry if at capacity. */
-  const setHealth = (cameraId, patch) => {
-    // Evict oldest entries if the health map grows beyond the cap
-    if (!health.has(cameraId) && health.size >= HEALTH_MAX_ENTRIES) {
-      const oldest = health.keys().next().value;
-      health.delete(oldest);
-    }
-    const prev = health.get(cameraId) || {};
-    health.set(cameraId, {
-      id: cameraId,
-      status: patch.status || prev.status || 'unknown',
-      sourceKind: patch.sourceKind || prev.sourceKind || 'unknown',
-      label: patch.label || prev.label || '',
-      message: patch.message || prev.message || '',
-      updatedAt: Date.now(),
-    });
-  };
-
-  /** Snapshot all camera health entries as an array. */
-  const listHealth = () => Array.from(health.values());
-
-  /** Build a JSON payload describing stream info (feedType, URLs) for a camera. */
-  const buildStreamPayload = (source, cameraId) => {
-    const feedType = normalizeFeedType(source?.feedType || 'image');
-    return {
-      id: cameraId,
-      feedType,
-      mediaUrl: isVideoFeedType(feedType)
-        ? `/api/cctv/media/${encodeURIComponent(cameraId)}`
-        : null,
-      frameUrl: `/api/cctv/frame/${encodeURIComponent(cameraId)}`,
-      provider: source?.provider || '',
-      sourceKind: source?.sourceKind || (source?.url ? 'configured' : 'fallback'),
-    };
-  };
-
-  /** Fetch a Google Street View static image as a fallback frame. Requires GOOGLE_MAPS_API_KEY. */
-  const streetViewFallback = async ({ lat, lon, heading, fov, pitch }) => {
-    const streetViewKey = process.env.GOOGLE_MAPS_API_KEY;
-    if (!streetViewKey || !Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-    try {
-      const sv = new URL('https://maps.googleapis.com/maps/api/streetview');
-      sv.searchParams.set('size', '960x540');
-      sv.searchParams.set('location', `${lat},${lon}`);
-      sv.searchParams.set('heading', String(Number.isFinite(heading) ? heading : 0));
-      sv.searchParams.set('fov', String(Number.isFinite(fov) ? Math.max(20, Math.min(120, fov)) : 80));
-      sv.searchParams.set('pitch', String(Number.isFinite(pitch) ? Math.max(-40, Math.min(20, pitch)) : 0));
-      sv.searchParams.set('source', 'outdoor');
-      sv.searchParams.set('return_error_code', 'true');
-      sv.searchParams.set('key', streetViewKey);
-
-      const svResp = await fetch(sv.toString(), {
-        headers: { 'User-Agent': CCTV_PROXY_USER_AGENT },
-        signal: AbortSignal.timeout(CCTV_FRAME_FETCH_TIMEOUT_MS),
-      });
-      const svType = svResp.headers.get('content-type') || '';
-      if (!svResp.ok || !svType.startsWith('image/')) return null;
-
-      return {
-        ok: true,
-        body: Buffer.from(await svResp.arrayBuffer()),
-        contentType: svType,
-      };
-    } catch {
-      return null;
-    }
-  };
+  // Sized to the full served catalog (CCTV_MAX_SOURCES hard-bounds at DEFAULT_CCTV_MAX_SOURCES)
+  // so health/status observability isn't silently evicted.
+  const healthStore = createCctvHealthStore(DEFAULT_CCTV_MAX_SOURCES);
+  const setHealth = healthStore.set;
+  const listHealth = healthStore.list;
 
   return {
     name: 'cctv-proxy',
@@ -145,28 +79,7 @@ export function cctvProxy() {
           const url = new URL(req.url || '/', 'http://localhost');
 
           if (url.pathname === '/sources') {
-            const body = {
-              sources: sources.map((source) => ({
-                id: source.id,
-                name: source.name,
-                city: source.city,
-                cityId: source.cityId,
-                provider: source.provider,
-                lat: source.lat,
-                lon: source.lon,
-                headingDeg: source.headingDeg,
-                headingConfidence: source.headingConfidence || '',
-                pitchDeg: source.pitchDeg,
-                fovDeg: source.fovDeg,
-                rangeM: source.rangeM,
-                mountHeightM: source.mountHeightM,
-                groundElevationM: source.groundElevationM,
-                feedType: normalizeFeedType(source.feedType),
-                sourceKind: source.sourceKind || (source.url ? 'configured' : 'fallback'),
-                poseSource: source.poseSource,
-                license: source.license,
-              })),
-            };
+            const body = { sources: sources.map(toPublicSource) };
             res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
             res.end(JSON.stringify(body));
             return;
@@ -409,7 +322,7 @@ export function cctvProxy() {
             return;
           }
 
-          const sv = await streetViewFallback({ lat, lon, heading, fov, pitch });
+          const sv = await fetchStreetViewFrame({ lat, lon, heading, fov, pitch });
           if (sv?.ok) {
             setHealth(cameraId, {
               status: 'degraded',

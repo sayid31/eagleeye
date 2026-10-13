@@ -99,6 +99,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Internal: `cctvProxy.mjs` (458 lines, close to the 500-line limit) lost its health
+  store, `/sources` + `/stream` payload shaping and Street View fallback to
+  `cctvHealthStore`, `cctvProxyPayloads` and `cctvStreetView` (371 lines left). The
+  Indonesia pack test (374 of 400 lines) moved its West Sumatra and toll-road
+  checks into `cctvIndonesiaSumbarPack.test.mjs` and `cctvIndonesiaTollPack.test.mjs`
+  (257 lines left). No behavior change; the extracted modules gained unit tests.
 - Internal: `cctvProxy.mjs` (1445 lines) was split into `cctvSourceCatalog`,
   `cctvOpenDataSources` (itself one module per provider: Austin, Caltrans, TfL),
   `cctvAustinParse`, `cctvSourceNormalize`, `cctvFrameFetch`
