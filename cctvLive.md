@@ -133,7 +133,15 @@ Solok 18/18, Padang Panjang 14/14, Pesisir Selatan 7/7, Padang 27/28, Bandung Ba
 atau flaky, jadi sebagian kamera butuh waktu lama sebelum frame pertama muncul. Dua sisanya gagal saat dicek tetapi manifest-nya menjawab 200 pada
 cek ulang lewat proxy, jadi tampak sementara: `padang-atcs-balaikota-pintu-keluar` (LL-HLS, gagal diurai sekali) dan `bandungbarat-atcs-langensari-cibodas` (manifest 404 sesaat).
 Pengecekan ulang: kedua kamera itu lolos 4 dari 4 putaran, jadi tidak ada kamera yang tetap rusak. Pemeriksaan ini memakai player hls.js biasa di browser headless,
-bukan panel CCTV aplikasi, jadi belum mencakup tampilan di globe.
+bukan panel CCTV aplikasi.
+
+### Pengecekan di globe (aplikasi sungguhan)
+
+Pada 2026-10-13, 10 kamera contoh (Bukittinggi, Solok, Padang Panjang, Pesisir Selatan, 2 Padang, 2 Flyover, Langensari-Cibodas, Lembang Orchid)
+dipilih lewat `selectCamera(id, {focus: true})` di Chrome headless (software GL), lalu stream cermin monitor-plane 1920x1080 diambil sampel pikselnya.
+**10 dari 10 mencapai status `live`**, tanpa error console. Waktu sampai live 1-12 detik; Lembang Orchid 26 detik karena sempat `retrying` lalu pulih
+lewat self-heal. Gambar berubah antar sampel pada semuanya. Dua kamera Padang dan Langensari-Cibodas tampak identik pada jendela 4 detik tetapi
+berubah pada jendela 16 detik (adegan sepi, bukan beku). Ini bukti jalur pemutaran bekerja, bukan jaminan semua kamera; kualitas visual dan performa render tidak dinilai.
 
 ### Kamera Padang (LL-HLS) kadang gagal di putaran pertama
 
