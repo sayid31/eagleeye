@@ -215,7 +215,13 @@ test('Bina Marga toll batch 2 never duplicates a stream already used by a binama
   for (const row of bmtol) assert.equal(earlier.has(row.url), false, row.id);
 });
 
-const TIER_RE = /\((APPROX\. LOCATION|CITY-LEVEL ONLY) — Live — Unofficial\)$/;
+const TIER_RE = /\((APPROX\. LOCATION|CITY-LEVEL ONLY|SOURCE-PUBLISHED LOCATION) — Live — Unofficial\)$/;
+// Each position tier must be spelled out, in capitals, in the row's licence text.
+const TIER_LICENSE_RE = {
+  'APPROX. LOCATION': /APPROXIMATE LOCATION/,
+  'CITY-LEVEL ONLY': /CITY-LEVEL LOCATION ONLY/,
+  'SOURCE-PUBLISHED LOCATION': /SOURCE-PUBLISHED LOCATION/,
+};
 
 const REGENCY_PACKS = [
   { prefix: 'pasuruan-atcs-', cityId: 'pasuruan', count: 31, lat: [-7.85, -7.5], lon: [112.6, 113.1],
@@ -230,6 +236,16 @@ const REGENCY_PACKS = [
     url: /^https:\/\/surakarta\.atcsindonesia\.info:8086\/camera\/[A-Za-z0-9]+\.flv$/ },
   { prefix: 'pekanbaru-atcs-', cityId: 'pekanbaru', count: 29, lat: [0.38, 0.66], lon: [101.33, 101.6],
     url: /^https:\/\/cctv\.pekanbaru\.go\.id\/hls\/cam-10\.200\.\d{1,3}\.\d{1,3}\/index\.m3u8$/ },
+  { prefix: 'bukittinggi-atcs-', cityId: 'bukittinggi', count: 39, lat: [-0.34, -0.26], lon: [100.35, 100.41],
+    url: /^https:\/\/hls\.bukittinggikota\.go\.id\/hls\d\/[A-Za-z0-9]+\/hls\/[A-Za-z0-9]+\/cam\d+d\d+\/s\.m3u8$/ },
+  { prefix: 'solok-atcs-', cityId: 'solok', count: 18, lat: [-0.86, -0.74], lon: [100.6, 100.72],
+    url: /^https:\/\/cctv\.solokkota\.go\.id\/[A-Za-z0-9]+\/hls\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/s\.m3u8$/ },
+  { prefix: 'padang-atcs-', cityId: 'padang', count: 28, lat: [-1.0, -0.8], lon: [100.3, 100.47],
+    url: /^https:\/\/streamcctv\.padang\.go\.id:3000\/stream\/[A-Za-z0-9-]+\/channel\/0\/hlsll\/live\/index\.m3u8$/ },
+  { prefix: 'padangpanjang-atcs-', cityId: 'padangpanjang', count: 14, lat: [-0.5, -0.43], lon: [100.38, 100.45],
+    url: /^https:\/\/mtx\.padangpanjang\.go\.id:3443\/cam\d+\/index\.m3u8$/ },
+  { prefix: 'pesisirselatan-atcs-', cityId: 'pesisirselatan', count: 7, lat: [-1.4, -1.0], lon: [100.4, 100.6],
+    url: /^https:\/\/live\.pesisirselatankab\.go\.id\/[a-f0-9]{32}\/hls\/kominfo\/[A-Za-z0-9]+\/s\.m3u8$/ },
 ];
 
 for (const c of REGENCY_PACKS) {
@@ -242,7 +258,7 @@ for (const c of REGENCY_PACKS) {
       const tier = row.name.match(TIER_RE)?.[1];
       assert.ok(tier, `${row.id} name lacks a position tier`);
       assert.ok(row.provider.includes(tier), row.id);
-      assert.match(row.license, tier === 'CITY-LEVEL ONLY' ? /CITY-LEVEL LOCATION ONLY/ : /APPROXIMATE LOCATION/, row.id);
+      assert.match(row.license, TIER_LICENSE_RE[tier], row.id);
       assert.ok(row.license.includes(`${c.prefix}*`), `${row.id} revoke hint must name this prefix`);
       assert.match(row.url, c.url, row.id);
       assert.equal(row.cityId, c.cityId, row.id);
@@ -316,6 +332,30 @@ test('Pekanbaru pack lists only cameras that served a valid segment in a probe (
     assert.equal(row.portalSession, undefined, row.id);
     assert.doesNotMatch(row.url, /[?@]/, row.id);
   }
+});
+
+test('West Sumatra packs list only cameras that served a valid segment in a probe (2026-10-13), once each', () => {
+  const urls = new Set(pack.map((row) => row.url));
+  // Pesisir Selatan "Kamera Carocok 4" repeats Carocok 3's stream id; Carocok 1 answered "File Not Found".
+  assert.equal(urls.has('https://live.pesisirselatankab.go.id/6d6755b8ccc552cb6ee01a1123f97b94/hls/kominfo/2qy20XfgZX/s.m3u8'), false);
+  assert.equal(pack.filter((row) => row.url.endsWith('/kominfo/1wbuTqepYN/s.m3u8')).length, 1);
+  // Padang Panjang cam12 (Simpang SMPN 5) answered 404 on every probe.
+  assert.equal(urls.has('https://mtx.padangpanjang.go.id:3443/cam12/index.m3u8'), false);
+  assert.equal(pack.some((row) => row.id.startsWith('padangpanjang-atcs-') && /SMPN 5/.test(row.name)), false);
+  assert.equal(pack.some((row) => row.id.startsWith('solok-atcs-') && /Sigege/.test(row.name)), false);
+  for (const row of pack.filter((r) => /^(bukittinggi|solok|padang|padangpanjang|pesisirselatan)-atcs-/.test(r.id))) {
+    assert.equal(row.portalSession, undefined, row.id);
+    assert.doesNotMatch(row.url, /[?@]/, row.id);
+  }
+});
+
+test('source-published coordinates are used as given and only by packs whose source publishes them', () => {
+  const published = pack.filter((row) => row.name.includes('(SOURCE-PUBLISHED LOCATION'));
+  const owners = new Set(published.map((row) => row.cityId));
+  assert.deepEqual([...owners].sort(), ['bukittinggi', 'padangpanjang', 'pesisirselatan']);
+  for (const row of published) assert.match(row.license, /publishes the coordinates/, row.id);
+  // Padang and Solok publish no coordinates, so none of their rows may claim a published position.
+  assert.equal(pack.some((row) => /^(padang|solok)-atcs-/.test(row.id) && row.name.includes('SOURCE-PUBLISHED')), false);
 });
 
 test('no synthetic seed camera remains in a city that has live pack rows', () => {

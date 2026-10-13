@@ -30,11 +30,12 @@ test('readIntermediateCertificates returns [] for a missing directory', () => {
   assert.deepEqual(readIntermediateCertificates(path.join(os.tmpdir(), 'gev-no-such-ca-dir')), []);
 });
 
-test('the bundled intermediates (Pasuruan DigiCert G2, Malang GeoTrust G1) are unexpired CA certificates', () => {
+test('the bundled intermediates (Pasuruan DigiCert G2, Malang GeoTrust G1, Padang Panjang Sectigo R36) are unexpired CA certificates', () => {
   const parsed = readIntermediateCertificates(BUNDLED_DIR).map((pem) => new X509Certificate(pem));
   const subjects = parsed.map((x509) => x509.subject).join('\n');
   assert.match(subjects, /DigiCert Global G2 TLS RSA SHA256 2020 CA1/);
   assert.match(subjects, /GeoTrust TLS RSA CA G1/);
+  assert.match(subjects, /Sectigo Public Server Authentication CA DV R36/);
   for (const x509 of parsed) {
     assert.equal(x509.ca, true, x509.subject);
     assert.ok(new Date(x509.validTo) > new Date(), `${x509.subject} must not be expired`);

@@ -1154,7 +1154,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 2000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1762 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1868 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1217,6 +1217,27 @@ speech-to-speech API, so Claude is paired with the browser's own
   the two named roads in OSM, or a Nominatim hit bounded to Kota Pekanbaru) / 6 `CITY-LEVEL ONLY`. The two
   "Flyover Sudirman - Nangka" cameras share a label, so their ids end in the IP octets. No seeds for the city.
   Revoke with the `pekanbaru-atcs-*` prefix.
+- **ATCS West Sumatra rows (106)**, read from the provincial aggregator `dashboardbencana.sumbarprov.go.id/cctv-kab-kota`
+  and the city portals it links to. Only cameras that served a valid segment in a probe (2026-10-13) are stored.
+  - `bukittinggi-atcs-*` (39): `hls.bukittinggikota.go.id/hls<n>/<token>/hls/<id>/cam<k>d<m>/s.m3u8` from the city's
+    `api/get-list-camera`, which also publishes each site's latitude/longitude. 8 of its 47 cameras served no segment.
+  - `solok-atcs-*` (18): `cctv.solokkota.go.id/<token>/hls/<id>/<id>/s.m3u8` from `kominfo.solokkota.go.id/showcctv`
+    (no coordinates: 5 `APPROX. LOCATION` from Nominatim, 13 `CITY-LEVEL ONLY`). "Simpang Sigege" served no segment.
+  - `padang-atcs-*` (28): `streamcctv.padang.go.id:3000/stream/<uuid>/channel/0/hlsll/live/index.m3u8`, Low-Latency
+    HLS with fMP4 (`EXT-X-MAP`, `EXT-X-PART`). `hlsManifestProxy.mjs` already drops the LL tags and rewrites the init map and
+    segments, so the browser gets a standard live playlist (checked end to end through `/api/cctv/media`). Names come from the portal
+    modal; no coordinates (all `APPROX. LOCATION`, anchored on the named market, clinic or office).
+  - `padangpanjang-atcs-*` (14): `mtx.padangpanjang.go.id:3443/cam<n>/index.m3u8` (MediaMTX, fMP4), names and site
+    coordinates from the portal's `getCctv` JSON. The host omits its intermediate TLS certificate, so
+    `config/ca/sectigo-public-server-auth-ca-dv-r36.crt` is bundled (same mechanism as Pasuruan and Malang). cam12 answers 404.
+  - `pesisirselatan-atcs-*` (7): `live.pesisirselatankab.go.id/<key>/hls/kominfo/<id>/s.m3u8` with the coordinates from the
+    page's `api.php?action=get_cameras`. "Kamera Carocok 4" repeats Carocok 3's stream and "Kamera Carocok 1" answers
+    "File Not Found", so both are left out.
+  - Rows whose source publishes coordinates carry the tier `SOURCE-PUBLISHED LOCATION` (position is the source's own, not
+    surveyed; heading unknown, `headingConfidence: low`). Cameras at one site are spread ~45 m so every marker is selectable.
+  - Not included: Padang Pariaman (its 14 streams are `i-see.iconpln.co.id` session URLs, all answering 502 with an expired
+    TLS certificate) and Payakumbuh (two YouTube embeds, no HLS). No seeds exist for these cities.
+  Revoke with the matching `<city>-atcs-*` prefix.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5
