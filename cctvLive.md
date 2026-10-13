@@ -81,6 +81,44 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 - **Shinjuku/Tokyo**: 3 kamera di `config/cctv_sources.shinjuku.json`, tidak dimuat secara default.
 - **Kamera seed sintetis** (tanpa stream): tersisa untuk Medan, Semarang, dan Makassar (2 per kota) karena belum punya sumber live, plus seed kota luar negeri.
 
+## Belum bisa dipakai (tidak masuk pack)
+
+Kamera ini ada di sumbernya tetapi **tidak** didaftarkan, karena tidak menyajikan segmen video yang valid saat dicek.
+Aturan masuk: kamera hanya dimasukkan bila pernah menyajikan segmen valid, dan dicek ulang tepat sebelum commit.
+Pengecekan terakhir 2026-10-13.
+
+| Sumber | Kamera | Alasan | Status cek ulang |
+|---|---:|---|---|
+| Pekanbaru | 57 | 55 manifest 404, 2 tidak pernah menghasilkan segmen (SEBERANG MPP 1, SUDIRMAN - TUANKU TAMBUSAI 1) | tetap mati |
+| Surakarta | 19 | tidak pernah menjawab, bahkan dengan tunggu 25 detik | belum dicek ulang |
+| Surabaya | sekitar 15 | urutan media beku atau playlist kosong, dan 404 terus; 2 kamera sempat pulih dan sudah dimasukkan | belum dicek ulang |
+| Bandung Barat | 15 | 13 selalu 404; Padalarang Flyover (Cimareme dan KBP) sempat lolos lalu 404, kini hidup lagi | 13 tetap mati, 2 hidup (lihat bawah) |
+| Bukittinggi | 8 | 404 / "File Not Found" | belum dicek ulang |
+| Yogyakarta | 2 | gagal uji liveness | belum dicek ulang |
+| Pasuruan | 2 | origin menjawab 404 | belum dicek ulang |
+| Solok | 1 | Simpang Sigege, 404 | belum dicek ulang |
+| Padang Panjang | 1 | cam12 (Simpang SMPN 5), 404 | tetap mati |
+| Pesisir Selatan | 1 | Kamera Carocok 1 hanya membalas "File Not Found"; Carocok 4 memakai stream yang sama dengan Carocok 3 sehingga disimpan sekali | tetap mati |
+| Jalan tol Cipali | 20 | rantai sertifikat TLS server tidak lengkap; Node menolaknya dan memaksa mematikan verifikasi TLS tidak sepadan untuk demo | belum dicek ulang |
+| Banyuwangi | tidak diketahui | `live.banyuwangikab.go.id` diblokir Cloudflare | butuh keputusan owner |
+| Sumber lain | tidak diketahui | BPJT (path 404), RTTMC (DNS gagal), smartcity.jakarta (butuh inspeksi browser), Bali Tower (host tidak terjangkau), ATCS Bandung (404) | belum dicek ulang |
+
+Dua kamera **Padalarang Flyover - Cimareme** dan **- KBP** lolos 5 probe berturut-turut (jeda 20 detik) pada 2026-10-13
+setelah sebelumnya 404 di setiap probe. Keduanya kamera yang timbul-tenggelam, jadi belum dimasukkan; cek lagi sebelum menambahkannya.
+
+Bukan kamera, tetapi sempat dibahas: layer Google My Maps (58 tempat evakuasi + 86 sirene tsunami) masih sebatas ide dan lisensinya belum jelas.
+
+## Verifikasi pemutaran
+
+Pada 2026-10-13, 149 kamera Sumatera Barat dan Bandung Barat diputar di Chrome headless (hls.js, lewat proxy `/api/cctv/media`),
+dengan syarat video punya dimensi dan `currentTime` maju lebih dari 1 detik. **147 dari 149 berhasil diputar** (Bukittinggi 39/39,
+Solok 18/18, Padang Panjang 14/14, Pesisir Selatan 7/7, Padang 27/28, Bandung Barat 42/43).
+22 kamera gagal pada putaran pertama (batas 30 detik) dan 20 di antaranya berhasil pada putaran kedua (batas 75 detik): origin lambat
+atau flaky, jadi sebagian kamera butuh waktu lama sebelum frame pertama muncul. Dua sisanya gagal saat dicek tetapi manifest-nya menjawab 200 pada
+cek ulang lewat proxy, jadi tampak sementara: `padang-atcs-balaikota-pintu-keluar` (LL-HLS; beberapa segmen awal di playlist kosong 0 byte sehingga
+gagal diurai) dan `bandungbarat-atcs-langensari-cibodas` (manifest 404 sesaat). Pemeriksaan ini memakai player hls.js biasa di browser headless,
+bukan panel CCTV aplikasi, jadi belum mencakup tampilan di globe.
+
 ## Catatan
 
 - Katalog gabungan saat ini 1911 kamera (batas 2000). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
