@@ -1154,7 +1154,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 2000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1733 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1762 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1209,6 +1209,14 @@ speech-to-speech API, so Claude is paired with the browser's own
   with a valid `FLV` header (re-probed with a 25 s timeout); 19 never answer and are left out. Rows carry
   `feedType: 'flv'`, `sourceKind: 'unofficial-flv-id'`, positions guessed from the label: 56 `APPROX. LOCATION` /
   20 `CITY-LEVEL ONLY`. Revoke with the `surakarta-atcs-*` prefix. Playback and proxy: see "FLV playback" below.
+- **ATCS Pekanbaru rows (29)**: `https://cctv.pekanbaru.go.id/hls/cam-10.200.<x>.<y>/index.m3u8` (plain HLS,
+  `#EXT-X-VERSION:6`, 5 s MPEG-TS segments, `Access-Control-Allow-Origin: *`, no cookie or portal session). The
+  city page lists 86 cameras; only those that served a valid segment (first byte `0x47`) in at least one of three
+  probes (2026-10-13) are stored. The origin is slow (up to ~40 s) and 54 cameras answer 404, so the set can
+  change; re-probe before adding more. The page carries no coordinates: 23 `APPROX. LOCATION` (a node shared by
+  the two named roads in OSM, or a Nominatim hit bounded to Kota Pekanbaru) / 6 `CITY-LEVEL ONLY`. The two
+  "Flyover Sudirman - Nangka" cameras share a label, so their ids end in the IP octets. No seeds for the city.
+  Revoke with the `pekanbaru-atcs-*` prefix.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5

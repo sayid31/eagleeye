@@ -15,6 +15,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 29 live Pekanbaru city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
+  public city page `cctv.pekanbaru.go.id/cam` (plain HLS, no cookie or login, no
+  new dependency or proxy change). The page lists 86 cameras but its origin is
+  slow and unstable: 54 answer 404 and the rest time out now and then, so only
+  the 29 that served a valid video segment in at least one of three probes are
+  included; the others can be added later. The page publishes no coordinates:
+  23 positions are guesses from the street names (a road crossing or place
+  search in Kota Pekanbaru, `APPROX. LOCATION`), 6 sit on a ring around central
+  Pekanbaru (`CITY-LEVEL ONLY`). Pekanbaru has no placeholder camera.
 - 76 live Surakarta city CCTV cameras (UNOFFICIAL SOURCE, demo only) from the
   public ATCS Kota Surakarta streams (anonymous HTTP-FLV, no cookie or login).
   They play in the same CCTV panel and 3D monitor as the HLS cameras, using the
