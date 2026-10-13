@@ -88,22 +88,6 @@ test('ATCS Surabaya rows never present a guessed position as precise', () => {
   }
 });
 
-const cianjurAtcs = pack.filter((row) => row.id.startsWith('cianjur-atcs-'));
-
-test('ATCS Cianjur row is labelled city-level only and stays inside Cianjur town', () => {
-  assert.equal(cianjurAtcs.length, 1);
-  for (const row of cianjurAtcs) {
-    assert.match(row.name, /CITY-LEVEL ONLY/, row.id);
-    assert.match(row.provider, /CITY-LEVEL ONLY/, row.id);
-    assert.match(row.license, /CITY-LEVEL LOCATION ONLY/, row.id);
-    assert.match(row.license, /cianjur-atcs-\*/, `${row.id} revoke hint must name this prefix`);
-    assert.match(row.url, /^https:\/\/atcs\.cianjurkab\.go\.id:5443\/LieApp\/streams\/[a-z0-9]+\.m3u8$/, row.id);
-    assert.equal(row.cityId, 'cianjur', row.id);
-    assert.equal(row.headingConfidence, 'low', row.id);
-    assert.ok(row.lat > -6.87 && row.lat < -6.78 && row.lon > 107.10 && row.lon < 107.19, `${row.id} outside Cianjur town bounds`);
-  }
-});
-
 const mataramAtcs = pack.filter((row) => row.id.startsWith('mataram-atcs-'));
 
 test('ATCS Mataram rows are labelled with their position tier, unique, and stay inside Mataram', () => {
@@ -251,7 +235,7 @@ test('no synthetic seed camera remains in a city that has live pack rows', () =>
 
 test('Indonesian cities without any live row keep their seed cameras', () => {
   const seededIds = new Set(seedCatalog().map((camera) => camera.cityId));
-  for (const cityId of ['medan', 'semarang', 'makassar']) {
+  for (const cityId of ['medan', 'makassar']) {
     assert.ok(seededIds.has(cityId), `${cityId} has no live source yet and must keep its seeds`);
   }
 });

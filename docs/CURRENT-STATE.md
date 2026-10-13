@@ -665,7 +665,7 @@ silently demoting every later lookup for the session.
   Sacramento; cap 300) and TfL London JamCams (cap 250) join Austin (cap 250) as keyless default
   sources — ~800 cameras total, all RAW PRIOR poses, stills-first. 24 hand-authored fictional/
   synthetic seed cameras (`CAMERA_SEEDS` in `cctvCatalog.js` — the original 8 cities plus the 3
-  Indonesian metros that still have no live rows: Medan, Semarang, Makassar, 2 per city) merge into the
+  Indonesian metros that still have no live rows: Medan, Makassar, 2 per city) merge into the
   catalog alongside whatever live sources load (`mergeSeedAndSourceCatalogs`, id-deduped, live
   source wins on a collision) rather than only appearing when live sources are entirely empty —
   seed-only cities keep their `feedConfigured:false` coverage even when Austin/Caltrans/TfL are
@@ -1155,8 +1155,8 @@ speech-to-speech API, so Claude is paired with the browser's own
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
-  are deliberately not added; the global catalog cap is 2000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 1913 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  are deliberately not added; the global catalog cap is 2600 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 2170 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1249,6 +1249,18 @@ speech-to-speech API, so Claude is paired with the browser's own
   because they answered 404 on every probe. Two Padalarang Flyover cameras (Cimareme / KBP) flip between 404 and live; they are
   listed since they served in every probe of the latest re-check, and may drop out again. TLS is a
   complete Let's Encrypt chain, so nothing was added to `config/ca/`.
+- **ATCS Java / Banten rows (260)**, `<site>-atcs-*`, all `SOURCE-PUBLISHED LOCATION`, plain HLS, no cookie or `portalSession`,
+  heading unknown, shared sites spread ~45 m, elevation per camera from Open-Meteo. Sites and counts: Magelang 74
+  (`magelang-atcs-*`, datarhei Restreamer on `dev.cctv.magelangkota.go.id` / `restreamer.magelangkota.go.id`, `?session=` not stored),
+  Semarang 47 (`livepantau.semarangkota.go.id/<uuid>/index.m3u8`), Cianjur 44 (Ant Media `atcs.cianjurkab.go.id:5443`, from the page's
+  `/get-maps` list), Tangerang Kabupaten 28 (`cctv-dishub.tangerangkab.go.id/storage/video/<id>/<id>.m3u8`), Banjar 20 (Ant Media
+  `atcs.banjarkota.go.id:5443`), Tasikmalaya 18 (`atcs.tasikmalayakota.go.id/camera/*.m3u8`), Banyumas 15
+  (`cctv.dev.banyumaskab.go.id/<name>/index.m3u8`, master then variant), Banten province 14 (`cctv.bantenprov.go.id/service/stream-cctv/<id>/index.m3u8`;
+  of 164 listed, 150 answer 404 although flagged Online). Rule: a valid first segment in the final probe AND a playlist through
+  `/api/cctv/media`. Not added: Kota Serang (21 streams play, but the server omits its TLS intermediate and Node rejects it; nothing
+  added to `config/ca/` yet), Ciamis and Kudus (no coordinates published), Medan and Kabupaten Bogor (list API needs a client
+  id/secret), Jawa Tengah Dishub GIS (login), Grobogan (no public list found). Rationale: `docs/DECISIONS.md` ("ATCS Java and Banten").
+  Revoke per site with its `<site>-atcs-*` prefix.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5

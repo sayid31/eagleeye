@@ -7,10 +7,10 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1413** |
-| Kota (18 kota) | 977 |
+| **Total kamera video live** | **1672** |
+| Kota dan kabupaten (25 lokasi) | 1236 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1337 |
+| Format HLS | 1596 |
 | Format FLV (Surakarta) | 76 |
 
 Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data:
@@ -18,8 +18,8 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | Label posisi | Kamera | Arti |
 |---|---:|---|
 | `APPROX. LOCATION` | 1068 | 632 kamera kota (dicari dari nama jalan/tempat) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 105 | koordinat dipublikasikan sumbernya sendiri (Bandung Barat 45, Bukittinggi 39, Padang Panjang 14, Pesisir Selatan 7), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
-| `CITY-LEVEL ONLY` | 178 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
+| `SOURCE-PUBLISHED LOCATION` | 365 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `CITY-LEVEL ONLY` | 177 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
 ## Kota
@@ -43,7 +43,14 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 15 | Padang Panjang | 14 | HLS (fMP4) |
 | 16 | Mataram | 12 | HLS |
 | 17 | Pesisir Selatan | 7 | HLS |
-| 18 | Cianjur | 1 | HLS |
+| 18 | Magelang | 74 | HLS |
+| 19 | Semarang | 47 | HLS |
+| 20 | Cianjur | 44 | HLS |
+| 21 | Tangerang (Kabupaten) | 28 | HLS |
+| 22 | Banjar | 20 | HLS |
+| 23 | Tasikmalaya | 18 | HLS |
+| 24 | Banyumas | 15 | HLS |
+| 25 | Banten (provinsi: Lebak, Bapenda, KP3B) | 14 | HLS |
 
 ## Jalan tol
 
@@ -79,7 +86,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 - **Austin (AS)** dan **London (TfL)**: masing-masing 250 kamera, tetapi berupa **foto yang diperbarui berkala**, bukan video. Diambil saat runtime dari data terbuka.
 - **Caltrans (California)**: diambil saat runtime dan jumlahnya berubah; saat dicek terakhir pengambilan data gagal (0 kamera), jadi tidak ada angka yang bisa dipastikan.
 - **Shinjuku/Tokyo**: 3 kamera di `config/cctv_sources.shinjuku.json`, tidak dimuat secara default.
-- **Kamera seed sintetis** (tanpa stream): tersisa untuk Medan, Semarang, dan Makassar (2 per kota) karena belum punya sumber live, plus seed kota luar negeri.
+- **Kamera seed sintetis** (tanpa stream): tersisa untuk Medan dan Makassar (2 per kota) karena belum punya sumber live, plus seed kota luar negeri.
 
 ## Belum bisa dipakai (tidak masuk pack)
 
@@ -101,6 +108,14 @@ Pengecekan terakhir 2026-10-13.
 | Pesisir Selatan | 1 | Kamera Carocok 1 hanya membalas "File Not Found"; Carocok 4 memakai stream yang sama dengan Carocok 3 sehingga disimpan sekali | tetap mati |
 | Jalan tol Cipali | 20 | rantai sertifikat TLS server tidak lengkap; Node menolaknya dan memaksa mematikan verifikasi TLS tidak sepadan untuk demo | belum dicek ulang |
 | Banyuwangi | tidak diketahui | `live.banyuwangikab.go.id` diblokir Cloudflare | butuh keputusan owner |
+| Serang (kota) | 21 | stream bisa diputar langsung, tetapi server tidak mengirim sertifikat perantara TLS sehingga proxy aplikasi gagal (502); perlu keputusan menambah CA di `config/ca/` | butuh keputusan owner |
+| Ciamis | 15 | stream hidup, tetapi situs tidak menerbitkan koordinat | tidak ditambahkan |
+| Kudus | 1 | hanya satu stream bawaan dan tanpa koordinat; daftar kameranya butuh kunci di JavaScript situs | tidak ditambahkan |
+| Medan, Kabupaten Bogor | tidak diketahui | daftar kamera hanya lewat API yang butuh client id/secret yang tertanam di JavaScript situs; tidak dipakai | tidak ditambahkan |
+| Jawa Tengah Dishub GIS | tidak diketahui | butuh login | tidak ditambahkan |
+| Grobogan | tidak diketahui | tidak ditemukan daftar atau stream publik | tidak ditambahkan |
+| Banten (provinsi) | 150 | portal menandai Online tetapi manifest 404 | belum dicek ulang |
+| Banyumas, Semarang, Tangerang Kab., Banjar, Tasikmalaya, Magelang, Cianjur | sekitar 110 | 404, timeout, atau handshake TLS gagal pada cek akhir; sebagian timbul-tenggelam | dicek 4 kali pada 2026-10-13 |
 | Sumber lain | tidak diketahui | BPJT (path 404), RTTMC (DNS gagal), smartcity.jakarta (butuh inspeksi browser), Bali Tower (host tidak terjangkau), ATCS Bandung (404) | belum dicek ulang |
 
 Dua kamera **Padalarang Flyover - Cimareme** dan **- KBP** sempat 404, lalu lolos 5 probe berturut-turut dan 3 probe ulang tepat sebelum
@@ -131,5 +146,5 @@ berhasil, satu di antaranya baru siap setelah 13 detik. Tidak ada perubahan kode
 
 ## Catatan
 
-- Katalog gabungan saat ini 1913 kamera (batas 2000). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
+- Katalog gabungan saat ini sekitar 2172 kamera (batas 2600; batas lama 2000 dinaikkan karena paket baru tidak akan muat). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
 - Hapus per kota dengan prefiks id-nya (misalnya `surakarta-atcs-*`), atau matikan seluruh paket dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.

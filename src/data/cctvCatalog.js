@@ -44,14 +44,11 @@ const CAMERA_SEEDS = [
   // `feedConfigured: false` renders coverage instead of an empty catalog.
   // A city that gains live rows must lose its seeds: a seed has no stream, and
   // next to live cameras it shows up as an empty green placeholder card
-  // (Yogyakarta/Malioboro). Jakarta, Bandung, Denpasar, Surabaya and
-  // Yogyakarta were removed for that reason; cctvIndonesiaUnofficialPack.test.mjs
+  // (Yogyakarta/Malioboro). Jakarta, Bandung, Denpasar, Surabaya,
+  // Yogyakarta and Semarang were removed for that reason; cctvIndonesiaUnofficialPack.test.mjs
   // enforces it. Same structure and `sourceKind: 'seed'` marking as above.
   { id: 'medan-maimun-e', cityId: 'medan', poiIndex: 0, label: 'Istana Maimun East', offsetNorthM: 90, offsetEastM: 100, headingDeg: 250, fovDeg: 70, rangeM: 700, elevationM: 22 },
   { id: 'medan-merdeka-walk', cityId: 'medan', poiIndex: 4, label: 'Merdeka Walk Core', offsetNorthM: -70, offsetEastM: -60, headingDeg: 120, fovDeg: 68, rangeM: 660, elevationM: 20 },
-
-  { id: 'semarang-kota-lama-n', cityId: 'semarang', poiIndex: 2, label: 'Kota Lama North', offsetNorthM: 100, offsetEastM: 45, headingDeg: 210, fovDeg: 71, rangeM: 700, elevationM: 23 },
-  { id: 'semarang-simpang-lima', cityId: 'semarang', poiIndex: 4, label: 'Simpang Lima Core', offsetNorthM: -80, offsetEastM: -50, headingDeg: 110, fovDeg: 74, rangeM: 720, elevationM: 24 },
 
   { id: 'makassar-losari-w', cityId: 'makassar', poiIndex: 1, label: 'Pantai Losari West', offsetNorthM: 60, offsetEastM: -110, headingDeg: 270, fovDeg: 74, rangeM: 760, elevationM: 24 },
   { id: 'makassar-karebosi-core', cityId: 'makassar', poiIndex: 4, label: 'Karebosi Park Core', offsetNorthM: -85, offsetEastM: 65, headingDeg: 150, fovDeg: 68, rangeM: 660, elevationM: 20 },

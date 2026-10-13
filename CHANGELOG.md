@@ -10,10 +10,27 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - The empty green placeholder cards (for example "Malioboro North" beside live
   Yogyakarta cameras) no longer appear in cities that have live cameras. The 10
   synthetic seed cameras for Jakarta, Bandung, Denpasar, Surabaya and Yogyakarta
-  were removed; Medan, Semarang and Makassar keep theirs because they have no live
-  source yet. `cctvLive.md` lists every live camera by city.
+  were removed (Semarang's 2 followed once it gained live cameras); Medan and
+  Makassar keep theirs because they have no live source yet. `cctvLive.md` lists every live camera by city.
 
 ### Added
+
+- 260 live Java and Banten ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain
+  HLS with no login or cookie: Magelang 74, Semarang 47, Cianjur 44, Tangerang
+  Kabupaten 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Banten province 14 (Lebak,
+  Bapenda, KP3B). The sources publish each camera's coordinates, so rows carry
+  `SOURCE-PUBLISHED LOCATION` (heading unknown). Only cameras that served a valid video
+  segment in the final probe and again through the app's own proxy are included; many
+  more are listed on those sites but answer 404 or time out. The old city-level Cianjur
+  camera is replaced by its located twin. Not added: Kota Serang (its TLS chain is
+  incomplete, so the proxy cannot fetch it), Ciamis and Kudus (no published
+  coordinates), Medan, Kabupaten Bogor, Jawa Tengah Dishub and Grobogan (a login or
+  client secret is needed, or no stream list is public). Per-site detail in `cctvLive.md`.
+
+### Changed
+
+- The CCTV catalog cap rises from 2000 to 2600 cameras (`DEFAULT_CCTV_MAX_SOURCES`);
+  the merged catalog is now about 2170, and the extra health-map memory is small.
 
 - 45 live Kabupaten Bandung Barat CCTV cameras (UNOFFICIAL SOURCE, demo only) from
   the Dishub KBB ATCS page, all plain HLS with no login or cookie. The source
