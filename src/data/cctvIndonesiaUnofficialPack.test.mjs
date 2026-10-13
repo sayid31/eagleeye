@@ -3,6 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { isAllowedRelOrigin } from '../server/hlsManifestProxy.mjs';
+import { seedCatalog } from './cctvCatalog.js';
 
 const pack = JSON.parse(readFileSync(new URL('../../config/cctv_sources.indonesia_unofficial.json', import.meta.url), 'utf8'));
 const pelindung = pack.filter((row) => row.id.startsWith('bandung-pelindung-'));
@@ -297,5 +298,20 @@ test('Surakarta rows never carry credentials or a portal session: the source is 
   for (const row of pack.filter(isFlvRow)) {
     assert.equal(row.portalSession, undefined, row.id);
     assert.doesNotMatch(row.url, /[?@]/, row.id);
+  }
+});
+
+test('no synthetic seed camera remains in a city that has live pack rows', () => {
+  // A seed has no stream; beside live cameras it renders as an empty green
+  // placeholder card (Malioboro North, Yogyakarta).
+  const liveCityIds = new Set(pack.map((row) => row.cityId));
+  const stale = seedCatalog().filter((camera) => liveCityIds.has(camera.cityId)).map((camera) => camera.id);
+  assert.deepEqual(stale, []);
+});
+
+test('Indonesian cities without any live row keep their seed cameras', () => {
+  const seededIds = new Set(seedCatalog().map((camera) => camera.cityId));
+  for (const cityId of ['medan', 'semarang', 'makassar']) {
+    assert.ok(seededIds.has(cityId), `${cityId} has no live source yet and must keep its seeds`);
   }
 });
