@@ -41,11 +41,11 @@ How to read this:
 
 ### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar, Surabaya, Cianjur, Mataram, Pasuruan, Sumedang, Malang, Yogyakarta, Surakarta, Pekanbaru, Bukittinggi, Solok, Padang, Padang Panjang, Pesisir Selatan, Bandung Barat, Magelang, Semarang, Cianjur, Tangerang Kabupaten, Banjar, Tasikmalaya, Banyumas, Banten, Kota Serang)
 
-2548 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+2584 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
 city CCTV portals (`jakcctv.jakarta.go.id`,
 `pelindung.bandung.go.id`, `binamarga.pu.go.id` CCTV Tol page,
-`atcs.denpasarkota.go.id`, the Surabaya ATCS stream host `36.66.208.101:5000`). The 14 + 508 Bina Marga toll cameras (the 508 `bmtol-unofficial-*` ones on 29 toll corridors, including Cipali from `cctvastra.lintasmarga.com`, from Jakarta-Cikampek to Sigli-Banda Aceh and
+`atcs.denpasarkota.go.id`, the Surabaya ATCS stream host `36.66.208.101:5000`). The 14 + 544 Bina Marga toll cameras (the 544 `bmtol-unofficial-*` ones on 35 toll corridors, including Cipali from `cctvastra.lintasmarga.com`, from Jakarta-Cikampek to Sigli-Banda Aceh and
 Binjai-Langsa, are placed by KM along the OpenStreetMap (ODbL)
 motorway centerline) carry
 **approximate, interpolated positions** (the source publishes no

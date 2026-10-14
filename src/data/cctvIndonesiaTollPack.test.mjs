@@ -81,6 +81,12 @@ const BMTOL_CORRIDORS = [
   { prefix: 'pembat', cityId: 'tol-pemalang-batang', min: 3, lat: [-6.95, -6.91], lon: [109.38, 109.75], host: /^https:\/\/live\.pbtr\.co\.id:5443\/LiveApp\/streams\/0\d{3}\.m3u8$/ },
   { prefix: 'palkan', cityId: 'tol-palimanan-kanci', min: 4, lat: [-6.81, -6.69], lon: [108.42, 108.66], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'bocimi', cityId: 'tol-ciawi-sukabumi', min: 6, lat: [-6.77, -6.64], lon: [106.79, 106.86], host: /^https:\/\/www\.tjt-info\.co\.id\// },
+  { prefix: 'terpeka', cityId: 'tol-terbanggi-kayuagung', min: 10, lat: [-4.75, -4.00], lon: [105.10, 105.25], host: /^https:\/\/pub2?\.hk-opt\.com\// },
+  { prefix: 'ngker', cityId: 'tol-ngawi-kertosono', min: 4, lat: [-7.60, -7.40], lon: [111.40, 111.62], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'kermoj', cityId: 'tol-kertosono-mojokerto', min: 3, lat: [-7.58, -7.40], lon: [112.13, 112.45], host: /^https:\/\/api-cctv\.margaharjaya\.co\.id\/hls\/[a-z]+\/stream\.m3u8$/ },
+  { prefix: 'semsol', cityId: 'tol-semarang-solo', min: 2, lat: [-7.25, -7.10], lon: [110.40, 110.48], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'manbit', cityId: 'tol-manado-bitung', min: 3, lat: [1.38, 1.50], lon: [125.00, 125.22], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'cimcib', cityId: 'tol-cimanggis-cibitung', min: 14, lat: [-6.42, -6.28], lon: [106.88, 107.09], host: /^https:\/\/streaming-cct\.co\.id\/LiveApp\/streams\/\d{24}\.m3u8$/ },
   { prefix: 'cipali', cityId: 'tol-cipali', min: 15, lat: [-6.75, -6.40], lon: [107.46, 108.45], host: /^https:\/\/cctvastra\.lintasmarga\.com\/barat\/KM_[0-9A-Za-z+_]+\.m3u8$/ },
 ];
 
@@ -110,6 +116,22 @@ test('Pejagan-Pemalang, Pemalang-Batang and Palimanan-Kanci: KM grows eastward a
   const lonAt = (id) => bmtol.find((row) => row.id === id).lon;
   assert.ok(Math.abs(lonAt('bmtol-unofficial-pejalang-km-268-000-a') - 109.062) < 0.01);
   assert.ok(Math.abs(lonAt('bmtol-unofficial-pembat-km-307-000') - 109.39) < 0.02, 'KM 307 is 5 km before the Pemalang interchange');
+});
+
+test('batch-2 corridors: KM grows along the carriageway and the interchange-anchored cameras sit on their junctions', () => {
+  const kmOf = (row) => { const m = /-km-(\d+)-(\d{3})/.exec(row.id); return Number(m[1]) + Number(m[2]) / 1000; };
+  const sorted = (prefix) => bmtol.filter((row) => row.id.startsWith(`bmtol-unofficial-${prefix}-`)).sort((a, b) => kmOf(a) - kmOf(b));
+  // Terbanggi Besar-Kayu Agung is numbered from Lampung (south) to South Sumatra (north), so latitude rises with KM.
+  const terpeka = sorted('terpeka');
+  for (let i = 1; i < terpeka.length; i += 1) assert.ok(terpeka[i].lat >= terpeka[i - 1].lat - 0.001, `${terpeka[i].id} lies south of ${terpeka[i - 1].id}`);
+  for (const prefix of ['ngker', 'kermoj', 'semsol', 'manbit', 'cimcib']) {
+    const rows = sorted(prefix);
+    for (let i = 1; i < rows.length; i += 1) assert.ok(rows[i].lon >= rows[i - 1].lon - 0.001, `${rows[i].id} lies west of ${rows[i - 1].id}`);
+  }
+  // OSM motorway_junction refs: Jombang 687 (lon ~112.25), Mojokerto Barat 707 (~112.40); GT Jombang is KM 687, GT Mojokerto Barat KM 706.
+  const lonAt = (id) => bmtol.find((row) => row.id === id).lon;
+  assert.ok(Math.abs(lonAt('bmtol-unofficial-kermoj-km-687-000') - 112.25) < 0.02);
+  assert.ok(Math.abs(lonAt('bmtol-unofficial-kermoj-km-706-000') - 112.40) < 0.02);
 });
 
 test('Bina Marga toll batch 2 never duplicates a stream already used by a binamarga-unofficial row', () => {

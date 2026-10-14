@@ -7,10 +7,10 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **2548** |
+| **Total kamera video live** | **2584** |
 | Kota dan kabupaten (44 lokasi) | 2040 |
-| Jalan tol (29 ruas) | 508 |
-| Format HLS | 2398 |
+| Jalan tol (35 ruas) | 544 |
+| Format HLS | 2434 |
 | Format FLV (Surakarta) | 134 |
 | Format MJPEG (Jombang, ditampilkan sebagai gambar yang disegarkan) | 16 |
 
@@ -18,7 +18,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 
 | Label posisi | Kamera | Arti |
 |---|---:|---|
-| `APPROX. LOCATION` | 1232 | 724 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream, Pati 4 dari koordinat agregator cctvnusantara.com, dan Ciamis 14 serta Pemalang 9 dari geocoding Nominatim, bukan dari sumber) + 508 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
+| `APPROX. LOCATION` | 1268 | 724 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream, Pati 4 dari koordinat agregator cctvnusantara.com, dan Ciamis 14 serta Pemalang 9 dari geocoding Nominatim, bukan dari sumber) + 508 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
 | `SOURCE-PUBLISHED LOCATION` | 1059 | koordinat dipublikasikan sumbernya sendiri (Magelang 75, Semarang 59, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 20, Padang Panjang 14, Banten 37, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16, Kota Serang 20, Nganjuk 289, Banjarbaru 47, Jambi 19, Garut 15, Karo 12, Lebak 10, dan Balangan menjadi 38), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
 | `CITY-LEVEL ONLY` | 195 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
@@ -105,6 +105,12 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 27 | Ciawi-Sukabumi Toll | 6 | HLS (`www.tjt-info.co.id`; KM 47–60, dikalibrasi ke KM interchange) |
 | 28 | Palimanan-Kanci Toll | 4 | HLS (KM 194,75–215, dikalibrasi ke KM interchange) |
 | 29 | Pemalang-Batang Toll | 3 | HLS (`live.pbtr.co.id`; KM 307, 319, 344, dikalibrasi ke KM interchange) |
+| 30 | Terbanggi Besar-Kayu Agung Toll | 10 | HLS (`pub2.hk-opt.com`; KM 162–235, dikalibrasi ke ref simpang susun OSM; KM 326 belum ada jangkar) |
+| 31 | Cimanggis-Cibitung Toll | 14 | HLS (`streaming-cct.co.id`; KM 51–70,4, dikalibrasi ke ref simpang susun OSM) |
+| 32 | Ngawi-Kertosono Toll | 4 | HLS (`jmlive.jasamarga.com`; KM 585–603, dikalibrasi ke ref simpang susun OSM) |
+| 33 | Kertosono-Mojokerto Toll | 3 | HLS (`api-cctv.margaharjaya.co.id`; KM 678, 687, 706, dikalibrasi ke ref simpang susun OSM) |
+| 34 | Manado-Bitung Toll | 3 | HLS (`jmlive.jasamarga.com`; KM 17,7, 25,6, 36,25, dikalibrasi ke ref simpang susun OSM) |
+| 35 | Semarang-Solo Toll | 2 | HLS (`jmlive.jasamarga.com`; KM 430,2 dan 437,8, dikalibrasi ke ref simpang susun OSM) |
 
 ## Bukan video live (tidak dihitung di atas)
 
@@ -133,7 +139,7 @@ Pengecekan terakhir 2026-10-14 (cek ulang menyeluruh: kamera berstatus "belum di
 | Jalan tol Cipali | 5 | KM 164, 179 B, 189 hanya rekaman (ENDLIST); KM 188 C1 dan C2 ENDLIST lewat proxy aplikasi. 15 kamera lain sudah dimasukkan; rantai TLS lengkap berkat intermediate Sectigo R36 di `config/ca/` | dicek ulang 2026-10-14 |
 | Banyuwangi | tidak diketahui | `live.banyuwangikab.go.id` menjawab 403 dengan `cf-mitigated: challenge` (tantangan Cloudflare). Melewatinya sama dengan menembus kontrol akses, jadi **dikecualikan** (dicek ulang 2026-10-14) | dikecualikan, tidak dilewati |
 | Jalan tol: rotasi UUID `jmlive.jasamarga.com` | 149 | portal mengganti UUID stream; URL lama menjawab 502 atau bukan m3u8 dan tidak ada URL pengganti dengan KM yang sama. Barisnya **masih ada di pack** (belum dihapus) | butuh keputusan owner |
-| Jalan tol: ruas tanpa titik awal KM yang bisa dipertanggungjawabkan | banyak | Manado-Bitung (rantai OSM terputus), Baleno dan Bayung Lencir-Tempino (data OSM gagal diambil), Kertosono-Mojokerto, Ngawi-Kertosono, Semarang A/B/C, Semarang-Solo, Pandaan-Malang; gerbang/ramp tanpa KM; host dengan rantai TLS tidak lengkap (`paspro-streaming`, `cijagolive`, tanpa intermediate di `config/ca/`) | tidak ditambahkan |
+| Jalan tol: ruas tanpa titik awal KM yang bisa dipertanggungjawabkan | banyak | Baleno dan Bayung Lencir-Tempino (data OSM gagal diambil), Semarang A/B/C (KM bercampur huruf C/Med, ambigu), Pandaan-Malang, Terpeka KM 326 (di luar jangkar terakhir), JORR S/W1, BORR, Waru-Juanda, Cibitung-Cilincing dan lainnya (belum dikalibrasi); gerbang/ramp tanpa KM (Jatikarya, Akses Tol Bandar/Jombang, Access Road Kauditan); host dengan rantai TLS tidak lengkap (`paspro-streaming`, `cijagolive`, tanpa intermediate di `config/ca/`) | tidak ditambahkan |
 | Balangan (tambahan) | 13 | dari 15 URL yang belum masuk, 13 menjawab 404; 2 (Tugu Gula Habang) hidup dan sudah dimasukkan | dicek 2026-10-14 |
 | Wonosobo, Brebes, Kudus, Samarinda, Sukoharjo | tidak diketahui | token per penonton, API 401, atau tantangan WAF/Turnstile; tidak dilewati | tidak ditambahkan |
 | Sibolga, Pematangsiantar, Sidoarjo (smartcity), Indramayu, Kuningan, Tuban, Kebumen | tidak diketahui | tidak ada HLS statis yang bisa ditemukan (mediamtx tanpa path statis, hanya template string, satu stream saja, hanya API status, atau token stream) | tidak ditambahkan |
@@ -195,5 +201,6 @@ berhasil, satu di antaranya baru siap setelah 13 detik. Tidak ada perubahan kode
 
 - 153 kamera batch 2026-10-14 (Banda Aceh, Balangan, Banjarmasin, Kotawaringin Barat, Tanah Bumbu, Situbondo) lolos probe langsung (3 putaran) dan pengambilan lewat `/api/cctv/media` di dev server. Pemutaran di browser/globe belum diuji untuk batch ini. Banda Aceh memuat banyak monitor taman/tinggi muka air; Banjarmasin tertunda sekitar 30 detik.
 - Batch tol 2026-10-14: UUID `jmlive.jasamarga.com` dirotasi portal, sehingga 108 baris lama diperbarui ke URL baru (dicocokkan lewat awalan ruas + KM + akhiran A/B, posisi tidak berubah) dan 57 baris baru ditambahkan (4 ruas baru: Pejagan-Pemalang, Pemalang-Batang, Palimanan-Kanci, Ciawi-Sukabumi; perluasan Pekanbaru-Dumai +11, Medan-Tebing Tinggi +8, MBZ, JORR Selatan, Semarang-Batang +1). 165 dari 165 baris yang berubah/baru lolos probe 3 putaran dan pengambilan lewat `/api/cctv/media`. Pemutaran di browser/globe belum diuji.
+- Batch tol 2 (2026-10-14, posisi dikalibrasi ke ref simpang susun OSM): 36 baris baru di 6 ruas yang sebelumnya dilewati: Terbanggi Besar-Kayu Agung 10, Cimanggis-Cibitung 14, Ngawi-Kertosono 4, Kertosono-Mojokerto 3, Manado-Bitung 3, Semarang-Solo 2. Semua 36 lolos probe 3 putaran dan `/api/cctv/media` (diambil satu per satu; permintaan serentak ke `jmlive` memicu 502 sementara). Pemutaran di browser/globe belum diuji.
 - Katalog gabungan saat ini sekitar 3050 kamera (batas 4000; batas lama 3000 dinaikkan karena pack 2372 ditambah alokasi Austin/Caltrans/TfL dan cadangan tidak lagi muat). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
 - Hapus per kota dengan prefiks id-nya (misalnya `surakarta-atcs-*`), atau matikan seluruh paket dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.

@@ -1095,7 +1095,7 @@ speech-to-speech API, so Claude is paired with the browser's own
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
 - 1026 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
-  toll cameras), Bina Marga toll corridors (508 `bmtol-unofficial-*` across 29 corridors, listed below), Bandung (60
+  toll cameras), Bina Marga toll corridors (544 `bmtol-unofficial-*` across 35 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`), Pasuruan (31 `pasuruan-atcs-*`), Sumedang (35 `sumedang-atcs-*`), Malang (199 `malang-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1130,7 +1130,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   `bmtol-unofficial-cipali-*` (see the corridor list below): the host omits its
   TLS intermediate, which `config/ca/` now bundles (Sectigo R36), so verification
   stays on.
-- **Bina Marga toll corridor rows (508, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
+- **Bina Marga toll corridor rows (544, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
   corridor: `tol-jakarta-cikampek` 42 `jakcik`, `tol-serpong-balaraja` 41 `sebal`, `tol-jalan-layang-mbz` 44 `mbz`,
   `tol-jorr-selatan` 22 `jorrs`, `tol-akses-tanjung-priok` 20 `atp`, `tol-jagorawi` 22 `jagorawi`,
   `tol-jorr-timur` 23 `jorre`, `tol-cipularang` 16 `cipul`, `tol-sedyatmo` 12 `sedyatmo`, `tol-jakarta-tangerang` 10 `janger`,
@@ -1138,7 +1138,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   `tol-pekanbaru-dumai` 32 `permai`, `tol-medan-tebing-tinggi` 19 `jmkt`, `tol-bengkulu-taba-penanjung` 18 `bengtab`,
   `tol-padang-sicincin` 11 `pacin`, `tol-palembang-indralaya` 10 `palindra`, `tol-indralaya-prabumulih` 9 `indraprabu`,
   `tol-pekanbaru-bangkinang` 10 `pekbang`, `tol-sigli-banda-aceh` 11 `sibanceh`, `tol-indrapura-kisaran` 18 `inkis`,
-  `tol-binjai-langsa` 10 `binsa`, `tol-dalam-kota-jakarta` 20 `jtc`, `tol-pejagan-pemalang` 22 `pejalang` (host `pptrlive.co.id/memfs/`), `tol-pemalang-batang` 3 `pembat` (host `live.pbtr.co.id:5443`), `tol-palimanan-kanci` 4 `palkan`, `tol-ciawi-sukabumi` 6 `bocimi` (host `www.tjt-info.co.id`), `tol-cipali` 15 `cipali` (host `cctvastra.lintasmarga.com/barat/KM_*.m3u8`; only live recordings-free streams, KM 70-188 mapped onto the 115.6 km OSM chain from Cikopo), from the matching binamarga.pu.go.id CCTV Tol
+  `tol-binjai-langsa` 10 `binsa`, `tol-dalam-kota-jakarta` 20 `jtc`, `tol-pejagan-pemalang` 22 `pejalang` (host `pptrlive.co.id/memfs/`), `tol-pemalang-batang` 3 `pembat` (host `live.pbtr.co.id:5443`), `tol-palimanan-kanci` 4 `palkan`, `tol-ciawi-sukabumi` 6 `bocimi` (host `www.tjt-info.co.id`), `tol-terbanggi-kayuagung` 10 `terpeka` (host `pub2.hk-opt.com`), `tol-cimanggis-cibitung` 14 `cimcib` (host `streaming-cct.co.id`), `tol-ngawi-kertosono` 4 `ngker`, `tol-kertosono-mojokerto` 3 `kermoj` (host `api-cctv.margaharjaya.co.id`), `tol-manado-bitung` 3 `manbit`, `tol-semarang-solo` 2 `semsol`, `tol-cipali` 15 `cipali` (host `cctvastra.lintasmarga.com/barat/KM_*.m3u8`; only live recordings-free streams, KM 70-188 mapped onto the 115.6 km OSM chain from Cikopo), from the matching binamarga.pu.go.id CCTV Tol
   ruas pages (hosts `jmlive.jasamarga.com`, `pub2.hk-opt.com`, `pub.hk-opt.com`, `info.serbaraja-tollroad.co.id:20443`).
   Only cameras whose name carries a `KM nn+nnn` marker AND whose stream returned
   a real video segment when probed are included; gate/ramp/rest-area names have
@@ -1151,7 +1151,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   Semarang-Batang: KM 347.4 at Semarang; Indrapura-Kisaran: KM 86.9 offset so KM 125-132 sits near Kisaran;
   Dalam Kota (JTC): Cawang to Pluit via Tomang, the camera KM scaled linearly onto the 18.3 km OSM chain as if the road were 20 km (Wikipedia interchange KMs disagree with that by up to ~1 km);
   Binjai-Langsa: KM 17.0 at Binjai; Sigli-Banda Aceh: chain from the Banda Aceh end, KM = chain km; the Sumatra and
-  Kalimantan corridors use the portal's own KM against the OSM chain from the toll start; Pejagan-Pemalang, Pemalang-Batang, Palimanan-Kanci and Ciawi-Sukabumi: piecewise-linear KM calibrated against OSM `motorway_junction` refs projected onto the OSM chain, which agree with the interchange KMs on Wikipedia (Brebes Timur 268, Tegal 279, Pemalang 312, Bojong 331; Palimanan 188, Plumbon 194, Ciperna 203, Kanci 214; Ciawi 47, Caringin 53, Cigombong 60; residual about 1 km); Palimanan-Kanci KM 215 continues on the Kanci-Pejagan chain). All origins are assumptions,
+  Kalimantan corridors use the portal's own KM against the OSM chain from the toll start; Pejagan-Pemalang, Pemalang-Batang, Palimanan-Kanci and Ciawi-Sukabumi: piecewise-linear KM calibrated against OSM `motorway_junction` refs projected onto the OSM chain, which agree with the interchange KMs on Wikipedia (Brebes Timur 268, Tegal 279, Pemalang 312, Bojong 331; Palimanan 188, Plumbon 194, Ciperna 203, Kanci 214; Ciawi 47, Caringin 53, Cigombong 60; residual about 1 km). The six later corridors (Terbanggi Besar-Kayu Agung, Cimanggis-Cibitung, Ngawi-Kertosono, Kertosono-Mojokerto, Manado-Bitung, Semarang-Solo) use the same method with their own junction refs (e.g. Terbanggi Besar 140, Gunung Batin 166, Menggala 184, Lambu Kibang 200, Way Kenanga 218, Simpang Pematang 239; Jatikarya 52, Narogong 59, Setu Bekasi 72; Jombang 687, Mojokerto Barat 707; Airmadidi 11, Kauditan 20, Danowudu 25; Ungaran 430, Bawen 442); Palimanan-Kanci KM 215 continues on the Kanci-Pejagan chain). All origins are assumptions,
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)

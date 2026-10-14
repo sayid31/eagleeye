@@ -2362,3 +2362,13 @@ Not added: Manado-Bitung (OSM chain broken), Baleno and Bayung Lencir-Tempino (O
 Banyuwangi: `live.banyuwangikab.go.id` answers 403 with `cf-mitigated: challenge`. Passing a Cloudflare challenge is access-control bypass, the same line drawn for Kutai Timur and the Wonosobo/Brebes/Kudus group, so it is excluded and listed in `cctvLive.md`.
 
 Not verified: in-browser playback; the checks were probes plus the app proxy (165 of 165 changed or new rows).
+
+## 2026-10-14 — Toll batch 2: six skipped ruas opened with the junction-anchor calibration
+
+The previous batch left Terbanggi Besar-Kayu Agung, Cimanggis-Cibitung, Ngawi-Kertosono, Kertosono-Mojokerto, Manado-Bitung and Semarang-Solo out because no KM origin could be defended. The piecewise calibration (OSM `motorway_junction` refs projected onto the OSM motorway chain, which match the Wikipedia interchange KMs) removes that objection, so they are now in: 36 rows (10 + 14 + 4 + 3 + 3 + 2). Each camera KM is interpolated between its two nearest anchors; error is about 1 km, so the tier stays `APPROX. LOCATION`.
+
+Where the method does not apply the rows stay out: Terpeka KM 326 (past the last anchor, Simpang Pematang 239), gates, ramps and access roads without a KM (Jatikarya, Akses Tol Bandar/Jombang, Access Road Kauditan), and Semarang A/B/C, whose KMs mix a letter (`432 C + 700`, `A/Med`) so the carriageway cannot be told from the name. The Manado-Bitung chain was only "broken" for a north-south query; as an east-west chain it is continuous (40 km). JORR South/W1, BORR, Waru-Juanda and Cibitung-Cilincing were not calibrated in this pass (Overpass kept answering 504 for some areas) and remain listed as not added.
+
+Verification note: `jmlive.jasamarga.com` answers 502 when several playlists are requested at once through the proxy. The first parallel run reported 9 of 36 as bad and different ones failed on each retry; one-at-a-time requests passed 9/9 three times. Liveness checks on that host therefore run sequentially.
+
+Not verified: in-browser playback; the checks were probes plus the app proxy (36 of 36).

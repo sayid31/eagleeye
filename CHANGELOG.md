@@ -15,10 +15,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 36 more Bina Marga toll cameras (UNOFFICIAL SOURCE, demo only, `APPROX. LOCATION`) on six corridors that were skipped before: Terbanggi Besar-Kayu Agung 10, Cimanggis-Cibitung 14, Ngawi-Kertosono 4, Kertosono-Mojokerto 3, Manado-Bitung 3 and Semarang-Solo 2. Positions use the same piecewise KM calibration against OSM interchange refs (about 1 km residual). All 36 passed three playlist polls and the app proxy. The pack now holds 2584 cameras across 35 toll corridors; gates and ramps without a KM, Terpeka KM 326 and the corridors without a usable OSM chain stay out. Per-site detail in `cctvLive.md`.
 - 57 more Bina Marga toll cameras (UNOFFICIAL SOURCE, demo only, `APPROX. LOCATION`) and 108 repaired toll URLs. The portal rotated the stream UUIDs of
   `jmlive.jasamarga.com`, so old toll rows no longer played; 108 of them now point at the current stream (matched by ruas, KM and A/B suffix, positions unchanged).
   New cameras: Pejagan-Pemalang 22, Ciawi-Sukabumi 6, Palimanan-Kanci 4 and Pemalang-Batang 3 (four new corridors), plus Pekanbaru-Dumai +11, Medan-Tebing Tinggi +8,
-  MBZ, JORR South and Semarang-Batang +1 each. The four new corridors are positioned by a piecewise KM calibration against OSM interchange refs (matching the Wikipedia interchange KMs) rather than an assumed origin; residual error is about 1 km. All 165 changed or new rows passed three playlist polls and the app proxy. The pack now holds 2548 cameras across
+  MBZ, JORR South and Semarang-Batang +1 each. The four new corridors are positioned by a piecewise KM calibration against OSM interchange refs (matching the Wikipedia interchange KMs) rather than an assumed origin; residual error is about 1 km. All 165 changed or new rows passed three playlist polls and the app proxy. After that batch the pack held 2548 cameras across
   29 toll corridors. 149 older toll rows have no live replacement and are still listed. Banyuwangi stays excluded: its host answers with a Cloudflare challenge
   that is not bypassed. Per-site detail in `cctvLive.md`; the URL list in `urlcctv.md` and `urlcctv.csv`.
 

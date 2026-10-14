@@ -4,10 +4,10 @@ Daftar URL stream video langsung (HLS/FLV) dari `config/cctv_sources.indonesia_u
 
 | | Jumlah |
 |---|---:|
-| **Total URL** | **2548** |
+| **Total URL** | **2584** |
 | Kota dan kabupaten (44 lokasi) | 2040 |
-| Jalan tol (29 ruas) | 508 |
-| HLS | 2398 |
+| Jalan tol (35 ruas) | 544 |
+| HLS | 2434 |
 | FLV | 134 |
 | MJPEG (Jombang) | 16 |
 
@@ -2933,3 +2933,69 @@ Catatan:
 | 1 | `bmtol-unofficial-pembat-km-319-000` | Tol Pemalang-Batang KM 319+000 | HLS | `https://live.pbtr.co.id:5443/LiveApp/streams/0319.m3u8` |
 | 2 | `bmtol-unofficial-pembat-km-307-000` | Tol Pemalang-Batang KM 307+000 | HLS | `https://live.pbtr.co.id:5443/LiveApp/streams/0307.m3u8` |
 | 3 | `bmtol-unofficial-pembat-km-344-000` | Tol Pemalang-Batang KM 344+000 | HLS | `https://live.pbtr.co.id:5443/LiveApp/streams/0344.m3u8` |
+
+### Terbanggi Besar-Kayu Agung Toll (10)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `bmtol-unofficial-terpeka-km-235-000-b` | Tol Terbanggi Besar-Kayu Agung KM 235+000 B | HLS | `https://pub2.hk-opt.com/LiveApp/streams/8NTlenir7evp1671470440611.m3u8` |
+| 2 | `bmtol-unofficial-terpeka-km-235-000-a` | Tol Terbanggi Besar-Kayu Agung KM 235+000 A | HLS | `https://pub2.hk-opt.com/LiveApp/streams/Fuz1xSJSZ6VS1671608975102.m3u8` |
+| 3 | `bmtol-unofficial-terpeka-km-214-000-b` | Tol Terbanggi Besar-Kayu Agung KM 214+000 B | HLS | `https://pub2.hk-opt.com/LiveApp/streams/y3173vty9vYS1672387738008.m3u8` |
+| 4 | `bmtol-unofficial-terpeka-km-209-000-b` | Tol Terbanggi Besar-Kayu Agung KM 209+000 B | HLS | `https://pub2.hk-opt.com/LiveApp/streams/1LVctZlG1CpM1672387244952.m3u8` |
+| 5 | `bmtol-unofficial-terpeka-km-207-000-a` | Tol Terbanggi Besar-Kayu Agung KM 207+000 A | HLS | `https://pub2.hk-opt.com/LiveApp/streams/bBOqwjkIE2ZJ1672387107936.m3u8` |
+| 6 | `bmtol-unofficial-terpeka-km-173-000-b` | Tol Terbanggi Besar-Kayu Agung KM 173+000 B | HLS | `https://pub2.hk-opt.com/LiveApp/streams/Ylilp78L1kJw1675839859824.m3u8` |
+| 7 | `bmtol-unofficial-terpeka-km-173-000-a` | Tol Terbanggi Besar-Kayu Agung KM 173+000 A | HLS | `https://pub2.hk-opt.com/LiveApp/streams/bPzYpO8EqsGg1675839839551.m3u8` |
+| 8 | `bmtol-unofficial-terpeka-km-172-000-b` | Tol Terbanggi Besar-Kayu Agung KM 172+000 B | HLS | `https://pub2.hk-opt.com/LiveApp/streams/RtnUTRHFxW2s1677120541641.m3u8` |
+| 9 | `bmtol-unofficial-terpeka-km-162-000-b` | Tol Terbanggi Besar-Kayu Agung KM 162+000 B | HLS | `https://pub2.hk-opt.com/LiveApp/streams/rdxGSmqvd5kN1675831415195.m3u8` |
+| 10 | `bmtol-unofficial-terpeka-km-162-000-a` | Tol Terbanggi Besar-Kayu Agung KM 162+000 A | HLS | `https://pub2.hk-opt.com/LiveApp/streams/bAoUDud5E4YR1675822282333.m3u8` |
+
+### Ngawi-Kertosono Toll (4)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `bmtol-unofficial-ngker-km-585-100` | Tol Ngawi-Kertosono KM 585+100 | HLS | `https://jmlive.jasamarga.com/hls/17/bc4e6ae3-a01f-4a70-b621-04a5fffbb034/index.m3u8` |
+| 2 | `bmtol-unofficial-ngker-km-595-500` | Tol Ngawi-Kertosono KM 595+500 | HLS | `https://jmlive.jasamarga.com/hls/17/2da759dc-5ae6-480e-9abb-0e06a60562f0/index.m3u8` |
+| 3 | `bmtol-unofficial-ngker-km-601-000` | Tol Ngawi-Kertosono KM 601+000 | HLS | `https://jmlive.jasamarga.com/hls/17/dc02c192-f8a7-4827-872f-5c89eb22501c/index.m3u8` |
+| 4 | `bmtol-unofficial-ngker-km-602-800` | Tol Ngawi-Kertosono KM 602+800 | HLS | `https://jmlive.jasamarga.com/hls/17/11ea38f3-0f09-445f-a313-474a0a17a7ab/index.m3u8` |
+
+### Kertosono-Mojokerto Toll (3)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `bmtol-unofficial-kermoj-km-687-000` | Tol Kertosono-Mojokerto KM 687+000 | HLS | `https://api-cctv.margaharjaya.co.id/hls/icjbgb/stream.m3u8` |
+| 2 | `bmtol-unofficial-kermoj-km-678-000` | Tol Kertosono-Mojokerto KM 678+000 | HLS | `https://api-cctv.margaharjaya.co.id/hls/kdmdepanmasuk/stream.m3u8` |
+| 3 | `bmtol-unofficial-kermoj-km-706-000` | Tol Kertosono-Mojokerto KM 706+000 | HLS | `https://api-cctv.margaharjaya.co.id/hls/icmbrb/stream.m3u8` |
+
+### Semarang-Solo Toll (2)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `bmtol-unofficial-semsol-km-430-200` | Tol Semarang-Solo KM 430+200 | HLS | `https://jmlive.jasamarga.com/hls/15/ce512402-dfa3-4460-8bd6-41b2a31a31d7/index.m3u8` |
+| 2 | `bmtol-unofficial-semsol-km-437-800` | Tol Semarang-Solo KM 437+800 | HLS | `https://jmlive.jasamarga.com/hls/15/357f6ad4-0868-4ad4-97f0-a3dd258e2349/index.m3u8` |
+
+### Manado-Bitung Toll (3)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `bmtol-unofficial-manbit-km-17-700` | Tol Manado-Bitung KM 17+700 | HLS | `https://jmlive.jasamarga.com/hls/30/4d8ac410-f018-432a-8d34-530df2fb346d/index.m3u8` |
+| 2 | `bmtol-unofficial-manbit-km-25-600` | Tol Manado-Bitung KM 25+600 | HLS | `https://jmlive.jasamarga.com/hls/30/e5272894-69dc-4f6d-a541-161ff8936772/index.m3u8` |
+| 3 | `bmtol-unofficial-manbit-km-36-250` | Tol Manado-Bitung KM 36+250 | HLS | `https://jmlive.jasamarga.com/hls/30/9944cb69-86f3-4da2-826f-5200e5c691a5/index.m3u8` |
+
+### Cimanggis-Cibitung Toll (14)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `bmtol-unofficial-cimcib-km-56-000` | Tol Cimanggis-Cibitung KM 56+000 | HLS | `https://streaming-cct.co.id/LiveApp/streams/808428562383454739684500.m3u8` |
+| 2 | `bmtol-unofficial-cimcib-km-55-650` | Tol Cimanggis-Cibitung KM 55+650 | HLS | `https://streaming-cct.co.id/LiveApp/streams/753814245775591052124656.m3u8` |
+| 3 | `bmtol-unofficial-cimcib-km-55-400` | Tol Cimanggis-Cibitung KM 55+400 | HLS | `https://streaming-cct.co.id/LiveApp/streams/419578865556916403624234.m3u8` |
+| 4 | `bmtol-unofficial-cimcib-km-55-000` | Tol Cimanggis-Cibitung KM 55+000 | HLS | `https://streaming-cct.co.id/LiveApp/streams/240320474473743062493512.m3u8` |
+| 5 | `bmtol-unofficial-cimcib-km-54-400` | Tol Cimanggis-Cibitung KM 54+400 | HLS | `https://streaming-cct.co.id/LiveApp/streams/042926552556500254096382.m3u8` |
+| 6 | `bmtol-unofficial-cimcib-km-54-000` | Tol Cimanggis-Cibitung KM 54+000 | HLS | `https://streaming-cct.co.id/LiveApp/streams/513568218162926065451774.m3u8` |
+| 7 | `bmtol-unofficial-cimcib-km-53-500` | Tol Cimanggis-Cibitung KM 53+500 | HLS | `https://streaming-cct.co.id/LiveApp/streams/728033679170510237677933.m3u8` |
+| 8 | `bmtol-unofficial-cimcib-km-70-400` | Tol Cimanggis-Cibitung KM 70+400 | HLS | `https://streaming-cct.co.id/LiveApp/streams/871311996681478545431857.m3u8` |
+| 9 | `bmtol-unofficial-cimcib-km-65-800` | Tol Cimanggis-Cibitung KM 65+800 | HLS | `https://streaming-cct.co.id/LiveApp/streams/380686335677885377945037.m3u8` |
+| 10 | `bmtol-unofficial-cimcib-km-64-400` | Tol Cimanggis-Cibitung KM 64+400 | HLS | `https://streaming-cct.co.id/LiveApp/streams/167013141883764986350307.m3u8` |
+| 11 | `bmtol-unofficial-cimcib-km-61-600` | Tol Cimanggis-Cibitung KM 61+600 | HLS | `https://streaming-cct.co.id/LiveApp/streams/859389239238521120834932.m3u8` |
+| 12 | `bmtol-unofficial-cimcib-km-59-400` | Tol Cimanggis-Cibitung KM 59+400 | HLS | `https://streaming-cct.co.id/LiveApp/streams/309234587115641908709722.m3u8` |
+| 13 | `bmtol-unofficial-cimcib-km-51-000` | Tol Cimanggis-Cibitung KM 51+000 | HLS | `https://streaming-cct.co.id/LiveApp/streams/418964061815952674729554.m3u8` |
+| 14 | `bmtol-unofficial-cimcib-km-68-000` | Tol Cimanggis-Cibitung KM 68+000 | HLS | `https://streaming-cct.co.id/LiveApp/streams/507909711721836488619938.m3u8` |
