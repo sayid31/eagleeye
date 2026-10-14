@@ -15,6 +15,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 57 more Bina Marga toll cameras (UNOFFICIAL SOURCE, demo only, `APPROX. LOCATION`) and 108 repaired toll URLs. The portal rotated the stream UUIDs of
+  `jmlive.jasamarga.com`, so old toll rows no longer played; 108 of them now point at the current stream (matched by ruas, KM and A/B suffix, positions unchanged).
+  New cameras: Pejagan-Pemalang 22, Ciawi-Sukabumi 6, Palimanan-Kanci 4 and Pemalang-Batang 3 (four new corridors), plus Pekanbaru-Dumai +11, Medan-Tebing Tinggi +8,
+  MBZ, JORR South and Semarang-Batang +1 each. All 165 changed or new rows passed three playlist polls and the app proxy. The pack now holds 2548 cameras across
+  29 toll corridors. 149 older toll rows have no live replacement and are still listed. Banyuwangi stays excluded: its host answers with a Cloudflare challenge
+  that is not bypassed. Per-site detail in `cctvLive.md`; the URL list in `urlcctv.md` and `urlcctv.csv`.
+
 - 119 more live ATCS CCTV cameras from a full re-check of every camera that had been marked "not re-checked" (UNOFFICIAL SOURCE, demo only). A camera is
   added only when three playlist polls show an advancing media sequence and it then plays through the app proxy. Added: Surakarta 58 FLV (76 to 134), Banten 23,
   Semarang 13, Banyumas 5, Pekanbaru 3, Yogyakarta 2 and Magelang 1, plus a new Cipali toll corridor (`bmtol-unofficial-cipali-*`, 15 cameras, `APPROX. LOCATION`).

@@ -2350,3 +2350,15 @@ Decisions behind the numbers:
 - **Surabaya's four revived cameras (cctv_285/297/387/455) were not added.** They sit on plain-http `36.66.208.101:5000`, have no coordinates and were frozen in earlier rounds; their recovery looks unstable and adding them would put four guessed markers on a fragile origin.
 - **Banten is still mostly 404.** 127 of 164 listed cameras still answer 404 although the portal flags them Online; only the 23 that served segments were added.
 - **Provider strings.** The regency tests require the provider text to repeat the tier string from the camera name, so new `APPROX.` rows say `APPROX. LOCATION)` in the provider; the license text keeps "APPROXIMATE LOCATION".
+
+## 2026-10-14 — Toll batch: UUID rotation repaired by KM, four new corridors, Banyuwangi stays excluded
+
+`jmlive.jasamarga.com` rotated its stream UUIDs: 451 old toll rows were probed and 302 were dead (502 or a non-m3u8 body). The portal page still lists the current URLs (931 entries), so a dead row was repaired by matching the portal entry on ruas prefix + KM + A/B suffix and replacing only `url`; the position is kept because the KM is the same camera. 108 rows were repaired this way. 149 dead rows have no live match; they were left in the pack rather than deleted, because removal was not requested and the portal may re-publish them (they never play, so the cost is catalog slots and "offline" health entries).
+
+New corridors: Pejagan-Pemalang 22, Pemalang-Batang 3, Palimanan-Kanci 4, Ciawi-Sukabumi 6, plus extra KM on five existing ones (57 new rows). Positions are KM interpolated along the OSM motorway chain (ODbL), and the origin of each is an assumption (Pejagan-Pemalang KM 250 at Pejagan; Palimanan-Kanci KM 194.75 at the chain start; Ciawi-Sukabumi KM 46 at the Ciawi end), hence `APPROX. LOCATION` and `headingConfidence: low`. Markers are kept at least 40 m apart except A/B views of one KM, which share a position.
+
+Not added: Manado-Bitung (OSM chain broken), Baleno and Bayung Lencir-Tempino (Overpass failed, origin unjustified), Kertosono-Mojokerto, Ngawi-Kertosono, Semarang A/B/C, Semarang-Solo, Pandaan-Malang (no defensible origin), gates and ramps without a KM, `jmkt` KM 1-6 (airport spur numbering) and 65-81 (beyond the chain), and hosts whose TLS chain is incomplete without a bundled intermediate (`paspro-streaming`, `cijagolive`). TLS verification is never turned off to reach them.
+
+Banyuwangi: `live.banyuwangikab.go.id` answers 403 with `cf-mitigated: challenge`. Passing a Cloudflare challenge is access-control bypass, the same line drawn for Kutai Timur and the Wonosobo/Brebes/Kudus group, so it is excluded and listed in `cctvLive.md`.
+
+Not verified: in-browser playback; the checks were probes plus the app proxy (165 of 165 changed or new rows).

@@ -1095,7 +1095,7 @@ speech-to-speech API, so Claude is paired with the browser's own
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
 - 1026 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
-  toll cameras), Bina Marga toll corridors (451 `bmtol-unofficial-*` across 25 corridors, listed below), Bandung (60
+  toll cameras), Bina Marga toll corridors (508 `bmtol-unofficial-*` across 29 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`), Pasuruan (31 `pasuruan-atcs-*`), Sumedang (35 `sumedang-atcs-*`), Malang (199 `malang-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1130,15 +1130,15 @@ speech-to-speech API, so Claude is paired with the browser's own
   `bmtol-unofficial-cipali-*` (see the corridor list below): the host omits its
   TLS intermediate, which `config/ca/` now bundles (Sectigo R36), so verification
   stays on.
-- **Bina Marga toll corridor rows (451, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
-  corridor: `tol-jakarta-cikampek` 42 `jakcik`, `tol-serpong-balaraja` 41 `sebal`, `tol-jalan-layang-mbz` 43 `mbz`,
-  `tol-jorr-selatan` 21 `jorrs`, `tol-akses-tanjung-priok` 20 `atp`, `tol-jagorawi` 22 `jagorawi`,
+- **Bina Marga toll corridor rows (508, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
+  corridor: `tol-jakarta-cikampek` 42 `jakcik`, `tol-serpong-balaraja` 41 `sebal`, `tol-jalan-layang-mbz` 44 `mbz`,
+  `tol-jorr-selatan` 22 `jorrs`, `tol-akses-tanjung-priok` 20 `atp`, `tol-jagorawi` 22 `jagorawi`,
   `tol-jorr-timur` 23 `jorre`, `tol-cipularang` 16 `cipul`, `tol-sedyatmo` 12 `sedyatmo`, `tol-jakarta-tangerang` 10 `janger`,
-  `tol-padaleunyi` 9 `padcil`, `tol-semarang-batang` 15 `jsb`, `tol-balikpapan-samarinda` 13 `balsam`,
-  `tol-pekanbaru-dumai` 21 `permai`, `tol-medan-tebing-tinggi` 11 `jmkt`, `tol-bengkulu-taba-penanjung` 18 `bengtab`,
+  `tol-padaleunyi` 9 `padcil`, `tol-semarang-batang` 16 `jsb`, `tol-balikpapan-samarinda` 13 `balsam`,
+  `tol-pekanbaru-dumai` 32 `permai`, `tol-medan-tebing-tinggi` 19 `jmkt`, `tol-bengkulu-taba-penanjung` 18 `bengtab`,
   `tol-padang-sicincin` 11 `pacin`, `tol-palembang-indralaya` 10 `palindra`, `tol-indralaya-prabumulih` 9 `indraprabu`,
   `tol-pekanbaru-bangkinang` 10 `pekbang`, `tol-sigli-banda-aceh` 11 `sibanceh`, `tol-indrapura-kisaran` 18 `inkis`,
-  `tol-binjai-langsa` 10 `binsa`, `tol-dalam-kota-jakarta` 20 `jtc`, `tol-cipali` 15 `cipali` (host `cctvastra.lintasmarga.com/barat/KM_*.m3u8`; only live recordings-free streams, KM 70-188 mapped onto the 115.6 km OSM chain from Cikopo), from the matching binamarga.pu.go.id CCTV Tol
+  `tol-binjai-langsa` 10 `binsa`, `tol-dalam-kota-jakarta` 20 `jtc`, `tol-pejagan-pemalang` 22 `pejalang` (host `pptrlive.co.id/memfs/`), `tol-pemalang-batang` 3 `pembat` (host `live.pbtr.co.id:5443`), `tol-palimanan-kanci` 4 `palkan`, `tol-ciawi-sukabumi` 6 `bocimi` (host `www.tjt-info.co.id`), `tol-cipali` 15 `cipali` (host `cctvastra.lintasmarga.com/barat/KM_*.m3u8`; only live recordings-free streams, KM 70-188 mapped onto the 115.6 km OSM chain from Cikopo), from the matching binamarga.pu.go.id CCTV Tol
   ruas pages (hosts `jmlive.jasamarga.com`, `pub2.hk-opt.com`, `pub.hk-opt.com`, `info.serbaraja-tollroad.co.id:20443`).
   Only cameras whose name carries a `KM nn+nnn` marker AND whose stream returned
   a real video segment when probed are included; gate/ramp/rest-area names have
@@ -1151,13 +1151,13 @@ speech-to-speech API, so Claude is paired with the browser's own
   Semarang-Batang: KM 347.4 at Semarang; Indrapura-Kisaran: KM 86.9 offset so KM 125-132 sits near Kisaran;
   Dalam Kota (JTC): Cawang to Pluit via Tomang, the camera KM scaled linearly onto the 18.3 km OSM chain as if the road were 20 km (Wikipedia interchange KMs disagree with that by up to ~1 km);
   Binjai-Langsa: KM 17.0 at Binjai; Sigli-Banda Aceh: chain from the Banda Aceh end, KM = chain km; the Sumatra and
-  Kalimantan corridors use the portal's own KM against the OSM chain from the toll start). All origins are assumptions,
+  Kalimantan corridors use the portal's own KM against the OSM chain from the toll start; Pejagan-Pemalang: portal KM 250-306 against the OSM chain with KM 250 at Pejagan; Palimanan-Kanci: KM 194.75-211.4 on a 26.3 km chain; Ciawi-Sukabumi: chain from the Ciawi end with KM 46 at km 0). All origins are assumptions,
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 4000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 3000 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
-  `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 3050 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix. The `jmlive.jasamarga.com` portal rotates its stream UUIDs; a row whose URL stops answering is repaired by matching the portal's current URL on prefix + KM + A/B suffix (the position stays). 149 older `jmlive` rows have no live match and remain in the pack as dead entries (they never play).
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
   the operator from the browser Network tab of the public ATCS page (requests
