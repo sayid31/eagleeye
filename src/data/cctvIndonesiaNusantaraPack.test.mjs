@@ -15,7 +15,7 @@ const SITES = [
   { prefix: 'banjarmasin', count: 33, lat: [-3.40, -3.26], lon: [114.55, 114.64], host: /^https:\/\/atcs\.banjarmasinkota\.go\.id\/stream\/[A-Za-z0-9_\-]+\/index\.m3u8$/ },
   { prefix: 'kobar', count: 22, lat: [-2.78, -2.64], lon: [111.60, 111.72], host: /^https:\/\/cctv\.kotawaringinbaratkab\.go\.id\/storage\/stream\/cctv\d+\/a\d+\.m3u8$/ },
   { prefix: 'tanahbumbu', count: 11, lat: [-3.80, -3.38], lon: [115.37, 116.03], host: /^https:\/\/atcs\.tanahbumbukab\.go\.id\/hls\/cctv_ch\d+\/index\.m3u8$/ },
-  { prefix: 'situbondo', count: 4, lat: [-7.75, -7.70], lon: [113.78, 114.02], host: /^https:\/\/cctvstream\.situbondokab\.go\.id\/cctv\d+\/index\.m3u8$/ },
+  { prefix: 'situbondo', count: 19, lat: [-7.80, -7.65], lon: [113.65, 114.30], host: /^https:\/\/cctvstream\.situbondokab\.go\.id\/cctv\d+\/index\.m3u8$/ },
 ];
 const rowsOf = (prefix) => pack.filter((row) => row.id.startsWith(`${prefix}-atcs-`));
 
@@ -63,14 +63,43 @@ for (const site of SITES) {
 test('sources that cannot be played safely or lawfully as static HLS are not in the pack', () => {
   // Kutai Timur: WAF proof-of-work challenge. Gresik: on-demand stream that needs a start call + heartbeat.
   // Jombang / Jatim Pelayaran: MJPEG (Jatim Pelayaran also embeds camera credentials). Pontianak: YouTube embeds.
-  // Kaltim: inactive, WebRTC or session-token URLs. Kediri / Pati: live but publish no coordinates.
-  for (const prefix of ['kutaitimur', 'gresik', 'jombang', 'jatimpelayaran', 'pontianak', 'kaltim', 'kediri', 'pati']) {
+  // Kaltim: inactive, WebRTC or session-token URLs.
+  for (const prefix of ['kutaitimur', 'gresik', 'jombang', 'jatimpelayaran', 'pontianak', 'kaltim']) {
     assert.equal(rowsOf(prefix).length, 0, prefix);
   }
 });
 
+// Kediri and Pati publish no coordinates, so their rows must never claim the SOURCE-PUBLISHED tier.
+const UNPOSITIONED = [
+  { prefix: 'kediri', count: 17, lat: [-7.90, -7.73], lon: [111.93, 112.08], host: /^https:\/\/pplterpadu\.kedirikota\.go\.id:8888\/[a-z_]+\/index\.m3u8$/ },
+  { prefix: 'pati', count: 4, lat: [-6.80, -6.70], lon: [111.00, 111.10], host: /^https:\/\/streaming\.patikab\.go\.id\/memfs\/[0-9a-f-]{36}\.m3u8$/ },
+];
+for (const site of UNPOSITIONED) {
+  test(`${site.prefix}: ${site.count} HLS rows with a guessed position, never labelled SOURCE-PUBLISHED`, () => {
+    const rows = rowsOf(site.prefix);
+    assert.equal(rows.length, site.count);
+    assert.equal(new Set(rows.map((row) => row.url)).size, site.count);
+    for (const row of rows) {
+      assert.match(row.url, site.host, row.id);
+      assert.doesNotMatch(row.url, /[?@]/, row.id);
+      assert.ok(isAllowedRelOrigin(row.url, row.url), row.id);
+      assert.match(row.name, /\((APPROX\. LOCATION|CITY-LEVEL ONLY) — Live — Unofficial\)$/, row.id);
+      assert.doesNotMatch(row.name + row.provider + row.license, /SOURCE-PUBLISHED LOCATION —/, row.id);
+      assert.match(row.license, /CCTV_INDONESIA_UNOFFICIAL_ENABLED=0/, row.id);
+      assert.equal(row.headingConfidence, 'low', row.id);
+      assert.ok(row.lat > site.lat[0] && row.lat < site.lat[1] && row.lon > site.lon[0] && row.lon < site.lon[1], row.id);
+    }
+    for (let i = 0; i < rows.length; i += 1) {
+      for (let j = i + 1; j < rows.length; j += 1) {
+        const metres = Math.hypot((rows[i].lat - rows[j].lat) * 111000, (rows[i].lon - rows[j].lon) * 110000);
+        assert.ok(metres >= 40, `${rows[i].id} is only ${Math.round(metres)} m from ${rows[j].id}`);
+      }
+    }
+  });
+}
+
 test('credentialed sources are not in the pack: no RTSP, no embedded user info, no tokens or session ids', () => {
-  for (const site of SITES) {
+  for (const site of [...SITES, ...UNPOSITIONED]) {
     for (const row of rowsOf(site.prefix)) {
       assert.match(row.url, /^https:\/\//, row.id);
       assert.doesNotMatch(JSON.stringify(row), /rtsp:|password|token=|session=|eyJ/i, row.id);

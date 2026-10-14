@@ -1266,11 +1266,14 @@ speech-to-speech API, so Claude is paired with the browser's own
   many are park or water-level monitors), Balangan 36 (`cctv.balangankab.go.id/hls/<slug>/index.m3u8`), Banjarmasin 33
   (`atcs.banjarmasinkota.go.id/stream/<code>/index.m3u8`, about 30 s behind live), Kotawaringin Barat 22
   (`cctv.kotawaringinbaratkab.go.id/storage/stream/cctvN/aN.m3u8`, behind Cloudflare but served without a challenge), Tanah Bumbu 11
-  (`atcs.tanahbumbukab.go.id/hls/cctv_chNN/index.m3u8`; two flaky channels dropped), Situbondo 4 (`cctvstream.situbondokab.go.id/cctvN/index.m3u8`).
+  (`atcs.tanahbumbukab.go.id/hls/cctv_chNN/index.m3u8`; two flaky channels dropped), Situbondo 19 (`cctvstream.situbondokab.go.id/cctvN/index.m3u8`, MediaMTX on demand: 12 more listed cameras answer HTTP 500 `source ... has timed out`, and the 19 can drop out the same way).
   Rule: advancing media sequence over three probes plus a valid segment through `/api/cctv/media`. Not added: Kutai Timur (WAF
   challenge), Gresik (on-demand stream needing a start call and heartbeat), Jombang and Jatim Pelayaran (MJPEG; the latter embeds camera
-  credentials), Pontianak (YouTube embeds), Kaltim (inactive, WebRTC or session tokens), Kediri and Pati (live but no coordinates),
-  the cctvnusantara.com aggregator (stream URLs not published). Rationale: `docs/DECISIONS.md` ("ATCS Aceh, Kalimantan and Situbondo").
+  credentials), Pontianak (YouTube embeds), Kaltim (inactive, WebRTC or session tokens), the cctvnusantara.com aggregator (stream URLs not published).
+  **Kediri 17 / Pati 4 rows** (`kediri-atcs-*`, `pati-atcs-*`) come from sources that publish no coordinates, so none is `SOURCE-PUBLISHED`:
+  15 Kediri rows are `APPROX. LOCATION` (Nominatim match for the place named in the stream path `pplterpadu.kedirikota.go.id:8888/<slug>/index.m3u8`,
+  error ~200 m-2 km), 2 (nabatiasa, water_torn) are `CITY-LEVEL ONLY` on a ring around central Kediri; the 4 Pati rows
+  (`streaming.patikab.go.id/memfs/<uuid>.m3u8`, master then variant) are `APPROX. LOCATION` from the cctvnusantara.com listing, not from the source. Rationale: `docs/DECISIONS.md` ("ATCS Aceh, Kalimantan and Situbondo").
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5

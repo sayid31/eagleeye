@@ -7,19 +7,19 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1825** |
-| Kota dan kabupaten (31 lokasi) | 1389 |
+| **Total kamera video live** | **1861** |
+| Kota dan kabupaten (33 lokasi) | 1425 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1749 |
+| Format HLS | 1785 |
 | Format FLV (Surakarta) | 76 |
 
 Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data:
 
 | Label posisi | Kamera | Arti |
 |---|---:|---|
-| `APPROX. LOCATION` | 1068 | 632 kamera kota (dicari dari nama jalan/tempat) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 518 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 4), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
-| `CITY-LEVEL ONLY` | 177 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
+| `APPROX. LOCATION` | 1087 | 651 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream dan Pati 4 dari koordinat agregator cctvnusantara.com, bukan dari sumber) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
+| `SOURCE-PUBLISHED LOCATION` | 533 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `CITY-LEVEL ONLY` | 179 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
 ## Kota
@@ -56,7 +56,9 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 28 | Banjarmasin | 33 | HLS (tertunda sekitar 30 detik) |
 | 29 | Kotawaringin Barat | 22 | HLS |
 | 30 | Tanah Bumbu | 11 | HLS |
-| 31 | Situbondo | 4 | HLS |
+| 31 | Situbondo | 19 | HLS (on-demand MediaMTX, bisa mati sewaktu-waktu) |
+| 32 | Kediri | 17 | HLS |
+| 33 | Pati | 4 | HLS |
 
 ## Jalan tol
 
@@ -128,11 +130,10 @@ Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 
 | Jatim Pelayaran (Dishub Jatim) | tidak diketahui | MJPEG lewat http, kredensial kamera tertanam, tanpa koordinat | tidak ditambahkan |
 | Pontianak | tidak diketahui | hanya embed YouTube | tidak ditambahkan |
 | Kaltim (layanan.kaltimprov) | tidak diketahui | kamera tidak aktif, WebRTC, atau URL bertoken sesi; rantai TLS tidak lengkap | tidak ditambahkan |
-| Kediri | 17 | stream hidup, tetapi situs tidak menerbitkan koordinat | tidak ditambahkan |
-| Pati (lewat cctvnusantara.com) | 4 | hidup, tetapi tanpa koordinat dari sumber asli | butuh keputusan owner |
 | cctvnusantara.com | tidak diketahui | agregator: URL stream tidak diterbitkan (relay di balik Turnstile); kamera pengadilan di luar cakupan; 2 stream Serang "Bogeg" kena masalah rantai TLS | tidak ditambahkan |
 | Tanah Bumbu | 2 | ch09 dan ch07 timbul-tenggelam (404 / terputus) dalam 3 putaran cek | tidak ditambahkan |
-| Situbondo | sekitar 27 | tidak stabil pada cek; hanya 4 yang lolos | belum dicek ulang |
+| Situbondo | 12 | sumber on-demand MediaMTX: playlist menjawab HTTP 500 "source of path ... has timed out" (RTSP upstream mati) atau urutan media beku | dicek ulang 2026-10-14, 15 dari 27 pulih dan dimasukkan |
+| Pati | 1 | CCTV Diskominfo Parkiran Depan, 404 | tidak dimasukkan |
 | Sumber lain | tidak diketahui | BPJT (path 404), RTTMC (DNS gagal), smartcity.jakarta (butuh inspeksi browser), Bali Tower (host tidak terjangkau), ATCS Bandung (404) | belum dicek ulang |
 
 Dua kamera **Padalarang Flyover - Cimareme** dan **- KBP** sempat 404, lalu lolos 5 probe berturut-turut dan 3 probe ulang tepat sebelum

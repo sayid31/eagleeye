@@ -4,10 +4,10 @@ Daftar URL stream video langsung (HLS/FLV) dari `config/cctv_sources.indonesia_u
 
 | | Jumlah |
 |---|---:|
-| **Total URL** | **1825** |
-| Kota dan kabupaten (31 lokasi) | 1389 |
+| **Total URL** | **1861** |
+| Kota dan kabupaten (33 lokasi) | 1425 |
 | Jalan tol (24 ruas) | 436 |
-| HLS | 1749 |
+| HLS | 1785 |
 | FLV | 76 |
 
 Catatan:
@@ -1385,6 +1385,30 @@ Catatan:
 | 19 | `banjar-atcs-simpang-gardu-arah-banjar` | ATCS SIMPANG GARDU ARAH BANJAR | HLS | `https://atcs.banjarkota.go.id:5443/LiveApp/streams/spgardu.m3u8` |
 | 20 | `banjar-atcs-singaperbangsa-2` | ATCS SINGAPERBANGSA 2 | HLS | `https://atcs.banjarkota.go.id:5443/LiveApp/streams/singaperbangsa2.m3u8` |
 
+### Situbondo (19)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `situbondo-atcs-pantai-blitok` | Pantai Blitok | HLS | `https://cctvstream.situbondokab.go.id/cctv8/index.m3u8` |
+| 2 | `situbondo-atcs-depan-kominfo` | Depan Kominfo | HLS | `https://cctvstream.situbondokab.go.id/cctv6/index.m3u8` |
+| 3 | `situbondo-atcs-paseban-alun-alun-situbondo` | Paseban Alun-Alun Situbondo | HLS | `https://cctvstream.situbondokab.go.id/cctv1/index.m3u8` |
+| 4 | `situbondo-atcs-pdam-selatan-alun-alun-situbondo` | PDAM Selatan Alun-Alun Situbondo | HLS | `https://cctvstream.situbondokab.go.id/cctv3/index.m3u8` |
+| 5 | `situbondo-atcs-simpang-buduan` | Simpang Buduan | HLS | `https://cctvstream.situbondokab.go.id/cctv109/index.m3u8` |
+| 6 | `situbondo-atcs-simpang-tiga-panarukan` | Simpang Tiga Panarukan | HLS | `https://cctvstream.situbondokab.go.id/cctv110/index.m3u8` |
+| 7 | `situbondo-atcs-simpang-tiga-wringinanom` | Simpang Tiga Wringinanom | HLS | `https://cctvstream.situbondokab.go.id/cctv105/index.m3u8` |
+| 8 | `situbondo-atcs-simpang-tugu-jam` | Simpang Tugu Jam | HLS | `https://cctvstream.situbondokab.go.id/cctv118/index.m3u8` |
+| 9 | `situbondo-atcs-simpang-bhayangkara` | Simpang Bhayangkara | HLS | `https://cctvstream.situbondokab.go.id/cctv119/index.m3u8` |
+| 10 | `situbondo-atcs-simpang-alun-alun-situbondo` | Simpang Alun-Alun Situbondo | HLS | `https://cctvstream.situbondokab.go.id/cctv117/index.m3u8` |
+| 11 | `situbondo-atcs-simpang-ab-timur` | Simpang AB Timur | HLS | `https://cctvstream.situbondokab.go.id/cctv115/index.m3u8` |
+| 12 | `situbondo-atcs-dam-pintu-lima` | Dam Pintu Lima | HLS | `https://cctvstream.situbondokab.go.id/cctv101/index.m3u8` |
+| 13 | `situbondo-atcs-simpang-smea-ptz` | Simpang SMEA PTZ | HLS | `https://cctvstream.situbondokab.go.id/cctv122/index.m3u8` |
+| 14 | `situbondo-atcs-simpang-smea` | Simpang SMEA | HLS | `https://cctvstream.situbondokab.go.id/cctv104/index.m3u8` |
+| 15 | `situbondo-atcs-simpang-man` | Simpang MAN | HLS | `https://cctvstream.situbondokab.go.id/cctv102/index.m3u8` |
+| 16 | `situbondo-atcs-simpang-tiga-pg-panji` | Simpang Tiga PG Panji | HLS | `https://cctvstream.situbondokab.go.id/cctv106/index.m3u8` |
+| 17 | `situbondo-atcs-simpang-kapongan` | Simpang Kapongan | HLS | `https://cctvstream.situbondokab.go.id/cctv107/index.m3u8` |
+| 18 | `situbondo-atcs-simpang-tiga-ps-kampung` | Simpang Tiga Ps. Kampung | HLS | `https://cctvstream.situbondokab.go.id/cctv113/index.m3u8` |
+| 19 | `situbondo-atcs-simpang-tiga-ps-asembagus` | Simpang Tiga Ps. Asembagus | HLS | `https://cctvstream.situbondokab.go.id/cctv112/index.m3u8` |
+
 ### Solok (18)
 
 | # | ID | Nama | Format | URL |
@@ -1430,6 +1454,28 @@ Catatan:
 | 16 | `tasikmalaya-atcs-simpang-paseh` | ATCS SIMPANG PASEH | HLS | `https://atcs.tasikmalayakota.go.id/camera/pasehptz.m3u8` |
 | 17 | `tasikmalaya-atcs-simpang-padayungan` | ATCS SIMPANG PADAYUNGAN | HLS | `https://atcs.tasikmalayakota.go.id/camera/padayunganarahkawalu.m3u8` |
 | 18 | `tasikmalaya-atcs-simpang-rumah-sakit` | ATCS SIMPANG RUMAH SAKIT | HLS | `https://atcs.tasikmalayakota.go.id/camera/rumahsakit.m3u8` |
+
+### Kediri (17)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `kediri-atcs-jetis` | ATCS Jetis | HLS | `https://pplterpadu.kedirikota.go.id:8888/jetis/index.m3u8` |
+| 2 | `kediri-atcs-tosaren` | ATCS Tosaren | HLS | `https://pplterpadu.kedirikota.go.id:8888/tosaren/index.m3u8` |
+| 3 | `kediri-atcs-baruna` | ATCS Baruna | HLS | `https://pplterpadu.kedirikota.go.id:8888/baruna/index.m3u8` |
+| 4 | `kediri-atcs-alun-alun` | ATCS Alun-Alun | HLS | `https://pplterpadu.kedirikota.go.id:8888/alun_alun/index.m3u8` |
+| 5 | `kediri-atcs-bandar-ngalim` | ATCS Bandar Ngalim | HLS | `https://pplterpadu.kedirikota.go.id:8888/bandar_ngalim/index.m3u8` |
+| 6 | `kediri-atcs-mrican` | ATCS Mrican | HLS | `https://pplterpadu.kedirikota.go.id:8888/mrican/index.m3u8` |
+| 7 | `kediri-atcs-iskandar-muda` | ATCS Iskandar Muda | HLS | `https://pplterpadu.kedirikota.go.id:8888/iskandar_muda/index.m3u8` |
+| 8 | `kediri-atcs-muning` | ATCS Muning | HLS | `https://pplterpadu.kedirikota.go.id:8888/muning/index.m3u8` |
+| 9 | `kediri-atcs-semampir` | ATCS Semampir | HLS | `https://pplterpadu.kedirikota.go.id:8888/semampir/index.m3u8` |
+| 10 | `kediri-atcs-nabatiasa` | ATCS Nabatiasa | HLS | `https://pplterpadu.kedirikota.go.id:8888/nabatiasa/index.m3u8` |
+| 11 | `kediri-atcs-dandangan` | ATCS Dandangan | HLS | `https://pplterpadu.kedirikota.go.id:8888/dandangan/index.m3u8` |
+| 12 | `kediri-atcs-water-tower` | ATCS Water Tower | HLS | `https://pplterpadu.kedirikota.go.id:8888/water_torn/index.m3u8` |
+| 13 | `kediri-atcs-tamanan` | ATCS Tamanan | HLS | `https://pplterpadu.kedirikota.go.id:8888/tamanan/index.m3u8` |
+| 14 | `kediri-atcs-a-yani-utara` | ATCS A. Yani Utara | HLS | `https://pplterpadu.kedirikota.go.id:8888/a_yani_utara/index.m3u8` |
+| 15 | `kediri-atcs-kawi` | ATCS Kawi | HLS | `https://pplterpadu.kedirikota.go.id:8888/kawi/index.m3u8` |
+| 16 | `kediri-atcs-sukorame` | ATCS Sukorame | HLS | `https://pplterpadu.kedirikota.go.id:8888/sukorame/index.m3u8` |
+| 17 | `kediri-atcs-a-yani-selatan` | ATCS A. Yani Selatan | HLS | `https://pplterpadu.kedirikota.go.id:8888/a_yani_selatan/index.m3u8` |
 
 ### Banyumas (15)
 
@@ -1554,14 +1600,14 @@ Catatan:
 | 6 | `pesisirselatan-atcs-batas-kota-1` | ATCS Batas Kota 1 | HLS | `https://live.pesisirselatankab.go.id/6d6755b8ccc552cb6ee01a1123f97b94/hls/kominfo/ttygSs99dy/s.m3u8` |
 | 7 | `pesisirselatan-atcs-batas-kota-2` | ATCS Batas kota 2 | HLS | `https://live.pesisirselatankab.go.id/6d6755b8ccc552cb6ee01a1123f97b94/hls/kominfo/8poXDsVDvP/s.m3u8` |
 
-### Situbondo (4)
+### Pati (4)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
-| 1 | `situbondo-atcs-pantai-blitok` | Pantai Blitok | HLS | `https://cctvstream.situbondokab.go.id/cctv8/index.m3u8` |
-| 2 | `situbondo-atcs-depan-kominfo` | Depan Kominfo | HLS | `https://cctvstream.situbondokab.go.id/cctv6/index.m3u8` |
-| 3 | `situbondo-atcs-paseban-alun-alun-situbondo` | Paseban Alun-Alun Situbondo | HLS | `https://cctvstream.situbondokab.go.id/cctv1/index.m3u8` |
-| 4 | `situbondo-atcs-pdam-selatan-alun-alun-situbondo` | PDAM Selatan Alun-Alun Situbondo | HLS | `https://cctvstream.situbondokab.go.id/cctv3/index.m3u8` |
+| 1 | `pati-atcs-dishub-terminal-1-pati` | ATCS Dishub Terminal 1 Pati | HLS | `https://streaming.patikab.go.id/memfs/22ab6501-63f2-43d6-af1b-ce6c1ed7cef0.m3u8` |
+| 2 | `pati-atcs-dishub-terminal-2-pati` | ATCS Dishub Terminal 2 Pati | HLS | `https://streaming.patikab.go.id/memfs/dfd316df-7293-40d8-b523-0b2b7ddb79df.m3u8` |
+| 3 | `pati-atcs-dishub-terminal-3-pati` | ATCS Dishub Terminal 3 Pati | HLS | `https://streaming.patikab.go.id/memfs/e74e945a-e872-4f35-9ebd-b25d78db0a8c.m3u8` |
+| 4 | `pati-atcs-cctv-alun-alun-simpang-lima-pati` | CCTV Alun-Alun Simpang Lima Pati | HLS | `https://streaming.patikab.go.id/memfs/8eff05af-b414-41ef-b9fb-45102439095d.m3u8` |
 
 ## Jalan tol
 

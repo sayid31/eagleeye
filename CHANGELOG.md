@@ -15,12 +15,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
-- 153 live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only) from six more sites, all plain HTTPS HLS with
-  no login or cookie and carrying their source-published coordinates: Banda Aceh 47, Balangan 36,
-  Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 4. Only cameras that served live video
-  in repeated probes and through the app's proxy are included. Not added: Kutai Timur, Gresik, Jombang,
-  Jatim Pelayaran, Pontianak, Kaltim (streams need a challenge, start call, MJPEG/YouTube support or
-  credentials), and Kediri and Pati (no coordinates published). Per-site detail in `cctvLive.md`; the full
+- 189 live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain HTTPS HLS with no login or cookie.
+  168 carry their source-published coordinates: Banda Aceh 47, Balangan 36, Banjarmasin 33,
+  Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19 (on-demand streams that can drop out). 21 more have no
+  published coordinates, so their markers are labelled `APPROX. LOCATION` (Kediri 15, placed from the place
+  named in each stream path; Pati 4, placed from the cctvnusantara.com listing) or `CITY-LEVEL ONLY` (Kediri 2).
+  Only cameras that served live video in repeated probes and through the app's proxy are included. Not added:
+  Kutai Timur, Gresik, Jombang, Jatim Pelayaran, Pontianak, Kaltim (streams need a challenge, a start call,
+  MJPEG/YouTube support or credentials). Per-site detail in `cctvLive.md`; the full
   URL list is in `urlcctv.md`.
 
 - 260 live Java and Banten ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain
