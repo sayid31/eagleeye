@@ -7,20 +7,20 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **2372** |
-| Kota dan kabupaten (44 lokasi) | 1936 |
-| Jalan tol (24 ruas) | 436 |
-| Format HLS | 2280 |
-| Format FLV (Surakarta) | 76 |
+| **Total kamera video live** | **2491** |
+| Kota dan kabupaten (44 lokasi) | 2040 |
+| Jalan tol (25 ruas) | 451 |
+| Format HLS | 2341 |
+| Format FLV (Surakarta) | 134 |
 | Format MJPEG (Jombang, ditampilkan sebagai gambar yang disegarkan) | 16 |
 
 Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data:
 
 | Label posisi | Kamera | Arti |
 |---|---:|---|
-| `APPROX. LOCATION` | 1110 | 674 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream, Pati 4 dari koordinat agregator cctvnusantara.com, dan Ciamis 14 serta Pemalang 9 dari geocoding Nominatim, bukan dari sumber) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 1018 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16, Kota Serang 20, Nganjuk 289, Banjarbaru 47, Jambi 19, Garut 15, Karo 12, Lebak 10, dan Balangan menjadi 38), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
-| `CITY-LEVEL ONLY` | 182 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
+| `APPROX. LOCATION` | 1175 | 724 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream, Pati 4 dari koordinat agregator cctvnusantara.com, dan Ciamis 14 serta Pemalang 9 dari geocoding Nominatim, bukan dari sumber) + 451 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
+| `SOURCE-PUBLISHED LOCATION` | 1059 | koordinat dipublikasikan sumbernya sendiri (Magelang 75, Semarang 59, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 20, Padang Panjang 14, Banten 37, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16, Kota Serang 20, Nganjuk 289, Banjarbaru 47, Jambi 19, Garut 15, Karo 12, Lebak 10, dan Balangan menjadi 38), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `CITY-LEVEL ONLY` | 195 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
 ## Kota
@@ -29,29 +29,29 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 |---|---|---:|---|
 | 1 | Malang | 199 | HLS |
 | 2 | Surabaya | 141 | HLS |
-| 3 | Yogyakarta | 131 | HLS |
+| 3 | Yogyakarta | 133 | HLS |
 | 4 | Denpasar | 96 | HLS |
-| 5 | Surakarta | 76 | FLV |
+| 5 | Surakarta | 134 | FLV |
 | 6 | Bandung | 60 | HLS |
 | 7 | Bandung Barat | 45 | HLS |
 | 8 | Bukittinggi | 39 | HLS |
 | 9 | Sumedang | 35 | HLS |
 | 10 | Pasuruan | 31 | HLS |
-| 11 | Pekanbaru | 29 | HLS |
+| 11 | Pekanbaru | 32 | HLS |
 | 12 | Padang | 28 | HLS (LL-HLS fMP4) |
 | 13 | Solok | 18 | HLS |
 | 14 | Jakarta | 15 | HLS |
 | 15 | Padang Panjang | 14 | HLS (fMP4) |
 | 16 | Mataram | 12 | HLS |
 | 17 | Pesisir Selatan | 7 | HLS |
-| 18 | Magelang | 74 | HLS |
-| 19 | Semarang | 47 | HLS |
+| 18 | Magelang | 75 | HLS |
+| 19 | Semarang | 59 | HLS |
 | 20 | Cianjur | 44 | HLS |
 | 21 | Tangerang (Kabupaten) | 28 | HLS |
 | 22 | Banjar | 20 | HLS |
 | 23 | Tasikmalaya | 18 | HLS |
-| 24 | Banyumas | 15 | HLS |
-| 25 | Banten (provinsi: Lebak, Bapenda, KP3B) | 14 | HLS |
+| 24 | Banyumas | 20 | HLS |
+| 25 | Banten (provinsi: Lebak, Bapenda, KP3B, Gerbang) | 37 | HLS |
 | 26 | Banda Aceh | 47 | HLS |
 | 27 | Balangan | 38 | HLS |
 | 28 | Banjarmasin | 33 | HLS (tertunda sekitar 30 detik) |
@@ -100,6 +100,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 22 | Pekanbaru-Bangkinang Toll | 10 | HLS |
 | 23 | Indralaya-Prabumulih Toll | 9 | HLS |
 | 24 | Padaleunyi Toll | 9 | HLS |
+| 25 | Cipali Toll (Cikopo-Palimanan) | 15 | HLS (`cctvastra.lintasmarga.com`; KM asumsi 70–188) |
 
 ## Bukan video live (tidak dihitung di atas)
 
@@ -112,21 +113,20 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 
 Kamera ini ada di sumbernya tetapi **tidak** didaftarkan, karena tidak menyajikan segmen video yang valid saat dicek.
 Aturan masuk: kamera hanya dimasukkan bila pernah menyajikan segmen valid, dan dicek ulang tepat sebelum commit.
-Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 (lainnya).
+Pengecekan terakhir 2026-10-14 (cek ulang menyeluruh: kamera berstatus "belum dicek ulang" diuji lagi tiga putaran lalu lewat proxy aplikasi) dan 2026-10-13 (lainnya).
 
 | Sumber | Kamera | Alasan | Status cek ulang |
 |---|---:|---|---|
-| Pekanbaru | 57 | 55 manifest 404, 2 tidak pernah menghasilkan segmen (SEBERANG MPP 1, SUDIRMAN - TUANKU TAMBUSAI 1) | tetap mati |
-| Surakarta | 19 | tidak pernah menjawab, bahkan dengan tunggu 25 detik | belum dicek ulang |
-| Surabaya | sekitar 15 | urutan media beku atau playlist kosong, dan 404 terus; 2 kamera sempat pulih dan sudah dimasukkan | belum dicek ulang |
+| Pekanbaru | 54 | 52 manifest 404, 2 tidak pernah menghasilkan segmen (SEBERANG MPP 1, SUDIRMAN - TUANKU TAMBUSAI 1); 3 pulih dan sudah dimasukkan | dicek ulang 2026-10-14 |
+| Surakarta | sekitar 25 | 18 tidak pernah menjawab; 3 stream FLV berkodek VP6 (tidak bisa diputar browser) tidak dimasukkan; 4 lolos cek FLV tetapi gagal lewat proxy aplikasi; 58 stream lain pulih dan sudah dimasukkan | dicek ulang 2026-10-14 |
+| Surabaya | sekitar 11 | urutan media beku atau playlist kosong, dan 404 terus. 4 kamera (cctv_285, 297, 387, 455) sempat bergerak lagi tetapi memakai http polos `36.66.208.101:5000` tanpa koordinat, jadi dianggap rapuh dan tidak dimasukkan | dicek ulang 2026-10-14 |
 | Bandung Barat | 13 | selalu 404 | dicek 3 kali pada 2026-10-13, tetap mati |
 | Bukittinggi | 8 | 404 / "File Not Found" | belum dicek ulang |
-| Yogyakarta | 2 | gagal uji liveness | belum dicek ulang |
-| Pasuruan | 2 | origin menjawab 404 | belum dicek ulang |
+| Pasuruan | 2 | origin menjawab 404 | dicek ulang 2026-10-14, tetap mati |
 | Solok | 1 | Simpang Sigege, 404 | belum dicek ulang |
 | Padang Panjang | 1 | cam12 (Simpang SMPN 5), 404 | tetap mati |
 | Pesisir Selatan | 1 | Kamera Carocok 1 hanya membalas "File Not Found"; Carocok 4 memakai stream yang sama dengan Carocok 3 sehingga disimpan sekali | tetap mati |
-| Jalan tol Cipali | 20 | rantai sertifikat TLS server tidak lengkap; Node menolaknya dan memaksa mematikan verifikasi TLS tidak sepadan untuk demo | belum dicek ulang |
+| Jalan tol Cipali | 5 | KM 164, 179 B, 189 hanya rekaman (ENDLIST); KM 188 C1 dan C2 ENDLIST lewat proxy aplikasi. 15 kamera lain sudah dimasukkan; rantai TLS lengkap berkat intermediate Sectigo R36 di `config/ca/` | dicek ulang 2026-10-14 |
 | Banyuwangi | tidak diketahui | `live.banyuwangikab.go.id` diblokir Cloudflare | butuh keputusan owner |
 | Balangan (tambahan) | 13 | dari 15 URL yang belum masuk, 13 menjawab 404; 2 (Tugu Gula Habang) hidup dan sudah dimasukkan | dicek 2026-10-14 |
 | Wonosobo, Brebes, Kudus, Samarinda, Sukoharjo | tidak diketahui | token per penonton, API 401, atau tantangan WAF/Turnstile; tidak dilewati | tidak ditambahkan |
@@ -135,8 +135,8 @@ Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 
 | Medan, Kabupaten Bogor | tidak diketahui | daftar kamera hanya lewat API yang butuh client id/secret yang tertanam di JavaScript situs; tidak dipakai | tidak ditambahkan |
 | Jawa Tengah Dishub GIS | tidak diketahui | butuh login | tidak ditambahkan |
 | Grobogan | tidak diketahui | tidak ditemukan daftar atau stream publik | tidak ditambahkan |
-| Banten (provinsi) | 150 | portal menandai Online tetapi manifest 404 | belum dicek ulang |
-| Banyumas, Semarang, Tangerang Kab., Banjar, Tasikmalaya, Magelang, Cianjur | sekitar 110 | 404, timeout, atau handshake TLS gagal pada cek akhir; sebagian timbul-tenggelam | dicek 4 kali pada 2026-10-13 |
+| Banten (provinsi) | 127 | portal menandai Online tetapi manifest masih HTTP 404; 23 yang pulih sudah dimasukkan | dicek ulang 2026-10-14 |
+| Banyumas 12, Semarang 10, Magelang 16, Cianjur 24, Banjar 19, Tasikmalaya 11 (rekaman ENDLIST), Kota Serang 3, Tangerang Kab. 2 | sekitar 97 | 404, reset koneksi, timeout, atau hanya rekaman; yang pulih (Semarang 13, Banyumas 5, Magelang 1) sudah dimasukkan | dicek ulang 2026-10-14 |
 | Kutai Timur | tidak diketahui | situs di balik tantangan WAF proof-of-work; melewatinya tidak dilakukan | tidak ditambahkan |
 | Gresik (cctvkanjeng) | 40 | dari 95 kamera: gagal start di sumber (RTSP ditolak, 401 atau error ffmpeg), playlist tidak pernah muncul, beku, atau offline menurut sumber. Respons start situs ini membocorkan kredensial RTSP kamera; tidak disimpan, sebaiknya dilaporkan ke admin situs | dicek ulang lewat proxy 2026-10-14 |
 | Jombang | 9 | monitor ZoneMinder yang mengirim gambar "Unable to stream" (kamera mati di sumber) | dicek 2026-10-14 |
