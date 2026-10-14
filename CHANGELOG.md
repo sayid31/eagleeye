@@ -15,6 +15,25 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 189 live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain HTTPS HLS with no login or cookie.
+  168 carry their source-published coordinates: Banda Aceh 47, Balangan 36, Banjarmasin 33,
+  Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19 (on-demand streams that can drop out). 21 more have no
+  published coordinates, so their markers are labelled `APPROX. LOCATION` (Kediri 15, placed from the place
+  named in each stream path; Pati 4, placed from the cctvnusantara.com listing) or `CITY-LEVEL ONLY` (Kediri 2).
+  Only cameras that served live video in repeated probes and through the app's proxy are included. Not added:
+  Kutai Timur, Jatim Pelayaran, Pontianak, Kaltim (streams need a challenge, YouTube support or credentials). Per-site detail in `cctvLive.md`; the full
+  URL list is in `urlcctv.md`.
+
+- 71 more live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only) from two sites whose streams are not plain static
+  HLS, all with source-published coordinates: Gresik 55 (`gresik-atcs-*`) and Jombang 16 (`jombang-atcs-*`).
+  Gresik runs a camera only while someone watches, so the dev proxy now opens an anonymous viewer session per
+  camera (start, 20 s heartbeat, stop after 60 s idle) and the CCTV panel plays it as normal HLS. Jombang serves
+  ZoneMinder MJPEG behind a 2-hour token printed on its public page; the proxy reads that token at run time,
+  keeps it in memory only, and serves one JPEG per poll, so the panel shows these as a refreshing image.
+  Dead monitors that return a "Unable to stream" picture are rejected. 19 Gresik cameras and 9 Jombang monitors
+  are left out because they are down at the source. Catalog rows gain optional `onDemand` / `pageToken` fields
+  (same-origin only, never sent to the browser).
+
 - 260 live Java and Banten ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain
   HLS with no login or cookie: Magelang 74, Semarang 47, Cianjur 44, Tangerang
   Kabupaten 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Banten province 14 (Lebak,
@@ -29,8 +48,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
-- The CCTV catalog cap rises from 2000 to 2600 cameras (`DEFAULT_CCTV_MAX_SOURCES`);
-  the merged catalog is now about 2170, and the extra health-map memory is small.
+- The CCTV catalog cap rises from 2000 to 3000 cameras (`DEFAULT_CCTV_MAX_SOURCES`);
+  the merged catalog is now about 2330, and the extra health-map memory is small.
 
 - 45 live Kabupaten Bandung Barat CCTV cameras (UNOFFICIAL SOURCE, demo only) from
   the Dishub KBB ATCS page, all plain HLS with no login or cookie. The source

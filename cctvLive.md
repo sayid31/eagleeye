@@ -7,19 +7,20 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1672** |
-| Kota dan kabupaten (25 lokasi) | 1236 |
+| **Total kamera video live** | **1932** |
+| Kota dan kabupaten (35 lokasi) | 1496 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1596 |
+| Format HLS | 1840 |
 | Format FLV (Surakarta) | 76 |
+| Format MJPEG (Jombang, ditampilkan sebagai gambar yang disegarkan) | 16 |
 
 Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data:
 
 | Label posisi | Kamera | Arti |
 |---|---:|---|
-| `APPROX. LOCATION` | 1068 | 632 kamera kota (dicari dari nama jalan/tempat) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 365 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
-| `CITY-LEVEL ONLY` | 177 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
+| `APPROX. LOCATION` | 1087 | 651 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream dan Pati 4 dari koordinat agregator cctvnusantara.com, bukan dari sumber) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
+| `SOURCE-PUBLISHED LOCATION` | 604 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `CITY-LEVEL ONLY` | 179 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
 ## Kota
@@ -51,6 +52,16 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 23 | Tasikmalaya | 18 | HLS |
 | 24 | Banyumas | 15 | HLS |
 | 25 | Banten (provinsi: Lebak, Bapenda, KP3B) | 14 | HLS |
+| 26 | Banda Aceh | 47 | HLS |
+| 27 | Balangan | 36 | HLS |
+| 28 | Banjarmasin | 33 | HLS (tertunda sekitar 30 detik) |
+| 29 | Kotawaringin Barat | 22 | HLS |
+| 30 | Tanah Bumbu | 11 | HLS |
+| 31 | Situbondo | 19 | HLS (on-demand MediaMTX, bisa mati sewaktu-waktu) |
+| 32 | Kediri | 17 | HLS |
+| 33 | Pati | 4 | HLS |
+| 34 | Gresik | 55 | HLS on-demand (proxy membuka sesi penonton; sebagian kamera mati di sumber) |
+| 35 | Jombang | 16 | MJPEG ZoneMinder (token halaman dibaca saat dijalankan; 9 dari 25 monitor mati di sumber) |
 
 ## Jalan tol
 
@@ -92,7 +103,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 
 Kamera ini ada di sumbernya tetapi **tidak** didaftarkan, karena tidak menyajikan segmen video yang valid saat dicek.
 Aturan masuk: kamera hanya dimasukkan bila pernah menyajikan segmen valid, dan dicek ulang tepat sebelum commit.
-Pengecekan terakhir 2026-10-13.
+Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 (lainnya).
 
 | Sumber | Kamera | Alasan | Status cek ulang |
 |---|---:|---|---|
@@ -116,6 +127,16 @@ Pengecekan terakhir 2026-10-13.
 | Grobogan | tidak diketahui | tidak ditemukan daftar atau stream publik | tidak ditambahkan |
 | Banten (provinsi) | 150 | portal menandai Online tetapi manifest 404 | belum dicek ulang |
 | Banyumas, Semarang, Tangerang Kab., Banjar, Tasikmalaya, Magelang, Cianjur | sekitar 110 | 404, timeout, atau handshake TLS gagal pada cek akhir; sebagian timbul-tenggelam | dicek 4 kali pada 2026-10-13 |
+| Kutai Timur | tidak diketahui | situs di balik tantangan WAF proof-of-work; melewatinya tidak dilakukan | tidak ditambahkan |
+| Gresik (cctvkanjeng) | 40 | dari 95 kamera: gagal start di sumber (RTSP ditolak, 401 atau error ffmpeg), playlist tidak pernah muncul, beku, atau offline menurut sumber. Respons start situs ini membocorkan kredensial RTSP kamera; tidak disimpan, sebaiknya dilaporkan ke admin situs | dicek ulang lewat proxy 2026-10-14 |
+| Jombang | 9 | monitor ZoneMinder yang mengirim gambar "Unable to stream" (kamera mati di sumber) | dicek 2026-10-14 |
+| Jatim Pelayaran (Dishub Jatim) | tidak diketahui | MJPEG lewat http, kredensial kamera tertanam, tanpa koordinat | tidak ditambahkan |
+| Pontianak | tidak diketahui | hanya embed YouTube | tidak ditambahkan |
+| Kaltim (layanan.kaltimprov) | tidak diketahui | kamera tidak aktif, WebRTC, atau URL bertoken sesi; rantai TLS tidak lengkap | tidak ditambahkan |
+| cctvnusantara.com | tidak diketahui | agregator: URL stream tidak diterbitkan (relay di balik Turnstile); kamera pengadilan di luar cakupan; 2 stream Serang "Bogeg" kena masalah rantai TLS | tidak ditambahkan |
+| Tanah Bumbu | 2 | ch09 dan ch07 timbul-tenggelam (404 / terputus) dalam 3 putaran cek | tidak ditambahkan |
+| Situbondo | 12 | sumber on-demand MediaMTX: playlist menjawab HTTP 500 "source of path ... has timed out" (RTSP upstream mati) atau urutan media beku | dicek ulang 2026-10-14, 15 dari 27 pulih dan dimasukkan |
+| Pati | 1 | CCTV Diskominfo Parkiran Depan, 404 | tidak dimasukkan |
 | Sumber lain | tidak diketahui | BPJT (path 404), RTTMC (DNS gagal), smartcity.jakarta (butuh inspeksi browser), Bali Tower (host tidak terjangkau), ATCS Bandung (404) | belum dicek ulang |
 
 Dua kamera **Padalarang Flyover - Cimareme** dan **- KBP** sempat 404, lalu lolos 5 probe berturut-turut dan 3 probe ulang tepat sebelum
@@ -154,5 +175,6 @@ berhasil, satu di antaranya baru siap setelah 13 detik. Tidak ada perubahan kode
 
 ## Catatan
 
-- Katalog gabungan saat ini sekitar 2172 kamera (batas 2600; batas lama 2000 dinaikkan karena paket baru tidak akan muat). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
+- 153 kamera batch 2026-10-14 (Banda Aceh, Balangan, Banjarmasin, Kotawaringin Barat, Tanah Bumbu, Situbondo) lolos probe langsung (3 putaran) dan pengambilan lewat `/api/cctv/media` di dev server. Pemutaran di browser/globe belum diuji untuk batch ini. Banda Aceh memuat banyak monitor taman/tinggi muka air; Banjarmasin tertunda sekitar 30 detik.
+- Katalog gabungan saat ini sekitar 2330 kamera (batas 3000; batas lama 2600 dinaikkan karena 153 kamera baru tidak akan muat bersama alokasi Austin/Caltrans/TfL). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
 - Hapus per kota dengan prefiks id-nya (misalnya `surakarta-atcs-*`), atau matikan seluruh paket dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.

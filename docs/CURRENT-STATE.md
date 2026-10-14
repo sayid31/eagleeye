@@ -1155,8 +1155,8 @@ speech-to-speech API, so Claude is paired with the browser's own
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
-  are deliberately not added; the global catalog cap is 2600 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 2170 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  are deliberately not added; the global catalog cap is 3000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 2330 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1261,6 +1261,34 @@ speech-to-speech API, so Claude is paired with the browser's own
   added to `config/ca/` yet), Ciamis and Kudus (no coordinates published), Medan and Kabupaten Bogor (list API needs a client
   id/secret), Jawa Tengah Dishub GIS (login), Grobogan (no public list found). Rationale: `docs/DECISIONS.md` ("ATCS Java and Banten").
   Revoke per site with its `<site>-atcs-*` prefix.
+- **ATCS Aceh / Kalimantan / Situbondo rows (153)**, `<site>-atcs-*`, all `SOURCE-PUBLISHED LOCATION`, plain HTTPS HLS, no cookie, token or
+  credential, heading unknown. Banda Aceh 47 (`api.bandaacehkota.go.id/cctv/memfs/<uuid>.m3u8` x45 and `cctv-stream.bandaacehkota.info` x2;
+  many are park or water-level monitors), Balangan 36 (`cctv.balangankab.go.id/hls/<slug>/index.m3u8`), Banjarmasin 33
+  (`atcs.banjarmasinkota.go.id/stream/<code>/index.m3u8`, about 30 s behind live), Kotawaringin Barat 22
+  (`cctv.kotawaringinbaratkab.go.id/storage/stream/cctvN/aN.m3u8`, behind Cloudflare but served without a challenge), Tanah Bumbu 11
+  (`atcs.tanahbumbukab.go.id/hls/cctv_chNN/index.m3u8`; two flaky channels dropped), Situbondo 19 (`cctvstream.situbondokab.go.id/cctvN/index.m3u8`, MediaMTX on demand: 12 more listed cameras answer HTTP 500 `source ... has timed out`, and the 19 can drop out the same way).
+  Rule: advancing media sequence over three probes plus a valid segment through `/api/cctv/media`. Not added: Kutai Timur (WAF
+  challenge), Jatim Pelayaran (MJPEG over http with embedded camera
+  credentials), Pontianak (YouTube embeds), Kaltim (inactive, WebRTC or session tokens), the cctvnusantara.com aggregator (stream URLs not published).
+  **Kediri 17 / Pati 4 rows** (`kediri-atcs-*`, `pati-atcs-*`) come from sources that publish no coordinates, so none is `SOURCE-PUBLISHED`:
+  15 Kediri rows are `APPROX. LOCATION` (Nominatim match for the place named in the stream path `pplterpadu.kedirikota.go.id:8888/<slug>/index.m3u8`,
+  error ~200 m-2 km), 2 (nabatiasa, water_torn) are `CITY-LEVEL ONLY` on a ring around central Kediri; the 4 Pati rows
+  (`streaming.patikab.go.id/memfs/<uuid>.m3u8`, master then variant) are `APPROX. LOCATION` from the cctvnusantara.com listing, not from the source. Rationale: `docs/DECISIONS.md` ("ATCS Aceh, Kalimantan and Situbondo").
+- **ATCS Gresik / Jombang rows (71)**, `gresik-atcs-*` (55) and `jombang-atcs-*` (16), `SOURCE-PUBLISHED LOCATION`, no credential stored.
+  Gresik (`cctvkanjeng.gresikkab.go.id/hls/<slug>/index.m3u8`) only runs a stream while a viewer exists, so rows carry
+  `onDemand: {controlUrl}`. `src/server/onDemandStream.mjs` (one manager per `cctvProxy()`) calls the host's anonymous
+  `POST <controlUrl>/start?viewer_id=…`, sends `/heartbeat` every 20 s, `/stop`s after 60 s without a browser request or on server
+  close, and `/media` retries the playlist for up to 10 s while the host writes it. A failed start answers 502 with a fixed generic
+  message and marks the camera `SOURCE_OFFLINE`; the host's own error text (it quotes camera RTSP credentials) is never read.
+  Jombang (`cctv.jombangkab.go.id/cgi-bin/nph-zms?monitor=N…`, ZoneMinder MJPEG) rows carry `pageToken: {pageUrl}`. The stream
+  answers 403 without the 2 h JWT its public page prints next to each stream URL; `src/server/pageToken.mjs` reads the page,
+  caches it in memory for 45 min (forced refresh at most every 30 s, after a 403) and never persists or returns the token.
+  `src/server/mjpegSnapshot.mjs` takes the first JPEG part of the multipart stream and rejects ZoneMinder's "Unable to stream"
+  placeholder by SHA-256. MJPEG is not a video feed type, so these cameras run in the panel's image mode and `/api/cctv/frame/:id`
+  returns one fresh frame per poll. Both fields are same-origin-checked on load and omitted from every public payload. Rule: Gresik
+  advancing playlist over three snapshots plus a segment over 10 KB through `/api/cctv/media`; Jombang a decodable, changing,
+  non-placeholder frame through `/api/cctv/frame`. 19 Gresik cameras and 9 Jombang monitors are left out (down at source).
+  Rationale: `docs/DECISIONS.md` ("ATCS Gresik and Jombang").
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5

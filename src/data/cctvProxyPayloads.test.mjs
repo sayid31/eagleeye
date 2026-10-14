@@ -37,3 +37,15 @@ test('buildStreamPayload gives a media URL only for video feeds and encodes the 
   assert.equal(unknown.feedType, 'image');
   assert.equal(unknown.sourceKind, 'fallback');
 });
+
+test('toPublicSource and buildStreamPayload never expose onDemand or pageToken', () => {
+  const source = {
+    id: 'g1', name: 'G', feedType: 'hls', url: 'https://h.example/hls/a/index.m3u8',
+    onDemand: { controlUrl: 'https://h.example/api/v1/public/cctv/abc' },
+    pageToken: { pageUrl: 'https://h.example/v2/' },
+  };
+  for (const out of [toPublicSource(source), buildStreamPayload(source, 'g1')]) {
+    const text = JSON.stringify(out);
+    assert.doesNotMatch(text, /onDemand|pageToken|controlUrl|pageUrl|h\.example/);
+  }
+});

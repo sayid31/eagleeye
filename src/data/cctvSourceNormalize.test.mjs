@@ -71,3 +71,23 @@ test('normalizeSourceItem fills safe defaults and keeps the portal session serve
   assert.equal(normalizeSourceItem({ id: 'c2' }).portalSession, undefined);
   assert.equal(normalizeSourceItem({ id: 'c3', poseSource: 'auto' }).poseSource, undefined);
 });
+
+test('normalizeSourceItem keeps same-origin onDemand / pageToken and drops cross-origin ones', () => {
+  const base = { id: 'x', url: 'https://h.example/s?monitor=1', feedType: 'mjpeg' };
+  const row = normalizeSourceItem({
+    ...base,
+    onDemand: { controlUrl: 'https://h.example/api/cctv/abc' },
+    pageToken: { pageUrl: 'https://h.example/v2/' },
+  });
+  assert.equal(row.feedType, 'mjpeg');
+  assert.equal(row.onDemand.controlUrl, 'https://h.example/api/cctv/abc');
+  assert.equal(row.pageToken.pageUrl, 'https://h.example/v2/');
+  const foreign = normalizeSourceItem({
+    ...base,
+    onDemand: { controlUrl: 'https://evil.example/api' },
+    pageToken: { pageUrl: 'https://evil.example/v2/' },
+  });
+  assert.equal(foreign.onDemand, undefined);
+  assert.equal(foreign.pageToken, undefined);
+  assert.equal(normalizeSourceItem(base).onDemand, undefined);
+});
