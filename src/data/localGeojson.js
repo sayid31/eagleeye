@@ -90,6 +90,12 @@ export function localInfrastructureOverlayCopy(properties, layerId) {
     if (river && river.toLocaleLowerCase() !== title.toLocaleLowerCase()) {
       details.push(clampCardLine(river));
     }
+  } else if (layerId === 'local-sumbar-tsunami') {
+    const kind = props.kind === 'siren' ? 'Tsunami siren' : 'Tsunami shelter';
+    const state = props.kind === 'siren'
+      ? firstClean([props.status])
+      : firstClean([props.capacity ? `capacity ${props.capacity}` : '', props.function]);
+    details.push(clampCardLine([kind, state].filter(Boolean).join(' · ')));
   }
 
   return { title, details };
@@ -842,6 +848,7 @@ function labelPriorityFromProperties(props, layerId) {
   if (props.output || tags['plant:output:electricity']) score += 120;
   if (layerId === 'local-dams') score += 80;
   if (layerId === 'local-datacenters') score += 60;
+  if (layerId === 'local-sumbar-tsunami') score += 70;
   return score;
 }
 
@@ -888,5 +895,6 @@ function clampCardLine(value) {
 function layerTitle(layerId) {
   if (layerId === 'local-datacenters') return 'Datacenter';
   if (layerId === 'local-dams') return 'Dam';
+  if (layerId === 'local-sumbar-tsunami') return 'Tsunami Point';
   return 'Feature';
 }

@@ -177,6 +177,25 @@ test('local infrastructure card copy uses the owner-approved source fields', () 
   });
 });
 
+test('tsunami layer cards show the siren condition or the shelter capacity', () => {
+  assert.deepEqual(localInfrastructureOverlayCopy({
+    name: 'Sirine Mesjid Muhajirin', kind: 'siren', status: 'TIDAK AKTIF',
+  }, 'local-sumbar-tsunami'), {
+    title: 'Sirine Mesjid Muhajirin',
+    details: ['Tsunami siren · TIDAK AKTIF'],
+  });
+  assert.deepEqual(localInfrastructureOverlayCopy({
+    name: 'Mesjid Raya Sumatera Barat', kind: 'shelter', capacity: '15000', function: 'Tempat Ibadah',
+  }, 'local-sumbar-tsunami'), {
+    title: 'Mesjid Raya Sumatera Barat',
+    details: ['Tsunami shelter · capacity 15000'],
+  });
+  assert.deepEqual(localInfrastructureOverlayCopy({ kind: 'shelter' }, 'local-sumbar-tsunami'), {
+    title: 'Tsunami Point',
+    details: ['Tsunami shelter'],
+  });
+});
+
 test('local infrastructure entries satisfy the shared presentation contract', () => {
   const position = Cesium.Cartesian3.fromDegrees(-97.7, 30.2, 2000);
   const entry = createLocalInfrastructureOverlayEntry({

@@ -22,6 +22,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   MBZ, JORR South and Semarang-Batang +1 each. The four new corridors are positioned by a piecewise KM calibration against OSM interchange refs (matching the Wikipedia interchange KMs) rather than an assumed origin; residual error is about 1 km. All 165 changed or new rows passed three playlist polls and the app proxy. After that batch the pack held 2548 cameras across
   29 toll corridors. 149 older toll rows have no live replacement and are still listed. Banyuwangi stays excluded: its host answers with a Cloudflare challenge
   that is not bypassed. Per-site detail in `cctvLive.md`; the URL list in `urlcctv.md` and `urlcctv.csv`.
+- New layer "Tsunami Shelters & Sirens (Sumbar)" (`local-sumbar-tsunami`): 58 shelter buildings and 86 tsunami sirens in West Sumatra, read live from two shared Google
+  My Maps documents (UNOFFICIAL SOURCE, demo only). Each point's card shows the siren condition (AKTIF / TIDAK AKTIF / Tidak Berfungsi, where the map states it) or the shelter
+  capacity and function. The data is fetched through an allowlisted proxy (`/api/mymaps/sumbar-tsunami`) and not bundled. The layer is on the voice layer list ("tsunami sirens",
+  "tsunami shelters"). Not yet checked in a browser.
 
 - 119 more live ATCS CCTV cameras from a full re-check of every camera that had been marked "not re-checked" (UNOFFICIAL SOURCE, demo only). A camera is
   added only when three playlist polls show an advancing media sequence and it then plays through the app proxy. Added: Surakarta 58 FLV (76 to 134), Banten 23,

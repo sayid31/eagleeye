@@ -53,6 +53,7 @@ import path from 'node:path';
 import { celestrakProxy } from './src/data/celestrakProxy.mjs';
 import { tomtomProxy } from './src/data/tomtomProxy.mjs';
 import { firmsProxy } from './src/data/firmsProxy.mjs';
+import { myMapsProxy } from './src/data/myMapsProxy.mjs';
 import { adsbdbProxy } from './src/data/adsbdbProxy.mjs';
 import { gbfsProxy } from './src/data/gbfsProxy.mjs';
 import { rocketLaunchesProxy, LL2_CACHE_TTL_MS, launchLibraryRequestHeaders } from './src/data/rocketLaunchesProxy.mjs';
@@ -874,6 +875,7 @@ export default defineConfig(({ mode }) => {
       celestrakProxy(),
       tomtomProxy(),
       firmsProxy(),
+      myMapsProxy(),
       rocketLaunchesProxy(),
       terrainHeightsProxy(),
       adsbdbProxy(),

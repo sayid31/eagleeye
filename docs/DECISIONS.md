@@ -2372,3 +2372,15 @@ Where the method does not apply the rows stay out: Terpeka KM 326 (past the last
 Verification note: `jmlive.jasamarga.com` answers 502 when several playlists are requested at once through the proxy. The first parallel run reported 9 of 36 as bad and different ones failed on each retry; one-at-a-time requests passed 9/9 three times. Liveness checks on that host therefore run sequentially.
 
 Not verified: in-browser playback; the checks were probes plus the app proxy (36 of 36).
+
+## 2026-10-14 — Google My Maps layer for West Sumatra tsunami shelters and sirens
+
+Two public Google My Maps documents (58 shelters, 86 sirens) were requested as a layer.
+
+- **Fetched at runtime, not bundled.** The maps carry no license, and CLAUDE.md forbids bundling data whose redistribution terms are unknown. `/api/mymaps/<dataset>` downloads the KML export (`google.com/maps/d/kml?mid=…&forcekml=1`, no login), parses it server-side and serves JSON Lines.
+- **The allowlist is the security boundary.** A request names a dataset, never a map id; `MYMAPS_DATASETS` holds the only two ids. Hostile dataset names (`constructor`, path segments) return 404 because the lookup uses `Object.hasOwn`.
+- **Cache 6 h.** The maps change rarely; single-flight refresh and a stale copy on failure keep one Google outage from emptying the layer.
+- **Reuses `createLocalGeoJsonLayer`** (stems, ground sampling, overlay cards) instead of a new renderer. It only needed `fetch(url)` to return JSON Lines, which the proxy does. The cost is the shared layer's card copy having one more `local-sumbar-tsunami` branch.
+- **Sirens marked inactive are shown.** 38 of 86 are "TIDAK AKTIF" and 12 more "Tidak Berfungsi" in the source; hiding them would misstate coverage, so the card shows the condition as published.
+- **Registry growth.** The layer-state registry goes from 16 to 17 layers (token `k`) and the voice tool schema pin was re-pinned (new layerId enum value), as the earlier pins describe.
+- **Not verified:** rendering in a browser and the sirens' real condition (the map may be out of date).
