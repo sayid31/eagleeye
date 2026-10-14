@@ -323,6 +323,7 @@ its criteria cannot be silently ignored.
 | Dams ▰ | OpenInfraMap/OSM extract (bundled) | `src/data/localLayers.js` | — | static |
 | Submarine Cables ◠ | TeleGeography public map (bundled) | `src/data/telegeographySubmarineCables.js` | — | static |
 | FIRMS Active Fires ▲ | NASA FIRMS live (VIIRS ×3 NRT, trailing 24h) | `src/data/firmsHeatmap.js` | `/api/firms` (`FIRMS_MAP_KEY`) | 10 min (proxy TTL 30 min) |
+| Tsunami Shelters & Sirens (Sumbar) ◭ | Two shared Google My Maps documents (58 shelter buildings, 86 sirens), unofficial | `src/data/localLayers.js` (`local-sumbar-tsunami`), parser `src/data/myMapsKml.mjs` | `/api/mymaps/sumbar-tsunami` (allowlisted map ids, 6 h cache, stale-on-failure) | loaded on enable |
 
 `src/data/militaryAwareness.js` remains registered internally as the Contacts
 coordinator, but it is not a user-visible Data Layers entry. Its visible entry
@@ -1597,6 +1598,7 @@ The popup now lines up with the panel's other full-width rows. See
 - `/api/google/text-search` keeps the Google key server-side for view-biased Places recovery used by annotation resolution.
 - `/api/overpass` is bounded by body/response caps, per-client/global rate limits, concurrency limits, mirror fallback, in-flight dedupe, cache bounds, and static validation that every selector is spatially bounded.
 - `/api/military-installations` uses an independent limiter with the same 90-per-client/300-global one-minute bounds, so viewport installation refreshes never consume `/api/overpass` annotation/traffic capacity.
+- `/api/mymaps/<dataset>` serves only datasets named in `src/data/myMapsSources.mjs`; the request never reaches the upstream URL (map ids are fixed server-side), KML bodies are capped at 2 MiB, and the result is cached 6 h with a single-flight refresh and a stale copy on upstream failure.
 - `/api/route` proxies bounded OSRM route requests for annotation routes, with profile allowlisting, distance caps, response caps, caching, and sanitized "no route found" errors.
 - Track endpoints: `/api/ais-live/track?mmsi=` (server-accumulated ring buffers; sub-route handled before the rows snapshot), `/api/opensky-track?icao24=` (OAuth, 60s cache, sanitized errors, independent OpenSky credit bucket), `/api/adsblol/trace?hex=` (60s cache, 5MB cap, ODbL attribution required in UI).
 - Realtime debug logs redact API keys, bearer tokens, client secrets, and image data URLs before writing to disk; request bodies are size-capped.

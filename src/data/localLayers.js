@@ -44,9 +44,25 @@ const fires = createFirmsHeatmapLayer({
   source: 'NASA FIRMS · LIVE',
 });
 
+// West Sumatra tsunami shelters (58) + sirens (86) from two shared Google My
+// Maps documents. Fetched at runtime through the allowlisted /api/mymaps proxy
+// and never bundled: the maps' license is unstated (DATA_SOURCES.md).
+const sumbarTsunami = createLocalGeoJsonLayer({
+  id: 'local-sumbar-tsunami',
+  url: '/api/mymaps/sumbar-tsunami',
+  name: 'Tsunami Shelters & Sirens (Sumbar)',
+  color: '#ff8c1a', // Orange
+  icon: '◭',
+  source: 'Google My Maps · Sumbar (unofficial)',
+  labels: true,
+  labelMax: 150,
+  labelGridPx: 120,
+});
+
 export default [
   datacenters,
   dams,
   submarineCablesLayer,
   fires,
+  sumbarTsunami,
 ];

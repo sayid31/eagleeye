@@ -128,7 +128,7 @@ export const GEV_TOOL_SCHEMAS = [
         layerId: {
           type: 'string',
           description:
-            'Common-name mapping for the non-obvious ids: space mission(s) → rocket-launches; fires/wildfires/active fires → local-firms (NASA FIRMS); ships/vessels/boats → ais-live-vessels; undersea/submarine cables → telegeography-submarine-cables; datacenters → local-datacenters; dams → local-dams; bikes/bike share → bikeshare; street traffic/congestion → traffic; traffic cameras → cctv; internet radio/stations → radio.',
+            'Common-name mapping for the non-obvious ids: space mission(s) → rocket-launches; fires/wildfires/active fires → local-firms (NASA FIRMS); ships/vessels/boats → ais-live-vessels; undersea/submarine cables → telegeography-submarine-cables; datacenters → local-datacenters; dams → local-dams; bikes/bike share → bikeshare; street traffic/congestion → traffic; tsunami sirens/shelters (West Sumatra) → local-sumbar-tsunami; traffic cameras → cctv; internet radio/stations → radio.',
           enum: [
             'flights',
             'military',
@@ -144,6 +144,7 @@ export const GEV_TOOL_SCHEMAS = [
             'local-dams',
             'telegeography-submarine-cables',
             'local-firms',
+            'local-sumbar-tsunami',
           ],
         },
         enabled: { type: 'boolean' },

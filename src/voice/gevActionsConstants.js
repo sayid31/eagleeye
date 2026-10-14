@@ -123,6 +123,12 @@ export const LAYER_ALIASES = new Map([
   ['firms', 'local-firms'],
   ['fires', 'local-firms'],
   ['active fires', 'local-firms'],
+  ['tsunami', 'local-sumbar-tsunami'],
+  ['tsunami sirens', 'local-sumbar-tsunami'],
+  ['tsunami shelters', 'local-sumbar-tsunami'],
+  ['tsunami shelter', 'local-sumbar-tsunami'],
+  ['tsunami sirene', 'local-sumbar-tsunami'],
+  ['sirens', 'local-sumbar-tsunami'],
 ]);
 
 export const CITY_ALIASES = new Map([

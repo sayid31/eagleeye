@@ -693,10 +693,13 @@ test('the voice TOOL SCHEMA is byte-identical to main — the mission mapping is
   // 'esri-dark-gray' to set_map_stack's enum and extends its description
   // with the dark/gray/canvas disambiguation clause — the tools are the same
   // 28, one enum/description grew. See CHANGELOG.md "Esri Dark Gray Canvas".
-  assert.equal(json.length, 26460, 'tool schema JSON length drifted from the pinned release schema');
+  // Re-pinned 2026-10-14 (f): the West Sumatra tsunami layer adds
+  // 'local-sumbar-tsunami' to set_layer_visibility's layerId enum plus one
+  // mapping clause in its description. No new tool, no other tool touched.
+  assert.equal(json.length, 26546, 'tool schema JSON length drifted from the pinned release schema');
   assert.equal(
     crypto.createHash('sha256').update(json).digest('hex'),
-    'fbc1bea2757ec64226a10e5c9e0c282b29770fba2381daed079ddef1d827ff79',
+    '3a04691be1ba1b3dbc5cb21277fabaf0fedd5731e9837c682f7d3ade0ab82f4b',
     'the first-run missions must ride EXISTING tools: no schema edit, no cache bust',
   );
 

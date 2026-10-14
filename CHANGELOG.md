@@ -15,6 +15,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- New layer "Tsunami Shelters & Sirens (Sumbar)" (`local-sumbar-tsunami`): 58 shelter buildings and 86 tsunami sirens in West Sumatra, read live from two shared Google
+  My Maps documents (UNOFFICIAL SOURCE, demo only). Each point's card shows the siren condition (AKTIF / TIDAK AKTIF / Tidak Berfungsi, where the map states it) or the shelter
+  capacity and function. The data is fetched through an allowlisted proxy (`/api/mymaps/sumbar-tsunami`) and not bundled. The layer is on the voice layer list ("tsunami sirens",
+  "tsunami shelters"). Not yet checked in a browser.
+
 - 119 more live ATCS CCTV cameras from a full re-check of every camera that had been marked "not re-checked" (UNOFFICIAL SOURCE, demo only). A camera is
   added only when three playlist polls show an advancing media sequence and it then plays through the app proxy. Added: Surakarta 58 FLV (76 to 134), Banten 23,
   Semarang 13, Banyumas 5, Pekanbaru 3, Yogyakarta 2 and Magelang 1, plus a new Cipali toll corridor (`bmtol-unofficial-cipali-*`, 15 cameras, `APPROX. LOCATION`).
