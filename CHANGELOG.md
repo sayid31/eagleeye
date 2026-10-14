@@ -15,6 +15,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 153 live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only) from six more sites, all plain HTTPS HLS with
+  no login or cookie and carrying their source-published coordinates: Banda Aceh 47, Balangan 36,
+  Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 4. Only cameras that served live video
+  in repeated probes and through the app's proxy are included. Not added: Kutai Timur, Gresik, Jombang,
+  Jatim Pelayaran, Pontianak, Kaltim (streams need a challenge, start call, MJPEG/YouTube support or
+  credentials), and Kediri and Pati (no coordinates published). Per-site detail in `cctvLive.md`; the full
+  URL list is in `urlcctv.md`.
+
 - 260 live Java and Banten ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain
   HLS with no login or cookie: Magelang 74, Semarang 47, Cianjur 44, Tangerang
   Kabupaten 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Banten province 14 (Lebak,
@@ -29,8 +37,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
-- The CCTV catalog cap rises from 2000 to 2600 cameras (`DEFAULT_CCTV_MAX_SOURCES`);
-  the merged catalog is now about 2170, and the extra health-map memory is small.
+- The CCTV catalog cap rises from 2000 to 3000 cameras (`DEFAULT_CCTV_MAX_SOURCES`);
+  the merged catalog is now about 2330, and the extra health-map memory is small.
 
 - 45 live Kabupaten Bandung Barat CCTV cameras (UNOFFICIAL SOURCE, demo only) from
   the Dishub KBB ATCS page, all plain HLS with no login or cookie. The source
