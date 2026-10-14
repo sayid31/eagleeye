@@ -4,11 +4,11 @@ Daftar URL stream video langsung (HLS/FLV) dari `config/cctv_sources.indonesia_u
 
 | | Jumlah |
 |---|---:|
-| **Total URL** | **2372** |
-| Kota dan kabupaten (44 lokasi) | 1936 |
-| Jalan tol (24 ruas) | 436 |
-| HLS | 2280 |
-| FLV | 76 |
+| **Total URL** | **2491** |
+| Kota dan kabupaten (44 lokasi) | 2040 |
+| Jalan tol (25 ruas) | 451 |
+| HLS | 2341 |
+| FLV | 134 |
 | MJPEG (Jombang) | 16 |
 
 Catatan:
@@ -20,7 +20,6 @@ Catatan:
 - Hapus per kota dengan prefiks id-nya, atau matikan seluruh pack dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.
 
 ## Kota dan kabupaten
-
 ### Malang (199)
 
 | # | ID | Nama | Format | URL |
@@ -371,7 +370,7 @@ Catatan:
 | 140 | `sby-atcs-386-terminal-tow` | ATCS Terminal Tow | HLS | `http://36.66.208.101:5000/hls/cctv_386/stream.m3u8` |
 | 141 | `sby-atcs-385-terminal-tow-selatan` | ATCS Terminal Tow Selatan | HLS | `http://36.66.208.101:5000/hls/cctv_385/stream.m3u8` |
 
-### Yogyakarta (131)
+### Yogyakarta (133)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -506,6 +505,8 @@ Catatan:
 | 129 | `jogja-atcs-atcs-atcs-mirota` | ATCS SIMPANG MIROTA (PTZ) | HLS | `https://cctvjss.jogjakota.go.id/atcs/ATCS_mirota.stream/playlist.m3u8` |
 | 130 | `jogja-atcs-atcs-atcs-simpang-borobudur-plaza` | ATCS SIMPANG BOROBUDUR PLAZA | HLS | `https://cctvjss.jogjakota.go.id/atcs/ATCS_Simpang_Borobudur_Plaza.stream/playlist.m3u8` |
 | 131 | `jogja-atcs-bpbd-bpbd-ngentak` | ATCS SUNGAI NGENTAK | HLS | `https://cctvjss.jogjakota.go.id/bpbd/BPBD_ngentak.stream/playlist.m3u8` |
+| 132 | `jogja-atcs-atcs-lampu-merah-joktengwetan` | ATCS ATCS_Lampu_Merah_JoktengWetan | HLS | `https://cctvjss.jogjakota.go.id/atcs/ATCS_Lampu_Merah_JoktengWetan.stream/playlist.m3u8` |
+| 133 | `jogja-atcs-rthp-pakudaya-pakuncen-2` | ATCS rthp_pakudaya_pakuncen_2 | HLS | `https://cctvjss.jogjakota.go.id/rthp/rthp_pakudaya_pakuncen_2.stream/playlist.m3u8` |
 
 ### Denpasar (96)
 
@@ -608,7 +609,7 @@ Catatan:
 | 95 | `denpasar-atcs-a050-jalan-gunung-agung` | ATCS Jalan Gunung Agung | HLS | `https://atcs.denpasarkota.go.id/stream/A050JALANGUNUNGAGUNGPTZ/stream.m3u8` |
 | 96 | `denpasar-atcs-a051-mahendradatta-soputan` | ATCS Mahendradatta - Soputan | HLS | `https://atcs.denpasarkota.go.id/stream/A051MAHENDRADATTA-SOPUTANPTZ/stream.m3u8` |
 
-### Surakarta (76)
+### Surakarta (134)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -688,8 +689,66 @@ Catatan:
 | 74 | `surakarta-atcs-ursulin` | ATCS Ursulin | FLV | `https://surakarta.atcsindonesia.info:8086/camera/Ursulin.flv` |
 | 75 | `surakarta-atcs-warungpelem` | ATCS Warung Pelem | FLV | `https://surakarta.atcsindonesia.info:8086/camera/WarungPelem.flv` |
 | 76 | `surakarta-atcs-widuran` | ATCS Widuran | FLV | `https://surakarta.atcsindonesia.info:8086/camera/Widuran.flv` |
+| 77 | `surakarta-atcs-balong` | ATCS Balong | FLV | `https://surakarta.atcsindonesia.info:8086/camera/Balong.flv` |
+| 78 | `surakarta-atcs-cembengan-barat` | ATCS Cembengan Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/CembenganBarat.flv` |
+| 79 | `surakarta-atcs-cembengan-selatan` | ATCS Cembengan Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/CembenganSelatan.flv` |
+| 80 | `surakarta-atcs-cembengan-timur` | ATCS Cembengan Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/CembenganTimur.flv` |
+| 81 | `surakarta-atcs-cembengan-utara` | ATCS Cembengan Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/CembenganUtara.flv` |
+| 82 | `surakarta-atcs-fajar-indah-barat` | ATCS Fajar Indah Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/FajarIndahBarat.flv` |
+| 83 | `surakarta-atcs-fajar-indah-selatan` | ATCS Fajar Indah Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/FajarIndahSelatan.flv` |
+| 84 | `surakarta-atcs-fajar-indah-timur` | ATCS Fajar Indah Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/FajarIndahTimur.flv` |
+| 85 | `surakarta-atcs-fajar-indah-utara` | ATCS Fajar Indah Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/FajarIndahUtara.flv` |
+| 86 | `surakarta-atcs-faroka-barat` | ATCS Faroka Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/FarokaBarat.flv` |
+| 87 | `surakarta-atcs-faroka-timur` | ATCS Faroka Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/FarokaTimur.flv` |
+| 88 | `surakarta-atcs-flyover-barat` | ATCS Flyover Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/FlyoverBarat.flv` |
+| 89 | `surakarta-atcs-gemblegan-barat` | ATCS Gemblegan Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GembleganBarat.flv` |
+| 90 | `surakarta-atcs-gemblegan-selatan` | ATCS Gemblegan Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GembleganSelatan.flv` |
+| 91 | `surakarta-atcs-gemblegan-timur` | ATCS Gemblegan Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GembleganTimur.flv` |
+| 92 | `surakarta-atcs-gemblegan-utara` | ATCS Gemblegan Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GembleganUtara.flv` |
+| 93 | `surakarta-atcs-gendengan-barat` | ATCS Gendengan Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GendenganBarat.flv` |
+| 94 | `surakarta-atcs-gendengan-timur` | ATCS Gendengan Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GendenganTimur.flv` |
+| 95 | `surakarta-atcs-genengan-barat` | ATCS Genengan Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GenenganBarat.flv` |
+| 96 | `surakarta-atcs-genengan-selatan` | ATCS Genengan Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GenenganSelatan.flv` |
+| 97 | `surakarta-atcs-genengan-timur` | ATCS Genengan Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GenenganTimur.flv` |
+| 98 | `surakarta-atcs-genengan-utara` | ATCS Genengan Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GenenganUtara.flv` |
+| 99 | `surakarta-atcs-giri-mulyo01` | ATCS Giri Mulyo01 | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GiriMulyo01.flv` |
+| 100 | `surakarta-atcs-gondang-ptz` | ATCS Gondang PTZ | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GondangPTZ.flv` |
+| 101 | `surakarta-atcs-gondang-wide` | ATCS Gondang Wide | FLV | `https://surakarta.atcsindonesia.info:8086/camera/GondangWide.flv` |
+| 102 | `surakarta-atcs-isiptz` | ATCS ISIPTZ | FLV | `https://surakarta.atcsindonesia.info:8086/camera/ISIPTZ.flv` |
+| 103 | `surakarta-atcs-isiwide` | ATCS ISIWide | FLV | `https://surakarta.atcsindonesia.info:8086/camera/ISIWide.flv` |
+| 104 | `surakarta-atcs-kelurahan-sumber-barat` | ATCS Kelurahan Sumber Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KelurahanSumberBarat.flv` |
+| 105 | `surakarta-atcs-kelurahan-sumber-selatan` | ATCS Kelurahan Sumber Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KelurahanSumberSelatan.flv` |
+| 106 | `surakarta-atcs-kelurahan-sumber-timur` | ATCS Kelurahan Sumber Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KelurahanSumberTimur.flv` |
+| 107 | `surakarta-atcs-kelurahan-sumber-utara` | ATCS Kelurahan Sumber Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KelurahanSumberUtara.flv` |
+| 108 | `surakarta-atcs-kerten-utara` | ATCS Kerten Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KertenUtara.flv` |
+| 109 | `surakarta-atcs-kleco-barat` | ATCS Kleco Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KlecoBarat.flv` |
+| 110 | `surakarta-atcs-klodran-barat` | ATCS Klodran Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KlodranBarat.flv` |
+| 111 | `surakarta-atcs-klodran-timur` | ATCS Klodran Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/KlodranTimur.flv` |
+| 112 | `surakarta-atcs-mojosongo-barat` | ATCS Mojosongo Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/MojosongoBarat.flv` |
+| 113 | `surakarta-atcs-mojosongo-utara` | ATCS Mojosongo Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/MojosongoUtara.flv` |
+| 114 | `surakarta-atcs-nonongan-wide` | ATCS Nonongan Wide | FLV | `https://surakarta.atcsindonesia.info:8086/camera/NononganWide.flv` |
+| 115 | `surakarta-atcs-overpass-barat` | ATCS Overpass Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/OverpassBarat.flv` |
+| 116 | `surakarta-atcs-overpass-selatan` | ATCS Overpass Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/OverpassSelatan.flv` |
+| 117 | `surakarta-atcs-panggung-barat` | ATCS Panggung Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/PanggungBarat.flv` |
+| 118 | `surakarta-atcs-panggung-selatan` | ATCS Panggung Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/PanggungSelatan.flv` |
+| 119 | `surakarta-atcs-pasar-kliwon` | ATCS Pasar Kliwon | FLV | `https://surakarta.atcsindonesia.info:8086/camera/PasarKliwon.flv` |
+| 120 | `surakarta-atcs-ring-road-barat` | ATCS Ring Road Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/RingRoadBarat.flv` |
+| 121 | `surakarta-atcs-ring-road-selatan` | ATCS Ring Road Selatan | FLV | `https://surakarta.atcsindonesia.info:8086/camera/RingRoadSelatan.flv` |
+| 122 | `surakarta-atcs-ring-road-timur` | ATCS Ring Road Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/RingRoadTimur.flv` |
+| 123 | `surakarta-atcs-ring-road-utara` | ATCS Ring Road Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/RingRoadUtara.flv` |
+| 124 | `surakarta-atcs-ruas-ring-road-barat` | ATCS Ruas Ring Road Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/RuasRingRoadBarat.flv` |
+| 125 | `surakarta-atcs-ruas-ring-road-timur` | ATCS Ruas Ring Road Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/RuasRingRoadTimur.flv` |
+| 126 | `surakarta-atcs-smp18` | ATCS SMP18 | FLV | `https://surakarta.atcsindonesia.info:8086/camera/SMP18.flv` |
+| 127 | `surakarta-atcs-sekarpace-barat` | ATCS Sekarpace Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/SekarpaceBarat.flv` |
+| 128 | `surakarta-atcs-sekarpace-timur` | ATCS Sekarpace Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/SekarpaceTimur.flv` |
+| 129 | `surakarta-atcs-sekarpace-utara` | ATCS Sekarpace Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/SekarpaceUtara.flv` |
+| 130 | `surakarta-atcs-tugu-wisnu-timur` | ATCS Tugu Wisnu Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/TuguWisnuTimur.flv` |
+| 131 | `surakarta-atcs-tugu-wisnu-utara` | ATCS Tugu Wisnu Utara | FLV | `https://surakarta.atcsindonesia.info:8086/camera/TuguWisnuUtara.flv` |
+| 132 | `surakarta-atcs-vmsdprd` | ATCS VMSDPRD | FLV | `https://surakarta.atcsindonesia.info:8086/camera/VMSDPRD.flv` |
+| 133 | `surakarta-atcs-warung-pelem-barat` | ATCS Warung Pelem Barat | FLV | `https://surakarta.atcsindonesia.info:8086/camera/WarungPelemBarat.flv` |
+| 134 | `surakarta-atcs-warung-pelem-timur` | ATCS Warung Pelem Timur | FLV | `https://surakarta.atcsindonesia.info:8086/camera/WarungPelemTimur.flv` |
 
-### Magelang (74)
+### Magelang (75)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -767,6 +826,7 @@ Catatan:
 | 72 | `magelang-atcs-rumdin-ketua-dprd-selatan` | ATCS RUMDIN KETUA DPRD - SELATAN | HLS | `https://dev.cctv.magelangkota.go.id/memfs/d0133ed3-fc7d-4738-86fb-718df392f2ab.m3u8` |
 | 73 | `magelang-atcs-rumdin-ketua-dprd-utara` | ATCS RUMDIN KETUA DPRD - UTARA | HLS | `https://dev.cctv.magelangkota.go.id/memfs/46b6bb7b-7187-480d-81a1-cd1f41a4c128.m3u8` |
 | 74 | `magelang-atcs-ptz-taman-a-yani-tengah` | ATCS PTZ TAMAN A YANI TENGAH | HLS | `https://dev.cctv.magelangkota.go.id/memfs/bab55df3-99a6-4c27-ae6c-5158aa9046a4.m3u8` |
+| 75 | `magelang-atcs-cctv-simpang-rejowinangun-timur` | ATCS CCTV-SIMPANG REJOWINANGUN TIMUR | HLS | `https://restreamer.magelangkota.go.id/memfs/03cc5b14-207e-4408-a7be-334d3e93e441.m3u8` |
 
 ### Bandung (60)
 
@@ -833,7 +893,7 @@ Catatan:
 | 59 | `bandung-pelindung-89f1a472` | Perempatan Laswi-Gatsu 01 | HLS | `https://pelindung.bandung.go.id:3443/video/HIKSVISION/Perlas.m3u8` |
 | 60 | `bandung-pelindung-727f72ba` | Cicadas - Cikutra 01 | HLS | `https://pelindung.bandung.go.id:3443/video/HIKSVISION/cicadasstyusup.m3u8` |
 
-### Semarang (47)
+### Semarang (59)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -884,6 +944,18 @@ Catatan:
 | 45 | `semarang-atcs-ruas-kerapyak` | ATCS RUAS KERAPYAK | HLS | `https://livepantau.semarangkota.go.id/f058e160-742f-4960-a47f-ad1fc5354bd4/index.m3u8` |
 | 46 | `semarang-atcs-karangayu-ke-barat` | ATCS KARANGAYU KE BARAT | HLS | `https://livepantau.semarangkota.go.id/0305a054-bb38-42f9-801b-113385baa0f6/index.m3u8` |
 | 47 | `semarang-atcs-jpo-jalan-ahmad-yani` | ATCS JPO JALAN AHMAD YANI | HLS | `https://livepantau.semarangkota.go.id/5e20c403-7f34-4749-8f56-3863711e0d38/index.m3u8` |
+| 48 | `semarang-atcs-bangkong` | ATCS BANGKONG | HLS | `https://livepantau.semarangkota.go.id/b8013256-1adc-4d5f-aed6-b28ed7d0b52e/index.m3u8` |
+| 49 | `semarang-atcs-milo` | ATCS MILO | HLS | `https://livepantau.semarangkota.go.id/1e056193-d64c-4e53-84a1-41a55d373ad0/index.m3u8` |
+| 50 | `semarang-atcs-simpang-kariadi-ptz` | ATCS SIMPANG KARIADI PTZ | HLS | `https://livepantau.semarangkota.go.id/5ed366a4-fec8-43b4-9052-6fe9a3fd5847/index.m3u8` |
+| 51 | `semarang-atcs-supriyadi` | ATCS SUPRIYADI | HLS | `https://livepantau.semarangkota.go.id/75722eec-3065-4f02-b1a3-c6ec259dc52b/index.m3u8` |
+| 52 | `semarang-atcs-pasar-kambing-360` | ATCS PASAR KAMBING 360 | HLS | `https://livepantau.semarangkota.go.id/67435362-8242-4f71-bf82-6c4f899a665e/index.m3u8` |
+| 53 | `semarang-atcs-hanoman` | ATCS HANOMAN | HLS | `https://livepantau.semarangkota.go.id/c83dfda9-1e9e-4b8a-8c83-f7396d7781e4/index.m3u8` |
+| 54 | `semarang-atcs-bergota-360` | ATCS BERGOTA 360 | HLS | `https://livepantau.semarangkota.go.id/0ccddd03-b302-458c-8618-69807ff6622c/index.m3u8` |
+| 55 | `semarang-atcs-bundaran-diponegoro` | ATCS BUNDARAN DIPONEGORO | HLS | `https://livepantau.semarangkota.go.id/c878988b-26b8-48ee-8352-4c5abfb61275/index.m3u8` |
+| 56 | `semarang-atcs-tlogosari` | ATCS TLOGOSARI | HLS | `https://livepantau.semarangkota.go.id/c3ecd247-0994-4147-a90e-dd1917700580/index.m3u8` |
+| 57 | `semarang-atcs-arah-tugu-tunas` | ATCS ARAH TUGU TUNAS | HLS | `https://livepantau.semarangkota.go.id/9468fa0e-c92f-4178-a9b6-3e94af0f456d/index.m3u8` |
+| 58 | `semarang-atcs-mt-haryono` | ATCS MT Haryono | HLS | `https://livepantau.semarangkota.go.id/ece9e864-bdbb-4db5-a8f3-30ddd7c2bebf/index.m3u8` |
+| 59 | `semarang-atcs-arah-pandanaran` | ATCS ARAH PANDANARAN | HLS | `https://livepantau.semarangkota.go.id/78e494b8-4873-4bfd-96ad-a319358e3f21/index.m3u8` |
 
 ### Banda Aceh (47)
 
@@ -1237,7 +1309,7 @@ Catatan:
 | 30 | `pasuruan-atcs-pier-raci` | ATCS Pier Raci | HLS | `https://dishub.pasuruankab.go.id:5444/LiveApp/streams/PIER_RACI.m3u8` |
 | 31 | `pasuruan-atcs-tambakrejo` | ATCS Tambakrejo | HLS | `https://dishub.pasuruankab.go.id:5444/LiveApp/streams/TAMBAKREJO.m3u8` |
 
-### Pekanbaru (29)
+### Pekanbaru (32)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -1270,6 +1342,9 @@ Catatan:
 | 27 | `pekanbaru-atcs-simpang-tabek-gadang-3` | ATCS SIMPANG TABEK GADANG 3 | HLS | `https://cctv.pekanbaru.go.id/hls/cam-10.200.57.4/index.m3u8` |
 | 28 | `pekanbaru-atcs-simpang-stadion-utama` | ATCS SIMPANG STADION UTAMA | HLS | `https://cctv.pekanbaru.go.id/hls/cam-10.200.59.2/index.m3u8` |
 | 29 | `pekanbaru-atcs-rth-tunjuk-ajar-arah-rumah-dinas` | ATCS RTH TUNJUK AJAR (ARAH RUMAH DINAS) | HLS | `https://cctv.pekanbaru.go.id/hls/cam-10.200.60.2/index.m3u8` |
+| 30 | `pekanbaru-atcs-sudirman-tuanku-tambusai-1` | ATCS SUDIRMAN - TUANKU TAMBUSAI 1 | HLS | `https://cctv.pekanbaru.go.id/hls/cam-10.200.51.2/index.m3u8` |
+| 31 | `pekanbaru-atcs-jpo-mtq-1` | ATCS JPO - MTQ 1 | HLS | `https://cctv.pekanbaru.go.id/hls/cam-10.200.24.2/index.m3u8` |
+| 32 | `pekanbaru-atcs-jpo-mtq-2` | ATCS JPO - MTQ 2 | HLS | `https://cctv.pekanbaru.go.id/hls/cam-10.200.24.3/index.m3u8` |
 
 ### Kabupaten Tangerang (28)
 
@@ -1481,7 +1556,7 @@ Catatan:
 | 16 | `kediri-atcs-sukorame` | ATCS Sukorame | HLS | `https://pplterpadu.kedirikota.go.id:8888/sukorame/index.m3u8` |
 | 17 | `kediri-atcs-a-yani-selatan` | ATCS A. Yani Selatan | HLS | `https://pplterpadu.kedirikota.go.id:8888/a_yani_selatan/index.m3u8` |
 
-### Banyumas (15)
+### Banyumas (20)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -1500,6 +1575,11 @@ Catatan:
 | 13 | `banyumas-atcs-cctv-simpang-karanglo` | ATCS CCTV SIMPANG KARANGLO | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_simpang_karanglo/index.m3u8` |
 | 14 | `banyumas-atcs-cctv-simpang-ajibarang` | ATCS CCTV SIMPANG AJIBARANG | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_simpang_ajibarang/index.m3u8` |
 | 15 | `banyumas-atcs-cctv-simpang-simpang-patriot` | ATCS CCTV SIMPANG SIMPANG PATRIOT | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_simpang_simpang_patriot/index.m3u8` |
+| 16 | `banyumas-atcs-cctv-simpang-patriot` | ATCS CCTV SIMPANG PATRIOT | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_simpang_patriot/index.m3u8` |
+| 17 | `banyumas-atcs-cctv-simpang-karang-bawang` | ATCS CCTV SIMPANG KARANG BAWANG | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_simpang_karang_bawang/index.m3u8` |
+| 18 | `banyumas-atcs-cctv-simpang-karang-bawang-barat` | ATCS CCTV SIMPANG KARANG BAWANG BARAT | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_simpang_karang_bawang_barat/index.m3u8` |
+| 19 | `banyumas-atcs-cctv-simpang-tanjung-utara` | ATCS CCTV SIMPANG TANJUNG UTARA | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_simpang_tanjung_utara/index.m3u8` |
+| 20 | `banyumas-atcs-cctv-ruas-tugu-adipura` | ATCS CCTV RUAS TUGU ADIPURA | HLS | `https://cctv.dev.banyumaskab.go.id/cctv_ruas_tugu_adipura/index.m3u8` |
 
 ### Jakarta (15)
 
@@ -1521,7 +1601,7 @@ Catatan:
 | 14 | `binamarga-unofficial-becakayu-on-ramp-cassablanca` | Tol Becakayu On Ramp Cassablanca | HLS | `https://cctv.kkdm.co.id/api/cctv/1/35/index.m3u8` |
 | 15 | `binamarga-unofficial-becakayu-off-ramp-cipinang` | Tol Becakayu Off Ramp Cipinang | HLS | `https://cctv.kkdm.co.id/api/cctv/1/47/index.m3u8` |
 
-### Banten (14)
+### Banten (37)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -1539,6 +1619,29 @@ Catatan:
 | 12 | `banten-atcs-lebak-jl-r-m-nata-atmaja-3` | ATCS LEBAK JL. R.M. NATA ATMAJA - 3 | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/41d33aa8-dd48-45a8-bc38-476de213d1b9/index.m3u8` |
 | 13 | `banten-atcs-lebak-jl-r-t-hardiwinangun-1` | ATCS LEBAK JL R.T. HARDIWINANGUN - 1 | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/8baaab58-7f4f-40f9-a8c6-1d0fe96691c4/index.m3u8` |
 | 14 | `banten-atcs-lebak-jl-r-t-hardiwinangun-2` | ATCS LEBAK JL R.T. HARDIWINANGUN - 2 | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/618e6d19-fd4a-48e3-a5cb-5c40ef95827d/index.m3u8` |
+| 15 | `banten-atcs-banten-pal-lima-timur` | ATCS BANTEN PAL LIMA TIMUR | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/65be9f99-c9ce-4045-a722-a51ad11aafd4/index.m3u8` |
+| 16 | `banten-atcs-banten-pal-lima-barat` | ATCS BANTEN PAL LIMA BARAT | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/db52373d-894f-4279-9c2f-c9d50d3bc2b1/index.m3u8` |
+| 17 | `banten-atcs-banten-kebun-jahe-timur` | ATCS BANTEN KEBUN JAHE TIMUR | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/a8a5eed6-d340-4002-89b8-89cd445c9210/index.m3u8` |
+| 18 | `banten-atcs-banten-kebun-jahe-selatan` | ATCS BANTEN KEBUN JAHE SELATAN | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/f4901c8e-e3b2-4356-969d-ca5762d1f699/index.m3u8` |
+| 19 | `banten-atcs-banten-sayabulu-utara` | ATCS BANTEN SAYABULU UTARA | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/70dd78e7-741b-4fb9-a0a1-7ceb6ba2f80d/index.m3u8` |
+| 20 | `banten-atcs-banten-batok-bali-timur` | ATCS BANTEN BATOK BALI TIMUR | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/d9b5c4af-23f4-411c-b0af-b2c263a65e1f/index.m3u8` |
+| 21 | `banten-atcs-banten-brimob-utara` | ATCS BANTEN BRIMOB UTARA | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/fcf9d25c-12f4-49d5-9ff5-48336e5dbad7/index.m3u8` |
+| 22 | `banten-atcs-banten-brimob-timur` | ATCS BANTEN BRIMOB TIMUR | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/5301c3c5-f007-4ce2-88a1-220ccfd20a7c/index.m3u8` |
+| 23 | `banten-atcs-banten-brimob-barat` | ATCS BANTEN BRIMOB BARAT | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/16cd60dc-c7ad-425e-bd7d-6b96ed5e1a5b/index.m3u8` |
+| 24 | `banten-atcs-banten-pisang-mas-utara` | ATCS BANTEN PISANG MAS UTARA | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/ffc44a84-39c5-4c94-92d7-c4121a4426db/index.m3u8` |
+| 25 | `banten-atcs-banten-pisang-mas-timur` | ATCS BANTEN PISANG MAS TIMUR | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/7b5a6593-ad43-491c-ae85-192f7744d4c3/index.m3u8` |
+| 26 | `banten-atcs-banten-pisang-mas-selatan` | ATCS BANTEN PISANG MAS SELATAN | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/785bb760-4398-43c9-a08f-b054d9bd651d/index.m3u8` |
+| 27 | `banten-atcs-banten-pisang-mas-barat` | ATCS BANTEN PISANG MAS BARAT | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/89e2c32e-6782-499e-a7f2-877ec8100a19/index.m3u8` |
+| 28 | `banten-atcs-banten-pisang-mas-barat-2` | ATCS BANTEN PISANG MAS BARAT | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/0aa5daf2-3108-4e8b-a932-02a649e483d2/index.m3u8` |
+| 29 | `banten-atcs-banten-ciceri-utara` | ATCS BANTEN CICERI UTARA | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/6707cf59-2bd0-4849-90d6-24e7ef0e4b96/index.m3u8` |
+| 30 | `banten-atcs-banten-pal-lima-selatan` | ATCS BANTEN PAL LIMA SELATAN | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/2c118679-fefa-4f8b-9c72-a48a9fe5c4c4/index.m3u8` |
+| 31 | `banten-atcs-banten-ciceri-selatan` | ATCS BANTEN CICERI SELATAN | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/ebbfacb6-525d-423a-a1dc-239cc01fcf8f/index.m3u8` |
+| 32 | `banten-atcs-banten-sempu-selatan` | ATCS BANTEN SEMPU SELATAN | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/f7a5eca7-f07f-4726-8550-9c9aea4c66b5/index.m3u8` |
+| 33 | `banten-atcs-gerbang-1` | ATCS GERBANG 1 | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/9ccff807-bbfe-44a2-b27a-80450fd8471b/index.m3u8` |
+| 34 | `banten-atcs-banten-kebun-jahe-barat` | ATCS BANTEN KEBUN JAHE BARAT | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/d5999b43-3161-4c7d-b87b-7ad417149d30/index.m3u8` |
+| 35 | `banten-atcs-banten-kepandean-timur` | ATCS BANTEN KEPANDEAN TIMUR | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/e2e72734-e1b0-412e-8dd1-7eecfea6f778/index.m3u8` |
+| 36 | `banten-atcs-banten-ciceri-utara-2` | ATCS BANTEN CICERI UTARA | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/87ccf2f1-d66f-4e77-a6c8-8a2d9471bbeb/index.m3u8` |
+| 37 | `banten-atcs-banten-brimob-selatan` | ATCS BANTEN BRIMOB SELATAN | HLS | `https://cctv.bantenprov.go.id/service/stream-cctv/7c91385c-ed15-499b-8c07-e5f25b3d8228/index.m3u8` |
 
 ### Padang Panjang (14)
 
@@ -2178,7 +2281,6 @@ Catatan:
 | 12 | `pemalang-atcs-warungpring` | Warungpring | HLS | `https://stream.pemalangkab.go.id/2025/warungpring/warungpring.m3u8` |
 
 ## Jalan tol
-
 ### Jalan Layang MBZ Toll (43)
 
 | # | ID | Nama | Format | URL |
@@ -2734,3 +2836,23 @@ Catatan:
 | 7 | `bmtol-unofficial-padcil-km-138-500` | Tol Padaleunyi KM 138+500 SS M TOHA | HLS | `https://jmlive.jasamarga.com/hls/6/8bc51287-945d-4fd9-a3f4-7151a2804aee/index.m3u8` |
 | 8 | `bmtol-unofficial-padcil-km-122-450-b` | Tol Padaleunyi KM 122+450 B | HLS | `https://jmlive.jasamarga.com/hls/6/5ea777d3-84a2-459c-88af-67d1da4c85df/index.m3u8` |
 | 9 | `bmtol-unofficial-padcil-km-132-400` | Tol Padaleunyi KM 132+400 SS PASIR KOJA | HLS | `https://jmlive.jasamarga.com/hls/6/042ea5d3-bc15-4238-804b-13a5320f6a4d/index.m3u8` |
+
+### Cipali Toll (Cikopo-Palimanan) (15)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `bmtol-unofficial-cipali-km-073-180` | Tol Cipali KM 73+180 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_73+180.m3u8` |
+| 2 | `bmtol-unofficial-cipali-km-076-500` | Tol Cipali KM 76+500 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_76+500.m3u8` |
+| 3 | `bmtol-unofficial-cipali-km-079-000` | Tol Cipali KM 79+000 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_79+000.m3u8` |
+| 4 | `bmtol-unofficial-cipali-km-086-500` | Tol Cipali KM 86+500 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_86+500.m3u8` |
+| 5 | `bmtol-unofficial-cipali-km-096-840` | Tol Cipali KM 96+840 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_96+840.m3u8` |
+| 6 | `bmtol-unofficial-cipali-km-098-700` | Tol Cipali KM 98+700 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_98+700.m3u8` |
+| 7 | `bmtol-unofficial-cipali-km-114-500` | Tol Cipali KM 114+500 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_114+500_A.m3u8` |
+| 8 | `bmtol-unofficial-cipali-km-118-700-a` | Tol Cipali KM 118+700 A | HLS | `https://cctvastra.lintasmarga.com/barat/KM_118+700_A.m3u8` |
+| 9 | `bmtol-unofficial-cipali-km-130-500-a` | Tol Cipali KM 130+500 A | HLS | `https://cctvastra.lintasmarga.com/barat/KM_130+500_A.m3u8` |
+| 10 | `bmtol-unofficial-cipali-km-140-270-b` | Tol Cipali KM 140+270 B | HLS | `https://cctvastra.lintasmarga.com/barat/KM_140+270_B.m3u8` |
+| 11 | `bmtol-unofficial-cipali-km-142-a` | Tol Cipali KM 142 A | HLS | `https://cctvastra.lintasmarga.com/barat/KM_142_A.m3u8` |
+| 12 | `bmtol-unofficial-cipali-km-149-000-a` | Tol Cipali KM 149+000 A | HLS | `https://cctvastra.lintasmarga.com/barat/KM_149+000_A.m3u8` |
+| 13 | `bmtol-unofficial-cipali-km-157-a` | Tol Cipali KM 157 A | HLS | `https://cctvastra.lintasmarga.com/barat/KM_157_A.m3u8` |
+| 14 | `bmtol-unofficial-cipali-km-166` | Tol Cipali KM 166 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_166.m3u8` |
+| 15 | `bmtol-unofficial-cipali-km-175` | Tol Cipali KM 175 | HLS | `https://cctvastra.lintasmarga.com/barat/KM_175.m3u8` |

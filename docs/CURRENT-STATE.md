@@ -1095,7 +1095,7 @@ speech-to-speech API, so Claude is paired with the browser's own
 ### CCTV — Indonesia unofficial live HLS pack (internal demo only)
 
 - 1026 hardcoded cameras — Jakarta (15: 1 JPO + 14 `binamarga-unofficial-*`
-  toll cameras), Bina Marga toll corridors (436 `bmtol-unofficial-*` across 24 corridors, listed below), Bandung (60
+  toll cameras), Bina Marga toll corridors (451 `bmtol-unofficial-*` across 25 corridors, listed below), Bandung (60
   `bandung-pelindung-*` from pelindung.bandung.go.id), Denpasar (96: 1
   Gunung Agung + 95 `denpasar-atcs-*`), Surabaya (141 `sby-atcs-*`), Cianjur (1 `cianjur-atcs-*`), Mataram (12 `mataram-atcs-*`), Pasuruan (31 `pasuruan-atcs-*`), Sumedang (35 `sumedang-atcs-*`), Malang (199 `malang-atcs-*`) — configured in `config/cctv_sources.indonesia_unofficial.json`,
   loaded independently of every other CCTV pack by
@@ -1126,11 +1126,11 @@ speech-to-speech API, so Claude is paired with the browser's own
   marker along a hand-drawn two-to-four-point route polyline (error roughly
   2 km or more) and heading is the assumed road bearing. Every such row says
   `APPROX. LOCATION` in its name, provider and license; do not treat these
-  as surveyed positions. Cipali (`cctvastra.lintasmarga.com`) streams are
-  deliberately excluded: that host serves an incomplete TLS chain, so Node
-  rejects it (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) and the proxy returns 502
-  — fixing it would mean disabling certificate verification.
-- **Bina Marga toll corridor rows (436, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
+  as surveyed positions. Cipali (`cctvastra.lintasmarga.com`) is included as
+  `bmtol-unofficial-cipali-*` (see the corridor list below): the host omits its
+  TLS intermediate, which `config/ca/` now bundles (Sectigo R36), so verification
+  stays on.
+- **Bina Marga toll corridor rows (451, APPROXIMATE LOCATION)**: `bmtol-unofficial-<prefix>-*`, one `cityId` per
   corridor: `tol-jakarta-cikampek` 42 `jakcik`, `tol-serpong-balaraja` 41 `sebal`, `tol-jalan-layang-mbz` 43 `mbz`,
   `tol-jorr-selatan` 21 `jorrs`, `tol-akses-tanjung-priok` 20 `atp`, `tol-jagorawi` 22 `jagorawi`,
   `tol-jorr-timur` 23 `jorre`, `tol-cipularang` 16 `cipul`, `tol-sedyatmo` 12 `sedyatmo`, `tol-jakarta-tangerang` 10 `janger`,
@@ -1138,7 +1138,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   `tol-pekanbaru-dumai` 21 `permai`, `tol-medan-tebing-tinggi` 11 `jmkt`, `tol-bengkulu-taba-penanjung` 18 `bengtab`,
   `tol-padang-sicincin` 11 `pacin`, `tol-palembang-indralaya` 10 `palindra`, `tol-indralaya-prabumulih` 9 `indraprabu`,
   `tol-pekanbaru-bangkinang` 10 `pekbang`, `tol-sigli-banda-aceh` 11 `sibanceh`, `tol-indrapura-kisaran` 18 `inkis`,
-  `tol-binjai-langsa` 10 `binsa`, `tol-dalam-kota-jakarta` 20 `jtc`, from the matching binamarga.pu.go.id CCTV Tol
+  `tol-binjai-langsa` 10 `binsa`, `tol-dalam-kota-jakarta` 20 `jtc`, `tol-cipali` 15 `cipali` (host `cctvastra.lintasmarga.com/barat/KM_*.m3u8`; only live recordings-free streams, KM 70-188 mapped onto the 115.6 km OSM chain from Cikopo), from the matching binamarga.pu.go.id CCTV Tol
   ruas pages (hosts `jmlive.jasamarga.com`, `pub2.hk-opt.com`, `pub.hk-opt.com`, `info.serbaraja-tollroad.co.id:20443`).
   Only cameras whose name carries a `KM nn+nnn` marker AND whose stream returned
   a real video segment when probed are included; gate/ramp/rest-area names have
@@ -1156,7 +1156,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
   are deliberately not added; the global catalog cap is 4000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 2750 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 3000 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1201,21 +1201,21 @@ speech-to-speech API, so Claude is paired with the browser's own
   issuer changed; add the new public intermediate to `config/ca/`. Rationale: `docs/DECISIONS.md` ("ATCS
   Pasuruan and Sumedang").
   Revoke with the `pasuruan-atcs-*` / `sumedang-atcs-*` prefixes.
-- **ATCS Yogyakarta rows (131)**: `https://cctvjss.jogjakota.go.id/<folder>/<name>.stream/playlist.m3u8`
+- **ATCS Yogyakarta rows (133)**: `https://cctvjss.jogjakota.go.id/<folder>/<name>.stream/playlist.m3u8`
   (Wowza, plain HLS, no cookie, no portal session, standard public TLS chain). The pack stores the stable
   `playlist.m3u8`; the `chunklist_wNNN.m3u8` URL seen in DevTools carries a per-session id and must not be
-  stored. Positions come from the label: 97 `APPROX. LOCATION` / 34 `CITY-LEVEL ONLY`. Revoke with the
+  stored. Positions come from the label: 99 `APPROX. LOCATION` / 34 `CITY-LEVEL ONLY`; two cameras that failed on 2026-10-12 served live HLS again on 2026-10-14. Revoke with the
   `jogja-atcs-*` prefix.
-- **ATCS Surakarta rows (76, FLV)**: `https://surakarta.atcsindonesia.info:8086/camera/<Name>.flv` (anonymous
-  HTTP-FLV, one unbounded chunked stream per camera, no cookie or login). Of the operator's 95 URLs, 76 answered
-  with a valid `FLV` header (re-probed with a 25 s timeout); 19 never answer and are left out. Rows carry
-  `feedType: 'flv'`, `sourceKind: 'unofficial-flv-id'`, positions guessed from the label: 56 `APPROX. LOCATION` /
-  20 `CITY-LEVEL ONLY`. Revoke with the `surakarta-atcs-*` prefix. Playback and proxy: see "FLV playback" below.
-- **ATCS Pekanbaru rows (29)**: `https://cctv.pekanbaru.go.id/hls/cam-10.200.<x>.<y>/index.m3u8` (plain HLS,
+- **ATCS Surakarta rows (134, FLV)**: `https://surakarta.atcsindonesia.info:8086/camera/<Name>.flv` (anonymous
+  HTTP-FLV, one unbounded chunked stream per camera, no cookie or login). The 2026-10-14 re-check admitted a camera only when it returned the `FLV` header plus at least 50 KB of data and then
+  streamed through `/api/cctv/media`; 18 URLs never answer, 3 use the VP6 codec that browsers cannot play, and the rest failed the proxy check. Rows carry
+  `feedType: 'flv'`, `sourceKind: 'unofficial-flv-id'`, positions guessed from the label: 101 `APPROX. LOCATION` /
+  33 `CITY-LEVEL ONLY`. Revoke with the `surakarta-atcs-*` prefix. Playback and proxy: see "FLV playback" below.
+- **ATCS Pekanbaru rows (32)**: `https://cctv.pekanbaru.go.id/hls/cam-10.200.<x>.<y>/index.m3u8` (plain HLS,
   `#EXT-X-VERSION:6`, 5 s MPEG-TS segments, `Access-Control-Allow-Origin: *`, no cookie or portal session). The
   city page lists 86 cameras; only those that served a valid segment (first byte `0x47`) in at least one of three
-  probes (2026-10-13) are stored. The origin is slow (up to ~40 s) and 54 cameras answer 404, so the set can
-  change; re-probe before adding more. The page carries no coordinates: 23 `APPROX. LOCATION` (a node shared by
+  probes (2026-10-13; re-checked 2026-10-14, +3) are stored. The origin is slow (up to ~40 s) and 52 cameras answer 404, so the set can
+  change; re-probe before adding more. The page carries no coordinates: 26 `APPROX. LOCATION` (a node shared by
   the two named roads in OSM, or a Nominatim hit bounded to Kota Pekanbaru) / 6 `CITY-LEVEL ONLY`. The two
   "Flyover Sudirman - Nangka" cameras share a label, so their ids end in the IP octets. No seeds for the city.
   Revoke with the `pekanbaru-atcs-*` prefix.
@@ -1249,14 +1249,14 @@ speech-to-speech API, so Claude is paired with the browser's own
   because they answered 404 on every probe. Two Padalarang Flyover cameras (Cimareme / KBP) flip between 404 and live; they are
   listed since they served in every probe of the latest re-check, and may drop out again. TLS is a
   complete Let's Encrypt chain, so nothing was added to `config/ca/`.
-- **ATCS Java / Banten rows (260)**, `<site>-atcs-*`, all `SOURCE-PUBLISHED LOCATION`, plain HLS, no cookie or `portalSession`,
-  heading unknown, shared sites spread ~45 m, elevation per camera from Open-Meteo. Sites and counts: Magelang 74
+- **ATCS Java / Banten rows (301)**, `<site>-atcs-*`, all `SOURCE-PUBLISHED LOCATION`, plain HLS, no cookie or `portalSession`,
+  heading unknown, shared sites spread ~45 m, elevation per camera from Open-Meteo. Sites and counts (re-checked 2026-10-14: Banten +23, Semarang +13, Banyumas +5, Magelang +1): Magelang 75
   (`magelang-atcs-*`, datarhei Restreamer on `dev.cctv.magelangkota.go.id` / `restreamer.magelangkota.go.id`, `?session=` not stored),
-  Semarang 47 (`livepantau.semarangkota.go.id/<uuid>/index.m3u8`), Cianjur 44 (Ant Media `atcs.cianjurkab.go.id:5443`, from the page's
+  Semarang 59 (`livepantau.semarangkota.go.id/<uuid>/index.m3u8`), Cianjur 44 (Ant Media `atcs.cianjurkab.go.id:5443`, from the page's
   `/get-maps` list), Tangerang Kabupaten 28 (`cctv-dishub.tangerangkab.go.id/storage/video/<id>/<id>.m3u8`), Banjar 20 (Ant Media
-  `atcs.banjarkota.go.id:5443`), Tasikmalaya 18 (`atcs.tasikmalayakota.go.id/camera/*.m3u8`), Banyumas 15
-  (`cctv.dev.banyumaskab.go.id/<name>/index.m3u8`, master then variant), Banten province 14 (`cctv.bantenprov.go.id/service/stream-cctv/<id>/index.m3u8`;
-  of 164 listed, 150 answer 404 although flagged Online). Rule: a valid first segment in the final probe AND a playlist through
+  `atcs.banjarkota.go.id:5443`), Tasikmalaya 18 (`atcs.tasikmalayakota.go.id/camera/*.m3u8`), Banyumas 20
+  (`cctv.dev.banyumaskab.go.id/<name>/index.m3u8`, master then variant), Banten province 37 (`cctv.bantenprov.go.id/service/stream-cctv/<id>/index.m3u8`, ids `banten-atcs-(lebak|bapenda|kp3b|gerbang|banten)-*`;
+  of 164 listed, 127 still answer 404 although flagged Online). Rule: a valid first segment in the final probe AND a playlist through
   `/api/cctv/media`. Kota Serang 20 (`serang-atcs-*`, `stream.serangkota.go.id/LiveApp/streams/<name>.m3u8`, Ant Media; the server omits its TLS
   intermediate, so `config/ca/` bundles GlobalSign GCC R6 AlphaSSL CA 2025, valid to 2027-05-21; 3 of 23 listed are down). Not added: Ciamis and Kudus (no coordinates published), Medan and Kabupaten Bogor (list API needs a client
   id/secret), Jawa Tengah Dishub GIS (login), Grobogan (no public list found). Rationale: `docs/DECISIONS.md` ("ATCS Java and Banten").

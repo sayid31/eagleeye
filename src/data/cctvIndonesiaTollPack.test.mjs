@@ -17,7 +17,7 @@ test('Bina Marga tol rows are bounded and always labelled APPROXIMATE LOCATION i
   }
 });
 
-test('Bina Marga rows sit inside Jakarta and none use the Cipali host (incomplete TLS chain, rejected by Node)', () => {
+test('Bina Marga (binamarga-unofficial-*) rows sit inside Jakarta; the Cipali host belongs to the bmtol-unofficial-cipali-* rows', () => {
   for (const row of binamarga) {
     assert.equal(row.cityId, 'jakarta', row.id);
     assert.ok(row.lat > -6.35 && row.lat < -6.05 && row.lon > 106.8 && row.lon < 107.05, row.id);
@@ -77,6 +77,7 @@ const BMTOL_CORRIDORS = [
   { prefix: 'inkis', cityId: 'tol-indrapura-kisaran', min: 15, lat: [3.10, 3.19], lon: [99.37, 99.49], host: /^https:\/\/pub2?\.hk-opt\.com\// },
   { prefix: 'binsa', cityId: 'tol-binjai-langsa', min: 8, lat: [3.67, 3.74], lon: [98.48, 98.56], host: /^https:\/\/pub2?\.hk-opt\.com\// },
   { prefix: 'jtc', cityId: 'tol-dalam-kota-jakarta', min: 18, lat: [-6.27, -6.12], lon: [106.76, 106.89], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'cipali', cityId: 'tol-cipali', min: 15, lat: [-6.75, -6.40], lon: [107.46, 108.45], host: /^https:\/\/cctvastra\.lintasmarga\.com\/barat\/KM_[0-9A-Za-z+_]+\.m3u8$/ },
 ];
 
 for (const c of BMTOL_CORRIDORS) {
@@ -96,4 +97,16 @@ for (const c of BMTOL_CORRIDORS) {
 test('Bina Marga toll batch 2 never duplicates a stream already used by a binamarga-unofficial row', () => {
   const earlier = new Set(pack.filter((row) => row.id.startsWith('binamarga-unofficial-')).map((row) => row.url));
   for (const row of bmtol) assert.equal(earlier.has(row.url), false, row.id);
+});
+
+test('Cipali rows are live-only: the five Cipali streams that are recorded files (#EXT-X-ENDLIST) are left out (checked 2026-10-14)', () => {
+  const urls = new Set(pack.map((row) => row.url));
+  // KM 164, 179 B, 189 are static recordings; KM 188 C1/C2 served live HLS in the probe but only an ENDLIST playlist through the app proxy.
+  for (const km of ['KM_164', 'KM_179_B', 'KM_189', 'KM_188_C1', 'KM_188_C2']) {
+    assert.equal(urls.has(`https://cctvastra.lintasmarga.com/barat/${km}.m3u8`), false, km);
+  }
+  for (const row of bmtol.filter((r) => r.id.startsWith('bmtol-unofficial-cipali-'))) {
+    assert.doesNotMatch(row.url, /[?@]/, row.id);
+    assert.match(row.id, /^bmtol-unofficial-cipali-km-\d{3}/, row.id);
+  }
 });

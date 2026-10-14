@@ -12,11 +12,11 @@ const pack = JSON.parse(readFileSync(new URL('../../config/cctv_sources.indonesi
 // bounds are generous boxes around each administrative area.
 const SITES = [
   { prefix: 'banjar', cityId: 'banjar', count: 20, lat: [-7.40, -7.33], lon: [108.50, 108.66], host: /^https:\/\/atcs\.banjarkota\.go\.id:5443\/[A-Za-z0-9_\-/]+\.m3u8$/ },
-  { prefix: 'banten', cityId: 'banten', count: 14, lat: [-6.38, -6.15], lon: [106.15, 106.26], host: /^https:\/\/cctv\.bantenprov\.go\.id\/service\/stream-cctv\/[0-9a-f-]{36}\/index\.m3u8$/ },
-  { prefix: 'banyumas', cityId: 'banyumas', count: 15, lat: [-7.47, -7.39], lon: [109.07, 109.30], host: /^https:\/\/cctv\.dev\.banyumaskab\.go\.id\/[a-z0-9_]+\/index\.m3u8$/ },
+  { prefix: 'banten', cityId: 'banten', count: 37, lat: [-6.38, -6.05], lon: [106.10, 106.26], host: /^https:\/\/cctv\.bantenprov\.go\.id\/service\/stream-cctv\/[0-9a-f-]{36}\/index\.m3u8$/ },
+  { prefix: 'banyumas', cityId: 'banyumas', count: 20, lat: [-7.47, -7.39], lon: [109.07, 109.30], host: /^https:\/\/cctv\.dev\.banyumaskab\.go\.id\/[a-z0-9_]+\/index\.m3u8$/ },
   { prefix: 'cianjur', cityId: 'cianjur', count: 44, lat: [-6.88, -6.70], lon: [106.99, 107.33], host: /^https:\/\/atcs\.cianjurkab\.go\.id:5443\/[A-Za-z]+App\/streams\/[A-Za-z0-9_\-]+\.m3u8$/ },
-  { prefix: 'magelang', cityId: 'magelang', count: 74, lat: [-7.50, -7.43], lon: [110.20, 110.23], host: /^https:\/\/(dev\.cctv|restreamer)\.magelangkota\.go\.id\/memfs\/[0-9a-f-]{36}\.m3u8$/ },
-  { prefix: 'semarang', cityId: 'semarang', count: 47, lat: [-7.08, -6.95], lon: [110.30, 110.50], host: /^https:\/\/livepantau\.semarangkota\.go\.id\/[0-9a-f-]{36}\/index\.m3u8$/ },
+  { prefix: 'magelang', cityId: 'magelang', count: 75, lat: [-7.50, -7.43], lon: [110.20, 110.23], host: /^https:\/\/(dev\.cctv|restreamer)\.magelangkota\.go\.id\/memfs\/[0-9a-f-]{36}\.m3u8$/ },
+  { prefix: 'semarang', cityId: 'semarang', count: 59, lat: [-7.08, -6.95], lon: [110.30, 110.50], host: /^https:\/\/livepantau\.semarangkota\.go\.id\/[0-9a-f-]{36}\/index\.m3u8$/ },
   { prefix: 'tangerangkab', cityId: 'tangerangkab', count: 28, lat: [-6.35, -6.05], lon: [106.37, 106.72], host: /^https:\/\/cctv-dishub\.tangerangkab\.go\.id\/storage\/video\/[A-Za-z0-9_\-]+\/[A-Za-z0-9_\-]+\.m3u8$/ },
   { prefix: 'tasikmalaya', cityId: 'tasikmalaya', count: 18, lat: [-7.36, -7.29], lon: [108.18, 108.24], host: /^https:\/\/atcs\.tasikmalayakota\.go\.id\/camera\/[A-Za-z0-9_\-]+\.m3u8$/ },
 ];
@@ -70,9 +70,10 @@ test('Cianjur now has one stream per camera and the old city-level Liliarahsuros
   assert.equal(located.length, 1);
 });
 
-test('Banten keeps only the cameras the portal actually served (Lebak, Bapenda, KP3B); the 150 that answered 404 are left out', () => {
+test('Banten keeps only the cameras the portal actually served (Lebak, Bapenda, KP3B, Gerbang and the 23 city ATCS cameras re-found on 2026-10-14)', () => {
   const rows = rowsOf('banten');
-  assert.ok(rows.every((row) => /^banten-atcs-(lebak|bapenda|kp3b)-/.test(row.id)), 'unexpected Banten area prefix');
+  assert.ok(rows.every((row) => /^banten-atcs-(lebak|bapenda|kp3b|gerbang|banten)-/.test(row.id)), 'unexpected Banten area prefix');
+  assert.equal(rows.filter((row) => /^banten-atcs-banten-/.test(row.id)).length, 22);
 });
 
 test('sources that cannot be played safely are not in the pack: Kudus (per-viewer token), Medan, Bogor, Grobogan (no usable public list)', () => {

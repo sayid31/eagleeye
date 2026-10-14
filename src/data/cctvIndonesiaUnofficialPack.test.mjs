@@ -125,11 +125,11 @@ const REGENCY_PACKS = [
     url: /^https:\/\/shinobi\.sumedangkab\.go\.id\/[A-Za-z0-9]+\/hls\/[A-Za-z0-9]+\/[A-Za-z0-9]+\/s\.m3u8$/ },
   { prefix: 'malang-atcs-', cityId: 'malang', count: 199, lat: [-8.06, -7.9], lon: [112.58, 112.7],
     url: /^https:\/\/cctv\.malangkota\.go\.id\/cctv-stream\/streams\/\d{24}\.m3u8$/ },
-  { prefix: 'jogja-atcs-', cityId: 'yogyakarta', count: 131, lat: [-7.86, -7.72], lon: [110.32, 110.43],
+  { prefix: 'jogja-atcs-', cityId: 'yogyakarta', count: 133, lat: [-7.86, -7.72], lon: [110.32, 110.43],
     url: /^https:\/\/cctvjss\.jogjakota\.go\.id\/[a-z-]+\/[A-Za-z0-9_%.-]+\.stream\/playlist\.m3u8$/ },
-  { prefix: 'surakarta-atcs-', cityId: 'surakarta', count: 76, lat: [-7.62, -7.52], lon: [110.76, 110.87],
+  { prefix: 'surakarta-atcs-', cityId: 'surakarta', count: 134, lat: [-7.62, -7.52], lon: [110.76, 110.87],
     url: /^https:\/\/surakarta\.atcsindonesia\.info:8086\/camera\/[A-Za-z0-9]+\.flv$/ },
-  { prefix: 'pekanbaru-atcs-', cityId: 'pekanbaru', count: 29, lat: [0.38, 0.66], lon: [101.33, 101.6],
+  { prefix: 'pekanbaru-atcs-', cityId: 'pekanbaru', count: 32, lat: [0.38, 0.66], lon: [101.33, 101.6],
     url: /^https:\/\/cctv\.pekanbaru\.go\.id\/hls\/cam-10\.200\.\d{1,3}\.\d{1,3}\/index\.m3u8$/ },
   { prefix: 'bukittinggi-atcs-', cityId: 'bukittinggi', count: 39, lat: [-0.34, -0.26], lon: [100.35, 100.41],
     url: /^https:\/\/hls\.bukittinggikota\.go\.id\/hls\d\/[A-Za-z0-9]+\/hls\/[A-Za-z0-9]+\/cam\d+d\d+\/s\.m3u8$/ },
@@ -186,22 +186,22 @@ test('Malang rows opt into the anonymous portal session; no other pack row does'
 
 test('Yogyakarta rows use the stable master playlist, never the per-session chunklist_wNNN URL', () => {
   const rows = pack.filter((row) => row.id.startsWith('jogja-atcs-'));
-  assert.equal(rows.length, 131);
+  assert.equal(rows.length, 133);
   for (const row of rows) assert.doesNotMatch(row.url, /chunklist_w\d+/, row.id);
 });
 
-test('Yogyakarta pack omits the two streams that failed the liveness probe (measured 2026-10-12)', () => {
+test('Yogyakarta pack includes the two streams that failed on 2026-10-12 and served live HLS again on 2026-10-14', () => {
   const urls = new Set(pack.map((row) => row.url));
-  assert.equal(urls.has('https://cctvjss.jogjakota.go.id/atcs/ATCS_Lampu_Merah_JoktengWetan.stream/playlist.m3u8'), false);
-  assert.equal(urls.has('https://cctvjss.jogjakota.go.id/rthp/rthp_pakudaya_pakuncen_2.stream/playlist.m3u8'), false);
+  assert.equal(urls.has('https://cctvjss.jogjakota.go.id/atcs/ATCS_Lampu_Merah_JoktengWetan.stream/playlist.m3u8'), true);
+  assert.equal(urls.has('https://cctvjss.jogjakota.go.id/rthp/rthp_pakudaya_pakuncen_2.stream/playlist.m3u8'), true);
 });
 
-test('Surakarta pack omits the 19 streams that never answered, even with a 25 s wait (measured 2026-10-12)', () => {
+test('Surakarta pack omits the 18 streams that still never answer, even with a 25 s wait (re-checked 2026-10-14; GiriMulyo01 came back)', () => {
   const urls = new Set(pack.map((row) => row.url));
-  const dead = ['PalangJoglo', 'DawungSelatan', 'DPRD', 'Genengan', 'GiriMulyo01', 'JembatanMojo', 'MasjidAgung',
+  const dead = ['PalangJoglo', 'DawungSelatan', 'DPRD', 'Genengan', 'JembatanMojo', 'MasjidAgung',
     'Mlipahan', 'PasarBeling', 'PasarKlewer', 'PasarkKliwon', 'PasarLegi', 'PasarNongko', 'PengadilanSriwedari',
     'GedungSerbagunaPucangsawit', 'Sekip', 'Singosaren', 'Sudirman', 'Timuran'];
-  assert.equal(dead.length, 19);
+  assert.equal(dead.length, 18);
   for (const name of dead) {
     assert.equal(urls.has(`https://surakarta.atcsindonesia.info:8086/camera/${name}.flv`), false, name);
   }

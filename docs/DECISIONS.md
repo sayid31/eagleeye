@@ -2108,7 +2108,7 @@ pelindung.bandung.go.id exposes an unauthenticated catalog (`:8443/api/cek`, 436
 
 Why Pelindung over ATCS Bandung: the ATCS catalog is reachable but every `:1990/<name>/index.m3u8` returns 404 (mediamtx, no publisher), including the 3 older Bandung rows, which remain in the pack but show no video. Bali Tower (`cctv.balitower.co.id`) timed out on 80/443 from the dev network and was not included. Bina Marga, BPJT, RTTMC and smartcity.jakarta.go.id were not probed in this change.
 
-## 2026-10-05 — Bina Marga toll cameras: approximate positions, Cipali excluded
+## 2026-10-05 — Bina Marga toll cameras: approximate positions, Cipali excluded (superseded 2026-10-14: Cipali is now included, see the re-check entry)
 
 binamarga.pu.go.id/contents/cctv_tol lists 82 toll segments; each segment page embeds `<source ….m3u8>` streams from the concessionaires' own hosts, with a name ("ATP KM 61+400 A") but no coordinates. Rather than skip them or pull coordinates from a source outside the allowed list, 14 cameras are placed by linear interpolation of the KM number along a hand-drawn route polyline (anchors from general geography, not surveyed). This is explicitly low precision (~2 km+), so every row says `APPROX. LOCATION` in name, provider and license, `headingConfidence` is `low` and heading is the assumed road bearing. A test enforces the label.
 
@@ -2338,3 +2338,15 @@ Left out on purpose: Wonosobo (token per viewer), Brebes (API answers 401), Kudu
 Capacity: the pack is now 2372 rows. With the 250 + 300 + 250 allowances for Austin, Caltrans and TfL the tests require 3172, above the old cap of 3000, and the catalog merge truncates silently past the cap. `DEFAULT_CCTV_MAX_SOURCES` is now 4000 (the health map grows by a few KB).
 
 Not verified: in-browser playback of the new rows; the checks were probes plus the proxy.
+
+## 2026-10-14 — Re-check of "not re-checked" cameras: +119, Cipali included
+
+Every camera listed as "belum dicek ulang" in `cctvLive.md` was probed again with the standing liveness rule (three playlist polls about 8 s apart with an advancing media sequence, a last segment above 10 KB with TS or fMP4 magic, no ENDLIST; for FLV an HTTP 200 with the `FLV\x01` magic and at least 50 KB), then each survivor was fetched through the app's own `/api/cctv/media/:id`. Seven rows passed the first stage but failed the proxy twice (Semarang Balai Kota 404, Cipali KM 188 C1/C2 ENDLIST through the proxy, two Surakarta 502s, two timeouts) and were dropped: a row that cannot play in the app is worse than a missing one. One Banten row with a single transient 502 was kept. Net +119 rows.
+
+Decisions behind the numbers:
+- **Cipali reverses the 2026-10-05 exclusion.** That entry rejected Cipali for an incomplete TLS chain, and the only fix then was disabling verification. The Padang Panjang work later bundled the Sectigo R36 intermediate in `config/ca/`, which completes Cipali's chain, so verification stays on and the host works. The `curl -k` shortcut was not used; the one probe that tried it was discarded and redone with verification.
+- **Cipali positions are `APPROX. LOCATION`.** The portal gives KM numbers only. KM 70-188 is mapped linearly onto the 115.6 km OSM motorway chain from Cikopo. That the KM origin is 70 at Cikopo is an assumption, as for the other toll corridors, so the tier never claims a surveyed position. KM 164, 179 B and 189 are recordings (ENDLIST) and are left out.
+- **Surakarta FLV: VP6 skipped.** Three streams answer with a valid FLV header but use the VP6 codec, which `mpegts.js` and browsers cannot decode, so they would show a black tile.
+- **Surabaya's four revived cameras (cctv_285/297/387/455) were not added.** They sit on plain-http `36.66.208.101:5000`, have no coordinates and were frozen in earlier rounds; their recovery looks unstable and adding them would put four guessed markers on a fragile origin.
+- **Banten is still mostly 404.** 127 of 164 listed cameras still answer 404 although the portal flags them Online; only the 23 that served segments were added.
+- **Provider strings.** The regency tests require the provider text to repeat the tier string from the camera name, so new `APPROX.` rows say `APPROX. LOCATION)` in the provider; the license text keeps "APPROXIMATE LOCATION".

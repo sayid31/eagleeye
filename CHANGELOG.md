@@ -15,10 +15,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 119 more live ATCS CCTV cameras from a full re-check of every camera that had been marked "not re-checked" (UNOFFICIAL SOURCE, demo only). A camera is
+  added only when three playlist polls show an advancing media sequence and it then plays through the app proxy. Added: Surakarta 58 FLV (76 to 134), Banten 23,
+  Semarang 13, Banyumas 5, Pekanbaru 3, Yogyakarta 2 and Magelang 1, plus a new Cipali toll corridor (`bmtol-unofficial-cipali-*`, 15 cameras, `APPROX. LOCATION`).
+  The pack now holds 2491 cameras. Not added: cameras that are only recordings (ENDLIST), still answer 404, use the VP6 FLV codec, or (Surabaya, 4 cameras) sit on a
+  plain-http host without coordinates. Per-site detail in `cctvLive.md`; the URL list in `urlcctv.md` and `urlcctv.csv`.
+
 - 420 more live ATCS CCTV cameras from a sweep of all regencies and cities (UNOFFICIAL SOURCE, demo only, plain HLS, no login or cookie): Nganjuk 289,
   Banjarbaru 47, Jambi 19, Garut 15, Ciamis 14, Karo 12, Lebak 10 and Pemalang 12, plus 2 new Balangan cameras. Nganjuk, Banjarbaru, Jambi, Garut, Karo and Lebak
   carry source-published coordinates; Ciamis and Pemalang have none, so their markers are `APPROX. LOCATION` (Pemalang also 3 `CITY-LEVEL ONLY`). Karo is served over
-  plain http. The CCTV catalog cap rises from 3000 to 4000 (`DEFAULT_CCTV_MAX_SOURCES`) so the 2372-camera pack fits. Not added: Wonosobo, Brebes, Kudus,
+  plain http. The CCTV catalog cap rises from 3000 to 4000 (`DEFAULT_CCTV_MAX_SOURCES`) so the 2372-camera pack fits (it now holds 2491). Not added: Wonosobo, Brebes, Kudus,
   Samarinda, Sukoharjo (per-viewer tokens, login or challenge pages). Per-site detail in `cctvLive.md`; the URL list is in `urlcctv.md` and `urlcctv.csv`.
 
 - 189 live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain HTTPS HLS with no login or cookie.
