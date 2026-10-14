@@ -75,8 +75,9 @@ test('Banten keeps only the cameras the portal actually served (Lebak, Bapenda, 
   assert.ok(rows.every((row) => /^banten-atcs-(lebak|bapenda|kp3b)-/.test(row.id)), 'unexpected Banten area prefix');
 });
 
-test('sources that cannot be played safely are not in the pack: Serang (incomplete TLS chain), Ciamis and Kudus (no published coordinates)', () => {
-  for (const prefix of ['serang', 'ciamis', 'kudus', 'medan', 'bogor', 'grobogan']) {
+test('sources that cannot be played safely are not in the pack: Ciamis and Kudus (no published coordinates), Medan, Bogor, Grobogan (no usable public list)', () => {
+  // Kota Serang was left out for its incomplete TLS chain; it is in the pack since config/ca/ bundles its intermediate (see cctvIndonesiaNusantaraPack.test.mjs).
+  for (const prefix of ['ciamis', 'kudus', 'medan', 'bogor', 'grobogan']) {
     assert.equal(rowsOf(prefix).length, 0, prefix);
   }
 });

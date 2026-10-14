@@ -74,3 +74,21 @@ test('installing the bundled intermediate adds it to the real default CA list', 
   assert.equal(tls.getCACertificates('default').length, before + added);
   assert.equal(installIntermediateCaTrust({ dir: BUNDLED_DIR }), 0);
 });
+
+test('every bundled certificate is a non-expired CA intermediate, never a self-signed root', () => {
+  const certs = readIntermediateCertificates(BUNDLED_DIR).map((pem) => new X509Certificate(pem));
+  assert.ok(certs.length >= 4, 'expected the bundled intermediates');
+  for (const cert of certs) {
+    assert.equal(cert.ca, true, cert.subject);
+    assert.notEqual(cert.subject, cert.issuer, `${cert.subject} must be an intermediate, not a root`);
+    assert.ok(new Date(cert.validTo) > new Date(), `${cert.subject} expired ${cert.validTo}`);
+  }
+});
+
+test('the Kota Serang intermediate (GlobalSign GCC R6 AlphaSSL CA 2025) is bundled and chains to a Mozilla root', () => {
+  const certs = readIntermediateCertificates(BUNDLED_DIR).map((pem) => new X509Certificate(pem));
+  const serang = certs.find((cert) => /GlobalSign GCC R6 AlphaSSL CA 2025/.test(cert.subject));
+  assert.ok(serang, 'Serang intermediate missing from config/ca/');
+  const roots = tls.getCACertificates('bundled').map((pem) => new X509Certificate(pem));
+  assert.ok(roots.some((root) => serang.checkIssued(root) && serang.verify(root.publicKey)), 'must chain to a root in Node\'s bundled Mozilla store');
+});

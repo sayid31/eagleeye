@@ -39,7 +39,7 @@ How to read this:
 | **Radio Browser** | Geolocated internet-radio station directory and station-level tags | Public-domain directory data under PDDL 1.0; individual broadcaster stream terms apply | "Radio Browser" plus a link to the selected broadcaster |
 | **Re:Earth Terrain** (Mapterhorn) | Terrain (keyless globe stacks — OSM etc. — + `/api/terrain/heights` ellipsoidal-height lookups) | Terrain mesh: CC BY 4.0; geoid: EGM2008 (NGA, public domain) | "Terrain (keyless globe stacks): Re:Earth Terrain / Mapterhorn (CC BY 4.0) / EGM2008 (NGA)" |
 
-### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar, Surabaya, Cianjur, Mataram, Pasuruan, Sumedang, Malang, Yogyakarta, Surakarta, Pekanbaru, Bukittinggi, Solok, Padang, Padang Panjang, Pesisir Selatan, Bandung Barat, Magelang, Semarang, Cianjur, Tangerang Kabupaten, Banjar, Tasikmalaya, Banyumas, Banten)
+### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar, Surabaya, Cianjur, Mataram, Pasuruan, Sumedang, Malang, Yogyakarta, Surakarta, Pekanbaru, Bukittinggi, Solok, Padang, Padang Panjang, Pesisir Selatan, Bandung Barat, Magelang, Semarang, Cianjur, Tangerang Kabupaten, Banjar, Tasikmalaya, Banyumas, Banten, Kota Serang)
 
 1672 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
@@ -59,7 +59,7 @@ one internal demo and is explicitly **not vetted for public or commercial
 deployment or redistribution**. The UI always shows a
 `⚠ UNOFFICIAL SOURCE` badge on these cameras (never folds into the generic
 status badge), and every row's `license` field repeats this disclaimer.
-Gresik (`cctvkanjeng.gresikkab.go.id`, 55 `gresik-atcs-*` rows) and Jombang (`cctv.jombangkab.go.id`, 16 `jombang-atcs-*` rows) are also in the pack: both are public pages of the local governments, positioned from their own published coordinates, and carry the same UNOFFICIAL badge and no stated licence. Gresik streams through an anonymous viewer session the dev proxy opens; Jombang's 2 h page token is read at run time and never stored. No credential is stored for either.
+Kota Serang (`cctv.serangkota.go.id`, 20 `serang-atcs-*` rows, plain HLS from `stream.serangkota.go.id`; its incomplete TLS chain is repaired with the bundled public GlobalSign intermediate) is in the pack on the same terms. Gresik (`cctvkanjeng.gresikkab.go.id`, 55 `gresik-atcs-*` rows) and Jombang (`cctv.jombangkab.go.id`, 16 `jombang-atcs-*` rows) are also in the pack: both are public pages of the local governments, positioned from their own published coordinates, and carry the same UNOFFICIAL badge and no stated licence. Gresik streams through an anonymous viewer session the dev proxy opens; Jombang's 2 h page token is read at run time and never stored. No credential is stored for either.
 
 Revoke instantly via `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0` or by deleting
 `config/cctv_sources.indonesia_unofficial.json` (or the file named by

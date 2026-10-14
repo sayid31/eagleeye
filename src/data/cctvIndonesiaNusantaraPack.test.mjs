@@ -1,4 +1,4 @@
-// Guard for the Aceh / Kalimantan / East Java ATCS rows (6 sites) of the UNOFFICIAL Indonesia pack.
+// Guard for the Aceh / Kalimantan / East Java / Kota Serang ATCS rows (7 sites) of the UNOFFICIAL Indonesia pack.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
@@ -15,6 +15,8 @@ const SITES = [
   { prefix: 'banjarmasin', count: 33, lat: [-3.40, -3.26], lon: [114.55, 114.64], host: /^https:\/\/atcs\.banjarmasinkota\.go\.id\/stream\/[A-Za-z0-9_\-]+\/index\.m3u8$/ },
   { prefix: 'kobar', count: 22, lat: [-2.78, -2.64], lon: [111.60, 111.72], host: /^https:\/\/cctv\.kotawaringinbaratkab\.go\.id\/storage\/stream\/cctv\d+\/a\d+\.m3u8$/ },
   { prefix: 'tanahbumbu', count: 11, lat: [-3.80, -3.38], lon: [115.37, 116.03], host: /^https:\/\/atcs\.tanahbumbukab\.go\.id\/hls\/cctv_ch\d+\/index\.m3u8$/ },
+  // Serang's server omits its TLS intermediate; the rows only play through the proxy with config/ca/ GlobalSign GCC R6 AlphaSSL CA 2025.
+  { prefix: 'serang', count: 20, lat: [-6.20, -6.00], lon: [106.10, 106.25], host: /^https:\/\/stream\.serangkota\.go\.id\/LiveApp\/streams\/[A-Za-z0-9]+\.m3u8$/ },
   { prefix: 'situbondo', count: 19, lat: [-7.80, -7.65], lon: [113.65, 114.30], host: /^https:\/\/cctvstream\.situbondokab\.go\.id\/cctv\d+\/index\.m3u8$/ },
 ];
 const rowsOf = (prefix) => pack.filter((row) => row.id.startsWith(`${prefix}-atcs-`));

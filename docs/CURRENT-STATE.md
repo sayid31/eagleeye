@@ -1257,8 +1257,8 @@ speech-to-speech API, so Claude is paired with the browser's own
   `atcs.banjarkota.go.id:5443`), Tasikmalaya 18 (`atcs.tasikmalayakota.go.id/camera/*.m3u8`), Banyumas 15
   (`cctv.dev.banyumaskab.go.id/<name>/index.m3u8`, master then variant), Banten province 14 (`cctv.bantenprov.go.id/service/stream-cctv/<id>/index.m3u8`;
   of 164 listed, 150 answer 404 although flagged Online). Rule: a valid first segment in the final probe AND a playlist through
-  `/api/cctv/media`. Not added: Kota Serang (21 streams play, but the server omits its TLS intermediate and Node rejects it; nothing
-  added to `config/ca/` yet), Ciamis and Kudus (no coordinates published), Medan and Kabupaten Bogor (list API needs a client
+  `/api/cctv/media`. Kota Serang 20 (`serang-atcs-*`, `stream.serangkota.go.id/LiveApp/streams/<name>.m3u8`, Ant Media; the server omits its TLS
+  intermediate, so `config/ca/` bundles GlobalSign GCC R6 AlphaSSL CA 2025, valid to 2027-05-21; 3 of 23 listed are down). Not added: Ciamis and Kudus (no coordinates published), Medan and Kabupaten Bogor (list API needs a client
   id/secret), Jawa Tengah Dishub GIS (login), Grobogan (no public list found). Rationale: `docs/DECISIONS.md` ("ATCS Java and Banten").
   Revoke per site with its `<site>-atcs-*` prefix.
 - **ATCS Aceh / Kalimantan / Situbondo rows (153)**, `<site>-atcs-*`, all `SOURCE-PUBLISHED LOCATION`, plain HTTPS HLS, no cookie, token or

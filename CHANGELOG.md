@@ -24,6 +24,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   Kutai Timur, Jatim Pelayaran, Pontianak, Kaltim (streams need a challenge, YouTube support or credentials). Per-site detail in `cctvLive.md`; the full
   URL list is in `urlcctv.md`.
 
+- 20 live Kota Serang ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only, `serang-atcs-*`, source-published
+  coordinates, plain HLS from `stream.serangkota.go.id`). The site's server omits its TLS intermediate, so the
+  dev proxy now also trusts the public GlobalSign GCC R6 AlphaSSL CA 2025 intermediate (`config/ca/`, valid to
+  2027-05-21); certificate verification stays on. 3 of the 23 listed cameras are down at the source.
+
 - 71 more live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only) from two sites whose streams are not plain static
   HLS, all with source-published coordinates: Gresik 55 (`gresik-atcs-*`) and Jombang 16 (`jombang-atcs-*`).
   Gresik runs a camera only while someone watches, so the dev proxy now opens an anonymous viewer session per
@@ -41,8 +46,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   `SOURCE-PUBLISHED LOCATION` (heading unknown). Only cameras that served a valid video
   segment in the final probe and again through the app's own proxy are included; many
   more are listed on those sites but answer 404 or time out. The old city-level Cianjur
-  camera is replaced by its located twin. Not added: Kota Serang (its TLS chain is
-  incomplete, so the proxy cannot fetch it), Ciamis and Kudus (no published
+  camera is replaced by its located twin. Kota Serang is added in
+  the entry above. Not added: Ciamis and Kudus (no published
   coordinates), Medan, Kabupaten Bogor, Jawa Tengah Dishub and Grobogan (a login or
   client secret is needed, or no stream list is public). Per-site detail in `cctvLive.md`.
 
