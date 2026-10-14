@@ -7,10 +7,10 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1932** |
-| Kota dan kabupaten (35 lokasi) | 1496 |
+| **Total kamera video live** | **1952** |
+| Kota dan kabupaten (36 lokasi) | 1516 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1840 |
+| Format HLS | 1860 |
 | Format FLV (Surakarta) | 76 |
 | Format MJPEG (Jombang, ditampilkan sebagai gambar yang disegarkan) | 16 |
 
@@ -19,7 +19,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | Label posisi | Kamera | Arti |
 |---|---:|---|
 | `APPROX. LOCATION` | 1087 | 651 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream dan Pati 4 dari koordinat agregator cctvnusantara.com, bukan dari sumber) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 604 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `SOURCE-PUBLISHED LOCATION` | 624 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16, Kota Serang 20), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
 | `CITY-LEVEL ONLY` | 179 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
@@ -62,6 +62,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 33 | Pati | 4 | HLS |
 | 34 | Gresik | 55 | HLS on-demand (proxy membuka sesi penonton; sebagian kamera mati di sumber) |
 | 35 | Jombang | 16 | MJPEG ZoneMinder (token halaman dibaca saat dijalankan; 9 dari 25 monitor mati di sumber) |
+| 36 | Kota Serang | 20 | HLS (Ant Media; perlu CA perantara GlobalSign di `config/ca/`; 3 dari 23 mati di sumber) |
 
 ## Jalan tol
 
@@ -119,7 +120,6 @@ Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 
 | Pesisir Selatan | 1 | Kamera Carocok 1 hanya membalas "File Not Found"; Carocok 4 memakai stream yang sama dengan Carocok 3 sehingga disimpan sekali | tetap mati |
 | Jalan tol Cipali | 20 | rantai sertifikat TLS server tidak lengkap; Node menolaknya dan memaksa mematikan verifikasi TLS tidak sepadan untuk demo | belum dicek ulang |
 | Banyuwangi | tidak diketahui | `live.banyuwangikab.go.id` diblokir Cloudflare | butuh keputusan owner |
-| Serang (kota) | 21 | stream bisa diputar langsung, tetapi server tidak mengirim sertifikat perantara TLS sehingga proxy aplikasi gagal (502); perlu keputusan menambah CA di `config/ca/` | butuh keputusan owner |
 | Ciamis | 15 | stream hidup, tetapi situs tidak menerbitkan koordinat | tidak ditambahkan |
 | Kudus | 1 | hanya satu stream bawaan dan tanpa koordinat; daftar kameranya butuh kunci di JavaScript situs | tidak ditambahkan |
 | Medan, Kabupaten Bogor | tidak diketahui | daftar kamera hanya lewat API yang butuh client id/secret yang tertanam di JavaScript situs; tidak dipakai | tidak ditambahkan |
@@ -133,7 +133,7 @@ Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 
 | Jatim Pelayaran (Dishub Jatim) | tidak diketahui | MJPEG lewat http, kredensial kamera tertanam, tanpa koordinat | tidak ditambahkan |
 | Pontianak | tidak diketahui | hanya embed YouTube | tidak ditambahkan |
 | Kaltim (layanan.kaltimprov) | tidak diketahui | kamera tidak aktif, WebRTC, atau URL bertoken sesi; rantai TLS tidak lengkap | tidak ditambahkan |
-| cctvnusantara.com | tidak diketahui | agregator: URL stream tidak diterbitkan (relay di balik Turnstile); kamera pengadilan di luar cakupan; 2 stream Serang "Bogeg" kena masalah rantai TLS | tidak ditambahkan |
+| cctvnusantara.com | tidak diketahui | agregator: URL stream tidak diterbitkan (relay di balik Turnstile); kamera pengadilan di luar cakupan; stream Serang "Bogeg" sudah masuk lewat kamera Kota Serang | tidak ditambahkan |
 | Tanah Bumbu | 2 | ch09 dan ch07 timbul-tenggelam (404 / terputus) dalam 3 putaran cek | tidak ditambahkan |
 | Situbondo | 12 | sumber on-demand MediaMTX: playlist menjawab HTTP 500 "source of path ... has timed out" (RTSP upstream mati) atau urutan media beku | dicek ulang 2026-10-14, 15 dari 27 pulih dan dimasukkan |
 | Pati | 1 | CCTV Diskominfo Parkiran Depan, 404 | tidak dimasukkan |

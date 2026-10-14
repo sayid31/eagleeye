@@ -2316,3 +2316,11 @@ Jombang (ZoneMinder `nph-zms`): MJPEG, 403 without a 2 h JWT that the public pag
 Safety: `onDemand.controlUrl` and `pageToken.pageUrl` must share the stream URL's origin, so a catalog entry cannot point the proxy at another host, and both fields are stripped from public payloads.
 
 Not verified: in-browser playback of the new rows; checks were proxy-level (playlist, segment, frame decode).
+
+## 2026-10-14 — Kota Serang: GlobalSign intermediate bundled, 20 cameras added
+
+Kota Serang had been held back because its server omits the TLS intermediate (see "ATCS Java and Banten"). The owner approved trusting it. The certificate is GlobalSign GCC R6 AlphaSSL CA 2025, fetched from the leaf's own AIA URL (SHA-256 A8:83:55:92…:CC:08:CA, CA:TRUE pathlen 0, valid to 2027-05-21) and chaining to GlobalSign Root R6, which Node's bundled store already contains. It joins the other intermediates in `config/ca/` under the same reasoning: verification stays on, an intermediate only vouches for certificates it issued, and no host gains trust it lacked with a complete chain. Because the trust list is process-wide, this intermediate can in principle vouch for any other GlobalSign-AlphaSSL-issued host; that is the same exposure as every browser. A test now checks that each bundled file is a non-expired, non-root CA and that the Serang one chains to a Mozilla root. Renewal: when it expires (2027-05-21) the operator's new intermediate must replace it.
+
+Rows: the site's `/api/cctv` lists 23 cameras with coordinates and an Ant Media stream name. 20 passed the usual rule (advancing playlist over three probes, segment over 10 KB) and then a playlist plus segment through `/api/cctv/media`; Royal Baroe 02 froze, Royal Baroe 03 and Stasiun Kota Serang answer 404. Three Pocis and Royal Baroe segments are only ~11-21 KB (low-bitrate feeds) but are valid MPEG-TS.
+
+Not verified: in-browser playback.

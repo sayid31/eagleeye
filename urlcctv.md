@@ -4,10 +4,10 @@ Daftar URL stream video langsung (HLS/FLV) dari `config/cctv_sources.indonesia_u
 
 | | Jumlah |
 |---|---:|
-| **Total URL** | **1932** |
-| Kota dan kabupaten (35 lokasi) | 1496 |
+| **Total URL** | **1952** |
+| Kota dan kabupaten (36 lokasi) | 1516 |
 | Jalan tol (24 ruas) | 436 |
-| HLS | 1840 |
+| HLS | 1860 |
 | FLV | 76 |
 | MJPEG (Jombang) | 16 |
 
@@ -1691,6 +1691,31 @@ Catatan:
 | 14 | `jombang-atcs-simpang-tugu-selatan` | Simpang Tugu (Selatan) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=147` |
 | 15 | `jombang-atcs-simpang-tugu-timur` | Simpang Tugu (Timur) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=148` |
 | 16 | `jombang-atcs-simpang-tugu-barat` | Simpang Tugu (Barat) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=146` |
+
+### Kota Serang (20)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `serang-atcs-ciceri-1` | CCTV Ciceri 1 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/ciceri1.m3u8` |
+| 2 | `serang-atcs-ciceri-2` | CCTV Ciceri 2 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/ciceri2.m3u8` |
+| 3 | `serang-atcs-ciracas-sepang` | CCTV Ciracas Sepang | HLS | `https://stream.serangkota.go.id/LiveApp/streams/sepang.m3u8` |
+| 4 | `serang-atcs-gerbang-tol-serang-timur` | CCTV Gerbang Tol Serang Timur | HLS | `https://stream.serangkota.go.id/LiveApp/streams/serangtimur.m3u8` |
+| 5 | `serang-atcs-jembatan-bogeg-1` | CCTV Jembatan Bogeg 1 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/Jembatanbogeg1.m3u8` |
+| 6 | `serang-atcs-jembatan-bogeg-2` | CCTV Jembatan Bogeg 2 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/Jembatanbogeg2.m3u8` |
+| 7 | `serang-atcs-kaligandu` | CCTV Kaligandu | HLS | `https://stream.serangkota.go.id/LiveApp/streams/kaligandu.m3u8` |
+| 8 | `serang-atcs-p3-royal-baroe-01` | CCTV P3 Royal Baroe 01 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/p3royalbaroe01.m3u8` |
+| 9 | `serang-atcs-p3-royal-baroe-02` | CCTV P3 Royal Baroe 02 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/p3royalbaroe02.m3u8` |
+| 10 | `serang-atcs-p3-royal-baroe-03` | CCTV P3 Royal Baroe 03 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/p3royalbaroe03.m3u8` |
+| 11 | `serang-atcs-p3-taman-sari` | CCTV P3 Taman Sari | HLS | `https://stream.serangkota.go.id/LiveApp/streams/p3tamansari.m3u8` |
+| 12 | `serang-atcs-p4-taman-sari` | CCTV P4 Taman Sari | HLS | `https://stream.serangkota.go.id/LiveApp/streams/p4tamansari.m3u8` |
+| 13 | `serang-atcs-pocis-01` | CCTV Pocis 01 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/pocis01.m3u8` |
+| 14 | `serang-atcs-pocis-02` | CCTV Pocis 02 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/pocis02.m3u8` |
+| 15 | `serang-atcs-royal-baroe-01` | CCTV Royal Baroe 01 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/royal01.m3u8` |
+| 16 | `serang-atcs-royal-baroe-04` | CCTV Royal Baroe 04 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/royalbaroe04.m3u8` |
+| 17 | `serang-atcs-royal-baroe-05` | CCTV Royal Baroe 05 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/royalbaroe05.m3u8` |
+| 18 | `serang-atcs-taman-sari-01` | CCTV Taman Sari 01 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/tamansari01.m3u8` |
+| 19 | `serang-atcs-taman-sari-02` | CCTV Taman Sari 02 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/tamansari02.m3u8` |
+| 20 | `serang-atcs-terminal-banten-lama` | CCTV Terminal Banten Lama | HLS | `https://stream.serangkota.go.id/LiveApp/streams/terminalbantenlama.m3u8` |
 
 ## Jalan tol
 
