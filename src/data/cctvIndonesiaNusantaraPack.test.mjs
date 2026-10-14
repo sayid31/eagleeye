@@ -61,10 +61,10 @@ for (const site of SITES) {
 }
 
 test('sources that cannot be played safely or lawfully as static HLS are not in the pack', () => {
-  // Kutai Timur: WAF proof-of-work challenge. Gresik: on-demand stream that needs a start call + heartbeat.
-  // Jombang / Jatim Pelayaran: MJPEG (Jatim Pelayaran also embeds camera credentials). Pontianak: YouTube embeds.
-  // Kaltim: inactive, WebRTC or session-token URLs.
-  for (const prefix of ['kutaitimur', 'gresik', 'jombang', 'jatimpelayaran', 'pontianak', 'kaltim']) {
+  // Kutai Timur: WAF proof-of-work challenge. Jatim Pelayaran: MJPEG with embedded camera credentials.
+  // Pontianak: YouTube embeds. Kaltim: inactive, WebRTC or session-token URLs.
+  // (Gresik and Jombang are in the pack; their guards are in cctvIndonesiaOnDemandPack.test.mjs.)
+  for (const prefix of ['kutaitimur', 'jatimpelayaran', 'pontianak', 'kaltim']) {
     assert.equal(rowsOf(prefix).length, 0, prefix);
   }
 });

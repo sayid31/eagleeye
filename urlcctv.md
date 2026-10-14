@@ -4,17 +4,19 @@ Daftar URL stream video langsung (HLS/FLV) dari `config/cctv_sources.indonesia_u
 
 | | Jumlah |
 |---|---:|
-| **Total URL** | **1861** |
-| Kota dan kabupaten (33 lokasi) | 1425 |
+| **Total URL** | **1932** |
+| Kota dan kabupaten (35 lokasi) | 1496 |
 | Jalan tol (24 ruas) | 436 |
-| HLS | 1785 |
+| HLS | 1840 |
 | FLV | 76 |
+| MJPEG (Jombang) | 16 |
 
 Catatan:
 
 - Daftar ini adalah kamera yang terdaftar di pack. Sumber tidak resmi bisa mati atau timbul-tenggelam kapan saja, jadi URL yang ada di sini bukan jaminan masih menyala.
 - **Malang (199)**: entri pack ini membawa `portalSession` (bootstrap `https://cctv.malangkota.go.id/`, Referer `https://cctv.malangkota.go.id/sebaran-cctv`), artinya aplikasi membuka sesi portal itu lewat proxy `/api/cctv/media` sebelum mengambil stream. Memutar URL mentah di bawah dari player lain mungkin ditolak; hal itu tidak diuji di sini.
-- URL di daftar ini tidak memakai query string, dan hanya Malang yang punya `portalSession` di data. Tidak ada kunci atau token yang tersimpan di file ini.
+- **Gresik (55) dan Jombang (16)**: URL di bawah adalah URL polos tanpa token. Gresik hanya menyala setelah proxy aplikasi membuka sesi penonton anonim (`POST .../start`, `heartbeat` tiap 20 detik, `stop`), jadi memutar URL mentah di player lain biasanya 404. Jombang memakai token JWT 2 jam yang tercetak di halaman publik `https://cctv.jombangkab.go.id/v2/`; proxy membacanya saat dijalankan, tidak pernah disimpan. Tanpa token stream menjawab 403.
+- URL di daftar ini tidak memakai query string, dan hanya Malang yang punya `portalSession`, Gresik `onDemand` dan Jombang `pageToken` di data. Tidak ada kunci atau token yang tersimpan di file ini.
 - Hapus per kota dengan prefiks id-nya, atau matikan seluruh pack dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.
 
 ## Kota dan kabupaten
@@ -1608,6 +1610,87 @@ Catatan:
 | 2 | `pati-atcs-dishub-terminal-2-pati` | ATCS Dishub Terminal 2 Pati | HLS | `https://streaming.patikab.go.id/memfs/dfd316df-7293-40d8-b523-0b2b7ddb79df.m3u8` |
 | 3 | `pati-atcs-dishub-terminal-3-pati` | ATCS Dishub Terminal 3 Pati | HLS | `https://streaming.patikab.go.id/memfs/e74e945a-e872-4f35-9ebd-b25d78db0a8c.m3u8` |
 | 4 | `pati-atcs-cctv-alun-alun-simpang-lima-pati` | CCTV Alun-Alun Simpang Lima Pati | HLS | `https://streaming.patikab.go.id/memfs/8eff05af-b414-41ef-b9fb-45102439095d.m3u8` |
+
+### Gresik (55)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `gresik-atcs-perempatan-duduksampeyan-4` | PEREMPATAN DUDUKSAMPEYAN 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-duduksampeyan-4/index.m3u8` |
+| 2 | `gresik-atcs-cctv-panoramic-putri-cempo` | CCTV PANORAMIC PUTRI CEMPO | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-panoramic-putri-cempo/index.m3u8` |
+| 3 | `gresik-atcs-bandara-bawean-3` | BANDARA BAWEAN 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/bandara-bawean-3/index.m3u8` |
+| 4 | `gresik-atcs-perempatan-duduksampeyan-1` | PEREMPATAN DUDUKSAMPEYAN 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-duduksampeyan-1/index.m3u8` |
+| 5 | `gresik-atcs-cctv-perempatan-legundi-1` | CCTV PEREMPATAN LEGUNDI 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-legundi-1/index.m3u8` |
+| 6 | `gresik-atcs-perempatan-pasar-gresik-2` | PEREMPATAN PASAR GRESIK 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-pasar-gresik-2/index.m3u8` |
+| 7 | `gresik-atcs-perempatan-pasar-gresik-4` | PEREMPATAN PASAR GRESIK 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-pasar-gresik-4/index.m3u8` |
+| 8 | `gresik-atcs-kapal-cepat-bawean-1` | KAPAL CEPAT BAWEAN 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/kapal-cepat-bawean-1/index.m3u8` |
+| 9 | `gresik-atcs-segoromadu-4` | SEGOROMADU 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/segoromadu-4/index.m3u8` |
+| 10 | `gresik-atcs-perempatan-pasar-gresik-1` | PEREMPATAN PASAR GRESIK 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-pasar-gresik-1/index.m3u8` |
+| 11 | `gresik-atcs-bandara-bawean-1` | BANDARA BAWEAN 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/bandara-bawean-1/index.m3u8` |
+| 12 | `gresik-atcs-cctv-perempatan-wringinanom-1` | CCTV PEREMPATAN WRINGINANOM 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-wringinanom-1/index.m3u8` |
+| 13 | `gresik-atcs-pelabuhan-bawean-1` | PELABUHAN BAWEAN 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pelabuhan-bawean-1/index.m3u8` |
+| 14 | `gresik-atcs-segoromadu-1` | SEGOROMADU 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/segoromadu-1/index.m3u8` |
+| 15 | `gresik-atcs-pasar-bungah-3` | PASAR BUNGAH 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-bungah-3/index.m3u8` |
+| 16 | `gresik-atcs-cctv-panoramic-kantor-bupati` | CCTV PANORAMIC KANTOR BUPATI | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-panoramic-kantor-bupati/index.m3u8` |
+| 17 | `gresik-atcs-pasar-gresik-3` | PASAR GRESIK 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-gresik-3/index.m3u8` |
+| 18 | `gresik-atcs-cctv-perempatan-legundi-4` | CCTV PEREMPATAN LEGUNDI 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-legundi-4/index.m3u8` |
+| 19 | `gresik-atcs-pasar-benjeng-4` | PASAR BENJENG 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-benjeng-4/index.m3u8` |
+| 20 | `gresik-atcs-pasar-gresik-2` | PASAR GRESIK 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-gresik-2/index.m3u8` |
+| 21 | `gresik-atcs-perempatan-ngepung-1` | PEREMPATAN NGEPUNG 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-ngepung-1/index.m3u8` |
+| 22 | `gresik-atcs-cctv-pertigaan-bambe-2` | CCTV PERTIGAAN BAMBE 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-pertigaan-bambe-2/index.m3u8` |
+| 23 | `gresik-atcs-cctv-perempatan-wringinanom-3` | CCTV PEREMPATAN WRINGINANOM 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-wringinanom-3/index.m3u8` |
+| 24 | `gresik-atcs-cctv-perempatan-wringinanom-4` | CCTV PEREMPATAN WRINGINANOM 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-wringinanom-4/index.m3u8` |
+| 25 | `gresik-atcs-cctv-pertigaan-bambe-3` | CCTV PERTIGAAN BAMBE 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-pertigaan-bambe-3/index.m3u8` |
+| 26 | `gresik-atcs-perempatan-ngepung-3` | PEREMPATAN NGEPUNG 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-ngepung-3/index.m3u8` |
+| 27 | `gresik-atcs-perempatan-ngepung-2` | PEREMPATAN NGEPUNG 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-ngepung-2/index.m3u8` |
+| 28 | `gresik-atcs-pelabuhan-bawean-3` | PELABUHAN BAWEAN 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pelabuhan-bawean-3/index.m3u8` |
+| 29 | `gresik-atcs-bandara-bawean-2` | BANDARA BAWEAN 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/bandara-bawean-2/index.m3u8` |
+| 30 | `gresik-atcs-perempatan-pasar-gresik-3` | PEREMPATAN PASAR GRESIK 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-pasar-gresik-3/index.m3u8` |
+| 31 | `gresik-atcs-cctv-perempatan-wringinanom-2` | CCTV PEREMPATAN WRINGINANOM 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-wringinanom-2/index.m3u8` |
+| 32 | `gresik-atcs-pasar-benjeng-2` | PASAR BENJENG 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-benjeng-2/index.m3u8` |
+| 33 | `gresik-atcs-pasar-benjeng-3` | PASAR BENJENG 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-benjeng-3/index.m3u8` |
+| 34 | `gresik-atcs-yosowilangun-3` | YOSOWILANGUN 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/yosowilangun-3/index.m3u8` |
+| 35 | `gresik-atcs-cctv-perempatan-legundi-3` | CCTV PEREMPATAN LEGUNDI 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-legundi-3/index.m3u8` |
+| 36 | `gresik-atcs-cctv-perempatan-legundi-2` | CCTV PEREMPATAN LEGUNDI 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-perempatan-legundi-2/index.m3u8` |
+| 37 | `gresik-atcs-jalan-desa-bedanten-1` | JALAN DESA BEDANTEN 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/jalan-desa-bedanten-1/index.m3u8` |
+| 38 | `gresik-atcs-exit-tol-belahanrejo-1` | EXIT TOL BELAHANREJO 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/exit-tol-belahanrejo-1/index.m3u8` |
+| 39 | `gresik-atcs-cctv-panoramic-masjid-jami` | CCTV PANORAMIC MASJID JAMI | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-panoramic-masjid-jami/index.m3u8` |
+| 40 | `gresik-atcs-perempatan-duduksampeyan-3` | PEREMPATAN DUDUKSAMPEYAN 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-duduksampeyan-3/index.m3u8` |
+| 41 | `gresik-atcs-kedungpring-3` | KEDUNGPRING 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/kedungpring-3/index.m3u8` |
+| 42 | `gresik-atcs-kapal-cepat-bawean-3` | KAPAL CEPAT BAWEAN 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/kapal-cepat-bawean-3/index.m3u8` |
+| 43 | `gresik-atcs-pasar-bungah-1` | PASAR BUNGAH 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-bungah-1/index.m3u8` |
+| 44 | `gresik-atcs-cctv-panoramik-mbah-condro` | CCTV PANORAMIK MBAH CONDRO | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-panoramik-mbah-condro/index.m3u8` |
+| 45 | `gresik-atcs-perempatan-ngepung-4` | PEREMPATAN NGEPUNG 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/perempatan-ngepung-4/index.m3u8` |
+| 46 | `gresik-atcs-kapal-cepat-bawean-2` | KAPAL CEPAT BAWEAN 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/kapal-cepat-bawean-2/index.m3u8` |
+| 47 | `gresik-atcs-segoromadu-2` | SEGOROMADU 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/segoromadu-2/index.m3u8` |
+| 48 | `gresik-atcs-segoromadu-3` | SEGOROMADU 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/segoromadu-3/index.m3u8` |
+| 49 | `gresik-atcs-cctv-pano-islamik-center` | CCTV-PANO-ISLAMIK-CENTER | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-pano-islamik-center/index.m3u8` |
+| 50 | `gresik-atcs-exit-tol-belahanrejo-3` | EXIT TOL BELAHANREJO 3 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/exit-tol-belahanrejo-3/index.m3u8` |
+| 51 | `gresik-atcs-cctv-pertigaan-cangkir-2` | CCTV PERTIGAAN CANGKIR 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-pertigaan-cangkir-2/index.m3u8` |
+| 52 | `gresik-atcs-cctv-pertigaan-bambe-1` | CCTV PERTIGAAN BAMBE 1 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/cctv-pertigaan-bambe-1/index.m3u8` |
+| 53 | `gresik-atcs-yosowilangun-4` | YOSOWILANGUN 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/yosowilangun-4/index.m3u8` |
+| 54 | `gresik-atcs-pasar-gresik-4` | PASAR GRESIK 4 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/pasar-gresik-4/index.m3u8` |
+| 55 | `gresik-atcs-exit-tol-belahanrejo-2` | EXIT TOL BELAHANREJO 2 | HLS (on-demand) | `https://cctvkanjeng.gresikkab.go.id/hls/exit-tol-belahanrejo-2/index.m3u8` |
+
+### Jombang (16)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `jombang-atcs-perbatasan-mojoagung-barat` | Perbatasan Mojoagung (Barat) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=96` |
+| 2 | `jombang-atcs-perbatasan-mojoagung-timur` | Perbatasan Mojoagung (Timur) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=106` |
+| 3 | `jombang-atcs-perbatasan-rejoagung-ngoro-selatan` | Perbatasan Rejoagung Ngoro (Selatan) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=107` |
+| 4 | `jombang-atcs-perbatasan-rejoagung-ngoro-utara` | Perbatasan Rejoagung Ngoro (Utara) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=108` |
+| 5 | `jombang-atcs-simpang-mojongapit-barat` | Simpang Mojongapit (Barat) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=139` |
+| 6 | `jombang-atcs-simpang-mojongapit-timur` | Simpang Mojongapit (Timur) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=140` |
+| 7 | `jombang-atcs-simpang-mojongapit-utara` | Simpang Mojongapit (Utara) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=141` |
+| 8 | `jombang-atcs-simpang-keplaksari-timur` | Simpang Keplaksari (Timur) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=133` |
+| 9 | `jombang-atcs-simpang-keplaksari-barat` | Simpang Keplaksari (Barat) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=134` |
+| 10 | `jombang-atcs-simpang-keplaksari-utara` | Simpang Keplaksari (Utara) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=138` |
+| 11 | `jombang-atcs-simpang-terminal-selatan` | Simpang Terminal (Selatan) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=137` |
+| 12 | `jombang-atcs-simpang-weru-utara` | Simpang Weru (Utara) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=144` |
+| 13 | `jombang-atcs-simpang-tugu-utara` | Simpang Tugu (Utara) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=145` |
+| 14 | `jombang-atcs-simpang-tugu-selatan` | Simpang Tugu (Selatan) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=147` |
+| 15 | `jombang-atcs-simpang-tugu-timur` | Simpang Tugu (Timur) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=148` |
+| 16 | `jombang-atcs-simpang-tugu-barat` | Simpang Tugu (Barat) | MJPEG (token halaman) | `https://cctv.jombangkab.go.id/zm/cgi-bin/nph-zms?monitor=146` |
 
 ## Jalan tol
 

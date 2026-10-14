@@ -26,7 +26,7 @@ test('source-published coordinates are used as given and only by packs whose sou
   const owners = new Set(published.map((row) => row.cityId));
   assert.deepEqual([...owners].sort(), [
     'balangan', 'bandaaceh', 'bandungbarat', 'banjar', 'banjarmasin', 'banten', 'banyumas', 'bukittinggi', 'cianjur',
-    'kobar', 'magelang', 'padangpanjang', 'pesisirselatan', 'semarang', 'situbondo', 'tanahbumbu', 'tangerangkab',
+    'gresik', 'jombang', 'kobar', 'magelang', 'padangpanjang', 'pesisirselatan', 'semarang', 'situbondo', 'tanahbumbu', 'tangerangkab',
     'tasikmalaya',
   ]);
   for (const row of published) assert.match(row.license, /publishes the coordinates/, row.id);

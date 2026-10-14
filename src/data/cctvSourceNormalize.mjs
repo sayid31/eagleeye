@@ -5,6 +5,8 @@
  */
 
 import { normalizePortalSession } from '../server/portalSession.mjs';
+import { normalizeOnDemand } from '../server/onDemandStream.mjs';
+import { normalizePageToken } from '../server/pageToken.mjs';
 
 /**
  * FNV-1a 32-bit hash of a string, used to derive deterministic pseudo-random
@@ -169,6 +171,10 @@ export function normalizeSourceItem(item) {
     url: typeof item.url === 'string' ? item.url : '',
     // Optional: hosts that 403 streams until the city portal was visited (see portalSession.mjs).
     portalSession: normalizePortalSession(item.portalSession, typeof item.url === 'string' ? item.url : ''),
+    // Optional: stream only runs while a viewer session is open (see onDemandStream.mjs).
+    onDemand: normalizeOnDemand(item.onDemand, typeof item.url === 'string' ? item.url : ''),
+    // Optional: stream URL needs a short-lived token read from the host's page (see pageToken.mjs).
+    pageToken: normalizePageToken(item.pageToken, typeof item.url === 'string' ? item.url : ''),
     snapshotUrl: typeof item.snapshotUrl === 'string' ? item.snapshotUrl : '',
     license: String(item.license || item.licenseNote || ''),
     sourceKind: String(item.sourceKind || item.kind || 'configured'),

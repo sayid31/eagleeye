@@ -59,6 +59,8 @@ one internal demo and is explicitly **not vetted for public or commercial
 deployment or redistribution**. The UI always shows a
 `⚠ UNOFFICIAL SOURCE` badge on these cameras (never folds into the generic
 status badge), and every row's `license` field repeats this disclaimer.
+Gresik (`cctvkanjeng.gresikkab.go.id`, 55 `gresik-atcs-*` rows) and Jombang (`cctv.jombangkab.go.id`, 16 `jombang-atcs-*` rows) are also in the pack: both are public pages of the local governments, positioned from their own published coordinates, and carry the same UNOFFICIAL badge and no stated licence. Gresik streams through an anonymous viewer session the dev proxy opens; Jombang's 2 h page token is read at run time and never stored. No credential is stored for either.
+
 Revoke instantly via `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0` or by deleting
 `config/cctv_sources.indonesia_unofficial.json` (or the file named by
 `CCTV_INDONESIA_UNOFFICIAL_FILE`) — see `docs/CURRENT-STATE.md` § CCTV for

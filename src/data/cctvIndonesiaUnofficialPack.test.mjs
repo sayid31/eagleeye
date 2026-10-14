@@ -8,14 +8,17 @@ import { seedCatalog } from './cctvCatalog.js';
 const pack = JSON.parse(readFileSync(new URL('../../config/cctv_sources.indonesia_unofficial.json', import.meta.url), 'utf8'));
 const pelindung = pack.filter((row) => row.id.startsWith('bandung-pelindung-'));
 
-// Surakarta is the one pack served as HTTP-FLV (played by mpegts.js); everything else is HLS.
+// Surakarta is served as HTTP-FLV (played by mpegts.js) and Jombang as page-token MJPEG (shown as refreshed
+// stills); everything else is HLS.
 const isFlvRow = (row) => row.id.startsWith('surakarta-atcs-');
+const isMjpegRow = (row) => row.id.startsWith('jombang-atcs-');
+const expectedKind = (row) => (isFlvRow(row) ? 'flv' : isMjpegRow(row) ? 'mjpeg' : 'hls');
 
-test('every pack row is flagged unofficial HLS (Surakarta: FLV) with a revocable UNOFFICIAL SOURCE license', () => {
+test('every pack row is flagged unofficial HLS (Surakarta: FLV, Jombang: MJPEG) with a revocable UNOFFICIAL SOURCE license', () => {
   assert.ok(pack.length > 0);
   for (const row of pack) {
-    assert.equal(row.sourceKind, isFlvRow(row) ? 'unofficial-flv-id' : 'unofficial-hls-id', row.id);
-    assert.equal(row.feedType, isFlvRow(row) ? 'flv' : 'hls', row.id);
+    assert.equal(row.sourceKind, `unofficial-${expectedKind(row)}-id`, row.id);
+    assert.equal(row.feedType, expectedKind(row), row.id);
     assert.match(row.license, /UNOFFICIAL SOURCE/, row.id);
     assert.match(row.license, /CCTV_INDONESIA_UNOFFICIAL_ENABLED=0/, row.id);
     assert.match(row.provider, /^UNOFFICIAL/, row.id);

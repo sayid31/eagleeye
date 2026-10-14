@@ -24,6 +24,9 @@ import { readCappedResponseText, proxyMediaResponse } from '../server/proxyInfra
 import { createLiveUpstreamAbort, pipeLiveStream } from '../server/liveStreamProxy.mjs';
 import { installIntermediateCaTrust } from '../server/intermediateCaTrust.mjs';
 import { createPortalSessionStore } from '../server/portalSession.mjs';
+import { createOnDemandStreamManager, ON_DEMAND_START_FAILED_MESSAGE } from '../server/onDemandStream.mjs';
+import { createPageTokenStore } from '../server/pageToken.mjs';
+import { fetchTokenedMjpegFrame } from './cctvTokenedFrame.mjs';
 import {
   EMPTY_PLAYLIST_MESSAGE,
   SOURCE_OFFLINE_STATUS,
@@ -63,6 +66,8 @@ export function cctvProxy() {
   // browsers repair that via AIA, Node's fetch does not. See intermediateCaTrust.mjs.
   installIntermediateCaTrust();
   const portalSessions = createPortalSessionStore({ userAgent: CCTV_PROXY_USER_AGENT });
+  const onDemandStreams = createOnDemandStreamManager({ userAgent: CCTV_PROXY_USER_AGENT });
+  const pageTokens = createPageTokenStore({ userAgent: CCTV_PROXY_USER_AGENT });
   // Sized to the full served catalog (CCTV_MAX_SOURCES hard-bounds at DEFAULT_CCTV_MAX_SOURCES)
   // so health/status observability isn't silently evicted.
   const healthStore = createCctvHealthStore(DEFAULT_CCTV_MAX_SOURCES);
@@ -72,6 +77,8 @@ export function cctvProxy() {
   return {
     name: 'cctv-proxy',
     configureServer(server) {
+      // Close the upstream viewer sessions of on-demand cameras with the dev server.
+      server.httpServer?.once('close', () => onDemandStreams.stopAll());
       server.middlewares.use('/api/cctv', async (req, res) => {
         try {
           const sources = await getCctvSources();
@@ -120,6 +127,7 @@ export function cctvProxy() {
             }
 
             try {
+              if (source.onDemand) onDemandStreams.touch(cameraId);
               const upstreamHeaders = { 'User-Agent': CCTV_PROXY_USER_AGENT };
               const requestRange = req.headers?.range;
               if (requestRange) upstreamHeaders.Range = requestRange;
@@ -175,16 +183,36 @@ export function cctvProxy() {
               return;
             }
 
+            if (source.onDemand) {
+              // The host runs this camera's stream only while a viewer session is open.
+              try {
+                await onDemandStreams.ensure(cameraId, source.onDemand);
+              } catch {
+                setHealth(cameraId, {
+                  status: SOURCE_OFFLINE_STATUS,
+                  sourceKind: 'upstream',
+                  label: source.provider || 'Configured source',
+                  message: ON_DEMAND_START_FAILED_MESSAGE,
+                });
+                res.writeHead(502, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
+                res.end(JSON.stringify({ error: ON_DEMAND_START_FAILED_MESSAGE }));
+                return;
+              }
+            }
+
             // A live FLV body never ends: the upstream read must stop with the browser.
             const liveAbort = feedType === 'flv' ? createLiveUpstreamAbort(res) : null;
             try {
               const upstreamHeaders = { 'User-Agent': CCTV_PROXY_USER_AGENT };
               const requestRange = req.headers?.range;
               if (requestRange && !liveAbort) upstreamHeaders.Range = requestRange;
-              const upstream = await portalSessions.fetchWithSession(source.portalSession, mediaUrl, {
+              const fetchMedia = () => portalSessions.fetchWithSession(source.portalSession, mediaUrl, {
                 headers: upstreamHeaders,
                 ...(liveAbort ? { signal: liveAbort.signal } : {}),
               });
+              const upstream = source.onDemand
+                ? await onDemandStreams.fetchWhenReady(cameraId, fetchMedia)
+                : await fetchMedia();
               liveAbort?.headersReceived();
               const contentType = upstream.headers.get('content-type') || '';
               if (!upstream.ok) {
@@ -305,7 +333,9 @@ export function cctvProxy() {
             source?.snapshotUrl
             || (!isVideoFeedType(normalizeFeedType(source?.feedType)) ? source?.url : '');
 
-          const upstreamImage = await fetchCctvImageFromUpstream(upstreamCandidate);
+          const upstreamImage = source?.pageToken
+            ? await fetchTokenedMjpegFrame(source, { tokens: pageTokens, userAgent: CCTV_PROXY_USER_AGENT })
+            : await fetchCctvImageFromUpstream(upstreamCandidate);
           if (upstreamImage?.ok) {
             setHealth(cameraId, {
               status: 'ok',

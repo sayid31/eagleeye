@@ -7,18 +7,19 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1861** |
-| Kota dan kabupaten (33 lokasi) | 1425 |
+| **Total kamera video live** | **1932** |
+| Kota dan kabupaten (35 lokasi) | 1496 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1785 |
+| Format HLS | 1840 |
 | Format FLV (Surakarta) | 76 |
+| Format MJPEG (Jombang, ditampilkan sebagai gambar yang disegarkan) | 16 |
 
 Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data:
 
 | Label posisi | Kamera | Arti |
 |---|---:|---|
 | `APPROX. LOCATION` | 1087 | 651 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream dan Pati 4 dari koordinat agregator cctvnusantara.com, bukan dari sumber) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 533 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `SOURCE-PUBLISHED LOCATION` | 604 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
 | `CITY-LEVEL ONLY` | 179 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
@@ -59,6 +60,8 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 31 | Situbondo | 19 | HLS (on-demand MediaMTX, bisa mati sewaktu-waktu) |
 | 32 | Kediri | 17 | HLS |
 | 33 | Pati | 4 | HLS |
+| 34 | Gresik | 55 | HLS on-demand (proxy membuka sesi penonton; sebagian kamera mati di sumber) |
+| 35 | Jombang | 16 | MJPEG ZoneMinder (token halaman dibaca saat dijalankan; 9 dari 25 monitor mati di sumber) |
 
 ## Jalan tol
 
@@ -125,8 +128,8 @@ Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 
 | Banten (provinsi) | 150 | portal menandai Online tetapi manifest 404 | belum dicek ulang |
 | Banyumas, Semarang, Tangerang Kab., Banjar, Tasikmalaya, Magelang, Cianjur | sekitar 110 | 404, timeout, atau handshake TLS gagal pada cek akhir; sebagian timbul-tenggelam | dicek 4 kali pada 2026-10-13 |
 | Kutai Timur | tidak diketahui | situs di balik tantangan WAF proof-of-work; melewatinya tidak dilakukan | tidak ditambahkan |
-| Gresik (cctvkanjeng) | tidak diketahui | stream baru jalan setelah panggilan start dan heartbeat (tidak cocok dengan pack HLS statis); responsnya juga membocorkan kredensial RTSP, sebaiknya dilaporkan ke admin situs | tidak ditambahkan |
-| Jombang | tidak diketahui | MJPEG dengan JWT, bukan HLS | tidak ditambahkan |
+| Gresik (cctvkanjeng) | 40 | dari 95 kamera: gagal start di sumber (RTSP ditolak, 401 atau error ffmpeg), playlist tidak pernah muncul, beku, atau offline menurut sumber. Respons start situs ini membocorkan kredensial RTSP kamera; tidak disimpan, sebaiknya dilaporkan ke admin situs | dicek ulang lewat proxy 2026-10-14 |
+| Jombang | 9 | monitor ZoneMinder yang mengirim gambar "Unable to stream" (kamera mati di sumber) | dicek 2026-10-14 |
 | Jatim Pelayaran (Dishub Jatim) | tidak diketahui | MJPEG lewat http, kredensial kamera tertanam, tanpa koordinat | tidak ditambahkan |
 | Pontianak | tidak diketahui | hanya embed YouTube | tidak ditambahkan |
 | Kaltim (layanan.kaltimprov) | tidak diketahui | kamera tidak aktif, WebRTC, atau URL bertoken sesi; rantai TLS tidak lengkap | tidak ditambahkan |
