@@ -30,7 +30,7 @@ const DEFAULT_CCTV_INDONESIA_UNOFFICIAL_FILE = 'config/cctv_sources.indonesia_un
 
 /** Global cap on total CCTV sources served by the proxy. Also the hard clamp for
  * CCTV_MAX_SOURCES and the size of the per-camera health map. */
-export const DEFAULT_CCTV_MAX_SOURCES = 3000;
+export const DEFAULT_CCTV_MAX_SOURCES = 4000;
 
 /** Camera CATALOGS change rarely; 15 min keeps multi-megabyte upstream list refetches (Austin rows.json + 4 Caltrans districts + TfL) infrequent. Frames are fetched per-request and are unaffected. */
 const CCTV_SOURCE_CACHE_MS = 15 * 60 * 1000;

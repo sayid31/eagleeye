@@ -2324,3 +2324,17 @@ Kota Serang had been held back because its server omits the TLS intermediate (se
 Rows: the site's `/api/cctv` lists 23 cameras with coordinates and an Ant Media stream name. 20 passed the usual rule (advancing playlist over three probes, segment over 10 KB) and then a playlist plus segment through `/api/cctv/media`; Royal Baroe 02 froze, Royal Baroe 03 and Stasiun Kota Serang answer 404. Three Pocis and Royal Baroe segments are only ~11-21 KB (low-bitrate feeds) but are valid MPEG-TS.
 
 Not verified: in-browser playback.
+
+## 2026-10-14 — ATCS discovery sweep: 8 new sites (418 cameras), cap raised to 4000
+
+The owner asked for more regencies and cities with reachable ATCS, and for cameras missing in cities already covered. Method: the 514 regencies and cities of Permendagri 72/2019, DNS lookups of common CCTV/ATCS subdomains, an HTTP fetch of each live homepage, then a crawl of its pages, scripts and JSON endpoints for m3u8 URLs and coordinates. The same liveness rule as before (advancing media sequence over three probes, last segment over 10 KB with a real TS or fMP4 header) was run before anything was written, and again through `/api/cctv/media`.
+
+Results: Nganjuk 289, Banjarbaru 47, Jambi 19, Garut 15, Karo 12, Lebak 10 publish coordinates (`SOURCE-PUBLISHED LOCATION`). Ciamis 14 and Pemalang 12 publish none, so they are `APPROX. LOCATION` (Nominatim) with three Pemalang cameras `CITY-LEVEL ONLY`; the tests forbid either site from claiming the published tier. Re-crawling 48 portals of cities already in the pack found only Balangan with new live streams (2 of 15 candidates), now added.
+
+Karo is served over plain http by IP address. Playing it through the proxy exposes no credential, but it is cleartext and unauthenticated. It is allowed only because the pack test pins that exact address next to Surabaya's (`PLAIN_HTTP_HOST`), so any other http row still fails the "well-formed https" test. Karo's `cam12` appeared under five titles with one placeholder coordinate; only "Terminal Kabanjahe" is kept, and "Gedung DPRD Karo" is dropped for sharing the placeholder.
+
+Left out on purpose: Wonosobo (token per viewer), Brebes (API answers 401), Kudus, Samarinda and Sukoharjo (challenge pages). Getting past those would be bypassing access control. Sibolga, Pematangsiantar, Sidoarjo, Indramayu, Kuningan, Tuban and Kebumen expose no static HLS to read.
+
+Capacity: the pack is now 2372 rows. With the 250 + 300 + 250 allowances for Austin, Caltrans and TfL the tests require 3172, above the old cap of 3000, and the catalog merge truncates silently past the cap. `DEFAULT_CCTV_MAX_SOURCES` is now 4000 (the health map grows by a few KB).
+
+Not verified: in-browser playback of the new rows; the checks were probes plus the proxy.

@@ -4,10 +4,10 @@ Daftar URL stream video langsung (HLS/FLV) dari `config/cctv_sources.indonesia_u
 
 | | Jumlah |
 |---|---:|
-| **Total URL** | **1952** |
-| Kota dan kabupaten (36 lokasi) | 1516 |
+| **Total URL** | **2372** |
+| Kota dan kabupaten (44 lokasi) | 1936 |
 | Jalan tol (24 ruas) | 436 |
-| HLS | 1860 |
+| HLS | 2280 |
 | FLV | 76 |
 | MJPEG (Jombang) | 16 |
 
@@ -1080,7 +1080,7 @@ Catatan:
 | 38 | `bukittinggi-atcs-banto-laweh-d8` | ATCS Banto Laweh D8 | HLS | `https://hls.bukittinggikota.go.id/hls3/wlRJXDnLF0nDarpukpIkiPcPiJquQU/hls/5uGBKQdmwh/cam2d8/s.m3u8` |
 | 39 | `bukittinggi-atcs-banto-laweh-d9` | ATCS Banto Laweh D9 | HLS | `https://hls.bukittinggikota.go.id/hls3/wlRJXDnLF0nDarpukpIkiPcPiJquQU/hls/5uGBKQdmwh/cam2d9/s.m3u8` |
 
-### Balangan (36)
+### Balangan (38)
 
 | # | ID | Nama | Format | URL |
 |---:|---|---|---|---|
@@ -1120,6 +1120,8 @@ Catatan:
 | 34 | `balangan-atcs-depan-bank-kalsel-area` | Depan Bank Kalsel | HLS | `https://cctv.balangankab.go.id/hls/depan-bank-kalsel-area/index.m3u8` |
 | 35 | `balangan-atcs-simp-3-taman-sehati-area` | Simp. 3 Taman Sehati | HLS | `https://cctv.balangankab.go.id/hls/simp3-taman-sehati-area/index.m3u8` |
 | 36 | `balangan-atcs-simp-4-kecamatan-parsel-utama` | Simp 4 Kecamatan Parsel | HLS | `https://cctv.balangankab.go.id/hls/simp4-kec-parsel-utama/index.m3u8` |
+| 37 | `balangan-atcs-tugu-gula-habang-lampihong-utama` | Tugu Gula Habang Lampihong | HLS | `https://cctv.balangankab.go.id/hls/tugu-gula-habang-utama/index.m3u8` |
+| 38 | `balangan-atcs-tugu-gula-habang-lampihong-area` | Tugu Gula Habang Lampihong | HLS | `https://cctv.balangankab.go.id/hls/tugu-gula-habang-area/index.m3u8` |
 
 ### Sumedang (35)
 
@@ -1716,6 +1718,464 @@ Catatan:
 | 18 | `serang-atcs-taman-sari-01` | CCTV Taman Sari 01 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/tamansari01.m3u8` |
 | 19 | `serang-atcs-taman-sari-02` | CCTV Taman Sari 02 | HLS | `https://stream.serangkota.go.id/LiveApp/streams/tamansari02.m3u8` |
 | 20 | `serang-atcs-terminal-banten-lama` | CCTV Terminal Banten Lama | HLS | `https://stream.serangkota.go.id/LiveApp/streams/terminalbantenlama.m3u8` |
+
+### Banjarbaru (47)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `banjarbaru-atcs-arah-polresta` | ARAH POLRESTA | HLS | `https://stream-backup.banjarbarukota.go.id/arah_polresta/index.m3u8` |
+| 2 | `banjarbaru-atcs-arah-museum` | ARAH MUSEUM | HLS | `https://stream-backup.banjarbarukota.go.id/arah_museum/index.m3u8` |
+| 3 | `banjarbaru-atcs-arah-gerbang-ulm` | ARAH GERBANG ULM | HLS | `https://stream-backup.banjarbarukota.go.id/arah_gerbang_ulm/index.m3u8` |
+| 4 | `banjarbaru-atcs-arah-purnama-ulm` | ARAH PURNAMA ULM | HLS | `https://stream-backup.banjarbarukota.go.id/arah_purnama/index.m3u8` |
+| 5 | `banjarbaru-atcs-a1-spbu-simpang-4` | A1 SPBU SIMPANG 4 | HLS | `https://stream-backup.banjarbarukota.go.id/a1_simpang4_arah_pom/index.m3u8` |
+| 6 | `banjarbaru-atcs-a2-ulin-simpang-4` | A2 ULIN SIMPANG 4 | HLS | `https://stream-backup.banjarbarukota.go.id/a2_simpang4_arah_sungai_ulin/index.m3u8` |
+| 7 | `banjarbaru-atcs-a3-ptz-simpang-4` | A3 PTZ SIMPANG 4 | HLS | `https://stream-backup.banjarbarukota.go.id/a3_ptz_simpang4/index.m3u8` |
+| 8 | `banjarbaru-atcs-c1-polisi-simpang-4` | C1 POLISI SIMPANG 4 | HLS | `https://stream-backup.banjarbarukota.go.id/c1_simpang4_arah_cempaka/index.m3u8` |
+| 9 | `banjarbaru-atcs-c2-banjarmasin-simpang-4` | C2 BANJARMASIN SIMPANG 4 | HLS | `https://stream-backup.banjarbarukota.go.id/c2_simpang4_arah_banjarmasin/index.m3u8` |
+| 10 | `banjarbaru-atcs-c3-ptz-simpang-4` | C3 PTZ SIMPANG 4 | HLS | `https://stream-backup.banjarbarukota.go.id/c3_ptz_simpang4_banjarbaru/index.m3u8` |
+| 11 | `banjarbaru-atcs-bundaran-amaco` | BUNDARAN AMACO | HLS | `https://stream-backup.banjarbarukota.go.id/bundaran_amaco/index.m3u8` |
+| 12 | `banjarbaru-atcs-qmall-arah-simpang-empat` | QMALL ARAH SIMPANG EMPAT | HLS | `https://stream-backup.banjarbarukota.go.id/qmall_arah_simpang_empat/index.m3u8` |
+| 13 | `banjarbaru-atcs-qmall-arah-batas-kota` | QMALL ARAH BATAS KOTA | HLS | `https://stream-backup.banjarbarukota.go.id/qmall_arah_batas_kota/index.m3u8` |
+| 14 | `banjarbaru-atcs-rebatig-ptz` | REBATIG PTZ | HLS | `https://stream-backup.banjarbarukota.go.id/rebatig/index.m3u8` |
+| 15 | `banjarbaru-atcs-bundaran-topi-toga` | BUNDARAN TOPI TOGA | HLS | `https://stream-backup.banjarbarukota.go.id/bundaran_stm/index.m3u8` |
+| 16 | `banjarbaru-atcs-jpo-dalam-utara` | JPO DALAM UTARA | HLS | `https://stream-backup.banjarbarukota.go.id/jpo_dalam_utara/index.m3u8` |
+| 17 | `banjarbaru-atcs-jpo-dalam-selatan` | JPO DALAM SELATAN | HLS | `https://stream-backup.banjarbarukota.go.id/jpo_dalam_selatan/index.m3u8` |
+| 18 | `banjarbaru-atcs-jpo-tangga-utara` | JPO TANGGA UTARA | HLS | `https://stream-backup.banjarbarukota.go.id/jpo_tangga_utara/index.m3u8` |
+| 19 | `banjarbaru-atcs-jembatan-kembar-arah-banjarmasin` | JEMBATAN KEMBAR ARAH BANJARMASIN | HLS | `https://stream-backup.banjarbarukota.go.id/jembatan_kembar_arah_banjarmasin/index.m3u8` |
+| 20 | `banjarbaru-atcs-jembatan-kembar-arah-banjarbaru` | JEMBATAN KEMBAR ARAH BANJARBARU | HLS | `https://stream-backup.banjarbarukota.go.id/jembatan_kembar_arah_banjarbaru/index.m3u8` |
+| 21 | `banjarbaru-atcs-jembatan-tonhar-landasan-ulin` | JEMBATAN TONHAR LANDASAN ULIN | HLS | `https://stream-backup.banjarbarukota.go.id/jembatan_tonhar/index.m3u8` |
+| 22 | `banjarbaru-atcs-jembatan-cempaka-1` | JEMBATAN CEMPAKA 1 | HLS | `https://stream-backup.banjarbarukota.go.id/jembatan_cempaka_1/index.m3u8` |
+| 23 | `banjarbaru-atcs-jembatan-al-mansyur` | JEMBATAN AL-MANSYUR | HLS | `https://stream-backup.banjarbarukota.go.id/jembatan_al_mansyur/index.m3u8` |
+| 24 | `banjarbaru-atcs-arah-dispenduk-pangeran-antasari` | ARAH DISPENDUK PANGERAN ANTASARI | HLS | `https://stream-backup.banjarbarukota.go.id/depan_disdukcapil/index.m3u8` |
+| 25 | `banjarbaru-atcs-jembatan-kemuning` | JEMBATAN KEMUNING | HLS | `https://stream-backup.banjarbarukota.go.id/jembatan_kemuning/index.m3u8` |
+| 26 | `banjarbaru-atcs-taman-minggu-raya` | TAMAN MINGGU RAYA | HLS | `https://stream-backup.banjarbarukota.go.id/taman_minggu_raya/index.m3u8` |
+| 27 | `banjarbaru-atcs-bundaran-palam-trikora-taman-pama` | BUNDARAN PALAM TRIKORA TAMAN PAMA | HLS | `https://stream-backup.banjarbarukota.go.id/taman_pama_arah_bundaran/index.m3u8` |
+| 28 | `banjarbaru-atcs-depan-stimik-arah-banjarmasin` | DEPAN STIMIK ARAH BANJARMASIN | HLS | `https://stream-backup.banjarbarukota.go.id/depan_stimik_arah_banjarmasin/index.m3u8` |
+| 29 | `banjarbaru-atcs-lapangan-murdjani-ptz` | LAPANGAN MURDJANI PTZ | HLS | `https://stream-backup.banjarbarukota.go.id/ptz_murjani/index.m3u8` |
+| 30 | `banjarbaru-atcs-polsek-bjb-arah-simpang-empat` | POLSEK BJB ARAH SIMPANG EMPAT | HLS | `https://stream-backup.banjarbarukota.go.id/depan_polsek_arah_simpang4/index.m3u8` |
+| 31 | `banjarbaru-atcs-polsek-bjb-arah-banjarmasin` | POLSEK BJB ARAH BANJARMASIN | HLS | `https://stream-backup.banjarbarukota.go.id/depan_polsek_arah_banjarmasin/index.m3u8` |
+| 32 | `banjarbaru-atcs-bundaran-trikora-masjid-al-munawarah` | BUNDARAN TRIKORA MASJID AL-MUNAWARAH | HLS | `https://stream-backup.banjarbarukota.go.id/bundaran_mesjid_al_munawwarah/index.m3u8` |
+| 33 | `banjarbaru-atcs-pertigaan-ambulung` | PERTIGAAN AMBULUNG | HLS | `https://stream-backup.banjarbarukota.go.id/pertigaan_ambulung/index.m3u8` |
+| 34 | `banjarbaru-atcs-taman-mawar` | TAMAN MAWAR | HLS | `https://stream-backup.banjarbarukota.go.id/taman_mawar_arah_taman_tengah/index.m3u8` |
+| 35 | `banjarbaru-atcs-ptz-taman-mawar-arah-sd` | PTZ TAMAN MAWAR ARAH SD | HLS | `https://stream-backup.banjarbarukota.go.id/taman_mawar_ptz_arah_sd/index.m3u8` |
+| 36 | `banjarbaru-atcs-perempatan-taruna-praja-barjad` | PEREMPATAN TARUNA PRAJA (BARJAD) | HLS | `https://stream-backup.banjarbarukota.go.id/simpang_4_barjad/index.m3u8` |
+| 37 | `banjarbaru-atcs-stimik-arah-banjarbaru` | STIMIK ARAH BANJARBARU | HLS | `https://stream-backup.banjarbarukota.go.id/depan_stimik_arah_banjarbaru/index.m3u8` |
+| 38 | `banjarbaru-atcs-pertigaan-trikora-ro-ulin-arah-masjid-agung` | PERTIGAAN TRIKORA RO ULIN ARAH MASJID AGUNG | HLS | `https://stream-backup.banjarbarukota.go.id/pertigaan_trikora_arah_mesjid_agung/index.m3u8` |
+| 39 | `banjarbaru-atcs-cctv-pertigaan-trikora-arah-ro-ulin` | CCTV PERTIGAAN TRIKORA ARAH RO ULIN | HLS | `https://stream-backup.banjarbarukota.go.id/pertigaan_trikora_arah_ro_ulin/index.m3u8` |
+| 40 | `banjarbaru-atcs-balai-kota-arah-murdjani` | BALAI KOTA ARAH MURDJANI | HLS | `https://stream-backup.banjarbarukota.go.id/balai_kota_murjani/index.m3u8` |
+| 41 | `banjarbaru-atcs-cctv-pertigaan-kebun-karet` | CCTV PERTIGAAN KEBUN KARET | HLS | `https://stream-backup.banjarbarukota.go.id/pertigaan_kebun_karet/index.m3u8` |
+| 42 | `banjarbaru-atcs-halte-minggu-raya` | Halte_minggu_raya | HLS | `https://stream-backup.banjarbarukota.go.id/Halte_minggu_raya/index.m3u8` |
+| 43 | `banjarbaru-atcs-halte-unlam-1` | Halte_unlam_1 | HLS | `https://stream-backup.banjarbarukota.go.id/halte_unlam_1/index.m3u8` |
+| 44 | `banjarbaru-atcs-trikora-cempaka` | TRIKORA CEMPAKA | HLS | `https://stream-backup.banjarbarukota.go.id/s3_trikora_cempaka/index.m3u8` |
+| 45 | `banjarbaru-atcs-trikora-cempaka-arah-banjarbaru` | TRIKORA CEMPAKA ARAH BANJARBARU | HLS | `https://stream-backup.banjarbarukota.go.id/s3_trikora_arah_bjb/index.m3u8` |
+| 46 | `banjarbaru-atcs-jembatan-cempaka-2` | JEMBATAN CEMPAKA 2 | HLS | `https://stream-backup.banjarbarukota.go.id/jembatan_cempaka_2/index.m3u8` |
+| 47 | `banjarbaru-atcs-the-breeze-water-park` | THE BREEZE WATER PARK | HLS | `https://stream-backup.banjarbarukota.go.id/breeze/index.m3u8` |
+
+### Jambi (19)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `jambi-atcs-tugu-keris-siginjai-2` | Tugu Keris SIGINJAI 2 | HLS | `https://cctv.jambikota.go.id/stream/2/stream.m3u8` |
+| 2 | `jambi-atcs-tugu-keris-3` | Tugu Keris 3 | HLS | `https://cctv.jambikota.go.id/stream/23/stream.m3u8` |
+| 3 | `jambi-atcs-tugu-keris-ptz` | Tugu Keris PTZ | HLS | `https://cctv.jambikota.go.id/stream/25/stream.m3u8` |
+| 4 | `jambi-atcs-simpang-bi-1` | Simpang BI 1 | HLS | `https://cctv.jambikota.go.id/stream/26/stream.m3u8` |
+| 5 | `jambi-atcs-simpang-bi-2` | Simpang BI 2 | HLS | `https://cctv.jambikota.go.id/stream/3/stream.m3u8` |
+| 6 | `jambi-atcs-simpang-bi-3` | Simpang BI 3 | HLS | `https://cctv.jambikota.go.id/stream/27/stream.m3u8` |
+| 7 | `jambi-atcs-simpang-bi-4` | Simpang BI 4 | HLS | `https://cctv.jambikota.go.id/stream/4/stream.m3u8` |
+| 8 | `jambi-atcs-persijam-1` | Persijam 1 | HLS | `https://cctv.jambikota.go.id/stream/28/stream.m3u8` |
+| 9 | `jambi-atcs-persijam-2` | Persijam 2 | HLS | `https://cctv.jambikota.go.id/stream/5/stream.m3u8` |
+| 10 | `jambi-atcs-persijam-3` | Persijam 3 | HLS | `https://cctv.jambikota.go.id/stream/6/stream.m3u8` |
+| 11 | `jambi-atcs-persijam-4` | Persijam 4 | HLS | `https://cctv.jambikota.go.id/stream/29/stream.m3u8` |
+| 12 | `jambi-atcs-persijam-ptz` | Persijam PTZ | HLS | `https://cctv.jambikota.go.id/stream/30/stream.m3u8` |
+| 13 | `jambi-atcs-mayang-1` | Mayang 1 | HLS | `https://cctv.jambikota.go.id/stream/7/stream.m3u8` |
+| 14 | `jambi-atcs-mayang-2` | Mayang 2 | HLS | `https://cctv.jambikota.go.id/stream/8/stream.m3u8` |
+| 15 | `jambi-atcs-puncak-2` | Puncak 2 | HLS | `https://cctv.jambikota.go.id/stream/12/stream.m3u8` |
+| 16 | `jambi-atcs-puncak-ptz` | Puncak PTZ | HLS | `https://cctv.jambikota.go.id/stream/11/stream.m3u8` |
+| 17 | `jambi-atcs-kota-baru-1` | Kota Baru 1 | HLS | `https://cctv.jambikota.go.id/stream/17/stream.m3u8` |
+| 18 | `jambi-atcs-nurdin-h-1` | Nurdin H 1 | HLS | `https://cctv.jambikota.go.id/stream/19/stream.m3u8` |
+| 19 | `jambi-atcs-nurdin-h-2` | Nurdin H 2 | HLS | `https://cctv.jambikota.go.id/stream/20/stream.m3u8` |
+
+### Karo (12)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `karo-atcs-simpang-tiga-mesjid-agung` | Simpang Tiga Mesjid Agung | HLS | `http://72.62.122.47:8888/cam11/index.m3u8` |
+| 2 | `karo-atcs-terminal-kabanjahe` | Terminal Kabanjahe | HLS | `http://72.62.122.47:8888/cam12/index.m3u8` |
+| 3 | `karo-atcs-simpang-tanjung-bunga` | Simpang Tanjung Bunga | HLS | `http://72.62.122.47:8888/cam13/index.m3u8` |
+| 4 | `karo-atcs-simpang-dinas-perpustakaan` | Simpang Dinas Perpustakaan | HLS | `http://72.62.122.47:8888/cam15/index.m3u8` |
+| 5 | `karo-atcs-simpang-zentrum-tugu-bulang` | Simpang Zentrum Tugu Bulang | HLS | `http://72.62.122.47:8888/cam19/index.m3u8` |
+| 6 | `karo-atcs-tugu-tiga-serangkai-2` | Tugu Tiga Serangkai 2 | HLS | `http://72.62.122.47:8888/cam33/index.m3u8` |
+| 7 | `karo-atcs-simpang-tugu-bambu-runcing` | Simpang Tugu Bambu Runcing | HLS | `http://72.62.122.47:8888/cam30/index.m3u8` |
+| 8 | `karo-atcs-kompleks-dprd-2` | Kompleks DPRD 2 | HLS | `http://72.62.122.47:8888/cam25/index.m3u8` |
+| 9 | `karo-atcs-kompleks-dprd-1` | Kompleks DPRD 1 | HLS | `http://72.62.122.47:8888/cam26/index.m3u8` |
+| 10 | `karo-atcs-simpang-laudah-pala-bangun` | Simpang Laudah Pala Bangun | HLS | `http://72.62.122.47:8888/cam24/index.m3u8` |
+| 11 | `karo-atcs-simpang-katepul` | Simpang Katepul | HLS | `http://72.62.122.47:8888/cam14/index.m3u8` |
+| 12 | `karo-atcs-simpang-laudah-spbu` | Simpang Laudah SPBU | HLS | `http://72.62.122.47:8888/cam22/index.m3u8` |
+
+### Nganjuk (289)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `nganjuk-atcs-desa-munung-simpang-3-selatan` | Desa MUNUNG - Simpang 3 Selatan | HLS | `https://wxyz.nganjukkab.go.id/Munung/streams/DmfSjnoeu1vH5zp71786673402183.m3u8` |
+| 2 | `nganjuk-atcs-pangsud-puri-barat` | Pangsud Puri Barat | HLS | `https://wxyz.nganjukkab.go.id/Mangundikaran/streams/jC7AdbW4yga3szZ01786673394060.m3u8` |
+| 3 | `nganjuk-atcs-pangsud-puri-timur` | Pangsud Puri Timur | HLS | `https://wxyz.nganjukkab.go.id/Mangundikaran/streams/wog313WxOZc7bBON1786673395680.m3u8` |
+| 4 | `nganjuk-atcs-tl-ploso-selatan` | TL Ploso Selatan | HLS | `https://wxyz.nganjukkab.go.id/Ploso/streams/1DIt0l4qHIzOcLGK1786673418780.m3u8` |
+| 5 | `nganjuk-atcs-tl-ploso-barat` | TL Ploso Barat | HLS | `https://wxyz.nganjukkab.go.id/Ploso/streams/3BGLRE219HeAxT9S1786673419427.m3u8` |
+| 6 | `nganjuk-atcs-tl-ploso-timur` | TL Ploso Timur | HLS | `https://wxyz.nganjukkab.go.id/Ploso/streams/nlvy6qE4DAmNePHn1786673418457.m3u8` |
+| 7 | `nganjuk-atcs-tl-ploso-utara` | TL Ploso Utara | HLS | `https://wxyz.nganjukkab.go.id/Ploso/streams/99tmtOxu7d4UZBtM1786673419104.m3u8` |
+| 8 | `nganjuk-atcs-pos-taman-nyawiji` | POS TAMAN NYAWIJI | HLS | `https://wxyz.nganjukkab.go.id/TamanNyawiji/streams/i7c6de7RWZTpZEnn1786673441203.m3u8` |
+| 9 | `nganjuk-atcs-taman-nyawiji-tl-selatan` | Taman Nyawiji TL Selatan | HLS | `https://wxyz.nganjukkab.go.id/TamanNyawiji/streams/dStU8cJLT5DKLMNh1786673442823.m3u8` |
+| 10 | `nganjuk-atcs-taman-nyawiji-dalam-selatan` | Taman Nyawiji Dalam Selatan | HLS | `https://wxyz.nganjukkab.go.id/TamanNyawiji/streams/4ewctTmV0Y4Npxtp1786673443147.m3u8` |
+| 11 | `nganjuk-atcs-taman-nyawiji-dalam-utara` | Taman Nyawiji Dalam Utara | HLS | `https://wxyz.nganjukkab.go.id/TamanNyawiji/streams/1drDKstevcxIODJ91786673441849.m3u8` |
+| 12 | `nganjuk-atcs-taman-nyawiji-tl-utara` | Taman Nyawiji TL Utara | HLS | `https://wxyz.nganjukkab.go.id/TamanNyawiji/streams/2rGpHIaFgE0PudZb1786673442501.m3u8` |
+| 13 | `nganjuk-atcs-taman-nyawiji-tl-timur` | Taman Nyawiji TL Timur | HLS | `https://wxyz.nganjukkab.go.id/TamanNyawiji/streams/ldOAqXqRJ0PcZ9Se1786673442174.m3u8` |
+| 14 | `nganjuk-atcs-winong-utara` | Winong Utara | HLS | `https://wxyz.nganjukkab.go.id/Winong/streams/hAn0voFUr2f57UYt1786673462986.m3u8` |
+| 15 | `nganjuk-atcs-winong-selatan` | Winong Selatan | HLS | `https://wxyz.nganjukkab.go.id/Winong/streams/biRXR3G2igO7rwqH1786673462661.m3u8` |
+| 16 | `nganjuk-atcs-pasar-baru-barat` | Pasar Baru Barat | HLS | `https://wxyz.nganjukkab.go.id/PasarBaru/streams/n69Fki8NkMXG9AyT1786673410972.m3u8` |
+| 17 | `nganjuk-atcs-pasar-baru-utara` | Pasar Baru Utara | HLS | `https://wxyz.nganjukkab.go.id/PasarBaru/streams/5duiei7e6GBQCFmI1786673411299.m3u8` |
+| 18 | `nganjuk-atcs-pasar-baru-selatan` | Pasar Baru Selatan | HLS | `https://wxyz.nganjukkab.go.id/PasarBaru/streams/rLBDmbs8UOepjtcS1786673411627.m3u8` |
+| 19 | `nganjuk-atcs-alun-alun-lapangan` | alun-alun lapangan | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/hLIonEqOn75kRBET1786673368096.m3u8` |
+| 20 | `nganjuk-atcs-alun-alun-tugu-20` | alun-alun tugu 20 | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/ZCdMMKieSLQXj0lA1786673368746.m3u8` |
+| 21 | `nganjuk-atcs-smpn-1-timur` | SMPN 1 timur | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/7L6X9VfuXjvPBAFa1786673368421.m3u8` |
+| 22 | `nganjuk-atcs-alun-alun-barat` | alun-alun barat | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/KqmwXPjyShF8OJOw1786673367772.m3u8` |
+| 23 | `nganjuk-atcs-alun-alun-selatan-1` | Alun-Alun Selatan 1 | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/C44dtpVlZaTibOu21786673370043.m3u8` |
+| 24 | `nganjuk-atcs-alun-alun-timur` | alun-alun timur | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/dCyHlqLDwMMpz0YG1786673370691.m3u8` |
+| 25 | `nganjuk-atcs-alun-alun-utara` | Alun-alun Utara | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/L5irpOvyaEbyD5il1786673371014.m3u8` |
+| 26 | `nganjuk-atcs-smpn-1-barat` | SMPN 1 Barat | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/fJy7Dx4g9fuN14Io1786673369069.m3u8` |
+| 27 | `nganjuk-atcs-alun-alun-utara-1` | Alun-Alun Utara 1 | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/pOIdFc0DXYM8PKEo1786673369717.m3u8` |
+| 28 | `nganjuk-atcs-alun-alun-selatan-2` | Alun-Alun Selatan 2 | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/4Uqx8yphPdB8BzGs1786673369393.m3u8` |
+| 29 | `nganjuk-atcs-alun-alun-utara-2` | Alun-Alun Utara 2 | HLS | `https://wxyz.nganjukkab.go.id/AlunAlun/streams/xpsE3qjvU2EhGLzL1786673370367.m3u8` |
+| 30 | `nganjuk-atcs-a-yani-jayastamba` | a.yani jayastamba | HLS | `https://wxyz.nganjukkab.go.id/A.Yani/streams/D3BINXG3AaQR2a4w1786673365180.m3u8` |
+| 31 | `nganjuk-atcs-a-yani-timur` | A.Yani Timur | HLS | `https://wxyz.nganjukkab.go.id/A.Yani/streams/XxVzS2yAV1K0xDEz1786673366475.m3u8` |
+| 32 | `nganjuk-atcs-a-yani-barat` | A.Yani barat | HLS | `https://wxyz.nganjukkab.go.id/A.Yani/streams/9fENZtsNgwVJL7Qg1786673365828.m3u8` |
+| 33 | `nganjuk-atcs-a-yani-prima-swalayan-pintu-keluar` | A. Yani - Prima Swalayan Pintu Keluar | HLS | `https://wxyz.nganjukkab.go.id/A.Yani/streams/75iQtUfqWIy50lEk1786673366152.m3u8` |
+| 34 | `nganjuk-atcs-a-yani-prima-timur-depan-prima-trotoar` | A. Yani - Prima Timur Depan Prima Trotoar | HLS | `https://wxyz.nganjukkab.go.id/A.Yani/streams/opOIJxon6ub2zVNX1786673364856.m3u8` |
+| 35 | `nganjuk-atcs-a-yani-simpang-4-tugu-jaya-stamba` | A. Yani Simpang 4 Tugu Jaya Stamba | HLS | `https://wxyz.nganjukkab.go.id/A.Yani/streams/wl4Nq2N5Y83JqGAD1786673364532.m3u8` |
+| 36 | `nganjuk-atcs-a-yani-simpang-4-utara-tugu-jaya-stamba` | A. Yani Simpang 4 Utara Tugu Jaya Stamba | HLS | `https://wxyz.nganjukkab.go.id/A.Yani/streams/TyLLbI6kCyXiI5hD1786673365504.m3u8` |
+| 37 | `nganjuk-atcs-slumbung-utara` | slumbung utara | HLS | `https://wxyz.nganjukkab.go.id/Slumbung/streams/n4SmNEbmTmeeZawK1786673436651.m3u8` |
+| 38 | `nganjuk-atcs-slumbung-selatan` | slumbung selatan | HLS | `https://wxyz.nganjukkab.go.id/Slumbung/streams/nVeFEKqiSAiORh4n1786673436975.m3u8` |
+| 39 | `nganjuk-atcs-dungdet-barat` | dungdet barat | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/miDArW2h0NiCrkfb1786673374586.m3u8` |
+| 40 | `nganjuk-atcs-dungdet-timur` | dungdet timur | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/lLmm2sJZPdIEnj8y1786673376534.m3u8` |
+| 41 | `nganjuk-atcs-ganung-kidul-selatan` | ganung kidul selatan | HLS | `https://wxyz.nganjukkab.go.id/Ganung/streams/uLEu9Om2eCLDCibj1786673379136.m3u8` |
+| 42 | `nganjuk-atcs-ganung-kidul-barat` | ganung kidul barat | HLS | `https://wxyz.nganjukkab.go.id/Ganung/streams/jO9U7V50xvj63mnD1786673378484.m3u8` |
+| 43 | `nganjuk-atcs-ganung-kidul-timur` | ganung kidul timur | HLS | `https://wxyz.nganjukkab.go.id/Ganung/streams/21Ai3Zn3cnvjvbKr1786673378158.m3u8` |
+| 44 | `nganjuk-atcs-ganung-kidul-utara` | ganung kidul utara | HLS | `https://wxyz.nganjukkab.go.id/Ganung/streams/MXlNel4io5uLO4Cm1786673378811.m3u8` |
+| 45 | `nganjuk-atcs-mastrip-timur` | mastrip timur | HLS | `https://wxyz.nganjukkab.go.id/Mastrip/streams/neIKAnJJxpiIfk051786673396330.m3u8` |
+| 46 | `nganjuk-atcs-mastrip-selatan` | mastrip selatan | HLS | `https://wxyz.nganjukkab.go.id/Mastrip/streams/QHCNd1Fe92geFZkf1786673396003.m3u8` |
+| 47 | `nganjuk-atcs-polsek-warujayeng-utara` | Polsek Warujayeng Utara | HLS | `https://wxyz.nganjukkab.go.id/testings/streams/WFLLch8Rt3V77rCN1786673448997.m3u8` |
+| 48 | `nganjuk-atcs-polsek-warujayeng-selatan` | Polsek Warujayeng Selatan | HLS | `https://wxyz.nganjukkab.go.id/testings/streams/HIgHYJ5oL1AzYN5q1786673451591.m3u8` |
+| 49 | `nganjuk-atcs-pertigaan-mustika-selatan` | Pertigaan Mustika Selatan | HLS | `https://wxyz.nganjukkab.go.id/Mustika/streams/haROYmLe0Zi3eVrS1786673403815.m3u8` |
+| 50 | `nganjuk-atcs-pertigaan-mustika-utara` | Pertigaan Mustika Utara | HLS | `https://wxyz.nganjukkab.go.id/Mustika/streams/qB54yzGXArlNFF761786673403487.m3u8` |
+| 51 | `nganjuk-atcs-pertigaan-mustika-timur` | Pertigaan Mustika Timur | HLS | `https://wxyz.nganjukkab.go.id/Mustika/streams/wAExBiJ1nvE7HiOO1786673403164.m3u8` |
+| 52 | `nganjuk-atcs-dam-tanjung-utara` | DAM tanjung utara | HLS | `https://wxyz.nganjukkab.go.id/DamTanjung/streams/BYzZegdH7jjpm7wq1786673374260.m3u8` |
+| 53 | `nganjuk-atcs-dam-tanjung-pintu-air` | DAM Tanjung Pintu Air | HLS | `https://wxyz.nganjukkab.go.id/DamTanjung/streams/nV8fVJ6pRvTx1Z6c1786673373935.m3u8` |
+| 54 | `nganjuk-atcs-pertigaan-rsi-selatan` | Pertigaan RSI selatan | HLS | `https://wxyz.nganjukkab.go.id/PertigaanRSI/streams/Zov8wDpIvZD8FTaA1786673415206.m3u8` |
+| 55 | `nganjuk-atcs-pertigaan-rsi-barat` | Pertigaan RSI barat | HLS | `https://wxyz.nganjukkab.go.id/PertigaanRSI/streams/ghCXIcWG9duNbKqp1786673415530.m3u8` |
+| 56 | `nganjuk-atcs-pertigaan-rsi-utara` | Pertigaan RSI Utara | HLS | `https://wxyz.nganjukkab.go.id/PertigaanRSI/streams/4ENziIdAHjPBPKxu1786673415854.m3u8` |
+| 57 | `nganjuk-atcs-adipura-gatsu-utara` | adipura gatsu utara | HLS | `https://wxyz.nganjukkab.go.id/AdipuraGatsu/streams/TgufehcvTn9LFqcu1786673367123.m3u8` |
+| 58 | `nganjuk-atcs-adipura-gatsu-selatan` | adipura gatsu selatan | HLS | `https://wxyz.nganjukkab.go.id/AdipuraGatsu/streams/tGLsaNjXndGTYa9k1786673366799.m3u8` |
+| 59 | `nganjuk-atcs-adipura-gatsu-barat` | adipura gatsu barat | HLS | `https://wxyz.nganjukkab.go.id/AdipuraGatsu/streams/NJmZXJMI19rvQNLK1786673367448.m3u8` |
+| 60 | `nganjuk-atcs-kuncir-utara` | kuncir utara | HLS | `https://wxyz.nganjukkab.go.id/Kuncir/streams/AOTM5pM4YrQftHNn1786673387895.m3u8` |
+| 61 | `nganjuk-atcs-kuncir-timur` | kuncir timur | HLS | `https://wxyz.nganjukkab.go.id/Kuncir/streams/uTUVlEKtCJn11dMr1786673387569.m3u8` |
+| 62 | `nganjuk-atcs-kuncir-barat` | kuncir barat | HLS | `https://wxyz.nganjukkab.go.id/Kuncir/streams/DfoVpx90VgKZQQY71786673386922.m3u8` |
+| 63 | `nganjuk-atcs-pasar-sukomoro-barat` | Pasar Sukomoro Barat | HLS | `https://wxyz.nganjukkab.go.id/PasarSukomoro/streams/9RvPJgf9yvxefgFo1786673413255.m3u8` |
+| 64 | `nganjuk-atcs-pasar-sukomoro-selatan` | Pasar Sukomoro Selatan | HLS | `https://wxyz.nganjukkab.go.id/PasarSukomoro/streams/NMDpkXP7dV2i6jkc1786673413580.m3u8` |
+| 65 | `nganjuk-atcs-pasar-sukomoro-timur` | Pasar Sukomoro Timur | HLS | `https://wxyz.nganjukkab.go.id/PasarSukomoro/streams/1YyzDxeUB42GoMBF1786673414230.m3u8` |
+| 66 | `nganjuk-atcs-ngrengket-barat` | Ngrengket Barat | HLS | `https://wxyz.nganjukkab.go.id/PasarSukomoro/streams/KPTczxkgPdNaWWkD1786673414882.m3u8` |
+| 67 | `nganjuk-atcs-ngrengket-selatan` | Ngrengket Selatan | HLS | `https://wxyz.nganjukkab.go.id/PasarSukomoro/streams/qIsWfpqzuQq0h0Ki1786673412930.m3u8` |
+| 68 | `nganjuk-atcs-ngrengket-timur` | Ngrengket Timur | HLS | `https://wxyz.nganjukkab.go.id/PasarSukomoro/streams/oXZqp47B9UxaKmd41786673413904.m3u8` |
+| 69 | `nganjuk-atcs-ngrengket-utara` | Ngrengket Utara | HLS | `https://wxyz.nganjukkab.go.id/PasarSukomoro/streams/xd7FDNkKJjaqujjB1786673414558.m3u8` |
+| 70 | `nganjuk-atcs-kertosono-pos-gatsu-selatan` | Kertosono Pos GatSu Selatan | HLS | `https://wxyz.nganjukkab.go.id/SimpangKertosono/streams/U84gJVMBvrDVpCy81786673435677.m3u8` |
+| 71 | `nganjuk-atcs-kertosono-pos-gatsu-utara` | Kertosono Pos GatSu Utara | HLS | `https://wxyz.nganjukkab.go.id/SimpangKertosono/streams/ZUvCj8YKfUwwSj4S1786673434706.m3u8` |
+| 72 | `nganjuk-atcs-kertosono-pos-gatsu-barat` | Kertosono Pos GatSu Barat | HLS | `https://wxyz.nganjukkab.go.id/SimpangKertosono/streams/EZuktbGFqR8TcVUP1786673435354.m3u8` |
+| 73 | `nganjuk-atcs-desa-nglawak-bogo` | Desa Nglawak - Bogo | HLS | `https://wxyz.nganjukkab.go.id/Nglawak/streams/XO7qcyM1pOKWPtc01786673406737.m3u8` |
+| 74 | `nganjuk-atcs-pertigaan-selatan-desa-kuncir` | pertigaan selatan desa kuncir | HLS | `https://wxyz.nganjukkab.go.id/Kuncir/streams/C2eFOsfVQbdc6UXb1786673386600.m3u8` |
+| 75 | `nganjuk-atcs-depan-kantor-balai-desa-kuncir` | depan kantor balai desa kuncir | HLS | `https://wxyz.nganjukkab.go.id/Kuncir/streams/yaiJi5YBc5c2rBwM1786673387245.m3u8` |
+| 76 | `nganjuk-atcs-balai-desa-kuncir` | balai desa kuncir | HLS | `https://wxyz.nganjukkab.go.id/Kuncir/streams/uvOF9U3l4fJvQvSN1786673388544.m3u8` |
+| 77 | `nganjuk-atcs-pertigaan-timur-desa-kuncir` | Pertigaan Timur Desa Kuncir | HLS | `https://wxyz.nganjukkab.go.id/Kuncir/streams/PTjGIlaPCZV1v8Pr1786673388219.m3u8` |
+| 78 | `nganjuk-atcs-simpang-4-utara-lengkong` | Simpang 4 utara lengkong | HLS | `https://wxyz.nganjukkab.go.id/Lengkong/streams/nSWmLlIGPMYJ7XYE1786673389517.m3u8` |
+| 79 | `nganjuk-atcs-simpang-3-pkm-timur-lengkong` | Simpang 3 PKM Timur lengkong | HLS | `https://wxyz.nganjukkab.go.id/Lengkong/streams/aett9QvF3DLdfxGs1786673389193.m3u8` |
+| 80 | `nganjuk-atcs-spbu-lengkong-barat` | SPBU Lengkong Barat | HLS | `https://wxyz.nganjukkab.go.id/Lengkong/streams/xlW5NsFLts0GE1Dh1786673389842.m3u8` |
+| 81 | `nganjuk-atcs-spbu-lengkong-utara` | SPBU Lengkong Utara | HLS | `https://wxyz.nganjukkab.go.id/Lengkong/streams/4jSKZGirEcZuvz6f1786673388868.m3u8` |
+| 82 | `nganjuk-atcs-depan-kantor-desa-nglundo` | Depan Kantor Desa Nglundo | HLS | `https://wxyz.nganjukkab.go.id/Nglundo/streams/KAh5bRZN398KFUeD1786673408038.m3u8` |
+| 83 | `nganjuk-atcs-pendopo-kantor-desa-nglundo` | Pendopo Kantor Desa Nglundo | HLS | `https://wxyz.nganjukkab.go.id/Nglundo/streams/5fZvQ23Db1qvUB5H1786673408690.m3u8` |
+| 84 | `nganjuk-atcs-gapura-nglundo-utara` | Gapura Nglundo Utara | HLS | `https://wxyz.nganjukkab.go.id/Nglundo/streams/iPLhdTrO4XUb9I3R1786673408365.m3u8` |
+| 85 | `nganjuk-atcs-gapura-nglundo-selatan` | Gapura Nglundo Selatan | HLS | `https://wxyz.nganjukkab.go.id/Nglundo/streams/YMd1AMB8BuqQj6TG1786673407715.m3u8` |
+| 86 | `nganjuk-atcs-sekarputih-gapura-2` | Sekarputih Gapura 2 | HLS | `https://wxyz.nganjukkab.go.id/SekarPutih/streams/AL6mUE2MU4J38k0q1786673423653.m3u8` |
+| 87 | `nganjuk-atcs-sekarputih-gapura-1` | Sekarputih Gapura 1 | HLS | `https://wxyz.nganjukkab.go.id/SekarPutih/streams/Xdo4zpKuK0DfyWDU1786673423006.m3u8` |
+| 88 | `nganjuk-atcs-sekarputih-balai-desa` | Sekarputih Balai Desa | HLS | `https://wxyz.nganjukkab.go.id/SekarPutih/streams/JltRbjClzsl2gBqg1786673423328.m3u8` |
+| 89 | `nganjuk-atcs-sekarputih-spbu` | Sekarputih SPBU | HLS | `https://wxyz.nganjukkab.go.id/SekarPutih/streams/q3bDNxeWitsX2oE21786673423977.m3u8` |
+| 90 | `nganjuk-atcs-tempelwetan-gapura` | TempelWetan Gapura | HLS | `https://wxyz.nganjukkab.go.id/TempelWetan/streams/SN5ohHT4N9EcsTUv1786673448028.m3u8` |
+| 91 | `nganjuk-atcs-tempelwetan-jalan-timur` | TempelWetan Jalan Timur | HLS | `https://wxyz.nganjukkab.go.id/TempelWetan/streams/JZt7FQ1iemf4FE5F1786673448675.m3u8` |
+| 92 | `nganjuk-atcs-tempelwetan-perempatan` | TempelWetan Perempatan | HLS | `https://wxyz.nganjukkab.go.id/TempelWetan/streams/USoXssZoZDMgfEuL1786673447701.m3u8` |
+| 93 | `nganjuk-atcs-tempelwetan-polindes` | TempelWetan Polindes | HLS | `https://wxyz.nganjukkab.go.id/TempelWetan/streams/Qz1Nym6K1z6F2lbI1786673448352.m3u8` |
+| 94 | `nganjuk-atcs-sendang-bumen-spbu` | Sendang Bumen SPBU | HLS | `https://wxyz.nganjukkab.go.id/SendangBumen/streams/VHlRFaciUj1WM8yU1786673424954.m3u8` |
+| 95 | `nganjuk-atcs-sendang-bumen-gapura-pogalan` | Sendang Bumen-Gapura Pogalan | HLS | `https://wxyz.nganjukkab.go.id/SendangBumen/streams/RJOgTwijShsxEkwE1786673424627.m3u8` |
+| 96 | `nganjuk-atcs-sendang-bumen-sman-1-berbek` | Sendang Bumen-SMAN 1 Berbek | HLS | `https://wxyz.nganjukkab.go.id/SendangBumen/streams/0UgX06vKuVzmvvUR1786673424301.m3u8` |
+| 97 | `nganjuk-atcs-kemaduh-baron-simpang-4-timur` | Kemaduh Baron Simpang 4 Timur | HLS | `https://wxyz.nganjukkab.go.id/Kemaduh/streams/Bd67G7JlFGCVZM5m1786673385951.m3u8` |
+| 98 | `nganjuk-atcs-desa-kemaduh-baron-simpang-4-barat` | DESA KEMADUH - BARON Simpang 4 Barat | HLS | `https://wxyz.nganjukkab.go.id/Kemaduh/streams/ag6Funygw71NQ1vU1786673386275.m3u8` |
+| 99 | `nganjuk-atcs-desa-kemaduh-baron-jembatan-barat` | Desa Kemaduh Baron Jembatan Barat | HLS | `https://wxyz.nganjukkab.go.id/Kemaduh/streams/VnLXvpm6lFHjzpjU1786673385628.m3u8` |
+| 100 | `nganjuk-atcs-desa-kemaduh-baron-jembatan-timur` | DESA KEMADUH - BARON Jembatan Timur | HLS | `https://wxyz.nganjukkab.go.id/Kemaduh/streams/Fc6MmqTTuUd5jww01786673385303.m3u8` |
+| 101 | `nganjuk-atcs-bangsri-kertosono-simpang-4-tk-selatan` | Bangsri - Kertosono Simpang 4 TK Selatan | HLS | `https://wxyz.nganjukkab.go.id/BangsriKertosono/streams/jMpkApKQksM2V1sA1786673372314.m3u8` |
+| 102 | `nganjuk-atcs-bangsri-kertosono-simpang-4-tk-utara` | Bangsri - Kertosono Simpang 4 TK Utara | HLS | `https://wxyz.nganjukkab.go.id/BangsriKertosono/streams/uk31rAuaXjoLUKXh1786673371984.m3u8` |
+| 103 | `nganjuk-atcs-bangsri-kertosono-simpang-4-panti-barat` | Bangsri-Kertosono Simpang 4 Panti Barat | HLS | `https://wxyz.nganjukkab.go.id/BangsriKertosono/streams/OjopFErar9wQ8qfd1786673371660.m3u8` |
+| 104 | `nganjuk-atcs-bangsri-kertosono-simpang-4-panti-timur` | Bangsri - Kertosono Simpang 4 Panti Timur | HLS | `https://wxyz.nganjukkab.go.id/BangsriKertosono/streams/uEghtVgyx5LTtQFG1786673371337.m3u8` |
+| 105 | `nganjuk-atcs-baldes-timur-desa-kalianyar-ngronggot` | Baldes Timur- Desa Kalianyar Ngronggot | HLS | `https://wxyz.nganjukkab.go.id/KalianyarNgronggot/streams/xOcd3hX2Zmr7hx7b1786673384004.m3u8` |
+| 106 | `nganjuk-atcs-baldes-barat-desa-kalianyar-ngronggot` | Baldes Barat- Desa Kalianyar Ngronggot | HLS | `https://wxyz.nganjukkab.go.id/KalianyarNgronggot/streams/lfy6N5iMPHFE7X3x1786673384977.m3u8` |
+| 107 | `nganjuk-atcs-simpang-3-selatan-desa-kalianyar-ngronggot` | Simpang 3 Selatan-Desa Kalianyar Ngronggot | HLS | `https://wxyz.nganjukkab.go.id/KalianyarNgronggot/streams/LQzSbMw9QtjVDWh21786673384328.m3u8` |
+| 108 | `nganjuk-atcs-masjid-barat-desa-kalianyar-ngronggot` | Masjid Barat- Desa Kalianyar Ngronggot | HLS | `https://wxyz.nganjukkab.go.id/KalianyarNgronggot/streams/qZ8C1idBjjfizQME1786673384652.m3u8` |
+| 109 | `nganjuk-atcs-depan-baldes-desa-ngadipiro-wilangan` | Depan Baldes - Desa Ngadipiro Wilangan | HLS | `https://wxyz.nganjukkab.go.id/NgadipiroWilangan/streams/4z62i1qPz8LJso6e1786673405111.m3u8` |
+| 110 | `nganjuk-atcs-pertigaan-apotik-desa-ngadipiro-wilangan` | Pertigaan Apotik - Desa Ngadipiro Wilangan | HLS | `https://wxyz.nganjukkab.go.id/NgadipiroWilangan/streams/6qGxNw9yL5a5m1Ca1786673404788.m3u8` |
+| 111 | `nganjuk-atcs-pasar-barat-desa-ngadipiro-wilangan` | Pasar Barat - Desa Ngadipiro Wilangan | HLS | `https://wxyz.nganjukkab.go.id/NgadipiroWilangan/streams/AzYvyMwbb1IKycRc1786673404141.m3u8` |
+| 112 | `nganjuk-atcs-baldes-utara-desa-sidorejo-sawahan` | Baldes Utara - Desa Sidorejo - Sawahan | HLS | `https://wxyz.nganjukkab.go.id/SidorejoSawahan/streams/awEBrH5tmrRXuAaM1786673425278.m3u8` |
+| 113 | `nganjuk-atcs-baldes-selatan-desa-sidorejo-sawahan` | Baldes Selatan - Desa Sidorejo - Sawahan | HLS | `https://wxyz.nganjukkab.go.id/SidorejoSawahan/streams/y0jYVAPbQxajQA181786673425600.m3u8` |
+| 114 | `nganjuk-atcs-desa-talang-talang-balai-desa-utara` | Desa TALANG - Talang Balai Desa Utara | HLS | `https://wxyz.nganjukkab.go.id/Talang/streams/bhnmwv1mxNa7bhID1786673440226.m3u8` |
+| 115 | `nganjuk-atcs-desa-talang-talang-balaidesa-depan` | Desa TALANG - Talang BalaiDesa Depan | HLS | `https://wxyz.nganjukkab.go.id/Talang/streams/LNprx3RwZGHQ1AFn1786673440877.m3u8` |
+| 116 | `nganjuk-atcs-desa-talang-talang-perempatan` | Desa TALANG - Talang Perempatan | HLS | `https://wxyz.nganjukkab.go.id/Talang/streams/TcXOsXWtk0KYKsOV1786673439904.m3u8` |
+| 117 | `nganjuk-atcs-desa-talang-sdn-1-talang` | Desa TALANG -SDN 1 Talang | HLS | `https://wxyz.nganjukkab.go.id/Talang/streams/MXX4KtxtnYyYa3NV1786673440554.m3u8` |
+| 118 | `nganjuk-atcs-desa-munung-simpang-4-selatan` | Desa MUNUNG - Simpang 4 Selatan | HLS | `https://wxyz.nganjukkab.go.id/Munung/streams/iCCFFvjbLf4turGG1786673401527.m3u8` |
+| 119 | `nganjuk-atcs-desa-munung-simpang-4-utara` | Desa MUNUNG - Simpang 4 Utara | HLS | `https://wxyz.nganjukkab.go.id/Munung/streams/ytgr8nOg20603i541786673401856.m3u8` |
+| 120 | `nganjuk-atcs-desa-munung-simpang-3-baldes-timur` | Desa MUNUNG - Simpang 3 BalDes Timur | HLS | `https://wxyz.nganjukkab.go.id/Munung/streams/1FXrNHmrNhdQVYNs1786673402836.m3u8` |
+| 121 | `nganjuk-atcs-desa-munung-simpang-3-baldes-selatan` | Desa MUNUNG - Simpang 3 Baldes Selatan | HLS | `https://wxyz.nganjukkab.go.id/Munung/streams/yU9aM92Bv691l1vS1786673402511.m3u8` |
+| 122 | `nganjuk-atcs-desa-nglawak-baldes-dalam` | Desa NGLAWAK - Baldes Dalam | HLS | `https://wxyz.nganjukkab.go.id/Nglawak/streams/yROubTMb9JUb9iVm1786673405761.m3u8` |
+| 123 | `nganjuk-atcs-desa-nglawak-perempatan-tugu-utara` | Desa NGLAWAK - Perempatan Tugu Utara | HLS | `https://wxyz.nganjukkab.go.id/Nglawak/streams/WNZWaqszsAk10aWB1786673406086.m3u8` |
+| 124 | `nganjuk-atcs-desa-nglawak-perempatan-tugu-selatan` | Desa NGLAWAK -Perempatan Tugu Selatan | HLS | `https://wxyz.nganjukkab.go.id/Nglawak/streams/5y9IHjJHC6hhlJ5n1786673407390.m3u8` |
+| 125 | `nganjuk-atcs-desa-nglawak-baldes-depan` | Desa NGLAWAK - Baldes Depan | HLS | `https://wxyz.nganjukkab.go.id/Nglawak/streams/nNZddlV4fVLo9xlP1786673407064.m3u8` |
+| 126 | `nganjuk-atcs-desa-lestari-balai-desa-utara` | Desa Lestari - Balai Desa Utara | HLS | `https://wxyz.nganjukkab.go.id/Lestari/streams/68YvdbQTRIepV83b1786673390489.m3u8` |
+| 127 | `nganjuk-atcs-desa-lestari-balai-desa-selatan` | Desa Lestari - Balai Desa Selatan | HLS | `https://wxyz.nganjukkab.go.id/Lestari/streams/kqP11mJto7yiwH281786673390817.m3u8` |
+| 128 | `nganjuk-atcs-desa-mojoseto-pendopo` | Desa Mojoseto - Pendopo | HLS | `https://wxyz.nganjukkab.go.id/Mojoseto/streams/u6P7LsjWNuFMzk3J1786673401201.m3u8` |
+| 129 | `nganjuk-atcs-desa-mojoseto-pertigaan-selatan` | Desa Mojoseto - Pertigaan Selatan | HLS | `https://wxyz.nganjukkab.go.id/Mojoseto/streams/EIWZyb7U728CgXD01786673400230.m3u8` |
+| 130 | `nganjuk-atcs-desa-mojoseto-pertigaan-utara` | Desa Mojoseto - Pertigaan Utara | HLS | `https://wxyz.nganjukkab.go.id/Mojoseto/streams/LbH6ZjSFbLAU1MMb1786673400878.m3u8` |
+| 131 | `nganjuk-atcs-desa-mojoseto-pertigaan-timur` | Desa Mojoseto - Pertigaan Timur | HLS | `https://wxyz.nganjukkab.go.id/Mojoseto/streams/DLrRi4oLUtpqpwTs1786673400555.m3u8` |
+| 132 | `nganjuk-atcs-desa-sugihwaras-pertigaan-timur` | Desa Sugihwaras - Pertigaan Timur | HLS | `https://wxyz.nganjukkab.go.id/Sugihwaras/streams/1dC4SToKiTKlNzUi1786673439580.m3u8` |
+| 133 | `nganjuk-atcs-desa-sugihwaras-baldes-timur` | Desa Sugihwaras - Baldes Timur | HLS | `https://wxyz.nganjukkab.go.id/Sugihwaras/streams/IoEau5fgZfWDnZAO1786673438926.m3u8` |
+| 134 | `nganjuk-atcs-desa-sugihwaras-baldes-depan` | Desa Sugihwaras - Baldes Depan | HLS | `https://wxyz.nganjukkab.go.id/Sugihwaras/streams/nSxPhq6RlUr1pKBY1786673438603.m3u8` |
+| 135 | `nganjuk-atcs-desa-sugihwaras-pertigaan-barat` | Desa Sugihwaras - Pertigaan Barat | HLS | `https://wxyz.nganjukkab.go.id/Sugihwaras/streams/fiMVxeVeE5kyFDzD1786673439250.m3u8` |
+| 136 | `nganjuk-atcs-desa-malangsari-baldes-utara` | Desa Malangsari - Baldes Utara | HLS | `https://wxyz.nganjukkab.go.id/Malangsari/streams/NVhZ8RVCfxiw1tRL1786673391789.m3u8` |
+| 137 | `nganjuk-atcs-desa-malangsari-baldes-selatan` | Desa Malangsari - Baldes Selatan | HLS | `https://wxyz.nganjukkab.go.id/Malangsari/streams/Vr0Db1QPmxyBzkEB1786673392112.m3u8` |
+| 138 | `nganjuk-atcs-desa-malangsari-baldes-timur` | Desa Malangsari - Baldes Timur | HLS | `https://wxyz.nganjukkab.go.id/Malangsari/streams/CmAVwCWYOIIUvO7l1786673391465.m3u8` |
+| 139 | `nganjuk-atcs-desa-malangsari-baldes-barat` | Desa Malangsari - Baldes Barat | HLS | `https://wxyz.nganjukkab.go.id/Malangsari/streams/CboMbyq8iImbX8IX1786673392436.m3u8` |
+| 140 | `nganjuk-atcs-desa-mlandangan-balai-desa` | Desa Mlandangan - Balai Desa | HLS | `https://wxyz.nganjukkab.go.id/Mlandangan/streams/3k4n5KY4PjQpiZxy1786673397630.m3u8` |
+| 141 | `nganjuk-atcs-desa-mlandangan-pertigaan-barat` | Desa Mlandangan - Pertigaan Barat | HLS | `https://wxyz.nganjukkab.go.id/Mlandangan/streams/aqgH3nw8SFjef3pm1786673396653.m3u8` |
+| 142 | `nganjuk-atcs-desa-mlandangan-pertigaan-selatan` | Desa Mlandangan - Pertigaan Selatan | HLS | `https://wxyz.nganjukkab.go.id/Mlandangan/streams/yCn6AhcoDtrPLOlj1786673397301.m3u8` |
+| 143 | `nganjuk-atcs-desa-mlandangan-pertigaan-timur` | Desa Mlandangan - Pertigaan Timur | HLS | `https://wxyz.nganjukkab.go.id/Mlandangan/streams/AHvBpiLytbhAYFTm1786673396976.m3u8` |
+| 144 | `nganjuk-atcs-kelurahan-mangundikaran-simpang-4-pangsud-barat` | Kelurahan Mangundikaran - Simpang 4 Pangsud Barat | HLS | `https://wxyz.nganjukkab.go.id/Mangundikaran/streams/AKx9NIazlolaSECV1786673394385.m3u8` |
+| 145 | `nganjuk-atcs-kelurahan-mangundikaran-simpang-4-pangsud-utara` | Kelurahan Mangundikaran - Simpang 4 Pangsud Utara | HLS | `https://wxyz.nganjukkab.go.id/Mangundikaran/streams/yy3h9XKyhYbF4TdQ1786673395356.m3u8` |
+| 146 | `nganjuk-atcs-kelurahan-mangundikaran-simpang-4-pangsud-timur` | Kelurahan Mangundikaran - Simpang 4 Pangsud Timur | HLS | `https://wxyz.nganjukkab.go.id/Mangundikaran/streams/4Q7yvhMM4ljaTKzV1786673395032.m3u8` |
+| 147 | `nganjuk-atcs-kelurahan-mangundikaran-simpang-4-pangsud-selatan` | Kelurahan Mangundikaran - Simpang 4 Pangsud Selatan | HLS | `https://wxyz.nganjukkab.go.id/Mangundikaran/streams/j2e6JFFQ3YYwyXXB1786673394710.m3u8` |
+| 148 | `nganjuk-atcs-desa-lestari-gapura-utara` | Desa Lestari - Gapura Utara | HLS | `https://wxyz.nganjukkab.go.id/Lestari/streams/7UXE2d0decQOV0C81786673390165.m3u8` |
+| 149 | `nganjuk-atcs-desa-lestari-gapura-selatan` | Desa Lestari - Gapura Selatan | HLS | `https://wxyz.nganjukkab.go.id/Lestari/streams/7ifXBUTcaWkE8to91786673391141.m3u8` |
+| 150 | `nganjuk-atcs-sombron-selatan` | Sombron Selatan | HLS | `https://wxyz.nganjukkab.go.id/SOMBRON/streams/7ZJEyZrduNrsWTB41786673437299.m3u8` |
+| 151 | `nganjuk-atcs-sombron-timur` | Sombron Timur | HLS | `https://wxyz.nganjukkab.go.id/SOMBRON/streams/tiwavwfFbs78VILv1786673437954.m3u8` |
+| 152 | `nganjuk-atcs-sombron-barat` | Sombron Barat | HLS | `https://wxyz.nganjukkab.go.id/SOMBRON/streams/Oihst9loKU9xiP6f1786673437627.m3u8` |
+| 153 | `nganjuk-atcs-sombron-utara` | Sombron Utara | HLS | `https://wxyz.nganjukkab.go.id/SOMBRON/streams/AqdXV5MqUbbmtDFq1786673438279.m3u8` |
+| 154 | `nganjuk-atcs-mpp-dalam-2` | MPP Dalam -2 | HLS | `https://wxyz.nganjukkab.go.id/MallPelayananPublik/streams/VDRQ8rVGhkTNS3kG1786673393408.m3u8` |
+| 155 | `nganjuk-atcs-mpp-dalam-1` | MPP Dalam-1 | HLS | `https://wxyz.nganjukkab.go.id/MallPelayananPublik/streams/ivrirLwg7j2PiVRu1786673392759.m3u8` |
+| 156 | `nganjuk-atcs-mpp-dalam-3` | MPP Dalam-3 | HLS | `https://wxyz.nganjukkab.go.id/MallPelayananPublik/streams/uyg8UIjRzVrwHg1n1786673393086.m3u8` |
+| 157 | `nganjuk-atcs-mpp-dalam-4` | MPP Dalam-4 | HLS | `https://wxyz.nganjukkab.go.id/MallPelayananPublik/streams/L1bFjo7cs8wL9Srt1786673393733.m3u8` |
+| 158 | `nganjuk-atcs-gor-bung-karno-dan-taman-pintar-taman-selatan` | GOR Bung Karno dan Taman Pintar - Taman Selatan | HLS | `https://wxyz.nganjukkab.go.id/TamanPintarGORBungKarno/streams/5HeUgITKRQRoHLex1786673447378.m3u8` |
+| 159 | `nganjuk-atcs-gor-bung-karno-dan-taman-pintar-taman-utara` | GOR Bung Karno dan Taman Pintar - Taman Utara | HLS | `https://wxyz.nganjukkab.go.id/TamanPintarGORBungKarno/streams/DPel37G9RusBOgIS1786673446726.m3u8` |
+| 160 | `nganjuk-atcs-gor-bung-karno-dan-taman-pintar-taman-barat` | GOR Bung Karno dan Taman Pintar - Taman Barat | HLS | `https://wxyz.nganjukkab.go.id/TamanPintarGORBungKarno/streams/6nt9XkSoPykpxKlp1786673445752.m3u8` |
+| 161 | `nganjuk-atcs-gor-bung-karno-dan-taman-pintar-taman-gerbang-timur` | GOR Bung Karno dan Taman Pintar - Taman Gerbang Timur | HLS | `https://wxyz.nganjukkab.go.id/TamanPintarGORBungKarno/streams/QOKH6lfS5jE4WngW1786673447049.m3u8` |
+| 162 | `nganjuk-atcs-gor-bung-karno-dan-taman-pintar-gor-gerbang-timur` | GOR Bung Karno dan Taman Pintar - Gor Gerbang Timur | HLS | `https://wxyz.nganjukkab.go.id/TamanPintarGORBungKarno/streams/OL47dc1ncT9gyRoB1786673445427.m3u8` |
+| 163 | `nganjuk-atcs-gor-bung-karno-dan-taman-pintar-gor-gerbang-selatan` | GOR Bung Karno dan Taman Pintar - Gor Gerbang Selatan | HLS | `https://wxyz.nganjukkab.go.id/TamanPintarGORBungKarno/streams/1mTsEFp7fYz3OpVG1786673446077.m3u8` |
+| 164 | `nganjuk-atcs-gor-bung-karno-dan-taman-pintar-gor-gerbang-utara` | GOR Bung Karno dan Taman Pintar - Gor Gerbang Utara | HLS | `https://wxyz.nganjukkab.go.id/TamanPintarGORBungKarno/streams/f0FWnY1VyySz2AIW1786673446402.m3u8` |
+| 165 | `nganjuk-atcs-taman-pandan-wilis-taman-parkiran` | Taman Pandan Wilis - Taman Parkiran | HLS | `https://wxyz.nganjukkab.go.id/TamanPandanWilis/streams/TyMM1QsWOjrLYOoe1786673444122.m3u8` |
+| 166 | `nganjuk-atcs-taman-pandan-wilis-taman-dalam-timur` | Taman Pandan Wilis - Taman Dalam Timur | HLS | `https://wxyz.nganjukkab.go.id/TamanPandanWilis/streams/Tzp9mQkvRbUGYP531786673445101.m3u8` |
+| 167 | `nganjuk-atcs-taman-pandan-wilis-taman-dalam-barat` | Taman Pandan Wilis - Taman Dalam Barat | HLS | `https://wxyz.nganjukkab.go.id/TamanPandanWilis/streams/BqihuiAQr8SlVdeq1786673443795.m3u8` |
+| 168 | `nganjuk-atcs-taman-pandan-wilis-taman-gerbang-selatan` | Taman Pandan Wilis - Taman Gerbang Selatan | HLS | `https://wxyz.nganjukkab.go.id/TamanPandanWilis/streams/48OAMxljGZdhBYYA1786673444449.m3u8` |
+| 169 | `nganjuk-atcs-taman-pandan-wilis-taman-kolam-selatan` | Taman Pandan Wilis - Taman Kolam Selatan | HLS | `https://wxyz.nganjukkab.go.id/TamanPandanWilis/streams/z6iODW8iZmRKdqGc1786673444774.m3u8` |
+| 170 | `nganjuk-atcs-taman-pandan-wilis-taman-kolam-utara` | Taman Pandan Wilis - Taman Kolam Utara | HLS | `https://wxyz.nganjukkab.go.id/TamanPandanWilis/streams/UjR3LVLji3cxrPUB1786673443471.m3u8` |
+| 171 | `nganjuk-atcs-simpang-4-begadung-begadung-timur` | Simpang 4 Begadung - Begadung Timur | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Begadung/streams/VM0iRvDUXvRuuJy01786673431129.m3u8` |
+| 172 | `nganjuk-atcs-simpang-4-begadung-begadung-utara` | Simpang 4 Begadung - Begadung Utara | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Begadung/streams/7LmVRGS7WNH15nz81786673430803.m3u8` |
+| 173 | `nganjuk-atcs-simpang-4-begadung-begadung-barat` | Simpang 4 Begadung - Begadung Barat | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Begadung/streams/fieAjENlFCKxy51B1786673431456.m3u8` |
+| 174 | `nganjuk-atcs-simpang-4-begadung-begadung-selatan` | Simpang 4 Begadung - Begadung Selatan | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Begadung/streams/pvL8uGbw2hNakECL1786673430478.m3u8` |
+| 175 | `nganjuk-atcs-traffic-light-candirejo-tl-candi-selatan` | Traffic Light Candirejo - TL Candi selatan | HLS | `https://wxyz.nganjukkab.go.id/TLCandi/streams/AACtfS4pXhZ7Qn2L1786673453881.m3u8` |
+| 176 | `nganjuk-atcs-traffic-light-candirejo-tl-candi-utara` | Traffic Light Candirejo - TL Candi Utara | HLS | `https://wxyz.nganjukkab.go.id/TLCandi/streams/FPtQ8ccfXnLflIL11786673454208.m3u8` |
+| 177 | `nganjuk-atcs-traffic-light-candirejo-tl-candi-barat` | Traffic Light Candirejo - TL Candi barat | HLS | `https://wxyz.nganjukkab.go.id/TLCandi/streams/TKNnpJbuzo1dmeme1786673454531.m3u8` |
+| 178 | `nganjuk-atcs-traffic-light-pace-pace-selatan` | Traffic Light Pace - Pace Selatan | HLS | `https://wxyz.nganjukkab.go.id/TLPace/streams/HZdocsqkAKDhwhPc1786673458111.m3u8` |
+| 179 | `nganjuk-atcs-traffic-light-pace-pace-utara` | Traffic Light Pace - Pace Utara | HLS | `https://wxyz.nganjukkab.go.id/TLPace/streams/m7xhIxrzMHpGx4yY1786673458433.m3u8` |
+| 180 | `nganjuk-atcs-traffic-light-pace-pace-timur` | Traffic Light Pace - Pace Timur | HLS | `https://wxyz.nganjukkab.go.id/TLPace/streams/d1uMVhtO1rVyrc2f1786673457463.m3u8` |
+| 181 | `nganjuk-atcs-traffic-light-pace-pace-barat` | Traffic Light Pace - Pace Barat | HLS | `https://wxyz.nganjukkab.go.id/TLPace/streams/r1x3e3oWprYzR5tc1786673457787.m3u8` |
+| 182 | `nganjuk-atcs-traffic-light-tiripan-tiripan-selatan` | Traffic Light Tiripan - Tiripan Selatan | HLS | `https://wxyz.nganjukkab.go.id/TLTiripan/streams/i3F2ZiFPrwOZKkhL1786673459404.m3u8` |
+| 183 | `nganjuk-atcs-traffic-light-tiripan-tiripan-timur` | Traffic Light Tiripan - Tiripan Timur | HLS | `https://wxyz.nganjukkab.go.id/TLTiripan/streams/9ZQ7qS57dSzrlxhW1786673460705.m3u8` |
+| 184 | `nganjuk-atcs-traffic-light-tiripan-tiripan-barat` | Traffic Light Tiripan - Tiripan Barat | HLS | `https://wxyz.nganjukkab.go.id/TLTiripan/streams/YicQao6KC83oNa2s1786673459081.m3u8` |
+| 185 | `nganjuk-atcs-traffic-light-tiripan-tiripan-utara` | Traffic Light Tiripan - Tiripan Utara | HLS | `https://wxyz.nganjukkab.go.id/TLTiripan/streams/JaiqkfUGpDwtTHR11786673458759.m3u8` |
+| 186 | `nganjuk-atcs-berbek-traffic-light-utara` | Berbek Traffic Light Utara | HLS | `https://wxyz.nganjukkab.go.id/TLBerbek/streams/HMWgJ5JUvga32o481786673453554.m3u8` |
+| 187 | `nganjuk-atcs-berbek-traffic-light-selatan` | Berbek Traffic Light Selatan | HLS | `https://wxyz.nganjukkab.go.id/TLBerbek/streams/Db4VpgmDnEPatEoW1786673453227.m3u8` |
+| 188 | `nganjuk-atcs-traffic-light-watudandang-watudandang-utara` | Traffic Light Watudandang - Watudandang Utara | HLS | `https://wxyz.nganjukkab.go.id/TLWatudandang/streams/7UOYnYqcYRyRt1XR1786673461679.m3u8` |
+| 189 | `nganjuk-atcs-traffic-light-watudandang-watudandang-selatan` | Traffic Light Watudandang - Watudandang Selatan | HLS | `https://wxyz.nganjukkab.go.id/TLWatudandang/streams/tgSvUGFELLAf1zos1786673461030.m3u8` |
+| 190 | `nganjuk-atcs-traffic-light-watudandang-watudandang-timur` | Traffic Light Watudandang - Watudandang Timur | HLS | `https://wxyz.nganjukkab.go.id/TLWatudandang/streams/xR3SQp1zL5Hy6gZ81786673461353.m3u8` |
+| 191 | `nganjuk-atcs-traffic-light-ngujung-ngujung-utara` | Traffic Light Ngujung - Ngujung Utara | HLS | `https://wxyz.nganjukkab.go.id/TLNgujung/streams/JYJolVRk6cdQLHbV1786673457136.m3u8` |
+| 192 | `nganjuk-atcs-traffic-light-ngujung-ngujung-timur` | Traffic Light Ngujung - Ngujung Timur | HLS | `https://wxyz.nganjukkab.go.id/TLNgujung/streams/4rduUiiTgbqT6yJq1786673456155.m3u8` |
+| 193 | `nganjuk-atcs-traffic-light-ngujung-ngujung-selatan` | Traffic Light Ngujung - Ngujung Selatan | HLS | `https://wxyz.nganjukkab.go.id/TLNgujung/streams/BE6GNvkEYiSZtNPC1786673456478.m3u8` |
+| 194 | `nganjuk-atcs-traffic-light-ngujung-ngujung-barat` | Traffic Light Ngujung - Ngujung Barat | HLS | `https://wxyz.nganjukkab.go.id/TLNgujung/streams/R5o3ZB6ypX5fVpaZ1786673456809.m3u8` |
+| 195 | `nganjuk-atcs-jembatan-kelutan-kelutan-selatan` | Jembatan Kelutan - Kelutan Selatan | HLS | `https://wxyz.nganjukkab.go.id/JembatanKelutan/streams/Kw9XwS7kqZvW7VLS1786673383680.m3u8` |
+| 196 | `nganjuk-atcs-jembatan-kelutan-kelutan-timur` | Jembatan Kelutan - Kelutan Timur | HLS | `https://wxyz.nganjukkab.go.id/JembatanKelutan/streams/68jFvPakkGhImK4s1786673383356.m3u8` |
+| 197 | `nganjuk-atcs-jembatan-kelutan-kelutan-barat` | Jembatan Kelutan - Kelutan Barat | HLS | `https://wxyz.nganjukkab.go.id/JembatanKelutan/streams/JY3YRe2CwAGrfKHU1786673383030.m3u8` |
+| 198 | `nganjuk-atcs-exit-tol-timur` | Exit Tol - Timur | HLS | `https://wxyz.nganjukkab.go.id/ExitTOL/streams/p8X9KpfftU3bFk9v1786673377833.m3u8` |
+| 199 | `nganjuk-atcs-exit-tol-utara` | Exit Tol - Utara | HLS | `https://wxyz.nganjukkab.go.id/ExitTOL/streams/C4UZD2Sez6hJSipl1786673377184.m3u8` |
+| 200 | `nganjuk-atcs-exit-tol-barat` | Exit Tol - Barat | HLS | `https://wxyz.nganjukkab.go.id/ExitTOL/streams/baZZEmf98pnkn3RR1786673377509.m3u8` |
+| 201 | `nganjuk-atcs-pasar-rejoso-utara` | Pasar Rejoso Utara | HLS | `https://wxyz.nganjukkab.go.id/REJOSO/streams/IAC1vNlq3H4voR5w1786673421055.m3u8` |
+| 202 | `nganjuk-atcs-pasar-rejoso-timur` | Pasar Rejoso Timur | HLS | `https://wxyz.nganjukkab.go.id/REJOSO/streams/k7gt5V29wwxuHwOt1786673421706.m3u8` |
+| 203 | `nganjuk-atcs-pasar-rejoso-barat` | Pasar Rejoso Barat | HLS | `https://wxyz.nganjukkab.go.id/REJOSO/streams/TCxWOMP97ngA14kz1786673422682.m3u8` |
+| 204 | `nganjuk-atcs-barong-barat` | Barong Barat | HLS | `https://wxyz.nganjukkab.go.id/TLBarong/streams/JrTQ7DxWXICAAK8N1786673452244.m3u8` |
+| 205 | `nganjuk-atcs-barong-selatan` | Barong Selatan | HLS | `https://wxyz.nganjukkab.go.id/TLBarong/streams/JJ4nO1hfcKlE91Aw1786673452571.m3u8` |
+| 206 | `nganjuk-atcs-barong-timur` | Barong Timur | HLS | `https://wxyz.nganjukkab.go.id/TLBarong/streams/bJFMV5BnPSkzPVQz1786673452901.m3u8` |
+| 207 | `nganjuk-atcs-simpang-4-ngangkatan-ngangkatan-barat` | Simpang 4 Ngangkatan - Ngangkatan Barat | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Ngangkatan/streams/LYztH66M3w7zHYjW1786673432755.m3u8` |
+| 208 | `nganjuk-atcs-simpang-4-ngangkatan-ngangkatan-timur` | Simpang 4 Ngangkatan - Ngangkatan Timur | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Ngangkatan/streams/5y5Xy7FWKaM8DXan1786673432108.m3u8` |
+| 209 | `nganjuk-atcs-simpang-4-ngangkatan-ngangkatan-utara` | Simpang 4 Ngangkatan - Ngangkatan Utara | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Ngangkatan/streams/4BG2cQHOfCVJ8N7Q1786673432432.m3u8` |
+| 210 | `nganjuk-atcs-simpang-4-ngangkatan-ngangkatan-selatan` | Simpang 4 Ngangkatan - Ngangkatan Selatan | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Ngangkatan/streams/1yDeDrKuxZeb6FME1786673431783.m3u8` |
+| 211 | `nganjuk-atcs-traffic-light-cangkringan-cangkringan-timur` | Traffic Light Cangkringan - Cangkringan Timur | HLS | `https://wxyz.nganjukkab.go.id/TLCangkringan/streams/APV5RcH7qNoaQVcu1786673454856.m3u8` |
+| 212 | `nganjuk-atcs-traffic-light-cangkringan-cangkringan-utara` | Traffic Light Cangkringan - Cangkringan Utara | HLS | `https://wxyz.nganjukkab.go.id/TLCangkringan/streams/eAfGKuDk7L5GFomc1786673455504.m3u8` |
+| 213 | `nganjuk-atcs-traffic-light-cangkringan-cangkringan-selatan` | Traffic Light Cangkringan - Cangkringan Selatan | HLS | `https://wxyz.nganjukkab.go.id/TLCangkringan/streams/7wtI2z1q4OHp7Y2a1786673455830.m3u8` |
+| 214 | `nganjuk-atcs-traffic-light-cangkringan-cangkringan-barat` | Traffic Light Cangkringan - Cangkringan Barat | HLS | `https://wxyz.nganjukkab.go.id/TLCangkringan/streams/Hs8MzTqYb6Es4qh41786673455181.m3u8` |
+| 215 | `nganjuk-atcs-simpang-sambikerep-sambikerep-utara` | Simpang Sambikerep - Sambikerep Utara | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Sambikerep/streams/4wRX2w6fWDJxasYs1786673430154.m3u8` |
+| 216 | `nganjuk-atcs-simpang-sambikerep-sambikerep-selatan` | Simpang Sambikerep - Sambikerep Selatan | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Sambikerep/streams/2R7lsXpmxk7BiXFI1786673429829.m3u8` |
+| 217 | `nganjuk-atcs-simpang-3-jetis-jetis-utara` | Simpang 3 Jetis - Jetis Utara | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Jetis/streams/JEPUSChBwpEdbVbf1786673428524.m3u8` |
+| 218 | `nganjuk-atcs-simpang-3-jetis-jetis-barat` | Simpang 3 Jetis - Jetis Barat | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Jetis/streams/DmyxjlJ8EeY9k8S61786673428199.m3u8` |
+| 219 | `nganjuk-atcs-simpang-3-jetis-jetis-selatan` | Simpang 3 Jetis - Jetis Selatan | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Jetis/streams/v1vbeB8xzzvyO09R1786673427875.m3u8` |
+| 220 | `nganjuk-atcs-wisata-goa-margo-tresno-margo-tresno-selatan` | WIsata Goa Margo Tresno - Margo tresno selatan | HLS | `https://wxyz.nganjukkab.go.id/GuaMargotresno/streams/fu9LIXeFGJfpBtkF1786673381413.m3u8` |
+| 221 | `nganjuk-atcs-wisata-goa-margo-tresno-margo-tresno-utara` | WIsata Goa Margo Tresno - Margo tresno Utara | HLS | `https://wxyz.nganjukkab.go.id/GuaMargotresno/streams/uCJ1AFSpxCvGuEma1786673381076.m3u8` |
+| 222 | `nganjuk-atcs-wisata-goa-margo-tresno-margo-tresno-timur` | WIsata Goa Margo Tresno - Margo tresno Timur | HLS | `https://wxyz.nganjukkab.go.id/GuaMargotresno/streams/T8zcAdierFvMvOGd1786673380753.m3u8` |
+| 223 | `nganjuk-atcs-simpang-3-ngluyu-ngluyu-selatan` | Simpang 3 Ngluyu - Ngluyu Selatan | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Ngluyu/streams/VdLRL3FyRQ3Qyode1786673429502.m3u8` |
+| 224 | `nganjuk-atcs-simpang-3-ngluyu-ngluyu-barat` | Simpang 3 Ngluyu - Ngluyu Barat | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Ngluyu/streams/c7sgmbCp7BrmDOuB1786673428849.m3u8` |
+| 225 | `nganjuk-atcs-simpang-3-ngluyu-ngluyu-utara` | Simpang 3 Ngluyu - Ngluyu Utara | HLS | `https://wxyz.nganjukkab.go.id/Simpang3Ngluyu/streams/na3PMVQ7YOLbFfkj1786673429176.m3u8` |
+| 226 | `nganjuk-atcs-simpang-4-warujayeng-warujayeng-barat` | Simpang 4 Warujayeng - Warujayeng Barat | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Warujayeng/streams/na4lgF6vIGgWLq1c1786673433732.m3u8` |
+| 227 | `nganjuk-atcs-simpang-4-warujayeng-warujayeng-timur` | Simpang 4 Warujayeng - Warujayeng Timur | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Warujayeng/streams/SVvWI6E1gRIYsceL1786673433081.m3u8` |
+| 228 | `nganjuk-atcs-simpang-4-warujayeng-warujayeng-utara` | Simpang 4 Warujayeng - Warujayeng Utara | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Warujayeng/streams/8upaUzUtbQ3dvLzO1786673434059.m3u8` |
+| 229 | `nganjuk-atcs-simpang-4-warujayeng-warujayeng-selatan` | Simpang 4 Warujayeng - Warujayeng Selatan | HLS | `https://wxyz.nganjukkab.go.id/Simpang4Warujayeng/streams/elwaJg2tT71zbYN21786673433406.m3u8` |
+| 230 | `nganjuk-atcs-awar-awar-awar-awar-timur` | Awar-awar - Awar Awar Timur | HLS | `https://wxyz.nganjukkab.go.id/PosAwarAwar/streams/KTY7jLEtpkzRgMC61786673420406.m3u8` |
+| 231 | `nganjuk-atcs-awar-awar-awar-awar-barat` | Awar-awar - Awar Awar Barat | HLS | `https://wxyz.nganjukkab.go.id/PosAwarAwar/streams/kEqDiPAiRNpJaMDi1786673420077.m3u8` |
+| 232 | `nganjuk-atcs-awar-awar-awar-awar-selatan` | Awar-awar - Awar Awar Selatan | HLS | `https://wxyz.nganjukkab.go.id/PosAwarAwar/streams/SDyeLcYv53tMJGzA1786673419754.m3u8` |
+| 233 | `nganjuk-atcs-awar-awar-awar-awar-utara` | Awar-awar - Awar Awar Utara | HLS | `https://wxyz.nganjukkab.go.id/PosAwarAwar/streams/6jWxq0WHYCSzLfvs1786673420732.m3u8` |
+| 234 | `nganjuk-atcs-pos-polisi-wilangan-wilangan-timur` | Pos Polisi Wilangan - Wilangan Timur | HLS | `https://wxyz.nganjukkab.go.id/WilanganPolsek/streams/pmUkY8OtwbllzjxC1786673462336.m3u8` |
+| 235 | `nganjuk-atcs-pos-polisi-wilangan-wilangan-barat` | Pos Polisi Wilangan - Wilangan Barat | HLS | `https://wxyz.nganjukkab.go.id/WilanganPolsek/streams/O9MM1zgPETGD6Ga51786673462007.m3u8` |
+| 236 | `nganjuk-atcs-sedudo-sedudo-utara` | Sedudo - Sedudo Utara | HLS | `https://wxyz.nganjukkab.go.id/SidorejoSawahan/streams/6txPJ5QtsiAH0P3s1786673425923.m3u8` |
+| 237 | `nganjuk-atcs-monumen-anjukladang-terminal-nganjuk-monumen-utara` | Monumen Anjukladang (Terminal Nganjuk) - Monumen Utara | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/TqvLsryzYrqb0R3U1786673375236.m3u8` |
+| 238 | `nganjuk-atcs-monumen-anjukladang-terminal-nganjuk-monumen-selatan` | Monumen Anjukladang (Terminal Nganjuk) - Monumen Selatan | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/VyIhaZCu8lCdkco21786673375560.m3u8` |
+| 239 | `nganjuk-atcs-monumen-anjukladang-terminal-nganjuk-monumen-tl-barat` | Monumen Anjukladang (Terminal Nganjuk) - Monumen TL Barat | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/UpygH7hwfNmUnoiM1786673376209.m3u8` |
+| 240 | `nganjuk-atcs-monumen-anjukladang-terminal-nganjuk-monumen-tl-timur` | Monumen Anjukladang (Terminal Nganjuk) - Monumen TL Timur | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/WjmLq4HtNqEQDRkR1786673375884.m3u8` |
+| 241 | `nganjuk-atcs-monumen-anjukladang-terminal-nganjuk-jembatan-dondong-timur` | Monumen Anjukladang (Terminal Nganjuk) - Jembatan Dondong Timur | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/5a8ZOphEnKWy3Jyp1786673376859.m3u8` |
+| 242 | `nganjuk-atcs-monumen-anjukladang-terminal-nganjuk-jembatan-dondong-barat` | Monumen Anjukladang (Terminal Nganjuk) - Jembatan Dondong Barat | HLS | `https://wxyz.nganjukkab.go.id/Dungdet/streams/JId7FZFXQvBtQQpY1786673374912.m3u8` |
+| 243 | `nganjuk-atcs-dam-tiripan-pintu-air` | Dam Tiripan – Pintu.Air | HLS | `https://wxyz.nganjukkab.go.id/TLTiripan/streams/9dz2Rvkkj5U7rYTv1786673459732.m3u8` |
+| 244 | `nganjuk-atcs-dam-tiripan-jembatan-timur` | Dam Tiripan – Jembatan Timur | HLS | `https://wxyz.nganjukkab.go.id/TLTiripan/streams/0SIBGf0ktPkMzUtg1786673460383.m3u8` |
+| 245 | `nganjuk-atcs-dam-tiripan-jembatan-barat` | Dam Tiripan – Jembatan Barat | HLS | `https://wxyz.nganjukkab.go.id/TLTiripan/streams/S3ypXsqid1Br5zCU1786673460059.m3u8` |
+| 246 | `nganjuk-atcs-dam-badug-pintu-air` | DAM Badug - Pintu Air | HLS | `https://wxyz.nganjukkab.go.id/DamBadug/streams/7tYRPcHZLEdcZYqu1786673372962.m3u8` |
+| 247 | `nganjuk-atcs-dam-badug-timur` | DAM Badug - Timur | HLS | `https://wxyz.nganjukkab.go.id/DamBadug/streams/lbO4S2mQyBI2gUUg1786673373607.m3u8` |
+| 248 | `nganjuk-atcs-dam-badug-selatan` | DAM Badug - Selatan | HLS | `https://wxyz.nganjukkab.go.id/DamBadug/streams/j0eR5pkTNbi5D6gZ1786673372639.m3u8` |
+| 249 | `nganjuk-atcs-dam-badug-jembatan-utara` | DAM Badug - Jembatan Utara | HLS | `https://wxyz.nganjukkab.go.id/DamBadug/streams/GYMcNLFMbMTY0mnL1786673373285.m3u8` |
+| 250 | `nganjuk-atcs-dam-rejoso-pintu-air` | DAM Rejoso - Pintu Air | HLS | `https://wxyz.nganjukkab.go.id/REJOSO/streams/q1YMrZxE4DLMMTTG1786673421380.m3u8` |
+| 251 | `nganjuk-atcs-dam-rejoso-jembatan-utara` | DAM Rejoso - Jembatan Utara | HLS | `https://wxyz.nganjukkab.go.id/REJOSO/streams/qfsabs1Hxpdvt2cl1786673422355.m3u8` |
+| 252 | `nganjuk-atcs-dam-rejoso-jembatan-selatan` | DAM Rejoso - Jembatan Selatan | HLS | `https://wxyz.nganjukkab.go.id/REJOSO/streams/PZxBX3BbNxscUSnN1786673422032.m3u8` |
+| 253 | `nganjuk-atcs-traffic-light-guyangan-guyangan-selatan` | Traffic Light Guyangan - Guyangan Selatan | HLS | `https://wxyz.nganjukkab.go.id/GUYANGAN/streams/c56rHEmdfwLE2uTp1786673382060.m3u8` |
+| 254 | `nganjuk-atcs-traffic-light-guyangan-guyangan-utara` | Traffic Light Guyangan - Guyangan Utara | HLS | `https://wxyz.nganjukkab.go.id/GUYANGAN/streams/Xv1fbKdxpV7rQYTP1786673381738.m3u8` |
+| 255 | `nganjuk-atcs-traffic-light-guyangan-guyangan-barat` | Traffic Light Guyangan - Guyangan Barat | HLS | `https://wxyz.nganjukkab.go.id/GUYANGAN/streams/sFfzKQUaJwRxO0nY1786673382707.m3u8` |
+| 256 | `nganjuk-atcs-traffic-light-guyangan-guyangan-timur` | Traffic Light Guyangan - Guyangan Timur | HLS | `https://wxyz.nganjukkab.go.id/GUYANGAN/streams/lEQrKeQzAiHMRomW1786673382383.m3u8` |
+| 257 | `nganjuk-atcs-pasar-kertosono-depan` | Pasar Kertosono Depan | HLS | `https://wxyz.nganjukkab.go.id/PasarKertosono/streams/aP4IvEAnuy2LBQ491786673412276.m3u8` |
+| 258 | `nganjuk-atcs-pasar-kertosono-timur` | Pasar Kertosono Timur | HLS | `https://wxyz.nganjukkab.go.id/PasarKertosono/streams/SLvYO0fq3KcmROW51786673412605.m3u8` |
+| 259 | `nganjuk-atcs-pasar-kertosono-barat` | Pasar Kertosono Barat | HLS | `https://wxyz.nganjukkab.go.id/PasarKertosono/streams/pt4EPHgCDkKlVMQL1786673411953.m3u8` |
+| 260 | `nganjuk-atcs-ngrami-utara` | Ngrami Utara | HLS | `https://wxyz.nganjukkab.go.id/NGRAMI/streams/BL5kWumrGw2gpf3Y1786673409340.m3u8` |
+| 261 | `nganjuk-atcs-ngrami-timur` | Ngrami Timur | HLS | `https://wxyz.nganjukkab.go.id/NGRAMI/streams/QE4kk5C8DdXcTmUa1786673409667.m3u8` |
+| 262 | `nganjuk-atcs-ngrami-selatan` | Ngrami Selatan | HLS | `https://wxyz.nganjukkab.go.id/NGRAMI/streams/IdVdfeSscVcfvASG1786673409015.m3u8` |
+| 263 | `nganjuk-atcs-ngrami-barat` | Ngrami Barat | HLS | `https://wxyz.nganjukkab.go.id/NGRAMI/streams/35CsBLIE80w4ggew1786673409991.m3u8` |
+| 264 | `nganjuk-atcs-pasar-bagor-barat` | Pasar Bagor Barat | HLS | `https://wxyz.nganjukkab.go.id/PasarBagor/streams/soe6noUls8aS2FcF1786673410318.m3u8` |
+| 265 | `nganjuk-atcs-pasar-bagor-timur` | Pasar Bagor Timur | HLS | `https://wxyz.nganjukkab.go.id/PasarBagor/streams/EFPlnOSflosCmE9k1786673410645.m3u8` |
+| 266 | `nganjuk-atcs-baron-rth-umkm` | Baron RTH UMKM | HLS | `https://wxyz.nganjukkab.go.id/testings/streams/JAQEpS2bXLwP50y71786673449644.m3u8` |
+| 267 | `nganjuk-atcs-baron-rth-dalam` | Baron RTH Dalam | HLS | `https://wxyz.nganjukkab.go.id/testings/streams/HWWXDeFXni7nZxsO1786673449970.m3u8` |
+| 268 | `nganjuk-atcs-baron-timur` | Baron Timur | HLS | `https://wxyz.nganjukkab.go.id/testings/streams/E6YTyIFHXm91RR5p1786673451918.m3u8` |
+| 269 | `nganjuk-atcs-baron-timur-2` | Baron Timur 2 | HLS | `https://wxyz.nganjukkab.go.id/testings/streams/72gM7KeHADEwwufW1786673450947.m3u8` |
+| 270 | `nganjuk-atcs-baron-tl-barat` | Baron TL Barat | HLS | `https://wxyz.nganjukkab.go.id/testings/streams/6ejygqBdQzMmzDOh1786673449321.m3u8` |
+| 271 | `nganjuk-atcs-klinter-mentaos` | Klinter Mentaos | HLS | `https://wxyz.nganjukkab.go.id/Nglawak/streams/tBJy8doULe0ku9Yt1786673405436.m3u8` |
+| 272 | `nganjuk-atcs-jembatan-klinter` | Jembatan Klinter | HLS | `https://wxyz.nganjukkab.go.id/Nglawak/streams/Z4eQidxCc6nULDPB1786673406411.m3u8` |
+| 273 | `nganjuk-atcs-gondang-tl-barat` | Gondang TL Barat | HLS | `https://wxyz.nganjukkab.go.id/Gondang/streams/dnie4z5BiJFEHwS11786673380105.m3u8` |
+| 274 | `nganjuk-atcs-gondang-pasar-timur` | Gondang Pasar Timur | HLS | `https://wxyz.nganjukkab.go.id/Gondang/streams/xGo2Mv2qeYL47vuu1786673380429.m3u8` |
+| 275 | `nganjuk-atcs-gondang-pasar-barat` | Gondang Pasar Barat | HLS | `https://wxyz.nganjukkab.go.id/Gondang/streams/qYfjD2PHBX0Nelp61786673379781.m3u8` |
+| 276 | `nganjuk-atcs-mojokendil-perempatan-barat` | Mojokendil Perempatan Barat | HLS | `https://wxyz.nganjukkab.go.id/Mojokendil/streams/9UpzVii6KTJrApYb1786673397955.m3u8` |
+| 277 | `nganjuk-atcs-mojokendil-perempatan-utara` | Mojokendil Perempatan Utara | HLS | `https://wxyz.nganjukkab.go.id/Mojokendil/streams/adLH4lSDw003XVXq1786673398930.m3u8` |
+| 278 | `nganjuk-atcs-mojokendil-perempatan-selatan` | Mojokendil Perempatan Selatan | HLS | `https://wxyz.nganjukkab.go.id/Mojokendil/streams/VM9GRVWtoEjZnzdz1786673399254.m3u8` |
+| 279 | `nganjuk-atcs-mojokendil-perempatan-timur` | Mojokendil Perempatan Timur | HLS | `https://wxyz.nganjukkab.go.id/Mojokendil/streams/buw0iI14tc4jdcO51786673399578.m3u8` |
+| 280 | `nganjuk-atcs-mojokendil-sumbersari-selatan` | Mojokendil - Sumbersari Selatan | HLS | `https://wxyz.nganjukkab.go.id/Mojokendil/streams/KhqKkIXCu7qy7bah1786673398603.m3u8` |
+| 281 | `nganjuk-atcs-mojokendil-sumbersari-barat` | Mojokendil - Sumbersari Barat | HLS | `https://wxyz.nganjukkab.go.id/Mojokendil/streams/T0BXbwsswnxFEjAM1786673399904.m3u8` |
+| 282 | `nganjuk-atcs-mojokendil-sumbersari-timur` | Mojokendil - Sumbersari Timur | HLS | `https://wxyz.nganjukkab.go.id/Mojokendil/streams/vD9Hz0JTLXU1NhX81786673398280.m3u8` |
+| 283 | `nganjuk-atcs-perum-bromo-pintu-masuk` | Perum Bromo - Pintu Masuk | HLS | `https://wxyz.nganjukkab.go.id/PerumBromo/streams/BMc53iozYF1oqkuc1786673417483.m3u8` |
+| 284 | `nganjuk-atcs-perum-bromo-jalur-utama` | Perum Bromo - Jalur Utama | HLS | `https://wxyz.nganjukkab.go.id/PerumBromo/streams/UgbQd5V0tt6YdhID1786673416832.m3u8` |
+| 285 | `nganjuk-atcs-perum-bromo-bromo-vii` | Perum Bromo - Bromo VII | HLS | `https://wxyz.nganjukkab.go.id/PerumBromo/streams/s8sACDnVNboPUHup1786673416180.m3u8` |
+| 286 | `nganjuk-atcs-perum-bromo-bromo-viii` | Perum Bromo - Bromo VIII | HLS | `https://wxyz.nganjukkab.go.id/PerumBromo/streams/DqQPvaLJ0MvyX86O1786673416504.m3u8` |
+| 287 | `nganjuk-atcs-perum-bromo-jalur-utama-barat` | Perum Bromo - Jalur Utama Barat | HLS | `https://wxyz.nganjukkab.go.id/PerumBromo/streams/KKZZxPVx3ZPkG8H21786673417158.m3u8` |
+| 288 | `nganjuk-atcs-perum-bromo-merapi-4-barat` | Perum Bromo - Merapi 4 Barat | HLS | `https://wxyz.nganjukkab.go.id/PerumBromo/streams/4DgrBJbLxTG7bMvC1786673417810.m3u8` |
+| 289 | `nganjuk-atcs-perum-bromo-merapi-4-selatan` | Perum Bromo - Merapi 4 Selatan | HLS | `https://wxyz.nganjukkab.go.id/PerumBromo/streams/jhKSrvGcwlzLPelQ1786673418133.m3u8` |
+
+### Garut (15)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `garut-atcs-simpang-5` | Simpang 5 | HLS | `https://cctv.garutkab.go.id/streams/cam_1787539233486199198/live.m3u8` |
+| 2 | `garut-atcs-petigaan-pengkolan` | Petigaan Pengkolan | HLS | `https://cctv.garutkab.go.id/streams/cam_1787539218405620248/live.m3u8` |
+| 3 | `garut-atcs-sukadana` | Sukadana | HLS | `https://cctv.garutkab.go.id/streams/cam_1787539189281403326/live.m3u8` |
+| 4 | `garut-atcs-simpang-limbangan` | Simpang Limbangan | HLS | `https://cctv.garutkab.go.id/streams/cam_1787539149377075528/live.m3u8` |
+| 5 | `garut-atcs-perempatan-bjb` | Perempatan BJB | HLS | `https://cctv.garutkab.go.id/streams/cam_1787539119128930509/live.m3u8` |
+| 6 | `garut-atcs-simpang-malangbong` | Simpang Malangbong | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538646306711165/live.m3u8` |
+| 7 | `garut-atcs-cipanas-harmoni` | Cipanas Harmoni | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538564655227152/live.m3u8` |
+| 8 | `garut-atcs-cipanas-pertigaan` | Cipanas pertigaan | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538546724229283/live.m3u8` |
+| 9 | `garut-atcs-perempatan-sigobing` | Perempatan Sigobing | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538532004486371/live.m3u8` |
+| 10 | `garut-atcs-bunderan-suci` | Bunderan Suci | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538464907719343/live.m3u8` |
+| 11 | `garut-atcs-maktal-pos` | Maktal pos | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538446742338235/live.m3u8` |
+| 12 | `garut-atcs-jembatan-maktal` | Jembatan Maktal | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538398416470636/live.m3u8` |
+| 13 | `garut-atcs-kadungora` | Kadungora | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538341418903270/live.m3u8` |
+| 14 | `garut-atcs-wanaraja` | Wanaraja | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538293152387236/live.m3u8` |
+| 15 | `garut-atcs-alun-alun-tarogong` | Alun Alun Tarogong | HLS | `https://cctv.garutkab.go.id/streams/cam_1787538200924155479/live.m3u8` |
+
+### Lebak (10)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `lebak-atcs-jl-alun-alun-selatan-1-air-mancur` | Jl. Alun-Alun Selatan - 1 (Air Mancur) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-004/main/index.m3u8` |
+| 2 | `lebak-atcs-jl-alun-alun-selatan-2-simpang-1` | Jl. Alun-Alun Selatan - 2 (Simpang 1) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-005/main/index.m3u8` |
+| 3 | `lebak-atcs-jl-alun-alun-selatan-3-simpang-2` | Jl. Alun-Alun Selatan - 3 (Simpang 2) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-006/main/index.m3u8` |
+| 4 | `lebak-atcs-jl-kaum-1-arah-utara` | Jl. Kaum - 1 (Arah Utara) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-001/main/index.m3u8` |
+| 5 | `lebak-atcs-jl-kaum-2-arah-timur` | Jl. Kaum - 2 (Arah Timur) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-002/main/index.m3u8` |
+| 6 | `lebak-atcs-jl-r-m-nata-atmaja-1-simpang-1` | Jl. R.M. Nata Atmaja - 1 (Simpang 1) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-007/main/index.m3u8` |
+| 7 | `lebak-atcs-jl-r-m-nata-atmaja-2-simpang-2` | Jl. R.M. Nata Atmaja - 2 (Simpang 2) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-008/main/index.m3u8` |
+| 8 | `lebak-atcs-jl-r-m-nata-atmaja-3-pintu-masuk-alun-alun-timur` | Jl. R.M. Nata Atmaja - 3 (Pintu Masuk Alun-alun Timur) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-009/main/index.m3u8` |
+| 9 | `lebak-atcs-jl-r-t-hardiwinangun-1-simpang-tibum-timur` | Jl. R.T. Hardiwinangun - 1 (Simpang Tibum Timur) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-010/main/index.m3u8` |
+| 10 | `lebak-atcs-jl-r-t-hardiwinangun-2-simpang-tibum-balong` | Jl. R.T. Hardiwinangun - 2 (Simpang Tibum Balong) | HLS | `https://cctv.lebakkab.go.id/hls/CAM-011/main/index.m3u8` |
+
+### Ciamis (14)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `ciamis-atcs-simpang-tonjong-arah-alun-alun` | Simpang Tonjong Arah Alun Alun | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/2lXC4ckpEIMOOeu812101585077277.m3u8` |
+| 2 | `ciamis-atcs-simpang-ramona-arah-alun-alun` | Simpang Ramona Arah Alun alun | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/2qLLaZwZ84dVBWiI11686757500847.m3u8` |
+| 3 | `ciamis-atcs-simpang-ramona-arah-stasiun` | Simpang Ramona Arah Stasiun | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/9eeihg8mCPjdSPZA11438123584949.m3u8` |
+| 4 | `ciamis-atcs-simpang-pasar-ciamis-arah-graha` | Simpang Pasar Ciamis Arah Graha | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/Gil7iBjt6ifeZweD11492401663749.m3u8` |
+| 5 | `ciamis-atcs-simpang-pahlawan-arah-ciamis` | Simpang Pahlawan Arah Ciamis | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/T1RDCka4hOT8XaYA12331511488363.m3u8` |
+| 6 | `ciamis-atcs-simpang-ramona-arah-pusaka` | Simpang Ramona Arah Pusaka | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/b9oVcRmb6mygovh711323506940850.m3u8` |
+| 7 | `ciamis-atcs-simpang-pahlawan-arah-benteng` | Simpang Pahlawan Arah Benteng | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/jfBkbIf4VOZN1pqr12222132016316.m3u8` |
+| 8 | `ciamis-atcs-simpang-rumah-sakit` | Simpang Rumah Sakit | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/qICgFGuVziCYmcpL29436246801255.m3u8` |
+| 9 | `ciamis-atcs-simpang-pahlawan-arah-tasik` | Simpang Pahlawan Arah Tasik | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/X05ielUCi3yg0qGw11383012047454.m3u8` |
+| 10 | `ciamis-atcs-simpang-tonjong-arah-tyara` | Simpang Tonjong Arah Tyara | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/XMUXif4e7LYm1dgs11233744357045.m3u8` |
+| 11 | `ciamis-atcs-simpang-cirahong-arah-pahlawan` | Simpang Cirahong Arah Pahlawan | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/ZWkyJ1Y0nbyfPDX6115497951775580.m3u8` |
+| 12 | `ciamis-atcs-simpang-pusaka-arah-ramona` | Simpang Pusaka Arah Ramona | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/lwIqNcCk4X9zcERz12099901714808.m3u8` |
+| 13 | `ciamis-atcs-sp-lokasana` | SP. Lokasana | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/JxZImmEqsMsGIkvl11101292506546.m3u8` |
+| 14 | `ciamis-atcs-simpang-lokasana-arah-alun-alun` | Simpang Lokasana Arah Alun Alun | HLS | `https://ams.ciamiskab.go.id:5443/LiveApp/streams/6iDzPLcO3yq4pBzp11977624022919.m3u8` |
+
+### Pemalang (12)
+
+| # | ID | Nama | Format | URL |
+|---:|---|---|---|---|
+| 1 | `pemalang-atcs-alun-alun-pemalang` | Alun-Alun Pemalang | HLS | `https://stream.pemalangkab.go.id/alunalun/alunalun1.m3u8` |
+| 2 | `pemalang-atcs-masjid-agung` | Masjid Agung | HLS | `https://stream.pemalangkab.go.id/masjidagung/masjid1.m3u8` |
+| 3 | `pemalang-atcs-depan-pendopo-1` | Depan Pendopo 1 | HLS | `https://stream.pemalangkab.go.id/2026/depanpendopo1/depanpendopo1.m3u8` |
+| 4 | `pemalang-atcs-beji-arah-timur` | Beji Arah Timur | HLS | `https://stream.pemalangkab.go.id/dishub/bejitimur/bejitimur.m3u8` |
+| 5 | `pemalang-atcs-bojongbata-arah-barat` | Bojongbata Arah Barat | HLS | `https://stream.pemalangkab.go.id/dishub/bojongbarat/bojongbarat.m3u8` |
+| 6 | `pemalang-atcs-bojongbata-arah-utara` | Bojongbata Arah Utara | HLS | `https://stream.pemalangkab.go.id/dishub/bojongutara/bojongutara.m3u8` |
+| 7 | `pemalang-atcs-petarukan-arah-barat` | Petarukan Arah Barat | HLS | `https://stream.pemalangkab.go.id/dishub/petarukanbarat/petarukanbarat.m3u8` |
+| 8 | `pemalang-atcs-petarukan-arah-timur` | Petarukan Arah Timur | HLS | `https://stream.pemalangkab.go.id/dishub/petarukantimur/petarukantimur.m3u8` |
+| 9 | `pemalang-atcs-tiptop-selatan` | Tiptop Selatan | HLS | `https://stream.pemalangkab.go.id/dishub/tiptopsel/tiptopsel.m3u8` |
+| 10 | `pemalang-atcs-depan-pendopo-2` | Depan Pendopo 2 | HLS | `https://stream.pemalangkab.go.id/2026/depanpendopo2/depanpendopo2.m3u8` |
+| 11 | `pemalang-atcs-randudongkal` | Randudongkal | HLS | `https://stream.pemalangkab.go.id/2025/randudongkal/randudongkal.m3u8` |
+| 12 | `pemalang-atcs-warungpring` | Warungpring | HLS | `https://stream.pemalangkab.go.id/2025/warungpring/warungpring.m3u8` |
 
 ## Jalan tol
 
