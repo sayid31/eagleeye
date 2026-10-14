@@ -1151,7 +1151,7 @@ speech-to-speech API, so Claude is paired with the browser's own
   Semarang-Batang: KM 347.4 at Semarang; Indrapura-Kisaran: KM 86.9 offset so KM 125-132 sits near Kisaran;
   Dalam Kota (JTC): Cawang to Pluit via Tomang, the camera KM scaled linearly onto the 18.3 km OSM chain as if the road were 20 km (Wikipedia interchange KMs disagree with that by up to ~1 km);
   Binjai-Langsa: KM 17.0 at Binjai; Sigli-Banda Aceh: chain from the Banda Aceh end, KM = chain km; the Sumatra and
-  Kalimantan corridors use the portal's own KM against the OSM chain from the toll start; Pejagan-Pemalang: portal KM 250-306 against the OSM chain with KM 250 at Pejagan; Palimanan-Kanci: KM 194.75-211.4 on a 26.3 km chain; Ciawi-Sukabumi: chain from the Ciawi end with KM 46 at km 0). All origins are assumptions,
+  Kalimantan corridors use the portal's own KM against the OSM chain from the toll start; Pejagan-Pemalang, Pemalang-Batang, Palimanan-Kanci and Ciawi-Sukabumi: piecewise-linear KM calibrated against OSM `motorway_junction` refs projected onto the OSM chain, which agree with the interchange KMs on Wikipedia (Brebes Timur 268, Tegal 279, Pemalang 312, Bojong 331; Palimanan 188, Plumbon 194, Ciperna 203, Kanci 214; Ciawi 47, Caringin 53, Cigombong 60; residual about 1 km); Palimanan-Kanci KM 215 continues on the Kanci-Pejagan chain). All origins are assumptions,
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)

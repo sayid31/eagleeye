@@ -101,10 +101,10 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 23 | Indralaya-Prabumulih Toll | 9 | HLS |
 | 24 | Padaleunyi Toll | 9 | HLS |
 | 25 | Cipali Toll (Cikopo-Palimanan) | 15 | HLS (`cctvastra.lintasmarga.com`; KM asumsi 70–188) |
-| 26 | Pejagan-Pemalang Toll | 22 | HLS (`pptrlive.co.id`; KM 250–306, titik awal asumsi) |
-| 27 | Ciawi-Sukabumi Toll | 6 | HLS (`www.tjt-info.co.id`; KM 47–55, titik awal asumsi) |
-| 28 | Palimanan-Kanci Toll | 4 | HLS (KM 194,75–211,4, titik awal asumsi) |
-| 29 | Pemalang-Batang Toll | 3 | HLS (`live.pbtr.co.id`; KM 307, 319, 344) |
+| 26 | Pejagan-Pemalang Toll | 22 | HLS (`pptrlive.co.id`; KM 250–306, dikalibrasi ke KM interchange) |
+| 27 | Ciawi-Sukabumi Toll | 6 | HLS (`www.tjt-info.co.id`; KM 47–60, dikalibrasi ke KM interchange) |
+| 28 | Palimanan-Kanci Toll | 4 | HLS (KM 194,75–215, dikalibrasi ke KM interchange) |
+| 29 | Pemalang-Batang Toll | 3 | HLS (`live.pbtr.co.id`; KM 307, 319, 344, dikalibrasi ke KM interchange) |
 
 ## Bukan video live (tidak dihitung di atas)
 

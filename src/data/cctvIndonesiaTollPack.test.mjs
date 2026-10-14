@@ -78,8 +78,8 @@ const BMTOL_CORRIDORS = [
   { prefix: 'binsa', cityId: 'tol-binjai-langsa', min: 8, lat: [3.67, 3.74], lon: [98.48, 98.56], host: /^https:\/\/pub2?\.hk-opt\.com\// },
   { prefix: 'jtc', cityId: 'tol-dalam-kota-jakarta', min: 18, lat: [-6.27, -6.12], lon: [106.76, 106.89], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'pejalang', cityId: 'tol-pejagan-pemalang', min: 20, lat: [-6.95, -6.88], lon: [108.88, 109.44], host: /^https:\/\/pptrlive\.co\.id\/memfs\/[0-9a-f-]{36}\.m3u8$/ },
-  { prefix: 'pembat', cityId: 'tol-pemalang-batang', min: 3, lat: [-6.95, -6.91], lon: [109.42, 109.75], host: /^https:\/\/live\.pbtr\.co\.id:5443\/LiveApp\/streams\/0\d{3}\.m3u8$/ },
-  { prefix: 'palkan', cityId: 'tol-palimanan-kanci', min: 4, lat: [-6.81, -6.69], lon: [108.42, 108.62], host: /^https:\/\/jmlive\.jasamarga\.com\// },
+  { prefix: 'pembat', cityId: 'tol-pemalang-batang', min: 3, lat: [-6.95, -6.91], lon: [109.38, 109.75], host: /^https:\/\/live\.pbtr\.co\.id:5443\/LiveApp\/streams\/0\d{3}\.m3u8$/ },
+  { prefix: 'palkan', cityId: 'tol-palimanan-kanci', min: 4, lat: [-6.81, -6.69], lon: [108.42, 108.66], host: /^https:\/\/jmlive\.jasamarga\.com\// },
   { prefix: 'bocimi', cityId: 'tol-ciawi-sukabumi', min: 6, lat: [-6.77, -6.64], lon: [106.79, 106.86], host: /^https:\/\/www\.tjt-info\.co\.id\// },
   { prefix: 'cipali', cityId: 'tol-cipali', min: 15, lat: [-6.75, -6.40], lon: [107.46, 108.45], host: /^https:\/\/cctvastra\.lintasmarga\.com\/barat\/KM_[0-9A-Za-z+_]+\.m3u8$/ },
 ];
@@ -97,6 +97,20 @@ for (const c of BMTOL_CORRIDORS) {
     }
   });
 }
+
+test('Pejagan-Pemalang, Pemalang-Batang and Palimanan-Kanci: KM grows eastward and sits near the Wikipedia/OSM interchange KMs', () => {
+  const kmOf = (row) => { const m = /-km-(\d+)-(\d{3})/.exec(row.id); return Number(m[1]) + Number(m[2]) / 1000; };
+  for (const prefix of ['pejalang', 'pembat', 'palkan']) {
+    const rows = bmtol.filter((row) => row.id.startsWith(`bmtol-unofficial-${prefix}-`)).sort((a, b) => kmOf(a) - kmOf(b));
+    for (let i = 1; i < rows.length; i += 1) {
+      assert.ok(rows[i].lon >= rows[i - 1].lon - 0.001, `${rows[i].id} lies west of ${rows[i - 1].id}`);
+    }
+  }
+  // Interchange anchors (OSM motorway_junction ref vs Wikipedia KM): Brebes Timur 268 at lon ~109.06, Tegal 279 at ~109.14, Pemalang 312 at ~109.43.
+  const lonAt = (id) => bmtol.find((row) => row.id === id).lon;
+  assert.ok(Math.abs(lonAt('bmtol-unofficial-pejalang-km-268-000-a') - 109.062) < 0.01);
+  assert.ok(Math.abs(lonAt('bmtol-unofficial-pembat-km-307-000') - 109.39) < 0.02, 'KM 307 is 5 km before the Pemalang interchange');
+});
 
 test('Bina Marga toll batch 2 never duplicates a stream already used by a binamarga-unofficial row', () => {
   const earlier = new Set(pack.filter((row) => row.id.startsWith('binamarga-unofficial-')).map((row) => row.url));
