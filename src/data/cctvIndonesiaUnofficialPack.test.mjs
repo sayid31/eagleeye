@@ -35,11 +35,12 @@ test('pack ids are unique and coordinates are finite and inside Indonesia', () =
 
 // The Surabaya ATCS origin only serves plain http on a bare IP:5000 (fetched server-side by
 // the proxy, so no mixed-content issue); every other row must be https.
-const PLAIN_HTTP_HOST = /^http:\/\/36\.66\.208\.101:5000\//;
+// Two pinned plain-http hosts: Surabaya and Kabupaten Karo, whose official pages embed these origins over http themselves.
+const PLAIN_HTTP_HOST = /^http:\/\/(36\.66\.208\.101:5000|72\.62\.122\.47:8888)\//;
 
-test('pack stream URLs are well-formed https (one pinned plain-http host) and pass the HLS rel-origin guard for their own host', () => {
+test('pack stream URLs are well-formed https (two pinned plain-http hosts) and pass the HLS rel-origin guard for their own host', () => {
   for (const row of pack) {
-    const plainHttpOk = row.id.startsWith('sby-atcs-') && PLAIN_HTTP_HOST.test(row.url);
+    const plainHttpOk = /^(sby|karo)-atcs-/.test(row.id) && PLAIN_HTTP_HOST.test(row.url);
     assert.ok(plainHttpOk || /^https:\/\/[^/]/.test(row.url), `${row.id} malformed url`);
     const sibling = new URL('seg0.ts', row.url).href;
     assert.equal(isAllowedRelOrigin(sibling, row.url), true, row.id);

@@ -41,7 +41,7 @@ How to read this:
 
 ### ⚠️ Unofficial/demo-only: Indonesia CCTV (Jakarta, Bandung, Denpasar, Surabaya, Cianjur, Mataram, Pasuruan, Sumedang, Malang, Yogyakarta, Surakarta, Pekanbaru, Bukittinggi, Solok, Padang, Padang Panjang, Pesisir Selatan, Bandung Barat, Magelang, Semarang, Cianjur, Tangerang Kabupaten, Banjar, Tasikmalaya, Banyumas, Banten, Kota Serang)
 
-1672 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
+2372 cameras (`config/cctv_sources.indonesia_unofficial.json`) stream real live
 video reverse-engineered via manual browser network inspection of public
 city CCTV portals (`jakcctv.jakarta.go.id`,
 `pelindung.bandung.go.id`, `binamarga.pu.go.id` CCTV Tol page,
@@ -60,6 +60,8 @@ deployment or redistribution**. The UI always shows a
 `⚠ UNOFFICIAL SOURCE` badge on these cameras (never folds into the generic
 status badge), and every row's `license` field repeats this disclaimer.
 Kota Serang (`cctv.serangkota.go.id`, 20 `serang-atcs-*` rows, plain HLS from `stream.serangkota.go.id`; its incomplete TLS chain is repaired with the bundled public GlobalSign intermediate) is in the pack on the same terms. Gresik (`cctvkanjeng.gresikkab.go.id`, 55 `gresik-atcs-*` rows) and Jombang (`cctv.jombangkab.go.id`, 16 `jombang-atcs-*` rows) are also in the pack: both are public pages of the local governments, positioned from their own published coordinates, and carry the same UNOFFICIAL badge and no stated licence. Gresik streams through an anonymous viewer session the dev proxy opens; Jombang's 2 h page token is read at run time and never stored. No credential is stored for either.
+
+The 2026-10-14 discovery sweep adds eight more public ATCS sites on the same terms (no agreement, internal demo only, no redistribution): Nganjuk (`wxyz.nganjukkab.go.id`, 289 `nganjuk-atcs-*`), Banjarbaru (`stream-backup.banjarbarukota.go.id`, 47), Jambi (`cctv.jambikota.go.id`, 19), Garut (`cctv.garutkab.go.id`, 15), Karo (`72.62.122.47:8888`, 12, plain http), Lebak (`cctv.lebakkab.go.id`, 10), Ciamis (`ams.ciamiskab.go.id:5443`, 14) and Pemalang (`stream.pemalangkab.go.id`, 12), plus 2 more `balangan-atcs-*`. The first six publish coordinates; Ciamis and Pemalang do not, so their positions are Nominatim (OpenStreetMap, ODbL) matches labelled `APPROX. LOCATION` / `CITY-LEVEL ONLY`. Only streams readable without a login, token or challenge are used. Revoke per site with its `<site>-atcs-*` prefix.
 
 Revoke instantly via `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0` or by deleting
 `config/cctv_sources.indonesia_unofficial.json` (or the file named by

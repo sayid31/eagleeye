@@ -11,7 +11,7 @@ const pack = JSON.parse(readFileSync(new URL('../../config/cctv_sources.indonesi
 // /api/cctv/media (2026-10-14); bounds are generous boxes around each administrative area.
 const SITES = [
   { prefix: 'bandaaceh', count: 47, lat: [5.50, 5.60], lon: [95.27, 95.34], host: /^https:\/\/(api\.bandaacehkota\.go\.id\/cctv|cctv-stream\.bandaacehkota\.info)\/memfs\/[0-9a-f-]{36}\.m3u8$/ },
-  { prefix: 'balangan', count: 36, lat: [-2.45, -2.25], lon: [115.40, 115.60], host: /^https:\/\/cctv\.balangankab\.go\.id\/hls\/[a-z0-9-]+\/index\.m3u8$/ },
+  { prefix: 'balangan', count: 38, lat: [-2.45, -2.25], lon: [115.30, 115.60], host: /^https:\/\/cctv\.balangankab\.go\.id\/hls\/[a-z0-9-]+\/index\.m3u8$/ },
   { prefix: 'banjarmasin', count: 33, lat: [-3.40, -3.26], lon: [114.55, 114.64], host: /^https:\/\/atcs\.banjarmasinkota\.go\.id\/stream\/[A-Za-z0-9_\-]+\/index\.m3u8$/ },
   { prefix: 'kobar', count: 22, lat: [-2.78, -2.64], lon: [111.60, 111.72], host: /^https:\/\/cctv\.kotawaringinbaratkab\.go\.id\/storage\/stream\/cctv\d+\/a\d+\.m3u8$/ },
   { prefix: 'tanahbumbu', count: 11, lat: [-3.80, -3.38], lon: [115.37, 116.03], host: /^https:\/\/atcs\.tanahbumbukab\.go\.id\/hls\/cctv_ch\d+\/index\.m3u8$/ },

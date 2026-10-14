@@ -1155,8 +1155,8 @@ speech-to-speech API, so Claude is paired with the browser's own
   not field-verified; heading = the
   local road bearing, `headingConfidence: 'low'`. Streams can go offline at any
   time. The remaining Bina Marga ruas (dozens of streams, mostly without a usable KM or without a reliable KM origin)
-  are deliberately not added; the global catalog cap is 3000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
-  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 2330 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
+  are deliberately not added; the global catalog cap is 4000 (`CCTV_MAX_SOURCES`, `DEFAULT_CCTV_MAX_SOURCES` in
+  `src/data/cctvSourceCatalog.mjs`, which also sizes the health map) and the full catalog now sits near 2750 rows; over the cap it is silently truncated (one `console.warn`), so check `/api/cctv/sources` after adding a pack. Why only the densest ruas:
   `docs/DECISIONS.md` ("Bina Marga toll batches 4-7"). Revoke with the `bmtol-unofficial-*` prefix.
 - **ATCS Denpasar rows (95, positions guessed)**: stream URLs
   (`https://atcs.denpasarkota.go.id/stream/<ID>/stream.m3u8`) were copied by
@@ -1289,6 +1289,19 @@ speech-to-speech API, so Claude is paired with the browser's own
   advancing playlist over three snapshots plus a segment over 10 KB through `/api/cctv/media`; Jombang a decodable, changing,
   non-placeholder frame through `/api/cctv/frame`. 19 Gresik cameras and 9 Jombang monitors are left out (down at source).
   Rationale: `docs/DECISIONS.md` ("ATCS Gresik and Jombang").
+- **ATCS discovery-sweep rows (420)**, `<site>-atcs-*`, plain HLS, no cookie, token, query string or credential, heading unknown, shared
+  sites spread ~45 m, elevation per camera from Open-Meteo. Found by checking the CCTV/ATCS subdomains of all 514 regencies and cities
+  (Permendagri 72/2019) and reading each site's public pages, scripts and JSON for m3u8 URLs and coordinates. `SOURCE-PUBLISHED LOCATION`
+  (the site publishes coordinates): Nganjuk 289 (`wxyz.nganjukkab.go.id/<app>/streams/<id>.m3u8`), Banjarbaru 47
+  (`stream-backup.banjarbarukota.go.id/<name>/index.m3u8`), Jambi 19 (`cctv.jambikota.go.id/stream/<n>/stream.m3u8`), Garut 15
+  (`cctv.garutkab.go.id/streams/cam_<n>/live.m3u8`), Karo 12 (plain **http** `72.62.122.47:8888/cam<n>/index.m3u8`; the only http host besides
+  Surabaya's, pinned by address in the pack tests), Lebak 10 (`cctv.lebakkab.go.id/hls/CAM-<n>/main/index.m3u8`). No published coordinates:
+  Ciamis 14 (`ams.ciamiskab.go.id:5443/LiveApp/streams/<id>.m3u8`) and Pemalang 12 (`stream.pemalangkab.go.id/...`) are `APPROX. LOCATION`
+  from Nominatim, plus 3 Pemalang cameras `CITY-LEVEL ONLY` around the Pendopo. Balangan gains 2 cameras (Tugu Gula Habang Lampihong
+  utama / area) that the source added later; 13 other listed Balangan cameras answer 404. Rule: advancing media sequence over three
+  probes plus a segment over 10 KB through `/api/cctv/media`. Not added: Wonosobo (per-viewer token), Brebes (API 401), Kudus, Samarinda and
+  Sukoharjo (challenge pages), Sibolga, Pematangsiantar, Sidoarjo smartcity, Indramayu, Kuningan, Tuban, Kebumen (no static HLS to read).
+  Rationale: `docs/DECISIONS.md` ("ATCS discovery sweep"). Revoke per site with its `<site>-atcs-*` prefix.
 - **ATCS Malang rows (199)**: `https://cctv.malangkota.go.id/cctv-stream/streams/<24 digits>.m3u8`. The origin
   answers 403 without a portal session, so these rows carry `portalSession: {bootstrapUrl, referer}`.
   `src/server/portalSession.mjs` (one store per `cctvProxy()`) GETs the bootstrap URL anonymously, follows up to 5

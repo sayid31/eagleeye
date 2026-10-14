@@ -7,10 +7,10 @@ Daftar kamera yang membawa **video langsung** (HLS/FLV) di EagleEye View, dihitu
 
 | | Jumlah |
 |---|---:|
-| **Total kamera video live** | **1952** |
-| Kota dan kabupaten (36 lokasi) | 1516 |
+| **Total kamera video live** | **2372** |
+| Kota dan kabupaten (44 lokasi) | 1936 |
 | Jalan tol (24 ruas) | 436 |
-| Format HLS | 1860 |
+| Format HLS | 2280 |
 | Format FLV (Surakarta) | 76 |
 | Format MJPEG (Jombang, ditampilkan sebagai gambar yang disegarkan) | 16 |
 
@@ -18,9 +18,9 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 
 | Label posisi | Kamera | Arti |
 |---|---:|---|
-| `APPROX. LOCATION` | 1087 | 651 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream dan Pati 4 dari koordinat agregator cctvnusantara.com, bukan dari sumber) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
-| `SOURCE-PUBLISHED LOCATION` | 624 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16, Kota Serang 20), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
-| `CITY-LEVEL ONLY` | 179 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
+| `APPROX. LOCATION` | 1110 | 674 kamera kota (dicari dari nama jalan/tempat; termasuk Kediri 15 dari geocoding slug stream, Pati 4 dari koordinat agregator cctvnusantara.com, dan Ciamis 14 serta Pemalang 9 dari geocoding Nominatim, bukan dari sumber) + 436 kamera tol (dari KM ruas, asumsi titik awal belum diverifikasi) |
+| `SOURCE-PUBLISHED LOCATION` | 1018 | koordinat dipublikasikan sumbernya sendiri (Magelang 74, Semarang 47, Bandung Barat 45, Cianjur 44, Bukittinggi 39, Tangerang Kab. 28, Banjar 20, Tasikmalaya 18, Banyumas 15, Padang Panjang 14, Banten 14, Pesisir Selatan 7, Banda Aceh 47, Balangan 36, Banjarmasin 33, Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19, Gresik 55, Jombang 16, Kota Serang 20, Nganjuk 289, Banjarbaru 47, Jambi 19, Garut 15, Karo 12, Lebak 10, dan Balangan menjadi 38), dipakai apa adanya, tidak disurvei ulang; arah tetap tidak diketahui |
+| `CITY-LEVEL ONLY` | 182 | diletakkan melingkar di sekitar pusat kota, tidak mewakili lokasi sebenarnya |
 | tanpa label tier | 62 | 60 Bandung, 1 Jakarta, 1 Denpasar: nama tidak memuat label tier; semuanya `headingConfidence: low` |
 
 ## Kota
@@ -53,7 +53,7 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 24 | Banyumas | 15 | HLS |
 | 25 | Banten (provinsi: Lebak, Bapenda, KP3B) | 14 | HLS |
 | 26 | Banda Aceh | 47 | HLS |
-| 27 | Balangan | 36 | HLS |
+| 27 | Balangan | 38 | HLS |
 | 28 | Banjarmasin | 33 | HLS (tertunda sekitar 30 detik) |
 | 29 | Kotawaringin Barat | 22 | HLS |
 | 30 | Tanah Bumbu | 11 | HLS |
@@ -63,6 +63,14 @@ Posisi kamera adalah **perkiraan**, bukan koordinat resmi. Tingkat label di data
 | 34 | Gresik | 55 | HLS on-demand (proxy membuka sesi penonton; sebagian kamera mati di sumber) |
 | 35 | Jombang | 16 | MJPEG ZoneMinder (token halaman dibaca saat dijalankan; 9 dari 25 monitor mati di sumber) |
 | 36 | Kota Serang | 20 | HLS (Ant Media; perlu CA perantara GlobalSign di `config/ca/`; 3 dari 23 mati di sumber) |
+| 37 | Nganjuk | 289 | HLS (`wxyz.nganjukkab.go.id`, koordinat dari sumber) |
+| 38 | Banjarbaru | 47 | HLS (`stream-backup.banjarbarukota.go.id`) |
+| 39 | Jambi (kota) | 19 | HLS (`cctv.jambikota.go.id`) |
+| 40 | Garut | 15 | HLS (`cctv.garutkab.go.id`) |
+| 41 | Ciamis | 14 | HLS (Ant Media :5443; posisi `APPROX. LOCATION`) |
+| 42 | Karo | 12 | HLS lewat http polos (`72.62.122.47:8888`, host yang dipin di tes) |
+| 43 | Lebak (kabupaten) | 10 | HLS (`cctv.lebakkab.go.id`) |
+| 44 | Pemalang | 12 | HLS (9 `APPROX. LOCATION`, 3 `CITY-LEVEL ONLY`) |
 
 ## Jalan tol
 
@@ -120,7 +128,9 @@ Pengecekan terakhir 2026-10-14 (batch Aceh/Kalimantan/Situbondo) dan 2026-10-13 
 | Pesisir Selatan | 1 | Kamera Carocok 1 hanya membalas "File Not Found"; Carocok 4 memakai stream yang sama dengan Carocok 3 sehingga disimpan sekali | tetap mati |
 | Jalan tol Cipali | 20 | rantai sertifikat TLS server tidak lengkap; Node menolaknya dan memaksa mematikan verifikasi TLS tidak sepadan untuk demo | belum dicek ulang |
 | Banyuwangi | tidak diketahui | `live.banyuwangikab.go.id` diblokir Cloudflare | butuh keputusan owner |
-| Ciamis | 15 | stream hidup, tetapi situs tidak menerbitkan koordinat | tidak ditambahkan |
+| Balangan (tambahan) | 13 | dari 15 URL yang belum masuk, 13 menjawab 404; 2 (Tugu Gula Habang) hidup dan sudah dimasukkan | dicek 2026-10-14 |
+| Wonosobo, Brebes, Kudus, Samarinda, Sukoharjo | tidak diketahui | token per penonton, API 401, atau tantangan WAF/Turnstile; tidak dilewati | tidak ditambahkan |
+| Sibolga, Pematangsiantar, Sidoarjo (smartcity), Indramayu, Kuningan, Tuban, Kebumen | tidak diketahui | tidak ada HLS statis yang bisa ditemukan (mediamtx tanpa path statis, hanya template string, satu stream saja, hanya API status, atau token stream) | tidak ditambahkan |
 | Kudus | 1 | hanya satu stream bawaan dan tanpa koordinat; daftar kameranya butuh kunci di JavaScript situs | tidak ditambahkan |
 | Medan, Kabupaten Bogor | tidak diketahui | daftar kamera hanya lewat API yang butuh client id/secret yang tertanam di JavaScript situs; tidak dipakai | tidak ditambahkan |
 | Jawa Tengah Dishub GIS | tidak diketahui | butuh login | tidak ditambahkan |
@@ -175,6 +185,8 @@ berhasil, satu di antaranya baru siap setelah 13 detik. Tidak ada perubahan kode
 
 ## Catatan
 
+- Batch penemuan 2026-10-14: dari 514 kabupaten/kota (Permendagri 72/2019) ditelusuri subdomain CCTV/ATCS, lalu halaman, JavaScript dan API publiknya dibaca untuk m3u8 dan koordinat. Delapan situs baru lolos probe 3 putaran (segmen valid, urutan media maju) dan pengambilan lewat `/api/cctv/media`: 418 kamera (Nganjuk 289, Banjarbaru 47, Jambi 19, Garut 15, Ciamis 14, Karo 12, Lebak 10, Pemalang 12) ditambah 2 kamera Balangan. Pemutaran di browser/globe belum diuji untuk batch ini.
+
 - 153 kamera batch 2026-10-14 (Banda Aceh, Balangan, Banjarmasin, Kotawaringin Barat, Tanah Bumbu, Situbondo) lolos probe langsung (3 putaran) dan pengambilan lewat `/api/cctv/media` di dev server. Pemutaran di browser/globe belum diuji untuk batch ini. Banda Aceh memuat banyak monitor taman/tinggi muka air; Banjarmasin tertunda sekitar 30 detik.
-- Katalog gabungan saat ini sekitar 2330 kamera (batas 3000; batas lama 2600 dinaikkan karena 153 kamera baru tidak akan muat bersama alokasi Austin/Caltrans/TfL). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
+- Katalog gabungan saat ini sekitar 2750 kamera (batas 4000; batas lama 3000 dinaikkan karena pack 2372 ditambah alokasi Austin/Caltrans/TfL dan cadangan tidak lagi muat). Kamera live yang dilaporkan sehat atau offline tergantung kondisi sumber pada saat itu; angka di atas adalah jumlah yang terdaftar, bukan jaminan semuanya menyala.
 - Hapus per kota dengan prefiks id-nya (misalnya `surakarta-atcs-*`), atau matikan seluruh paket dengan `CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`.

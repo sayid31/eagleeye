@@ -15,6 +15,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- 420 more live ATCS CCTV cameras from a sweep of all regencies and cities (UNOFFICIAL SOURCE, demo only, plain HLS, no login or cookie): Nganjuk 289,
+  Banjarbaru 47, Jambi 19, Garut 15, Ciamis 14, Karo 12, Lebak 10 and Pemalang 12, plus 2 new Balangan cameras. Nganjuk, Banjarbaru, Jambi, Garut, Karo and Lebak
+  carry source-published coordinates; Ciamis and Pemalang have none, so their markers are `APPROX. LOCATION` (Pemalang also 3 `CITY-LEVEL ONLY`). Karo is served over
+  plain http. The CCTV catalog cap rises from 3000 to 4000 (`DEFAULT_CCTV_MAX_SOURCES`) so the 2372-camera pack fits. Not added: Wonosobo, Brebes, Kudus,
+  Samarinda, Sukoharjo (per-viewer tokens, login or challenge pages). Per-site detail in `cctvLive.md`; the URL list is in `urlcctv.md` and `urlcctv.csv`.
+
 - 189 live ATCS CCTV cameras (UNOFFICIAL SOURCE, demo only), all plain HTTPS HLS with no login or cookie.
   168 carry their source-published coordinates: Banda Aceh 47, Balangan 36, Banjarmasin 33,
   Kotawaringin Barat 22, Tanah Bumbu 11, Situbondo 19 (on-demand streams that can drop out). 21 more have no
