@@ -158,7 +158,8 @@ _registerLayer(layerModule) {
 
 /**
    * Resolve a lazy entry's module exactly once, memoizing concurrent
-   * callers onto the same in-flight promise. No-ops (returns the module
+   * callers onto the same in-flight promise. A failed load is not cached, so a
+   * later call retries the loader. No-ops (returns the module
    * immediately) for an already-resolved or non-lazy entry — safe to call
    * unconditionally from any lifecycle-triggering path.
    * @param {object} entry Entry object from `this.layers`.
@@ -188,6 +189,12 @@ _registerLayer(layerModule) {
           entry.pendingParams = null;
         }
         return module;
+      }).catch((error) => {
+        // Drop the memoized rejection so the next lifecycle touch re-runs the
+        // loader. Caching it would pin a transient dynamic-import failure
+        // (e.g. ERR_NETWORK_CHANGED mid-load) until a full page reload.
+        entry.resolvePromise = null;
+        throw error;
       });
     }
     return entry.resolvePromise;
