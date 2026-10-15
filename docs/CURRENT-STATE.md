@@ -69,7 +69,11 @@ Historical planning documents may not match runtime behavior.
   `src/data/layerMetadata.js` is the single source of truth for each
   layer's toggle-panel metadata (`name`/`icon`/`source`/`showInTogglePanel`/
   `hasRowControls`), spread into `main.js`'s `registerLazy()` call so it
-  isn't duplicated inline.
+  isn't duplicated inline. A failed load (a dynamic `import()` that rejects,
+  for example on a network change) is not memoized: the entry's
+  `resolvePromise` is cleared, so the next enable or lifecycle touch runs
+  the loader again instead of failing until a page reload. The failing
+  call itself still reports the layer as not enabled.
 - `src/data/localLayers.js`'s bundled static datasets (dams, datacenters,
   submarine cables, FIRMS heatmap context) stay eagerly `register()`-ed —
   already lightweight, intentionally out of scope for lazy-loading.

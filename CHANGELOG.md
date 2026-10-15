@@ -7,6 +7,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- A data layer whose code failed to download (for example CCTV, after a network
+  change while the page was open) can now be turned on again without reloading the
+  page. Before, one failed download stayed cached and every later toggle failed the same way.
 - The empty green placeholder cards (for example "Malioboro North" beside live
   Yogyakarta cameras) no longer appear in cities that have live cameras. The 10
   synthetic seed cameras for Jakarta, Bandung, Denpasar, Surabaya and Yogyakarta
