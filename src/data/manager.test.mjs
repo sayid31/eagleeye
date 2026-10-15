@@ -3538,6 +3538,39 @@ test('concurrent enable triggers during resolution share the same in-flight load
   assert.equal(mgr.isEnabled('flights'), true);
 });
 
+test('a failed lazy import is not cached: the next enable retries the loader and succeeds', async () => {
+  const mgr = new DataLayerManager({});
+  const layer = makeLazyLayer('cctv');
+  let attempts = 0;
+  // First dynamic import fails (e.g. ERR_NETWORK_CHANGED while Vite serves the
+  // module); the second one succeeds. A cached rejected promise would make the
+  // layer un-enableable until a full page reload.
+  const flakyLoader = () => {
+    attempts++;
+    return attempts === 1
+      ? Promise.reject(new TypeError('Failed to fetch dynamically imported module'))
+      : layer.loader();
+  };
+  mgr.registerLazy({ ...layer.config, loader: flakyLoader });
+  const origWarn = console.warn;
+  console.warn = () => {}; // the manager logs the resolve failure by design
+  let first;
+  try {
+    first = await mgr.setEnabled('cctv', true);
+  } finally {
+    console.warn = origWarn;
+  }
+  assert.equal(first, false, 'first enable reports failure');
+  assert.equal(mgr.isEnabled('cctv'), false);
+  assert.equal(mgr.layers.get('cctv').resolvePromise, null, 'rejected promise must not stay cached');
+
+  const second = await mgr.setEnabled('cctv', true);
+  assert.equal(second, true, 'retry after the network recovers enables the layer');
+  assert.equal(attempts, 2, 'loader was invoked again');
+  assert.equal(layer.calls.init, 1);
+  assert.equal(mgr.isEnabled('cctv'), true);
+});
+
 test('setLayerParams on an unresolved lazy entry queues pendingParams instead of forcing a load', () => {
   const mgr = new DataLayerManager({});
   const layer = makeLazyLayer('cctv', {
