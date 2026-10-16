@@ -1,0 +1,426 @@
+/* Shell layout: top bar, left icon rail, grouped layer panel, dock, status bar.
+   Loaded after style.css, so it re-places existing elements rather than
+   editing their rules. Every selector is scoped to body.ee-shell, which
+   src/shell/shellController.js sets when the shell mounts. */
+
+body.ee-shell {
+  --left-stack-x: calc(var(--ee-rail-w) + 16px);
+  --left-stack-top: calc(var(--ee-topbar-h) + 16px);
+  --right-rail-x: 16px;
+}
+
+/* ---- top bar ---------------------------------------------------------- */
+#shell-topbar {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 120;
+  height: var(--ee-topbar-h);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 16px 0 232px;
+  background: var(--ee-bg);
+  border-bottom: 1px solid var(--ee-border);
+  font-family: var(--ee-font-sans);
+}
+
+.shell-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 1 520px;
+  margin: 0 auto;
+  height: 38px;
+  padding: 0 10px;
+  background: var(--ee-surface);
+  border: 1px solid var(--ee-border);
+  border-radius: var(--ee-radius-sm);
+  color: var(--ee-text-muted);
+}
+
+.shell-search:focus-within {
+  border-color: var(--ee-accent);
+}
+
+.shell-search input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  color: var(--ee-text);
+  font: 400 14px var(--ee-font-sans);
+}
+
+.shell-search input::placeholder {
+  color: var(--ee-text-muted);
+}
+
+/* The global :focus-visible ring is on the input; the wrapper shows it instead. */
+.shell-search input:focus-visible {
+  outline: none !important;
+}
+
+.shell-search:has(input:focus-visible) {
+  outline: 2px solid var(--ee-accent);
+  outline-offset: 2px;
+}
+
+.shell-search kbd {
+  padding: 2px 6px;
+  font-size: 11px;
+  color: var(--ee-text-muted);
+  border: 1px solid var(--ee-border);
+  border-radius: 4px;
+}
+
+.shell-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 12px;
+  background: var(--ee-surface);
+  border: 1px solid var(--ee-border);
+  border-radius: 999px;
+  color: var(--ee-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+#shell-health-degraded-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#shell-health-degraded-wrap[hidden] {
+  display: none;
+}
+
+.shell-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--ee-off);
+}
+
+.shell-dot[data-tone='ok'] { background: var(--ee-ok); }
+.shell-dot[data-tone='warn'] { background: var(--ee-warn); }
+
+/* Brand: the existing #title-bar, restyled into the bar's left slot. */
+body.ee-shell #title-bar {
+  top: 0;
+  left: 16px;
+  height: var(--ee-topbar-h);
+  display: flex;
+  align-items: center;
+  z-index: 121;
+}
+
+body.ee-shell #title-bar h1 {
+  font-family: var(--ee-font-sans);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  gap: 10px;
+}
+
+body.ee-shell #title-bar h1 .title-accent { color: var(--ee-text); }
+body.ee-shell #title-bar .subtitle { display: none; }
+body.ee-shell #title-bar .brand-logo { width: 28px; height: 28px; }
+
+/* Existing globe actions (clear layers / share / reset) sit at the bar's right. */
+body.ee-shell #top-center-actions {
+  top: 10px;
+  right: 16px;
+  left: auto;
+  transform: none;
+  z-index: 121;
+}
+
+body.ee-shell #shell-topbar { padding-right: 160px; }
+
+/* The ACTIVE STYLE readout duplicates the dock's active preset; keep it for
+   assistive tech but out of the layout. */
+body.ee-shell #style-indicator {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- left icon rail ----------------------------------------------------- */
+#shell-rail {
+  position: fixed;
+  top: var(--ee-topbar-h);
+  bottom: var(--ee-statusbar-h);
+  left: 0;
+  z-index: 119;
+  width: var(--ee-rail-w);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  background: var(--ee-bg);
+  border-right: 1px solid var(--ee-border);
+}
+
+.shell-rail-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.shell-rail-btn {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--ee-radius-sm);
+  color: var(--ee-text-muted);
+  cursor: pointer;
+}
+
+.shell-rail-btn:hover {
+  background: var(--ee-surface);
+  color: var(--ee-text);
+}
+
+.shell-rail-btn.active {
+  background: var(--ee-accent-soft);
+  border-color: var(--ee-accent);
+  color: var(--ee-accent);
+}
+
+/* ---- status bar ----------------------------------------------------------- */
+#shell-statusbar {
+  position: fixed;
+  inset: auto 0 0 var(--ee-rail-w);
+  z-index: 95;
+  height: var(--ee-statusbar-h);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 0 360px 0 16px;
+  background: var(--ee-bg);
+  border-top: 1px solid var(--ee-border);
+  color: var(--ee-text-muted);
+  font-size: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Imagery attribution is a Google/Cesium ToS requirement: it lives in the
+   status bar's right end and must stay visible in every mode. */
+body.ee-shell #cesium-credits {
+  left: auto;
+  right: 16px;
+  bottom: 0;
+  height: var(--ee-statusbar-h);
+  display: flex;
+  align-items: center;
+  z-index: 96;
+  font-family: var(--ee-font-sans);
+  font-size: 12px;
+  color: var(--ee-text-muted);
+}
+
+/* Corner coordinate readouts now live in the status bar. Cockpit keeps its own. */
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-bottom-left,
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-bottom-right {
+  display: none;
+}
+
+body.ui-clean-view #shell-topbar,
+body.ui-clean-view #shell-rail,
+body.ui-clean-view #shell-statusbar,
+body.recording-mode #shell-topbar,
+body.recording-mode #shell-rail,
+body.recording-mode #shell-statusbar {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* ---- layer panel -------------------------------------------------------------- */
+body.ee-shell #data-panel,
+body.ee-shell #cctv-panel,
+body.ee-shell #scene-panel,
+body.ee-shell #global-context-panel {
+  background: var(--ee-surface);
+  border: 1px solid var(--ee-border);
+  border-radius: var(--ee-radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.ee-shell #data-panel .panel-title {
+  font-family: var(--ee-font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ee-text);
+}
+
+.ee-active-count {
+  margin-left: auto;
+  padding: 2px 10px;
+  font-size: 12px;
+  color: var(--ee-text-muted);
+  border: 1px solid var(--ee-border);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.ee-layer-group {
+  padding: 12px 10px 4px;
+  font: 500 12px var(--ee-font-sans);
+  color: var(--ee-text-muted);
+}
+
+body.ee-shell .data-toggle-row {
+  padding: 8px 10px;
+  border-radius: var(--ee-radius-sm);
+}
+
+body.ee-shell .data-toggle-row:hover,
+body.ee-shell .data-toggle-row:focus-within {
+  background: var(--ee-surface-2);
+}
+
+/* .data-name keeps its text for voice focus; the visible label is .ee-layer-label. */
+body.ee-shell .data-toggle-left .data-name {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+.ee-layer-label {
+  font: 500 14px var(--ee-font-sans);
+  color: var(--ee-text);
+}
+
+body.ee-shell .data-icon {
+  color: var(--ee-text-muted);
+  filter: grayscale(1);
+  opacity: 0.8;
+}
+
+.ee-layer-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 0 0 28px;
+  font: 400 12px var(--ee-font-sans);
+  color: var(--ee-text-muted);
+}
+
+.ee-layer-status[data-state='live'] .shell-dot { background: var(--ee-ok); }
+.ee-layer-status[data-state='degraded'] .shell-dot { background: var(--ee-warn); }
+.ee-layer-status[data-state='loading'] .shell-dot { background: var(--ee-accent); }
+.ee-layer-status[data-state='static'] .shell-dot { background: var(--ee-accent); }
+.ee-layer-status[data-state='off'] .shell-dot { background: var(--ee-off); }
+
+/* Technical meta (source, error text) shows on hover/focus instead of always. */
+body.ee-shell .data-toggle-meta {
+  display: none;
+  margin: 2px 0 0 28px;
+  font: 400 11px var(--ee-font-sans);
+  color: var(--ee-text-dim);
+}
+
+body.ee-shell .data-toggle-row:hover .data-toggle-meta,
+body.ee-shell .data-toggle-row:focus-within .data-toggle-meta {
+  display: block;
+}
+
+body.ee-shell .data-count {
+  font-family: var(--ee-font-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ee-text-muted);
+}
+
+/* ON/OFF/DEGRADED text button -> switch. The text stays for the accessible name. */
+body.ee-shell .data-toggle-list .data-toggle-btn {
+  position: relative;
+  min-width: 0;
+  width: 38px;
+  height: 22px;
+  padding: 0;
+  font-size: 0;
+  color: transparent;
+  background: var(--ee-surface-2);
+  border: 1px solid var(--ee-border-strong);
+  border-radius: 999px;
+}
+
+body.ee-shell .data-toggle-list .data-toggle-btn::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--ee-text-muted);
+  transition: transform var(--transition-fast);
+}
+
+body.ee-shell .data-toggle-list .data-toggle-btn.active,
+body.ee-shell .data-toggle-list .data-toggle-btn.active[class*='feed-'] {
+  background: var(--ee-accent);
+  border-color: var(--ee-accent);
+}
+
+body.ee-shell .data-toggle-list .data-toggle-btn.active::after {
+  background: var(--ee-on-accent);
+  transform: translateX(16px);
+}
+
+/* ---- bottom dock ---------------------------------------------------------------- */
+body.ee-shell #command-dock {
+  bottom: calc(var(--ee-statusbar-h) + 16px);
+  background: var(--ee-surface);
+  border: 1px solid var(--ee-border);
+  border-radius: var(--ee-radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.ee-shell #location-bar,
+body.ee-shell #control-panel {
+  background: transparent;
+  border-color: var(--ee-border);
+  box-shadow: none;
+}
+
+body.ee-shell #gev-voice-control {
+  background: transparent;
+  border-color: var(--ee-border);
+  box-shadow: none;
+}
+
+body.ee-shell #gev-voice-button {
+  background: var(--ee-accent);
+  color: var(--ee-on-accent);
+  box-shadow: none;
+}
+
+@media (max-width: 900px) {
+  #shell-topbar { padding-left: 200px; }
+  .shell-search kbd,
+  #shell-clock { display: none; }
+  #shell-statusbar { padding-right: 16px; }
+  body.ee-shell #cesium-credits { bottom: var(--ee-statusbar-h); height: auto; }
+}
