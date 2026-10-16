@@ -12,6 +12,7 @@ import { DEFAULT_BOOT_STACK, MapStackController } from './mapStackController.js'
 import { initAnnotations } from './annotations/index.js';
 import { initLogoGaze } from './logoGaze.js';
 import { initShell } from './shell/shellController.js';
+import { initCameraInspector } from './shell/cameraInspector.js';
 import { initCockpitCloudEffects } from './cockpitCloudEffects.js';
 import {
   installRenderGovernor,
@@ -281,6 +282,7 @@ async function init() {
     dataManager.buildTogglePanel(document.getElementById('data-toggles'));
     styleManager.attachDataManager(dataManager);
     initShell({ viewer, dataManager });
+    initCameraInspector({ dataManager });
 
     // Initialize deterministic scene playback for social clip capture
     const sceneDirector = new SceneDirector(viewer, styleManager, dataManager);

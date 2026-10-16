@@ -1,0 +1,158 @@
+/* Camera inspector (right side). Restyles the CCTV panel; the legacy controls
+   stay in the DOM behind "Kontrol lanjutan" because code and tests use them. */
+body.ee-shell #right-context-rail {
+  top: calc(var(--ee-topbar-h) + 12px);
+  right: 16px;
+  bottom: calc(var(--ee-statusbar-h) + 12px);
+  width: 340px;
+}
+
+body.ee-shell #cctv-panel .cctv-panel-inner {
+  background: var(--ee-surface);
+  border: 0;
+  border-radius: var(--ee-radius);
+  box-shadow: none;
+}
+
+body.ee-shell #cctv-panel .panel-title {
+  font-family: var(--ee-font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--ee-text);
+}
+
+/* Video stays the hero; keep the 16:9 frame calm and flat. */
+body.ee-shell .cctv-frame-wrap {
+  border: 1px solid var(--ee-border);
+  border-radius: var(--ee-radius);
+  background: #000;
+}
+
+/* The unofficial-source disclosure must stay visible (see DATA_SOURCES.md). */
+body.ee-shell #cctv-source-badge {
+  border-color: var(--ee-border);
+  background: var(--ee-surface-2);
+  color: var(--ee-text-dim);
+  font-family: var(--ee-font-mono);
+  letter-spacing: 0;
+}
+
+.cam-inspector { display: flex; flex-direction: column; gap: 12px; }
+
+.cam-inspector-empty { color: var(--ee-text-dim); font-size: 13px; }
+
+.cam-inspector-head { display: flex; align-items: flex-start; gap: 8px; }
+.cam-inspector-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
+.cam-inspector-title strong { font-size: 15px; font-weight: 600; color: var(--ee-text); overflow-wrap: anywhere; }
+.cam-inspector-title span { font-size: 12px; color: var(--ee-text-dim); }
+
+.cam-inspector-close {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ee-border);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ee-text-dim);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.cam-inspector-badges { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.cam-badge {
+  padding: 3px 10px;
+  border: 1px solid var(--ee-border);
+  border-radius: 999px;
+  background: var(--ee-surface-2);
+  color: var(--ee-text);
+  font-size: 12px;
+}
+.cam-badge[data-tone='ok'] { border-color: var(--ee-ok); color: var(--ee-ok); }
+.cam-badge[data-tone='warn'] { border-color: var(--ee-warn); color: var(--ee-warn); }
+.cam-badge[data-tone='off'] { border-color: var(--ee-off); color: var(--ee-text-dim); }
+
+.cam-inspector-rows {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 16px;
+  margin: 0;
+  font-size: 13px;
+}
+.cam-inspector-rows dt { color: var(--ee-text-dim); }
+.cam-inspector-rows dd { margin: 0; color: var(--ee-text); font-family: var(--ee-font-mono); text-align: right; }
+
+.cam-inspector-actions { display: flex; gap: 8px; }
+
+.cam-inspector-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--ee-border);
+  border-radius: 6px;
+  background: var(--ee-surface-2);
+  color: var(--ee-text);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+.cam-inspector-btn-primary { border-color: var(--ee-accent); color: var(--ee-accent); }
+.cam-inspector-btn[aria-pressed='true'] { background: var(--ee-accent); border-color: var(--ee-accent); color: var(--ee-on-accent); }
+
+.cam-inspector-subhead { margin: 0; font-size: 12px; font-weight: 600; color: var(--ee-text-dim); }
+
+.cam-inspector-nearby { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+
+.cam-nearby-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--ee-text);
+  font: inherit;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+}
+.cam-nearby-btn:hover { background: var(--ee-surface-2); }
+.cam-nearby-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cam-nearby-dist { color: var(--ee-text-dim); font-family: var(--ee-font-mono); font-size: 12px; }
+.cam-nearby-btn .shell-dot[data-tone='off'] { background: var(--ee-bad); }
+.cam-nearby-btn .shell-dot[data-tone='idle'] { background: var(--ee-off); }
+
+.cam-inspector-advanced {
+  align-self: flex-start;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ee-text-dim);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cam-inspector-close:focus-visible,
+.cam-inspector-btn:focus-visible,
+.cam-nearby-btn:focus-visible,
+.cam-inspector-advanced:focus-visible {
+  outline: 2px solid var(--ee-accent);
+  outline-offset: 2px;
+}
+
+/* Legacy controls: hidden until "Kontrol lanjutan" (or ADJUST) opens them.
+   Hidden from layout only; the elements stay in the DOM for code and voice. */
+body.ee-shell #cctv-panel:not(.ee-advanced-open) .cctv-controls,
+body.ee-shell #cctv-panel:not(.ee-advanced-open) .cctv-calibration-block,
+body.ee-shell #cctv-panel:not(.ee-advanced-open) #cctv-summary,
+body.ee-shell #cctv-panel:not(.ee-advanced-open) .cctv-summary-label {
+  display: none;
+}
+
+@media (max-width: 900px) {
+  body.ee-shell #right-context-rail { width: min(340px, calc(100vw - 32px)); }
+}

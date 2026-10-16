@@ -5,6 +5,19 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- The console has a new look: a calm dark theme with one blue accent, no glowing text
+  and no "TOP SECRET" banner. It has a top bar (search, source-health summary, UTC clock),
+  a left icon rail and a bottom status bar with coordinates, MGRS and altitude.
+  Imagery attribution stays visible in the status bar.
+- The layer panel groups layers into Pergerakan, Lingkungan and Kota. Each layer shows an
+  honest status: Live, Terganggu, Mati, Memuat, or Data statis for bundled datasets.
+- The CCTV panel opens with a camera inspector: badges (including "Sumber tidak resmi" and
+  "Lokasi perkiraan"), operator, direction, format, "Pusatkan di peta", "Kalibrasi posisi" and
+  a list of the nearest cameras. The earlier controls are under "Kontrol lanjutan".
+  While a camera's video shows, its 3D frustum stays hidden unless you are calibrating.
+
 ### Fixed
 
 - A data layer whose code failed to download (for example CCTV, after a network

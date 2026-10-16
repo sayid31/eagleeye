@@ -48,3 +48,15 @@ test('viewshed fills never exist while a live plane is showing', () => {
   assert.equal(shouldShowViewshedVolume({ ...v, hasGeometry: false }), false);
   assert.equal(shouldShowViewshedVolume({ ...v, enabled: false }), false);
 });
+
+test('inspector scenario: an active camera showing video draws no frustum over it, until ADJUST', () => {
+  const livePlaneOn = isLivePlaneOn({ enabled: true, showProjection: true, hasActive: true });
+  const common = {
+    enabled: true, livePlaneOn, isActive: true, coverageOn: true, inVisibleSet: true,
+  };
+  assert.equal(shouldShowCoverageWireframe({ ...common, calibrating: false }), false);
+  assert.equal(shouldShowViewshedVolume({
+    enabled: true, livePlaneOn, viewshedOn: true, inVisibleSet: true, hasGeometry: true,
+  }), false);
+  assert.equal(shouldShowCoverageWireframe({ ...common, calibrating: true }), true);
+});

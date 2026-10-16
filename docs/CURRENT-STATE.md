@@ -1607,6 +1607,19 @@ The popup now lines up with the panel's other full-width rows. See
 - Track endpoints: `/api/ais-live/track?mmsi=` (server-accumulated ring buffers; sub-route handled before the rows snapshot), `/api/opensky-track?icao24=` (OAuth, 60s cache, sanitized errors, independent OpenSky credit bucket), `/api/adsblol/trace?hex=` (60s cache, 5MB cap, ODbL attribution required in UI).
 - Realtime debug logs redact API keys, bearer tokens, client secrets, and image data URLs before writing to disk; request bodies are size-capped.
 
+## UI Shell (theme layer)
+
+- `src/theme/theme.css` loads after `style.css` and holds the redesigned look (`tokens.css`, `base.css`,
+  `shell.css`, `inspector.css`). Every shell rule is scoped to `body.ee-shell`, set by `initShell`.
+- `src/shell/` mounts a top bar, icon rail and status bar. The rail and search proxy to existing
+  controls. The shell never writes layer state.
+- Layer rows show a status from `layerShellStatus` (`src/shell/layerStatus.js`): Live, Terganggu, Mati,
+  Memuat, or Data statis for bundled datasets. `.data-name` text is unchanged because voice focus reads it.
+- `#cesium-credits` is moved to the status bar and is never hidden.
+- The CCTV panel starts with the camera inspector (`src/shell/cameraInspector*.js`). Its buttons
+  click the existing FOCUS and ADJUST controls. Operator and last-checked time are not in the CCTV
+  public state, so they read "tidak diketahui". "Lokasi perkiraan ±3 km" appears only for `calBadge === 'raw-prior'`.
+
 ## UI/UX Runtime Defaults
 
 - Z ladder: panels promote within 100–139 (renormalized on wrap), voice pill 150, toast 200, clean-view exit 300.
