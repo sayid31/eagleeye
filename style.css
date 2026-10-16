@@ -8,9 +8,9 @@
   --glass-bg: rgba(12, 12, 20, 0.72);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-border-hover: rgba(255, 255, 255, 0.15);
-  --accent: #00d4ff;
-  --accent-dim: rgba(0, 212, 255, 0.15);
-  --accent-glow: rgba(0, 212, 255, 0.4);
+  --accent: #6cb4fa;
+  --accent-dim: rgba(108, 180, 250, 0.15);
+  --accent-glow: rgba(108, 180, 250, 0.4);
   --text-primary: #e8eaed;
   --text-secondary: rgba(232, 234, 237, 0.5);
   --text-dim: rgba(232, 234, 237, 0.3);
@@ -330,7 +330,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
     0 8px 32px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
     0 1px 0 rgba(255, 255, 255, 0.06) inset,
-    0 0 20px rgba(0, 212, 255, 0.08);
+    0 0 20px rgba(108, 180, 250, 0.08);
   backdrop-filter: blur(24px) saturate(1.4);
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
   font-family: var(--font-mono);
@@ -342,8 +342,8 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   height: 34px;
   flex: 0 0 auto;
   color: var(--accent);
-  background: rgba(0, 212, 255, 0.06);
-  border: 1px solid rgba(0, 212, 255, 0.28);
+  background: rgba(108, 180, 250, 0.06);
+  border: 1px solid rgba(108, 180, 250, 0.28);
   border-radius: var(--btn-radius);
   font-family: var(--font-mono);
   font-size: 10px;
@@ -354,7 +354,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
 #gev-voice-button:hover {
   color: #ffffff;
   border-color: var(--accent);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.22);
+  box-shadow: 0 0 12px rgba(108, 180, 250, 0.22);
 }
 
 .gev-voice-readout {
@@ -474,7 +474,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   display: block;
   width: 30px;
   height: auto;
-  filter: drop-shadow(0 0 12px rgba(0, 246, 255, 0.5));
+  filter: drop-shadow(0 0 12px rgba(108, 180, 250, 0.5));
 }
 
 #title-bar .title-logo::before,
@@ -656,7 +656,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   letter-spacing: 1.8px;
   color: var(--accent);
   text-transform: uppercase;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  text-shadow: 0 0 8px rgba(108, 180, 250, 0.3);
 }
 
 .panel-drag-handle {
@@ -784,8 +784,8 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   border-color: var(--accent);
   background: var(--accent-dim);
   box-shadow:
-    0 0 20px rgba(0, 212, 255, 0.15),
-    0 0 0 1px rgba(0, 212, 255, 0.1) inset;
+    0 0 20px rgba(108, 180, 250, 0.15),
+    0 0 0 1px rgba(108, 180, 250, 0.1) inset;
 }
 
 .style-btn.active .btn-icon {
@@ -856,7 +856,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   width: 72px;
   height: auto;
   margin: 0 auto 24px;
-  filter: drop-shadow(0 0 24px rgba(0, 246, 255, 0.42));
+  filter: drop-shadow(0 0 24px rgba(108, 180, 250, 0.42));
   animation: logo-pulse 2s ease-in-out infinite;
 }
 
@@ -1015,7 +1015,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
 .pp-toggle-btn.active {
   border-color: var(--accent);
   background: var(--accent-dim);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 12px rgba(108, 180, 250, 0.15);
 }
 
 .pp-icon {
@@ -1315,7 +1315,7 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   color: var(--accent);
   border-color: var(--accent);
   background: var(--accent-dim);
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 10px rgba(108, 180, 250, 0.15);
 }
 
 .map-stack-chip.unavailable,
@@ -1728,7 +1728,7 @@ body.ui-clean-view #scene-runtime.active {
   background: var(--accent-dim);
   border-color: var(--accent);
   color: var(--accent);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 12px rgba(108, 180, 250, 0.15);
 }
 
 /* ── Expandable POI Row ──────────────────────── */
@@ -1795,7 +1795,7 @@ body.ui-clean-view #scene-runtime.active {
 .poi-pill.active {
   background: var(--accent-dim);
   border-color: var(--accent);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 12px rgba(108, 180, 250, 0.15);
 }
 
 .poi-pill-name {
@@ -1823,7 +1823,7 @@ body.ui-clean-view #scene-runtime.active {
 
 .poi-pill.active .poi-pill-key {
   color: var(--accent);
-  background: rgba(0, 212, 255, 0.12);
+  background: rgba(108, 180, 250, 0.12);
 }
 
 /* ── Location Search ─────────────────────────── */
@@ -1944,7 +1944,7 @@ body.ui-clean-view #scene-runtime.active {
   max-width: calc(100vw - 32px);
   padding: 6px 10px;
   border-radius: 7px;
-  border: 1px solid rgba(0, 212, 255, 0.24);
+  border: 1px solid rgba(108, 180, 250, 0.24);
   background: rgba(3, 10, 18, 0.78);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -1954,7 +1954,7 @@ body.ui-clean-view #scene-runtime.active {
   letter-spacing: 1.35px;
   text-transform: uppercase;
   transform: translateX(-50%);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 14px rgba(0, 212, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 14px rgba(108, 180, 250, 0.08);
   pointer-events: none;
 }
 #global-loading-status[hidden] { display: none; }
@@ -1986,8 +1986,8 @@ body.ui-clean-view #scene-runtime.active {
 #global-loading-status[data-state='cancelled'] #global-loading-label,
 #global-loading-status[data-state='cancelled'] #global-loading-detail { color: #ffd488; }
 #global-loading-status[data-state='acquiring'] {
-  border-color: rgba(0, 212, 255, 0.42);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 18px rgba(0, 212, 255, 0.12);
+  border-color: rgba(108, 180, 250, 0.42);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 18px rgba(108, 180, 250, 0.12);
 }
 
 .share-icon {
@@ -2007,7 +2007,7 @@ body.ui-clean-view #scene-runtime.active {
   gap: 10px;
   padding: 6px 10px;
   border-radius: 7px;
-  border: 1px solid rgba(0, 212, 255, 0.24);
+  border: 1px solid rgba(108, 180, 250, 0.24);
   background: rgba(3, 10, 18, 0.78);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
@@ -2019,7 +2019,7 @@ body.ui-clean-view #scene-runtime.active {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease, transform 0.22s ease;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 14px rgba(0, 212, 255, 0.08);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 14px rgba(108, 180, 250, 0.08);
 }
 
 /* Stacked below the traffic chip so both can show at once */
@@ -2200,7 +2200,7 @@ body.ui-clean-view #scene-runtime.active {
   visibility: hidden;
   pointer-events: none;
   transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
-  box-shadow: 0 0 20px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 20px rgba(108, 180, 250, 0.15);
 }
 
 #toast.visible {
@@ -4472,7 +4472,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   overscroll-behavior: contain;
   padding-right: 4px;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.5) rgba(255, 255, 255, 0.04);
+  scrollbar-color: rgba(108, 180, 250, 0.5) rgba(255, 255, 255, 0.04);
   scrollbar-gutter: stable;
 }
 
@@ -4486,7 +4486,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 }
 
 .data-toggle-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.65), rgba(0, 212, 255, 0.2));
+  background: linear-gradient(180deg, rgba(108, 180, 250, 0.65), rgba(108, 180, 250, 0.2));
   border-radius: 999px;
 }
 
@@ -4612,7 +4612,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   overflow-y: auto;
   overscroll-behavior: contain;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.4) transparent;
+  scrollbar-color: rgba(108, 180, 250, 0.4) transparent;
 }
 #right-context-rail.layout-focus > #cctv-panel:not(.collapsed) .cctv-panel-inner,
 #right-context-rail.layout-focus > #global-context-panel:not(.collapsed) .global-context-panel-inner {
@@ -5199,8 +5199,8 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 .context-radio-toggle.active {
   border-color: rgba(101, 247, 255, .82);
   color: #eaffff;
-  background: rgba(0, 212, 255, .16);
-  box-shadow: inset 0 0 12px rgba(0, 212, 255, .1), 0 0 12px rgba(0, 212, 255, .2);
+  background: rgba(108, 180, 250, .16);
+  box-shadow: inset 0 0 12px rgba(108, 180, 250, .1), 0 0 12px rgba(108, 180, 250, .2);
 }
 .context-radio-toggle:disabled { opacity: .5; cursor: wait; }
 .context-radio-mini {
@@ -5373,10 +5373,10 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   outline: none;
 }
 .context-mode-button.active {
-  border-color: rgba(0, 212, 255, .75);
+  border-color: rgba(108, 180, 250, .75);
   color: #eaffff;
-  background: rgba(0, 212, 255, .14);
-  box-shadow: inset 0 0 16px rgba(0, 212, 255, .08), 0 0 12px rgba(0, 212, 255, .12);
+  background: rgba(108, 180, 250, .14);
+  box-shadow: inset 0 0 16px rgba(108, 180, 250, .08), 0 0 12px rgba(108, 180, 250, .12);
 }
 .context-mode-button:disabled { opacity: .55; cursor: wait; }
 .context-mode-view[hidden],
@@ -5424,10 +5424,10 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   outline: none;
 }
 .panel-layer-toggle.active {
-  border-color: rgba(0, 212, 255, 0.7);
+  border-color: rgba(108, 180, 250, 0.7);
   color: #fff;
-  background: rgba(0, 212, 255, 0.14);
-  box-shadow: 0 0 12px rgba(0, 212, 255, 0.14);
+  background: rgba(108, 180, 250, 0.14);
+  box-shadow: 0 0 12px rgba(108, 180, 250, 0.14);
 }
 .panel-layer-toggle:disabled { opacity: 0.45; cursor: wait; }
 .global-context-actions .panel-layer-toggle {
@@ -5471,7 +5471,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   background: rgba(2, 15, 20, .42);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .035);
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, .46) rgba(255, 255, 255, .06);
+  scrollbar-color: rgba(108, 180, 250, .46) rgba(255, 255, 255, .06);
 }
 #radio-panel .panel-header { margin-bottom: 0; }
 .radio-layer-state {
@@ -5532,7 +5532,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   border: 1px solid rgba(65, 220, 231, .22);
   border-radius: 7px;
   background: linear-gradient(180deg, rgba(1, 9, 13, .92), rgba(4, 24, 30, .72));
-  box-shadow: inset 0 0 18px rgba(0, 212, 255, .045);
+  box-shadow: inset 0 0 18px rgba(108, 180, 250, .045);
 }
 .radio-tuner[hidden] { display: none; }
 .radio-tuner-header,
@@ -5894,7 +5894,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   color: var(--accent);
   border-color: var(--accent);
   background: var(--accent-dim);
-  box-shadow: 0 0 10px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 10px rgba(108, 180, 250, 0.15);
 }
 
 .data-toggle-btn.active.feed-stale,
@@ -6026,7 +6026,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 #cctv-panel .panel-glow {
   position: absolute;
   inset: -18px;
-  background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.16) 0%, transparent 65%);
+  background: radial-gradient(ellipse at center, rgba(108, 180, 250, 0.16) 0%, transparent 65%);
   filter: blur(16px);
   opacity: 0.25;
   pointer-events: none;
@@ -6044,7 +6044,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   max-height: calc(100vh - 24px);
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.46) rgba(255, 255, 255, 0.06);
+  scrollbar-color: rgba(108, 180, 250, 0.46) rgba(255, 255, 255, 0.06);
   backdrop-filter: blur(24px) saturate(1.4);
   -webkit-backdrop-filter: blur(24px) saturate(1.4);
   box-shadow:
@@ -6063,8 +6063,8 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 }
 
 .cctv-panel-inner::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 212, 255, 0.28));
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  background: linear-gradient(180deg, rgba(108, 180, 250, 0.6), rgba(108, 180, 250, 0.28));
+  border: 1px solid rgba(108, 180, 250, 0.4);
   border-radius: 999px;
 }
 
@@ -6078,7 +6078,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 #left-panel-stack,
 #right-context-rail {
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.46) rgba(255, 255, 255, 0.06);
+  scrollbar-color: rgba(108, 180, 250, 0.46) rgba(255, 255, 255, 0.06);
 }
 
 .scene-panel-inner::-webkit-scrollbar,
@@ -6106,8 +6106,8 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 #military-awareness-panel::-webkit-scrollbar-thumb,
 #left-panel-stack::-webkit-scrollbar-thumb,
 #right-context-rail::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 212, 255, 0.28));
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  background: linear-gradient(180deg, rgba(108, 180, 250, 0.6), rgba(108, 180, 250, 0.28));
+  border: 1px solid rgba(108, 180, 250, 0.4);
   border-radius: 999px;
 }
 
@@ -6158,8 +6158,8 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 }
 
 .cctv-cal-value:hover:not(:disabled) {
-  border-color: rgba(0, 212, 255, 0.45);
-  background: rgba(0, 212, 255, 0.08);
+  border-color: rgba(108, 180, 250, 0.45);
+  background: rgba(108, 180, 250, 0.08);
 }
 
 .cctv-cal-input {
@@ -6168,8 +6168,8 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   font-size: 9px;
   letter-spacing: 0.7px;
   color: var(--text-primary);
-  background: rgba(0, 212, 255, 0.1);
-  border: 1px solid rgba(0, 212, 255, 0.5);
+  background: rgba(108, 180, 250, 0.1);
+  border: 1px solid rgba(108, 180, 250, 0.5);
   border-radius: 4px;
   padding: 1px 3px;
   outline: none;
@@ -6247,7 +6247,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.46) rgba(255, 255, 255, 0.06);
+  scrollbar-color: rgba(108, 180, 250, 0.46) rgba(255, 255, 255, 0.06);
 }
 
 .cctv-camera-listbox::-webkit-scrollbar {
@@ -6260,8 +6260,8 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 }
 
 .cctv-camera-listbox::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 212, 255, 0.28));
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  background: linear-gradient(180deg, rgba(108, 180, 250, 0.6), rgba(108, 180, 250, 0.28));
+  border: 1px solid rgba(108, 180, 250, 0.4);
   border-radius: 999px;
 }
 
@@ -6292,7 +6292,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 #cctv-projection-btn.active {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(0, 212, 255, 0.14);
+  background: rgba(108, 180, 250, 0.14);
 }
 
 #cctv-quality-chip {
@@ -6301,13 +6301,13 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   justify-content: center;
   min-width: 90px;
   padding: 6px 8px;
-  border: 1px solid rgba(0, 212, 255, 0.2);
+  border: 1px solid rgba(108, 180, 250, 0.2);
   border-radius: 8px;
   font-family: var(--font-mono);
   font-size: 9px;
   letter-spacing: 1px;
   color: #8fe7ff;
-  background: rgba(0, 212, 255, 0.08);
+  background: rgba(108, 180, 250, 0.08);
   text-transform: uppercase;
 }
 
@@ -6357,9 +6357,9 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   background: linear-gradient(
     100deg,
     transparent 24%,
-    rgba(0, 212, 255, 0.08) 44%,
+    rgba(108, 180, 250, 0.08) 44%,
     rgba(170, 244, 255, 0.14) 50%,
-    rgba(0, 212, 255, 0.08) 56%,
+    rgba(108, 180, 250, 0.08) 56%,
     transparent 76%
   );
   transform: translateX(-100%);
@@ -6445,9 +6445,9 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 
 #cctv-source-badge {
   align-self: flex-start;
-  border: 1px solid rgba(0, 212, 255, 0.32);
+  border: 1px solid rgba(108, 180, 250, 0.32);
   border-radius: 999px;
-  background: rgba(0, 212, 255, 0.09);
+  background: rgba(108, 180, 250, 0.09);
   color: #9defff;
   font-family: var(--font-mono);
   font-size: 8px;
@@ -6510,7 +6510,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   letter-spacing: 0.8px;
   line-height: 1.45;
   color: #a8f7ff;
-  text-shadow: 0 0 10px rgba(0, 212, 255, 0.18);
+  text-shadow: 0 0 10px rgba(108, 180, 250, 0.18);
 }
 
 /* ── Scene Director Panel ───────────────────── */
@@ -6618,7 +6618,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 #scene-panel .panel-glow {
   position: absolute;
   inset: -18px;
-  background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.16) 0%, transparent 65%);
+  background: radial-gradient(ellipse at center, rgba(108, 180, 250, 0.16) 0%, transparent 65%);
   filter: blur(16px);
   opacity: 0.25;
   pointer-events: none;
@@ -6698,7 +6698,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   -webkit-backdrop-filter: blur(16px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   scrollbar-width: thin;
-  scrollbar-color: rgba(0, 212, 255, 0.46) rgba(255, 255, 255, 0.06);
+  scrollbar-color: rgba(108, 180, 250, 0.46) rgba(255, 255, 255, 0.06);
 }
 
 .scene-picker-listbox::-webkit-scrollbar {
@@ -6711,8 +6711,8 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 }
 
 .scene-picker-listbox::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(0, 212, 255, 0.6), rgba(0, 212, 255, 0.28));
-  border: 1px solid rgba(0, 212, 255, 0.4);
+  background: linear-gradient(180deg, rgba(108, 180, 250, 0.6), rgba(108, 180, 250, 0.28));
+  border: 1px solid rgba(108, 180, 250, 0.4);
   border-radius: 999px;
 }
 
@@ -6790,7 +6790,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 
 .scene-shot-row.active {
   border-color: var(--accent);
-  background: rgba(0, 212, 255, 0.08);
+  background: rgba(108, 180, 250, 0.08);
 }
 
 .scene-shot-top {
@@ -6846,7 +6846,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 .scene-btn:hover:not(:disabled) {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(0, 212, 255, 0.14);
+  background: rgba(108, 180, 250, 0.14);
 }
 
 .scene-btn:disabled {
@@ -6873,7 +6873,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 #scene-progress-fill {
   width: 0%;
   height: 100%;
-  background: linear-gradient(90deg, rgba(0, 212, 255, 0.2), rgba(0, 212, 255, 0.75));
+  background: linear-gradient(90deg, rgba(108, 180, 250, 0.2), rgba(108, 180, 250, 0.75));
   color: #d5f7ff;
   font-family: var(--font-mono);
   font-size: 8px;
@@ -6883,7 +6883,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   justify-content: flex-end;
   padding-right: 6px;
   transition: width 100ms linear;
-  text-shadow: 0 0 6px rgba(0, 212, 255, 0.6);
+  text-shadow: 0 0 6px rgba(108, 180, 250, 0.6);
 }
 
 #scene-status {
@@ -6908,10 +6908,10 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   letter-spacing: 2px;
   color: #bff4ff;
   background: rgba(0, 0, 0, 0.45);
-  border: 1px solid rgba(0, 212, 255, 0.36);
+  border: 1px solid rgba(108, 180, 250, 0.36);
   border-radius: 999px;
   padding: 6px 14px;
-  text-shadow: 0 0 8px rgba(0, 212, 255, 0.55);
+  text-shadow: 0 0 8px rgba(108, 180, 250, 0.55);
   pointer-events: none;
 }
 
@@ -7252,7 +7252,7 @@ body.scene-playback-mode :is(#clear-selected-layers, #reset-globe-view) {
   box-shadow:
     0 12px 36px rgba(0, 0, 0, 0.58),
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
-    0 0 28px rgba(0, 212, 255, 0.06);
+    0 0 28px rgba(108, 180, 250, 0.06);
   backdrop-filter: blur(28px) saturate(1.35);
   -webkit-backdrop-filter: blur(28px) saturate(1.35);
   transform: translateX(-50%);
@@ -7289,13 +7289,13 @@ body.scene-playback-mode :is(#clear-selected-layers, #reset-globe-view) {
   min-width: 0;
   margin: -14px 0;
   padding: 19px 14px 12px;
-  border-color: rgba(0, 212, 255, 0.36);
+  border-color: rgba(108, 180, 250, 0.36);
   border-radius: 12px;
   background: rgba(8, 31, 42, 0.94);
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.56),
-    0 0 26px rgba(0, 212, 255, 0.12),
-    0 0 0 1px rgba(0, 212, 255, 0.08) inset;
+    0 0 26px rgba(108, 180, 250, 0.12),
+    0 0 0 1px rgba(108, 180, 250, 0.08) inset;
 }
 
 #command-dock .gev-voice-kicker {
@@ -7793,8 +7793,8 @@ body.recording-mode #cesium-credits {
   padding: 0;
   border-radius: 50%;
   box-shadow:
-    0 0 0 0.2rem rgba(0, 212, 255, 0.06),
-    0 0 1rem rgba(0, 212, 255, 0.12);
+    0 0 0 0.2rem rgba(108, 180, 250, 0.06),
+    0 0 1rem rgba(108, 180, 250, 0.12);
 }
 
 #command-dock .gev-mic-orbit {
@@ -7990,7 +7990,7 @@ body:not(.ui-clean-view):not(.recording-mode) #cesium-credits {
 #command-dock :is(#location-bar, #control-panel):hover .dock-label-icon,
 #command-dock :is(#location-bar, #control-panel).dock-pinned .dock-label-icon {
   background: var(--accent);
-  filter: drop-shadow(0 0 0.35rem rgba(0, 212, 255, 0.28));
+  filter: drop-shadow(0 0 0.35rem rgba(108, 180, 250, 0.28));
 }
 
 #command-dock :is(#location-bar, #control-panel):hover .location-toolbar-label,
@@ -8182,10 +8182,10 @@ body:not(.ui-clean-view):not(.recording-mode) #cesium-credits {
   height: 2.45rem;
   aspect-ratio: 1;
   box-sizing: border-box;
-  background: rgba(0, 212, 255, 0.06);
-  border: 1px solid rgba(0, 212, 255, 0.48);
+  background: rgba(108, 180, 250, 0.06);
+  border: 1px solid rgba(108, 180, 250, 0.48);
   border-radius: 50%;
-  box-shadow: 0 0 0 0.18rem rgba(0, 212, 255, 0.06), 0 0 0.9rem rgba(0, 212, 255, 0.12);
+  box-shadow: 0 0 0 0.18rem rgba(108, 180, 250, 0.06), 0 0 0.9rem rgba(108, 180, 250, 0.12);
 }
 
 #command-dock .gev-mic-label {
@@ -8446,7 +8446,7 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
   border-radius: 0.42rem;
   box-shadow:
     0 0.9rem 2.4rem rgba(0, 0, 0, 0.58),
-    0 0 1.5rem rgba(0, 212, 255, 0.08),
+    0 0 1.5rem rgba(108, 180, 250, 0.08),
     0 0 0 1px rgba(255, 255, 255, 0.025) inset;
   backdrop-filter: blur(28px) saturate(1.3);
   -webkit-backdrop-filter: blur(28px) saturate(1.3);
@@ -8539,9 +8539,9 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
 #command-dock .dock-pin-btn:hover,
 #command-dock .dock-pin-btn[aria-pressed='true'] {
   color: var(--accent);
-  border-color: rgba(0, 212, 255, 0.62);
-  background: rgba(0, 212, 255, 0.1);
-  box-shadow: 0 0 0.55rem rgba(0, 212, 255, 0.12);
+  border-color: rgba(108, 180, 250, 0.62);
+  background: rgba(108, 180, 250, 0.1);
+  box-shadow: 0 0 0.55rem rgba(108, 180, 250, 0.12);
 }
 
 #command-dock .panel-divider {
@@ -8839,9 +8839,9 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
   [data-status='thinking'],
   [data-status='speaking']
 ) .gev-mic-orbit {
-  background: rgba(0, 212, 255, 0.06);
-  border-color: rgba(0, 212, 255, 0.48);
-  box-shadow: 0 0 0 0.18rem rgba(0, 212, 255, 0.06), 0 0 0.9rem rgba(0, 212, 255, 0.12);
+  background: rgba(108, 180, 250, 0.06);
+  border-color: rgba(108, 180, 250, 0.48);
+  box-shadow: 0 0 0 0.18rem rgba(108, 180, 250, 0.06), 0 0 0.9rem rgba(108, 180, 250, 0.12);
 }
 
 #command-dock #gev-voice-button:hover .gev-mic-orbit img,
@@ -8883,11 +8883,11 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
 }
 
 #command-dock > :is(#location-bar, #control-panel).dock-pinned {
-  border-color: rgba(0, 212, 255, 0.55);
+  border-color: rgba(108, 180, 250, 0.55);
   box-shadow:
     0 8px 32px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(0, 212, 255, 0.08) inset,
-    0 0 1rem rgba(0, 212, 255, 0.12);
+    0 0 0 1px rgba(108, 180, 250, 0.08) inset,
+    0 0 1rem rgba(108, 180, 250, 0.12);
 }
 
 #command-dock #location-bar .location-toolbar {
@@ -8971,7 +8971,7 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
   border-radius: 0.38rem;
   box-shadow:
     0 0.85rem 2rem rgba(0, 0, 0, 0.58),
-    0 0 1.2rem rgba(0, 212, 255, 0.08);
+    0 0 1.2rem rgba(108, 180, 250, 0.08);
   backdrop-filter: blur(24px) saturate(1.3);
   -webkit-backdrop-filter: blur(24px) saturate(1.3);
   pointer-events: none;
@@ -9059,8 +9059,8 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: rgba(0, 212, 255, 0.06);
-  border: 1px solid rgba(0, 212, 255, 0.34);
+  background: rgba(108, 180, 250, 0.06);
+  border: 1px solid rgba(108, 180, 250, 0.34);
   border-radius: 0.18rem;
   color: var(--text-secondary);
   font-family: var(--font-mono);
@@ -9074,8 +9074,8 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
 
 .gev-voice-tier-btn:hover {
   color: var(--text-primary);
-  border-color: rgba(0, 212, 255, 0.6);
-  background: rgba(0, 212, 255, 0.12);
+  border-color: rgba(108, 180, 250, 0.6);
+  background: rgba(108, 180, 250, 0.12);
 }
 
 /* MINI engaged — amber, distinct from the cyan default so the cheaper tier
@@ -9151,7 +9151,7 @@ body:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minim
   border-radius: 0.65rem;
   box-shadow:
     0 1.4rem 4.5rem rgba(0, 0, 0, 0.72),
-    0 0 2.5rem rgba(0, 212, 255, 0.09),
+    0 0 2.5rem rgba(108, 180, 250, 0.09),
     inset 0 0 0 1px rgba(255, 255, 255, 0.025);
   backdrop-filter: blur(28px) saturate(1.25);
   -webkit-backdrop-filter: blur(28px) saturate(1.25);
@@ -9463,7 +9463,7 @@ body.scene-playback-mode #first-run-launcher {
   border-radius: 0.42rem;
   box-shadow:
     0 0.4rem 1.6rem rgba(0, 0, 0, 0.5),
-    0 0 1.2rem rgba(0, 212, 255, 0.07);
+    0 0 1.2rem rgba(108, 180, 250, 0.07);
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
   cursor: pointer;
@@ -9505,7 +9505,7 @@ body.scene-playback-mode #first-run-launcher {
   border-radius: 0.65rem;
   box-shadow:
     0 1.4rem 4.5rem rgba(0, 0, 0, 0.72),
-    0 0 2.5rem rgba(0, 212, 255, 0.09),
+    0 0 2.5rem rgba(108, 180, 250, 0.09),
     inset 0 0 0 1px rgba(255, 255, 255, 0.025);
   backdrop-filter: blur(28px) saturate(1.25);
   -webkit-backdrop-filter: blur(28px) saturate(1.25);
