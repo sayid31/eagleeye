@@ -15,7 +15,9 @@ const REFRESH_MS = 1500;
 const CLOCK_MS = 1000;
 const POSITION_MS = 500;
 const PANEL_TITLE = 'Layer data';
-const RAIL_PANELS = Object.freeze({ layers: 'data-panel', camera: 'cctv-panel', scenes: 'scene-panel' });
+const RAIL_PANELS = Object.freeze({ layers: 'data-panel', camera: 'cctv-panel', scenes: 'scene-panel',
+  display: 'pp-toggles', context: 'global-context-panel',
+});
 
 /**
  * Mount the shell. Returns a disposer that removes the markup and timers.

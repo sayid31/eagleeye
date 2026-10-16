@@ -1,0 +1,38 @@
+/* Chrome clean-up: collapsed panel launchers and the imagery attribution.
+   Scoped to body.ee-shell; loaded after shell.css. */
+
+/* The collapsed title cards (LAYER DATA, KAMERA, SCENES, DISPLAY, CONTEXT) are
+   reached from the left rail instead. They leave the layout but stay in the DOM:
+   the rail proxies clicks to their collapse buttons and the panel mixins read
+   their titles for aria labels. */
+body.ee-shell #data-panel.collapsed,
+body.ee-shell #cctv-panel.collapsed,
+body.ee-shell #scene-panel.collapsed,
+body.ee-shell #pp-toggles.collapsed,
+body.ee-shell #global-context-panel.collapsed {
+  display: none;
+}
+
+/* Imagery attribution (Google / Cesium ToS) sits at the status bar's right end.
+   The legacy bottom-left rules in style.css carry up to 2 ids and :has() arguments
+   of specificity, so these use !important to win; the text itself is never hidden. */
+body.ee-shell:not(.ui-clean-view):not(.recording-mode) #cesium-credits,
+body.ee-shell:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minimal'].active) #cesium-credits {
+  right: 16px !important;
+  bottom: 0 !important;
+  left: auto !important;
+  width: auto !important;
+  max-width: 340px !important;
+  height: var(--ee-statusbar-h);
+  text-align: right;
+  text-shadow: none;
+  font-family: var(--ee-font-sans);
+}
+
+@media (max-width: 900px) {
+  body.ee-shell:not(.ui-clean-view):not(.recording-mode) #cesium-credits,
+  body.ee-shell:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minimal'].active) #cesium-credits {
+    bottom: 0 !important;
+    max-width: calc(100vw - 32px) !important;
+  }
+}

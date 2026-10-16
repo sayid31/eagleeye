@@ -1615,7 +1615,14 @@ The popup now lines up with the panel's other full-width rows. See
   controls. The shell never writes layer state.
 - Layer rows show a status from `layerShellStatus` (`src/shell/layerStatus.js`): Live, Terganggu, Mati,
   Memuat, or Data statis for bundled datasets. `.data-name` text is unchanged because voice focus reads it.
-- `#cesium-credits` is moved to the status bar and is never hidden.
+- `#cesium-credits` is moved to the status bar's right end (`chrome.css`, `!important` to beat the legacy
+  bottom-left rules) and is never hidden. The status bar and the dock no longer overlap.
+- The top bar has no background; the search is for locations only (Ctrl K focuses it). The left rail is a
+  translucent floating bar centred vertically; it has entries for Layer data, Kamera, Skenario, Tampilan
+  (DISPLAY) and Konteks (CONTEXT). Collapsed panel launcher cards are removed from the layout
+  (`chrome.css`) and opened from the rail; their DOM stays for aria labels and panel code.
+- The dock (`dock.css`) is a row of a location pill, a style pill and a round blue mic. Tray titles, the
+  AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
 - The CCTV panel starts with the camera inspector (`src/shell/cameraInspector*.js`). Its buttons
   click the existing FOCUS and ADJUST controls. Operator and last-checked time are not in the CCTV
   public state, so they read "tidak diketahui". "Lokasi perkiraan ±3 km" appears only for `calBadge === 'raw-prior'`.

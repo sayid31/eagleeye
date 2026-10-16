@@ -2,3 +2,5 @@
 @import './base.css';
 @import './shell.css';
 @import './inspector.css';
+@import './chrome.css';
+@import './dock.css';

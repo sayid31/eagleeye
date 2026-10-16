@@ -1,0 +1,200 @@
+/* Bottom dock, matching the reference: [location pill] [style pill] [round mic].
+   style.css styles the dock with ids, :has() and media-query variants, so the
+   layout-critical properties here use !important. Markup is untouched: titles,
+   status text and cost readouts are clipped visually and stay for assistive tech. */
+
+body.ee-shell #command-dock {
+  bottom: calc(var(--ee-statusbar-h) + 16px);
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center;
+  gap: 8px;
+  width: auto !important;
+  max-width: calc(100vw - 24px);
+  padding: 8px;
+  background: rgba(13, 19, 27, 0.88);
+  border: 1px solid var(--ee-border);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+body.ee-shell #command-dock > #location-bar,
+body.ee-shell #command-dock > #control-panel {
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0;
+  margin: 0 !important;
+  background: var(--ee-surface-2);
+  border: 1px solid var(--ee-border) !important;
+  border-radius: 10px;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.ee-shell #command-dock > #location-bar { order: 1; }
+body.ee-shell #command-dock > #control-panel { order: 2; }
+body.ee-shell #command-dock > #gev-voice-control { order: 3; }
+
+body.ee-shell #command-dock .location-inner,
+body.ee-shell #command-dock .panel-inner {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 12px;
+}
+
+/* Tray titles are clipped, not removed. */
+body.ee-shell #command-dock .location-toolbar,
+body.ee-shell #command-dock #control-panel .panel-title,
+body.ee-shell #command-dock #control-panel .panel-mini-label,
+body.ee-shell #command-dock .location-mini-poi,
+body.ee-shell #command-dock .gev-voice-heading,
+body.ee-shell #command-dock .gev-voice-kicker,
+body.ee-shell #command-dock .gev-voice-visualizer,
+body.ee-shell #command-dock .gev-voice-readout,
+body.ee-shell #command-dock .gev-mic-label {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* Location pill: "📍 Jakarta ▾". */
+body.ee-shell #command-dock #location-bar .location-mini-status {
+  display: block !important;
+  padding: 0;
+}
+
+body.ee-shell #command-dock .location-mini-city {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--ee-text);
+  font: 500 14px var(--ee-font-sans);
+  letter-spacing: 0;
+}
+
+body.ee-shell #command-dock .location-mini-city::after {
+  content: '▾';
+  margin-left: 8px;
+  color: var(--ee-text-muted);
+}
+
+/* Style pill: shows the active style; the full-size toggle covers it as the click target. */
+body.ee-shell #command-dock #control-panel .panel-mini-status {
+  display: flex !important;
+  padding: 0;
+}
+
+body.ee-shell #command-dock #control-panel #style-mini-value {
+  color: var(--ee-accent);
+  font: 500 14px var(--ee-font-sans);
+  letter-spacing: 0;
+  text-transform: lowercase;
+}
+
+body.ee-shell #command-dock #control-panel #style-mini-value::first-letter {
+  text-transform: uppercase;
+}
+
+body.ee-shell #command-dock #control-panel #style-mini-value::after {
+  content: '▾';
+  margin-left: 8px;
+  color: var(--ee-text-muted);
+}
+
+body.ee-shell #command-dock #control-panel .dock-tray-toggle {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  margin: 0;
+  opacity: 0;
+}
+
+body.ee-shell #command-dock #control-panel:has(.dock-tray-toggle:focus-visible) {
+  outline: 2px solid var(--ee-accent);
+  outline-offset: 2px;
+  border-radius: 10px;
+}
+
+/* Trays open as calm surfaces, not glass with glow. */
+body.ee-shell #command-dock .dock-popover-content {
+  background: var(--ee-surface);
+  border: 1px solid var(--ee-border);
+  border-radius: var(--ee-radius);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+/* Round blue mic; status, tier and cost text stay in the DOM, clipped. */
+body.ee-shell #command-dock#command-dock > #gev-voice-control {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+body.ee-shell #command-dock #gev-voice-button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: var(--ee-accent);
+  border: 0;
+  border-radius: 50%;
+  box-shadow: none;
+}
+
+body.ee-shell #command-dock #gev-voice-button .gev-mic-orbit {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+
+body.ee-shell #command-dock #gev-voice-button .gev-mic-orbit img {
+  filter: brightness(0) !important;
+  opacity: 0.85 !important;
+}
+
+body.ee-shell #command-dock #gev-voice-control:is(
+  [data-status='listening'],
+  [data-status='thinking'],
+  [data-status='speaking'],
+  [data-status='executing']
+) #gev-voice-button {
+  box-shadow: 0 0 0 4px var(--ee-accent-soft);
+}
+
+body.ee-shell #command-dock #gev-voice-control[data-status='error'] #gev-voice-button {
+  box-shadow: 0 0 0 3px var(--ee-bad);
+}
+
+body.ee-shell #command-dock #gev-voice-control #gev-voice-status,
+body.ee-shell #command-dock #gev-voice-control .gev-voice-cost,
+body.ee-shell #command-dock #gev-voice-control #gev-voice-detail {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}

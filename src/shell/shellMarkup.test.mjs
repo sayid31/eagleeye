@@ -10,7 +10,7 @@ test('every rail target resolves to an element that already exists in index.html
   for (const item of RAIL_ITEMS) {
     const id = /#([\w-]+)$/.exec(item.target)?.[1];
     const collapse = /data-collapse-target="([\w-]+)"/.exec(item.target)?.[1];
-    if (collapse) assert.match(html, new RegExp(`class="panel-collapse-btn" data-collapse-target="${collapse}"`), item.id);
+    if (collapse) assert.match(html, new RegExp(`class="panel-collapse-btn[^"]*" data-collapse-target="${collapse}"`), item.id);
     else assert.match(html, new RegExp(`id="${id}"`), item.id);
   }
 });
@@ -25,6 +25,13 @@ test('top bar has search, a live-region health chip and a UTC clock', () => {
   assert.match(markup, /id="shell-search-input"[^>]*aria-label=/);
   assert.match(markup, /id="shell-health"[^>]*role="status"/);
   assert.match(markup, /id="shell-clock"/);
+});
+
+test('search is for locations only and the rail reaches every collapsed panel', () => {
+  assert.match(topBarMarkup(), /placeholder="Cari lokasi"/);
+  assert.doesNotMatch(topBarMarkup(), /kamera|perintah/i);
+  const ids = RAIL_ITEMS.map((item) => item.id);
+  for (const id of ['layers', 'camera', 'scenes', 'display', 'context']) assert.ok(ids.includes(id), id);
 });
 
 test('status bar carries coordinates, MGRS and altitude, and never the attribution', () => {
