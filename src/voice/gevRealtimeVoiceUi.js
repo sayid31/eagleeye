@@ -1,5 +1,5 @@
 // GevRealtimeController voice UI: push-to-talk, mic, visualizers, status and button label.
-import { ASSISTANT_VISUALIZER_GATE, MICROPHONE_VISUALIZER_GATE, STATUS } from './gevRealtimeConstants.js';
+import { ASSISTANT_VISUALIZER_GATE, MICROPHONE_VISUALIZER_GATE } from './gevRealtimeConstants.js';
 import {
   gateVoiceVisualizerLevel,
   isPushToTalkKey,
@@ -10,6 +10,15 @@ import {
   shouldHandlePushToTalkKeyDown,
 } from './gevRealtimeVoiceControlUi.js';
 import { shouldPauseRadioForVoice } from './gevRealtimeRadioHelpers.js';
+
+/** Session status → on-screen (Indonesian) label; keys match `STATUS` in gevRealtimeConstants.js. */
+const STATUS_LABELS = Object.freeze({
+  idle: 'MATI',
+  connecting: 'MENGHUBUNGKAN',
+  listening: 'MENDENGARKAN',
+  executing: 'MENJALANKAN',
+  error: 'GALAT',
+});
 
 export const voiceUiMixin = {
 /**
@@ -37,7 +46,7 @@ export const voiceUiMixin = {
       this.ui.root.dataset.pushToTalk = 'held';
       if (this.isActive()) {
         this.setMicrophoneEnabled(true);
-        if (this.status === 'listening') this.setStatus('listening', 'Release Space to send');
+        if (this.status === 'listening') this.setStatus('listening', 'Lepas Space untuk kirim');
       } else {
         this.start({ pushToTalk: true });
       }
@@ -76,7 +85,7 @@ export const voiceUiMixin = {
     delete this.ui.root.dataset.pushToTalk;
     if (!this.pushToTalkMode) return;
     this.setMicrophoneEnabled(false);
-    if (this.status === 'listening') this.setStatus('listening', 'Hold Space to talk');
+    if (this.status === 'listening') this.setStatus('listening', 'Tahan Space untuk bicara');
     else this.updateVoiceButtonLabel();
   },
 
@@ -207,18 +216,18 @@ setStatus(status, detail) {
     this.ui.root.dataset.status = status;
     if (status === 'error') this.ui.root.classList.remove('error-dismissed');
     this.updateVoiceButtonLabel();
-    this.ui.status.textContent = STATUS[status] || STATUS.idle;
+    this.ui.status.textContent = STATUS_LABELS[status] || STATUS_LABELS.idle;
     const resolvedDetail = status === 'listening' && this.pushToTalkMode
-      ? (this.pushToTalkKeyHeld ? 'Release Space to send' : 'Hold Space to talk')
+      ? (this.pushToTalkKeyHeld ? 'Lepas Space untuk kirim' : 'Tahan Space untuk bicara')
       : detail;
     const primaryDetail = status === 'error'
-      ? 'VOICE UNAVAILABLE'
-      : (resolvedDetail || (status === 'idle' ? 'VOICE STANDBY' : 'VOICE ACTIVE'));
+      ? 'SUARA TIDAK TERSEDIA'
+      : (resolvedDetail || (status === 'idle' ? 'SUARA SIAGA' : 'SUARA AKTIF'));
     this.ui.detail.textContent = primaryDetail;
     this.ui.detail.title = primaryDetail;
     if (this.ui.errorDetail) {
       this.ui.errorDetail.textContent = status === 'error'
-        ? (resolvedDetail || 'Voice session could not be started.')
+        ? (resolvedDetail || 'Sesi suara tidak dapat dimulai.')
         : '';
     }
     if (status === 'idle' || status === 'connecting' || status === 'error') {
@@ -235,7 +244,7 @@ setStatus(status, detail) {
    */
   updateVoiceButtonLabel() {
     if (!this.ui.buttonLabel) return;
-    this.ui.buttonLabel.textContent = 'MIC';
+    this.ui.buttonLabel.textContent = 'MIK';
     if (this.ui.helpDetail) {
       this.ui.helpDetail.textContent = resolveVoiceControlHint(
         this.pushToTalkMode,

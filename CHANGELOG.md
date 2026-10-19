@@ -5,6 +5,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- Every user-visible label is now Indonesian, matching the layer panel: the control panels, HUD and cockpit
+  text, CCTV and scene controls, radio, key setup, first-run chooser, map-source messages, status and error
+  texts, tooltips and aria-labels. Brand names, abbreviations (CCTV, HUD, NVG, FLIR, CRT, AIS, UTC, ADS-B,
+  FOV), units and provider names stay as they are. Layer names that voice focus reads, the voice prompts and
+  tool schemas, and names that come from upstream data stay English.
+
 ### Fixed
 
 - The bottom dock is smaller, matching the mockup: it was about 60 px tall and stretched its menu to that

@@ -200,7 +200,7 @@ export const cctvPanelMixin = {
         selectedCameraId: cameraId,
         calibration: { cameraId, save: true },
       }, { origin: 'user' });
-      this._showToast('CCTV calibration saved');
+      this._showToast('Kalibrasi CCTV disimpan');
     });
 
     this._cctvCalibResetBtn?.addEventListener('click', () => {
@@ -611,18 +611,18 @@ export const cctvPanelMixin = {
   _syncCctvSourceBadge(activeCamera, enabled) {
     if (!this._cctvSourceBadge) return;
     if (!enabled || !activeCamera) {
-      this._cctvSourceBadge.textContent = 'SOURCE · UNKNOWN';
+      this._cctvSourceBadge.textContent = 'SUMBER · TIDAK DIKETAHUI';
       this._cctvSourceBadge.dataset.frameState = 'idle';
       return;
     }
     const hasDisplayedFrame = this._cctvFrameWrap?.classList.contains('has-frame');
     if (this._cctvFrame?.dataset.loading === 'true' && !hasDisplayedFrame) {
-      this._cctvSourceBadge.textContent = 'FRAME · LOADING';
+      this._cctvSourceBadge.textContent = 'FRAME · MEMUAT';
       this._cctvSourceBadge.dataset.frameState = 'loading';
       return;
     }
     if (this._cctvFrame?.dataset.error === 'true' && !hasDisplayedFrame) {
-      this._cctvSourceBadge.textContent = 'FRAME · UNAVAILABLE';
+      this._cctvSourceBadge.textContent = 'FRAME · TIDAK TERSEDIA';
       this._cctvSourceBadge.dataset.frameState = 'error';
       return;
     }
@@ -630,7 +630,7 @@ export const cctvPanelMixin = {
     // plainly, ahead of the generic status, so a dead source is never read as
     // a fault in this app.
     if (isSourceOffline(activeCamera.sourceStatus)) {
-      this._cctvSourceBadge.textContent = '⛔ CAMERA OFFLINE · SOURCE DOWN';
+      this._cctvSourceBadge.textContent = '⛔ KAMERA MATI · SUMBER MATI';
       this._cctvSourceBadge.dataset.frameState = 'offline';
       return;
     }
@@ -674,7 +674,7 @@ export const cctvPanelMixin = {
         reset: true,
       },
     }, { origin: 'user' });
-    this._showToast('CCTV calibration reset');
+    this._showToast('Kalibrasi CCTV diatur ulang');
   },
 
   /**
@@ -738,7 +738,7 @@ export const cctvPanelMixin = {
     if (this._cctvAdjustBtn) {
       const adjustOn = !!this._cctvState?.calibrationMode;
       this._cctvAdjustBtn.classList.toggle('active', adjustOn && canCalibrate);
-      this._cctvAdjustBtn.textContent = adjustOn ? 'ADJUST ON' : 'ADJUST';
+      this._cctvAdjustBtn.textContent = adjustOn ? 'ATUR AKTIF' : 'ATUR';
       this._cctvAdjustBtn.disabled = !canCalibrate;
     }
     if (this._cctvCalReadout) {
@@ -766,7 +766,7 @@ export const cctvPanelMixin = {
    */
   async _toggleCctvEnabled(forceState) {
     if (!this._dataManager || !this._dataManager.layers?.has('cctv')) {
-      this._showToast('CCTV layer unavailable');
+      this._showToast('Layer CCTV tidak tersedia');
       return false;
     }
     const enabled = this._dataManager.isEnabled('cctv');
@@ -842,7 +842,7 @@ export const cctvPanelMixin = {
 
     if (this._cctvEnableBtn) {
       this._cctvEnableBtn.classList.toggle('active', enabled);
-      this._cctvEnableBtn.textContent = enabled ? 'CCTV ON' : 'CCTV OFF';
+      this._cctvEnableBtn.textContent = enabled ? 'CCTV HIDUP' : 'CCTV MATI';
     }
 
     if (this._cctvCameraListbox) {
@@ -870,22 +870,22 @@ export const cctvPanelMixin = {
       const mode = state?.coverageMode || (state?.showCoverage ? 'on' : 'off');
       this._cctvCoverageBtn.classList.toggle('active', mode !== 'off');
       this._cctvCoverageBtn.textContent = mode === 'viewshed'
-        ? 'VIEWSHED ON'
-        : mode === 'on' ? 'COVERAGE ON' : 'COVERAGE OFF';
+        ? 'VIEWSHED AKTIF'
+        : mode === 'on' ? 'CAKUPAN AKTIF' : 'CAKUPAN MATI';
       this._cctvCoverageBtn.disabled = !enabled;
     }
 
     if (this._cctvAutoHopBtn) {
       const autoHop = !!state?.autoHop;
       this._cctvAutoHopBtn.classList.toggle('active', autoHop);
-      this._cctvAutoHopBtn.textContent = autoHop ? 'AUTO HOP ON' : 'AUTO HOP OFF';
+      this._cctvAutoHopBtn.textContent = autoHop ? 'LOMPAT OTOMATIS HIDUP' : 'LOMPAT OTOMATIS MATI';
       this._cctvAutoHopBtn.disabled = !enabled;
     }
 
     if (this._cctvProjectionBtn) {
       const showProjection = state?.showProjection !== false;
       this._cctvProjectionBtn.classList.toggle('active', showProjection);
-      this._cctvProjectionBtn.textContent = showProjection ? 'PROJECTION ON' : 'PROJECTION OFF';
+      this._cctvProjectionBtn.textContent = showProjection ? 'PROYEKSI HIDUP' : 'PROYEKSI MATI';
       this._cctvProjectionBtn.disabled = !enabled;
     }
 
@@ -909,17 +909,17 @@ export const cctvPanelMixin = {
 
     if (this._cctvMeta) {
       if (activeCamera) {
-        const provider = activeCamera.sourceLabel || activeCamera.provider || 'Configured Source';
+        const provider = activeCamera.sourceLabel || activeCamera.provider || 'Sumber Terkonfigurasi';
         const statusMsg = activeCamera.sourceMessage ? ` · ${activeCamera.sourceMessage}` : '';
         const calBadge = activeCamera.calBadge ? this._calBadgeLabel(activeCamera.calBadge) : '';
         const projLabel = state?.showProjection !== false ? 'MONITOR' : 'OFF';
-        this._cctvMeta.textContent = `${activeCamera.city} · HDG ${Math.round(activeCamera.headingDeg)}° · FOV ${Math.round(activeCamera.fovDeg)}° · RANGE ${Math.round(activeCamera.rangeM)}m · ${projLabel}${calBadge ? ` · ${calBadge}` : ''} · ${provider}${statusMsg}`;
+        this._cctvMeta.textContent = `${activeCamera.city} · HDG ${Math.round(activeCamera.headingDeg)}° · FOV ${Math.round(activeCamera.fovDeg)}° · JARAK ${Math.round(activeCamera.rangeM)}m · ${projLabel}${calBadge ? ` · ${calBadge}` : ''} · ${provider}${statusMsg}`;
       } else if (cameras.length > 0) {
         this._cctvMeta.textContent = enabled
-          ? `${cameras.length} cameras loaded · click a camera to activate`
-          : `${cameras.length} cameras loaded · enable CCTV to activate`;
+          ? `${cameras.length} kamera dimuat · klik kamera untuk mengaktifkan`
+          : `${cameras.length} kamera dimuat · nyalakan CCTV untuk mengaktifkan`;
       } else {
-        this._cctvMeta.textContent = 'Enable CCTV to load camera intersections';
+        this._cctvMeta.textContent = 'Nyalakan CCTV untuk memuat persimpangan kamera';
       }
     }
 
@@ -947,7 +947,7 @@ export const cctvPanelMixin = {
     }
 
     this._syncCctvSourceBadge(activeCamera, enabled);
-    this._typeCctvSummary(state?.summary || 'Enable CCTV to start camera-linked intelligence summaries.');
+    this._typeCctvSummary(state?.summary || 'Nyalakan CCTV untuk memulai ringkasan intelijen berbasis kamera.');
   },
 
   /**
@@ -959,7 +959,7 @@ export const cctvPanelMixin = {
    */
   _typeCctvSummary(text) {
     if (!this._cctvSummary) return;
-    const nextText = String(text || '').trim() || 'No summary available.';
+    const nextText = String(text || '').trim() || 'Ringkasan tidak tersedia.';
     if (nextText === this._lastCctvSummaryText) return;
     this._lastCctvSummaryText = nextText;
 

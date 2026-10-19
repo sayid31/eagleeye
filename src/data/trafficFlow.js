@@ -28,11 +28,11 @@ export function deriveTrafficFlowError(error) {
   if (!error || error.name === 'AbortError') return null;
   const message = String(error.message || error);
   const status = Number(message.match(/HTTP (\d{3})/)?.[1]);
-  if (status === 503) return 'TomTom key unavailable';
-  if (status === 429) return 'TomTom daily budget reached';
-  if (status === 502 || status === 504) return 'TomTom upstream unreachable';
-  if (Number.isFinite(status)) return `TomTom flow error (HTTP ${status})`;
-  return 'TomTom flow unavailable';
+  if (status === 503) return 'Kunci TomTom tidak tersedia';
+  if (status === 429) return 'Kuota harian TomTom habis';
+  if (status === 502 || status === 504) return 'Server TomTom tidak terjangkau';
+  if (Number.isFinite(status)) return `Galat aliran TomTom (HTTP ${status})`;
+  return 'Aliran TomTom tidak tersedia';
 }
 
 /**
@@ -69,7 +69,7 @@ export function trafficFeedPresentation({
     // drops `loadingLabel` in its error branch, so the owner's SIMULATED copy
     // has to BE the error text or the steady state reverts to a bare
     // "TomTom daily budget reached" that never says what is on screen.
-    const degraded = `SIMULATED — ${flowError}`;
+    const degraded = `SIMULASI — ${flowError}`;
     return { mode, error: degraded, loadingLabel: degraded };
   }
   if (liveMode) {
@@ -77,8 +77,8 @@ export function trafficFeedPresentation({
       mode,
       error: null,
       loadingLabel: fetching
-        ? 'syncing LIVE traffic flow'
-        : `LIVE · TomTom flow · ${coveragePct}% cov`,
+        ? 'menyinkronkan aliran lalu lintas LIVE'
+        : `LIVE · aliran TomTom · cakupan ${coveragePct}%`,
     };
   }
   // Keyless simulation — one terse line that names the mode and the remedy
@@ -88,8 +88,8 @@ export function trafficFeedPresentation({
     mode,
     error: null,
     loadingLabel: statusUnavailable
-      ? 'SIMULATED — traffic service unreachable'
-      : 'SIMULATED — add TomTom key for live',
+      ? 'SIMULASI — layanan lalu lintas tidak terjangkau'
+      : 'SIMULASI — tambahkan kunci TomTom untuk live',
   };
 }
 

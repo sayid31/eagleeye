@@ -51,7 +51,7 @@ export async function updateSatellitesLayer(viewer, { signal = null } = {}) {
       // the chip still read "just now". Keep the existing (stale) catalog on
       // screen and surface the outage instead — do NOT stamp _lastUpdate.
       if (results.every(r => !r.ok)) {
-        S._lastError = 'CelesTrak unreachable';
+        S._lastError = 'CelesTrak tidak terjangkau';
         console.warn('[Data:Satellites] All CelesTrak groups failed — keeping existing catalog, surfacing outage');
         // Re-apply dense mode is skipped (no fresh core catalog); tracking untouched.
         return;
@@ -61,7 +61,7 @@ export async function updateSatellitesLayer(viewer, { signal = null } = {}) {
       // partial outage visible at the layer control instead of presenting the
       // reduced catalog as a fully healthy refresh.
       S._lastError = failed.length
-        ? `${failed.length} CelesTrak group${failed.length === 1 ? '' : 's'} unavailable`
+        ? `${failed.length} grup CelesTrak tidak tersedia`
         : null;
 
       // Clear existing

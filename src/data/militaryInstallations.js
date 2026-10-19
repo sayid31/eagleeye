@@ -108,7 +108,7 @@ export function installationSourceLabel(record) {
   const names = [...new Set((Array.isArray(record?.sources) ? record.sources : [])
     .map((source) => String(source?.name || '').trim())
     .filter(Boolean))];
-  return names.join(' + ') || 'Unknown mapped source';
+  return names.join(' + ') || 'Sumber terpetakan tidak diketahui';
 }
 
 /**
@@ -274,7 +274,7 @@ function renderRecords() {
     entity.gevTrackedId = `installations:${record.id}`;
     entity.gevDisplayPosition = () => displayPosition;
     entity.gevLabelModel = {
-      title: record.name || 'MAPPED INSTALLATION',
+      title: record.name || 'INSTALASI TERPETAKAN',
       details: [String(record.class || 'installation').replaceAll('_', ' ').toUpperCase()],
       accent: COLOR_BY_CLASS[record.class] || '#9ca6b0',
     };
@@ -409,7 +409,7 @@ async function loadInstallations() {
     state.abort = null;
     state.loading = false;
     clearUnavailableRetry();
-    setInstallationStatus('zoom-in', 'Zoom in to load mapped installation context');
+    setInstallationStatus('zoom-in', 'Perbesar untuk memuat konteks instalasi terpetakan');
     return;
   }
   state.abort?.abort();
@@ -496,14 +496,14 @@ async function loadInstallations() {
     setInstallationStatus(
       state.records.length ? (state.stale ? 'stale' : 'ready') : 'empty',
       payload.status === 'stale'
-        ? 'Serving cached mapped context'
-        : (saturated ? 'Too many mapped sites in view to list them all' : placesError),
+        ? 'Menyajikan konteks terpetakan dari cache'
+        : (saturated ? 'Terlalu banyak situs terpetakan di tampilan untuk didaftar semuanya' : placesError),
     );
     renderRecords();
     warmInstallationFloors(state.records);
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    setInstallationStatus('unavailable', error?.message || 'Installation context unavailable');
+    setInstallationStatus('unavailable', error?.message || 'Konteks instalasi tidak tersedia');
     scheduleUnavailableRetry();
   } finally {
     // An older aborted request must not clear a newer request's busy state.
@@ -630,7 +630,7 @@ const militaryInstallationsLayer = {
       error: state.error,
       status: state.status,
       loading: state.loading,
-      loadingLabel: state.loading ? 'loading mapped installation context' : '',
+      loadingLabel: state.loading ? 'memuat konteks instalasi terpetakan' : '',
     };
   },
 };

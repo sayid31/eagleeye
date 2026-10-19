@@ -19,29 +19,29 @@ import {
 import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 test('universal status notices reuse the standard failure dwell', () => {
-  const notice = createGlobalStatusNotice('Shared satellite is unavailable', 1000);
+  const notice = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 1000);
   assert.equal(notice.hideAt, null, 'finite dwell waits until first presentation');
-  assert.equal(presentGlobalStatusNotice(notice, 1001).label, 'Shared satellite is unavailable');
+  assert.equal(presentGlobalStatusNotice(notice, 1001).label, 'Satelit yang dibagikan tidak tersedia');
   assert.equal(notice.hideAt, 1001 + LOADING_FAILURE_DWELL_MS);
   assert.deepEqual(presentGlobalStatusNotice(notice, notice.hideAt - 1), {
     state: 'error',
-    label: 'Shared satellite is unavailable',
+    label: 'Satelit yang dibagikan tidak tersedia',
     detail: '',
   });
   assert.equal(presentGlobalStatusNotice(notice, notice.hideAt), null);
 });
 
 test('acquiring notices persist without a dwell until explicitly cleared', () => {
-  const notice = createGlobalStatusNotice('ACQUIRING', 1000, {
+  const notice = createGlobalStatusNotice('MEMPEROLEH', 1000, {
     state: 'acquiring',
-    detail: 'SHARED FLIGHT',
+    detail: 'DIBAGIKAN FLIGHT',
     persistent: true,
   });
   assert.equal(notice.hideAt, null);
   assert.deepEqual(presentGlobalStatusNotice(notice, 1_000_000), {
     state: 'acquiring',
-    label: 'ACQUIRING',
-    detail: 'SHARED FLIGHT',
+    label: 'MEMPEROLEH',
+    detail: 'DIBAGIKAN FLIGHT',
   });
 });
 
@@ -78,10 +78,10 @@ test('universal notice masks active loading only for its own fixed dwell', () =>
   const summary = aggregateLayerLoading([{ id: 'satellites', name: 'Satellites', lifecycleState: 'enabling' }]);
   let loading = reduceLoadingFeedback(createLoadingFeedbackState(), summary, 0);
   loading = reduceLoadingFeedback(loading, summary, 200);
-  const notice = createGlobalStatusNotice('Shared satellite is unavailable', 300);
+  const notice = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 300);
 
-  assert.equal(presentGlobalLoadingStatus(notice, loading, summary, 301).label, 'Shared satellite is unavailable');
-  assert.equal(presentGlobalLoadingStatus(notice, loading, summary, notice.hideAt).label, 'LOADING LIVE DATA');
+  assert.equal(presentGlobalLoadingStatus(notice, loading, summary, 301).label, 'Satelit yang dibagikan tidak tersedia');
+  assert.equal(presentGlobalLoadingStatus(notice, loading, summary, notice.hideAt).label, 'MEMUAT DATA LIVE');
 });
 
 test('terminal failure preempts a finite notice, whose full dwell starts afterward', () => {
@@ -91,22 +91,22 @@ test('terminal failure preempts a finite notice, whose full dwell starts afterwa
   loading = reduceLoadingFeedback(loading, aggregateLayerLoading([]), 300, {
     type: 'visibility-failed', layerId: 'satellites', error: new Error('offline'),
   });
-  const notice = createGlobalStatusNotice('Shared satellite is unavailable', 400);
+  const notice = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 400);
 
   assert.equal(
     presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), 401).label,
-    'LOAD FAILED',
+    'MUAT GAGAL',
   );
   assert.equal(notice.hideAt, null, 'masked finite notice has not started its dwell');
   loading = reduceLoadingFeedback(loading, aggregateLayerLoading([]), 5300);
   assert.equal(
     presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), 5300).label,
-    'Shared satellite is unavailable',
+    'Satelit yang dibagikan tidak tersedia',
   );
   assert.equal(notice.hideAt, 5300 + LOADING_FAILURE_DWELL_MS);
   assert.equal(
     presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), notice.hideAt - 1).label,
-    'Shared satellite is unavailable',
+    'Satelit yang dibagikan tidak tersedia',
   );
   assert.equal(presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), notice.hideAt), null);
 });
@@ -121,40 +121,40 @@ test('persistent acquisition never hides an unrelated manager failure', () => {
   loading = reduceLoadingFeedback(loading, idle, 300, {
     type: 'visibility-failed', layerId: 'traffic', error: new Error('offline'),
   });
-  const acquiring = createGlobalStatusNotice('ACQUIRING', 100, {
+  const acquiring = createGlobalStatusNotice('MEMPEROLEH', 100, {
     state: 'acquiring',
-    detail: 'SHARED FLIGHT',
+    detail: 'DIBAGIKAN FLIGHT',
     persistent: true,
   });
 
   assert.deepEqual(presentGlobalLoadingStatus(acquiring, loading, idle, 301), {
     state: 'error',
-    label: 'LOAD FAILED',
+    label: 'MUAT GAGAL',
     detail: '',
   });
   assert.equal(
     presentGlobalLoadingStatus(acquiring, loading, idle, 300 + LOADING_FAILURE_DWELL_MS - 1).label,
-    'LOAD FAILED',
+    'MUAT GAGAL',
   );
   loading = reduceLoadingFeedback(loading, idle, 300 + LOADING_FAILURE_DWELL_MS);
   assert.equal(
     presentGlobalLoadingStatus(acquiring, loading, idle, 300 + LOADING_FAILURE_DWELL_MS).label,
-    'ACQUIRING',
+    'MEMPEROLEH',
     'the still-owned acquisition resumes only after the full failure dwell is visible',
   );
 });
 
 test('replacement, repetition, and hidden-tab elapsed time use the newest fixed deadline', () => {
-  const first = createGlobalStatusNotice('Shared satellite is unavailable', 100);
-  const repeated = createGlobalStatusNotice('Shared satellite is unavailable', 200);
-  const replacement = createGlobalStatusNotice('Shared satellite follow expired', 300);
+  const first = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 100);
+  const repeated = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 200);
+  const replacement = createGlobalStatusNotice('Pelacakan satelit yang dibagikan kedaluwarsa', 300);
 
   presentGlobalStatusNotice(first, 100);
   presentGlobalStatusNotice(repeated, 200);
   presentGlobalStatusNotice(replacement, 300);
 
   assert.ok(repeated.hideAt > first.hideAt, 'a repeated event is a new accessible notice epoch');
-  assert.equal(presentGlobalStatusNotice(replacement, replacement.hideAt - 1).label, 'Shared satellite follow expired');
+  assert.equal(presentGlobalStatusNotice(replacement, replacement.hideAt - 1).label, 'Pelacakan satelit yang dibagikan kedaluwarsa');
   assert.equal(presentGlobalStatusNotice(replacement, replacement.hideAt), null,
     'elapsed wall time while hidden expires the notice instead of replaying it');
 });
@@ -194,9 +194,9 @@ test('reveals sustained loading and then a bounded completion state', () => {
   const summary = aggregateLayerLoading([{ id: 'a', name: 'A', lifecycleState: 'enabling' }]);
   const pending = reduceLoadingFeedback(createLoadingFeedbackState(), summary, 100);
   const visible = reduceLoadingFeedback(pending, summary, 300);
-  assert.equal(presentLoadingFeedback(visible, summary, 300).label, 'LOADING LIVE DATA');
+  assert.equal(presentLoadingFeedback(visible, summary, 300).label, 'MEMUAT DATA LIVE');
   const complete = reduceLoadingFeedback(visible, aggregateLayerLoading([]), 350);
-  assert.equal(presentLoadingFeedback(complete, aggregateLayerLoading([]), 350).label, 'LOAD COMPLETE');
+  assert.equal(presentLoadingFeedback(complete, aggregateLayerLoading([]), 350).label, 'MUAT SELESAI');
 });
 
 test('terminal loading feedback centers its label without an empty detail slot', () => {
@@ -242,11 +242,11 @@ test('surfaces manager-owned refresh failure and recovery through the shared ban
     type: 'refresh-transition', layerId: 'satellites', refreshEpoch: 1,
   });
   state = reduceLoadingFeedback(state, refreshing, 200);
-  assert.equal(presentLoadingFeedback(state, refreshing, 200).label, 'REFRESHING LIVE DATA');
+  assert.equal(presentLoadingFeedback(state, refreshing, 200).label, 'MEMPERBARUI DATA LIVE');
   state = reduceLoadingFeedback(state, aggregateLayerLoading([]), 250, {
     type: 'refresh-failed', layerId: 'satellites', error: new Error('offline'), refreshEpoch: 1,
   });
-  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([]), 250).label, 'LOAD FAILED');
+  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([]), 250).label, 'MUAT GAGAL');
 
   const recovered = reduceLoadingFeedback(state, refreshing, 6000, {
     type: 'refresh-transition', layerId: 'satellites', refreshEpoch: 2,
@@ -284,7 +284,7 @@ test('AIS first-connect grace expiry reports failure even without a terminal man
   state = reduceLoadingFeedback(state, unavailable, 300);
 
   assert.equal(state.terminal, 'error');
-  assert.equal(presentLoadingFeedback(state, unavailable, 300).label, 'LOAD FAILED');
+  assert.equal(presentLoadingFeedback(state, unavailable, 300).label, 'MUAT GAGAL');
 });
 
 test('participant stats failure outranks a simultaneous visibility completion', () => {
@@ -335,7 +335,7 @@ test('retains the worst terminal outcome until every concurrent load drains', ()
     type: 'visibility', layerId: 'b', enabled: true,
   });
   assert.equal(state.terminal, 'error');
-  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([]), 350).label, 'LOAD FAILED');
+  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([]), 350).label, 'MUAT GAGAL');
 });
 
 test('retains cancellation across overlapping success and resets it for a later epoch', () => {
@@ -400,9 +400,9 @@ test('describes disable work without reporting it as a completed load', () => {
   }]);
   const pending = reduceLoadingFeedback(createLoadingFeedbackState(), summary, 0);
   const visible = reduceLoadingFeedback(pending, summary, 200);
-  assert.equal(presentLoadingFeedback(visible, summary, 200).label, 'TURNING OFF LIVE DATA');
+  assert.equal(presentLoadingFeedback(visible, summary, 200).label, 'MEMATIKAN DATA LIVE');
   const complete = reduceLoadingFeedback(visible, aggregateLayerLoading([]), 250);
-  assert.equal(presentLoadingFeedback(complete, aggregateLayerLoading([]), 250).label, 'LIVE DATA OFF');
+  assert.equal(presentLoadingFeedback(complete, aggregateLayerLoading([]), 250).label, 'DATA LIVE MATI');
 });
 
 test('a flow failure landing after the roads settle still ends the batch as LOAD FAILED', () => {
@@ -434,7 +434,7 @@ test('a flow failure landing after the roads settle still ends the batch as LOAD
   assert.equal(state.terminal, 'error');
   assert.equal(
     presentLoadingFeedback(state, flowFailed, 900).label,
-    'LOAD FAILED',
+    'MUAT GAGAL',
     'a late flow failure must not be announced as LOAD COMPLETE',
   );
 });
@@ -576,7 +576,7 @@ test('aggregates Mapped Installations refresh beside CCTV without changing eithe
   const visible = reduceLoadingFeedback(pending, summary, 200);
   assert.deepEqual(
     presentLoadingFeedback(visible, summary, 200),
-    { state: 'refresh', label: 'REFRESHING LIVE DATA', detail: 'CCTV · Mapped Installations' },
+    { state: 'refresh', label: 'MEMPERBARUI DATA LIVE', detail: 'CCTV · Mapped Installations' },
   );
 });
 

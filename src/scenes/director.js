@@ -138,7 +138,7 @@ export class SceneDirector {
 
   /** Surface a "scene not saved" notice via the global toast + scene status line. */
   _toastStorageError() {
-    const message = 'Scene not saved — browser storage unavailable';
+    const message = 'Skenario tidak tersimpan — penyimpanan browser tidak tersedia';
     this._updateStatus(message);
     try {
       const toast = document.getElementById('toast');
@@ -245,7 +245,7 @@ export class SceneDirector {
     if (!scene || scene.shots.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'scene-shot-empty';
-      empty.textContent = 'No shots yet. Use CAPTURE SHOT to save current look.';
+      empty.textContent = 'Belum ada shot. Gunakan AMBIL SHOT untuk menyimpan tampilan saat ini.';
       this._sceneShotList.appendChild(empty);
       return;
     }
@@ -271,7 +271,7 @@ export class SceneDirector {
         this._renderShotList();
       });
       label.addEventListener('dblclick', () => {
-        const nextTitle = window.prompt('Shot title', shot.title);
+        const nextTitle = window.prompt('Judul shot', shot.title);
         if (!nextTitle) return;
         shot.title = nextTitle.trim() || shot.title;
         this._saveProject();
@@ -283,14 +283,14 @@ export class SceneDirector {
 
       const loadBtn = document.createElement('button');
       loadBtn.className = 'scene-shot-btn';
-      loadBtn.textContent = 'LOAD';
+      loadBtn.textContent = 'MUAT';
       loadBtn.addEventListener('click', () => {
         this.loadShot(scene.id, shot.id);
       });
 
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'scene-shot-btn scene-shot-danger';
-      deleteBtn.textContent = 'DEL';
+      deleteBtn.textContent = 'HAPUS';
       deleteBtn.addEventListener('click', () => {
         this.deleteShot(scene.id, shot.id);
       });
@@ -334,7 +334,7 @@ export class SceneDirector {
 
   /** Prompt the user for a name and append a new empty scene to the project. */
   _createScene() {
-    const sceneName = window.prompt('New scene name', `Scene ${this._project.scenes.length + 1}`);
+    const sceneName = window.prompt('Nama skenario baru', `Skenario ${this._project.scenes.length + 1}`);
     if (!sceneName) return;
 
     const scene = {
@@ -356,7 +356,7 @@ export class SceneDirector {
     const scene = this._getSelectedScene();
     if (!scene) return;
 
-    const ok = window.confirm(`Delete scene "${scene.title}" and all shots?`);
+    const ok = window.confirm(`Hapus skenario "${scene.title}" beserta semua shot?`);
     if (!ok) return;
 
     this._project.scenes = this._project.scenes.filter((item) => item.id !== scene.id);
@@ -398,7 +398,7 @@ export class SceneDirector {
 
     const camera = this.styleManager.getCameraState();
     if (!camera) {
-      this._updateStatus('Cannot capture shot: camera not ready');
+      this._updateStatus('Tidak bisa mengambil shot: kamera belum siap');
       return;
     }
 
@@ -416,7 +416,7 @@ export class SceneDirector {
     this._selectedShotId = shot.id;
     this._saveProject();
     this._renderShotList();
-    this._updateStatus(`Captured: ${scene.title} / ${shot.title}`);
+    this._updateStatus(`Diambil: ${scene.title} / ${shot.title}`);
   }
 
   /**
@@ -429,7 +429,7 @@ export class SceneDirector {
 
     const shot = scene.shots.find((item) => item.id === this._selectedShotId);
     if (!shot) {
-      this._updateStatus('Select a shot first');
+      this._updateStatus('Pilih shot dulu');
       return;
     }
 
@@ -442,7 +442,7 @@ export class SceneDirector {
 
     this._saveProject();
     this._renderShotList();
-    this._updateStatus(`Updated: ${scene.title} / ${shot.title}`);
+    this._updateStatus(`Diperbarui: ${scene.title} / ${shot.title}`);
   }
 
   /**
@@ -454,7 +454,7 @@ export class SceneDirector {
     const { scene, shot } = this._getShot(sceneId, shotId);
     if (!scene || !shot) return;
 
-    const ok = window.confirm(`Delete shot "${shot.title}"?`);
+    const ok = window.confirm(`Hapus shot "${shot.title}"?`);
     if (!ok) return;
 
     scene.shots = scene.shots.filter((item) => item.id !== shot.id);
@@ -506,7 +506,7 @@ export class SceneDirector {
     if (token.cancelled) return;
 
     if (this._loadAbort === controller) this._loadAbort = null;
-    this._updateStatus(`Loaded: ${scene.title} / ${shot.title}`);
+    this._updateStatus(`Dimuat: ${scene.title} / ${shot.title}`);
     this._updateRuntime('');
   }
 
@@ -542,7 +542,7 @@ export class SceneDirector {
     if (typeof this.styleManager?.runImmediateNavigation !== 'function') return true;
     const claimed = this.styleManager.runImmediateNavigation('scene', () => true);
     if (claimed === false) {
-      this._updateStatus('Camera unavailable — exit cockpit first');
+      this._updateStatus('Kamera tidak tersedia — keluar dari kokpit dulu');
       return false;
     }
     return true;
@@ -639,7 +639,7 @@ export class SceneDirector {
 
     const queue = this._buildPlaybackQueue(sceneId || this._selectedSceneId || this._project.scenes[0]?.id, { single });
     if (!queue.length) {
-      this._updateStatus('No shots to run');
+      this._updateStatus('Tidak ada shot untuk dijalankan');
       return { started: false, reason: 'no-shots' };
     }
 
@@ -687,7 +687,7 @@ export class SceneDirector {
     // Initialize telemetry accumulator for this run
     this._activeRun = {
       recipeId: `project-${PROJECT_VERSION}`,
-      title: 'Editable Scene Run',
+      title: 'Jalankan Skenario Terbuka',
       startedAt: new Date().toISOString(),
       estimatedDurationSec,
       scenesRun: queue.length,
@@ -710,7 +710,7 @@ export class SceneDirector {
         this._renderSceneSelect();
         this._renderShotList();
 
-        this._updateStatus(`Running ${idx + 1}/${queue.length}: ${scene.title} / ${shot.title}`);
+        this._updateStatus(`Menjalankan ${idx + 1}/${queue.length}: ${scene.title} / ${shot.title}`);
         this._updateRuntime(`${scene.title} · ${shot.title}`);
 
         this._logEvent('shot_start', {
@@ -750,11 +750,11 @@ export class SceneDirector {
 
       if (!token.cancelled) {
         this._setProgress(1);
-        this._updateStatus('Scene run complete');
+        this._updateStatus('Skenario selesai dijalankan');
         this._logEvent('scene_run_complete', {});
       }
     } catch (error) {
-      this._updateStatus(`Error: ${error.message || 'run failed'}`);
+      this._updateStatus(`Error: ${error.message || 'gagal dijalankan'}`);
       this._logEvent('scene_run_error', { message: error.message || 'unknown error' });
     } finally {
       this._finishRun();
@@ -862,7 +862,7 @@ export class SceneDirector {
     }
 
     if (refused.length) {
-      this._updateStatus(`Layers refused: ${refused.join(', ')}`);
+      this._updateStatus(`Layer ditolak: ${refused.join(', ')}`);
       this._logEvent('shot_layers_refused', { layerIds: [...refused] });
     }
     return { applied, refused, cancelled: false };
@@ -898,7 +898,7 @@ export class SceneDirector {
     const result = await this.styleManager.setContextMode('off');
     if (result && result.ok === false) {
       console.warn(`[Scenes] Could not exit ${mode}:`, result.error || 'unknown reason');
-      this._updateStatus(`Could not exit ${mode} — scene layers may be refused`);
+      this._updateStatus(`Tidak bisa keluar dari ${mode} — layer skenario mungkin ditolak`);
       this._logEvent('context_mode_exit_failed', { mode, error: result.error || null });
       return false;
     }

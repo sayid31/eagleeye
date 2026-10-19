@@ -427,7 +427,7 @@ export function initFirstRunExperience({
     // <body> mid-flight and strands a keyboard visitor outside the launcher.
     for (const button of buttons) button.setAttribute('aria-disabled', String(next));
     if (!status) return;
-    if (next) status.textContent = FIRST_RUN_MISSIONS[choice]?.busyText || 'Working…';
+    if (next) status.textContent = FIRST_RUN_MISSIONS[choice]?.busyText || 'Memproses…';
     else if (status.dataset.sticky !== 'true') status.textContent = defaultStatus;
   };
 
@@ -472,7 +472,7 @@ export function initFirstRunExperience({
     const detail = Array.isArray(failed) && failed.length ? ` (${failed.join(', ')})` : '';
     if (status) {
       status.dataset.sticky = 'true';
-      status.textContent = `Could not open that mission${detail}. Retry or explore manually.`;
+      status.textContent = `Tidak bisa membuka misi itu${detail}. Coba lagi atau jelajahi manual.`;
     }
     setBusy(false);
   };
@@ -488,7 +488,7 @@ export function initFirstRunExperience({
     if (box) box.checked = !wanted;
     if (!status) return;
     status.dataset.sticky = 'true';
-    status.textContent = 'This browser is blocking storage, so that could not be saved.';
+    status.textContent = 'Browser ini memblokir penyimpanan, jadi pilihan tidak bisa disimpan.';
   };
 
   function onKeyDown(event) {

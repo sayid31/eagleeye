@@ -59,8 +59,8 @@ export function missionPathPresentation(launch, replayAvailable = false) {
   return {
     orbit: orbitName ? `${orbitAllowed ? '' : 'PLANNED · '}${orbitName}` : null,
     ascent: suppliedTrajectoryPoints > 1
-      ? 'SUPPLIED TRAJECTORY POINTS'
-      : replayAvailable ? 'RECONSTRUCTED ESTIMATE' : 'UNAVAILABLE',
+      ? 'TITIK LINTASAN DARI SUMBER'
+      : replayAvailable ? 'ESTIMASI REKONSTRUKSI' : 'TIDAK TERSEDIA',
     replayAvailable: Boolean(replayAvailable),
   };
 }

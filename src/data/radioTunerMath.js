@@ -69,14 +69,14 @@ const CATEGORY_MATCHERS = Object.freeze({
 });
 
 const RADIO_CLUSTER_LABELS = Object.freeze({
-  news: 'NEWS',
+  news: 'BERITA',
   talk: 'TALK',
-  weather: 'WEATHER',
-  'public-safety': 'SAFETY',
-  'aviation-marine': 'AIR / SEA',
+  weather: 'CUACA',
+  'public-safety': 'KEAMANAN',
+  'aviation-marine': 'UDARA / LAUT',
   'traffic-transit': 'TRANSIT',
-  music: 'MUSIC',
-  other: 'OTHER',
+  music: 'MUSIK',
+  other: 'LAINNYA',
 });
 
 const RADIO_MARKER_CATEGORY_ORDER = Object.freeze([
@@ -192,14 +192,14 @@ export function radioStationCategoryId(station) {
 export function buildRadioCategories(stations) {
   const rows = Array.isArray(stations) ? stations : [];
   const categories = [
-    { id: 'all', label: 'All' },
-    { id: 'news', label: 'News' },
+    { id: 'all', label: 'Semua' },
+    { id: 'news', label: 'Berita' },
     { id: 'talk', label: 'Talk' },
-    { id: 'weather', label: 'Weather / Emergency' },
-    { id: 'public-safety', label: 'Public Safety' },
-    { id: 'aviation-marine', label: 'Aviation / Marine' },
-    { id: 'traffic-transit', label: 'Traffic / Transit' },
-    { id: 'music', label: 'Music' },
+    { id: 'weather', label: 'Cuaca / Darurat' },
+    { id: 'public-safety', label: 'Keselamatan publik' },
+    { id: 'aviation-marine', label: 'Penerbangan / Maritim' },
+    { id: 'traffic-transit', label: 'Lalu lintas / Transit' },
+    { id: 'music', label: 'Musik' },
   ];
 
   for (const [genre, label] of MUSIC_GENRES) {
@@ -208,7 +208,7 @@ export function buildRadioCategories(stations) {
       categories.push({ id, label });
     }
   }
-  categories.push({ id: 'other', label: 'Other' });
+  categories.push({ id: 'other', label: 'Lainnya' });
   return categories.map((category) => ({
     ...category,
     color: radioCategoryColor(category.id),

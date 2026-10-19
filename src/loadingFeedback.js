@@ -174,7 +174,7 @@ export function reduceTrafficSyncFeedback(previous, {
       // Neutral default: the layer always supplies its own LIVE/SIMULATED
       // label, and a fallback string must never claim a live feed on a
       // keyless build.
-      label: label || 'syncing road network',
+      label: label || 'menyinkronkan jaringan jalan',
       progressText: hasProgress ? `${progressPct}%` : '...',
     };
   }
@@ -278,17 +278,17 @@ export function reduceLoadingFeedback(previous, summary, nowMs, event = null) {
 export function presentLoadingFeedback(state, summary, nowMs) {
   if (!state?.visible) return null;
   if (state.phase === 'terminal') {
-    const labels = { complete: 'LOAD COMPLETE', cancelled: 'LOAD CANCELLED', error: 'LOAD FAILED' };
+    const labels = { complete: 'MUAT SELESAI', cancelled: 'MUAT DIBATALKAN', error: 'MUAT GAGAL' };
     const label = state.operation === 'disabling' && state.terminal === 'complete'
-      ? 'LIVE DATA OFF'
-      : labels[state.terminal] || 'LOAD COMPLETE';
+      ? 'DATA LIVE MATI'
+      : labels[state.terminal] || 'MUAT SELESAI';
     return { state: state.terminal, label, detail: '' };
   }
   const active = summary.active;
   const elapsed = Math.max(0, nowMs - state.startedAt);
   const label = summary.disabling
-    ? 'TURNING OFF LIVE DATA'
-    : summary.refresh ? 'REFRESHING LIVE DATA' : 'LOADING LIVE DATA';
+    ? 'MEMATIKAN DATA LIVE'
+    : summary.refresh ? 'MEMPERBARUI DATA LIVE' : 'MEMUAT DATA LIVE';
   const names = active.slice(0, 2).map((record) => record.label).join(' · ');
   const suffix = active.length > 2 ? ` +${active.length - 2}` : '';
   return {

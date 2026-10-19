@@ -58,8 +58,8 @@ export async function updateFlightsLayer(viewer, { signal = null } = {}) {
         S._backoff = true;
         S._retryAt = nowMs + BACKOFF_INTERVAL;
         S._lastError = authMode && authMode !== 'anon'
-          ? 'OpenSky rate limited'
-          : 'OpenSky rate limited (anonymous)';
+          ? 'OpenSky dibatasi laju'
+          : 'OpenSky dibatasi laju (anonim)';
         return;
       }
 
@@ -104,7 +104,7 @@ export async function updateFlightsLayer(viewer, { signal = null } = {}) {
       if (!data || !Array.isArray(data.states)) {
         S._backoff = true;
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;
-        S._lastError = 'Malformed OpenSky response';
+        S._lastError = 'Respons OpenSky tidak valid';
         return;
       }
 
@@ -112,7 +112,7 @@ export async function updateFlightsLayer(viewer, { signal = null } = {}) {
       if (data.states.length > 0 && usableStates.length === 0) {
         S._backoff = true;
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;
-        S._lastError = 'Malformed OpenSky aircraft rows';
+        S._lastError = 'Baris pesawat OpenSky tidak valid';
         return;
       }
 
@@ -124,7 +124,7 @@ export async function updateFlightsLayer(viewer, { signal = null } = {}) {
       S._backoff = sourceStale;
       S._retryAt = 0;
       S._lastError = sourceStale
-        ? `Source snapshot ${Math.max(2, Math.round(sourceAgeMs / 60_000))} min old`
+        ? `Snapshot sumber berusia ${Math.max(2, Math.round(sourceAgeMs / 60_000))} mnt`
         : null;
       S._lastSource = responseSource || 'OpenSky Network';
       S._lastCoverage = responseCoverage || 'worldwide upstream snapshot';
@@ -591,7 +591,7 @@ export async function updateFlightsLayer(viewer, { signal = null } = {}) {
       console.warn('[Data:Flights] Fetch error:', e);
       S._backoff = true;
       S._retryAt = Date.now() + ERROR_BACKOFF_INTERVAL;
-      S._lastError = 'OpenSky network error';
+      S._lastError = 'Galat jaringan OpenSky';
     } finally {
       _activeUpdateControllers.delete(resourceController);
     }

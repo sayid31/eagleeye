@@ -199,8 +199,8 @@ export class MapStackController {
    */
   _unavailableReason(stack) {
     return stack?.requiresIon
-      ? 'Cesium ion token required for Bing stacks'
-      : `${stack?.label || 'This map stack'} is unavailable`;
+      ? 'Token Cesium ion diperlukan untuk susunan Bing'
+      : `${stack?.label || 'Susunan peta ini'} tidak tersedia`;
   }
 
   getStack(id) {
@@ -399,7 +399,7 @@ export class MapStackController {
           credit: DEFAULT_OSM_CREDIT,
         });
         effectiveStackId = 'osm';
-        fallbackMessage = 'Esri Satellite is unavailable; using OSM';
+        fallbackMessage = 'Esri Satellite tidak tersedia; memakai OSM';
       }
     } else if (stack.kind === 'esri-dark-gray') {
       try {
@@ -414,7 +414,7 @@ export class MapStackController {
           credit: DEFAULT_OSM_CREDIT,
         });
         effectiveStackId = 'osm';
-        fallbackMessage = 'Esri Dark Gray is unavailable; using OSM';
+        fallbackMessage = 'Esri Dark Gray tidak tersedia; memakai OSM';
       }
     } else if (stack.kind === 'osm') {
       provider = new Cesium.OpenStreetMapImageryProvider({
@@ -452,7 +452,7 @@ export class MapStackController {
       if (failures < 2 || this._esriFallbackPending) return;
       this._esriFallbackPending = true;
       const failedStack = this.getStack(resolution.effectiveStackId);
-      const message = `${failedStack?.label || 'Esri'} tile requests failed; using OSM`;
+      const message = `Permintaan tile ${failedStack?.label || 'Esri'} gagal; memakai OSM`;
       this._onError?.(message, failedStack);
       void this.setStack('osm', { silent: true }).then((state) => {
         if (state?.activeId === 'osm') {
@@ -592,7 +592,7 @@ export class MapStackController {
   _triggerCoverageFallback() {
     if (this._coverageFallbackPending) return;
     this._coverageFallbackPending = true;
-    const message = 'Google 3D has no photo coverage here; showing Esri Satellite';
+    const message = 'Google 3D tidak punya cakupan foto di sini; menampilkan Esri Satellite';
     this._onError?.(message, this.getStack('photoreal'));
     void this.setStack('esri-imagery', { silent: true }).then((state) => {
       if (state?.activeId === 'esri-imagery' || state?.activeId === 'osm') {

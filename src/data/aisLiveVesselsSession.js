@@ -73,8 +73,8 @@ function scheduleFirstConnectExpiry(sessionId, delayMs) {
     state.firstConnectPhase = 'unavailable';
     state.loadingLabel = '';
     state.error = state.lastMessageAt
-      ? 'awaiting usable AIS positions…'
-      : 'awaiting first AIS message…';
+      ? 'menunggu posisi AIS yang dapat dipakai…'
+      : 'menunggu pesan AIS pertama…';
     state.stale = state.count > 0;
   }, delayMs);
 }
@@ -95,14 +95,14 @@ function isDefinitiveTransportFailure(status) {
 
 function markAisUnavailable(reason) {
   settleFirstConnectPhase('unavailable');
-  state.error = reason || 'AIS live load failed';
+  state.error = reason || 'Pemuatan AIS live gagal';
   state.stale = state.count > 0;
 }
 
 export async function loadLivePositions(viewer) {
   if (!viewer || state.loading) return;
   state.loading = true;
-  state.loadingLabel = state.loaded ? 'refreshing...' : 'loading...';
+  state.loadingLabel = state.loaded ? 'memperbarui...' : 'memuat...';
   const requestController = new AbortController();
   const requestSessionId = state.sessionId;
   state.abort = requestController;
@@ -137,7 +137,7 @@ export async function loadLivePositions(viewer) {
     applyAisFeedSnapshot(viewer, payload);
   } catch (error) {
     if (ownsAisRequest(requestController, requestSessionId) && error?.name !== 'AbortError') {
-      markAisUnavailable(error?.message || 'AIS live load failed');
+      markAisUnavailable(error?.message || 'Pemuatan AIS live gagal');
       console.warn('[Data:ais-live-vessels]', state.error, error);
     }
   } finally {

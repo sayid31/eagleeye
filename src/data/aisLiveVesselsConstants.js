@@ -16,7 +16,7 @@ export const REFRESH_MS = 60000;
 /** Bounded wait for the first accepted vessel position in one enabled session. */
 export const AIS_FIRST_CONNECT_GRACE_MS = 30000;
 
-export const AIS_FIRST_CONNECT_LABEL = 'awaiting first AIS position…';
+export const AIS_FIRST_CONNECT_LABEL = 'menunggu posisi AIS pertama…';
 
 export const VISIBILITY_UPDATE_MS = 800;
 

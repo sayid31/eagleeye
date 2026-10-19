@@ -137,7 +137,7 @@ setRadioVoiceDucking(ducked) {
     this.debugLog('tool.radio_handoff', { result: radioHandoff.result });
     if (radioHandoff.result?.ok || radioHandoff.cancelled || !stillCurrent) return;
     if (this.dc?.readyState === 'open' && !this.userTurnPending) {
-      this.setStatus('listening', 'Radio did not start');
+      this.setStatus('listening', 'Radio tidak berhasil dimulai');
       this.queueResponseCreate('Say exactly one short correction: “The Radio station could not start. Voice is still on.”');
     }
   },

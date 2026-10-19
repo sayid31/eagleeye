@@ -582,21 +582,21 @@ function statusToColor(status, capacity) {
  */
 function buildSelectionLabel(record) {
   const stationName = String(record?.stationName || '').trim();
-  const stationLabel = stationName || (record?.stationId ? `Station ${record.stationId}` : 'Station');
+  const stationLabel = stationName || (record?.stationId ? `Stasiun ${record.stationId}` : 'Stasiun');
   const bikes = Number.isFinite(record?.bikesAvailable) ? record.bikesAvailable : '?';
   const docks = Number.isFinite(record?.docksAvailable) ? record.docksAvailable : '?';
   const capacity = Number.isFinite(record?.capacity) ? record.capacity : '?';
 
   const lines = [
     stationLabel,
-    `🚲 ${bikes} avail · ${docks} docks · ${capacity} cap`,
+    `🚲 ${bikes} tersedia · ${docks} dok · kapasitas ${capacity}`,
   ];
 
   // Append warnings for stations that are offline or partially non-operational
   const abnormal = [];
-  if (record?.isInstalled === false) abnormal.push('⚠️ Not installed');
-  if (record?.isRenting === false) abnormal.push('⚠️ Not renting');
-  if (record?.isReturning === false) abnormal.push('⚠️ Not returning');
+  if (record?.isInstalled === false) abnormal.push('⚠️ Belum terpasang');
+  if (record?.isRenting === false) abnormal.push('⚠️ Tidak menyewakan');
+  if (record?.isReturning === false) abnormal.push('⚠️ Tidak menerima pengembalian');
   if (abnormal.length > 0) {
     lines.push(abnormal.join(' · '));
   }
@@ -998,7 +998,7 @@ async function activateCity(cityId, generation) {
   } catch (error) {
     if (error?.name === 'AbortError') return;
     console.warn(`[Data:Bikeshare] ${cityId} activate error:`, error);
-    _error = 'GBFS fetch error';
+    _error = 'Galat pengambilan GBFS';
     deactivateCity(cityId);
     _activeCityIds.delete(cityId);
   } finally {
@@ -1199,7 +1199,7 @@ const bikeshareLayer = {
       } catch (error) {
         if (error?.name === 'AbortError') return;
         console.warn(`[Data:Bikeshare] ${cityId} status update error:`, error);
-        _error = 'GBFS status update failed';
+        _error = 'Pembaruan status GBFS gagal';
       }
     }));
 
@@ -1228,8 +1228,8 @@ const bikeshareLayer = {
     };
     if (_loading) {
       stats.loadingLabel = _activeCityIds.size > 0
-        ? `syncing ${_activeCityIds.size} city feeds...`
-        : 'scanning nearby systems...';
+        ? `menyinkronkan ${_activeCityIds.size} feed kota...`
+        : 'memindai sistem terdekat...';
     }
     if (_error) stats.error = _error;
     return stats;

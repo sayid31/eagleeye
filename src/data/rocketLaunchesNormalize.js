@@ -83,7 +83,7 @@ export function missionHoverPreviewRange(cameraHeight) {
  */
 export function formatMissionEventTime(launchTime) {
   const date = new Date(launchTime);
-  if (!launchTime || !Number.isFinite(date.getTime())) return 'UNAVAILABLE';
+  if (!launchTime || !Number.isFinite(date.getTime())) return 'TIDAK TERSEDIA';
   return `${date.toISOString().slice(0, 10)}\n${date.toISOString().slice(11, 19)} UTC`;
 }
 
@@ -137,12 +137,12 @@ function normalizeLanding(stage, fallbackName, category, index) {
   const success = landing?.success;
   const recoveryType = landing?.type?.name || null;
   const launcherStatus = launcher.status?.name || null;
-  const status = success === true ? 'RECOVERED'
-    : success === false ? 'LOST'
-      : attempted ? 'RECOVERY ATTEMPT'
+  const status = success === true ? 'DIPULIHKAN'
+    : success === false ? 'HILANG'
+      : attempted ? 'UPAYA PEMULIHAN'
         : recoveryType ? recoveryType.toUpperCase()
           : launcherStatus ? launcherStatus.toUpperCase()
-            : 'NO RECOVERY DATA';
+            : 'TIDAK ADA DATA PEMULIHAN';
   return {
     id: String(stage?.id || landing?.id || `${category}-${index}`),
     category,
@@ -167,8 +167,8 @@ function normalizeRecoveryStages(launch, payloads) {
   const launcherStages = Array.isArray(rocket.launcher_stage) ? rocket.launcher_stage : [];
   const spacecraftStages = Array.isArray(rocket.spacecraft_stage) ? rocket.spacecraft_stage : [];
   const stages = [
-    ...launcherStages.map((stage, index) => normalizeLanding(stage, `Launcher stage ${index + 1}`, 'LAUNCHER', index)),
-    ...spacecraftStages.map((stage, index) => normalizeLanding(stage, `Spacecraft stage ${index + 1}`, 'SPACECRAFT', index)),
+    ...launcherStages.map((stage, index) => normalizeLanding(stage, `Tahap peluncur ${index + 1}`, 'LAUNCHER', index)),
+    ...spacecraftStages.map((stage, index) => normalizeLanding(stage, `Tahap pesawat antariksa ${index + 1}`, 'SPACECRAFT', index)),
   ];
   const payloadFlights = rocket.payloads || launch.payloads || [];
   if (Array.isArray(payloadFlights)) {
@@ -176,7 +176,7 @@ function normalizeRecoveryStages(launch, payloads) {
       if (!flight?.landing) return;
       stages.push(normalizeLanding(
         { ...flight, type: payloads[index]?.type || 'Payload', serial_number: payloads[index]?.name },
-        payloads[index]?.name || `Payload ${index + 1}`,
+        payloads[index]?.name || `Muatan ${index + 1}`,
         'PAYLOAD',
         index,
       ));
@@ -187,7 +187,7 @@ function normalizeRecoveryStages(launch, payloads) {
 
 export function landingEndpoint(stage, launch, insertionPosition) {
   if (Number.isFinite(stage.lat) && Number.isFinite(stage.lon)) {
-    return { lat: stage.lat, lon: stage.lon, accuracy: 'CONFIRMED' };
+    return { lat: stage.lat, lon: stage.lon, accuracy: 'TERKONFIRMASI' };
   }
   const recoveryIdentity = `${stage.recoveryType || ''} ${stage.destination || ''}`.toLowerCase();
   if (/return to launch site|rtls|launch site|landing zone/.test(recoveryIdentity)) {
@@ -283,10 +283,10 @@ export function normalizeRocketLaunches(payload, now = new Date()) {
     const payloads = normalizePayloadFlights(launch);
     return {
       id: String(launch.id || launch.slug || launch.name || `launch-${date}`),
-      name: launch.name || 'Unnamed launch',
-      status: launch.status?.name || 'Unknown',
+      name: launch.name || 'Peluncuran tanpa nama',
+      status: launch.status?.name || 'Tidak diketahui',
       launchTime: Number.isFinite(date) ? new Date(date).toISOString() : null,
-      launchSite: pad.name || location.name || 'Unknown launch site',
+      launchSite: pad.name || location.name || 'Lokasi peluncuran tidak diketahui',
       lat: Number.isFinite(lat) ? lat : null,
       lon: Number.isFinite(lon) ? lon : null,
       provider: launch.launch_service_provider?.name || null,

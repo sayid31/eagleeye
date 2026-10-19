@@ -158,7 +158,7 @@ test('two consecutive blank samples trigger the Esri fallback and fire the toast
     await settledMove(t, h.moveEnd);
 
     assert.equal(h.controller.getActiveId(), 'esri-imagery');
-    assert.equal(h.controller.getState().lastError, 'Google 3D has no photo coverage here; showing Esri Satellite');
+    assert.equal(h.controller.getState().lastError, 'Google 3D tidak punya cakupan foto di sini; menampilkan Esri Satellite');
     assert.equal(h.controller.consumeCoverageFallbackFlag(), true, 'the flag reads true the first time');
     assert.equal(h.controller.consumeCoverageFallbackFlag(), false, 'and clears itself on read');
   } finally {
@@ -339,7 +339,7 @@ test('Esri unreachable at fallback time still stamps lastError and fires the toa
     await settledMove(t, h.moveEnd);
 
     assert.equal(h.controller.getActiveId(), 'osm', 'Esri\'s own OSM sub-fallback still applies underneath the coverage fallback');
-    assert.equal(h.controller.getState().lastError, 'Google 3D has no photo coverage here; showing Esri Satellite');
+    assert.equal(h.controller.getState().lastError, 'Google 3D tidak punya cakupan foto di sini; menampilkan Esri Satellite');
     assert.equal(h.controller.consumeCoverageFallbackFlag(), true);
   } finally {
     h.restore();

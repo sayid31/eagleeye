@@ -1537,7 +1537,7 @@ async function runBrowserGroup(record) {
     if (!chip) return fail('no [data-layer-id="ais-live-vessels"] row in the DOM — cannot read the surfaced feed state');
 
     if (env.keys.AIS === false) {
-      const surfaced = chip.feedState === 'unavailable' && /UNAVAILABLE/i.test(chip.text);
+      const surfaced = chip.feedState === 'unavailable' && /TIDAK TERSEDIA/i.test(chip.text);
       if (!surfaced) {
         return fail(`keyless vessels did not SURFACE the unavailable state: chip="${chip.text}" feedState=${chip.feedState} (stats: status=${s.status} error=${s.error}) — a silently empty layer is the failure mode this check exists for`);
       }
@@ -1552,12 +1552,12 @@ async function runBrowserGroup(record) {
     if (live && s.count > 0) {
       // Chip vocabulary: ON / LOADING / DEGRADED / STALE / FALLBACK /
       // UNAVAILABLE (src/data/manager.js:12-19). A live feed with rows reads ON.
-      return /^ON$/i.test(chip.text)
+      return /^HIDUP$/i.test(chip.text)
         ? pass(`${s.count} vessels live: chip="ON", transport=${transport}, lastMessage=${s.lastMessageAt || 'n/a'}`)
         : fail(`transport=${transport} with ${s.count} vessels, but the chip reads "${chip.text}" — a live feed must present as ON`);
     }
     if (transport === 'auth-failed') {
-      const surfaced = /UNAVAILABLE/i.test(chip.text) && /key rejected/i.test(String(s.error || ''));
+      const surfaced = /TIDAK TERSEDIA/i.test(chip.text) && /kunci api ditolak/i.test(String(s.error || ''));
       return surfaced
         ? fail(`AISStream rejected the key — surfaced correctly (chip="${chip.text}", error="${s.error}", retryInSec=${s.retryInSec}) but a rejected key is a product-blocking failure, not an environment condition`)
         : fail(`AISStream rejected the key and the UI did not say so: chip="${chip.text}", error="${String(s.error || 'none')}"`);
@@ -1565,7 +1565,7 @@ async function runBrowserGroup(record) {
     if (['stale', 'reconnecting', 'down'].includes(transport)) {
       // Degraded is ENV only when it is SURFACED. Cached rows must read STALE;
       // no usable rows must read UNAVAILABLE.
-      const expected = s.count > 0 ? /STALE|DEGRADED/i : /UNAVAILABLE|DEGRADED/i;
+      const expected = s.count > 0 ? /USANG|MENURUN/i : /TIDAK TERSEDIA|MENURUN/i;
       return expected.test(chip.text)
         ? skip(`feed is ${transport}${s.count > 0 ? ` with ${s.count} CACHED vessels` : ''} and the UI says so (chip="${chip.text}", error="${String(s.error || '').slice(0, 60)}", retryInSec=${s.retryInSec}) — honest degradation, not a live feed`, 'ENV')
         : fail(`feed is ${transport} with ${s.count} vessels but the chip reads "${chip.text}" — a degraded feed that presents as healthy is exactly the invisible outage this check exists for`);
@@ -1574,7 +1574,7 @@ async function runBrowserGroup(record) {
       return fail(`${s.count} vessels with transport="${transport}" — neither live nor a recognised degraded state, so this cannot be called a live feed (chip="${chip.text}")`);
     }
     // Keyed but empty: honest only if the UI says so.
-    return /UNAVAILABLE|LOADING|DEGRADED|STALE/i.test(chip.text)
+    return /TIDAK TERSEDIA|MEMUAT|MENURUN|USANG/i.test(chip.text)
       ? skip(`keyed but 0 vessels and the UI says so (chip="${chip.text}", transport=${transport}, error="${String(s.error || '').slice(0, 60)}") — AISStream connects open-but-silent upstream`, 'ENV')
       : fail(`keyed, 0 vessels, and the chip claims "${chip.text}" — the layer is empty without surfacing it`);
   });
@@ -1585,9 +1585,9 @@ async function runBrowserGroup(record) {
     const r = await settle('local-firms', 30);
     const s = r.stats || {};
     if (env.keys.FIRMS === false) {
-      return s.error === 'KEY REQUIRED'
-        ? pass('keyless and honest: getStats().error === "KEY REQUIRED"')
-        : fail(`keyless but error=${s.error} count=${s.count} — expected "KEY REQUIRED"`);
+      return s.error === 'KUNCI DIPERLUKAN'
+        ? pass('keyless and honest: getStats().error === "KUNCI DIPERLUKAN"')
+        : fail(`keyless but error=${s.error} count=${s.count} — expected "KUNCI DIPERLUKAN"`);
     }
     return s.count > 0 ? pass(`${s.count} fires, cells=${s.cells}`) : fail(`keyed but 0 fires (error=${s.error || ''})`);
   });
@@ -1608,7 +1608,7 @@ async function runBrowserGroup(record) {
     const s = r.stats || {};
     if (env.keys.TOMTOM === false) {
       const label = String(s.loadingLabel || '');
-      return s.mode === 'sim' && /SIMULATED/i.test(label)
+      return s.mode === 'sim' && /SIMULASI/i.test(label)
         ? pass(`sim mode labelled honestly: "${label.slice(0, 70)}"`)
         : fail(`mode=${s.mode} label="${label.slice(0, 70)}" — expected sim + a SIMULATED label`);
     }
@@ -2007,7 +2007,7 @@ async function runBrowserGroup(record) {
         // eslint-disable-next-line no-await-in-loop
         await new Promise((r) => setTimeout(r, 500));
         const status = document.getElementById('gev-voice-status')?.textContent?.trim() || '';
-        if (status && status !== 'CONNECTING') break;
+        if (status && status !== 'MENGHUBUNGKAN') break;
       }
       let diag = null;
       try { diag = vc.getDiagnostics?.(); } catch { /* not started */ }
@@ -2023,7 +2023,7 @@ async function runBrowserGroup(record) {
     if (!surfacedR.ok) return crash(`could not drive the keyless voice path: ${surfacedR.reason}`);
     const surfaced = surfacedR.value;
     const saysKey = /OPENAI_API_KEY is not set/i.test(`${surfaced.errorDetail || ''} ${surfaced.recentError?.message || ''}`);
-    const saysUnavailable = surfaced.dataStatus === 'error' || /ERROR|UNAVAILABLE/i.test(`${surfaced.status || ''} ${surfaced.detail || ''}`);
+    const saysUnavailable = surfaced.dataStatus === 'error' || /GALAT|TIDAK TERSEDIA/i.test(`${surfaced.status || ''} ${surfaced.detail || ''}`);
     if (!surfaced.appAlive) return fail('the app died when voice was started without a key — a missing optional key must never take the globe down');
     if (!saysUnavailable) {
       return fail(`voice start without a key left the UI at status="${surfaced.status}" detail="${surfaced.detail}" (data-status=${surfaced.dataStatus}) — the 503 never surfaced to the user`);

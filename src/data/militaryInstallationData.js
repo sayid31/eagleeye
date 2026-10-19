@@ -23,10 +23,10 @@ const CLASS_BY_MILITARY_TAG = {
  * attribution and the details panel read it.
  */
 const LABEL_BY_CLASS = {
-  airfield: 'Military airfield',
-  naval_base: 'Naval base',
-  range: 'Firing range',
-  military_land: 'Military land',
+  airfield: 'Pangkalan udara militer',
+  naval_base: 'Pangkalan angkatan laut',
+  range: 'Lapangan tembak',
+  military_land: 'Lahan militer',
 };
 
 const MAX_FOOTPRINT_POINTS = 400;
@@ -40,7 +40,7 @@ export function humanizeInstallationClass(klass) {
   const key = String(klass || '').trim().toLowerCase();
   if (LABEL_BY_CLASS[key]) return LABEL_BY_CLASS[key];
   const words = key.replaceAll('_', ' ').trim();
-  return words ? `${words[0].toUpperCase()}${words.slice(1)}` : 'Mapped installation';
+  return words ? `${words[0].toUpperCase()}${words.slice(1)}` : 'Instalasi terpetakan';
 }
 
 function finiteLatitude(value) {

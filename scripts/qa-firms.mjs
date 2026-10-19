@@ -325,8 +325,8 @@ async function main() {
 
     const keyless = await bootAndEnable(page, { timeoutS: 20 });
     {
-      const ok = keyless.error === 'KEY REQUIRED' && keyless.count === 0;
-      record('KEYLESS: error "KEY REQUIRED", zero fires, no crash', ok,
+      const ok = keyless.error === 'KUNCI DIPERLUKAN' && keyless.count === 0;
+      record('KEYLESS: error "KUNCI DIPERLUKAN", zero fires, no crash', ok,
         `error=${JSON.stringify(keyless.error)} count=${keyless.count} label=${JSON.stringify(keyless.loadingLabel)}`);
       if (!ok) exitCode = 1;
       await page.screenshot({ path: path.join(SHOTS_DIR, 'firms-keyless.png') });
@@ -338,9 +338,9 @@ async function main() {
     const stale = await bootAndEnable(page, { timeoutS: 20 });
     {
       const ok = stale.stale === true
-        && String(stale.error || '').startsWith('STALE')
+        && String(stale.error || '').startsWith('USANG')
         && stale.count === 3;
-      record('STALE: stats.stale, "STALE · cached" error, fires still render', ok,
+      record('STALE: stats.stale, "USANG · tersimpan" error, fires still render', ok,
         `stale=${stale.stale} error=${JSON.stringify(stale.error)} count=${stale.count}`);
       if (!ok) exitCode = 1;
       await page.screenshot({ path: path.join(SHOTS_DIR, 'firms-stale.png') });

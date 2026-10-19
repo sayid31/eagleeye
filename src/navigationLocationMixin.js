@@ -18,7 +18,7 @@ const STYLE_STATUS_LABELS = {
   thermal: 'FLIR',
   anime: 'ANIME',
   noir: 'NOIR',
-  snow: 'SNOW',
+  snow: 'SALJU',
 };
 
 /**
@@ -313,12 +313,12 @@ export const navigationLocationMixin = {
             this._collapsePOIRow();
             this._updateLocationMiniStatus();
           } else {
-            this._showToast('Location not found');
+            this._showToast('Lokasi tidak ditemukan');
           }
         } catch (err) {
           console.error('[Search] Geocoding failed:', err);
           if (this._disposed || generation !== this._navigationGeneration) return;
-          this._showToast('Search failed');
+          this._showToast('Pencarian gagal');
         } finally {
           this._settleLocationSearchUi(generation);
         }

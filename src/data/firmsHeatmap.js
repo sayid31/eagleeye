@@ -306,18 +306,18 @@ export function createFirmsHeatmapLayer({
      */
     getStats() {
       const now = Date.now();
-      const staleText = _lastUpdate ? `STALE · cached ${formatAge(now - _lastUpdate) || '<1h'}` : 'STALE';
+      const staleText = _lastUpdate ? `USANG · tersimpan ${formatAge(now - _lastUpdate) || '<1h'}` : 'USANG';
       let loadingLabel = '';
       if (_loading) {
-        loadingLabel = _fires.length ? 'refreshing...' : 'loading...';
+        loadingLabel = _fires.length ? 'menyegarkan...' : 'memuat...';
       } else if (_keyRequired) {
-        loadingLabel = 'KEY REQUIRED';
+        loadingLabel = 'KUNCI DIPERLUKAN';
       } else if (_stale) {
         loadingLabel = staleText;
       } else if (_error) {
         loadingLabel = _error;
       } else if (_lastUpdate) {
-        loadingLabel = `LIVE · updated ${formatAgoMinutes(now - _lastUpdate)}`;
+        loadingLabel = `LIVE · diperbarui ${formatAgoMinutes(now - _lastUpdate)}`;
       }
       return {
         count: _count,
@@ -325,7 +325,7 @@ export function createFirmsHeatmapLayer({
         lastUpdate: _lastUpdate,
         loading: _loading,
         stale: _stale,
-        error: _keyRequired ? 'KEY REQUIRED' : (_stale ? staleText : _error),
+        error: _keyRequired ? 'KUNCI DIPERLUKAN' : (_stale ? staleText : _error),
         loadingLabel,
       };
     },
@@ -342,7 +342,7 @@ export function createFirmsHeatmapLayer({
         latitude: strongest.lat,
         longitude: strongest.lon,
         frp: strongest.frp,
-        label: `Fire · FRP ${formatFrp(strongest.frp)} MW`,
+        label: `Titik api · FRP ${formatFrp(strongest.frp)} MW`,
       };
     },
 
@@ -470,7 +470,7 @@ export function createFirmsHeatmapLayer({
       if (reselected) selectFire(reselected);
     } catch (error) {
       console.warn(`[Data:${id}] FIRMS live load failed:`, error);
-      _error = 'live feed unavailable';
+      _error = 'feed live tidak tersedia';
     } finally {
       _loading = false;
     }
@@ -865,7 +865,7 @@ export function createFirmsHeatmapLayer({
     requestWorldFocus({
       kind: 'fire',
       id: fireDetectionKey(fire),
-      label: 'FIRE',
+      label: 'TITIK API',
       position: firePosition(fire),
     });
   }
@@ -991,7 +991,7 @@ export function createFirmsHeatmapLayer({
       layerName: name,
       source: 'NASA FIRMS',
       dataSource: _dataSource,
-      label: `Fire · FRP ${formatFrp(fire.frp)} MW`,
+      label: `Titik api · FRP ${formatFrp(fire.frp)} MW`,
       latitude: fire.lat,
       longitude: fire.lon,
       properties: {
@@ -1347,9 +1347,9 @@ function cellAccent(normalized) {
 
 /** Millisecond delta → "<1m ago" / "Xm ago" / "Xh ago" (fresh-feed readout). */
 function formatAgoMinutes(deltaMs) {
-  if (!Number.isFinite(deltaMs) || deltaMs < 0) return 'just now';
+  if (!Number.isFinite(deltaMs) || deltaMs < 0) return 'baru saja';
   const minutes = Math.floor(deltaMs / 60000);
-  if (minutes < 1) return '<1m ago';
-  if (minutes < 90) return `${minutes}m ago`;
-  return `${Math.round(minutes / 60)}h ago`;
+  if (minutes < 1) return '<1m lalu';
+  if (minutes < 90) return `${minutes}m lalu`;
+  return `${Math.round(minutes / 60)}h lalu`;
 }

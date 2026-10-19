@@ -240,7 +240,7 @@ function publishVesselOverlayEntries(entries) {
         : '';
       return {
         ...card,
-        accessibilityLabel: `Focus vessel ${card.title}, MMSI ${mmsi}`,
+        accessibilityLabel: `Fokus kapal ${card.title}, MMSI ${mmsi}`,
         activate: () => {
           const record = state.vesselMap.get(mmsi);
           if (!record) return false;

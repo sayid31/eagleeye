@@ -161,7 +161,7 @@ function _trackedLabelText(icao24) {
   const altFt = Math.round((info.altitude || 0) * 3.28084);
   const fl = altFt >= 18000 ? `FL${Math.round(altFt / 100)}` : `${altFt} ft`;
   const spd = info.velocity ? `${Math.round(info.velocity * 1.944)} kts` : '';
-  const stale = (S._missingPolls.get(icao24) || S._backoff) ? 'STALE' : '';
+  const stale = (S._missingPolls.get(icao24) || S._backoff) ? 'USANG' : '';
   const lines = [[cs, fl, spd, stale].filter(Boolean).join(' · ')];
   // Converted contacts report their class as TR-3B and nothing else — the
   // operator/type identity is exactly what the Easter egg is replacing.

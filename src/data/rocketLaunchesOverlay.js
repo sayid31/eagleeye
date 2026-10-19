@@ -20,8 +20,8 @@ export function createRocketMissionMarkerOverlayEntry(launch, position, selected
   const launchTimeMs = Date.parse(launch?.launchTime);
   const details = selected
     ? [siteName
-      ? `LAUNCH SITE · ${shortMissionLabel(siteName, 20).toUpperCase()}`
-      : 'LAUNCH SITE']
+      ? `LOKASI PELUNCURAN · ${shortMissionLabel(siteName, 20).toUpperCase()}`
+      : 'LOKASI PELUNCURAN']
     : [];
   return {
     id: `launch:${launch?.id}`,

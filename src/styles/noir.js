@@ -5,9 +5,9 @@
 export const noirShader = {
   name: 'noir',
   uniforms: {
-    contrastAmt: { default: 1.2, min: 0, max: 2, label: 'Contrast' },
-    grainAmt: { default: 0.5, min: 0, max: 1, label: 'Grain' },
-    vignetteAmt: { default: 0.5, min: 0, max: 1, label: 'Vignette' },
+    contrastAmt: { default: 1.2, min: 0, max: 2, label: 'Kontras' },
+    grainAmt: { default: 0.5, min: 0, max: 1, label: 'Butiran' },
+    vignetteAmt: { default: 0.5, min: 0, max: 1, label: 'Vinyet' },
   },
   fragmentShader: /* glsl */ `
     uniform sampler2D colorTexture;

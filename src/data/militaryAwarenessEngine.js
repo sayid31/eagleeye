@@ -62,8 +62,8 @@ export function formatAwarenessLabel(value) {
  * claim in this MVP.
  */
 export function summarizeAwarenessCohort(items, { available = true, stale = false, limit = 3 } = {}) {
-  if (!available) return { relationship: AWARENESS_RELATIONSHIP.UNKNOWN, count: null, nearest: [], reason: 'feed unavailable' };
-  if (stale) return { relationship: AWARENESS_RELATIONSHIP.UNKNOWN, count: null, nearest: [], reason: 'feed stale' };
+  if (!available) return { relationship: AWARENESS_RELATIONSHIP.UNKNOWN, count: null, nearest: [], reason: 'feed tidak tersedia' };
+  if (stale) return { relationship: AWARENESS_RELATIONSHIP.UNKNOWN, count: null, nearest: [], reason: 'feed usang' };
   const normalized = (Array.isArray(items) ? items : [])
     .filter((item) => Number.isFinite(item?.distanceM ?? item?.distance)
       && (item.distanceM ?? item.distance) >= 0)
@@ -73,7 +73,7 @@ export function summarizeAwarenessCohort(items, { available = true, stale = fals
     relationship: normalized.length ? AWARENESS_RELATIONSHIP.NEARBY : AWARENESS_RELATIONSHIP.UNKNOWN,
     count: normalized.length,
     nearest: normalized.slice(0, limit),
-    reason: normalized.length ? 'observed or mapped nearby context' : 'no observed or mapped objects in current feeds',
+    reason: normalized.length ? 'konteks sekitar teramati atau terpetakan' : 'tidak ada objek teramati atau terpetakan di feed saat ini',
   };
 }
 

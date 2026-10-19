@@ -36,7 +36,7 @@ export function renderMissionPanel() {
   setMissionPanelField('[data-mission-status]', launch.status);
   setMissionPanelField(
     '[data-mission-site]',
-    launch.launchSite && launch.launchSite !== 'Unknown launch site' ? launch.launchSite : null,
+    launch.launchSite && launch.launchSite !== 'Lokasi peluncuran tidak diketahui' ? launch.launchSite : null,
   );
   setMissionPanelField('[data-mission-time]', launch.launchTime);
   const pathPresentation = missionPathPresentation(launch, _replayTracks.has(launch.id));
@@ -49,26 +49,26 @@ export function renderMissionPanel() {
         payload.operator && payload.operator !== payload.manufacturer ? payload.operator : null,
         Number.isFinite(payload.massKg) ? `${payload.massKg.toLocaleString()} KG` : null,
       ].filter(Boolean).join(' · ');
-      return `<tr><td>${escapeMissionText(payload.name)}${payload.amount > 1 ? ` ×${payload.amount}` : ''}${detail ? `<small>${escapeMissionText(detail)}</small>` : ''}</td><td>${escapeMissionText(payload.type || 'UNSPECIFIED')}</td><td>${escapeMissionText(payload.destination || launch.orbit?.name || 'UNAVAILABLE')}</td></tr>`;
+      return `<tr><td>${escapeMissionText(payload.name)}${payload.amount > 1 ? ` ×${payload.amount}` : ''}${detail ? `<small>${escapeMissionText(detail)}</small>` : ''}</td><td>${escapeMissionText(payload.type || 'TIDAK DITENTUKAN')}</td><td>${escapeMissionText(payload.destination || launch.orbit?.name || 'TIDAK TERSEDIA')}</td></tr>`;
     })
     : [];
   if (launch.payloads.length > 5) {
-    payloadRows.push(`<tr><td colspan="3" class="mission-table-empty">+${launch.payloads.length - 5} additional payload records</td></tr>`);
+    payloadRows.push(`<tr><td colspan="3" class="mission-table-empty">+${launch.payloads.length - 5} catatan muatan tambahan</td></tr>`);
   }
   S._missionPanel.querySelector('[data-mission-payloads]').innerHTML = missionTableRows(
     payloadRows,
     3,
-    'CLASSIFIED / MULTI-PAYLOAD',
+    'RAHASIA / MUATAN GANDA',
   );
   const stageRows = launch.recoveryStages.map((stage) => {
     const endpoint = stage.endpoint;
-    const destination = stage.destination || (endpoint?.accuracy === 'PAD / RTLS' ? launch.launchSite : 'UNAVAILABLE');
+    const destination = stage.destination || (endpoint?.accuracy === 'PAD / RTLS' ? launch.launchSite : 'TIDAK TERSEDIA');
     const position = endpoint
       ? `${endpoint.lat.toFixed(2)}, ${endpoint.lon.toFixed(2)} · ${endpoint.accuracy}`
-      : stage.downrangeKm > 0 ? `${stage.downrangeKm.toLocaleString()} KM DOWNRANGE` : 'POSITION UNAVAILABLE';
+      : stage.downrangeKm > 0 ? `${stage.downrangeKm.toLocaleString()} KM JARAK JELAJAH` : 'POSISI TIDAK TERSEDIA';
     const stageDetail = [
-      Number.isFinite(stage.flightNumber) ? `FLIGHT ${stage.flightNumber}` : null,
-      stage.reused ? 'REUSED' : null,
+      Number.isFinite(stage.flightNumber) ? `PENERBANGAN ${stage.flightNumber}` : null,
+      stage.reused ? 'DIPAKAI ULANG' : null,
       stage.recoveryType,
     ].filter(Boolean).join(' · ');
     return `<tr><td>${escapeMissionText(stage.name)}${stageDetail ? `<small>${escapeMissionText(stageDetail)}</small>` : ''}</td><td>${escapeMissionText(stage.status)}</td><td>${escapeMissionText(destination)}<small>${escapeMissionText(position)}</small></td></tr>`;
@@ -76,7 +76,7 @@ export function renderMissionPanel() {
   S._missionPanel.querySelector('[data-mission-stages]').innerHTML = missionTableRows(
     stageRows,
     3,
-    'NO STAGE RE-ENTRY / RECOVERY DATA',
+    'TIDAK ADA DATA MASUK KEMBALI / PEMULIHAN TAHAP',
   );
   const stageSection = S._missionPanel.querySelector('[data-mission-stages-section]');
   if (stageSection) stageSection.hidden = stageRows.length === 0;
@@ -97,15 +97,15 @@ export function renderMissionRoster() {
   if (!list) return;
   const entries = missionRosterEntries(S._launches);
   if (!entries.length) {
-    list.innerHTML = '<div class="space-mission-roster-empty">NO MISSIONS AVAILABLE IN THE CURRENT 30-DAY WINDOW</div>';
+    list.innerHTML = '<div class="space-mission-roster-empty">TIDAK ADA MISI DALAM RENTANG 30 HARI SAAT INI</div>';
     return;
   }
   list.innerHTML = entries.map(({ launch, index }) => {
     const color = missionMarkerColor(launch).toCssColorString();
-    const date = launch.launchTime?.slice(0, 10) || 'DATE UNAVAILABLE';
-    const provider = launch.provider || 'UNSPECIFIED OPERATOR';
+    const date = launch.launchTime?.slice(0, 10) || 'TANGGAL TIDAK TERSEDIA';
+    const provider = launch.provider || 'OPERATOR TIDAK DITENTUKAN';
     const label = shortMissionLabel(launch.name, 27).toUpperCase();
-    return `<button type="button" class="space-mission-roster-item" data-mission-roster-index="${index}" aria-label="Select ${escapeMissionText(label)}"><span class="space-mission-roster-marker" style="--mission-roster-color:${color}" aria-hidden="true"></span><span class="space-mission-roster-copy"><strong>${escapeMissionText(label)}</strong><small>${escapeMissionText(provider)} · ${escapeMissionText(date)}</small></span><span class="space-mission-roster-chevron" aria-hidden="true">›</span></button>`;
+    return `<button type="button" class="space-mission-roster-item" data-mission-roster-index="${index}" aria-label="Pilih ${escapeMissionText(label)}"><span class="space-mission-roster-marker" style="--mission-roster-color:${color}" aria-hidden="true"></span><span class="space-mission-roster-copy"><strong>${escapeMissionText(label)}</strong><small>${escapeMissionText(provider)} · ${escapeMissionText(date)}</small></span><span class="space-mission-roster-chevron" aria-hidden="true">›</span></button>`;
   }).join('');
 }
 
@@ -211,13 +211,13 @@ export function createMissionPanel() {
   S._missionPanel = document.createElement('aside');
   S._missionPanel.id = 'space-mission-panel';
   S._missionPanel.className = 'context-space-mission-detail';
-  S._missionPanel.setAttribute('aria-label', 'Selected Space Mission');
-  S._missionPanel.innerHTML = `<div class="space-mission-view-header"><span>SELECTED SPACE MISSION</span><button type="button" data-mission-close title="Show all missions" aria-label="Deselect mission">×</button></div><div class="space-mission-detail"><strong data-mission-title>MISSION</strong><span data-mission-field data-mission-provider></span><span data-mission-field>STATUS · <b data-mission-status></b></span><span data-mission-field>LAUNCH SITE · <b data-mission-site></b></span><span data-mission-field>LAUNCH TIME · <b data-mission-time></b></span><span data-mission-field>ORBIT · <b data-mission-orbit></b></span><span>ASCENT PATH · <b data-mission-ascent-source></b></span><span data-mission-field>CURRENT DISTANCE FROM EARTH · <b data-mission-distance></b></span><span data-mission-field>SATELLITE SPEED · <b data-mission-speed></b></span></div><section class="mission-data-section"><h4>PAYLOAD</h4><div class="mission-table-scroll"><table class="mission-data-table"><thead><tr><th>NAME</th><th>TYPE</th><th>DESTINATION</th></tr></thead><tbody data-mission-payloads></tbody></table></div></section><section class="mission-data-section" data-mission-stages-section><h4>STAGE / RE-ENTRY / RECOVERY</h4><div class="mission-table-scroll"><table class="mission-data-table"><thead><tr><th>STAGE</th><th>STATUS</th><th>FINAL POSITION</th></tr></thead><tbody data-mission-stages></tbody></table></div></section><div class="mission-replay-speed-control"><div class="mission-replay-speed-header"><label for="space-mission-replay-speed">REPLAY SPEED</label><output class="gev-slider-value" for="space-mission-replay-speed" data-mission-replay-speed-output>1×</output></div><input id="space-mission-replay-speed" class="gev-quantitative-slider" type="range" min="0.25" max="4" step="0.25" value="1" data-mission-replay-speed aria-label="Replay speed multiplier"><div class="mission-replay-speed-scale" aria-hidden="true"><span>0.25×</span><span>1×</span><span>4×</span></div></div><div class="mission-action-row"><button type="button" class="mission-focus-button" data-mission-focus>FOCUS</button><button type="button" class="mission-replay-button" data-mission-replay aria-pressed="false">REPLAY ASCENT</button></div><div class="space-mission-nav"><button type="button" class="mission-nav-button" data-mission-prev title="Previous mission"><span aria-hidden="true">‹</span> PREV</button><span class="mission-nav-index" data-mission-index>—</span><button type="button" class="mission-nav-button" data-mission-next title="Next mission">NEXT <span aria-hidden="true">›</span></button></div><button type="button" class="panel-layer-toggle" data-mission-show-all>SHOW ALL / DESELECT</button>`;
+  S._missionPanel.setAttribute('aria-label', 'Misi antariksa terpilih');
+  S._missionPanel.innerHTML = `<div class="space-mission-view-header"><span>MISI ANTARIKSA TERPILIH</span><button type="button" data-mission-close title="Tampilkan semua misi" aria-label="Batalkan pilihan misi">×</button></div><div class="space-mission-detail"><strong data-mission-title>MISI</strong><span data-mission-field data-mission-provider></span><span data-mission-field>STATUS · <b data-mission-status></b></span><span data-mission-field>LOKASI PELUNCURAN · <b data-mission-site></b></span><span data-mission-field>WAKTU PELUNCURAN · <b data-mission-time></b></span><span data-mission-field>ORBIT · <b data-mission-orbit></b></span><span>JALUR PENDAKIAN · <b data-mission-ascent-source></b></span><span data-mission-field>JARAK SAAT INI DARI BUMI · <b data-mission-distance></b></span><span data-mission-field>KECEPATAN SATELIT · <b data-mission-speed></b></span></div><section class="mission-data-section"><h4>MUATAN</h4><div class="mission-table-scroll"><table class="mission-data-table"><thead><tr><th>NAMA</th><th>JENIS</th><th>TUJUAN</th></tr></thead><tbody data-mission-payloads></tbody></table></div></section><section class="mission-data-section" data-mission-stages-section><h4>TAHAP / MASUK KEMBALI / PEMULIHAN</h4><div class="mission-table-scroll"><table class="mission-data-table"><thead><tr><th>TAHAP</th><th>STATUS</th><th>POSISI AKHIR</th></tr></thead><tbody data-mission-stages></tbody></table></div></section><div class="mission-replay-speed-control"><div class="mission-replay-speed-header"><label for="space-mission-replay-speed">KECEPATAN ULANG</label><output class="gev-slider-value" for="space-mission-replay-speed" data-mission-replay-speed-output>1×</output></div><input id="space-mission-replay-speed" class="gev-quantitative-slider" type="range" min="0.25" max="4" step="0.25" value="1" data-mission-replay-speed aria-label="Pengali kecepatan ulang"><div class="mission-replay-speed-scale" aria-hidden="true"><span>0.25×</span><span>1×</span><span>4×</span></div></div><div class="mission-action-row"><button type="button" class="mission-focus-button" data-mission-focus>FOKUS</button><button type="button" class="mission-replay-button" data-mission-replay aria-pressed="false">ULANG PENDAKIAN</button></div><div class="space-mission-nav"><button type="button" class="mission-nav-button" data-mission-prev title="Misi sebelumnya"><span aria-hidden="true">‹</span> SEBELUMNYA</button><span class="mission-nav-index" data-mission-index>—</span><button type="button" class="mission-nav-button" data-mission-next title="Misi berikutnya">BERIKUTNYA <span aria-hidden="true">›</span></button></div><button type="button" class="panel-layer-toggle" data-mission-show-all>TAMPILKAN SEMUA / BATAL PILIH</button>`;
   S._missionPanel.querySelector('.mission-action-row').insertAdjacentHTML(
     'beforeend',
     `<div class="mission-replay-transport" data-mission-replay-transport hidden>
-      <button type="button" data-mission-replay-toggle title="Pause replay" aria-label="Pause replay">Ⅱ</button>
-      <button type="button" class="cancel" data-mission-replay-cancel title="Cancel replay" aria-label="Cancel replay"><span aria-hidden="true">×</span></button>
+      <button type="button" data-mission-replay-toggle title="Jeda ulangan" aria-label="Jeda ulangan">Ⅱ</button>
+      <button type="button" class="cancel" data-mission-replay-cancel title="Batalkan ulangan" aria-label="Batalkan ulangan"><span aria-hidden="true">×</span></button>
     </div>`,
   );
   host.appendChild(S._missionPanel);

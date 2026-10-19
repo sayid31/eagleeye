@@ -51,7 +51,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
         // hammer the upstream and the UI reads honestly.
         if (response.status === 429) {
           S._retryAt = nowMs + BACKOFF_INTERVAL;
-          S._lastError = 'adsb.lol rate limited';
+          S._lastError = 'adsb.lol dibatasi laju';
           return;
         }
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;
@@ -73,7 +73,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
       if (!data || !Array.isArray(data.ac)) {
         S._backoff = true;
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;
-        S._lastError = 'Malformed adsb.lol response';
+        S._lastError = 'Respons adsb.lol tidak valid';
         return;
       }
 
@@ -81,7 +81,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
       if (data.ac.length > 0 && usableAircraft.length === 0) {
         S._backoff = true;
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;
-        S._lastError = 'Malformed adsb.lol aircraft rows';
+        S._lastError = 'Baris pesawat adsb.lol tidak valid';
         return;
       }
 
@@ -472,7 +472,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
       console.warn('[Data:Military] Fetch error:', e);
       S._backoff = true;
       S._retryAt = Date.now() + ERROR_BACKOFF_INTERVAL;
-      S._lastError = 'adsb.lol network error';
+      S._lastError = 'Galat jaringan adsb.lol';
     } finally {
       _activeUpdateControllers.delete(resourceController);
     }

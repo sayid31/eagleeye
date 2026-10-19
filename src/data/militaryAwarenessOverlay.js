@@ -154,8 +154,8 @@ function updateDirectionOverlay() {
         Cesium.Math.toDegrees(targetCartographic.longitude),
       )
       : null;
-    const bearingText = Number.isFinite(bearing) ? `BRG ${String(Math.round(bearing)).padStart(3, '0')}°` : 'BRG —';
-    const courseText = Number.isFinite(item.track) ? ` · CRS ${String(Math.round(item.track)).padStart(3, '0')}°` : '';
+    const bearingText = Number.isFinite(bearing) ? `AZM ${String(Math.round(bearing)).padStart(3, '0')}°` : 'AZM —';
+    const courseText = Number.isFinite(item.track) ? ` · HAL ${String(Math.round(item.track)).padStart(3, '0')}°` : '';
     marker._label.textContent = `${label} · ${formatAwarenessDistance(item.distanceM)}\n${bearingText}${courseText}`;
     marker.hidden = false;
   }

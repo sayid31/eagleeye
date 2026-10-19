@@ -335,7 +335,7 @@ test('keeps failed-launch mission details truthful without inventing paths', () 
     trajectory: [],
   }, false), {
     orbit: 'PLANNED · Geostationary Transfer Orbit',
-    ascent: 'UNAVAILABLE',
+    ascent: 'TIDAK TERSEDIA',
     replayAvailable: false,
   });
   assert.deepEqual(missionPathPresentation({
@@ -347,7 +347,7 @@ test('keeps failed-launch mission details truthful without inventing paths', () 
     ],
   }, false), {
     orbit: 'PLANNED · Low Earth Orbit',
-    ascent: 'SUPPLIED TRAJECTORY POINTS',
+    ascent: 'TITIK LINTASAN DARI SUMBER',
     replayAvailable: false,
   });
 });
@@ -359,7 +359,7 @@ test('describes only renderable successful mission paths', () => {
     trajectory: [],
   }, true), {
     orbit: 'Low Earth Orbit',
-    ascent: 'RECONSTRUCTED ESTIMATE',
+    ascent: 'ESTIMASI REKONSTRUKSI',
     replayAvailable: true,
   });
   assert.deepEqual(missionPathPresentation({
@@ -368,7 +368,7 @@ test('describes only renderable successful mission paths', () => {
     trajectory: [{ latitude: 28.5, longitude: -80.5 }],
   }, false), {
     orbit: null,
-    ascent: 'UNAVAILABLE',
+    ascent: 'TIDAK TERSEDIA',
     replayAvailable: false,
   });
 });
@@ -573,7 +573,7 @@ test('normalizes detailed payload and stage recovery records', () => {
   assert.equal(launches[0].payloads[0].amount, 2);
   assert.equal(launches[0].payloads[0].massKg, 420);
   assert.equal(launches[0].recoveryStages[0].name, 'Core · B1099');
-  assert.equal(launches[0].recoveryStages[0].status, 'RECOVERED');
+  assert.equal(launches[0].recoveryStages[0].status, 'DIPULIHKAN');
   assert.equal(launches[0].recoveryStages[0].downrangeKm, 610);
   assert.equal(launches[0].recoveryStages[0].lat, 30.1);
   assert.equal(launches[0].recoveryStages[0].lon, -76.2);
@@ -751,7 +751,7 @@ test('formats the launch epoch for ascent and orbit replay labels', () => {
     formatMissionEventTime('2026-06-29T02:25:00Z'),
     '2026-06-29\n02:25:00 UTC',
   );
-  assert.equal(formatMissionEventTime(null), 'UNAVAILABLE');
+  assert.equal(formatMissionEventTime(null), 'TIDAK TERSEDIA');
 });
 
 test('reduces generic launch-site names to their identifying suffix', () => {
@@ -790,17 +790,17 @@ test('mission overlay factories preserve all four source-formatted label roles a
 
   const selected = createRocketMissionMarkerOverlayEntry(launch, position, true);
   assert.equal(selected.title, 'FALCON 9');
-  assert.deepEqual(selected.details, ['LAUNCH SITE · 39A']);
+  assert.deepEqual(selected.details, ['LOKASI PELUNCURAN · 39A']);
   assert.equal(selected.paintLane, 'selected');
   assert.equal(selected.protected, true);
 
   const roles = [
-    ['reentry', 'STAGE RE-ENTRY', '#ffd166', ['STAGE RE-ENTRY', []]],
+    ['reentry', 'MASUK KEMBALI TAHAP', '#ffd166', ['MASUK KEMBALI TAHAP', []]],
     ['payload', 'EST. ORBIT POSITION\n2026-07-20\n10:00:00 UTC', '#ffd166', [
       'EST. ORBIT POSITION',
       ['2026-07-20', '10:00:00 UTC'],
     ]],
-    ['orbit', 'PROJECTED ORBIT', '#c084fc', ['PROJECTED ORBIT', []]],
+    ['orbit', 'ORBIT PROYEKSI', '#c084fc', ['ORBIT PROYEKSI', []]],
   ];
   for (const [id, text, accent, [title, details]] of roles) {
     const entry = createRocketMissionElementOverlayEntry({ id, position, text, accent });
@@ -1054,11 +1054,11 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
     assert.deepEqual(selectedPublication[3], ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_OPTIONS);
     assert.deepEqual(selectedPublication[2].map(({ title }) => title), [
       'FALCON 9',
-      'STAGE RE-ENTRY',
+      'MASUK KEMBALI TAHAP',
       'EST. ORBIT POSITION',
-      'PROJECTED ORBIT',
+      'ORBIT PROYEKSI',
     ]);
-    assert.deepEqual(selectedPublication[2][0].details, ['LAUNCH SITE · 39A']);
+    assert.deepEqual(selectedPublication[2][0].details, ['LOKASI PELUNCURAN · 39A']);
     assert.match(selectedPublication[2][2].details[0], /^\d{4}-\d{2}-\d{2}$/);
     assert.match(selectedPublication[2][2].details[1], /^\d{2}:\d{2}:\d{2} UTC$/);
     assert.ok(selectedPublication[2].every((entry) => (
@@ -1135,7 +1135,7 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
       type === 'entries' && sourceId === ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_ID
     ));
     assert.equal(refreshPublication[2][0].title, 'MISSION REFRESH');
-    assert.deepEqual(refreshPublication[2][0].details, ['LAUNCH SITE · 39A']);
+    assert.deepEqual(refreshPublication[2][0].details, ['LOKASI PELUNCURAN · 39A']);
 
     _setSelectedRocketMissionForTest(null);
     const deselectedPublication = hostCalls.findLast(([type, sourceId]) => (

@@ -10,12 +10,12 @@
  * "just now · 0 vessels".
  */
 const AIS_STATUS_REASON = {
-  'missing-key': 'AISSTREAM_API_KEY not set',
-  unsupported: 'live feed unsupported',
-  connecting: 'connecting to feed…',
-  closed: 'feed disconnected',
-  error: 'feed down',
-  idle: 'feed idle',
+  'missing-key': 'AISSTREAM_API_KEY belum diatur',
+  unsupported: 'feed live tidak didukung',
+  connecting: 'menghubungkan ke feed…',
+  closed: 'feed terputus',
+  error: 'feed mati',
+  idle: 'feed diam',
 };
 
 /**
@@ -42,19 +42,19 @@ function describeDegradedAisFeed(status, payload) {
   if (status === 'auth-failed') {
     // Actionable, not a countdown: retrying cannot fix a rejected credential,
     // so the chip asks the operator to do the one thing that can.
-    return 'API key rejected — check AISSTREAM_API_KEY';
+    return 'Kunci API ditolak — periksa AISSTREAM_API_KEY';
   }
   if (status === 'stale') {
     const silentSec = Math.round(Number(payload?.silentForMs) / 1000);
     return Number.isFinite(silentSec) && silentSec > 0
-      ? `feed silent ${silentSec}s — no AIS data`
-      : 'feed silent — no AIS data';
+      ? `feed senyap ${silentSec}d — tidak ada data AIS`
+      : 'feed senyap — tidak ada data AIS';
   }
   const attempt = Number(payload?.reconnectAttempt);
-  const suffix = Number.isFinite(attempt) && attempt >= 1 ? ` (attempt ${attempt})` : '';
+  const suffix = Number.isFinite(attempt) && attempt >= 1 ? ` (percobaan ${attempt})` : '';
   return status === 'down'
-    ? `feed down — retrying slowly${suffix}`
-    : `reconnecting to feed…${suffix}`;
+    ? `feed mati — mencoba lagi perlahan${suffix}`
+    : `menyambung ulang ke feed…${suffix}`;
 }
 
 /**
@@ -77,12 +77,12 @@ export function deriveAisFeedError(payload, acceptedRowCount) {
   if (acceptedRowCount > 0) return null; // accepted rows may be stale while reconnecting, but remain usable
   if (AIS_HEALTHY_STATUSES.has(status)) {
     return payload?.lastMessageAt
-      ? 'awaiting usable AIS positions…'
-      : 'awaiting first AIS message…';
+      ? 'menunggu posisi AIS yang dapat dipakai…'
+      : 'menunggu pesan AIS pertama…';
   }
   if (!status) return null;
   const detail = typeof payload.error === 'string' && payload.error.trim() ? payload.error.trim() : '';
-  const reason = AIS_STATUS_REASON[status] || 'feed unavailable';
+  const reason = AIS_STATUS_REASON[status] || 'feed tidak tersedia';
   return detail && !AIS_STATUS_REASON[status] ? `${reason} (${detail})` : reason;
 }
 
@@ -112,6 +112,6 @@ export function classifyAisFeedSnapshot(payload) {
     rawRowCount: rawRows.length,
     acceptedRowCount,
     error: deriveAisFeedError(payload, acceptedRowCount)
-      || (acceptedRowCount === 0 ? 'awaiting usable AIS positions…' : null),
+      || (acceptedRowCount === 0 ? 'menunggu posisi AIS yang dapat dipakai…' : null),
   };
 }

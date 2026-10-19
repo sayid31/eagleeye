@@ -1,5 +1,11 @@
 import { layerFeedState, FEED_STATE_LABELS } from './managerFeedState.js';
 
+/** Lifecycle transition → user-visible (Indonesian) label; the state keys stay English. */
+const LIFECYCLE_LABELS = Object.freeze({
+  enabling: 'MENYALAKAN',
+  disabling: 'MEMATIKAN',
+});
+
 /**
  * Prototype mixin for `DataLayerManager` (see `manager.js`): the toggle-panel
  * DOM rendering block (build/refresh/row-controls/button-state/formatting).
@@ -231,23 +237,23 @@ export const managerTogglePanelMixin = {
     const source = stats.source || layer.source;
     const lifecycleState = layer.lifecycleState || (layer.enabled ? 'enabled' : 'disabled');
     if (lifecycleState === 'enabling' || lifecycleState === 'disabling') {
-      return `${lifecycleState.toUpperCase()} · ${source}`;
+      return `${LIFECYCLE_LABELS[lifecycleState]} · ${source}`;
     }
     if (layer.lifecycleUncertain) {
-      return `UNCERTAIN · ${source} · lifecycle state requires reconciliation`;
+      return `TIDAK PASTI · ${source} · status siklus perlu direkonsiliasi`;
     }
     const presentedError = stats.error || stats.lastError || stats.managerRefreshError;
     if (presentedError) {
       if (typeof stats.retryInSec === 'number' && stats.retryInSec > 0) {
-        return `${stateLabel} · ${source} · ${presentedError} · retry ${stats.retryInSec}s`;
+        return `${stateLabel} · ${source} · ${presentedError} · coba lagi ${stats.retryInSec}d`;
       }
       return `${stateLabel} · ${source} · ${presentedError}`;
     }
-    const ago = stats.lastUpdate ? this._timeAgo(stats.lastUpdate) : 'never';
+    const ago = stats.lastUpdate ? this._timeAgo(stats.lastUpdate) : 'belum pernah';
     if (stats.loading) {
       const loadingLabel = typeof stats.loadingLabel === 'string' && stats.loadingLabel.trim()
         ? stats.loadingLabel.trim()
-        : 'loading...';
+        : 'memuat...';
       return `${source} · ${loadingLabel}`;
     }
     if (feedState === 'fallback') {
@@ -258,7 +264,7 @@ export const managerTogglePanelMixin = {
     }
     if (feedState === 'stale') {
       const retry = typeof stats.retryInSec === 'number' && stats.retryInSec > 0
-        ? ` · retrying in ${stats.retryInSec}s`
+        ? ` · mencoba lagi dalam ${stats.retryInSec}d`
         : '';
       return `${stateLabel} · ${source} · ${ago}${retry}`;
     }
@@ -285,8 +291,8 @@ export const managerTogglePanelMixin = {
       : (uncertain ? 'uncertain' : feedState);
     button.disabled = transitioning;
     button.textContent = transitioning
-      ? layer.lifecycleState.toUpperCase()
-      : (uncertain ? 'UNCERTAIN' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'OFF'));
+      ? LIFECYCLE_LABELS[layer.lifecycleState]
+      : (uncertain ? 'TIDAK PASTI' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'MATI'));
     button.setAttribute('aria-label', `${layer.name}: ${button.textContent}`);
   },
 
@@ -297,9 +303,9 @@ export const managerTogglePanelMixin = {
 
   _timeAgo(timestamp) {
     const diff = Math.floor((Date.now() - timestamp) / 1000);
-    if (diff < 5) return 'just now';
-    if (diff < 60) return `${diff}s ago`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
-    return `${Math.floor(diff / 3600)}h ago`;
+    if (diff < 5) return 'baru saja';
+    if (diff < 60) return `${diff}d lalu`;
+    if (diff < 3600) return `${Math.floor(diff / 60)}m lalu`;
+    return `${Math.floor(diff / 3600)}j lalu`;
   },
 };

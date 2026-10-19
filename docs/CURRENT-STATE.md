@@ -1611,6 +1611,10 @@ The popup now lines up with the panel's other full-width rows. See
 
 - `src/theme/theme.css` loads after `style.css` and holds the redesigned look (`tokens.css`, `base.css`,
   `shell.css`, `inspector.css`, `chrome.css`, `dock.css`, `adaptive.css`, `close.css`). Every shell rule is scoped to `body.ee-shell`, set by `initShell`.
+- All user-visible UI text (visible text, titles, aria-labels, placeholders, toasts, status and error
+  messages) is Indonesian. Kept in English: brand and abbreviations (CCTV, HUD, NVG, FLIR, CRT, AIS, UTC,
+  ADS-B, FOV), units, provider names, layer `name:` fields (voice focus reads them), voice prompts and tool
+  schemas, upstream-sourced names, console messages and `error:` strings returned to voice tools.
 - `src/shell/` mounts a top bar, icon rail and status bar. The rail and search proxy to existing
   controls. The shell never writes layer state.
 - Layer rows show a status from `layerShellStatus` (`src/shell/layerStatus.js`): Live, Terganggu, Mati,

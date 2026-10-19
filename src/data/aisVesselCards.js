@@ -17,7 +17,7 @@ export function trimHudValue(value, maxLength) {
 export function displayVesselName(record) {
   const name = String(record.name || '').trim();
   if (name && name !== 'VESSEL' && name !== record.mmsi) return name;
-  return record.mmsi ? `MMSI ${record.mmsi}` : 'VESSEL';
+  return record.mmsi ? `MMSI ${record.mmsi}` : 'KAPAL';
 }
 
 export function formatSpeed(speed) {
@@ -104,14 +104,14 @@ export function buildVesselCard(record) {
 export function buildSelectedVesselCard(record) {
   const direction = record.heading ?? record.course;
   const details = [[
-    vesselTypeShort(record) || 'VESSEL',
+    vesselTypeShort(record) || 'KAPAL',
     formatSpeed(record.speed),
     Number.isFinite(direction) ? `${Math.round(direction)}°` : '--°',
   ].join(' · ')];
   const destination = String(record.destination || '').trim();
   if (destination) details.push(`→ ${trimHudValue(destination, 24)}`);
   const stale = (record.missedRefreshes || 0) > 0;
-  details.push(`MMSI ${record.mmsi || '--'} · ${formatPositionTime(record)}${stale ? ' · STALE' : ''}`);
+  details.push(`MMSI ${record.mmsi || '--'} · ${formatPositionTime(record)}${stale ? ' · USANG' : ''}`);
   return {
     id: vesselOverlayEntryId(record),
     actionable: Boolean(record?.mmsi),

@@ -37,7 +37,7 @@ export function _toCleanText(value) {
  * @returns {string} Formatted altitude string (e.g. "35000 ft" or "Alt unknown")
  */
 export function _formatAltitude(altitudeFt) {
-  if (!Number.isFinite(altitudeFt)) return 'Alt unknown';
+  if (!Number.isFinite(altitudeFt)) return 'Alt tidak diketahui';
   return `${Math.round(altitudeFt)} ft`;
 }
 

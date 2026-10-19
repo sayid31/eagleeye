@@ -364,10 +364,10 @@ test('pending mapped installations render as unknown instead of a false zero', a
     const snapshot = militaryAwarenessLayer.getContextSnapshot();
     const installations = snapshot?.cohorts.find(({ id }) => id === 'military-installations');
     assert.equal(installations?.count, null, 'loading is not an observed empty cohort');
-    assert.match(installations?.reason || '', /unavailable/i);
+    assert.match(installations?.reason || '', /tidak tersedia/i);
     assert.match(
       runtime.panel()?.innerHTML || '',
-      /Mapped installations<\/strong><b aria-live="polite">\?<\/b>/,
+      /Instalasi terpetakan<\/strong><b aria-live="polite">\?<\/b>/,
       'the operator sees ? rather than an all-clear 0 while installations load',
     );
   } finally {
@@ -471,15 +471,15 @@ test('a vessel feed still connecting after the lifecycle settles reads as unknow
       null,
       'a source that has never answered has told us nothing — 0 would be a fabricated all-clear',
     );
-    assert.match(vessels?.reason || '', /unavailable/i);
+    assert.match(vessels?.reason || '', /tidak tersedia/i);
     assert.match(
       runtime.panel()?.innerHTML || '',
-      /AIS vessels<\/strong><b aria-live="polite">\?<\/b>/,
+      /Kapal AIS<\/strong><b aria-live="polite">\?<\/b>/,
       'the panel prints ? for the whole settled-but-connecting window',
     );
     assert.doesNotMatch(
       runtime.panel()?.innerHTML || '',
-      /AIS vessels<\/strong><b aria-live="polite">0<\/b>/,
+      /Kapal AIS<\/strong><b aria-live="polite">0<\/b>/,
       'the panel must never print an all-clear 0 before the feed has answered once',
     );
   } finally {
@@ -509,7 +509,7 @@ test('a settled vessel feed reporting a real empty viewport recovers to 0', asyn
     assert.equal(vessels?.count, 0, 'an answered empty viewport is a real observation');
     assert.match(
       runtime.panel()?.innerHTML || '',
-      /AIS vessels<\/strong><b aria-live="polite">0<\/b>/,
+      /Kapal AIS<\/strong><b aria-live="polite">0<\/b>/,
       'the operator sees the real count once the feed answers',
     );
   } finally {
@@ -1528,11 +1528,11 @@ test('awareness rescans only for invalidation, source change, or meaningful move
 
 test('installation summaries disclose viewport-scoped coverage', () => {
   const empty = summarizeInstallationViewport([], { available: true, stale: false });
-  assert.match(empty.reason, /viewport feed/i);
-  assert.match(empty.reason, /not a complete 250 km survey/i);
+  assert.match(empty.reason, /feed viewport/i);
+  assert.match(empty.reason, /bukan survei lengkap 250 km/i);
 
   const unavailable = summarizeInstallationViewport([], { available: false, stale: false });
-  assert.equal(unavailable.reason, 'feed unavailable');
+  assert.equal(unavailable.reason, 'feed tidak tersedia');
 });
 
 test('compact Context snapshots retain installation coverage', () => {
@@ -1542,16 +1542,16 @@ test('compact Context snapshots retain installation coverage', () => {
     radiusM: 250000,
     cohorts: [{
       id: 'military-installations',
-      label: 'Mapped installations',
+      label: 'Instalasi terpetakan',
       source: 'OpenStreetMap',
-      coverage: 'CURRENT VIEWPORT ONLY',
+      coverage: 'HANYA VIEWPORT SAAT INI',
       summary: {
         relationship: 'NEARBY', count: 2, reason: 'mapped matches', nearest: [],
       },
     }],
   }, { canNext: true });
 
-  assert.equal(snapshot.cohorts[0].coverage, 'CURRENT VIEWPORT ONLY');
+  assert.equal(snapshot.cohorts[0].coverage, 'HANYA VIEWPORT SAAT INI');
   assert.deepEqual(snapshot.navigation, { canNext: true });
 });
 
@@ -1559,7 +1559,7 @@ test('expanded Context results omit the redundant status heading', () => {
   assert.doesNotMatch(militaryAwarenessSource, /military-awareness-heading/);
   assert.doesNotMatch(militaryAwarenessSource, /GLOBAL CONTEXT <span>CONTEXT ONLY<\/span>/);
   assert.match(militaryAwarenessSource, /military-awareness-subject/);
-  assert.match(militaryAwarenessSource, /FLIGHT \/ VESSEL WINDOW/);
+  assert.match(militaryAwarenessSource, /JENDELA PENERBANGAN \/ KAPAL/);
   assert.match(militaryAwarenessSource, /military-awareness-controls/);
 });
 
@@ -2428,8 +2428,8 @@ test('the contacts window reports exactly the counts the panel renders', () => {
     radiusM: AWARENESS_RADIUS_M,
     cohorts: [
       { id: 'flights', label: 'Flights', source: 'OpenSky', summary: { relationship: 'nearby', count: 42, reason: 'observed', nearest: [] } },
-      { id: 'military', label: 'Military flights', source: 'adsb.lol', summary: { relationship: 'nearby', count: 13, reason: 'observed', nearest: [] } },
-      { id: 'ais-live-vessels', label: 'AIS vessels', source: 'AISStream', summary: { relationship: 'unknown', count: null, reason: 'feed unavailable', nearest: [] } },
+      { id: 'military', label: 'Penerbangan militer', source: 'adsb.lol', summary: { relationship: 'nearby', count: 13, reason: 'observed', nearest: [] } },
+      { id: 'ais-live-vessels', label: 'Kapal AIS', source: 'AISStream', summary: { relationship: 'unknown', count: null, reason: 'feed tidak tersedia', nearest: [] } },
     ],
   };
   const snapshot = buildAwarenessContextSnapshot(results, {});

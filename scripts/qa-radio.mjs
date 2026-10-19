@@ -423,10 +423,10 @@ async function main() {
         && uncertainPresentation.layerState === 'UNCERTAIN'
         && /uncertain/i.test(uncertainPresentation.playbackMessage)
         && uncertainPresentation.miniStation === 'RADIO STATE UNCERTAIN'
-        && uncertainPresentation.dataRailText === 'UNCERTAIN'
+        && uncertainPresentation.dataRailText === 'TIDAK PASTI'
         && uncertainPresentation.dataRailState === 'uncertain'
-        && /uncertain/i.test(uncertainPresentation.dataRailLabel)
-        && /uncertain/i.test(uncertainPresentation.dataRailMeta)
+        && /tidak pasti/i.test(uncertainPresentation.dataRailLabel)
+        && /tidak pasti/i.test(uncertainPresentation.dataRailMeta)
         && uncertainPresentation.directSelect === false
         && uncertainPresentation.directPlay === false
         && uncertainPresentation.directCycle === false

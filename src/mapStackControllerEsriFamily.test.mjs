@@ -84,7 +84,7 @@ test('esri-dark-gray construction failure falls back to osm with its own fallbac
   try {
     const state = await h.controller.setStack('esri-dark-gray');
     assert.equal(state.activeId, 'osm', 'construction failure must fall back to OSM, not strand on a blank layer');
-    assert.equal(state.lastError, 'Esri Dark Gray is unavailable; using OSM');
+    assert.equal(state.lastError, 'Esri Dark Gray tidak tersedia; memakai OSM');
   } finally {
     h.restore();
   }
@@ -105,7 +105,7 @@ test('repeated tile failures on an active esri-dark-gray provider trigger the ge
     for (let i = 0; i < 20; i++) await Promise.resolve();
 
     assert.equal(h.controller.getActiveId(), 'osm', 'two tile failures must trigger the OSM fallback');
-    assert.equal(h.controller.getState().lastError, 'Esri Dark Gray tile requests failed; using OSM');
+    assert.equal(h.controller.getState().lastError, 'Permintaan tile Esri Dark Gray gagal; memakai OSM');
   } finally {
     h.restore();
   }
@@ -124,7 +124,7 @@ test('esri-imagery keeps its own existing tile-failure message after the gate wa
     assert.equal(h.controller.getActiveId(), 'osm');
     assert.equal(
       h.controller.getState().lastError,
-      'Esri Satellite tile requests failed; using OSM',
+      'Permintaan tile Esri Satellite gagal; memakai OSM',
       'esri-imagery must keep naming itself, not esri-dark-gray, after the shared-set refactor',
     );
   } finally {

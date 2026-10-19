@@ -193,7 +193,7 @@ _setCommandDockPanelPinState(panelId, pin, {
       const hadOldPositions = Object.keys(localStorage)
         .some((key) => key.startsWith('gev:panel-pos:v6:'));
       if (hadOldPositions) {
-        this._showToast('Panel layout updated — positions reset to new defaults');
+        this._showToast('Tata letak panel diperbarui — posisi diatur ulang ke bawaan');
       }
     } catch {
       // storage unavailable

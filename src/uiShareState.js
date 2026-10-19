@@ -200,9 +200,9 @@ _handleShareTrackingRestoreStatus(result) {
     if (result.classification === 'pending') {
       this._shareTrackingNoticeGeneration += 1;
       this._shareTrackingAcquiringKey = trackingKey;
-      this._showGlobalStatusNotice('ACQUIRING', {
+      this._showGlobalStatusNotice('MEMPEROLEH', {
         state: 'acquiring',
-        detail: `SHARED ${String(result.label || 'SUBJECT').toUpperCase()}`,
+        detail: `DIBAGIKAN ${String(result.label || 'OBJEK').toUpperCase()}`,
         persistent: true,
       });
       return;
@@ -222,12 +222,12 @@ _handleShareTrackingRestoreStatus(result) {
     const noticeGeneration = ownsAcquiringNotice
       ? this._shareTrackingNoticeGeneration
       : ++this._shareTrackingNoticeGeneration;
-    const subject = result.label || 'entity';
+    const subject = result.label || 'entitas';
     const message = result.classification === 'expired'
-      ? `Shared ${subject} follow expired`
+      ? `Pelacakan ${subject} yang dibagikan kedaluwarsa`
       : result.classification === 'source-unavailable'
-        ? `Shared ${subject} could not be restored — feed unavailable`
-        : `Shared ${subject} is unavailable`;
+        ? `${subject} yang dibagikan tidak dapat dipulihkan — feed tidak tersedia`
+        : `${subject} yang dibagikan tidak tersedia`;
     const showAfterStartupCover = () => {
       requestAnimationFrame(() => {
         if (!canPresentDeferredStatusNotice(
@@ -270,7 +270,7 @@ _handleShareTrackingRestoreStatus(result) {
   _initShareButton() {
     this._shareBtn.addEventListener('click', async () => {
       const success = await this.shareLinkManager.copyLink();
-      this._showToast(success ? 'Link copied!' : 'Copy failed');
+      this._showToast(success ? 'Tautan disalin!' : 'Gagal menyalin');
     });
   },
 

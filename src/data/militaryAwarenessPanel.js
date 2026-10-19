@@ -36,8 +36,8 @@ export function ensurePanel() {
 export function hidePanel() {
   if (state.panel) {
     const markup = `<div class="military-awareness-standby">
-      <strong>${state.enabled ? 'CONTEXT READY' : 'GLOBAL CONTEXT OFF'}</strong>
-      <span>${state.enabled ? 'SELECT A FLIGHT, VESSEL, OR MAPPED INSTALLATION' : 'ENABLE TO LOAD OBSERVED / MAPPED PROXIMITY'}</span>
+      <strong>${state.enabled ? 'KONTEKS SIAP' : 'KONTEKS GLOBAL MATI'}</strong>
+      <span>${state.enabled ? 'PILIH PENERBANGAN, KAPAL, ATAU INSTALASI TERPETAKAN' : 'NYALAKAN UNTUK MEMUAT KEDEKATAN TERAMATI / TERPETAKAN'}</span>
     </div>`;
     state.panel.hidden = false;
     if (state.panelMarkup !== markup) {
@@ -56,10 +56,10 @@ function rowHtml(cohort) {
     const label = formatAwarenessLabel(item);
     const targetId = item.icao24 || item.mmsi || item.id;
     if (!targetId) {
-      return `<li><span class="military-awareness-target unavailable" aria-label="Unavailable">${escapeHtml(label)} <span>${formatAwarenessDistance(item.distanceM)}</span></span></li>`;
+      return `<li><span class="military-awareness-target unavailable" aria-label="Tidak tersedia">${escapeHtml(label)} <span>${formatAwarenessDistance(item.distanceM)}</span></span></li>`;
     }
-    const accessibleLabel = label === '—' ? 'Unavailable' : label;
-    return `<li><button type="button" class="military-awareness-target" data-awareness-layer="${escapeHtml(cohort.id)}" data-awareness-id="${escapeHtml(targetId)}" aria-label="Focus ${escapeHtml(accessibleLabel)}">${escapeHtml(label)} <span>${formatAwarenessDistance(item.distanceM)}</span></button></li>`;
+    const accessibleLabel = label === '—' ? 'Tidak tersedia' : label;
+    return `<li><button type="button" class="military-awareness-target" data-awareness-layer="${escapeHtml(cohort.id)}" data-awareness-id="${escapeHtml(targetId)}" aria-label="Fokus ${escapeHtml(accessibleLabel)}">${escapeHtml(label)} <span>${formatAwarenessDistance(item.distanceM)}</span></button></li>`;
   }).join('');
   const pageCount = Math.max(1, Math.ceil(summary.nearest.length / AWARENESS_PAGE_SIZE));
   const pageLabel = pageCount > 1 ? ` · ${Math.floor(page / AWARENESS_PAGE_SIZE) + 1}/${pageCount}` : '';
@@ -73,10 +73,10 @@ function rowHtml(cohort) {
 
 function navigationControlsHtml() {
   const canPrevious = state.navigationIndex > 0;
-  return `<div class="military-awareness-controls" role="group" aria-label="Global Context navigation">
-    <button type="button" data-awareness-action="previous" title="Previous — prior visited contact in the 250 km window"${canPrevious ? '' : ' disabled'}>PREVIOUS</button>
-    <button type="button" data-awareness-action="focus">FOCUS</button>
-    <button type="button" data-awareness-action="next" title="Next — nearest unvisited contact in the 250 km window"${canNavigateNext() ? '' : ' disabled'}>NEXT</button>
+  return `<div class="military-awareness-controls" role="group" aria-label="Navigasi Konteks Global">
+    <button type="button" data-awareness-action="previous" title="Sebelumnya — kontak yang dikunjungi sebelumnya dalam jendela 250 km"${canPrevious ? '' : ' disabled'}>SEBELUMNYA</button>
+    <button type="button" data-awareness-action="focus">FOKUS</button>
+    <button type="button" data-awareness-action="next" title="Berikutnya — kontak terdekat yang belum dikunjungi dalam jendela 250 km"${canNavigateNext() ? '' : ' disabled'}>BERIKUTNYA</button>
   </div>`;
 }
 
@@ -88,10 +88,10 @@ export function renderResults() {
   if (!state.enabled || !state.results) return hidePanel();
   const panel = ensurePanel();
   const { subject, cohorts } = state.results;
-  const markup = `<div class="military-awareness-subject">${escapeHtml(subject.label)} · ${formatAwarenessDistance(AWARENESS_RADIUS_M)} FLIGHT / VESSEL WINDOW</div>
+  const markup = `<div class="military-awareness-subject">${escapeHtml(subject.label)} · ${formatAwarenessDistance(AWARENESS_RADIUS_M)} JENDELA PENERBANGAN / KAPAL</div>
     ${navigationControlsHtml()}
     ${cohorts.map(rowHtml).join('')}
-    <p class="military-awareness-note">Open-source mapped/observed context. Missing broadcasts, unloaded map areas, or unmapped sites are not evidence of absence.</p>`;
+    <p class="military-awareness-note">Konteks terpetakan/teramati dari sumber terbuka. Siaran yang hilang, area peta yang belum dimuat, atau situs yang tidak terpetakan bukan bukti ketiadaan.</p>`;
   panel.hidden = false;
   if (state.panelMarkup !== markup) {
     panel.innerHTML = markup;
