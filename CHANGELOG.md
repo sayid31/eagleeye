@@ -5,6 +5,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Fixed
+
+- `scripts/dev-fresh.sh` starts again. Its CCTV wiring check looked for a registration call that
+  lazy loading had replaced, so it stopped with "CCTV layer not wired" before starting the server.
+
 ### Changed
 
 - The console has a new look: a calm dark theme with one blue accent, no glowing text

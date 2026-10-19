@@ -225,7 +225,9 @@ if [[ ! -f "src/data/cctv.js" ]]; then
   exit 1
 fi
 
-if ! grep -q "dataManager.register(cctvLayer)" src/main.js; then
+# CCTV is registered lazily (registerLazy with LAYER_METADATA.cctv) since the
+# lazy-registration change; the old eager register(cctvLayer) call no longer exists.
+if ! grep -q "LAYER_METADATA.cctv" src/main.js; then
   echo "error: CCTV layer not wired in src/main.js"
   exit 1
 fi
