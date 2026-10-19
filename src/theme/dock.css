@@ -44,13 +44,20 @@ body.ee-shell #command-dock > #location-bar { order: 1; }
 body.ee-shell #command-dock > #control-panel { order: 2; }
 body.ee-shell #command-dock > #gev-voice-control { order: 3; }
 
+/* style.css sets min-height 3.75rem + column layout on these with ids and
+   .collapsed (higher specificity), which left the 28px pill's content 60px tall and
+   centred, so it sat on the pill's bottom edge. Force a one-row, pill-height box. */
 body.ee-shell #command-dock .location-inner,
-body.ee-shell #command-dock .panel-inner {
-  display: flex;
-  align-items: center;
-  min-height: 28px;
-  height: 28px;
-  padding: 0 10px;
+body.ee-shell #command-dock .panel-inner,
+body.ee-shell #command-dock #control-panel.collapsed .panel-inner,
+body.ee-shell #command-dock #location-bar.collapsed .location-inner {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-height: 0 !important;
+  height: 28px !important;
+  padding: 0 10px !important;
 }
 
 /* Tray titles are clipped, not removed. */

@@ -10,6 +10,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - The bottom dock is smaller, matching the mockup: it was about 60 px tall and stretched its menu to that
   height; it is now about 48 px with a 28 px style menu. The microphone icon sits in the middle of the
   round button instead of low and to the right.
+  The style menu's icon and label sit in the middle of the pill instead of on its bottom edge.
 - Picking a camera in the "Cari kamera CCTV" search now flies to it (it used to select the camera
   and leave the view where it was). The "Cari manual" button is gone; the manual controls are always shown.
 - Running `npm test` no longer breaks a running dev server. The traffic timing test started its own
