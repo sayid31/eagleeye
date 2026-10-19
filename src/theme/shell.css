@@ -18,7 +18,7 @@ body.ee-shell {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 0 16px 0 232px;
+  padding: 0 300px;
   /* No bar background: only the search and chips carry a surface. The bar
      itself ignores the pointer so the globe stays draggable underneath. */
   background: transparent;
@@ -35,11 +35,13 @@ body.ee-shell {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex: 0 1 520px;
+  flex: 0 1 360px;
   margin: 0 auto;
-  height: 38px;
+  height: 32px;
   padding: 0 10px;
-  background: var(--ee-surface);
+  background: rgba(13, 19, 27, 0.35);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--ee-border);
   border-radius: var(--ee-radius-sm);
   color: var(--ee-text-muted);
@@ -117,9 +119,8 @@ body.ee-shell {
 
 /* Brand: the existing #title-bar, restyled into the bar's left slot. */
 body.ee-shell #title-bar {
-  top: 0;
-  left: 16px;
-  height: var(--ee-topbar-h);
+  top: 32px;
+  left: 36px;
   display: flex;
   align-items: center;
   z-index: 121;
@@ -127,16 +128,17 @@ body.ee-shell #title-bar {
 
 body.ee-shell #title-bar h1 {
   font-family: var(--ee-font-sans);
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 600;
-  letter-spacing: 0;
-  text-transform: none;
-  gap: 10px;
+  letter-spacing: 3px;
+  text-shadow: none;
+  gap: 12px;
 }
 
 body.ee-shell #title-bar h1 .title-accent { color: var(--ee-text); }
 body.ee-shell #title-bar .subtitle { display: none; }
-body.ee-shell #title-bar .brand-logo { width: 28px; height: 28px; }
+body.ee-shell #title-bar .brand-logo { width: 44px; height: 44px; filter: none; }
+body.ee-shell #title-bar .title-glow { display: none; }
 
 /* Existing globe actions (clear layers / share / reset) sit at the bar's right. */
 body.ee-shell #top-center-actions {
@@ -147,7 +149,6 @@ body.ee-shell #top-center-actions {
   z-index: 121;
 }
 
-body.ee-shell #shell-topbar { padding-right: 160px; }
 
 /* The ACTIVE STYLE readout duplicates the dock's active preset; keep it for
    assistive tech but out of the layout. */
@@ -213,16 +214,18 @@ body.ee-shell #style-indicator {
 /* ---- status bar ----------------------------------------------------------- */
 #shell-statusbar {
   position: fixed;
-  inset: auto 0 0 var(--ee-rail-w);
+  inset: auto 0 0 0;
   z-index: 95;
   height: var(--ee-statusbar-h);
   display: flex;
   align-items: center;
   gap: 24px;
-  padding: 0 360px 0 16px;
-  background: var(--ee-bg);
-  border-top: 1px solid var(--ee-border);
-  color: var(--ee-text-muted);
+  padding: 0 200px 0 12px;
+  /* No bar background: text sits on the map, so it gets a plain dark outline. */
+  background: transparent;
+  pointer-events: none;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.85);
+  color: var(--ee-text);
   font-size: 12px;
   white-space: nowrap;
   overflow: hidden;
@@ -399,7 +402,7 @@ body.ee-shell .data-toggle-list .data-toggle-btn.active::after {
 }
 
 @media (max-width: 900px) {
-  #shell-topbar { padding-left: 200px; }
+  #shell-topbar { padding: 0 150px 0 200px; }
   .shell-search kbd,
   #shell-clock { display: none; }
   #shell-statusbar { padding-right: 16px; }

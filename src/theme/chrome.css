@@ -15,18 +15,20 @@ body.ee-shell #global-context-panel.collapsed {
 
 /* Imagery attribution (Google / Cesium ToS) sits at the status bar's right end.
    The legacy bottom-left rules in style.css carry up to 2 ids and :has() arguments
-   of specificity, so these use !important to win; the text itself is never hidden. */
+   of specificity, so these use !important to win. Small and dim, but never hidden. */
 body.ee-shell:not(.ui-clean-view):not(.recording-mode) #cesium-credits,
 body.ee-shell:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-variant='minimal'].active) #cesium-credits {
-  right: 16px !important;
-  bottom: 0 !important;
+  right: 6px !important;
+  bottom: 2px !important;
   left: auto !important;
   width: auto !important;
-  max-width: 340px !important;
-  height: var(--ee-statusbar-h);
+  max-width: 260px !important;
+  height: auto;
   text-align: right;
   text-shadow: none;
   font-family: var(--ee-font-sans);
+  font-size: 10px;
+  opacity: 0.6;
 }
 
 @media (max-width: 900px) {
@@ -35,4 +37,35 @@ body.ee-shell:not(.ui-clean-view):not(.recording-mode):has(#intel-hud[data-varia
     bottom: 0 !important;
     max-width: calc(100vw - 32px) !important;
   }
+}
+
+/* Top bar: only the search is shown. Health and UTC stay in the DOM (the
+   controller still writes them) but are not displayed. */
+body.ee-shell #shell-health,
+body.ee-shell #shell-clock {
+  display: none;
+}
+
+/* The mission-id / mode / summary readout (top-left) is gone: coordinates live
+   in the status bar. Cockpit mode keeps its own HUD. */
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-top-left {
+  display: none;
+}
+
+/* DISPLAY and CONTEXT are written into the right-hand rail, but open beside the
+   left icon rail like the other panels. Only CAMERA stays on the right. */
+body.ee-shell #right-context-rail > #pp-toggles:not(.collapsed),
+body.ee-shell #right-context-rail > #global-context-panel:not(.collapsed) {
+  position: fixed;
+  top: 26vh;
+  left: var(--left-stack-x);
+  right: auto;
+  max-height: calc(100vh - 26vh - 24px);
+  margin: 0;
+  overflow-y: auto;
+}
+
+/* CAMERA opens at the top of the right edge, just under the globe buttons. */
+body.ee-shell #right-context-rail {
+  top: calc(var(--ee-topbar-h) + 96px) !important;
 }

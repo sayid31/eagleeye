@@ -9,6 +9,7 @@ import { summarizeSources } from './layerStatus.js';
 import {
   formatAltitude, formatDms, formatMgrs, formatUtcClock, healthLabels,
 } from './shellFormat.js';
+import { panelsToCollapse } from './railPlan.js';
 import { RAIL_ITEMS, railMarkup, statusBarMarkup, topBarMarkup } from './shellMarkup.js';
 
 const REFRESH_MS = 1500;
@@ -56,6 +57,13 @@ export function initShell({ viewer, dataManager }) {
     const button = event.target.closest?.('.shell-rail-btn');
     if (!button) return;
     const item = RAIL_ITEMS.find((entry) => entry.id === button.dataset.railId);
+    const panelId = RAIL_PANELS[item?.id];
+    if (panelId && document.getElementById(panelId)?.classList.contains('collapsed')) {
+      const expanded = [...document.querySelectorAll('.panel-collapsible:not(.collapsed)')].map((el) => el.id);
+      for (const id of panelsToCollapse(panelId, expanded)) {
+        document.querySelector(`.panel-collapse-btn[data-collapse-target="${id}"]`)?.click();
+      }
+    }
     document.querySelector(item?.target || '')?.click();
     syncRail();
   };

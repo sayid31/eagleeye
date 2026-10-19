@@ -1621,6 +1621,11 @@ The popup now lines up with the panel's other full-width rows. See
   translucent floating bar centred vertically; it has entries for Layer data, Kamera, Skenario, Tampilan
   (DISPLAY) and Konteks (CONTEXT). Collapsed panel launcher cards are removed from the layout
   (`chrome.css`) and opened from the rail; their DOM stays for aria labels and panel code.
+- The top bar shows only the location search (health chip and UTC clock stay in the DOM, not displayed).
+  The brand is larger at the top-left. The status bar has no background. The attribution is small and dim
+  in the bottom-right corner, still rendered. The legacy top-left HUD readout (mission id, mode, summary)
+  is hidden outside cockpit mode. DISPLAY and CONTEXT open beside the rail (not on the right), and the rail
+  collapses the other side panels first (`railPlan.js`); CAMERA opens on the right edge under the globe buttons.
 - The dock (`dock.css`) is a row of a location pill, a style pill and a round blue mic. Tray titles, the
   AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
 - The CCTV panel starts with the camera inspector (`src/shell/cameraInspector*.js`). Its buttons

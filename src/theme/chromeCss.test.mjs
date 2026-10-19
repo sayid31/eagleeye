@@ -46,10 +46,10 @@ test('attribution wins over the legacy bottom-left rules and is never hidden', (
   const bodies = bodyOf(chrome, '#cesium-credits');
   assert.ok(bodies.length >= 1);
   for (const body of bodies) {
-    assert.doesNotMatch(body, /display:\s*none|visibility:\s*hidden|opacity:\s*0\b/);
+    assert.doesNotMatch(body, /display:\s*none|visibility:\s*hidden|opacity:\s*0\s*(;|$)/);
   }
   assert.match(bodies[0], /left:\s*auto\s*!important/);
-  assert.match(bodies[0], /bottom:\s*0\s*!important/);
+  assert.match(bodies[0], /bottom:\s*\d+px\s*!important/);
 });
 
 test('the dock is clear of the status bar and the mic is a round accent button', () => {
@@ -69,4 +69,21 @@ test('no glow and every --ee-* token used is defined', () => {
   for (const name of new Set([...(dock + chrome).matchAll(/var\((--ee-[\w-]+)/g)].map((m) => m[1]))) {
     assert.match(tokens, new RegExp(`${name}:`), name);
   }
+});
+
+test('the top bar shows only the search; the legacy HUD readout is hidden outside cockpit', () => {
+  assert.match(chrome, /body\.ee-shell #shell-health,\s*body\.ee-shell #shell-clock\s*\{\s*display:\s*none/);
+  assert.match(chrome, /body\.ee-shell:not\(\.cockpit-mode\) #intel-hud \.hud-top-left\s*\{\s*display:\s*none/);
+});
+
+test('DISPLAY and CONTEXT open beside the rail; CAMERA keeps the right edge', () => {
+  assert.match(chrome, /#right-context-rail > #pp-toggles:not\(\.collapsed\)/);
+  assert.match(chrome, /#right-context-rail > #global-context-panel:not\(\.collapsed\)/);
+  assert.doesNotMatch(chrome, /#right-context-rail > #cctv-panel/);
+});
+
+test('the status bar has no background and starts at the left edge', () => {
+  const [body] = bodyOf(shell, '#shell-statusbar {');
+  assert.match(body, /background:\s*transparent/);
+  assert.match(body, /inset:\s*auto 0 0 0/);
 });

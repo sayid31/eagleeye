@@ -15,6 +15,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   translucent bar centred on the screen and also opens Display and Context. The collapsed panel
   title cards are gone. The attribution no longer overlaps the coordinates, and the bottom dock
   is a location pill, a style pill and a round blue mic.
+- The top bar keeps only the search; the brand is larger; the status bar has no background; the
+  attribution sits small in the bottom-right corner; the top-left HUD text block is gone. Display and
+  Context now open next to the left rail, and opening one closes the others. Camera opens on the right.
 - The layer panel groups layers into Pergerakan, Lingkungan and Kota. Each layer shows an
   honest status: Live, Terganggu, Mati, Memuat, or Data statis for bundled datasets.
 - The CCTV panel opens with a camera inspector: badges (including "Sumber tidak resmi" and
