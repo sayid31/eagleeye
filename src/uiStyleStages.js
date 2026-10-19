@@ -438,8 +438,10 @@ export const styleStagesMixin = {
     }
 
     // Update button UI
-    document.querySelectorAll('.style-btn').forEach(btn => {
-      btn.classList.toggle('active', btn.dataset.style === styleName);
+    document.querySelectorAll('.style-btn, .dock-style-seg').forEach(btn => {
+      const isActive = btn.dataset.style === styleName;
+      btn.classList.toggle('active', isActive);
+      if (btn.classList.contains('dock-style-seg')) btn.setAttribute('aria-pressed', String(isActive));
     });
 
     // Update style indicator

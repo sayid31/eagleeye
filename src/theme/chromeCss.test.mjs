@@ -99,14 +99,20 @@ test('DISPLAY and CONTEXT get a bounded width so they are not clipped at the rig
   assert.match(body, /width:\s*min\(330px, calc\(100vw - var\(--left-stack-x\) - 16px\)\)\s*!important/);
 });
 
-test('the dock location pill is clipped (search lives in the top bar), not removed', () => {
+test('the dock location pill is visible and shows the city with a chevron', () => {
   const bodies = bodyOf(dock, 'body.ee-shell #command-dock > #location-bar {');
-  assert.ok(bodies.some((body) => /clip-path:\s*inset\(50%\)/.test(body)));
-  assert.ok(bodies.every((body) => !/display:\s*none/.test(body)));
+  assert.ok(bodies.every((body) => !/clip-path|width:\s*1px|display:\s*none/.test(body)));
+  assert.match(dock, /\.location-mini-city::after[^}]*content:\s*'▾'/);
 });
 
-test('style menu has an icon and the mic is a ringed gradient with solid rings only', () => {
-  assert.match(dock, /#control-panel \.panel-mini-status::before/);
+test('the more-styles menu keeps its toggle and clips the style name, not removes it', () => {
+  assert.match(dock, /#control-panel \.panel-mini-status::before[^}]*content:\s*'tune'/);
+  const [value] = bodyOf(dock, 'body.ee-shell #command-dock #control-panel #style-mini-value {');
+  assert.match(value, /clip-path:\s*inset\(50%\)/);
+  assert.doesNotMatch(value, /display:\s*none/);
+});
+
+test('the mic is a ringed gradient with solid rings only', () => {
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
   assert.match(mic, /linear-gradient/);
   assert.match(mic, /box-shadow:\s*0 0 0 3px var\(--ee-accent-soft\)/);
@@ -116,4 +122,23 @@ test('the dock is compact: small mic and pills', () => {
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
   assert.match(mic, /width:\s*34px/);
   assert.match(dock, /min-height:\s*32px/);
+});
+
+test('the segmented style control is imported, accent-marks the active style and maps the three presets', () => {
+  const seg = strip('./dockSegments.css');
+  assert.match(theme, /@import '\.\/dockSegments\.css'/);
+  const [active] = bodyOf(seg, 'body.ee-shell #command-dock .dock-style-seg.active {');
+  assert.match(active, /color:\s*var\(--ee-accent\)/);
+  const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+  const pairs = [...html.matchAll(/class="dock-style-seg[^"]*" data-style="(\w+)"[^>]*>(\w+)</g)]
+    .map(([, style, label]) => `${style}:${label}`);
+  assert.deepEqual(pairs, ['normal:Normal', 'thermal:Termal', 'surveillance:Malam']);
+});
+
+test('segments are wired to setStyle and kept in sync with the active style', () => {
+  const portal = readFileSync(new URL('../uiHudPortal.js', import.meta.url), 'utf8');
+  const stages = readFileSync(new URL('../uiStyleStages.js', import.meta.url), 'utf8');
+  assert.match(portal, /querySelectorAll\('\.style-btn, \.dock-style-seg'\)/);
+  assert.match(stages, /querySelectorAll\('\.style-btn, \.dock-style-seg'\)/);
+  assert.match(stages, /setAttribute\('aria-pressed'/);
 });

@@ -4,5 +4,6 @@
 @import './inspector.css';
 @import './chrome.css';
 @import './dock.css';
+@import './dockSegments.css';
 @import './adaptive.css';
 @import './close.css';

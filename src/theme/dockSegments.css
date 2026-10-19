@@ -1,0 +1,42 @@
+/* Dock segmented style control: Normal | Termal | Malam. The three buttons drive the
+   same setStyle() as the .style-btn tray (hotkeys 1, 4, 3); the active one is accent. */
+
+body.ee-shell #command-dock > #dock-style-segments {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  background: var(--ee-surface-2);
+  border: 1px solid var(--ee-border);
+  border-radius: 10px;
+}
+
+body.ee-shell #command-dock .dock-style-seg {
+  min-height: 26px;
+  padding: 0 12px;
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  color: var(--ee-text-muted);
+  font: 500 13px var(--ee-font-sans);
+  letter-spacing: 0;
+  text-transform: none;
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+
+body.ee-shell #command-dock .dock-style-seg:hover {
+  color: var(--ee-text);
+}
+
+body.ee-shell #command-dock .dock-style-seg.active {
+  background: var(--ee-accent-soft);
+  color: var(--ee-accent);
+  font-weight: 600;
+}
+
+body.ee-shell #command-dock .dock-style-seg:focus-visible {
+  outline: 2px solid var(--ee-accent);
+  outline-offset: 1px;
+}

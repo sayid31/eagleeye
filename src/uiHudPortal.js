@@ -20,7 +20,7 @@ export const hudPortalMixin = {
    */
   _initUI() {
     // Style buttons
-    document.querySelectorAll('.style-btn').forEach(btn => {
+    document.querySelectorAll('.style-btn, .dock-style-seg').forEach(btn => {
       btn.addEventListener('click', () => this.setStyle(btn.dataset.style));
     });
 

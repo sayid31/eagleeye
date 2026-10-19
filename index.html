@@ -496,7 +496,7 @@
     <div class="panel-inner">
       <button id="control-panel-toggle" class="panel-header dock-tray-toggle" type="button"
         data-dock-toggle-target="control-panel" aria-expanded="false"
-        aria-controls="control-panel-popover" aria-label="Expand Visual Presets">
+        aria-controls="control-panel-popover" aria-label="Expand Visual Presets" title="Gaya lainnya &amp; sumber peta">
         <span class="panel-title"><span class="dock-label-icon dock-label-icon-presets" aria-hidden="true"></span>VISUAL PRESETS</span>
         <span class="panel-divider"></span>
       </button>
@@ -582,6 +582,13 @@
       </div>
     </div>
   </div>
+  <!-- Segmented style control: the three most-used presets, wired like .style-btn -->
+  <div id="dock-style-segments" class="dock-style-segments" role="group" aria-label="Gaya tampilan">
+    <button type="button" class="dock-style-seg active" data-style="normal" aria-pressed="true">Normal</button>
+    <button type="button" class="dock-style-seg" data-style="thermal" aria-pressed="false">Termal</button>
+    <button type="button" class="dock-style-seg" data-style="surveillance" aria-pressed="false">Malam</button>
+  </div>
+
   </div>
 
   <div id="left-panel-stack">
