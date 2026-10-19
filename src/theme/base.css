@@ -1,0 +1,49 @@
+/* Base overrides: visible keyboard focus, no glowing text, tabular numerals.
+   Appearance only; no layout or behavior. */
+
+/* Keyboard focus must stay visible. style.css has ~47 `outline: none` rules
+   with id-level specificity, so this is !important on purpose. */
+:where(button, a[href], input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: 2px solid var(--ee-accent) !important;
+  outline-offset: 2px !important;
+}
+
+/* Numbers and coordinates read in monospace with fixed-width digits. */
+.ee-mono,
+#hud-coordinates,
+.panel-mini-value,
+.cctv-readout {
+  font-family: var(--ee-font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* No glowing text. Legibility shadows (0 1px 2px) are left alone. */
+#title-bar h1,
+#style-indicator .indicator-value,
+.panel-mini-value,
+.style-btn.active .btn-icon,
+#detection-toggle.active .pp-icon,
+#cockpit-hud,
+.cockpit-altitude-rim-pointer,
+.cockpit-roll-token.is-rolling,
+.cockpit-compass-tape span.active,
+.cockpit-context-window,
+.cockpit-signal-window,
+.cockpit-signal-target:hover,
+.cockpit-signal-target:focus-visible,
+#orbit-indicator,
+.mission-replay-overlay-callout,
+.radio-tuner-scale,
+#cctv-summary,
+#scene-runtime {
+  text-shadow: none;
+}
+
+/* Decorative glow layers behind panels and the title. */
+.panel-glow,
+#title-bar .title-glow {
+  display: none;
+}
+#title-bar .title-logo {
+  filter: none;
+}

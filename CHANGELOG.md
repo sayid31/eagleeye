@@ -5,6 +5,42 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- The console has a new look: a calm dark theme with one blue accent, no glowing text
+  and no "TOP SECRET" banner. It has a top bar (search, source-health summary, UTC clock),
+  a left icon rail and a bottom status bar with coordinates, MGRS and altitude.
+  Imagery attribution stays visible in the status bar.
+- The top bar has no background and its search finds locations only. The left icon rail is a
+  translucent bar centred on the screen and also opens Display and Context. The collapsed panel
+  title cards are gone. The attribution no longer overlaps the coordinates, and the bottom dock
+  is a location pill, a style pill and a round blue mic.
+- The top bar keeps only the search; the brand is larger; the status bar has no background; the
+  attribution sits small in the bottom-right corner; the top-left HUD text block is gone. Display and
+  Context now open next to the left rail, and opening one closes the others. Camera opens on the right.
+- The left rail no longer has the globe-reset button (the top-right one does the same). The small
+  vertical COLL/ONA readout on the left edge is hidden. The three top-right icons have no background,
+  and the icons, coordinates and attribution switch to dark text over the bright OSM map
+  and stay light over satellite, 3D and dark maps. Display and Context open at a fixed width instead of
+  being cut off at the screen edge.
+- The dock no longer shows the location pill (search is in the top bar). The style menu has an icon and an
+  accent border when open, and the mic is a ringed gradient button.
+- The camera panel shows the camera screen first, then a "Cari kamera CCTV" search box (name, city,
+  id or operator). The detail block (badges, operator, direction, format, nearby cameras, centre and
+  calibrate buttons) is removed; "Cari manual" opens the earlier previous/next/picker/calibration controls.
+- The "Cari kamera CCTV" search lists every matching camera instead of the first 8, so a city
+  such as Denpasar shows all of its cameras. A count line sits above the list ("90 kamera ditemukan");
+  past 200 matches it reads "Menampilkan 200 dari N kamera, persempit pencarian".
+- The side panels (Layer data, Kamera, Skenario, Tampilan, Konteks) close with an "×" icon at the
+  header's right corner instead of a text arrow or +/−.
+- The bottom dock is smaller (34 px mic, 32 px style menu). The EAGLEEYE VIEW wordmark uses the
+  logo's cyan on every map.
+- The layer panel groups layers into Pergerakan, Lingkungan and Kota. Each layer shows an
+  honest status: Live, Terganggu, Mati, Memuat, or Data statis for bundled datasets.
+- The CCTV panel opens with the camera screen, then a "Cari kamera CCTV" search. The earlier
+  controls are under "Cari manual".
+  While a camera's video shows, its 3D frustum stays hidden unless you are calibrating.
+
 ### Fixed
 
 - A data layer whose code failed to download (for example CCTV, after a network

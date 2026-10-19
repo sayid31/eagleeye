@@ -1607,6 +1607,46 @@ The popup now lines up with the panel's other full-width rows. See
 - Track endpoints: `/api/ais-live/track?mmsi=` (server-accumulated ring buffers; sub-route handled before the rows snapshot), `/api/opensky-track?icao24=` (OAuth, 60s cache, sanitized errors, independent OpenSky credit bucket), `/api/adsblol/trace?hex=` (60s cache, 5MB cap, ODbL attribution required in UI).
 - Realtime debug logs redact API keys, bearer tokens, client secrets, and image data URLs before writing to disk; request bodies are size-capped.
 
+## UI Shell (theme layer)
+
+- `src/theme/theme.css` loads after `style.css` and holds the redesigned look (`tokens.css`, `base.css`,
+  `shell.css`, `inspector.css`, `chrome.css`, `dock.css`, `adaptive.css`, `close.css`). Every shell rule is scoped to `body.ee-shell`, set by `initShell`.
+- `src/shell/` mounts a top bar, icon rail and status bar. The rail and search proxy to existing
+  controls. The shell never writes layer state.
+- Layer rows show a status from `layerShellStatus` (`src/shell/layerStatus.js`): Live, Terganggu, Mati,
+  Memuat, or Data statis for bundled datasets. `.data-name` text is unchanged because voice focus reads it.
+- `#cesium-credits` is moved to the status bar's right end (`chrome.css`, `!important` to beat the legacy
+  bottom-left rules) and is never hidden. The status bar and the dock no longer overlap.
+- The top bar has no background; the search is for locations only (Ctrl K focuses it). The left rail is a
+  translucent floating bar centred vertically; it has entries for Layer data, Kamera, Skenario, Tampilan
+  (DISPLAY) and Konteks (CONTEXT). Collapsed panel launcher cards are removed from the layout
+  (`chrome.css`) and opened from the rail; their DOM stays for aria labels and panel code.
+- The top bar shows only the location search (health chip and UTC clock stay in the DOM, not displayed).
+  The brand is larger at the top-left. The status bar has no background. The attribution is small and dim
+  in the bottom-right corner, still rendered. The legacy top-left HUD readout (mission id, mode, summary)
+  and the decorative REC/ORB readout (top-right) are hidden outside cockpit mode. DISPLAY and CONTEXT open beside the rail (not on the right), and the rail
+  collapses the other side panels first (`railPlan.js`); CAMERA opens on the right edge under the globe buttons.
+- The rail has no globe-reset entry (`#top-center-actions` has it). `.hud-left-edge` (COLL/ONA) is hidden
+  outside cockpit mode. DISPLAY and CONTEXT open at `min(330px, 100vw - rail - 16px)`.
+- `adaptive.css` colours the chrome that sits directly on the map (status text, attribution, globe
+  action icons, which have no plate). `initShell` sets `body[data-map-tone]` from the active map stack
+  (`src/shell/mapTone.js`: `light` only for OSM) and updates it on `gev:map-stack-changed`.
+- The dock (`dock.css`) is a compact style menu (palette icon, active style, accent border when open) and a 34 px round
+  gradient mic. The location pill is clipped, not removed (location code reads it). Tray titles, the
+  AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
+- In the CCTV panel a slim header row (title clipped, close icon) comes first, then the camera screen
+  (`#cctv-frame-wrap`), then the "Cari kamera CCTV" search, all by CSS `order`. `searchCameras`
+  (`cameraInspectorModel.js`) ranks name-prefix matches first over name, city, id and provider and returns
+  `{items, total}`: every match is listed (render cap `SEARCH_LIMIT` = 200) under a count line, so a
+  city query shows all of the city's cameras; picking a
+  result calls `selectCamera`; Enter selects nothing. "Cari manual" reveals the legacy controls
+  (`.ee-advanced-open`, also set while calibrating). There is no detail block: operator, direction, format
+  and nearby cameras are not shown. `#cctv-source-badge` (⚠ UNOFFICIAL SOURCE) stays visible.
+- `close.css`: the collapse buttons of the five side panels render an "×" (Material Symbols `close`) via
+  `::before` with the text glyph at `font-size: 0`; the button, its id and `aria-label` are unchanged.
+- The wordmark colour is `--ee-brand` (#00d4ff, the colour in `public/logo.svg`) on every basemap; only
+  the other on-map chrome follows `data-map-tone`.
+
 ## UI/UX Runtime Defaults
 
 - Z ladder: panels promote within 100–139 (renormalized on wrap), voice pill 150, toast 200, clean-view exit 300.
