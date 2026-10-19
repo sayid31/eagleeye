@@ -1,0 +1,54 @@
+/* Chrome that sits straight on the map (brand, globe actions, status text).
+   It has no panel behind it, so its colour follows the basemap: light text with
+   a dark outline over satellite / 3D / dark-gray, dark text with a light outline
+   over the bright OSM street map. shellController sets body[data-map-tone]. */
+body.ee-shell {
+  --ee-chrome-fg: var(--ee-text);
+  --ee-chrome-fg-muted: var(--ee-text-muted);
+  --ee-chrome-outline: rgba(0, 0, 0, 0.85);
+}
+
+body.ee-shell[data-map-tone='light'] {
+  --ee-chrome-fg: #0b1220;
+  --ee-chrome-fg-muted: #2a3646;
+  --ee-chrome-outline: rgba(255, 255, 255, 0.85);
+}
+
+body.ee-shell #title-bar h1,
+body.ee-shell #title-bar h1 .title-accent {
+  color: var(--ee-chrome-fg);
+  text-shadow: 0 1px 3px var(--ee-chrome-outline);
+}
+
+body.ee-shell #shell-statusbar {
+  color: var(--ee-chrome-fg);
+  text-shadow: 0 1px 2px var(--ee-chrome-outline);
+}
+
+body.ee-shell:not(.ui-clean-view):not(.recording-mode) #cesium-credits {
+  color: var(--ee-chrome-fg);
+  text-shadow: 0 1px 2px var(--ee-chrome-outline);
+}
+
+/* Globe actions (clear layers / share / reset): icons only, no plate. */
+body.ee-shell #top-center-actions button {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  color: var(--ee-chrome-fg);
+  filter: drop-shadow(0 1px 2px var(--ee-chrome-outline));
+}
+
+body.ee-shell #top-center-actions button:hover {
+  background: transparent;
+  border-color: transparent;
+  color: var(--ee-accent);
+}
+
+body.ee-shell #top-center-actions button:focus-visible {
+  background: transparent;
+  outline: 2px solid var(--ee-accent);
+  outline-offset: 2px;
+}

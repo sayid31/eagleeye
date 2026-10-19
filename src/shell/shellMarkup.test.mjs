@@ -41,6 +41,11 @@ test('status bar carries coordinates, MGRS and altitude, and never the attributi
 });
 
 test('the shell is mounted from main.js after the layer panel is built', () => {
-  assert.match(main, /initShell\(\{ viewer, dataManager \}\)/);
+  assert.match(main, /initShell\(\{ viewer, dataManager, mapStackController \}\)/);
   assert.ok(main.indexOf("buildTogglePanel(document.getElementById('data-toggles'))") < main.indexOf('initShell('));
+});
+
+test('the rail has no globe-reset entry; the top-right button already does that', () => {
+  assert.ok(!RAIL_ITEMS.some((item) => item.id === 'reset'));
+  assert.match(html, /id="reset-globe-view"/);
 });

@@ -8,7 +8,6 @@ export const RAIL_ITEMS = Object.freeze([
   { id: 'scenes', label: 'Skenario', icon: 'movie', target: '.panel-collapse-btn[data-collapse-target="scene-panel"]' },
   { id: 'display', label: 'Tampilan', icon: 'tune', target: '.panel-collapse-btn[data-collapse-target="pp-toggles"]' },
   { id: 'context', label: 'Konteks', icon: 'monitoring', target: '.panel-collapse-btn[data-collapse-target="global-context-panel"]' },
-  { id: 'reset', label: 'Pusatkan globe', icon: 'public', target: '#reset-globe-view' },
   { id: 'share', label: 'Bagikan tampilan', icon: 'share', target: '#share-btn', bottom: true },
 ]);
 

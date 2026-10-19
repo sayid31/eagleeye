@@ -57,7 +57,7 @@ test('the dock is clear of the status bar and the mic is a round accent button',
   assert.match(dockBody, /bottom:\s*calc\(var\(--ee-statusbar-h\) \+ 16px\)/);
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
   assert.match(mic, /border-radius:\s*50%/);
-  assert.match(mic, /background:\s*var\(--ee-accent\)/);
+  assert.match(mic, /background:[^;]*var\(--ee-accent\)/);
 });
 
 test('dock voice text is clipped, never display:none', () => {
@@ -75,7 +75,7 @@ test('the top bar shows only the search; the legacy HUD readout is hidden outsid
   assert.match(chrome, /body\.ee-shell #shell-health,\s*body\.ee-shell #shell-clock\s*\{\s*display:\s*none/);
   assert.match(chrome, /body\.ee-shell:not\(\.cockpit-mode\) #intel-hud \.hud-top-left,/);
   assert.match(chrome, /#intel-hud \.hud-top-right,/);
-  assert.match(chrome, /#intel-hud \.hud-right-edge\s*\{\s*display:\s*none/);
+  assert.match(chrome, /#intel-hud \.hud-left-edge\s*\{\s*display:\s*none/);
 });
 
 test('DISPLAY and CONTEXT open beside the rail; CAMERA keeps the right edge', () => {
@@ -88,4 +88,26 @@ test('the status bar has no background and starts at the left edge', () => {
   const [body] = bodyOf(shell, '#shell-statusbar {');
   assert.match(body, /background:\s*transparent/);
   assert.match(body, /inset:\s*auto 0 0 0/);
+});
+
+test('left-edge HUD readout is hidden outside cockpit mode', () => {
+  assert.match(chrome, /body\.ee-shell:not\(\.cockpit-mode\) #intel-hud \.hud-left-edge/);
+});
+
+test('DISPLAY and CONTEXT get a bounded width so they are not clipped at the right edge', () => {
+  const [body] = bodyOf(chrome, '#right-context-rail > #pp-toggles:not(.collapsed)');
+  assert.match(body, /width:\s*min\(330px, calc\(100vw - var\(--left-stack-x\) - 16px\)\)\s*!important/);
+});
+
+test('the dock location pill is clipped (search lives in the top bar), not removed', () => {
+  const bodies = bodyOf(dock, 'body.ee-shell #command-dock > #location-bar {');
+  assert.ok(bodies.some((body) => /clip-path:\s*inset\(50%\)/.test(body)));
+  assert.ok(bodies.every((body) => !/display:\s*none/.test(body)));
+});
+
+test('style menu has an icon and the mic is a ringed gradient with solid rings only', () => {
+  assert.match(dock, /#control-panel \.panel-mini-status::before/);
+  const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
+  assert.match(mic, /linear-gradient/);
+  assert.match(mic, /box-shadow:\s*0 0 0 4px var\(--ee-accent-soft\)/);
 });

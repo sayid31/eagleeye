@@ -29,3 +29,12 @@ test('the legacy UNOFFICIAL SOURCE badge text is still produced by the panel mix
   const mixin = readFileSync(new URL('../cctvPanelMixin.js', import.meta.url), 'utf8');
   assert.match(mixin, /⚠ UNOFFICIAL SOURCE/);
 });
+
+test('the camera search sits in the inspector and picks cameras through selectCamera', () => {
+  const markup = inspectorMarkup();
+  assert.match(markup, /id="cam-search-input"[^>]*aria-label="Cari kamera CCTV"/);
+  assert.match(markup, /id="cam-search-results"/);
+  assert.match(markup, /id="cam-inspector-advanced"[^>]*>Cari manual</);
+  assert.match(controller, /searchCameras/);
+  assert.match(controller, /callLayerMethod\('cctv', 'selectCamera'/);
+});

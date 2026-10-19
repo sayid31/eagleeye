@@ -9,6 +9,7 @@ import { summarizeSources } from './layerStatus.js';
 import {
   formatAltitude, formatDms, formatMgrs, formatUtcClock, healthLabels,
 } from './shellFormat.js';
+import { mapTone } from './mapTone.js';
 import { panelsToCollapse } from './railPlan.js';
 import { RAIL_ITEMS, railMarkup, statusBarMarkup, topBarMarkup } from './shellMarkup.js';
 
@@ -22,10 +23,10 @@ const RAIL_PANELS = Object.freeze({ layers: 'data-panel', camera: 'cctv-panel', 
 
 /**
  * Mount the shell. Returns a disposer that removes the markup and timers.
- * @param {{viewer: object, dataManager: object}} deps
+ * @param {{viewer: object, dataManager: object, mapStackController?: object}} deps
  * @returns {() => void}
  */
-export function initShell({ viewer, dataManager }) {
+export function initShell({ viewer, dataManager, mapStackController }) {
   if (document.getElementById('shell-topbar')) return () => {};
   document.body.classList.add('ee-shell');
   document.body.insertAdjacentHTML('afterbegin', topBarMarkup() + railMarkup() + statusBarMarkup());
@@ -52,6 +53,16 @@ export function initShell({ viewer, dataManager }) {
   };
   document.addEventListener('keydown', onGlobalKey);
   cleanups.push(() => document.removeEventListener('keydown', onGlobalKey));
+
+  // Chrome text that sits straight on the map flips tone with the basemap.
+  const applyMapTone = (stackId) => { document.body.dataset.mapTone = mapTone(stackId); };
+  const onStackChange = (event) => applyMapTone(event.detail?.activeId);
+  applyMapTone(mapStackController?.getActiveId?.());
+  window.addEventListener('gev:map-stack-changed', onStackChange);
+  cleanups.push(() => {
+    window.removeEventListener('gev:map-stack-changed', onStackChange);
+    delete document.body.dataset.mapTone;
+  });
 
   const onRailClick = (event) => {
     const button = event.target.closest?.('.shell-rail-btn');

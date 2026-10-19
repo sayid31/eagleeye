@@ -3,7 +3,7 @@
 // already exists (focus, ADJUST, collapse) or to the layer's public
 // selectCamera, so no CCTV behaviour is duplicated here.
 import {
-  inspectorBadges, inspectorRows, nearbyCameras,
+  inspectorBadges, inspectorRows, nearbyCameras, searchCameras,
 } from './cameraInspectorModel.js';
 import { inspectorMarkup } from './cameraInspectorMarkup.js';
 
@@ -46,7 +46,45 @@ export function initCameraInspector({ dataManager }) {
     if (id) dataManager.callLayerMethod('cctv', 'selectCamera', id);
   });
 
+  let lastState = null;
+  const results = $('cam-search-results');
+  const searchInput = $('cam-search-input');
+
+  function renderSearch() {
+    const query = searchInput.value;
+    const hits = searchCameras(query, lastState?.cameras);
+    results.hidden = !query.trim();
+    if (results.hidden) return results.replaceChildren();
+    if (!hits.length) {
+      const empty = el('li', 'cam-search-empty', lastState?.enabled
+        ? 'Tidak ada kamera yang cocok.'
+        : 'Nyalakan lapisan CCTV (atau pakai Cari manual) untuk mencari kamera.');
+      return results.replaceChildren(empty);
+    }
+    results.replaceChildren(...hits.map((hit) => {
+      const item = el('li');
+      const button = el('button', 'cam-nearby-btn');
+      button.type = 'button';
+      button.dataset.cameraId = hit.id;
+      const dot = el('span', 'shell-dot');
+      dot.dataset.tone = hit.tone;
+      button.append(dot, el('span', 'cam-nearby-name', hit.name), el('span', 'cam-nearby-dist', hit.city));
+      item.append(button);
+      return item;
+    }));
+  }
+  searchInput.addEventListener('input', renderSearch);
+  results.addEventListener('click', (event) => {
+    const id = event.target.closest?.('[data-camera-id]')?.dataset.cameraId;
+    if (!id) return;
+    dataManager.callLayerMethod('cctv', 'selectCamera', id);
+    searchInput.value = '';
+    renderSearch();
+  });
+
   function render(state) {
+    lastState = state;
+    if (searchInput.value) renderSearch();
     const camera = state?.enabled ? state.activeCamera : null;
     $('cam-inspector-empty').hidden = !!camera;
     $('cam-inspector-body').hidden = !camera;

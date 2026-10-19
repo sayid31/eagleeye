@@ -18,11 +18,20 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - The top bar keeps only the search; the brand is larger; the status bar has no background; the
   attribution sits small in the bottom-right corner; the top-left HUD text block is gone. Display and
   Context now open next to the left rail, and opening one closes the others. Camera opens on the right.
+- The left rail no longer has the globe-reset button (the top-right one does the same). The small
+  vertical COLL/ONA readout on the left edge is hidden. The three top-right icons have no background,
+  and the brand, icons, coordinates and attribution switch to dark text over the bright OSM map
+  and stay light over satellite, 3D and dark maps. Display and Context open at a fixed width instead of
+  being cut off at the screen edge.
+- The dock no longer shows the location pill (search is in the top bar). The style menu has an icon and an
+  accent border when open, and the mic is a ringed gradient button.
+- The camera panel shows the camera screen first, then a "Cari kamera CCTV" search box (name, city,
+  id or operator), then the details. "Cari manual" opens the earlier previous/next/picker controls.
 - The layer panel groups layers into Pergerakan, Lingkungan and Kota. Each layer shows an
   honest status: Live, Terganggu, Mati, Memuat, or Data statis for bundled datasets.
 - The CCTV panel opens with a camera inspector: badges (including "Sumber tidak resmi" and
   "Lokasi perkiraan"), operator, direction, format, "Pusatkan di peta", "Kalibrasi posisi" and
-  a list of the nearest cameras. The earlier controls are under "Kontrol lanjutan".
+  a list of the nearest cameras. The earlier controls are under "Cari manual".
   While a camera's video shows, its 3D frustum stays hidden unless you are calibrating.
 
 ### Fixed

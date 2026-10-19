@@ -51,7 +51,8 @@ body.ee-shell #shell-clock {
    in the status bar. Cockpit mode keeps its own HUD. */
 body.ee-shell:not(.cockpit-mode) #intel-hud .hud-top-left,
 body.ee-shell:not(.cockpit-mode) #intel-hud .hud-top-right,
-body.ee-shell:not(.cockpit-mode) #intel-hud .hud-right-edge {
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-right-edge,
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-left-edge {
   display: none;
 }
 
@@ -63,9 +64,19 @@ body.ee-shell #right-context-rail > #global-context-panel:not(.collapsed) {
   top: 26vh;
   left: var(--left-stack-x);
   right: auto;
+  width: min(330px, calc(100vw - var(--left-stack-x) - 16px)) !important;
+  max-width: none;
   max-height: calc(100vh - 26vh - 24px);
   margin: 0;
   overflow-y: auto;
+}
+
+/* Their headings read like the other panels: sentence-case sans, not tiny mono. */
+body.ee-shell #pp-toggles:not(.collapsed) .pp-header-label,
+body.ee-shell #global-context-panel:not(.collapsed) .panel-title {
+  font: 600 15px var(--ee-font-sans);
+  letter-spacing: 0;
+  color: var(--ee-text);
 }
 
 /* CAMERA opens at the top of the right edge, just under the globe buttons. */

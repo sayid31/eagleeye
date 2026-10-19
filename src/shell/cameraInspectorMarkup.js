@@ -5,6 +5,12 @@
 export function inspectorMarkup() {
   return `
 <section id="cam-inspector" class="cam-inspector" aria-label="Detail kamera">
+  <div class="cam-search">
+    <span class="material-symbols-outlined" aria-hidden="true">search</span>
+    <input id="cam-search-input" type="search" autocomplete="off" spellcheck="false"
+      placeholder="Cari kamera CCTV" aria-label="Cari kamera CCTV" aria-controls="cam-search-results" />
+  </div>
+  <ul id="cam-search-results" class="cam-search-results" aria-label="Hasil pencarian kamera" hidden></ul>
   <div id="cam-inspector-empty" class="cam-inspector-empty">Pilih kamera untuk melihat detailnya.</div>
   <div id="cam-inspector-body" hidden>
     <div class="cam-inspector-head">
@@ -23,6 +29,6 @@ export function inspectorMarkup() {
     <h3 class="cam-inspector-subhead">Kamera terdekat</h3>
     <ul id="cam-inspector-nearby" class="cam-inspector-nearby"></ul>
   </div>
-  <button type="button" id="cam-inspector-advanced" class="cam-inspector-advanced" aria-expanded="false" aria-controls="cctv-panel">Kontrol lanjutan</button>
+  <button type="button" id="cam-inspector-advanced" class="cam-inspector-advanced" aria-expanded="false" aria-controls="cctv-panel">Cari manual</button>
 </section>`;
 }

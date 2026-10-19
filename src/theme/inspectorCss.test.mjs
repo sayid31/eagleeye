@@ -41,3 +41,8 @@ test('no glowing text or neon box-shadows', () => {
 test('main.js mounts the inspector after the shell', () => {
   assert.ok(main.indexOf('initCameraInspector({') > main.indexOf('initShell({'));
 });
+
+test('the camera screen is ordered first, ahead of the search and details', () => {
+  assert.match(css, /#cctv-panel \.cctv-frame-wrap \{ order: -4; \}/);
+  assert.match(css, /#cctv-panel \.cam-inspector \{ order: -1; \}/);
+});
