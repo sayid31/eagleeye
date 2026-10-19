@@ -54,7 +54,7 @@ test('attribution wins over the legacy bottom-left rules and is never hidden', (
 
 test('the dock is clear of the status bar and the mic is a round accent button', () => {
   const [dockBody] = bodyOf(dock, 'body.ee-shell #command-dock {');
-  assert.match(dockBody, /bottom:\s*calc\(var\(--ee-statusbar-h\) \+ 16px\)/);
+  assert.match(dockBody, /bottom:\s*calc\(var\(--ee-statusbar-h\) \+ 12px\)/);
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
   assert.match(mic, /border-radius:\s*50%/);
   assert.match(mic, /background:[^;]*var\(--ee-accent\)/);
@@ -109,5 +109,11 @@ test('style menu has an icon and the mic is a ringed gradient with solid rings o
   assert.match(dock, /#control-panel \.panel-mini-status::before/);
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
   assert.match(mic, /linear-gradient/);
-  assert.match(mic, /box-shadow:\s*0 0 0 4px var\(--ee-accent-soft\)/);
+  assert.match(mic, /box-shadow:\s*0 0 0 3px var\(--ee-accent-soft\)/);
+});
+
+test('the dock is compact: small mic and pills', () => {
+  const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
+  assert.match(mic, /width:\s*34px/);
+  assert.match(dock, /min-height:\s*32px/);
 });

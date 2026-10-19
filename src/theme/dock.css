@@ -4,18 +4,18 @@
    status text and cost readouts are clipped visually and stay for assistive tech. */
 
 body.ee-shell #command-dock {
-  bottom: calc(var(--ee-statusbar-h) + 16px);
+  bottom: calc(var(--ee-statusbar-h) + 12px);
   display: flex !important;
   flex-direction: row !important;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   width: auto !important;
   max-width: calc(100vw - 24px);
-  padding: 8px;
+  padding: 5px;
   background: rgba(13, 19, 27, 0.88);
   border: 1px solid var(--ee-border);
-  border-radius: 16px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  border-radius: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
@@ -42,8 +42,8 @@ body.ee-shell #command-dock .location-inner,
 body.ee-shell #command-dock .panel-inner {
   display: flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0 12px;
+  min-height: 32px;
+  padding: 0 10px;
 }
 
 /* Tray titles are clipped, not removed. */
@@ -103,7 +103,7 @@ body.ee-shell #command-dock .location-mini-city::after {
    toggle covers it as the click target. */
 body.ee-shell #command-dock > #control-panel {
   background: linear-gradient(180deg, var(--ee-surface-2), var(--ee-surface));
-  border-radius: 12px;
+  border-radius: 10px;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 
@@ -121,13 +121,13 @@ body.ee-shell #command-dock #control-panel .panel-mini-status::before {
   content: 'palette';
   display: grid;
   place-items: center;
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
   background: var(--ee-accent-soft);
   color: var(--ee-accent);
   font-family: 'Material Symbols Outlined';
-  font-size: 18px;
+  font-size: 15px;
   font-feature-settings: 'liga';
   line-height: 1;
   letter-spacing: normal;
@@ -145,7 +145,7 @@ body.ee-shell #command-dock #control-panel .panel-mini-status {
 
 body.ee-shell #command-dock #control-panel #style-mini-value {
   color: var(--ee-text);
-  font: 600 14px var(--ee-font-sans);
+  font: 600 13px var(--ee-font-sans);
   letter-spacing: 0;
   text-transform: lowercase;
 }
@@ -199,8 +199,8 @@ body.ee-shell #command-dock#command-dock > #gev-voice-control {
 }
 
 body.ee-shell #command-dock #gev-voice-button {
-  width: 44px;
-  height: 44px;
+  width: 34px;
+  height: 34px;
   display: grid;
   place-items: center;
   padding: 0;
@@ -208,7 +208,7 @@ body.ee-shell #command-dock #gev-voice-button {
   border: 0;
   border-radius: 50%;
   /* Solid rings only: an outer halo and an inner top highlight, no blur glow. */
-  box-shadow: 0 0 0 4px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 3px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -223,8 +223,8 @@ body.ee-shell #command-dock #gev-voice-button:focus-visible {
 
 body.ee-shell #command-dock #gev-voice-button .gev-mic-orbit {
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: 18px;
+  height: 18px;
   background: transparent;
   border: 0;
   box-shadow: none;
@@ -241,7 +241,7 @@ body.ee-shell #command-dock #gev-voice-control:is(
   [data-status='speaking'],
   [data-status='executing']
 ) #gev-voice-button {
-  box-shadow: 0 0 0 6px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 0 4px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 body.ee-shell #command-dock #gev-voice-control[data-status='error'] #gev-voice-button {

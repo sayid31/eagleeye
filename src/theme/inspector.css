@@ -38,70 +38,7 @@ body.ee-shell #cctv-source-badge {
   letter-spacing: 0;
 }
 
-.cam-inspector { display: flex; flex-direction: column; gap: 12px; }
-
-.cam-inspector-empty { color: var(--ee-text-dim); font-size: 13px; }
-
-.cam-inspector-head { display: flex; align-items: flex-start; gap: 8px; }
-.cam-inspector-title { display: flex; flex-direction: column; min-width: 0; flex: 1; }
-.cam-inspector-title strong { font-size: 15px; font-weight: 600; color: var(--ee-text); overflow-wrap: anywhere; }
-.cam-inspector-title span { font-size: 12px; color: var(--ee-text-dim); }
-
-.cam-inspector-close {
-  width: 28px;
-  height: 28px;
-  border: 1px solid var(--ee-border);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ee-text-dim);
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.cam-inspector-badges { display: flex; flex-wrap: wrap; gap: 6px; }
-
-.cam-badge {
-  padding: 3px 10px;
-  border: 1px solid var(--ee-border);
-  border-radius: 999px;
-  background: var(--ee-surface-2);
-  color: var(--ee-text);
-  font-size: 12px;
-}
-.cam-badge[data-tone='ok'] { border-color: var(--ee-ok); color: var(--ee-ok); }
-.cam-badge[data-tone='warn'] { border-color: var(--ee-warn); color: var(--ee-warn); }
-.cam-badge[data-tone='off'] { border-color: var(--ee-off); color: var(--ee-text-dim); }
-
-.cam-inspector-rows {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 6px 16px;
-  margin: 0;
-  font-size: 13px;
-}
-.cam-inspector-rows dt { color: var(--ee-text-dim); }
-.cam-inspector-rows dd { margin: 0; color: var(--ee-text); font-family: var(--ee-font-mono); text-align: right; }
-
-.cam-inspector-actions { display: flex; gap: 8px; }
-
-.cam-inspector-btn {
-  flex: 1;
-  padding: 8px 10px;
-  border: 1px solid var(--ee-border);
-  border-radius: 6px;
-  background: var(--ee-surface-2);
-  color: var(--ee-text);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-}
-.cam-inspector-btn-primary { border-color: var(--ee-accent); color: var(--ee-accent); }
-.cam-inspector-btn[aria-pressed='true'] { background: var(--ee-accent); border-color: var(--ee-accent); color: var(--ee-on-accent); }
-
-.cam-inspector-subhead { margin: 0; font-size: 12px; font-weight: 600; color: var(--ee-text-dim); }
-
-.cam-inspector-nearby { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+.cam-inspector { display: flex; flex-direction: column; gap: 10px; }
 
 .cam-nearby-btn {
   display: flex;
@@ -136,8 +73,6 @@ body.ee-shell #cctv-source-badge {
   cursor: pointer;
 }
 
-.cam-inspector-close:focus-visible,
-.cam-inspector-btn:focus-visible,
 .cam-nearby-btn:focus-visible,
 .cam-inspector-advanced:focus-visible,
 .cam-search input:focus-visible {
@@ -158,35 +93,13 @@ body.ee-shell #cctv-panel:not(.ee-advanced-open) .cctv-summary-label {
   body.ee-shell #right-context-rail { width: min(340px, calc(100vw - 32px)); }
 }
 
-/* Order inside the CCTV column: the camera screen first, then the search and
-   details. Only the visual order changes; the DOM (and tab order of the legacy
+/* Order inside the CCTV column: a slim title row with the close button, the
+   camera screen, then the search. Only the visual order changes; the DOM (and tab order of the legacy
    controls) is untouched. */
+body.ee-shell #cctv-panel .panel-header { order: -5; }
 body.ee-shell #cctv-panel .cctv-frame-wrap { order: -4; }
 body.ee-shell #cctv-panel #cctv-source-badge { order: -3; }
 body.ee-shell #cctv-panel .cam-inspector { order: -1; }
-
-/* The "Kamera" title row would otherwise sit between the screen and the search,
-   so it floats over the screen's corner: only the collapse button stays visible,
-   the title is clipped for assistive tech. */
-body.ee-shell #cctv-panel .panel-header {
-  position: absolute;
-  top: 22px;
-  right: 22px;
-  z-index: 3;
-  margin: 0;
-  padding: 2px;
-  background: rgba(7, 11, 17, 0.6);
-  border-radius: 999px;
-}
-body.ee-shell #cctv-panel .panel-header .panel-title,
-body.ee-shell #cctv-panel .panel-header .panel-divider {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
 
 .cam-search {
   display: flex;

@@ -25,3 +25,14 @@ test('attribution is recoloured, never hidden', () => {
   assert.match(css, /#cesium-credits/);
   assert.doesNotMatch(css, /display:\s*none|visibility:\s*hidden|opacity:\s*0\s*(;|$)/);
 });
+
+test('the brand wordmark keeps the logo cyan on every basemap', () => {
+  const tokens = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8');
+  const logo = readFileSync(new URL('../../public/logo.svg', import.meta.url), 'utf8');
+  const cyan = /--ee-brand:\s*(#[0-9a-f]{6})/i.exec(tokens)?.[1];
+  assert.ok(cyan, '--ee-brand is defined');
+  assert.ok(logo.toLowerCase().includes(cyan.toLowerCase()), 'matches public/logo.svg');
+  const [body] = [...css.matchAll(/body\.ee-shell #title-bar h1,\s*body\.ee-shell #title-bar h1 \.title-accent\s*\{([^}]*)\}/g)].map((m) => m[1]);
+  assert.match(body, /color:\s*var\(--ee-brand\)/);
+  assert.doesNotMatch(body, /--ee-chrome-fg/);
+});

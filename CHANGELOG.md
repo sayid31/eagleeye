@@ -20,18 +20,22 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   Context now open next to the left rail, and opening one closes the others. Camera opens on the right.
 - The left rail no longer has the globe-reset button (the top-right one does the same). The small
   vertical COLL/ONA readout on the left edge is hidden. The three top-right icons have no background,
-  and the brand, icons, coordinates and attribution switch to dark text over the bright OSM map
+  and the icons, coordinates and attribution switch to dark text over the bright OSM map
   and stay light over satellite, 3D and dark maps. Display and Context open at a fixed width instead of
   being cut off at the screen edge.
 - The dock no longer shows the location pill (search is in the top bar). The style menu has an icon and an
   accent border when open, and the mic is a ringed gradient button.
 - The camera panel shows the camera screen first, then a "Cari kamera CCTV" search box (name, city,
-  id or operator), then the details. "Cari manual" opens the earlier previous/next/picker controls.
+  id or operator). The detail block (badges, operator, direction, format, nearby cameras, centre and
+  calibrate buttons) is removed; "Cari manual" opens the earlier previous/next/picker/calibration controls.
+- The side panels (Layer data, Kamera, Skenario, Tampilan, Konteks) close with an "×" icon at the
+  header's right corner instead of a text arrow or +/−.
+- The bottom dock is smaller (34 px mic, 32 px style menu). The EAGLEEYE VIEW wordmark uses the
+  logo's cyan on every map.
 - The layer panel groups layers into Pergerakan, Lingkungan and Kota. Each layer shows an
   honest status: Live, Terganggu, Mati, Memuat, or Data statis for bundled datasets.
-- The CCTV panel opens with a camera inspector: badges (including "Sumber tidak resmi" and
-  "Lokasi perkiraan"), operator, direction, format, "Pusatkan di peta", "Kalibrasi posisi" and
-  a list of the nearest cameras. The earlier controls are under "Cari manual".
+- The CCTV panel opens with the camera screen, then a "Cari kamera CCTV" search. The earlier
+  controls are under "Cari manual".
   While a camera's video shows, its 3D frustum stays hidden unless you are calibrating.
 
 ### Fixed

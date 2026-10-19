@@ -29,7 +29,6 @@ test('legacy controls are hidden from layout only, and only while advanced is cl
 });
 
 test('interactive inspector controls have a visible keyboard focus ring', () => {
-  assert.match(css, /\.cam-inspector-btn:focus-visible/);
   assert.match(css, /\.cam-nearby-btn:focus-visible/);
 });
 
@@ -42,7 +41,8 @@ test('main.js mounts the inspector after the shell', () => {
   assert.ok(main.indexOf('initCameraInspector({') > main.indexOf('initShell({'));
 });
 
-test('the camera screen is ordered first, ahead of the search and details', () => {
+test('the title row sits above the camera screen, which sits ahead of the search', () => {
+  assert.match(css, /#cctv-panel \.panel-header \{ order: -5; \}/);
   assert.match(css, /#cctv-panel \.cctv-frame-wrap \{ order: -4; \}/);
   assert.match(css, /#cctv-panel \.cam-inspector \{ order: -1; \}/);
 });

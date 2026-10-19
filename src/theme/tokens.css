@@ -16,6 +16,8 @@
 
   /* the single accent */
   --ee-accent: #6cb4fa;
+  /* Same cyan as public/logo.svg; the wordmark uses it on every basemap. */
+  --ee-brand: #00d4ff;
   --ee-accent-soft: rgba(108, 180, 250, 0.14);
   --ee-on-accent: #06121f;
 

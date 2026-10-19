@@ -1,7 +1,8 @@
-/* Chrome that sits straight on the map (brand, globe actions, status text).
+/* Chrome that sits straight on the map (globe actions, status text).
    It has no panel behind it, so its colour follows the basemap: light text with
    a dark outline over satellite / 3D / dark-gray, dark text with a light outline
-   over the bright OSM street map. shellController sets body[data-map-tone]. */
+   over the bright OSM street map. shellController sets body[data-map-tone]. The
+   brand wordmark is the exception: it keeps the logo colour everywhere. */
 body.ee-shell {
   --ee-chrome-fg: var(--ee-text);
   --ee-chrome-fg-muted: var(--ee-text-muted);
@@ -14,10 +15,12 @@ body.ee-shell[data-map-tone='light'] {
   --ee-chrome-outline: rgba(255, 255, 255, 0.85);
 }
 
+/* The wordmark is always the logo's cyan, on every basemap, with a fixed dark
+   outline so it stays readable on bright imagery too. */
 body.ee-shell #title-bar h1,
 body.ee-shell #title-bar h1 .title-accent {
-  color: var(--ee-chrome-fg);
-  text-shadow: 0 1px 3px var(--ee-chrome-outline);
+  color: var(--ee-brand);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7);
 }
 
 body.ee-shell #shell-statusbar {

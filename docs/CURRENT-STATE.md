@@ -1610,7 +1610,7 @@ The popup now lines up with the panel's other full-width rows. See
 ## UI Shell (theme layer)
 
 - `src/theme/theme.css` loads after `style.css` and holds the redesigned look (`tokens.css`, `base.css`,
-  `shell.css`, `inspector.css`, `chrome.css`, `dock.css`, `adaptive.css`). Every shell rule is scoped to `body.ee-shell`, set by `initShell`.
+  `shell.css`, `inspector.css`, `chrome.css`, `dock.css`, `adaptive.css`, `close.css`). Every shell rule is scoped to `body.ee-shell`, set by `initShell`.
 - `src/shell/` mounts a top bar, icon rail and status bar. The rail and search proxy to existing
   controls. The shell never writes layer state.
 - Layer rows show a status from `layerShellStatus` (`src/shell/layerStatus.js`): Live, Terganggu, Mati,
@@ -1628,18 +1628,22 @@ The popup now lines up with the panel's other full-width rows. See
   collapses the other side panels first (`railPlan.js`); CAMERA opens on the right edge under the globe buttons.
 - The rail has no globe-reset entry (`#top-center-actions` has it). `.hud-left-edge` (COLL/ONA) is hidden
   outside cockpit mode. DISPLAY and CONTEXT open at `min(330px, 100vw - rail - 16px)`.
-- `adaptive.css` colours the chrome that sits directly on the map (brand, status text, attribution, globe
+- `adaptive.css` colours the chrome that sits directly on the map (status text, attribution, globe
   action icons, which have no plate). `initShell` sets `body[data-map-tone]` from the active map stack
   (`src/shell/mapTone.js`: `light` only for OSM) and updates it on `gev:map-stack-changed`.
-- The dock (`dock.css`) is a style menu (palette icon, active style, accent border when open) and a round
+- The dock (`dock.css`) is a compact style menu (palette icon, active style, accent border when open) and a 34 px round
   gradient mic. The location pill is clipped, not removed (location code reads it). Tray titles, the
   AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
-- In the CCTV panel the camera screen (`#cctv-frame-wrap`) is ordered first by CSS `order`, followed by the
-  "Cari kamera CCTV" search (`searchCameras` in `cameraInspectorModel.js`; picks via `selectCamera`) and the
-  inspector. "Cari manual" reveals the legacy controls. The panel title is clipped over the screen corner.
-- The CCTV panel contains the camera inspector (`src/shell/cameraInspector*.js`). Its buttons
-  click the existing FOCUS and ADJUST controls. Operator and last-checked time are not in the CCTV
-  public state, so they read "tidak diketahui". "Lokasi perkiraan ±3 km" appears only for `calBadge === 'raw-prior'`.
+- In the CCTV panel a slim header row (title clipped, close icon) comes first, then the camera screen
+  (`#cctv-frame-wrap`), then the "Cari kamera CCTV" search, all by CSS `order`. `searchCameras`
+  (`cameraInspectorModel.js`) ranks name-prefix matches first over name, city, id and provider; picking a
+  result calls `selectCamera`; Enter selects nothing. "Cari manual" reveals the legacy controls
+  (`.ee-advanced-open`, also set while calibrating). There is no detail block: operator, direction, format
+  and nearby cameras are not shown. `#cctv-source-badge` (⚠ UNOFFICIAL SOURCE) stays visible.
+- `close.css`: the collapse buttons of the five side panels render an "×" (Material Symbols `close`) via
+  `::before` with the text glyph at `font-size: 0`; the button, its id and `aria-label` are unchanged.
+- The wordmark colour is `--ee-brand` (#00d4ff, the colour in `public/logo.svg`) on every basemap; only
+  the other on-map chrome follows `data-map-tone`.
 
 ## UI/UX Runtime Defaults
 

@@ -1,0 +1,45 @@
+/* Side panels (layers, camera, scenarios, display, context) close with an "×"
+   icon in the header's right corner. The collapse button keeps its element, id
+   and aria-label (panel code rewrites its text glyph), so the glyph is hidden
+   and the icon is drawn by ::before. Collapsed panels are display:none in the
+   shell, so only the expanded state is styled. */
+body.ee-shell :is(#data-panel, #cctv-panel, #scene-panel, #pp-toggles, #global-context-panel) .panel-collapse-btn[data-collapse-target] {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ee-text-muted);
+  font-size: 0;
+}
+
+body.ee-shell :is(#data-panel, #cctv-panel, #scene-panel, #pp-toggles, #global-context-panel) .panel-collapse-btn[data-collapse-target]::before {
+  content: 'close';
+  font-family: 'Material Symbols Outlined';
+  font-size: 18px;
+  font-feature-settings: 'liga';
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+body.ee-shell :is(#data-panel, #cctv-panel, #scene-panel, #pp-toggles, #global-context-panel) .panel-collapse-btn[data-collapse-target]:hover {
+  background: var(--ee-surface-2);
+  color: var(--ee-text);
+}
+
+body.ee-shell :is(#data-panel, #cctv-panel, #scene-panel, #pp-toggles, #global-context-panel) .panel-collapse-btn[data-collapse-target]:focus-visible {
+  outline: 2px solid var(--ee-accent);
+  outline-offset: 2px;
+}
+
+/* The header divider line would sit between the title and the close icon. */
+body.ee-shell :is(#data-panel, #cctv-panel, #scene-panel, #pp-toggles, #global-context-panel) .panel-header .panel-divider,
+body.ee-shell #pp-toggles .pp-header-row .panel-divider {
+  display: none;
+}
