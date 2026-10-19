@@ -633,15 +633,18 @@
         </div>
         <button id="cctv-next-btn" class="scene-btn">BERIKUTNYA</button>
       </div>
-      <div class="cctv-controls">
-        <button id="cctv-focus-btn" class="scene-btn">FOKUS</button>
-        <button id="cctv-coverage-btn" class="scene-btn">CAKUPAN MATI</button>
-        <button id="cctv-auto-hop-btn" class="scene-btn">LOMPAT OTOMATIS MATI</button>
-      </div>
-      <div class="cctv-controls">
-        <button id="cctv-projection-btn" class="scene-btn">PROYEKSI HIDUP</button>
-        <span id="cctv-quality-chip">KAL · --</span>
-      </div>
+      <details class="cctv-advanced">
+        <summary>OPSI LANJUTAN</summary>
+        <div class="cctv-controls">
+          <button id="cctv-focus-btn" class="scene-btn" title="Terbangkan kamera dunia ke kamera CCTV yang sedang aktif">FOKUS</button>
+          <button id="cctv-coverage-btn" class="scene-btn" title="Tampilkan area pandang kamera di peta: mati, bingkai, lalu volume viewshed">CAKUPAN MATI</button>
+        </div>
+        <div class="cctv-controls">
+          <button id="cctv-auto-hop-btn" class="scene-btn" title="Berpindah ke kamera berikutnya secara otomatis tiap beberapa detik">LOMPAT OTOMATIS MATI</button>
+          <button id="cctv-projection-btn" class="scene-btn" title="Tampilkan layar video kamera di dunia 3D">PROYEKSI HIDUP</button>
+        </div>
+        <span id="cctv-quality-chip" title="Kualitas kalibrasi posisi kamera">KAL · --</span>
+      </details>
       <div class="cctv-calibration-block">
         <div class="cctv-calibration-header">
           <div class="cctv-summary-label">KALIBRASI</div>

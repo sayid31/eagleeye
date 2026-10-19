@@ -48,3 +48,20 @@ test('CCTV control rows wrap so longer Indonesian labels never squeeze the camer
   assert.match(css, /#cctv-panel \.cctv-controls \.scene-btn\s*\{[^}]*white-space:\s*normal/);
   assert.match(css, /#cctv-panel \.cctv-controls \.cctv-camera-picker\s*\{[^}]*flex:\s*1 1 100%/);
 });
+
+test('the CCTV camera picker shows a chevron that flips while the list is open', () => {
+  assert.match(css, /\.cctv-camera-picker::after\s*\{[^}]*content:\s*'expand_more'[^}]*pointer-events:\s*none/);
+  assert.match(css, /\.cctv-camera-picker:has\(\.cctv-camera-trigger\[aria-expanded='true'\]\)::after\s*\{[^}]*rotate\(180deg\)/);
+  assert.match(css, /\.cctv-camera-trigger\s*\{[^}]*padding-right:\s*34px/);
+});
+
+test('CCTV power controls live in a closed "Opsi lanjutan" disclosure but keep their ids', async () => {
+  const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+  const block = html.match(/<details class="cctv-advanced">[\s\S]*?<\/details>/)?.[0];
+  assert.ok(block, 'advanced disclosure exists');
+  assert.doesNotMatch(block, /<details[^>]*\sopen/);
+  for (const id of ['cctv-focus-btn', 'cctv-coverage-btn', 'cctv-auto-hop-btn', 'cctv-projection-btn', 'cctv-quality-chip']) {
+    assert.ok(block.includes(`id="${id}"`), id);
+  }
+  assert.match(css, /#cctv-panel \.cctv-advanced > summary/);
+});
