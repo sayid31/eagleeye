@@ -7,9 +7,6 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
-- The bottom dock matches the mockup again: a location pill ("📍 Jakarta ▾"), a Normal / Termal / Malam
-  segmented control with the active style in blue, and the round mic. Normal, Termal (FLIR) and Malam (NVG)
-  switch in one click; CRT, Anime, Noir, Snow and the map source are behind the small menu button beside it.
 - Picking a camera in the "Cari kamera CCTV" search now flies to it (it used to select the camera
   and leave the view where it was). The "Cari manual" button is gone; the manual controls are always shown.
 - Running `npm test` no longer breaks a running dev server. The traffic timing test started its own

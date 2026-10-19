@@ -1631,12 +1631,8 @@ The popup now lines up with the panel's other full-width rows. See
 - `adaptive.css` colours the chrome that sits directly on the map (status text, attribution, globe
   action icons, which have no plate). `initShell` sets `body[data-map-tone]` from the active map stack
   (`src/shell/mapTone.js`: `light` only for OSM) and updates it on `gev:map-stack-changed`.
-- The dock (`dock.css`, `dockSegments.css`) is, left to right: the location pill (`#location-bar`, pin + city
-  from `#location-mini-city` + chevron; hover opens the location tray), a segmented style control
-  (`#dock-style-segments`: Normal / Termal / Malam = `normal` / `thermal` / `surveillance`), a small
-  "more styles" button (`#control-panel`, `tune` icon; opens CRT, Anime, Noir, Snow and the map source),
-  and a 34 px round gradient mic. The segments are wired like `.style-btn` in `_initUI` and toggled
-  (`.active`, `aria-pressed`) by `setStyle`; hotkeys 1-7 are unchanged. Tray titles, the style name, the
+- The dock (`dock.css`) is a compact style menu (palette icon, active style, accent border when open) and a 34 px round
+  gradient mic. The location pill is clipped, not removed (location code reads it). Tray titles, the
   AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
 - In the CCTV panel a slim header row (title clipped, close icon) comes first, then the camera screen
   (`#cctv-frame-wrap`), then the "Cari kamera CCTV" search, all by CSS `order`. `searchCameras`

@@ -1,5 +1,4 @@
-/* Bottom dock: [location pill] [Normal | Termal | Malam] [more styles] [round mic].
-   The segmented control lives in dockSegments.css.
+/* Bottom dock: [style menu] [round mic]; the location pill is clipped (see below).
    style.css styles the dock with ids, :has() and media-query variants, so the
    layout-critical properties here use !important. Markup is untouched: titles,
    status text and cost readouts are clipped visually and stay for assistive tech. */
@@ -36,9 +35,8 @@ body.ee-shell #command-dock > #control-panel {
 }
 
 body.ee-shell #command-dock > #location-bar { order: 1; }
-body.ee-shell #command-dock > #dock-style-segments { order: 2; }
-body.ee-shell #command-dock > #control-panel { order: 3; }
-body.ee-shell #command-dock > #gev-voice-control { order: 4; }
+body.ee-shell #command-dock > #control-panel { order: 2; }
+body.ee-shell #command-dock > #gev-voice-control { order: 3; }
 
 body.ee-shell #command-dock .location-inner,
 body.ee-shell #command-dock .panel-inner {
@@ -68,7 +66,18 @@ body.ee-shell #command-dock .gev-mic-label {
   white-space: nowrap;
 }
 
-/* Location pill: pin, city and a chevron; hovering it opens the location tray. */
+/* Location is searched from the top bar, so the dock's location pill is clipped
+   out of view. It stays in the DOM: location code and the layout mixin read it. */
+body.ee-shell #command-dock > #location-bar {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  overflow: hidden;
+  clip-path: inset(50%);
+  pointer-events: none;
+}
+
+/* Location pill internals (hidden above; kept so the text stays current). */
 body.ee-shell #command-dock #location-bar .location-mini-status {
   display: block !important;
   padding: 0;
@@ -90,22 +99,12 @@ body.ee-shell #command-dock .location-mini-city::after {
   color: var(--ee-text-muted);
 }
 
-body.ee-shell #command-dock > #location-bar {
-  cursor: pointer;
-  transition: border-color 0.15s ease;
-}
-
-body.ee-shell #command-dock > #location-bar:hover,
-body.ee-shell #command-dock > #location-bar:not(.collapsed) {
-  border-color: var(--ee-accent) !important;
-}
-
-/* More-styles menu: a small icon button for the styles and map sources that do not
-   fit the segmented control (CRT, Anime, Noir, Snow, map source). The style name
-   stays in the DOM, clipped. The full-size toggle covers it as the click target. */
+/* Style menu: palette icon, the active style in accent, a chevron. The full-size
+   toggle covers it as the click target. */
 body.ee-shell #command-dock > #control-panel {
-  background: var(--ee-surface-2);
-  transition: border-color 0.15s ease;
+  background: linear-gradient(180deg, var(--ee-surface-2), var(--ee-surface));
+  border-radius: 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 body.ee-shell #command-dock > #control-panel:hover,
@@ -113,38 +112,52 @@ body.ee-shell #command-dock > #control-panel:not(.collapsed) {
   border-color: var(--ee-accent) !important;
 }
 
-body.ee-shell #command-dock #control-panel .panel-inner {
-  padding: 0 6px;
-}
-
 body.ee-shell #command-dock #control-panel .panel-mini-status {
-  display: flex !important;
   align-items: center;
-  padding: 0;
+  gap: 8px;
 }
 
 body.ee-shell #command-dock #control-panel .panel-mini-status::before {
-  content: 'tune';
+  content: 'palette';
   display: grid;
   place-items: center;
   width: 22px;
   height: 22px;
+  border-radius: 7px;
+  background: var(--ee-accent-soft);
   color: var(--ee-accent);
   font-family: 'Material Symbols Outlined';
-  font-size: 18px;
+  font-size: 15px;
   font-feature-settings: 'liga';
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
 }
 
+body.ee-shell #command-dock #control-panel:not(.collapsed) #style-mini-value::after {
+  content: '▴';
+  color: var(--ee-accent);
+}
+body.ee-shell #command-dock #control-panel .panel-mini-status {
+  display: flex !important;
+  padding: 0;
+}
+
 body.ee-shell #command-dock #control-panel #style-mini-value {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
+  color: var(--ee-text);
+  font: 600 13px var(--ee-font-sans);
+  letter-spacing: 0;
+  text-transform: lowercase;
+}
+
+body.ee-shell #command-dock #control-panel #style-mini-value::first-letter {
+  text-transform: uppercase;
+}
+
+body.ee-shell #command-dock #control-panel #style-mini-value::after {
+  content: '▾';
+  margin-left: 8px;
+  color: var(--ee-text-muted);
 }
 
 body.ee-shell #command-dock #control-panel .dock-tray-toggle {
