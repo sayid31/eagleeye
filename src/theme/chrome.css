@@ -46,9 +46,12 @@ body.ee-shell #shell-clock {
   display: none;
 }
 
-/* The mission-id / mode / summary readout (top-left) is gone: coordinates live
+/* The mission-id / mode / summary readout (top-left) and the decorative REC /
+   ORB / BAND readout (top-right, right edge) are gone: coordinates live
    in the status bar. Cockpit mode keeps its own HUD. */
-body.ee-shell:not(.cockpit-mode) #intel-hud .hud-top-left {
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-top-left,
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-top-right,
+body.ee-shell:not(.cockpit-mode) #intel-hud .hud-right-edge {
   display: none;
 }
 

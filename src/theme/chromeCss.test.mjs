@@ -73,7 +73,9 @@ test('no glow and every --ee-* token used is defined', () => {
 
 test('the top bar shows only the search; the legacy HUD readout is hidden outside cockpit', () => {
   assert.match(chrome, /body\.ee-shell #shell-health,\s*body\.ee-shell #shell-clock\s*\{\s*display:\s*none/);
-  assert.match(chrome, /body\.ee-shell:not\(\.cockpit-mode\) #intel-hud \.hud-top-left\s*\{\s*display:\s*none/);
+  assert.match(chrome, /body\.ee-shell:not\(\.cockpit-mode\) #intel-hud \.hud-top-left,/);
+  assert.match(chrome, /#intel-hud \.hud-top-right,/);
+  assert.match(chrome, /#intel-hud \.hud-right-edge\s*\{\s*display:\s*none/);
 });
 
 test('DISPLAY and CONTEXT open beside the rail; CAMERA keeps the right edge', () => {
