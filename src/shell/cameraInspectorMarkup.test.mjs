@@ -32,7 +32,20 @@ test('the camera search sits in the inspector and picks cameras through selectCa
   const markup = inspectorMarkup();
   assert.match(markup, /id="cam-search-input"[^>]*aria-label="Cari kamera CCTV"/);
   assert.match(markup, /id="cam-search-results"/);
-  assert.match(markup, /id="cam-inspector-advanced"[^>]*>Cari manual</);
   assert.match(controller, /searchCameras/);
-  assert.match(controller, /callLayerMethod\('cctv', 'selectCamera'/);
+});
+
+test('picking a search result flies to the camera through the panel select-and-fly path', () => {
+  assert.match(controller, /styleManager\.selectCctvCameraAndFly\(id\)/);
+  assert.doesNotMatch(controller, /callLayerMethod\('cctv', 'selectCamera'/, 'a bare selectCamera does not fly');
+  const mixin = readFileSync(new URL('../cctvPanelMixin.js', import.meta.url), 'utf8');
+  const method = mixin.slice(mixin.indexOf('async _selectCctvCameraFromListbox'));
+  assert.match(method.slice(0, method.indexOf('\n  },')), /focusCamera\('cctv'/);
+  assert.match(mixin, /selectCctvCameraAndFly\(cameraId\) \{\s*return this\._selectCctvCameraFromListbox\(cameraId\)/);
+});
+
+test('the manual controls are always visible: no "Cari manual" button and no hide rule', () => {
+  assert.doesNotMatch(inspectorMarkup(), /cam-inspector-advanced|Cari manual/);
+  const css = readFileSync(new URL('../theme/inspector.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(css, /ee-advanced-open|cam-inspector-advanced/);
 });

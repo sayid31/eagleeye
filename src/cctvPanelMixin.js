@@ -428,6 +428,16 @@ export const cctvPanelMixin = {
   },
 
   /**
+   * Public entry for other pickers (the shell's camera search): same enable,
+   * fly-to and persist path as choosing a camera in the manual picker.
+   * @param {string} cameraId
+   * @returns {Promise<void>}
+   */
+  selectCctvCameraAndFly(cameraId) {
+    return this._selectCctvCameraFromListbox(cameraId);
+  },
+
+  /**
    * Returns the currently active CCTV camera ID from state or the picker trigger.
    * @returns {string} Camera ID, or empty string if none.
    */

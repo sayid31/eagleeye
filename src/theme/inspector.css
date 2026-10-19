@@ -1,5 +1,5 @@
 /* Camera inspector (right side). Restyles the CCTV panel; the legacy controls
-   stay in the DOM behind "Kontrol lanjutan" because code and tests use them. */
+   (previous/next, picker, calibration) stay visible below the search. */
 body.ee-shell #right-context-rail {
   top: calc(var(--ee-topbar-h) + 12px);
   right: 16px;
@@ -61,32 +61,10 @@ body.ee-shell #cctv-source-badge {
 .cam-nearby-btn .shell-dot[data-tone='off'] { background: var(--ee-bad); }
 .cam-nearby-btn .shell-dot[data-tone='idle'] { background: var(--ee-off); }
 
-.cam-inspector-advanced {
-  align-self: flex-start;
-  padding: 0;
-  border: 0;
-  background: none;
-  color: var(--ee-text-dim);
-  font: inherit;
-  font-size: 12px;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
 .cam-nearby-btn:focus-visible,
-.cam-inspector-advanced:focus-visible,
 .cam-search input:focus-visible {
   outline: 2px solid var(--ee-accent);
   outline-offset: 2px;
-}
-
-/* Legacy controls: hidden until "Kontrol lanjutan" (or ADJUST) opens them.
-   Hidden from layout only; the elements stay in the DOM for code and voice. */
-body.ee-shell #cctv-panel:not(.ee-advanced-open) .cctv-controls,
-body.ee-shell #cctv-panel:not(.ee-advanced-open) .cctv-calibration-block,
-body.ee-shell #cctv-panel:not(.ee-advanced-open) #cctv-summary,
-body.ee-shell #cctv-panel:not(.ee-advanced-open) .cctv-summary-label {
-  display: none;
 }
 
 @media (max-width: 900px) {

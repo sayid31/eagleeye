@@ -1639,9 +1639,10 @@ The popup now lines up with the panel's other full-width rows. See
   (`cameraInspectorModel.js`) ranks name-prefix matches first over name, city, id and provider and returns
   `{items, total}`: every match is listed (render cap `SEARCH_LIMIT` = 200) under a count line, so a
   city query shows all of the city's cameras; picking a
-  result calls `selectCamera`; Enter selects nothing. "Cari manual" reveals the legacy controls
-  (`.ee-advanced-open`, also set while calibrating). There is no detail block: operator, direction, format
-  and nearby cameras are not shown. `#cctv-source-badge` (⚠ UNOFFICIAL SOURCE) stays visible.
+  result runs `styleManager.selectCctvCameraAndFly` (the manual picker's path: enable the layer, select,
+  fly to the camera, persist); Enter selects nothing. The legacy controls (previous/next, picker,
+  calibration) are always shown below the search; there is no "Cari manual" toggle. There is no detail
+  block: operator, direction, format and nearby cameras are not shown. `#cctv-source-badge` (⚠ UNOFFICIAL SOURCE) stays visible.
 - `close.css`: the collapse buttons of the five side panels render an "×" (Material Symbols `close`) via
   `::before` with the text glyph at `font-size: 0`; the button, its id and `aria-label` are unchanged.
 - The wordmark colour is `--ee-brand` (#00d4ff, the colour in `public/logo.svg`) on every basemap; only

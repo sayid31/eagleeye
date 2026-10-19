@@ -7,6 +7,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Picking a camera in the "Cari kamera CCTV" search now flies to it (it used to select the camera
+  and leave the view where it was). The "Cari manual" button is gone; the manual controls are always shown.
 - Running `npm test` no longer breaks a running dev server. The traffic timing test started its own
   Vite server on the same dependency cache and wiped it, so the open app got `504 Outdated Optimize Dep`
   for hls.js, pbf and @mapbox/vector-tile (CCTV video and the traffic layer failed to load). The test now
@@ -36,7 +38,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   accent border when open, and the mic is a ringed gradient button.
 - The camera panel shows the camera screen first, then a "Cari kamera CCTV" search box (name, city,
   id or operator). The detail block (badges, operator, direction, format, nearby cameras, centre and
-  calibrate buttons) is removed; "Cari manual" opens the earlier previous/next/picker/calibration controls.
+  calibrate buttons) is removed; the earlier previous/next/picker/calibration controls stay shown below.
 - The "Cari kamera CCTV" search lists every matching camera instead of the first 8, so a city
   such as Denpasar shows all of its cameras. A count line sits above the list ("90 kamera ditemukan");
   past 200 matches it reads "Menampilkan 200 dari N kamera, persempit pencarian".
@@ -46,8 +48,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   logo's cyan on every map.
 - The layer panel groups layers into Pergerakan, Lingkungan and Kota. Each layer shows an
   honest status: Live, Terganggu, Mati, Memuat, or Data statis for bundled datasets.
-- The CCTV panel opens with the camera screen, then a "Cari kamera CCTV" search. The earlier
-  controls are under "Cari manual".
+- The CCTV panel opens with the camera screen, then a "Cari kamera CCTV" search, then the earlier
+  controls.
   While a camera's video shows, its 3D frustum stays hidden unless you are calibrating.
 
 ### Fixed
