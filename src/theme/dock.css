@@ -8,10 +8,13 @@ body.ee-shell #command-dock {
   display: flex !important;
   flex-direction: row !important;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   width: auto !important;
   max-width: calc(100vw - 24px);
-  padding: 5px;
+  /* style.css gives the dock min-height 3.75rem; the mockup dock is ~48px
+     (34px mic + 6px padding + 1px border on each side). */
+  min-height: 0 !important;
+  padding: 6px;
   background: rgba(13, 19, 27, 0.88);
   border: 1px solid var(--ee-border);
   border-radius: 14px;
@@ -23,8 +26,11 @@ body.ee-shell #command-dock {
 body.ee-shell #command-dock > #location-bar,
 body.ee-shell #command-dock > #control-panel {
   flex: 0 0 auto !important;
+  /* style.css stretches the pill to the dock height; keep it at the mockup's 28px. */
+  align-self: center !important;
   width: auto !important;
   min-width: 0;
+  height: 28px !important;
   margin: 0 !important;
   background: var(--ee-surface-2);
   border: 1px solid var(--ee-border) !important;
@@ -38,12 +44,20 @@ body.ee-shell #command-dock > #location-bar { order: 1; }
 body.ee-shell #command-dock > #control-panel { order: 2; }
 body.ee-shell #command-dock > #gev-voice-control { order: 3; }
 
+/* style.css sets min-height 3.75rem + column layout on these with ids and
+   .collapsed (higher specificity), which left the 28px pill's content 60px tall and
+   centred, so it sat on the pill's bottom edge. Force a one-row, pill-height box. */
 body.ee-shell #command-dock .location-inner,
-body.ee-shell #command-dock .panel-inner {
-  display: flex;
-  align-items: center;
-  min-height: 32px;
-  padding: 0 10px;
+body.ee-shell #command-dock .panel-inner,
+body.ee-shell #command-dock #control-panel.collapsed .panel-inner,
+body.ee-shell #command-dock #location-bar.collapsed .location-inner {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  min-height: 0 !important;
+  height: 28px !important;
+  padding: 0 10px !important;
 }
 
 /* Tray titles are clipped, not removed. */
@@ -230,7 +244,12 @@ body.ee-shell #command-dock #gev-voice-button .gev-mic-orbit {
   box-shadow: none;
 }
 
+/* style.css sizes the icon at 1.55rem inside this 18px orbit, which pushed it
+   down and right; fit it to the orbit so it is centred in the round button. */
 body.ee-shell #command-dock #gev-voice-button .gev-mic-orbit img {
+  display: block;
+  width: 100%;
+  height: 100%;
   filter: brightness(0) !important;
   opacity: 0.85 !important;
 }
