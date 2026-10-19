@@ -282,7 +282,7 @@ async function init() {
     dataManager.buildTogglePanel(document.getElementById('data-toggles'));
     styleManager.attachDataManager(dataManager);
     initShell({ viewer, dataManager, mapStackController });
-    initCameraInspector({ dataManager });
+    initCameraInspector({ dataManager, styleManager });
 
     // Initialize deterministic scene playback for social clip capture
     const sceneDirector = new SceneDirector(viewer, styleManager, dataManager);

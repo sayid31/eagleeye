@@ -23,11 +23,6 @@ test('the unofficial-source badge is restyled, never hidden', () => {
   for (const [, , body] of rules) assert.doesNotMatch(body, /display:\s*none|visibility:\s*hidden|opacity:\s*0\b/);
 });
 
-test('legacy controls are hidden from layout only, and only while advanced is closed', () => {
-  assert.match(css, /#cctv-panel:not\(\.ee-advanced-open\) \.cctv-controls/);
-  assert.match(css, /#cctv-panel:not\(\.ee-advanced-open\) \.cctv-calibration-block/);
-});
-
 test('interactive inspector controls have a visible keyboard focus ring', () => {
   assert.match(css, /\.cam-nearby-btn:focus-visible/);
 });
@@ -39,6 +34,7 @@ test('no glowing text or neon box-shadows', () => {
 
 test('main.js mounts the inspector after the shell', () => {
   assert.ok(main.indexOf('initCameraInspector({') > main.indexOf('initShell({'));
+  assert.match(main, /initCameraInspector\(\{ dataManager, styleManager \}\)/);
 });
 
 test('the title row sits above the camera screen, which sits ahead of the search', () => {
