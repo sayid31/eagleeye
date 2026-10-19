@@ -7,6 +7,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Running `npm test` no longer breaks a running dev server. The traffic timing test started its own
+  Vite server on the same dependency cache and wiped it, so the open app got `504 Outdated Optimize Dep`
+  for hls.js, pbf and @mapbox/vector-tile (CCTV video and the traffic layer failed to load). The test now
+  uses a private temporary cache.
 - `scripts/dev-fresh.sh` starts again. Its CCTV wiring check looked for a registration call that
   lazy loading had replaced, so it stopped with "CCTV layer not wired" before starting the server.
 

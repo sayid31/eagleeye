@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
@@ -125,6 +127,7 @@ test('traffic timing stays inert when the DEV flag is off under bare Node', () =
 
 test('traffic timing pairs real ordering to the scheduling change and guards re-arms', async () => {
   const { createServer } = await import('vite');
+  const cacheDir = mkdtempSync(join(tmpdir(), 'gev-traffic-timing-vite-'));
   const originalWindow = globalThis.window;
   const originalDocument = globalThis.document;
   const originalFetch = globalThis.fetch;
@@ -161,6 +164,10 @@ test('traffic timing pairs real ordering to the scheduling change and guards re-
     server = await createServer({
       root: fileURLToPath(new URL('../..', import.meta.url)),
       configFile: false,
+      // configFile:false gives this server no dependency list, so its optimizer would
+      // wipe node_modules/.vite/deps of a running dev server (hls.js/pbf then 504 with
+      // "Outdated Optimize Dep"). A private cache dir keeps the test off that cache.
+      cacheDir,
       appType: 'custom',
       logLevel: 'silent',
       server: { middlewareMode: true },
@@ -321,6 +328,7 @@ test('traffic timing pairs real ordering to the scheduling change and guards re-
   } finally {
     trafficLayer?.disable(viewer);
     await server?.close();
+    rmSync(cacheDir, { recursive: true, force: true });
     globalThis.window = originalWindow;
     globalThis.document = originalDocument;
     globalThis.fetch = originalFetch;
