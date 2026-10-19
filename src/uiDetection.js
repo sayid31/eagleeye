@@ -9,6 +9,9 @@ import {
 } from './data/detection.js';
 import { getKeyholeFadeTuning, setKeyholeFadeTuning } from './celestialRing.js';
 
+/** Indonesian display names for the detection density profiles (state values stay English). */
+const DETECTION_MODE_LABELS_ID = { SPARSE: 'jarang', BALANCED: 'seimbang', DENSE: 'padat' };
+
 export const detectionUiMixin = {
 /**
    * Reads and canonicalizes the five-stop density control. The engine derives
@@ -115,20 +118,20 @@ _syncDetectionUiFromEngine() {
     const enabled = modeLabel !== 'OFF';
     btn.setAttribute('aria-pressed', String(enabled));
     btn.setAttribute('aria-label', enabled
-      ? `Detection overlay: ${String(modeLabel).toLowerCase()}`
-      : 'Detection overlay: off');
+      ? `Overlay deteksi: ${DETECTION_MODE_LABELS_ID[modeLabel] || String(modeLabel).toLowerCase()}`
+      : 'Overlay deteksi: mati');
     btn.classList.remove('active', 'god', 'panoptic');
     if (modeLabel === 'SPARSE') {
-      btn.querySelector('.pp-label').textContent = 'SPARSE';
+      btn.querySelector('.pp-label').textContent = DETECTION_MODE_LABELS_ID.SPARSE.toUpperCase();
       btn.classList.add('active');
     } else if (modeLabel === 'BALANCED') {
-      btn.querySelector('.pp-label').textContent = 'BALANCED';
+      btn.querySelector('.pp-label').textContent = DETECTION_MODE_LABELS_ID.BALANCED.toUpperCase();
       btn.classList.add('active');
     } else if (modeLabel === 'DENSE') {
-      btn.querySelector('.pp-label').textContent = 'DENSE';
+      btn.querySelector('.pp-label').textContent = DETECTION_MODE_LABELS_ID.DENSE.toUpperCase();
       btn.classList.add('active', 'panoptic');
     } else {
-      btn.querySelector('.pp-label').textContent = 'DETECT';
+      btn.querySelector('.pp-label').textContent = 'DETEKSI';
     }
 
     if (this._detectionSliderRow) {

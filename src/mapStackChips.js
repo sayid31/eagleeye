@@ -37,8 +37,8 @@ export function mapStackChipModel(stack, activeId) {
   const label = String(stack?.label ?? stack?.id ?? '');
   const requiresIon = stack?.requiresIon === true;
   const fallbackReason = requiresIon
-    ? 'Cesium ion token required'
-    : `${label || 'This map stack'} is unavailable`;
+    ? 'Token Cesium ion diperlukan'
+    : `${label || 'Susunan peta ini'} tidak tersedia`;
   const unavailableHint = available ? '' : String(stack?.unavailableReason || fallbackReason);
   return {
     id: String(stack?.id ?? ''),
@@ -101,7 +101,7 @@ export function renderMapStackChips(container, stacks, { activeId = null, onSele
     chip.setAttribute('aria-pressed', String(model.active));
     chip.setAttribute('aria-disabled', String(!model.available));
     if (!model.available) {
-      chip.setAttribute('aria-label', `${model.label} unavailable: ${model.unavailableHint}`);
+      chip.setAttribute('aria-label', `${model.label} tidak tersedia: ${model.unavailableHint}`);
     }
 
     const label = ownerDoc.createElement('span');

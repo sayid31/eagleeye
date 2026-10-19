@@ -41,7 +41,7 @@ export const publicApiMixin = {
         // is visually obvious, so it gets an explicit toast on top of the
         // status chip's amber warn state.
         if (this.mapStackController?.consumeCoverageFallbackFlag?.()) {
-          this._showToast(event.detail?.lastError || 'Google 3D has no coverage here — showing Esri Satellite');
+          this._showToast(event.detail?.lastError || 'Google 3D tidak mencakup area ini — menampilkan Esri Satellite');
         }
       };
       window.addEventListener('gev:map-stack-changed', this._mapStackChangeHandler);
@@ -90,7 +90,7 @@ export const publicApiMixin = {
       const stack = state.activeStack;
       const label = state.status === 'switching'
         ? '...'
-        : (stack?.shortLabel || stack?.label || 'MAP');
+        : (stack?.shortLabel || stack?.label || 'PETA');
       this._mapStackStatus.textContent = label;
       this._mapStackStatus.classList.toggle('warn', !!state.lastError);
     }
@@ -280,7 +280,7 @@ export const publicApiMixin = {
    */
   async setMapStack(stackId) {
     if (!this.mapStackController) {
-      return { ok: false, error: 'Map stack controller unavailable' };
+      return { ok: false, error: 'Kontroler sumber peta tidak tersedia' };
     }
     const stacks = this.mapStackController.getStacks();
     const target = stacks.find((stack) => stack.id === stackId);
@@ -296,7 +296,7 @@ export const publicApiMixin = {
     return {
       ok: landed,
       activeStack: state.activeId,
-      error: landed ? null : (state.lastError || 'Map stack did not switch'),
+      error: landed ? null : (state.lastError || 'Sumber peta tidak berganti'),
     };
   },
 
@@ -395,7 +395,7 @@ export const publicApiMixin = {
         ok: false,
         celestialRing: current(),
         cameraFocused: false,
-        error: 'Celestial ring options must be boolean',
+        error: 'Opsi cincin selestial harus boolean',
       };
     }
     if (!styleSupported && enabled) {
@@ -403,7 +403,7 @@ export const publicApiMixin = {
         ok: false,
         celestialRing: current(),
         cameraFocused: false,
-        error: 'Celestial ring is available only in Normal style',
+        error: 'Cincin selestial hanya tersedia di gaya Normal',
       };
     }
     if (syncShare) this.shareLinkManager?.claimRestoreLane?.('visual');
@@ -415,8 +415,8 @@ export const publicApiMixin = {
       this._celestialBtn.disabled = !styleSupported;
       this._celestialBtn.setAttribute('aria-disabled', String(!styleSupported));
       this._celestialBtn.title = styleSupported
-        ? 'Celestial ring — reveal the full globe'
-        : 'Celestial ring — available in Normal style';
+        ? 'Cincin selestial — tampilkan globe penuh'
+        : 'Cincin selestial — tersedia di gaya Normal';
     }
     let cameraFocused = false;
     if (nextEnabled && focus) {
@@ -445,7 +445,7 @@ export const publicApiMixin = {
       return { ok: true, orbiting: false };
     }
     if (!this._currentTarget) {
-      return { ok: false, orbiting: false, error: 'No active landmark to orbit — fly to a landmark first' };
+      return { ok: false, orbiting: false, error: 'Tidak ada penanda aktif untuk diorbit — terbang ke penanda dulu' };
     }
     this._toggleOrbit();
     return { ok: true, orbiting: !!this.orbitController?.active };
@@ -604,7 +604,7 @@ export const publicApiMixin = {
    */
   _toggleOrbit() {
     if (!this._currentTarget) {
-      this._showToast('Fly to a POI first');
+      this._showToast('Terbang ke POI dulu');
       return;
     }
 

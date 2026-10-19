@@ -220,26 +220,26 @@ export function updateReplayVehicleOverlay(occluder) {
   const mission = shortMissionLabel(launch.name, 22).toUpperCase();
   const siteName = compactLaunchSiteName(launch.launchSite);
   const siteCallout = siteName
-    ? `LAUNCH SITE · ${shortMissionLabel(siteName, 20).toUpperCase()}`
-    : 'LAUNCH SITE';
+    ? `LOKASI PELUNCURAN · ${shortMissionLabel(siteName, 20).toUpperCase()}`
+    : 'LOKASI PELUNCURAN';
   let title = mission;
   let detail = siteCallout;
   if (mode === 'countdown') {
     title = `T−${String(state.countdownSeconds).padStart(2, '0')} · ${mission}`;
-    detail = `LAUNCH STANDBY\n${siteCallout}`;
+    detail = `PELUNCURAN SIAGA\n${siteCallout}`;
   } else if (mode === 'ascent') {
     title = state.elapsedSinceStart < 1
-      ? `LIFTOFF · ${mission}`
-      : `${launch.trajectory.length > 1 ? 'ASCENT REPLAY' : 'ASCENT ESTIMATE'} · ${mission}`;
+      ? `LEPAS LANDAS · ${mission}`
+      : `${launch.trajectory.length > 1 ? 'ULANGAN PENDAKIAN' : 'ESTIMASI PENDAKIAN'} · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   } else if (mode === 'recovery') {
-    title = `STAGE RE-ENTRY / RECOVERY · ${mission}`;
+    title = `MASUK KEMBALI / PEMULIHAN TAHAP · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   } else if (mode === 'orbit') {
-    title = `ORBIT REPLAY · ${mission}`;
+    title = `ULANGAN ORBIT · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   }
-  if (S._replayPaused) title = `PAUSED · ${title}`;
+  if (S._replayPaused) title = `DIJEDA · ${title}`;
   const nextText = `${title}\n${detail}`;
   if (nextText !== S._replayVehicleOverlayText) {
     S._replayVehicleOverlayText = nextText;

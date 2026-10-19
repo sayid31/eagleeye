@@ -8,7 +8,7 @@ test('source badge shows an explicit offline label ahead of the generic status',
   const genericAt = mixin.indexOf("const status = String(activeCamera.sourceStatus || 'unknown')");
   assert.ok(offlineAt > 0, 'offline branch exists');
   assert.ok(offlineAt < genericAt, 'offline branch runs before the generic KIND · STATUS label');
-  assert.match(mixin, /CAMERA OFFLINE · SOURCE DOWN/);
+  assert.match(mixin, /KAMERA MATI · SUMBER MATI/);
   assert.match(mixin, /frameState = 'offline'/);
 });
 

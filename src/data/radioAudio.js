@@ -71,7 +71,7 @@ export function installAudio({ replace = false } = {}) {
     const attempt = S._activePlaybackAttempt;
     if (tryRadioFallback(failedId, attempt?.origin, attempt?.id)) return;
     S._audioState = 'error';
-    S._audioError = 'Broadcaster stream is unavailable or blocked by the browser.';
+    S._audioError = 'Aliran penyiar tidak tersedia atau diblokir oleh peramban.';
     emitState();
   });
 }

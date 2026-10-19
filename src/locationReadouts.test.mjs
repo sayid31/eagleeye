@@ -42,7 +42,7 @@ test('the ACTIVE STYLE indicator is written from the style name and nothing else
 test('a free-text search records its destination for the LOCATION mini-status', () => {
   const handler = locationSearchHandler();
   // The destination has to be recorded BEFORE _setActiveLocation(null), whose
-  // own refresh would otherwise repaint the readout as "Location: --".
+  // own refresh would otherwise repaint the readout as "Lokasi: --".
   assert.match(
     handler,
     /this\._searchedLocationLabel = destination\.label[\s\S]{0,120}?this\._setActiveLocation\(null\);/,
@@ -57,7 +57,7 @@ test('the mini-status reads its copy from the shared formatter', () => {
   const body = navMixin.slice(start, navMixin.indexOf('\n  }', start));
   assert.match(body, /locationMiniStatus\(\{[\s\S]*?searchedLabel: this\._searchedLocationLabel,[\s\S]*?\}\)/);
   // No second copy of the placeholder strings to drift out of sync.
-  assert.doesNotMatch(body, /Location: --/);
+  assert.doesNotMatch(body, /Lokasi: --/);
 });
 
 test('selecting a preset location clears the superseded search label', () => {

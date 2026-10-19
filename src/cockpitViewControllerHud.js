@@ -25,7 +25,7 @@ updateHud(info, nowMs = performance.now(), forceContext = false) {
     this.lastAircraftInfo = info;
     const heading = normalizeHeading(this.heading ?? info.track ?? 0);
     if (this.callsign) {
-      this.callsign.textContent = info.callsign || info.registration || info.icao24 || 'AIRCRAFT';
+      this.callsign.textContent = info.callsign || info.registration || info.icao24 || 'PESAWAT';
     }
     const speedKt = Number.isFinite(info.velocityMps) ? info.velocityMps * 1.94384 : null;
     setCockpitRollingValue(
@@ -107,9 +107,9 @@ updateHud(info, nowMs = performance.now(), forceContext = false) {
     }
     if (this.aircraftMeta) {
       const feedState = this.surfaceAcquiring
-        ? 'ACQUIRING SURFACE'
-        : (this.surfaceFallback ? 'SURFACE FALLBACK' : (info.stale ? 'STALE FEED' : 'LIVE TRACK'));
-      this.aircraftMeta.textContent = `${info.layerId === 'military' ? 'MILITARY' : 'COMMERCIAL'} · ${feedState} · COURSE ALIGNED`;
+        ? 'MEMPEROLEH PERMUKAAN'
+        : (this.surfaceFallback ? 'PERMUKAAN CADANGAN' : (info.stale ? 'FEED USANG' : 'LACAK LIVE'));
+      this.aircraftMeta.textContent = `${info.layerId === 'military' ? 'MILITER' : 'KOMERSIAL'} · ${feedState} · HALUAN SEJALAN`;
     }
     this.updateRoute(info);
     if (forceContext
@@ -126,13 +126,13 @@ updateRoute(info) {
     const origin = info?.route?.origin;
     const destination = info?.route?.destination;
     const validDestination = Number.isFinite(destination?.lat) && Number.isFinite(destination?.lon);
-    const routeLabel = (airport) => [airport?.code, airport?.name].filter(Boolean).join(' · ') || 'UNKNOWN';
+    const routeLabel = (airport) => [airport?.code, airport?.name].filter(Boolean).join(' · ') || 'TIDAK DIKETAHUI';
     if (this.routeFrom) this.routeFrom.textContent = routeLabel(origin);
     if (this.routeTo) this.routeTo.textContent = routeLabel(destination);
     if (this.routeStatus) {
       this.routeStatus.textContent = validDestination
-        ? 'ARROW · ESTIMATED DIRECTION'
-        : 'ROUTE DATA UNAVAILABLE';
+        ? 'PANAH · ARAH PERKIRAAN'
+        : 'DATA RUTE TIDAK TERSEDIA';
     }
     if (this.route) this.route.hidden = !origin && !destination;
     if (!validDestination || !Number.isFinite(info?.longitude) || !Number.isFinite(info?.latitude)) {
@@ -156,7 +156,7 @@ updateRoute(info) {
       this.routeDirection.style.setProperty('--route-angle', `${displayedRelative.toFixed(2)}deg`);
     }
     if (this.routeDirectionLabel) {
-      this.routeDirectionLabel.textContent = `DEST ${String(Math.round(destinationBearing)).padStart(3, '0')}°`;
+      this.routeDirectionLabel.textContent = `TUJ ${String(Math.round(destinationBearing)).padStart(3, '0')}°`;
     }
   },
 
@@ -172,8 +172,8 @@ updateContext(info, heading) {
       this.pushCockpitSignal(
         'context-status',
         'info',
-        'CONTEXT STANDBY',
-        'ENABLE GLOBAL CONTEXT FOR PROXIMITY PINGS',
+        'KONTEKS SIAGA',
+        'NYALAKAN KONTEKS GLOBAL UNTUK PING KEDEKATAN',
       );
       return;
     }
@@ -201,7 +201,7 @@ updateContext(info, heading) {
       const enteringLost = this.context.dataset.state !== 'lost';
       this.context.dataset.state = 'lost';
       if (this.contextUncertainty) {
-        this.contextUncertainty.textContent = 'CONTACT LOST · LAST KNOWN READOUT · NOT AN ALL-CLEAR';
+        this.contextUncertainty.textContent = 'KONTAK HILANG · PEMBACAAN TERAKHIR DIKETAHUI · BUKAN TANDA AMAN';
       }
       // The cue changes the footer's height; re-run layout once on the way in
       // rather than every frame the contact stays lost.
@@ -209,8 +209,8 @@ updateContext(info, heading) {
       this.pushCockpitSignal(
         'context-status',
         'warning',
-        `CONTACT LOST · ${snapshot.subject.label || snapshot.subject.id || 'SUBJECT'}`,
-        'SUBJECT LEFT ITS FEED · READOUT HOLDING LAST KNOWN',
+        `KONTAK HILANG · ${snapshot.subject.label || snapshot.subject.id || 'SUBJEK'}`,
+        'SUBJEK KELUAR DARI FEED · PEMBACAAN MENAHAN DATA TERAKHIR',
       );
       return;
     }
@@ -230,11 +230,11 @@ updateContext(info, heading) {
     const closestLabel = formatAwarenessLabel(closest);
     if (this.contextNearestLabel) {
       this.contextNearestLabel.textContent = closest
-        ? `${closest.cohort.label.toUpperCase()} · ${closestLabel}` : 'NO AVAILABLE EXAMPLE';
+        ? `${closest.cohort.label.toUpperCase()} · ${closestLabel}` : 'TIDAK ADA CONTOH TERSEDIA';
       this.contextNearestLabel.setAttribute(
         'aria-label',
         closest && closestLabel === '—'
-          ? `${closest.cohort.label}, Unavailable`
+          ? `${closest.cohort.label}, Tidak tersedia`
           : this.contextNearestLabel.textContent,
       );
     }
@@ -244,7 +244,7 @@ updateContext(info, heading) {
         ? `${distanceM < 10000 ? (distanceM / 1000).toFixed(1) : Math.round(distanceM / 1000)} KM` : '—';
       this.contextDistance.setAttribute(
         'aria-label',
-        Number.isFinite(distanceM) ? this.contextDistance.textContent : 'Unavailable',
+        Number.isFinite(distanceM) ? this.contextDistance.textContent : 'Tidak tersedia',
       );
     }
 
@@ -270,14 +270,14 @@ updateContext(info, heading) {
       this.contextDirection.classList.toggle('unknown', relative === null);
     }
     if (this.contextBearing) {
-      if (relative === null) this.contextBearing.textContent = 'BRG —';
-      else if (Math.abs(relative) < 8) this.contextBearing.textContent = 'AHEAD';
-      else this.contextBearing.textContent = `${relative < 0 ? 'L' : 'R'} ${String(Math.round(Math.abs(relative))).padStart(3, '0')}°`;
+      if (relative === null) this.contextBearing.textContent = 'AZM —';
+      else if (Math.abs(relative) < 8) this.contextBearing.textContent = 'DEPAN';
+      else this.contextBearing.textContent = `${relative < 0 ? 'KI' : 'KA'} ${String(Math.round(Math.abs(relative))).padStart(3, '0')}°`;
     }
     if (this.contextUncertainty) {
       this.contextUncertainty.textContent = unknownCount
-        ? `${unknownCount} INPUT${unknownCount === 1 ? '' : 'S'} UNKNOWN · NOT AN ALL-CLEAR`
-        : 'AVAILABLE INPUTS CURRENT · NOT AN ALL-CLEAR';
+        ? `${unknownCount} INPUT TIDAK DIKETAHUI · BUKAN TANDA AMAN`
+        : 'INPUT TERSEDIA TERKINI · BUKAN TANDA AMAN';
     }
     if (this.contextUpdated) {
       this.contextUpdated.textContent = Number.isFinite(snapshot.evaluatedAt)

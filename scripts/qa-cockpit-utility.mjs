@@ -780,10 +780,10 @@ try {
       new Promise((resolve) => { setTimeout(() => resolve({ settled: false, value: null }), ms); }),
     ]);
     const row = () => [...document.querySelectorAll('#military-awareness-panel .military-awareness-row')]
-      .find((candidate) => candidate.querySelector('strong')?.textContent?.trim() === 'Mapped installations');
+      .find((candidate) => candidate.querySelector('strong')?.textContent?.trim() === 'Instalasi terpetakan');
     const installationCount = () => row()?.querySelector('b')?.textContent?.trim() || null;
     /** The REASON text, which is what tracks availability: the cohort engine
-     *  answers 'feed unavailable' / 'feed stale' when it refuses to count. */
+     *  answers 'feed tidak tersedia' / 'feed usang' when it refuses to count. */
     const installationReason = () => row()?.querySelector('small')?.textContent?.trim() || null;
 
     const realFetch = window.fetch;
@@ -924,7 +924,7 @@ try {
       && deferredInstallationReadiness.contacts.value === true
       && deferredInstallationReadiness.pendingLifecycle?.lifecycleState === 'enabling'
       && readsUnknown(deferredInstallationReadiness.pendingCount)
-      && /unavailable|stale/i.test(String(deferredInstallationReadiness.pendingReason))
+      && /tidak tersedia|usang/i.test(String(deferredInstallationReadiness.pendingReason))
       && deferredInstallationReadiness.cockpitAvailableAfterActivation
       && deferredInstallationReadiness.installed?.settled,
     JSON.stringify(deferredInstallationReadiness),
@@ -937,7 +937,7 @@ try {
       && deferredInstallationReadiness.fetchingCounts.length > 0
       && deferredInstallationReadiness.fetchingCounts.every(readsUnknown)
       && Array.isArray(deferredInstallationReadiness.fetchingReasons)
-      && deferredInstallationReadiness.fetchingReasons.every((r) => /unavailable|stale/i.test(String(r))),
+      && deferredInstallationReadiness.fetchingReasons.every((r) => /tidak tersedia|usang/i.test(String(r))),
     JSON.stringify({
       settledLifecycle: deferredInstallationReadiness.settledLifecycle,
       fetchingCounts: deferredInstallationReadiness.fetchingCounts,
@@ -948,7 +948,7 @@ try {
     deferredInstallationReadiness.exercised
       && deferredInstallationReadiness.answered?.settled
       && readsNumber(deferredInstallationReadiness.settledCount)
-      && !/unavailable|stale/i.test(String(deferredInstallationReadiness.settledReason)),
+      && !/tidak tersedia|usang/i.test(String(deferredInstallationReadiness.settledReason)),
     JSON.stringify({
       answered: deferredInstallationReadiness.answered,
       settledCount: deferredInstallationReadiness.settledCount,
@@ -1064,7 +1064,7 @@ try {
       previousDisabled: previous?.disabled,
       nextDisabled: next?.disabled,
       navigation: snapshot?.navigation || null,
-      contextStandby: signalText.includes('CONTEXT STANDBY'),
+      contextStandby: signalText.includes('KONTEKS SIAGA'),
     };
   });
   check(

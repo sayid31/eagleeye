@@ -250,13 +250,13 @@ const MUTATIONS = [
   {
     defect: 'the tile stops promising the fires it actually turns on',
     file: 'html',
-    from: '<small>Live earthquakes and active fires, from USGS and NASA</small>',
-    to: '<small>Live earthquakes worldwide, straight from USGS</small>',
+    from: '<small>Gempa live dan titik api aktif, dari USGS dan NASA</small>',
+    to: '<small>Gempa live di seluruh dunia, langsung dari USGS</small>',
   },
   {
     defect: "the owner-authored first-run line is quietly rewritten",
     file: 'html',
-    from: 'It feels like a forbidden cockpit—then you realize the sources are public and the data is real.',
+    from: 'Terasa seperti kokpit terlarang—lalu Anda sadar sumbernya publik dan datanya nyata.',
     to: "It feels like a forbidden cockpit. It isn't — every feed is public, and every contact is live.",
   },
   {

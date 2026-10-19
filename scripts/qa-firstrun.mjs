@@ -640,13 +640,13 @@ async function main() {
      *             (`src/loadingFeedback.js`), LEDGERED post-launch — it is not
      *             a desirable outcome and not this tile's contract.
      */
-    const keyless = state.firmsError === 'KEY REQUIRED';
+    const keyless = state.firmsError === 'KUNCI DIPERLUKAN';
     console.log(`  \x1b[2m   FIRMS key state: ${keyless ? 'KEYLESS' : 'KEYED'} `
       + `(row="${state.firmsError ?? 'none'}", count=${state.firmsCount})\x1b[0m`);
     if (keyless) {
       record(
-        'KEYLESS: the FIRMS row tells the visitor the truth (KEY REQUIRED)',
-        state.firmsError === 'KEY REQUIRED',
+        'KEYLESS: the FIRMS row tells the visitor the truth (KUNCI DIPERLUKAN)',
+        state.firmsError === 'KUNCI DIPERLUKAN',
         `layer row reports "${state.firmsError}"`,
       );
       record(

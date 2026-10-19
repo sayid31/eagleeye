@@ -540,7 +540,7 @@ export function createTeleGeographySubmarineCableLayer({
 
     _loading = true;
     _error = null;
-    _loadingLabel = 'loading...';
+    _loadingLabel = 'memuat...';
     // Ownership token (the militaryAwareness activationId pattern): a
     // disable/abort followed by a fresh enable starts a NEWER load while this
     // one is still settling. The stale load must bail after every await and
@@ -692,7 +692,7 @@ export function createTeleGeographySubmarineCableLayer({
       // A stale or aborted load reports nothing: its failure belongs to a
       // lifecycle the user already left.
       if (owns() && error?.name !== 'AbortError') {
-        _error = error?.message || 'TeleGeography load failed';
+        _error = error?.message || 'Gagal memuat TeleGeography';
         console.warn('[Data:telegeography-submarine-cables]', _error, error);
       }
     } finally {

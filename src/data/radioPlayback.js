@@ -66,8 +66,8 @@ export async function playSelectedRadio({ origin = 'programmatic', attemptId = n
     if (tryRadioFallback(station.id, origin, ownedAttemptId)) return false;
     S._audioState = 'error';
     S._audioError = error?.name === 'NotAllowedError'
-      ? 'Playback requires a direct click or tap.'
-      : 'Broadcaster stream could not be started.';
+      ? 'Pemutaran memerlukan klik atau ketukan langsung.'
+      : 'Aliran penyiar tidak dapat dimulai.';
     emitState();
     return false;
   }

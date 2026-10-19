@@ -358,10 +358,10 @@ async function main() {
       );
       if (!hasError) exitCode = 1;
     }
-    const aisControl = await readLayerControl(page, 'ais-live-vessels', 'UNAVAILABLE');
+    const aisControl = await readLayerControl(page, 'ais-live-vessels', 'TIDAK TERSEDIA');
     const aisChipHonest = aisControl.feedState === 'unavailable'
-      && aisControl.ariaLabel === 'Live AIS Vessels: UNAVAILABLE';
-    const aisMetaHonest = /^UNAVAILABLE · AISStream · /i.test(aisControl.meta)
+      && aisControl.ariaLabel === 'Live AIS Vessels: TIDAK TERSEDIA';
+    const aisMetaHonest = /^TIDAK TERSEDIA · AISStream · /i.test(aisControl.meta)
       && aisStats.error
       && aisControl.meta.includes(aisStats.error);
     record(
@@ -405,13 +405,13 @@ async function main() {
         await new Promise((r) => setTimeout(r, 800));
         return dm.layers.get('satellites').module.getStats();
       });
-      const partialControl = await readLayerControl(page, 'satellites', 'DEGRADED');
+      const partialControl = await readLayerControl(page, 'satellites', 'MENURUN');
       const partialChipHonest = partialStats.count > 0
-        && /1 CelesTrak group unavailable/i.test(partialStats.error || '')
+        && /1 grup CelesTrak tidak tersedia/i.test(partialStats.error || '')
         && partialControl.feedState === 'degraded'
-        && partialControl.ariaLabel === 'Satellites: DEGRADED';
-      const partialMetaHonest = /^DEGRADED · CelesTrak · /i.test(partialControl.meta)
-        && /1 CelesTrak group unavailable/i.test(partialControl.meta);
+        && partialControl.ariaLabel === 'Satellites: MENURUN';
+      const partialMetaHonest = /^MENURUN · CelesTrak · /i.test(partialControl.meta)
+        && /1 grup CelesTrak tidak tersedia/i.test(partialControl.meta);
       record(
         'Satellites: partial outage renders a DEGRADED chip',
         partialChipHonest,
@@ -441,10 +441,10 @@ async function main() {
       const s = outageStats.stats;
       const notWiped = s.count > 0; // catalog preserved, not blanked to 0
       const errorSet = typeof s.error === 'string' && s.error.length > 0;
-      const outageControl = await readLayerControl(page, 'satellites', 'UNAVAILABLE');
+      const outageControl = await readLayerControl(page, 'satellites', 'TIDAK TERSEDIA');
       const outageChipHonest = outageControl.feedState === 'unavailable'
-        && outageControl.ariaLabel === 'Satellites: UNAVAILABLE';
-      const outageMetaHonest = /^UNAVAILABLE · CelesTrak · /i.test(outageControl.meta)
+        && outageControl.ariaLabel === 'Satellites: TIDAK TERSEDIA';
+      const outageMetaHonest = /^TIDAK TERSEDIA · CelesTrak · /i.test(outageControl.meta)
         && outageControl.meta.includes(s.error || '');
       record(
         'Satellites: catalog NOT wiped to 0 on total outage',

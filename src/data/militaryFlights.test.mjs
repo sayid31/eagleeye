@@ -141,7 +141,7 @@ test('nonempty adsb.lol payload with zero usable rows cannot prove share target 
     await militaryFlightsLayer.update({ camera: { positionCartographic: null }, scene: {} });
     const resolution = await militaryFlightsLayer.resolveTrackingRestoreTarget('ae1234');
     assert.equal(resolution.status, 'source-unavailable');
-    assert.match(militaryFlightsLayer.getStats().error, /Malformed adsb\.lol aircraft rows/);
+    assert.match(militaryFlightsLayer.getStats().error, /Baris pesawat adsb\.lol tidak valid/);
     assert.equal(militaryFlightsLayer.getAnalystRecords().length, 1, 'warm aircraft data is preserved');
   } finally {
     globalThis.fetch = realFetch;
@@ -213,7 +213,7 @@ test('military poll refreshes tracked callsign/altitude/kts and marks a missed p
     assert.match(entity.gevLabelModel.details.join(' · '), /400 kt/);
 
     await militaryFlightsLayer.update(viewer);
-    assert.match(entity.gevLabelModel.title, /STALE/);
+    assert.match(entity.gevLabelModel.title, /USANG/);
   } finally {
     globalThis.fetch = realFetch;
   }

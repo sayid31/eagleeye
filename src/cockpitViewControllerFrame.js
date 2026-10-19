@@ -84,13 +84,13 @@ enter() {
     this.signalSignatures.clear();
     this.showBriefPage(0);
     this.startBriefRotation();
-    const trackLabel = info.callsign || info.registration || info.icao24 || 'AIRCRAFT';
+    const trackLabel = info.callsign || info.registration || info.icao24 || 'PESAWAT';
     const trackHeading = String(Math.round(normalizeHeading(info.track ?? 0))).padStart(3, '0');
     this.pushCockpitSignal(
       'track',
       'track',
-      'TRACK ACQUIRED',
-      `${trackLabel} · COURSE ${trackHeading}°`,
+      'TRACK DIPEROLEH',
+      `${trackLabel} · HALUAN ${trackHeading}°`,
     );
     this.updateHud(info, performance.now(), true);
     this.setVisionMode(this.visionMode);

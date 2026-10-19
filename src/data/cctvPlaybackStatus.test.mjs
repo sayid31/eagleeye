@@ -4,14 +4,14 @@ import { isPlaybackStalled, playbackBadge, videoPlaceholderHealth } from './cctv
 
 test('playlist health ok with no video is reported as waiting, never as the health message', () => {
   const out = videoPlaceholderHealth({ status: 'ok', message: 'Live stream connected' }, { state: 'connecting', attempt: 0 });
-  assert.equal(out.message, 'Waiting for video');
+  assert.equal(out.message, 'Menunggu video');
   assert.doesNotMatch(out.message, /connected/i);
 });
 
 test('stalled and recovering players are named on the plane', () => {
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'retrying', attempt: 3 }).message, /stalled.*#3/i);
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'recovering' }).message, /recovering/i);
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'unavailable' }).message, /unavailable/i);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'retrying', attempt: 3 }).message, /macet.*#3/i);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'recovering' }).message, /memulihkan/i);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'unavailable' }).message, /tidak tersedia/i);
 });
 
 test('an offline source keeps its offline wording even while the player retries', () => {
@@ -22,7 +22,7 @@ test('an offline source keeps its offline wording even while the player retries'
 
 test('degraded health keeps its own message when the player has nothing more specific', () => {
   assert.equal(videoPlaceholderHealth({ status: 'degraded', message: 'HTTP 502' }, null).message, 'HTTP 502');
-  assert.equal(videoPlaceholderHealth(null, null).message, 'Waiting for video');
+  assert.equal(videoPlaceholderHealth(null, null).message, 'Menunggu video');
 });
 
 test('only a retrying player counts as stalled', () => {
@@ -35,15 +35,15 @@ test('badge appears only for non-healthy player states', () => {
   assert.equal(playbackBadge('live'), null);
   assert.equal(playbackBadge(null), null);
   assert.equal(playbackBadge('retrying').frameState, 'stalled');
-  assert.match(playbackBadge('connecting').text, /CONNECTING/);
+  assert.match(playbackBadge('connecting').text, /MENGHUBUNGKAN/);
 });
 
 import { EMPTY_PLAYLIST_MESSAGE } from './cctvSourceHealth.mjs';
 
 test('an empty playlist from the source is named on the plane and the badge', () => {
   const health = { status: 'degraded', message: EMPTY_PLAYLIST_MESSAGE };
-  assert.match(videoPlaceholderHealth(health, { state: 'connecting' }).message, /empty playlist/i);
-  assert.match(playbackBadge('connecting', { sourceMessage: EMPTY_PLAYLIST_MESSAGE }).text, /EMPTY PLAYLIST/);
+  assert.match(videoPlaceholderHealth(health, { state: 'connecting' }).message, /playlist kosong/i);
+  assert.match(playbackBadge('connecting', { sourceMessage: EMPTY_PLAYLIST_MESSAGE }).text, /PLAYLIST KOSONG/);
 });
 
 test('a stale empty-playlist message never overrides a feed that is actually live', () => {
@@ -52,7 +52,7 @@ test('a stale empty-playlist message never overrides a feed that is actually liv
 
 test('a connect timeout is reported as no data from the source', () => {
   const playback = { state: 'retrying', attempt: 2, reason: 'no-data' };
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, playback).message, /no data from source.*#2/i);
-  assert.match(playbackBadge('retrying', { reason: 'no-data' }).text, /NO DATA FROM SOURCE/);
-  assert.match(playbackBadge('retrying').text, /STALLED/);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, playback).message, /tidak ada data dari sumber.*#2/i);
+  assert.match(playbackBadge('retrying', { reason: 'no-data' }).text, /TIDAK ADA DATA DARI SUMBER/);
+  assert.match(playbackBadge('retrying').text, /MACET/);
 });

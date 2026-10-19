@@ -182,7 +182,7 @@ export function getSatellitesStats() {
       count: S._count,
       lastUpdate: S._lastUpdate,
       stale: false,
-      status: S._lastError === 'CelesTrak unreachable'
+      status: S._lastError === 'CelesTrak tidak terjangkau'
         ? 'unavailable'
         : (S._lastError ? 'degraded' : 'nominal'),
       error: S._lastError,

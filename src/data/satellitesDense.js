@@ -108,7 +108,7 @@ export async function _loadDenseCatalog({ signal = null } = {}) {
     const res = await fetch(`/api/celestrak/${DENSE_GROUP_PATH}`, { signal: loadSignal });
     if (!res.ok) {
       console.warn(`[Data:Satellites] Dense group '${DENSE_GROUP_PATH}' fetch failed (${res.status})`);
-      _denseLoadFailed(token, `feed unavailable (${res.status})`);
+      _denseLoadFailed(token, `feed tidak tersedia (${res.status})`);
       return { status: 'source-unavailable', reason: `feed unavailable (${res.status})` };
     }
     const text = await res.text();
@@ -162,7 +162,7 @@ export async function _loadDenseCatalog({ signal = null } = {}) {
     // a 502 as success, just through a different door.
     if (added === 0) {
       console.warn(`[Data:Satellites] Dense group '${DENSE_GROUP_PATH}' returned no usable satellites`);
-      _denseLoadFailed(token, 'feed returned no satellites');
+      _denseLoadFailed(token, 'feed tidak mengembalikan satelit');
       return { status: 'source-unavailable', reason: 'feed returned no satellites' };
     }
 
@@ -180,7 +180,7 @@ export async function _loadDenseCatalog({ signal = null } = {}) {
       return { status: 'cancelled', reason: String(loadSignal.reason || 'aborted') };
     }
     console.warn('[Data:Satellites] Dense catalog load failed:', e);
-    _denseLoadFailed(token, 'feed unreachable');
+    _denseLoadFailed(token, 'feed tidak terjangkau');
     return { status: 'source-unavailable', reason: 'feed unreachable' };
   } finally {
     if (S._denseLoadController === resourceController) S._denseLoadController = null;

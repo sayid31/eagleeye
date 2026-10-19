@@ -161,7 +161,7 @@ test('nonempty OpenSky payload with zero usable rows cannot prove share target a
     await flightsLayer.update({ camera: { positionCartographic: null }, scene: {} });
     const resolution = await flightsLayer.resolveTrackingRestoreTarget('abc123');
     assert.equal(resolution.status, 'source-unavailable');
-    assert.match(flightsLayer.getStats().error, /Malformed OpenSky aircraft rows/);
+    assert.match(flightsLayer.getStats().error, /Baris pesawat OpenSky tidak valid/);
     assert.equal(flightsLayer.getAnalystRecords().length, 1, 'warm aircraft data is preserved');
   } finally {
     globalThis.fetch = realFetch;
@@ -230,7 +230,7 @@ test('flights poll refreshes tracked callsign/FL/kts and marks a missed poll STA
     await flightsLayer.update(viewer);
     assert.match(
       [entity.gevLabelModel.title, ...entity.gevLabelModel.details].join(' · '),
-      /STALE/,
+      /USANG/,
     );
   } finally {
     globalThis.fetch = realFetch;

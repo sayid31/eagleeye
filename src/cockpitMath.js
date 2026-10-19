@@ -76,9 +76,9 @@ export function formatCockpitContextScope(subjectLabel, radiusM, installationCov
   const coverage = typeof installationCoverage === 'string'
     ? installationCoverage.trim()
     : '';
-  const base = `${normalizedLabel} · ${radiusKm} KM AIR/SEA WINDOW`;
+  const base = `${normalizedLabel} · ${radiusKm} KM JENDELA UDARA/LAUT`;
   return coverage
-    ? `${base} · INSTALLATIONS ${coverage}`
+    ? `${base} · INSTALASI ${coverage}`
     : base;
 }
 

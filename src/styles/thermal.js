@@ -14,10 +14,10 @@
 export const thermalShader = {
   name: 'thermal',
   uniforms: {
-    sensitivity: { default: 0.75, min: 0, max: 1, label: 'Sensitivity' },
+    sensitivity: { default: 0.75, min: 0, max: 1, label: 'Sensitivitas' },
     bloom: { default: 0.65, min: 0, max: 1, label: 'Bloom' },
     mode: { default: 0.0, min: 0, max: 1, label: 'WHOT/BHOT' },
-    pixelation: { default: 1.5, min: 1, max: 6, label: 'Pixelation' },
+    pixelation: { default: 1.5, min: 1, max: 6, label: 'Piksel' },
     palette: { default: 0.0, min: 0, max: 1, label: 'Ironbow' },
   },
   fragmentShader: /* glsl */ `

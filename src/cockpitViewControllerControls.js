@@ -16,10 +16,10 @@ syncWeatherToggle(enabled) {
     this.weatherToggle.setAttribute('aria-pressed', String(active));
     this.weatherToggle.setAttribute(
       'aria-label',
-      `${active ? 'Disable' : 'Enable'} cockpit weather effects`,
+      `${active ? 'Matikan' : 'Nyalakan'} efek cuaca kokpit`,
     );
-    this.weatherToggle.title = `${active ? 'Disable' : 'Enable'} cockpit weather effects`;
-    if (this.weatherState) this.weatherState.textContent = active ? 'ON' : 'OFF';
+    this.weatherToggle.title = `${active ? 'Matikan' : 'Nyalakan'} efek cuaca kokpit`;
+    if (this.weatherState) this.weatherState.textContent = active ? 'HIDUP' : 'MATI';
   },
 
 readAircraftInfo() {
@@ -79,7 +79,7 @@ dispatchCockpitModeChanged(active, info = null) {
     this._tr3bSignature = signature;
     this.tr3bToggle.hidden = !icao24;
     this.tr3bToggle.setAttribute('aria-pressed', converted ? 'true' : 'false');
-    this.tr3bToggle.title = converted ? 'Restore real aircraft' : 'Reclassify as TR-3B';
+    this.tr3bToggle.title = converted ? 'Pulihkan pesawat asli' : 'Klasifikasi ulang sebagai TR-3B';
   },
 
 syncEntry() {
@@ -147,11 +147,11 @@ setVisionMode(mode, { revealParameters = false } = {}) {
     this.visionMode = next;
     const inherited = String(this.getInheritedVisionLabel?.() || 'NORMAL').toUpperCase();
     const labels = { optical: inherited, crt: 'CRT', nvg: 'NVG', thermal: 'FLIR', noir: 'NOIR' };
-    const names = { optical: inherited, crt: 'CRT', nvg: 'Night vision', thermal: 'Thermal', noir: 'Noir' };
+    const names = { optical: inherited, crt: 'CRT', nvg: 'Penglihatan malam', thermal: 'Termal', noir: 'Noir' };
     if (this.visionCurrent) {
       this.visionCurrent.dataset.cockpitVision = next;
-      this.visionCurrent.setAttribute('aria-label', `Current cockpit vision style: ${names[next]}. Activate for next style.`);
-      this.visionCurrent.title = `Current style: ${names[next]} — click for next`;
+      this.visionCurrent.setAttribute('aria-label', `Gaya penglihatan kokpit saat ini: ${names[next]}. Aktifkan untuk gaya berikutnya.`);
+      this.visionCurrent.title = `Gaya saat ini: ${names[next]} — klik untuk berikutnya`;
     }
     if (this.visionCurrentLabel) this.visionCurrentLabel.textContent = labels[next];
     this.onVisionChange?.(next, this.active, { revealParameters });

@@ -59,6 +59,9 @@ export function formatAge(deltaMs) {
   return `${Math.round(hours / 24)}d`;
 }
 
+/** Display bucket → Indonesian on-card wording (bucket ids stay English for data consumers). */
+const CONFIDENCE_LABELS = Object.freeze({ high: 'tinggi', nominal: 'sedang', low: 'rendah' });
+
 /** Normalized 0..1 confidence → low/nominal/high display bucket. */
 export function confidenceBucket(confidence) {
   if (confidence >= 0.75) return 'high';
@@ -75,13 +78,13 @@ export function confidenceBucket(confidence) {
  * @returns {Object} firmsLabels entry.
  */
 export function buildSelectedFireCard(fire, nowMs) {
-  const meta = [`${confidenceBucket(fire.confidence)} conf`];
+  const meta = [`keyakinan ${CONFIDENCE_LABELS[confidenceBucket(fire.confidence)]}`];
   if (fire.acqMs > 0) {
     const age = formatAge(nowMs - fire.acqMs);
-    if (age) meta.push(`${age} ago`);
+    if (age) meta.push(`${age} lalu`);
   }
   const sat = satelliteShortName(fire.satellite);
-  meta.push(sat ? `${fire.sensor || 'VIIRS'} ${sat}` : (fire.sensor || 'sensor n/a'));
+  meta.push(sat ? `${fire.sensor || 'VIIRS'} ${sat}` : (fire.sensor || 'sensor t/a'));
   return {
     id: `selected-fire:${fireDetectionKey(fire)}`,
     actionable: true,
@@ -90,10 +93,10 @@ export function buildSelectedFireCard(fire, nowMs) {
     cullPosition: fireCullPosition(fire),
     gapPx: frpPixelSize(fire.frp),
     accent: accentForSeverity(detectionColorStop(fire).name),
-    title: `FIRE · ${formatFrp(fire.frp)} MW`,
+    title: `TITIK API · ${formatFrp(fire.frp)} MW`,
     details: [
       meta.join(' · '),
-      formatLatLon(fire.lat, fire.lon) + (fire.night ? ' · NIGHT' : ''),
+      formatLatLon(fire.lat, fire.lon) + (fire.night ? ' · MALAM' : ''),
     ],
     selected: true,
     priority: Number.MAX_SAFE_INTEGER,
@@ -111,7 +114,7 @@ export function buildSelectedFireCard(fire, nowMs) {
  */
 export function buildFireCard(candidate, nowMs) {
   const fire = candidate.fire;
-  const meta = [confidenceBucket(fire.confidence)];
+  const meta = [CONFIDENCE_LABELS[confidenceBucket(fire.confidence)]];
   if (fire.acqMs > 0) {
     const age = formatAge(nowMs - fire.acqMs);
     if (age) meta.push(age);
@@ -142,11 +145,10 @@ export function buildFireCard(candidate, nowMs) {
  */
 export function buildCellCard(candidate, nowMs) {
   const cell = candidate.cell;
-  const noun = cell.count === 1 ? 'FIRE' : 'FIRES';
-  const parts = [`max ${formatFrp(cell.maxFrp)} MW`];
+  const parts = [`maks ${formatFrp(cell.maxFrp)} MW`];
   if (cell.newestAcqMs > 0) {
     const age = formatAge(nowMs - cell.newestAcqMs);
-    if (age) parts.push(`new ${age}`);
+    if (age) parts.push(`baru ${age}`);
   }
   return {
     id: `cell:${cell.latCell ?? 'x'}:${cell.lonCell ?? 'x'}`,
@@ -154,7 +156,7 @@ export function buildCellCard(candidate, nowMs) {
     cullPosition: candidate.cullPosition || candidate.position,
     gapPx: 10,
     accent: candidate.accent || accentForSeverity('yellow'),
-    title: `${cell.count} ${noun}`,
+    title: `${cell.count} TITIK API`,
     details: [parts.join(' · ')],
     selected: false,
     priority: Number(cell.maxFrp) || 0,

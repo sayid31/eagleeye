@@ -34,9 +34,9 @@ export const COCKPIT_GROUND_WAIT_TIMEOUT_MS = 5000;
 
 export const COCKPIT_BRIEF_ROTATE_MS = 9000;
 
-export const COCKPIT_BRIEF_CYCLE_OFF_HELP = 'Cycle briefing pages automatically every 9 seconds (Signals → News → Local). Pauses while you hover or focus the panel. Live signal data refreshes continuously either way.';
+export const COCKPIT_BRIEF_CYCLE_OFF_HELP = 'Putar halaman ringkasan otomatis setiap 9 detik (Sinyal → Berita → Lokal). Berhenti sementara saat kursor atau fokus ada di panel. Data sinyal live tetap diperbarui terus-menerus.';
 
-export const COCKPIT_BRIEF_CYCLE_ON_HELP = 'Stop automatic page cycling. Previous, Next, and the SIG/NEWS/LOCAL tabs stay available.';
+export const COCKPIT_BRIEF_CYCLE_ON_HELP = 'Hentikan perputaran halaman otomatis. Sebelumnya, Berikutnya, dan tab SIN/BERITA/LOKAL tetap tersedia.';
 
 export const COCKPIT_REGIONAL_REFRESH_MS = 5 * 60_000;
 
@@ -45,20 +45,20 @@ export const COCKPIT_REGIONAL_REFRESH_DISTANCE_M = 25_000;
 export const COCKPIT_BRIEF_PAGES = [
   {
     id: 'signals',
-    kicker: 'LIVE SIGNALS',
-    subtitle: 'OBSERVED / MAPPED PINGS',
-    source: 'SOURCE-BACKED EVENTS · NO SYNTHETIC NEWS',
+    kicker: 'SINYAL LIVE',
+    subtitle: 'PING TERAMATI / TERPETAKAN',
+    source: 'PERISTIWA BERSUMBER · TANPA BERITA SINTETIS',
   },
   {
     id: 'news',
-    kicker: 'REGIONAL NEWS',
-    subtitle: 'LATEST LOCATION-MATCHED REPORTING',
-    source: 'GOOGLE NEWS RSS · LOCATION QUERY · RECENT',
+    kicker: 'BERITA REGIONAL',
+    subtitle: 'LIPUTAN TERBARU SESUAI LOKASI',
+    source: 'GOOGLE NEWS RSS · KUERI LOKASI · TERBARU',
   },
   {
     id: 'local',
-    kicker: 'LOCAL INFO',
-    subtitle: 'PLACE / CONDITIONS / POSITION',
+    kicker: 'INFO LOKAL',
+    subtitle: 'TEMPAT / KONDISI / POSISI',
     source: 'OPENSTREETMAP · OPEN-METEO · UTC',
   },
 ];

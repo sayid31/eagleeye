@@ -67,8 +67,8 @@ export function resolveVoiceVisualizerSpeaker(currentSpeaker, nextSpeaker, keepC
  */
 export function resolveVoiceControlHint(pushToTalkMode, pushToTalkKeyHeld) {
   return pushToTalkMode && pushToTalkKeyHeld
-    ? 'Release Space to send'
-    : 'Hold Space to speak · click mic to toggle voice';
+    ? 'Lepas Space untuk kirim'
+    : 'Tahan Space untuk bicara · klik mik untuk menyalakan suara';
 }
 
 /**
@@ -110,35 +110,35 @@ export function createVoiceControl({ reset = false } = {}) {
     root.dataset.speaker = 'idle';
     root.innerHTML = `
       <div class="gev-voice-heading">
-        <div class="gev-voice-kicker">AI AGENT</div>
-        <div id="gev-voice-status">OFF</div>
+        <div class="gev-voice-kicker">AGEN AI</div>
+        <div id="gev-voice-status">MATI</div>
         <div class="gev-voice-cost">
-          <button id="gev-voice-backend" class="gev-voice-tier-btn gev-voice-backend-btn" type="button" hidden aria-pressed="false" title="Voice backend">GPT</button>
-          <button id="gev-voice-tier" class="gev-voice-tier-btn" type="button" aria-pressed="false" title="Voice model tier — applies next session">STD</button>
-          <span id="gev-voice-cost-value" class="gev-voice-cost-value" data-level="ok" title="Estimated session cost">~$0.00</span>
+          <button id="gev-voice-backend" class="gev-voice-tier-btn gev-voice-backend-btn" type="button" hidden aria-pressed="false" title="Mesin suara">GPT</button>
+          <button id="gev-voice-tier" class="gev-voice-tier-btn" type="button" aria-pressed="false" title="Tingkat model suara — berlaku di sesi berikutnya">STD</button>
+          <span id="gev-voice-cost-value" class="gev-voice-cost-value" data-level="ok" title="Perkiraan biaya sesi">~$0.00</span>
         </div>
       </div>
-      <button id="gev-voice-button" type="button" aria-label="Voice control — hold Space to speak; click to toggle voice" aria-describedby="gev-voice-help">
+      <button id="gev-voice-button" type="button" aria-label="Kontrol suara — tahan Space untuk bicara; klik untuk menyalakan suara" aria-describedby="gev-voice-help">
         <span class="gev-mic-orbit"><img src="/mic.svg" alt="" /></span>
-        <span class="gev-mic-label">ON/OFF</span>
+        <span class="gev-mic-label">HIDUP/MATI</span>
       </button>
       <div class="gev-voice-visualizer" aria-hidden="true">
         ${Array.from({ length: 15 }, (_, index) => `<span style="--bar:${index}"></span>`).join('')}
       </div>
       <div class="gev-voice-readout">
-        <div id="gev-voice-detail">VOICE STANDBY</div>
+        <div id="gev-voice-detail">SUARA SIAGA</div>
       </div>
       <div id="gev-voice-help" class="gev-voice-help-tray" role="tooltip">
-        <span class="gev-voice-help-kicker">VOICE CONTROL</span>
-        <span class="gev-voice-help-detail">Hold Space to speak · click mic to toggle voice</span>
+        <span class="gev-voice-help-kicker">KONTROL SUARA</span>
+        <span class="gev-voice-help-detail">Tahan Space untuk bicara · klik mik untuk menyalakan suara</span>
       </div>
       <div class="gev-voice-error-tray" role="alert" aria-live="assertive">
         <div class="gev-voice-error-header">
-          <span>VOICE SYSTEM ERROR</span>
-          <button class="gev-voice-error-dismiss" type="button">DISMISS</button>
+          <span>GALAT SISTEM SUARA</span>
+          <button class="gev-voice-error-dismiss" type="button">TUTUP</button>
         </div>
         <div id="gev-voice-error-detail"></div>
-        <div class="gev-voice-error-hint">Check microphone permission and network access, then try again.</div>
+        <div class="gev-voice-error-hint">Periksa izin mikrofon dan akses jaringan, lalu coba lagi.</div>
       </div>
     `;
     const commandDock = document.getElementById('command-dock');

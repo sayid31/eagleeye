@@ -76,13 +76,13 @@ function buildRow(documentRef, key) {
   const tier = documentRef.createElement('span');
   tier.className = 'key-setup-tier';
   tier.textContent = TIER_DOTS[key.tier] || '';
-  tier.title = key.tier === 'metered' ? 'Metered — a billing-enabled account' : 'Free key — register, paste, done';
+  tier.title = key.tier === 'metered' ? 'Berbayar — akun dengan penagihan aktif' : 'Kunci gratis — daftar, tempel, selesai';
   head.append(led, title, tier);
   if (key.clientExposed) {
     const exposed = documentRef.createElement('span');
     exposed.className = 'key-setup-exposed';
-    exposed.textContent = 'browser-side';
-    exposed.title = 'This key runs in the browser by design — restrict it at the provider (see SECURITY.md)';
+    exposed.textContent = 'sisi browser';
+    exposed.title = 'Kunci ini sengaja berjalan di browser — batasi di penyedia (lihat SECURITY.md)';
     head.append(exposed);
   }
   if (external) {
@@ -90,8 +90,8 @@ function buildRow(documentRef, key) {
     // facts this panel reports, never values it rewrites or deletes.
     const badge = documentRef.createElement('span');
     badge.className = 'key-setup-external';
-    badge.textContent = 'configured externally';
-    badge.title = 'Supplied by your environment, Keychain, or launcher — change it where it was set';
+    badge.textContent = 'diatur dari luar';
+    badge.title = 'Disediakan oleh environment, Keychain, atau launcher Anda — ubah di tempat kunci itu diatur';
     head.append(badge);
   }
   const get = documentRef.createElement('a');
@@ -99,7 +99,7 @@ function buildRow(documentRef, key) {
   get.href = key.getUrl;
   get.target = '_blank';
   get.rel = 'noopener noreferrer';
-  get.textContent = key.set ? 'MANAGE ↗' : 'GET KEY ↗';
+  get.textContent = key.set ? 'KELOLA ↗' : 'DAPATKAN KUNCI ↗';
   head.append(get);
 
   const unlocks = documentRef.createElement('p');
@@ -129,8 +129,8 @@ function buildRow(documentRef, key) {
       remove.type = 'button';
       remove.className = 'key-setup-remove';
       remove.dataset.keySetupRemove = JSON.stringify(key.envVars);
-      remove.textContent = 'REMOVE';
-      remove.title = `Remove ${key.title} from this app's saved keys`;
+      remove.textContent = 'HAPUS';
+      remove.title = `Hapus ${key.title} dari kunci tersimpan aplikasi ini`;
       fields.append(remove);
     }
     row.append(fields);
@@ -304,7 +304,7 @@ export async function initKeySetup({ documentRef = globalThis.document, fetchImp
       inputs.map((input) => ({ envVar: input.dataset.envVar, value: input.value })),
     );
     if (!Object.keys(updates).length) {
-      say('Paste at least one key first.');
+      say('Tempel setidaknya satu kunci dulu.');
       return;
     }
     await submitUpdates(updates, 'Saved to');
@@ -328,7 +328,7 @@ export async function initKeySetup({ documentRef = globalThis.document, fetchImp
     // stop it — a clickjack target. A confirm turns a single aligned click into
     // a deliberate two-step the lure cannot pre-satisfy.
     const ok = typeof globalThis.confirm !== 'function'
-      || globalThis.confirm('Remove this key from your saved configuration?');
+      || globalThis.confirm('Hapus kunci ini dari konfigurasi tersimpan Anda?');
     if (!ok) return;
     void submitUpdates(
       Object.fromEntries(envVars.map((name) => [name, null])),

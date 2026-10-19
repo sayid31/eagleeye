@@ -89,8 +89,8 @@ export function summarizeInstallationViewport(items, source) {
   return {
     ...summary,
     reason: summary.count
-      ? 'mapped matches from the loaded viewport'
-      : 'viewport feed is not a complete 250 km survey',
+      ? 'kecocokan terpetakan dari viewport yang dimuat'
+      : 'feed viewport bukan survei lengkap 250 km',
   };
 }
 
@@ -227,14 +227,14 @@ export function evaluateSubject(subject, sourceStates = collectSourceStates()) {
     evaluatedAt: Date.now(),
     radiusM: AWARENESS_RADIUS_M,
     cohorts: [
-      { id: 'flights', label: 'Flights', source: flightsState.stats.source || SOURCE_LABEL.flights, summary: summarizeAwarenessCohortForNavigation(flights, flightsState) },
-      { id: 'military', label: 'Military flights', source: militaryState.stats.source || SOURCE_LABEL.military, summary: summarizeAwarenessCohortForNavigation(military, militaryState) },
-      { id: 'ais-live-vessels', label: 'AIS vessels', source: vesselsState.stats.source || SOURCE_LABEL['ais-live-vessels'], summary: summarizeAwarenessCohortForNavigation(vessels, vesselsState) },
+      { id: 'flights', label: 'Penerbangan', source: flightsState.stats.source || SOURCE_LABEL.flights, summary: summarizeAwarenessCohortForNavigation(flights, flightsState) },
+      { id: 'military', label: 'Penerbangan militer', source: militaryState.stats.source || SOURCE_LABEL.military, summary: summarizeAwarenessCohortForNavigation(military, militaryState) },
+      { id: 'ais-live-vessels', label: 'Kapal AIS', source: vesselsState.stats.source || SOURCE_LABEL['ais-live-vessels'], summary: summarizeAwarenessCohortForNavigation(vessels, vesselsState) },
       {
         id: 'military-installations',
-        label: 'Mapped installations',
+        label: 'Instalasi terpetakan',
         source: installationsState.stats.source || SOURCE_LABEL['military-installations'],
-        coverage: 'CURRENT VIEWPORT ONLY',
+        coverage: 'HANYA VIEWPORT SAAT INI',
         summary: summarizeInstallationViewport(installations, installationsState),
       },
     ],

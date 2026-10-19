@@ -222,8 +222,8 @@ export function updateSelectedVesselHud(record) {
   el.classList.add('active');
   el.textContent = [
     `AIS: ${trimHudValue(record.name, 32)}`,
-    `${trimHudValue(record.type || 'VESSEL', 24)}  SPD: ${formatSpeed(record.speed)}  HDG: ${formatHeading(record.heading ?? record.course)}`,
-    `MMSI: ${record.mmsi || '--'}  ${formatPositionTime(record)}${stale ? '  · STALE' : ''}`,
+    `${trimHudValue(record.type || 'KAPAL', 24)}  SPD: ${formatSpeed(record.speed)}  HDG: ${formatHeading(record.heading ?? record.course)}`,
+    `MMSI: ${record.mmsi || '--'}  ${formatPositionTime(record)}${stale ? '  · USANG' : ''}`,
   ].join('\n');
 }
 

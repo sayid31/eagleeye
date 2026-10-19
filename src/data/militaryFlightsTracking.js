@@ -32,13 +32,13 @@ import { _clearTrail, _startTrail } from './militaryFlightsTrail.js';
  * @returns {string} Newline-separated label text
  */
 function _buildTrackedLabel(info, icao24) {
-  const stale = (S._missingPolls.get(icao24) || S._backoff) ? ' · STALE' : '';
+  const stale = (S._missingPolls.get(icao24) || S._backoff) ? ' · USANG' : '';
   const callsign = (_toCleanText(info?.callsign) || _toCleanText(info?.registration) || icao24) + stale;
   // Converted contacts report their class as TR-3B — that override is exactly
   // what the Easter egg replaces the real type with.
-  const type = tr3bTypeLabel(icao24, _toCleanText(info?.type) || 'Type unknown');
-  const registration = _toCleanText(info?.registration) || 'Reg unknown';
-  const operator = _toCleanText(info?.operator) || 'Operator unknown';
+  const type = tr3bTypeLabel(icao24, _toCleanText(info?.type) || 'Tipe tidak diketahui');
+  const registration = _toCleanText(info?.registration) || 'Reg tidak diketahui';
+  const operator = _toCleanText(info?.operator) || 'Operator tidak diketahui';
   const altitude = _formatAltitude(info?.altitudeFt);
   const speedKt = info?.speedMps ? Math.round(info.speedMps * 1.944) : null;
   const tail = speedKt ? `${altitude} · ${speedKt} kt` : altitude;
