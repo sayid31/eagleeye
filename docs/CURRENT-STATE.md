@@ -1636,7 +1636,9 @@ The popup now lines up with the panel's other full-width rows. See
   AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
 - In the CCTV panel a slim header row (title clipped, close icon) comes first, then the camera screen
   (`#cctv-frame-wrap`), then the "Cari kamera CCTV" search, all by CSS `order`. `searchCameras`
-  (`cameraInspectorModel.js`) ranks name-prefix matches first over name, city, id and provider; picking a
+  (`cameraInspectorModel.js`) ranks name-prefix matches first over name, city, id and provider and returns
+  `{items, total}`: every match is listed (render cap `SEARCH_LIMIT` = 200) under a count line, so a
+  city query shows all of the city's cameras; picking a
   result calls `selectCamera`; Enter selects nothing. "Cari manual" reveals the legacy controls
   (`.ee-advanced-open`, also set while calibrating). There is no detail block: operator, direction, format
   and nearby cameras are not shown. `#cctv-source-badge` (⚠ UNOFFICIAL SOURCE) stays visible.

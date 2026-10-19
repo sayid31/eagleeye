@@ -7,6 +7,9 @@ import { inspectorMarkup } from './cameraInspectorMarkup.js';
 const PANEL_TITLE = 'Kamera';
 const HINT_LAYER_OFF = 'Nyalakan lapisan CCTV (atau pakai Cari manual) untuk mencari kamera.';
 const HINT_NO_MATCH = 'Tidak ada kamera yang cocok.';
+const countLabel = (shown, total) => (shown < total
+  ? `Menampilkan ${shown} dari ${total} kamera, persempit pencarian`
+  : `${total} kamera ditemukan`);
 
 function el(tag, className, text) {
   const node = document.createElement(tag);
@@ -43,11 +46,13 @@ export function initCameraInspector({ dataManager }) {
     const query = searchInput.value;
     results.hidden = !query.trim();
     if (results.hidden) return results.replaceChildren();
-    const hits = searchCameras(query, lastState?.cameras);
+    const { items: hits, total } = searchCameras(query, lastState?.cameras);
     if (!hits.length) {
       return results.replaceChildren(el('li', 'cam-search-empty', lastState?.enabled ? HINT_NO_MATCH : HINT_LAYER_OFF));
     }
-    results.replaceChildren(...hits.map((hit) => {
+    const count = el('li', 'cam-search-count', countLabel(hits.length, total));
+    count.setAttribute('role', 'status');
+    results.replaceChildren(count, ...hits.map((hit) => {
       const item = el('li');
       const button = el('button', 'cam-nearby-btn');
       button.type = 'button';

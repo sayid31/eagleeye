@@ -28,6 +28,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - The camera panel shows the camera screen first, then a "Cari kamera CCTV" search box (name, city,
   id or operator). The detail block (badges, operator, direction, format, nearby cameras, centre and
   calibrate buttons) is removed; "Cari manual" opens the earlier previous/next/picker/calibration controls.
+- The "Cari kamera CCTV" search lists every matching camera instead of the first 8, so a city
+  such as Denpasar shows all of its cameras. A count line sits above the list ("90 kamera ditemukan");
+  past 200 matches it reads "Menampilkan 200 dari N kamera, persempit pencarian".
 - The side panels (Layer data, Kamera, Skenario, Tampilan, Konteks) close with an "×" icon at the
   header's right corner instead of a text arrow or +/−.
 - The bottom dock is smaller (34 px mic, 32 px style menu). The EAGLEEYE VIEW wordmark uses the

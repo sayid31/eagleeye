@@ -138,3 +138,11 @@ body.ee-shell #cctv-panel .cam-inspector { order: -1; }
 }
 .cam-search-results[hidden] { display: none; }
 .cam-search-empty { padding: 8px; color: var(--ee-text-dim); font-size: 12px; }
+.cam-search-count {
+  position: sticky;
+  top: -4px;
+  padding: 4px 8px;
+  background: var(--ee-surface-2);
+  color: var(--ee-text-dim);
+  font-size: 11px;
+}
