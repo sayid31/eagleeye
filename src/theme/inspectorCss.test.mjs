@@ -42,3 +42,9 @@ test('the title row sits above the camera screen, which sits ahead of the search
   assert.match(css, /#cctv-panel \.cctv-frame-wrap \{ order: -4; \}/);
   assert.match(css, /#cctv-panel \.cam-inspector \{ order: -1; \}/);
 });
+
+test('CCTV control rows wrap so longer Indonesian labels never squeeze the camera picker', () => {
+  assert.match(css, /#cctv-panel \.cctv-controls\s*\{[^}]*flex-wrap:\s*wrap/);
+  assert.match(css, /#cctv-panel \.cctv-controls \.scene-btn\s*\{[^}]*white-space:\s*normal/);
+  assert.match(css, /#cctv-panel \.cctv-controls \.cctv-camera-picker\s*\{[^}]*flex:\s*1 1 100%/);
+});

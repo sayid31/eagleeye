@@ -124,3 +124,30 @@ body.ee-shell #cctv-panel .cam-inspector { order: -1; }
   color: var(--ee-text-dim);
   font-size: 11px;
 }
+
+/* Indonesian button labels are longer than the English ones (LOMPAT OTOMATIS MATI,
+   CAKUPAN AKTIF). style.css makes .scene-btn nowrap with a 72px minimum, so a row
+   overflowed and squeezed the camera picker down to "Denpasa…". Let the rows wrap,
+   let long labels break onto two lines, and give the picker a full row of its own
+   (prev/next stay below it, side by side). Markup and DOM order are untouched. */
+body.ee-shell #cctv-panel .cctv-controls {
+  flex-wrap: wrap;
+}
+
+body.ee-shell #cctv-panel .cctv-controls .scene-btn {
+  flex: 1 1 auto;
+  min-width: 0;
+  white-space: normal;
+  line-height: 1.25;
+  text-align: center;
+}
+
+body.ee-shell #cctv-panel .cctv-controls .cctv-camera-picker {
+  flex: 1 1 100%;
+  order: -1;
+}
+
+body.ee-shell #cctv-panel .cctv-controls #cctv-prev-btn,
+body.ee-shell #cctv-panel .cctv-controls #cctv-next-btn {
+  flex: 1 1 0;
+}
