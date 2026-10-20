@@ -253,8 +253,9 @@ async function main() {
     );
     await page.$eval('#context-radio-mini-enable-btn', (button) => button.click());
     await page.waitForFunction(() => {
-      const state = window.__godsEyeView.dataManager.layers.get('radio').module.getUIState();
-      return state.enabled && !state.loading && state.stationCount === 750;
+      // The radio layer is lazy: `module` is null until the first enable resolves it.
+      const state = window.__godsEyeView.dataManager.layers.get('radio').module?.getUIState?.();
+      return !!state && state.enabled && !state.loading && state.stationCount === 750;
     });
     const enableElapsedMs = Date.now() - enableStartedAt;
     const initial = await page.evaluate(() => {
@@ -1134,7 +1135,7 @@ async function main() {
         ))
         && userFacingFailures.directEntryFailures.length === 4
         && userFacingFailures.directEntryFailures.every((failure) => (
-          failure.reason.includes('could not start')
+          failure.reason.includes('tidak dapat dimulai')
           && failure.retryReason === null
           && failure.toastMessages.length === 1
           && failure.toastMessages[0] === failure.reason

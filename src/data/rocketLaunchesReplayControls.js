@@ -2,7 +2,12 @@
 
 import * as Cesium from 'cesium';
 import { MISSION_GLOBE_VIEW_RANGE_M, missionZoomPitch } from './rocketReplayCamera.js';
-import { normalizeReplaySpeed, replayStartAfterPause } from './rocketOrbitMath.js';
+import {
+  REPLAY_SPEED_MAX,
+  REPLAY_SPEED_MIN,
+  normalizeReplaySpeed,
+  replayStartAfterPause,
+} from './rocketOrbitMath.js';
 import { S, _animationStarts, _replayTracks } from './rocketLaunchesState.js';
 
 export function stopMissionZoomAnchor() {
