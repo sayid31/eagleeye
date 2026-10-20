@@ -102,7 +102,7 @@ test('accepted cached rows remain usable while transport reconnects', () => {
 
 test('missing key with no rows surfaces a clean reason', () => {
   assert.equal(
-    deriveAisFeedError({ status: 'missing-key', error: 'AISSTREAM_API_KEY is not set' }, 0),
+    deriveAisFeedError({ status: 'missing-key', error: 'AISSTREAM_API_KEY belum diatur' }, 0),
     'AISSTREAM_API_KEY belum diatur',
   );
 });
@@ -405,7 +405,7 @@ test('definitive AIS transport failures end grace immediately', () => {
     _beginAisSessionForTest();
     _applyAisFeedSnapshotForTest({}, {
       status: 'missing-key',
-      error: 'AISSTREAM_API_KEY is not set',
+      error: 'AISSTREAM_API_KEY belum diatur',
       rows: [],
     });
     const feed = _getVesselFeedStateForTest();
@@ -520,7 +520,7 @@ test('HTTP rejection ends first-connect grace without waiting for its deadline',
     status: 503,
     json: async () => ({
       status: 'missing-key',
-      error: 'AISSTREAM_API_KEY is not set',
+      error: 'AISSTREAM_API_KEY belum diatur',
     }),
   });
   console.warn = () => {};

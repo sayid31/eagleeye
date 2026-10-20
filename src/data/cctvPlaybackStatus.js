@@ -31,7 +31,7 @@ export function videoPlaceholderHealth(health, playback) {
   }
   // The proxy saw a 200 with no playlist in it: say that, it is the real cause.
   if (health?.message === EMPTY_PLAYLIST_MESSAGE) {
-    return { status: 'degraded', message: 'Sumber mengirim playlist kosong · mencoba lagi' };
+    return { status: 'degraded', message: `${EMPTY_PLAYLIST_MESSAGE} · mencoba lagi` };
   }
   switch (playback?.state) {
     case 'retrying':

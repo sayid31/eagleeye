@@ -40,8 +40,8 @@ export function isUpstreamUnreachableError(error) {
  * @returns {string}
  */
 export function describeOfflineSource({ status, unreachable } = {}) {
-  if (unreachable) return 'Camera offline at source (host unreachable)';
-  return `Camera offline at source (HTTP ${status})`;
+  if (unreachable) return 'Kamera mati di sumber (host tidak terjangkau)';
+  return `Kamera mati di sumber (HTTP ${status})`;
 }
 
 /**
@@ -69,7 +69,7 @@ export function isSourceOffline(status) {
 }
 
 /** Health message for a source that answers 200 but sends no playlist. */
-export const EMPTY_PLAYLIST_MESSAGE = 'Source sent an empty playlist';
+export const EMPTY_PLAYLIST_MESSAGE = 'Sumber mengirim playlist kosong';
 
 /**
  * Whether an HLS manifest body is a playlist at all. A 200 with an empty or

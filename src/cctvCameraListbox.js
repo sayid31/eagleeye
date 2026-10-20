@@ -85,7 +85,7 @@ export function syncCctvCameraListboxState({ trigger, listbox } = {}, { cameras 
 
   if (trigger) {
     trigger.disabled = !enabled || cameraList.length === 0;
-    trigger.textContent = activeCamera ? cctvCameraOptionLabel(activeCamera) : 'Select camera';
+    trigger.textContent = activeCamera ? cctvCameraOptionLabel(activeCamera) : 'Pilih kamera';
     trigger.dataset.selectedCameraId = activeCamera ? activeCamera.id : '';
   }
 

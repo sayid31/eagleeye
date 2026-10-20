@@ -1153,7 +1153,7 @@ async function main() {
         && userFacingFailures.directActivationRollbackFailures.length === 2
         && userFacingFailures.directActivationRollbackFailures.every((failure) => (
           failure.toastMessages.length === 1
-          && failure.toastMessages[0] === `${failure.layerId} could not start cleanly`
+          && failure.toastMessages[0] === `${failure.layerId} tidak dapat dinyalakan dengan benar`
           && failure.retryRetained
         ))
         && userFacingFailures.contextExitFailures.length === 2
@@ -1174,14 +1174,14 @@ async function main() {
         ))
         && userFacingFailures.unrelatedManagerFailure.result === false
         && userFacingFailures.unrelatedManagerFailure.toastMessages.length === 1
-        && userFacingFailures.unrelatedManagerFailure.toastMessages[0].includes('qa-unrelated-manager-failure could not start cleanly')
-        && userFacingFailures.installationFalseMessage.includes('could not be refreshed')
+        && userFacingFailures.unrelatedManagerFailure.toastMessages[0].includes('qa-unrelated-manager-failure tidak dapat dinyalakan dengan benar')
+        && userFacingFailures.installationFalseMessage.includes('tidak dapat diperbarui')
         && userFacingFailures.installationFalseReleased
-        && userFacingFailures.installationEnableRejectionMessage.includes('could not be refreshed')
+        && userFacingFailures.installationEnableRejectionMessage.includes('tidak dapat diperbarui')
         && userFacingFailures.installationEnableRejectionReleased
-        && userFacingFailures.installationRejectionMessage.includes('could not be refreshed')
+        && userFacingFailures.installationRejectionMessage.includes('tidak dapat diperbarui')
         && userFacingFailures.installationRejectionReleased
-        && userFacingFailures.installationSearchFalseMessage.includes('could not be refreshed')
+        && userFacingFailures.installationSearchFalseMessage.includes('tidak dapat diperbarui')
         && userFacingFailures.installationSearchFalseReleased
         && userFacingFailures.unhandled.length === 0,
       JSON.stringify(userFacingFailures),

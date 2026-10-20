@@ -19,6 +19,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   texts, tooltips and aria-labels. Brand names, abbreviations (CCTV, HUD, NVG, FLIR, CRT, AIS, UTC, ADS-B,
   FOV), units and provider names stay as they are. Layer names that voice focus reads, the voice prompts and
   tool schemas, and names that come from upstream data stay English.
+- Toasts and status/error messages shown to the user (Context mode, Space Missions, key setup, CCTV source
+  health, AIS watchdog, cockpit navigation) are Indonesian too. Messages returned to voice tools and server
+  proxy errors stay English.
 
 ### Fixed
 

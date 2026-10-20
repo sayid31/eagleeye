@@ -94,7 +94,7 @@ test('keyless install reports the feature as off and never opens a socket', () =
   assert.deepEqual(h.types(), []);
   const snap = h.snapshot();
   assert.equal(snap.status, 'missing-key');
-  assert.equal(snap.error, 'AISSTREAM_API_KEY is not set');
+  assert.equal(snap.error, 'AISSTREAM_API_KEY belum diatur');
   assert.equal(snap.reconnectAttempt, 0);
   assert.equal(snap.nextAttemptAt, null);
 });
@@ -224,7 +224,7 @@ test('a silent socket is terminated once, then reconnected after backoff', () =>
   const afterKill = h.snapshot();
   assert.equal(afterKill.status, 'reconnecting');
   assert.equal(afterKill.reconnectAttempt, 1);
-  assert.match(afterKill.error, /delivered no data for \d+s/);
+  assert.match(afterKill.error, /tidak mengirim data selama \d+dtk/);
 
   h.advance(4_000);
   h.tick();

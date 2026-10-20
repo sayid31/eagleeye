@@ -108,7 +108,7 @@ test('syncCctvCameraListboxState shows a placeholder and clears selection when n
 
   syncCctvCameraListboxState({ trigger, listbox }, { cameras: CAMERAS, activeId: '', enabled: true });
 
-  assert.equal(trigger.textContent, 'Select camera');
+  assert.equal(trigger.textContent, 'Pilih kamera');
   assert.equal(trigger.dataset.selectedCameraId, '');
   assert.ok(listbox.children.every((li) => li.getAttribute('aria-selected') === 'false'));
 });
