@@ -25,6 +25,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Space Missions turns on again: its replay speed slider referenced two constants it never imported, so the
+  layer failed during start-up and Contacts → Space Missions always ended in a failure toast.
 - The bottom dock is smaller, matching the mockup: it was about 60 px tall and stretched its menu to that
   height; it is now about 48 px with a 28 px style menu. The microphone icon sits in the middle of the
   round button instead of low and to the right.
