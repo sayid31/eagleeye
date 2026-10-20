@@ -7,6 +7,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- The CCTV camera picker shows a chevron, so it reads as a dropdown (the chevron flips while the list is open).
+- In the CCTV panel, FOKUS, CAKUPAN, LOMPAT OTOMATIS, PROYEKSI and the calibration chip are grouped under a
+  closed "Opsi lanjutan" disclosure, each with a tooltip saying what it does. The panel opens with only
+  CCTV on/off, Terdekat, the picker and Sebelumnya/Berikutnya.
+
+### Changed
+
 - Every user-visible label is now Indonesian, matching the layer panel: the control panels, HUD and cockpit
   text, CCTV and scene controls, radio, key setup, first-run chooser, map-source messages, status and error
   texts, tooltips and aria-labels. Brand names, abbreviations (CCTV, HUD, NVG, FLIR, CRT, AIS, UTC, ADS-B,

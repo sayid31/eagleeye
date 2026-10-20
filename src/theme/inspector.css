@@ -151,3 +151,54 @@ body.ee-shell #cctv-panel .cctv-controls #cctv-prev-btn,
 body.ee-shell #cctv-panel .cctv-controls #cctv-next-btn {
   flex: 1 1 0;
 }
+
+/* The camera picker is a custom dropdown, but it read as a plain text field.
+   A chevron on the right says it opens a list; it flips while the list is open.
+   It sits on the wrapper (not the button) so the button's ellipsis is unaffected. */
+body.ee-shell #cctv-panel .cctv-camera-picker::after {
+  content: 'expand_more';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  color: var(--ee-text-muted);
+  font-family: 'Material Symbols Outlined';
+  font-size: 20px;
+  font-feature-settings: 'liga';
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  pointer-events: none;
+}
+
+body.ee-shell #cctv-panel .cctv-camera-picker:has(.cctv-camera-trigger[aria-expanded='true'])::after {
+  transform: translateY(-50%) rotate(180deg);
+  color: var(--ee-accent);
+}
+
+body.ee-shell #cctv-panel .cctv-camera-trigger {
+  padding-right: 34px;
+}
+
+/* Focus, coverage, auto-hop, projection and the calibration chip are power features
+   that confused first-time users. They sit in a closed disclosure; the buttons stay in
+   the DOM because cctvPanelMixin binds and updates them by id. */
+body.ee-shell #cctv-panel .cctv-advanced {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+body.ee-shell #cctv-panel .cctv-advanced > summary {
+  cursor: pointer;
+  color: var(--ee-text-muted);
+  font: 500 11px var(--ee-font-sans);
+  letter-spacing: 0.6px;
+  list-style: none;
+}
+
+body.ee-shell #cctv-panel .cctv-advanced > summary::-webkit-details-marker { display: none; }
+body.ee-shell #cctv-panel .cctv-advanced > summary::before { content: '▸ '; }
+body.ee-shell #cctv-panel .cctv-advanced[open] > summary::before { content: '▾ '; }
+body.ee-shell #cctv-panel .cctv-advanced[open] > summary { margin-bottom: 8px; }
+body.ee-shell #cctv-panel .cctv-advanced > .cctv-controls + .cctv-controls { margin-top: 8px; }

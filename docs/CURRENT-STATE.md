@@ -1615,6 +1615,9 @@ The popup now lines up with the panel's other full-width rows. See
   messages) is Indonesian. Kept in English: brand and abbreviations (CCTV, HUD, NVG, FLIR, CRT, AIS, UTC,
   ADS-B, FOV), units, provider names, layer `name:` fields (voice focus reads them), voice prompts and tool
   schemas, upstream-sourced names, console messages and `error:` strings returned to voice tools.
+- The CCTV panel's camera picker has a chevron (flips when open). FOKUS, CAKUPAN, LOMPAT OTOMATIS, PROYEKSI
+  and the calibration chip sit in a closed `<details class="cctv-advanced">` ("Opsi lanjutan") with tooltips;
+  the buttons keep their ids because `cctvPanelMixin` binds them.
 - `src/shell/` mounts a top bar, icon rail and status bar. The rail and search proxy to existing
   controls. The shell never writes layer state.
 - Layer rows show a status from `layerShellStatus` (`src/shell/layerStatus.js`): Live, Terganggu, Mati,
