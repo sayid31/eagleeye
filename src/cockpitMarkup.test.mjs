@@ -214,6 +214,15 @@ test('the cockpit reads its aircraft from the layer that owns Cesium tracking', 
   // In cockpit mode the controller moves the entity off viewer.trackedEntity,
   // so its own handle is the tracked identity there.
   assert.match(read[1], /this\.viewer\?\.trackedEntity \|\| this\.trackedEntity/);
+  // The facade defaults to () => null, so a missing wiring is silent: the entry
+  // button never appears because readAircraftInfo() can never see a contact.
+  // It must be a late-reading closure — the controller is built before
+  // attachDataManager(), so a captured value would be permanently null.
+  assert.match(
+    ui,
+    /new CockpitViewController\(viewer, \{[\s\S]*?getDataManager: \(\) => this\._dataManager,/,
+    'ui.js must pass a late-reading getDataManager into CockpitViewController',
+  );
 });
 
 test('programmatic Context layer changes cannot bypass explicit expansion policy', () => {
