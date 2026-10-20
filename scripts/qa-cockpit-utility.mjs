@@ -444,7 +444,7 @@ try {
           'space-missions',
           { notificationToken },
         ),
-        'Space Missions could not complete the requested transition; try again',
+        'Misi Antariksa tidak dapat menyelesaikan transisi yang diminta; coba lagi',
       );
       await updateStarted;
       const supersedingOff = dataManager.setEnabled('rocket-launches', false, {

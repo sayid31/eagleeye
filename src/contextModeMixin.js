@@ -81,7 +81,7 @@ export const contextModeMixin = {
           nextMode,
           { notificationToken },
         ),
-        'Contacts could not complete the requested transition; try again',
+        'Kontak tidak dapat menyelesaikan transisi yang diminta; coba lagi',
       ).then((succeeded) => {
         if (nextMode && shouldExpandGlobalContextPanel({
           action: 'contacts',
@@ -98,7 +98,7 @@ export const contextModeMixin = {
           nextMode,
           { notificationToken },
         ),
-        'Space Missions could not complete the requested transition; try again',
+        'Misi Antariksa tidak dapat menyelesaikan transisi yang diminta; coba lagi',
       ).then((succeeded) => {
         if (nextMode && shouldExpandGlobalContextPanel({
           action: 'space-missions',
@@ -121,10 +121,10 @@ export const contextModeMixin = {
         if (searched === false) return false;
         const stats = this._dataManager?.getLayerStatsRaw('military-installations');
         this._showToast(stats?.status === 'zoom-in'
-          ? 'Zoom in to search mapped installations'
-          : 'Nearby installations refreshed');
+          ? 'Perbesar peta untuk mencari instalasi terpetakan'
+          : 'Instalasi terdekat diperbarui');
         return true;
-      }, 'Nearby installations could not be refreshed; try again').finally(() => {
+      }, 'Instalasi terdekat tidak dapat diperbarui; coba lagi').finally(() => {
         button.disabled = false;
       });
     });
@@ -132,7 +132,7 @@ export const contextModeMixin = {
 
   async _runUserFacingContextAction(
     operation,
-    message = 'Context could not restore every layer; try again',
+    message = 'Konteks tidak dapat memulihkan semua layer; coba lagi',
     { falseIsFailure = true } = {},
   ) {
     const notificationToken = Symbol('user-facing-context-action');
@@ -602,7 +602,7 @@ export const contextModeMixin = {
               );
               return true;
             },
-            'Space Missions cancellation could not restore the previous layer state',
+            'Pembatalan Misi Antariksa tidak dapat memulihkan status layer sebelumnya',
           ));
         }
       }
@@ -617,13 +617,13 @@ export const contextModeMixin = {
     }
     if (change?.type === 'visibility-blocked') {
       if (!this._userFacingContextNotificationTokens.has(change.notificationToken)) {
-        this._showToast(change.reason || 'That layer is unavailable in the current Context mode');
+        this._showToast(change.reason || 'Layer itu tidak tersedia di mode Konteks saat ini');
       }
       this._syncContextModeButtons();
       return;
     }
     if (change?.type === 'visibility-failed') {
-      const failureMessage = `${change.layerId} could not ${change.enabled ? 'start' : 'stop'} cleanly`;
+      const failureMessage = `${change.layerId} tidak dapat ${change.enabled ? 'dinyalakan' : 'dimatikan'} dengan benar`;
       // A failed direct Context-shell START has already had its siblings
       // cleared by the visibility guard. Wait outside the synchronous manager
       // notification for this queue to settle, then reconcile the complete

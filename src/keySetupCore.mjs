@@ -210,7 +210,7 @@ export function admitKeySetupRequest({
   // only appear when someone has deliberately fronted the dev server.
   const PROXY_SIGNALS = ['forwarded', 'via', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-proto', 'x-real-ip', 'cf-connecting-ip', 'cf-ray'];
   if (PROXY_SIGNALS.some((name) => String(proxyHeaders[name] || '').trim() !== '')) {
-    return { ok: false, status: 403, error: 'Provider Settings does not answer proxied requests' };
+    return { ok: false, status: 403, error: 'Pengaturan Penyedia tidak melayani permintaan lewat proxy' };
   }
   // Every sharing signal the launcher recognizes (scripts/pinokio-preflight.mjs)
   // also disables this surface — so the gate's set is complete, not a subset the
@@ -227,24 +227,24 @@ export function admitKeySetupRequest({
     .some((name) => /^(1|true)$/i.test(String(env[name] || '').trim()))
     || (shareVar !== '' && shareVar !== '__gev_sharing_disabled__');
   if (sharingEnabled) {
-    return { ok: false, status: 403, error: 'Provider Settings is disabled while sharing is enabled' };
+    return { ok: false, status: 403, error: 'Pengaturan Penyedia dinonaktifkan saat berbagi aktif' };
   }
   if (!LOOPBACK_ADDRESSES.has(String(remoteAddress || ''))) {
-    return { ok: false, status: 403, error: 'Provider Settings answers only the machine running the server' };
+    return { ok: false, status: 403, error: 'Pengaturan Penyedia hanya melayani mesin yang menjalankan server' };
   }
   const authority = localAuthority(hostHeader, protocol);
   if (!authority) {
-    return { ok: false, status: 403, error: 'Provider Settings answers only local hostnames' };
+    return { ok: false, status: 403, error: 'Pengaturan Penyedia hanya melayani nama host lokal' };
   }
   if (method === 'POST' && (origin === undefined || origin === null || origin === '')) {
-    return { ok: false, status: 403, error: 'Provider Settings requires an exact local Origin' };
+    return { ok: false, status: 403, error: 'Pengaturan Penyedia memerlukan Origin lokal yang tepat' };
   }
   if (origin !== undefined && origin !== null && origin !== '') {
     let parsedOrigin;
     try {
       parsedOrigin = new URL(String(origin));
     } catch {
-      return { ok: false, status: 403, error: 'Unrecognized Origin refused' };
+      return { ok: false, status: 403, error: 'Origin tidak dikenal ditolak' };
     }
     const exactOrigin = parsedOrigin.username === ''
       && parsedOrigin.password === ''
@@ -253,11 +253,11 @@ export function admitKeySetupRequest({
       && parsedOrigin.hash === ''
       && parsedOrigin.origin === authority;
     if (!exactOrigin) {
-      return { ok: false, status: 403, error: 'Cross-origin requests are refused' };
+      return { ok: false, status: 403, error: 'Permintaan lintas-origin ditolak' };
     }
   }
   if (method === 'POST' && !String(contentType || '').toLowerCase().startsWith('application/json')) {
-    return { ok: false, status: 415, error: 'Content-Type must be application/json' };
+    return { ok: false, status: 415, error: 'Content-Type harus application/json' };
   }
   return { ok: true };
 }
@@ -328,29 +328,29 @@ export function keySetupStatus(env = {}) {
  */
 export function validateKeySetupUpdates(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return { ok: false, error: 'Body must be a JSON object of {ENV_VAR: value}' };
+    return { ok: false, error: 'Isi harus berupa objek JSON {ENV_VAR: nilai}' };
   }
   const entries = Object.entries(body);
-  if (entries.length === 0) return { ok: false, error: 'No keys provided' };
+  if (entries.length === 0) return { ok: false, error: 'Tidak ada kunci yang diberikan' };
   if (entries.length > KEY_SETUP_UPDATE_LIMIT) {
-    return { ok: false, error: `At most ${KEY_SETUP_UPDATE_LIMIT} keys per save` };
+    return { ok: false, error: `Maksimal ${KEY_SETUP_UPDATE_LIMIT} kunci per simpan` };
   }
   const known = knownKeySetupEnvVars();
   const updates = {};
   for (const [name, raw] of entries) {
-    if (!known.has(name)) return { ok: false, error: `Unknown key: ${name}` };
+    if (!known.has(name)) return { ok: false, error: `Kunci tidak dikenal: ${name}` };
     if (raw === null) {
       updates[name] = null;
       continue;
     }
-    if (typeof raw !== 'string') return { ok: false, error: `${name} must be a string` };
+    if (typeof raw !== 'string') return { ok: false, error: `${name} harus berupa string` };
     const value = raw.trim();
-    if (!value) return { ok: false, error: `${name} is empty` };
+    if (!value) return { ok: false, error: `${name} kosong` };
     if (value.length > KEY_SETUP_VALUE_LIMIT) {
-      return { ok: false, error: `${name} is longer than any real key (${KEY_SETUP_VALUE_LIMIT} max)` };
+      return { ok: false, error: `${name} lebih panjang dari kunci asli (maks ${KEY_SETUP_VALUE_LIMIT})` };
     }
     if (!/^[\x21-\x7e]+$/.test(value)) {
-      return { ok: false, error: `${name} may only contain printable characters with no spaces` };
+      return { ok: false, error: `${name} hanya boleh berisi karakter yang dapat dicetak tanpa spasi` };
     }
     // Reject the dotenv metacharacters that would round-trip WRONG when written
     // unquoted (# starts a comment, quotes redelimit, $ expands, backslash and
@@ -358,7 +358,7 @@ export function validateKeySetupUpdates(body) {
     // parseEnv and Vite's expansion read back. Real provider keys never contain
     // these; they are base64url / hex / JWT alphabets.
     if (/[#"'$\\`]/.test(value)) {
-      return { ok: false, error: `${name} contains a character that is not valid in a key (#, quotes, $, \\, or backtick)` };
+      return { ok: false, error: `${name} berisi karakter yang tidak valid untuk kunci (#, tanda kutip, $, \\, atau backtick)` };
     }
     updates[name] = value;
   }

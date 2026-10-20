@@ -84,7 +84,7 @@ export function runExplicitNavigation({
 } = {}) {
   if (disposed) return false;
   if (cockpitActive) {
-    showToast?.(`Exit cockpit to fly to a ${noun}`);
+    showToast?.(`Keluar dari kokpit untuk terbang ke ${noun}`);
     return false;
   }
   const generation = stamp?.();
@@ -106,7 +106,7 @@ export function beginDeferredNavigation({
 } = {}) {
   if (disposed) return false;
   if (cockpitActive) {
-    showToast?.(`Exit cockpit to fly to a ${noun}`);
+    showToast?.(`Keluar dari kokpit untuk terbang ke ${noun}`);
     return false;
   }
   return stamp?.();
@@ -127,7 +127,7 @@ export function reassertNavigationHandoff({
 } = {}) {
   if (disposed || generation !== currentGeneration) return false;
   if (cockpitActive) {
-    showToast?.('Exit cockpit to fly to a location');
+    showToast?.('Keluar dari kokpit untuk terbang ke lokasi');
     return false;
   }
   release?.();

@@ -131,7 +131,7 @@ export const dataManagerAttachMixin = {
             } catch (restoreError) {
               console.warn(`[Context] ${change.layerId} rollback failed`, restoreError);
             }
-            return `${entryMode === 'space-missions' ? 'Space Missions' : 'Context'} could not start because another layer did not stop cleanly`;
+            return `${entryMode === 'space-missions' ? 'Misi Antariksa' : 'Konteks'} tidak dapat dimulai karena layer lain tidak berhenti dengan benar`;
           } finally {
             if (ownsNotificationToken) {
               this._userFacingContextNotificationTokens.delete(notificationToken);

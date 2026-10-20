@@ -236,7 +236,7 @@ export function createAisWatchdog(options = {}) {
     if (!env.hasKey) {
       const actions = terminateOwned('key-absent');
       status = 'missing-key';
-      error = 'AISSTREAM_API_KEY is not set';
+      error = 'AISSTREAM_API_KEY belum diatur';
       reconnectAttempt = 0;
       keyFingerprint = null;
       return actions;
@@ -244,7 +244,7 @@ export function createAisWatchdog(options = {}) {
     if (env.hasTransport === false) {
       const actions = terminateOwned('no-transport');
       status = 'unsupported';
-      error = 'Node WebSocket transport is unavailable';
+      error = 'Transport WebSocket Node tidak tersedia';
       return actions;
     }
 
@@ -315,7 +315,7 @@ export function createAisWatchdog(options = {}) {
       if (!silenceWatchArmed) return [];
       const silentFor = monoNow - silenceSinceMono;
       if (silentFor >= recycleAfterMs) {
-        error = `AISStream delivered no data for ${Math.round(silentFor / 1000)}s`;
+        error = `AISStream tidak mengirim data selama ${Math.round(silentFor / 1000)}dtk`;
         const actions = terminateOwned('silent');
         scheduleRetry('transport');
         return actions;
@@ -382,7 +382,7 @@ export function createAisWatchdog(options = {}) {
   function onClose(eventGeneration) {
     if (!ownsGeneration(eventGeneration)) return [];
     release();
-    if (!error) error = 'AISStream websocket closed';
+    if (!error) error = 'WebSocket AISStream tertutup';
     scheduleRetry('transport');
     return [];
   }

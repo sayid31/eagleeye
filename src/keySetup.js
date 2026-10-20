@@ -269,7 +269,7 @@ export async function initKeySetup({ documentRef = globalThis.document, fetchImp
       });
       const payload = await response.json().catch(() => ({}));
       if (!response.ok || !payload.ok) {
-        say(payload.error || `Save failed (${response.status}).`);
+        say(payload.error || `Gagal menyimpan (${response.status}).`);
         return;
       }
       for (const input of root.querySelectorAll('input[data-env-var]')) input.value = '';
@@ -290,7 +290,7 @@ export async function initKeySetup({ documentRef = globalThis.document, fetchImp
       }
       say(`${doneVerb} ${storeLabel()}. Restarting — this page reloads itself.`);
     } catch (error) {
-      say(`Save failed: ${error?.message || error}`);
+      say(`Gagal menyimpan: ${error?.message || error}`);
     } finally {
       busy = false;
       applyButton?.setAttribute('aria-disabled', 'false');

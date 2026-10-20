@@ -52,8 +52,8 @@ test('isUpstreamUnreachableError matches DNS/refused, not timeouts', () => {
 });
 
 test('describeOfflineSource names the cause and says it is the source that is down', () => {
-  assert.match(describeOfflineSource({ status: 404 }), /offline at source.*404/i);
-  assert.match(describeOfflineSource({ unreachable: true }), /offline at source.*unreachable/i);
+  assert.match(describeOfflineSource({ status: 404 }), /mati di sumber.*404/i);
+  assert.match(describeOfflineSource({ unreachable: true }), /mati di sumber.*tidak terjangkau/i);
 });
 
 test('isSourceOffline only matches the offline status', () => {
@@ -71,5 +71,5 @@ test('isValidHlsPlaylist rejects empty and non-playlist bodies', () => {
   assert.equal(isValidHlsPlaylist('<html>error</html>'), false);
   assert.equal(isValidHlsPlaylist('#EXTM3U\n#EXT-X-VERSION:3\n'), true);
   assert.equal(isValidHlsPlaylist('\n#EXTM3U\n'), true);
-  assert.match(EMPTY_PLAYLIST_MESSAGE, /empty playlist/);
+  assert.match(EMPTY_PLAYLIST_MESSAGE, /playlist kosong/);
 });

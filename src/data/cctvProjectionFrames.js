@@ -227,7 +227,7 @@ export function paintProjectionPlaceholder(ctx, camera, health = null) {
 
   const label = String(camera?.name || 'CCTV');
   const city = String(camera?.city || 'GLOBAL');
-  const status = String(health?.message || health?.status || camera?.feedType || 'NO FEED').toUpperCase();
+  const status = String(health?.message || health?.status || camera?.feedType || 'TANPA FEED').toUpperCase();
 
   ctx.strokeStyle = 'rgba(0, 220, 255, 0.24)';
   ctx.lineWidth = 2;
