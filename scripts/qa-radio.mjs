@@ -305,7 +305,7 @@ async function main() {
     check('All is the initial Radio filter', initial.state.filter === 'all' && initial.state.filteredCount === 750, `${initial.state.filteredCount} stations`);
     check(
       'the default All filter exposes a draggable directory tuner band',
-      initial.tunerVisible && initial.tunerCount === 750 && initial.tunerLabel === 'DIRECTORY BAND',
+      initial.tunerVisible && initial.tunerCount === 750 && initial.tunerLabel === 'BAND DIREKTORI',
       JSON.stringify({ visible: initial.tunerVisible, count: initial.tunerCount, label: initial.tunerLabel }),
     );
     const uncertainPresentation = await page.evaluate(async () => {
@@ -415,14 +415,14 @@ async function main() {
         && uncertainPresentation.prevDisabled
         && uncertainPresentation.playDisabled
         && uncertainPresentation.volumeDisabled
-        && /compact Radio controls/i.test(uncertainPresentation.disclosureLabel)
-        && /uncertain/i.test(uncertainPresentation.compactPowerLabel)
-        && uncertainPresentation.compactPowerText === 'RECONCILE'
-        && /uncertain/i.test(uncertainPresentation.fullLabel)
-        && uncertainPresentation.fullText === 'RECONCILE'
-        && uncertainPresentation.layerState === 'UNCERTAIN'
-        && /uncertain/i.test(uncertainPresentation.playbackMessage)
-        && uncertainPresentation.miniStation === 'RADIO STATE UNCERTAIN'
+        && /kontrol Radio ringkas/i.test(uncertainPresentation.disclosureLabel)
+        && /tidak pasti/i.test(uncertainPresentation.compactPowerLabel)
+        && uncertainPresentation.compactPowerText === 'SELARASKAN'
+        && /tidak pasti/i.test(uncertainPresentation.fullLabel)
+        && uncertainPresentation.fullText === 'SELARASKAN'
+        && uncertainPresentation.layerState === 'TIDAK PASTI'
+        && /tidak pasti/i.test(uncertainPresentation.playbackMessage)
+        && uncertainPresentation.miniStation === 'STATUS RADIO TIDAK PASTI'
         && uncertainPresentation.dataRailText === 'TIDAK PASTI'
         && uncertainPresentation.dataRailState === 'uncertain'
         && /tidak pasti/i.test(uncertainPresentation.dataRailLabel)
@@ -480,11 +480,11 @@ async function main() {
         && disablingPresentation.manager.lifecycleState === 'disabling'
         && disablingPresentation.presentationActive === false
         && disablingPresentation.markerSourceVisible === false
-        && disablingPresentation.full === 'DISABLING'
-        && /compact Radio controls/i.test(disablingPresentation.disclosure)
-        && disablingPresentation.compactPower === 'DISABLING'
-        && disablingPresentation.layerState === 'DISABLING'
-        && /disabling/i.test(disablingPresentation.message)
+        && disablingPresentation.full === 'MEMATIKAN'
+        && /kontrol Radio ringkas/i.test(disablingPresentation.disclosure)
+        && disablingPresentation.compactPower === 'MEMATIKAN'
+        && disablingPresentation.layerState === 'MEMATIKAN'
+        && /sedang dimatikan/i.test(disablingPresentation.message)
         && disablingPresentation.stopDisabled
         && disablingPresentation.volumeDisabled,
       JSON.stringify(disablingPresentation),
@@ -556,13 +556,13 @@ async function main() {
         && enablingPresentation.manager.lifecycleState === 'enabling'
         && enablingPresentation.presentationActive === false
         && enablingPresentation.markerSourceVisible === false
-        && enablingPresentation.full === 'ENABLING'
-        && enablingPresentation.disclosure === 'Go to expanded Radio section'
+        && enablingPresentation.full === 'MENYALAKAN'
+        && enablingPresentation.disclosure === 'Ke bagian Radio yang terbentang'
         && enablingPresentation.disclosureControls === 'radio-panel'
         && enablingPresentation.disclosureExpanded === 'true'
-        && enablingPresentation.compactPower === 'ENABLING'
-        && enablingPresentation.layerState === 'ENABLING'
-        && /enabling/i.test(enablingPresentation.message)
+        && enablingPresentation.compactPower === 'MENYALAKAN'
+        && enablingPresentation.layerState === 'MENYALAKAN'
+        && /sedang dinyalakan/i.test(enablingPresentation.message)
         && enablingPresentation.tunerHidden
         && enablingPresentation.stopDisabled
         && enablingPresentation.volumeDisabled,
@@ -1120,7 +1120,7 @@ async function main() {
     });
     check(
       'user-facing chip, real Context entry rollback, and installation Search failures settle safely',
-      userFacingFailures.semanticFalseMessage === 'Radio could not stop cleanly'
+      userFacingFailures.semanticFalseMessage === 'Radio tidak dapat dimatikan dengan benar'
         && userFacingFailures.contextFailures.length === 8
         && userFacingFailures.contextFailures.every((failure) => (
           failure.result === false
@@ -1200,7 +1200,7 @@ async function main() {
       degradedCatalog.state.stationCount === 750
         && degradedCatalog.state.degraded === true
         && degradedCatalog.state.stale === false
-        && degradedCatalog.message.includes('degraded directory'),
+        && degradedCatalog.message.includes('direktori terdegradasi'),
       JSON.stringify(degradedCatalog),
     );
     catalogDegraded = false;
@@ -1507,7 +1507,7 @@ async function main() {
     );
     await page.select('#radio-filter', 'news');
     check('launcher enables Radio without forcing Context open', !initial.panelExpanded && !initial.contextExpanded && initial.nestedInContext);
-    check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Play nearest radio station');
+    check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Putar stasiun radio terdekat');
 
     const hoverOnlyDisclosure = await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
@@ -1566,7 +1566,7 @@ async function main() {
       compact.visible && compact.prevEnabled && compact.playEnabled && compact.nextEnabled && compact.volumeEnabled,
       JSON.stringify(compact),
     );
-    check('compact Play is available before a station is selected', compact.playLabel === 'Play nearest radio station');
+    check('compact Play is available before a station is selected', compact.playLabel === 'Putar stasiun radio terdekat');
     check('compact Radio controls sit 20px below the launcher', compact.offsetBelowToggle === 20, `${compact.offsetBelowToggle}px`);
     const compactCloseDisclosure = await page.evaluate(() => {
       const launcher = document.getElementById('context-radio-toggle-btn');
@@ -2482,8 +2482,8 @@ async function main() {
       return { texts: radio.getOverlayDiagnostics().clusterTexts };
     });
     check(
-      'Weather / Emergency view labels its cluster callouts WEATHER',
-      weatherCluster.texts.length > 0 && weatherCluster.texts.every((text) => /^\d+ WEATHER$/.test(text)),
+      'Weather / Emergency view labels its cluster callouts CUACA',
+      weatherCluster.texts.length > 0 && weatherCluster.texts.every((text) => /^\d+ CUACA$/.test(text)),
       JSON.stringify(weatherCluster),
     );
     await page.select('#radio-filter', 'news');
@@ -3037,9 +3037,9 @@ async function main() {
         && tunerRefreshRelease.unavailableId === tunerRefreshTarget.id
         && tunerRefreshRelease.selectedId !== tunerRefreshTarget.id
         && tunerRefreshRelease.plays === tunerRefreshTarget.plays
-        && tunerRefreshRelease.value === 'OFF AIR'
-        && tunerRefreshRelease.stationText === 'STATION UNAVAILABLE'
-        && /unavailable after directory refresh/i.test(tunerRefreshRelease.message),
+        && tunerRefreshRelease.value === 'TIDAK SIARAN'
+        && tunerRefreshRelease.stationText === 'STASIUN TIDAK TERSEDIA'
+        && /tidak tersedia setelah direktori diperbarui/i.test(tunerRefreshRelease.message),
       JSON.stringify(tunerRefreshRelease),
     );
     catalogStations = stations;
@@ -4421,7 +4421,7 @@ async function main() {
       'expanded Context Radio icon reveals and scrolls to embedded Radio without an overlay or playback/camera theft',
       expandedContextRadioAfter.ariaControls === 'radio-panel'
         && expandedContextRadioAfter.expanded === 'true'
-        && expandedContextRadioAfter.label === 'Go to expanded Radio section'
+        && expandedContextRadioAfter.label === 'Ke bagian Radio yang terbentang'
         && !expandedContextRadioAfter.radioCollapsed
         && expandedContextRadioAfter.compactHidden
         && expandedContextRadioAfter.scrollTop > expandedContextRadioBefore.scrollTop
