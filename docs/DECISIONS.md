@@ -2420,3 +2420,47 @@ whose `subscribe` returns a bare unsubscribe.
 A sweep for the same pattern (a lazy module read once and stored) found no other
 instances: the remaining `.module` reads in `src/` are all function-local and
 re-read per call.
+
+## 2026-10-21 — The Radio selection marker decides its own horizon visibility at creation
+
+`updateRenderVisibility` owns `entity.show` for every Radio marker, and the
+250 ms poll that drives it early-returns unless the camera has translated at
+least 1 m (`HORIZON_TICK_MS`, `radioCameraPositionChanged`'s
+`HORIZON_CAMERA_MOVE_EPSILON_M`). That gate is correct for the station set:
+station positions are static, so a stationary camera cannot change any of their
+visibility, and the alternative is rewriting 750 flags four times a second while
+voice and audio share the main thread.
+
+It was wrong for the selection entity, because that entity is *new*.
+`updateSelectionEntity` removes and re-adds it on every selection, and a fresh
+Cesium entity defaults to `show: true`. Nothing evaluated that default: with a
+still camera the next poll early-returned, so a station selected on the far side
+of the globe kept drawing its marker and bracket **through the Earth** until the
+camera next moved — not for 250 ms, but indefinitely. Both parts use
+`disableDepthTestDistance: Number.POSITIVE_INFINITY`, so no depth test would
+have caught it either. The paths that reach this are ordinary: voice selection,
+a tuner click, and directory Next without `rotate`.
+
+Proven in the running app before changing anything: camera parked at (0, 0) at
+9,000 km, a station at lon 174 selected with the camera untouched. The layer's
+horizon scan counter stayed at 4 across 1.6 s (≈6 skipped ticks), the shared
+occluder reported `isPointVisible === false` for that exact position, the
+ordinary station marker was correctly hidden — and the selected entity's `show`
+was `true` both immediately and after several ticks.
+
+Two repairs were possible. Forcing a pass on selection (or on camera jumps)
+would have reintroduced the 750-entity scan the gate exists to avoid, and would
+have paid it on an event that changes exactly one entity. Instead the entity
+resolves its own flag at birth from the same occluder the pass uses, through one
+shared pure helper (`radioEntityHorizonVisible`) — one point test, no new scan.
+The verification run confirms the scan counter still does not move (4 → 4) while
+the far-side selection is now hidden and a near-side one still shows.
+
+The helper shows rather than hides when visibility cannot be decided (no
+resolved position, or no usable occluder). Hiding on missing geometry would let
+a marker the camera is plainly pointed at blink out because its sample was taken
+a frame early; drawing one extra marker for a frame is the cheaper failure.
+
+- **Not fixed here:** the same gate still delays *station* markers by up to one
+  tick after a teleport. That is the latency the gate was designed to trade for,
+  and unlike the selection case it self-corrects on the next camera move.

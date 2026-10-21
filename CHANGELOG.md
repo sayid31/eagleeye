@@ -25,6 +25,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Penanda stasiun radio terpilih tidak lagi tembus bola bumi. Saat kamera diam — memilih stasiun lewat
+  suara, klik tuner, atau Berikutnya tanpa rotasi — penanda dan braket stasiun di sisi belakang bumi tetap
+  tergambar sampai kamera digerakkan lagi.
 - Space Missions turns on again: its replay speed slider referenced two constants it never imported, so the
   layer failed during start-up and Contacts → Space Missions always ended in a failure toast.
 - The KOKPIT button appears again once Contacts has a tracked aircraft. The cockpit controller was never
