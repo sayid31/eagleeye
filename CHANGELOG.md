@@ -30,6 +30,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - The KOKPIT button appears again once Contacts has a tracked aircraft. The cockpit controller was never
   given its data-layer accessor, so it could not see the tracked contact and kept the entry button hidden
   even while the aircraft was being followed.
+- Voice and the radio no longer talk over each other. Starting voice pauses the playing station and
+  releases it afterwards, holding Space or the assistant speaking pauses it too, and pressing Play
+  yourself takes the speaker back and closes the voice session without cutting the stream. None of this
+  worked: voice looked up the radio before the radio had loaded, found nothing, and kept that answer for
+  the rest of the session.
 - The bottom dock is smaller, matching the mockup: it was about 60 px tall and stretched its menu to that
   height; it is now about 48 px with a 28 px style menu. The microphone icon sits in the middle of the
   round button instead of low and to the right.

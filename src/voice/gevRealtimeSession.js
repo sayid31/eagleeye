@@ -361,6 +361,13 @@ stop(options = {}) {
       this.radioControlUnsubscribe();
       this.radioControlUnsubscribe = null;
     }
+    if (removeUi && this.radioResolutionUnsubscribe) {
+      // Pending-resolution watcher for a `radio` module that never loaded
+      // during this controller's life — drop it with the rest, or a replaced
+      // controller keeps a live callback into the manager's entry.
+      this.radioResolutionUnsubscribe();
+      this.radioResolutionUnsubscribe = null;
+    }
     if (removeUi && this.radioVisibilityRequestUnsubscribe) {
       this.radioVisibilityRequestUnsubscribe();
       this.radioVisibilityRequestUnsubscribe = null;

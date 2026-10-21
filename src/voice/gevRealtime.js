@@ -42,8 +42,10 @@ export function initGevVoiceCommands({ viewer, styleManager, dataManager, sceneD
   }
   const runner = createGevActionRunner({ viewer, styleManager, dataManager, sceneDirector, annotations });
   const ui = createVoiceControl({ reset: true });
-  const radioLayer = dataManager?.layers?.get('radio')?.module || null;
-  const controller = new GevRealtimeController({ runner, ui, radioLayer, dataManager });
+  // No `radioLayer` here on purpose: `radio` is a registerLazy entry, so its
+  // module is still null at boot and capturing it would pin that null for the
+  // life of the controller. The controller reads it live off dataManager.
+  const controller = new GevRealtimeController({ runner, ui, dataManager });
   // Deferred annotation outlines finish AFTER their tool result returned. Feed the
   // final outcome (resolved / failed) into the conversation so the model can honestly
   // confirm — or correct — what it narrated about a boundary it never saw land.
@@ -72,7 +74,9 @@ export class GevRealtimeController {
   constructor({ runner, ui, radioLayer = null, dataManager = null }) {
     this.runner = runner;
     this.ui = ui;
-    this.radioLayer = radioLayer;
+    // Explicit override only; the real app passes nothing and lets the
+    // `radioLayer` accessor below read the module live. Tests inject a double.
+    this._radioLayerOverride = radioLayer;
     this.dataManager = dataManager;
     this.radioVoiceDucked = false;
     this.pc = null;
@@ -122,21 +126,9 @@ export class GevRealtimeController {
       limits: this.voiceLimits,
     });
     this.costCapStopped = false;
-    this.radioControlUnsubscribe = this.radioLayer?.subscribePlaybackControls?.((control) => {
-      const event = typeof control === 'string'
-        ? { action: control, origin: 'user' }
-        : (control || {});
-      if (
-        event.origin === 'user'
-        && (event.action === 'pause' || event.action === 'stop')
-      ) {
-        this.cancelRadioHandoff();
-      } else if (event.origin === 'user' && event.action === 'play' && this.isActive()) {
-        // Explicit user playback has already reached `playing` under the voice
-        // hard mute. Hand the speaker to Radio without tearing its stream down.
-        this.stop({ preserveRadioPlayback: true });
-      }
-    }) || null;
+    this.radioControlUnsubscribe = null;
+    this.radioResolutionUnsubscribe = null;
+    this.bindRadioPlaybackControls();
     this.radioVisibilityRequestUnsubscribe = this.dataManager?.subscribeVisibilityRequests?.((change) => {
       if (
         change?.layerId === 'radio'
@@ -170,6 +162,25 @@ export class GevRealtimeController {
     this.errors = loadStoredErrors();
     this.sessionId = createDebugSessionId();
     this.debugLog('controller.created', { status: this.status });
+  }
+
+  /**
+   * The live `radio` layer module, or null while it is still unresolved.
+   *
+   * Read through on EVERY access rather than captured once: `radio` is
+   * registered with `registerLazy`, so `entry.module` is null until the user
+   * (or a voice tool) first enables the layer. A boot-time snapshot pins that
+   * null forever, and because every consumer here uses optional chaining the
+   * whole voice-vs-Radio ducking contract then no-ops in silence.
+   */
+  get radioLayer() {
+    if (this._radioLayerOverride) return this._radioLayerOverride;
+    return this.dataManager?.layers?.get('radio')?.module || null;
+  }
+
+  /** Test/compat setter; assigning a module pins it like an injected double. */
+  set radioLayer(value) {
+    this._radioLayerOverride = value || null;
   }
 
   isActive() {

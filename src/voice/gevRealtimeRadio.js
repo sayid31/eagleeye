@@ -2,6 +2,54 @@
 import { silenceRadioForVoice, startPreparedRadioAfterPlaybackReady } from './gevRealtimeRadioHelpers.js';
 
 export const radioMixin = {
+/**
+   * Subscribe to Radio's explicit playback controls, retrying once the lazy
+   * `radio` module resolves.
+   *
+   * At construction time the module is null (registerLazy), so subscribing
+   * eagerly silently installs nothing and never retries — which is how a
+   * user's manual Play stopped being able to take the speaker back from an
+   * active voice session.
+   *
+   * The retry rides the manager's own change stream rather than
+   * `subscribeLayer('radio', ...)`: that one flushes queued callbacks by
+   * calling the resolved module's `subscribe()`, so it would only fire for a
+   * layer whose `subscribe` happens to deliver current state on attach. The
+   * manager stream depends on no layer's semantics and already fires after
+   * the lifecycle work that resolved the module.
+   * @returns {boolean} true once the playback-control subscription is live.
+   */
+  bindRadioPlaybackControls() {
+    if (this.radioControlUnsubscribe) return true;
+    const layer = this.radioLayer;
+    if (!layer) {
+      if (this.radioResolutionUnsubscribe) return false;
+      this.radioResolutionUnsubscribe = this.dataManager?.subscribe?.((change) => {
+        if (change?.layerId && change.layerId !== 'radio') return;
+        if (!this.bindRadioPlaybackControls()) return;
+        this.radioResolutionUnsubscribe?.();
+        this.radioResolutionUnsubscribe = null;
+      }) || null;
+      return false;
+    }
+    this.radioControlUnsubscribe = layer.subscribePlaybackControls?.((control) => {
+      const event = typeof control === 'string'
+        ? { action: control, origin: 'user' }
+        : (control || {});
+      if (
+        event.origin === 'user'
+        && (event.action === 'pause' || event.action === 'stop')
+      ) {
+        this.cancelRadioHandoff();
+      } else if (event.origin === 'user' && event.action === 'play' && this.isActive()) {
+        // Explicit user playback has already reached `playing` under the voice
+        // hard mute. Hand the speaker to Radio without tearing its stream down.
+        this.stop({ preserveRadioPlayback: true });
+      }
+    }) || null;
+    return Boolean(this.radioControlUnsubscribe);
+  },
+
 /** Pause Radio for explicit voice ownership; never resumes it automatically. */
   pauseRadioForVoice() {
     return silenceRadioForVoice({
