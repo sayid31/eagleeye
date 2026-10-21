@@ -5,6 +5,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Fixed
+
+- Lalu lintas tidak lagi menggantung lama saat server peta jalan (Overpass) bermasalah. Dua dari
+  empat alamat mirror ternyata mesin yang sama, sehingga setiap permintaan yang gagal menunggu dua kali
+  untuk satu server mati; alamat ganda itu dihapus. Mirror yang baru saja gagal kini diingat dan
+  dilewati sebentar (1, lalu 5, lalu 15 menit) alih-alih dicoba ulang setiap kali peta digeser, dan
+  saat semua mirror mati aplikasi berhenti mencoba dalam hitungan detik, bukan ~45 detik. Mirror yang
+  sudah pulih tetap dicoba kembali, dan satu permintaan berat yang ditolak server tidak lagi membuat
+  seluruh mirror ikut dilewati. Jika semua mirror benar-benar mati dan area itu belum pernah dimuat,
+  jalan tetap tidak muncul — perubahan ini mempercepat pemberitahuannya, bukan mengada-adakan data.
+
 ### Changed
 
 - The CCTV camera picker shows a chevron, so it reads as a dropdown (the chevron flips while the list is open).
