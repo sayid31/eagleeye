@@ -380,6 +380,11 @@ export class StyleManager {
     /** Pre-Contacts detection state, restored on deactivation (see _syncContactsDetection). */
     this._contactsDetectionRestore = null;
     this.cockpitView = new CockpitViewController(viewer, {
+      // Reads the live `_dataManager` field at call time: the controller is
+      // built before attachDataManager() runs, so a captured value would be
+      // permanently null and every facade read (tracked info, focusTarget)
+      // would silently return nothing.
+      getDataManager: () => this._dataManager,
       onVisionChange: (mode, active, options) => this._setCockpitVision(mode, active, options),
       onCameraTakeover: () => this._stampNavigation({ cancelPendingSelection: false }),
       getInheritedVisionLabel: () => (

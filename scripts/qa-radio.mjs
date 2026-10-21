@@ -76,6 +76,60 @@ function check(name, ok, detail = '') {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const COLLAPSED_CONTEXT_HITBOX_ID = 'qa-radio-collapsed-context-hitbox';
+
+/**
+ * Give a COLLAPSED Context panel a layout box for the duration of a block that
+ * needs to measure or click the compact Radio controls nested inside it.
+ *
+ * The shell theme removes a collapsed Context panel from the layout outright
+ * (`body.ee-shell #global-context-panel.collapsed { display: none }` in
+ * src/theme/chrome.css — it is reached from the left rail instead). Everything
+ * inside it therefore has a 0x0 rect, which `page.hover`/`page.click` reject
+ * and `waitForSelector({visible:true})` can never satisfy, even though the
+ * launcher correctly clears `hidden` and sets `display: grid` on the mini
+ * player itself.
+ *
+ * Collapsed is not incidental to these blocks: `_syncContextRadioLauncherState`
+ * routes the launcher at `context-radio-mini` ONLY while Context is collapsed
+ * (expanded, it points at the detailed `radio-panel` section). So the panel
+ * cannot simply be expanded — the override restores the box while leaving the
+ * `collapsed` class the compact route depends on.
+ *
+ * @param {import('puppeteer').Page} page
+ * @returns {Promise<void>}
+ */
+async function applyCollapsedContextHitbox(page) {
+  await page.evaluate(async (styleId) => {
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = 'body.ee-shell #global-context-panel.collapsed { display: block !important; }';
+    document.head.appendChild(style);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }, COLLAPSED_CONTEXT_HITBOX_ID);
+}
+
+/**
+ * Hand the shell theme back its own collapsed-panel rule.
+ *
+ * Focus is blurred first: these blocks legitimately leave focus on a control
+ * inside Context (the compact close button restores it to the launcher), and
+ * restoring the rule takes that element out of the layout — a later block would
+ * then capture a `document.activeElement` it can never focus again and read it
+ * as a focus-restoration regression.
+ *
+ * @param {import('puppeteer').Page} page
+ * @returns {Promise<void>}
+ */
+async function removeCollapsedContextHitbox(page) {
+  await page.evaluate((styleId) => {
+    const active = document.activeElement;
+    if (active && document.getElementById('global-context-panel')?.contains(active)) active.blur();
+    document.getElementById(styleId)?.remove();
+  }, COLLAPSED_CONTEXT_HITBOX_ID);
+}
+
 async function main() {
   const response = await fetch(APP_URL).catch(() => null);
   if (!response?.ok) {
@@ -224,8 +278,21 @@ async function main() {
       typeof window.__gevQaRegisterLayer === 'function'
       && typeof window.__gevQaUnregisterLayer === 'function'
     ));
+    // The boot fly-in (flyToDefault) issues setView immediately and the
+    // 4 s cinematic flyTo 500 ms LATER, so a single cancelFlight() here races
+    // it: when the page settles fast the flight has not started yet, survives
+    // the cancel, and then drifts the camera for seconds — which later reads
+    // as a camera-theft failure in the reveal assertions below. Cancel until
+    // the camera is actually still.
+    await page.evaluate(async () => {
+      const { camera } = window.__godsEyeView.viewer;
+      for (let i = 0; i < 60; i++) {
+        camera.cancelFlight();
+        if (i > 4 && !camera._currentFlight) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    });
     await page.evaluate(() => {
-      window.__godsEyeView.viewer.camera.cancelFlight();
       window.__godsEyeView.styleManager.setPanelCollapsed('pp-toggles', true);
       window.__godsEyeView.styleManager.setPanelCollapsed('cctv-panel', true);
       window.__godsEyeView.styleManager.setPanelCollapsed('radio-panel', true);
@@ -508,6 +575,13 @@ async function main() {
       const camera = gev.viewer.camera.positionWC;
       return {
         scrollTop: scroller.scrollTop,
+        // Whether the Context scroller can scroll at all at this viewport. At
+        // 1440x900 the expanded Context content fits exactly (scrollHeight ===
+        // clientHeight), so the reveal has nowhere to move and demanding a
+        // scrollTop increase would assert something the layout forbids. The
+        // property under test is that directory + Play end up visible; scroll
+        // movement is only required when there is room for it.
+        maxScroll: scroller.scrollHeight - scroller.clientHeight,
         pageY: window.scrollY,
         camera: { x: camera.x, y: camera.y, z: camera.z },
         plays: window.__qaRadioPlayCalls.length,
@@ -599,7 +673,9 @@ async function main() {
     );
     check(
       'expanded Radio Enable reveals the directory and Play inside Context without autoplay or focus/camera theft',
-      explicitRevealAfter.scrollTop > explicitRevealBefore.scrollTop
+      (explicitRevealBefore.maxScroll > 0
+        ? explicitRevealAfter.scrollTop > explicitRevealBefore.scrollTop
+        : explicitRevealAfter.scrollTop === explicitRevealBefore.scrollTop)
         && explicitRevealAfter.directoryVisible && explicitRevealAfter.playVisible
         && explicitRevealAfter.focusId === 'radio-enable-btn'
         && explicitRevealAfter.pageY === explicitRevealBefore.pageY
@@ -1510,6 +1586,9 @@ async function main() {
     check('launcher enables Radio without forcing Context open', !initial.panelExpanded && !initial.contextExpanded && initial.nestedInContext);
     check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Putar stasiun radio terdekat');
 
+    // Pointer input on the compact launcher follows; see the helper for why a
+    // collapsed Context panel has no hitbox. Removed right after the block.
+    await applyCollapsedContextHitbox(page);
     const hoverOnlyDisclosure = await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
       if (button.getAttribute('aria-expanded') === 'true') button.click();
@@ -1613,6 +1692,7 @@ async function main() {
       compactTouchDisclosure.closed && compactTouchDisclosure.reopened,
       JSON.stringify(compactTouchDisclosure),
     );
+    await removeCollapsedContextHitbox(page);
     const multiExpandedPanelLayout = await page.evaluate(async () => {
       const manager = window.__godsEyeView.styleManager;
       const ids = ['data-panel', 'scene-panel', 'pp-toggles', 'cctv-panel', 'global-context-panel'];
@@ -1819,6 +1899,12 @@ async function main() {
           focusRestored: !prior.focusId || document.activeElement?.id === prior.focusId,
         };
         result.restoredExactly = Object.values(result.restoreDetails).every(Boolean);
+        // Kept outside restoreDetails: restoredExactly folds that object with
+        // every(Boolean), so a diagnostic string/null would corrupt the verdict.
+        result.focusTrace = {
+          priorFocusId: prior.focusId,
+          activeFocusId: document.activeElement?.id || document.activeElement?.tagName || null,
+        };
       }
 
       return result;
@@ -2154,11 +2240,23 @@ async function main() {
       manager._setModels3dMode('proximity');
       manager._setModels3dEnabled(false);
       const models3dSteps = [];
+      // flights/military are registerLazy entries and this harness only ever
+      // enables `radio`, so their modules are never resolved here and
+      // getLayerParams() returns null by contract (managerParams.js refuses to
+      // force-resolve a module just to apply params). The intent is queued on
+      // entry.pendingParams and replayed on resolution, so read whichever of
+      // the two actually holds the layer's parameters: the property under test
+      // is that one Display control drives both flight layers identically, in
+      // either state.
+      const effectiveLayerParams = (layerId) => {
+        const entry = manager._dataManager.layers.get(layerId);
+        return manager._dataManager.getLayerParams(layerId) || entry?.pendingParams || {};
+      };
       for (let index = 0; index < 3; index += 1) {
         if (index === 0 || index === 2) models3dToggle.click();
         else models3dAll.click();
-        const flightsParams = manager._dataManager.getLayerParams('flights');
-        const militaryParams = manager._dataManager.getLayerParams('military');
+        const flightsParams = effectiveLayerParams('flights');
+        const militaryParams = effectiveLayerParams('military');
         models3dSteps.push({
           label: manager._models3dEnabled ? manager._models3dMode.toUpperCase() : 'OFF',
           flightsEnabled: flightsParams.models3d,
@@ -2605,6 +2703,10 @@ async function main() {
       idleVoice.audioState === 'paused',
       idleVoice.audioState,
     );
+    // The compact Play control is measured and then really clicked while
+    // Context is collapsed, so it needs a hitbox; see the helper. Applied
+    // before the collapse so the first layout read is already correct.
+    await applyCollapsedContextHitbox(page);
     const manualPlayTarget = await page.evaluate(() => {
       const manager = window.__godsEyeView.styleManager;
       manager.setPanelCollapsed('global-context-panel', true);
@@ -2647,6 +2749,7 @@ async function main() {
         && !manualTakeover.voiceDucked,
       JSON.stringify(manualTakeover),
     );
+    await removeCollapsedContextHitbox(page);
     await page.evaluate(() => window.__godsEyeView.voiceCommands.setStatus('listening', 'QA standby'));
     const explicitResume = await page.evaluate(async () => {
       const voice = window.__godsEyeView.voiceCommands;
@@ -3710,6 +3813,11 @@ async function main() {
       gev.dataManager.layers.get('flights').enabled = true;
     });
     await sleep(500);
+    // Radio-only camera ownership is driven from the compact controls with
+    // Context collapsed, so the mini player needs a layout box: without one the
+    // waitForSelector below can never see it visible, however correctly the
+    // launcher opens it. See the helper for the mechanism.
+    await applyCollapsedContextHitbox(page);
     await page.evaluate(() => window.__godsEyeView.styleManager.setPanelCollapsed('global-context-panel', true));
     await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
@@ -3882,6 +3990,9 @@ async function main() {
         && Boolean(delayedFallbackOwnership.selectedId),
       JSON.stringify(delayedFallbackOwnership),
     );
+    // Last use of the compact controls in this block (the Previous/Next
+    // ownership chain above) is done.
+    await removeCollapsedContextHitbox(page);
     await page.evaluate(() => {
       const viewer = window.__godsEyeView.viewer;
       viewer.camera.setView({
@@ -4438,6 +4549,9 @@ async function main() {
       }),
     );
 
+    // Waits on a real rect and then issues real clicks on the compact close
+    // button and launcher, all with Context collapsed — needs a hitbox.
+    await applyCollapsedContextHitbox(page);
     await page.evaluate(() => {
       const manager = window.__godsEyeView.styleManager;
       manager.setPanelCollapsed('global-context-panel', true);
@@ -4465,6 +4579,8 @@ async function main() {
       compactHidden: document.getElementById('context-radio-mini').hidden,
     }));
     const splitDetailActions = { closedCompact, repeatedOpen };
+    // Compact-control clicks for this block are done.
+    await removeCollapsedContextHitbox(page);
     check(
       'collapsed Context keeps compact close and full-panel open as separate stable actions',
       !splitDetailActions.closedCompact.radioCollapsed

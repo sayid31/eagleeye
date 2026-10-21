@@ -2384,3 +2384,39 @@ Two public Google My Maps documents (58 shelters, 86 sirens) were requested as a
 - **Sirens marked inactive are shown.** 38 of 86 are "TIDAK AKTIF" and 12 more "Tidak Berfungsi" in the source; hiding them would misstate coverage, so the card shows the condition as published.
 - **Registry growth.** The layer-state registry goes from 16 to 17 layers (token `k`) and the voice tool schema pin was re-pinned (new layerId enum value), as the earlier pins describe.
 - **Not verified:** rendering in a browser and the sirens' real condition (the map may be out of date).
+
+## 2026-10-21 — Voice reads the `radio` module live instead of back-filling it at resolution
+
+`initGevVoiceCommands` captured `dataManager.layers.get('radio').module` once
+and handed it to `GevRealtimeController`. Since the lazy-layers change `radio`
+resolves only on first enable, so that value was always `null`, and every
+consumer reaches it as `this.radioLayer?.method?.()` — so the whole
+voice-vs-Radio contract (ducking, pause-for-voice, the user-Play speaker
+handoff) no-opped with no error, no warning and no failed assertion. Proven in
+the running app before changing anything: at boot `entry.module === null` and
+`controller.radioLayer === null`; after enabling the layer the module exists but
+the controller's field stays `null`, and a `setVoiceDucked` spy on the real
+module records zero calls.
+
+Two repairs were possible. Back-filling the field from
+`_ensureModuleResolved` would have put voice-specific knowledge into the
+manager's generic resolution path and left the same stale-capture hazard for
+the next consumer. Instead the controller keeps no captured module: `radioLayer`
+is a getter that looks the entry up on each access, so it cannot go stale, and a
+`_radioLayerOverride` preserves the injected-double constructor path the
+existing suite depends on.
+
+The playback-control subscription needed its own fix — it cannot be re-derived
+on access, because subscribing eagerly to a null module installed nothing and
+never retried. `bindRadioPlaybackControls()` subscribes when the module appears,
+watching the manager's own change stream rather than
+`subscribeLayer('radio', …)`: that facade flushes queued callbacks by calling
+the resolved module's `subscribe()`, so it only fires for layers whose
+`subscribe` delivers current state on attach. Radio's does, which would have
+made the test pass for a reason that is not the contract; the manager stream
+depends on no layer's semantics. A unit test caught exactly this, with a double
+whose `subscribe` returns a bare unsubscribe.
+
+A sweep for the same pattern (a lazy module read once and stored) found no other
+instances: the remaining `.module` reads in `src/` are all function-local and
+re-read per call.

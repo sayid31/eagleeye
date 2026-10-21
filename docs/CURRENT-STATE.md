@@ -96,6 +96,16 @@ Historical planning documents may not match runtime behavior.
   silently dropping it — this is what lets the always-visible CCTV sync
   chip and cockpit radio mini-player keep working even though CCTV/Radio
   themselves no longer eagerly subscribe at boot.
+- **No long-lived consumer captures a lazy layer's module.** A module read
+  at construction time is `null` for every lazy layer, and because consumers
+  reach it through optional chaining, storing that null disables a feature
+  without raising anything. `GevRealtimeController` therefore resolves
+  `radio` through a live accessor on each access rather than a constructor
+  argument, and installs its playback-control subscription when the module
+  resolves (watching the manager's change stream, not the layer's own
+  `subscribe`, which only replays for layers that deliver state on attach).
+  See `docs/DECISIONS.md` for why the live read is preferred over
+  back-filling the field at resolution time.
 - **Not every layer achieves a separate build chunk.** `earthquakes`,
   `bikeshare`, `traffic`, `radio`, `rocket-launches`, and `cctv` code-split
   cleanly. `flights.js`, `militaryFlights.js`, `satellites.js`,

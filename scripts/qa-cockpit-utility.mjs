@@ -1495,7 +1495,7 @@ try {
     JSON.stringify(visionCycle.states.map((state) => state.mode))
       === JSON.stringify(['optical', 'crt', 'nvg', 'thermal', 'noir', 'optical'])
       && visionCycle.states[4]?.label === 'NOIR'
-      && visionCycle.states[4]?.aria === 'Current cockpit vision style: Noir. Activate for next style.',
+      && visionCycle.states[4]?.aria === 'Gaya penglihatan kokpit saat ini: Noir. Aktifkan untuk gaya berikutnya.',
     JSON.stringify(visionCycle),
   );
   check(
@@ -1904,7 +1904,7 @@ try {
     contextTransition.afterExpansion === 1
       && contextTransition.afterRepeatedExpansion === 1
       && contextTransition.ariaExpanded === 'true'
-      && contextTransition.label === 'Collapse Contact panel',
+      && contextTransition.label === 'Ciutkan panel Kontak',
     JSON.stringify(contextTransition),
   );
   await page.screenshot({ path: path.join(shotsDir, 'restored-desktop.png') });
