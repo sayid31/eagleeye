@@ -3868,7 +3868,11 @@ async function main() {
       flyToCalls: window.__qaRadioFlyToCalls.length,
       flightTargets,
       cameraHeight: window.__qaRadioCameraHeight,
-      compactPlayLabel: document.getElementById('context-radio-mini-play-btn').getAttribute('aria-label'),
+      // Structural, not textual: the aria-label is localized copy, so asserting
+      // on it breaks on every translation pass. `active` + the glyph are the
+      // state the control actually renders.
+      compactPlayActive: document.getElementById('context-radio-mini-play-btn').classList.contains('active'),
+      compactPlayGlyph: document.getElementById('context-radio-mini-play-btn').textContent,
       regularMarkerSize: Array.from({ length: window.__godsEyeView.viewer.dataSources.length }, (_, index) => window.__godsEyeView.viewer.dataSources.get(index))
         .find((item) => item.name === 'Radio stations')?.entities.values[0]?.point?.pixelSize?.getValue(),
       selectedMarkerSize: selectedEntity?.point?.pixelSize?.getValue(),
@@ -3892,7 +3896,15 @@ async function main() {
         fallback: playing.expectedFallback?.id,
       }),
     );
-    check('compact next is explicit playback and updates play/pause state', playing.calls.length === 2 && playing.compactPlayLabel.startsWith('Pause'));
+    check(
+      'compact next is explicit playback and updates play/pause state',
+      playing.calls.length === 2 && playing.compactPlayActive && playing.compactPlayGlyph === 'Ⅱ',
+      JSON.stringify({
+        calls: playing.calls.length,
+        active: playing.compactPlayActive,
+        glyph: playing.compactPlayGlyph,
+      }),
+    );
     check(
       'compact next rotates toward its station without changing zoom, including fallback',
       playing.flyToCalls === 2
@@ -4037,12 +4049,28 @@ async function main() {
         destination,
         orientation: { heading: 0, pitch: -Math.PI / 2, roll: 0 },
       });
-      const selectedEntity = viewer.entities.values
-        .find((entity) => String(entity.id) === `radio:selected:${selected.id}`);
       const { getOverlayPaintRect, getWorldOverlayDiagnostics } = await import('/src/overlays/worldOverlay.js');
       const expectedEntryId = `selected:${selected.id}`;
+      // Re-read rather than capture: updateSelectionEntity removes and re-adds
+      // the entity, so a reference taken before the settle loop can outlive the
+      // object the layer is actually drawing.
+      const findSelectedEntity = () => viewer.entities.values
+        .find((entity) => String(entity.id) === `radio:selected:${selected.id}`);
+      // `show` is recomputed by the horizon pass, which polls every
+      // HORIZON_TICK_MS (250 ms) and skips the scan entirely while the camera
+      // has moved less than 1 m (radioOverlay.js updateRenderVisibility +
+      // radioCameraPositionChanged). The setView above leaves the camera
+      // perfectly still, so after the pass lands at the new pose it stops
+      // re-running. Settling on `rect` alone therefore samples `show` in a
+      // window where it can still hold the pre-jump value — a ~1-in-5 flake.
+      // Wait for both, and keep the camera untouched so the view under test is
+      // the stationary one the check is named for.
       let painted = null;
-      for (let attempt = 0; attempt < 20 && !painted?.rect; attempt += 1) {
+      for (
+        let attempt = 0;
+        attempt < 20 && (!painted?.rect || findSelectedEntity()?.show !== true);
+        attempt += 1
+      ) {
         painted = await new Promise((resolve) => {
           let removePostRender = null;
           const timeout = setTimeout(() => {
@@ -4065,7 +4093,7 @@ async function main() {
         expectedEntryId,
         rect: painted?.rect || null,
         host: painted?.host || getWorldOverlayDiagnostics(),
-        selectedEntityShow: selectedEntity?.show,
+        selectedEntityShow: findSelectedEntity()?.show,
         cameraHeight: viewer.camera.positionCartographic.height,
       };
     });
@@ -4517,6 +4545,7 @@ async function main() {
         radioCollapsed: radio.classList.contains('collapsed'),
         compactHidden: document.getElementById('context-radio-mini').hidden,
         scrollTop: scroller.scrollTop,
+        overflowRoom: scroller.scrollHeight - scroller.clientHeight,
         focusTarget: document.activeElement?.getAttribute('data-collapse-target'),
         pageY: window.scrollY,
         camera: { x: camera.x, y: camera.y, z: camera.z },
@@ -4536,7 +4565,15 @@ async function main() {
         && expandedContextRadioAfter.label === 'Ke bagian Radio yang terbentang'
         && !expandedContextRadioAfter.radioCollapsed
         && expandedContextRadioAfter.compactHidden
-        && expandedContextRadioAfter.scrollTop > expandedContextRadioBefore.scrollTop
+        // Only assert movement when there is room to move. At a tall viewport
+        // the expanded Context host grows to fit instead of scrolling
+        // (max-height leaves slack), so _revealRadioPanelInsideContext clamps
+        // its target to the 0-height scroll range and correctly reports "did
+        // not move" — the Radio section is already fully visible. Demanding a
+        // scroll there asserts the viewport, not the reveal.
+        && (expandedContextRadioAfter.overflowRoom > 0
+          ? expandedContextRadioAfter.scrollTop > expandedContextRadioBefore.scrollTop
+          : expandedContextRadioAfter.scrollTop === 0)
         && expandedContextRadioAfter.focusTarget === 'radio-panel'
         && expandedContextRadioAfter.pageY === expandedContextRadioBefore.pageY
         && expandedContextRadioCameraDelta < 0.01
