@@ -129,10 +129,60 @@ export function deriveFetchCenter({ nadirLat, nadirLon, hitLat, hitLon, maxPullK
 export function clampBoundsAroundCenter(bounds, center, maxSpanDeg = 0.05) {
   const latSpan = Math.min(bounds.north - bounds.south, maxSpanDeg);
   const lonSpan = Math.min(bounds.east - bounds.west, maxSpanDeg);
+  const snapped = snapFetchCenter(center);
   return {
-    south: center.lat - latSpan / 2,
-    north: center.lat + latSpan / 2,
-    west: center.lon - lonSpan / 2,
-    east: center.lon + lonSpan / 2,
+    south: snapped.lat - latSpan / 2,
+    north: snapped.lat + latSpan / 2,
+    west: snapped.lon - lonSpan / 2,
+    east: snapped.lon + lonSpan / 2,
   };
+}
+
+/**
+ * @const {number} Grid pitch (degrees) the fetch center is snapped to —
+ * 0.0125° ≈ 1.4 km, a quarter of the 0.05° (~5.5 km) box span.
+ *
+ * Chosen by measuring 500 cached road fetch boxes (2026-10-22): snapping
+ * deduplicated them 5.26x at this pitch, against 4.31x at 0.01° and 6.33x at
+ * 0.025°. The pitch is bounded ABOVE by how far the box may slide off the
+ * camera's look-at point — worst case half the pitch per axis, ~700 m, well
+ * inside the ~2.8 km half-span, so the look-at point stays comfortably inside
+ * the box. A coarser pitch dedupes better but drifts the box further from what
+ * the user is looking at, and `MIN_CENTER_SHIFT_KM` (0.35 km) would stop
+ * gating pans usefully.
+ */
+export const FETCH_GRID_PITCH_DEG = 0.0125;
+
+/**
+ * Snap a fetch center onto a fixed global grid.
+ *
+ * The fetch bbox is the Overpass cache key (a hash of the exact query text), so
+ * an unsnapped camera-centered box made nearly every revisit a cache miss: the
+ * same 500 boxes above covered only 372 distinct positions, and at the coarser
+ * 0.05° cell level 598 road payloads fell into just 67 cells (~8.9x redundant
+ * fetching). Snapping the CENTER — rather than growing the box — is what keeps
+ * this free: `allocateRoadDotBudgets` spreads MAX_DOTS across every road the
+ * fetch returns, with no viewport cull, so a larger box would dilute dot
+ * density in the visible area.
+ *
+ * Longitude is snapped on the same degree grid as latitude, so cells narrow
+ * toward the poles. That is deliberate: it keeps the grid stable and seam-free
+ * at any latitude, and the traffic layer only runs below 8 km altitude where
+ * the cell is small regardless.
+ *
+ * @param {{lat:number, lon:number}} center - Unsnapped fetch center (degrees).
+ * @param {number} [pitchDeg=FETCH_GRID_PITCH_DEG] - Grid pitch in degrees.
+ * @returns {{lat:number, lon:number}} Snapped center, or the input unchanged
+ *   when it is not finite or the pitch is non-positive.
+ */
+export function snapFetchCenter(center, pitchDeg = FETCH_GRID_PITCH_DEG) {
+  const lat = center?.lat;
+  const lon = center?.lon;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return center;
+  if (!Number.isFinite(pitchDeg) || pitchDeg <= 0) return { lat, lon };
+  // Snap, then round to 6 decimals: the raw product carries float noise
+  // (e.g. 29.999999999999996) that would reach the cache key as a distinct
+  // string and defeat the whole point.
+  const quantize = (value) => Number((Math.round(value / pitchDeg) * pitchDeg).toFixed(6));
+  return { lat: quantize(lat), lon: quantize(lon) };
 }
