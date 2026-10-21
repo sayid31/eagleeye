@@ -76,6 +76,60 @@ function check(name, ok, detail = '') {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const COLLAPSED_CONTEXT_HITBOX_ID = 'qa-radio-collapsed-context-hitbox';
+
+/**
+ * Give a COLLAPSED Context panel a layout box for the duration of a block that
+ * needs to measure or click the compact Radio controls nested inside it.
+ *
+ * The shell theme removes a collapsed Context panel from the layout outright
+ * (`body.ee-shell #global-context-panel.collapsed { display: none }` in
+ * src/theme/chrome.css — it is reached from the left rail instead). Everything
+ * inside it therefore has a 0x0 rect, which `page.hover`/`page.click` reject
+ * and `waitForSelector({visible:true})` can never satisfy, even though the
+ * launcher correctly clears `hidden` and sets `display: grid` on the mini
+ * player itself.
+ *
+ * Collapsed is not incidental to these blocks: `_syncContextRadioLauncherState`
+ * routes the launcher at `context-radio-mini` ONLY while Context is collapsed
+ * (expanded, it points at the detailed `radio-panel` section). So the panel
+ * cannot simply be expanded — the override restores the box while leaving the
+ * `collapsed` class the compact route depends on.
+ *
+ * @param {import('puppeteer').Page} page
+ * @returns {Promise<void>}
+ */
+async function applyCollapsedContextHitbox(page) {
+  await page.evaluate(async (styleId) => {
+    if (document.getElementById(styleId)) return;
+    const style = document.createElement('style');
+    style.id = styleId;
+    style.textContent = 'body.ee-shell #global-context-panel.collapsed { display: block !important; }';
+    document.head.appendChild(style);
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  }, COLLAPSED_CONTEXT_HITBOX_ID);
+}
+
+/**
+ * Hand the shell theme back its own collapsed-panel rule.
+ *
+ * Focus is blurred first: these blocks legitimately leave focus on a control
+ * inside Context (the compact close button restores it to the launcher), and
+ * restoring the rule takes that element out of the layout — a later block would
+ * then capture a `document.activeElement` it can never focus again and read it
+ * as a focus-restoration regression.
+ *
+ * @param {import('puppeteer').Page} page
+ * @returns {Promise<void>}
+ */
+async function removeCollapsedContextHitbox(page) {
+  await page.evaluate((styleId) => {
+    const active = document.activeElement;
+    if (active && document.getElementById('global-context-panel')?.contains(active)) active.blur();
+    document.getElementById(styleId)?.remove();
+  }, COLLAPSED_CONTEXT_HITBOX_ID);
+}
+
 async function main() {
   const response = await fetch(APP_URL).catch(() => null);
   if (!response?.ok) {
@@ -1532,22 +1586,9 @@ async function main() {
     check('launcher enables Radio without forcing Context open', !initial.panelExpanded && !initial.contextExpanded && initial.nestedInContext);
     check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Putar stasiun radio terdekat');
 
-    // This block exercises the COLLAPSED-Context route of the launcher:
-    // _syncContextRadioLauncherState() points it at `context-radio-mini` only
-    // while Context is collapsed (expanded, it routes to the detailed
-    // `radio-panel` section instead). But the shell theme removes a collapsed
-    // Context panel from the layout (`display: none` — it is reached from the
-    // left rail), leaving the launcher a 0x0 rect that page.hover/page.click
-    // reject outright. Give it back a box with a scoped override so real
-    // pointer input lands, without touching the `collapsed` class the route
-    // depends on. Removed right after the block.
-    await page.evaluate(async () => {
-      const style = document.createElement('style');
-      style.id = 'qa-radio-collapsed-context-hitbox';
-      style.textContent = 'body.ee-shell #global-context-panel.collapsed { display: block !important; }';
-      document.head.appendChild(style);
-      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    });
+    // Pointer input on the compact launcher follows; see the helper for why a
+    // collapsed Context panel has no hitbox. Removed right after the block.
+    await applyCollapsedContextHitbox(page);
     const hoverOnlyDisclosure = await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
       if (button.getAttribute('aria-expanded') === 'true') button.click();
@@ -1651,16 +1692,7 @@ async function main() {
       compactTouchDisclosure.closed && compactTouchDisclosure.reopened,
       JSON.stringify(compactTouchDisclosure),
     );
-    // Collapsed-Context pointer block is done: hand the shell theme back its
-    // own collapsed-panel layout rule. The compact close button legitimately
-    // leaves focus on the launcher, which the restored rule then takes out of
-    // the layout — so blur it first. Otherwise later blocks capture a
-    // `document.activeElement` they can never focus again and read it as a
-    // focus-restoration regression.
-    await page.evaluate(() => {
-      document.getElementById('context-radio-toggle-btn')?.blur();
-      document.getElementById('qa-radio-collapsed-context-hitbox')?.remove();
-    });
+    await removeCollapsedContextHitbox(page);
     const multiExpandedPanelLayout = await page.evaluate(async () => {
       const manager = window.__godsEyeView.styleManager;
       const ids = ['data-panel', 'scene-panel', 'pp-toggles', 'cctv-panel', 'global-context-panel'];
@@ -2671,6 +2703,10 @@ async function main() {
       idleVoice.audioState === 'paused',
       idleVoice.audioState,
     );
+    // The compact Play control is measured and then really clicked while
+    // Context is collapsed, so it needs a hitbox; see the helper. Applied
+    // before the collapse so the first layout read is already correct.
+    await applyCollapsedContextHitbox(page);
     const manualPlayTarget = await page.evaluate(() => {
       const manager = window.__godsEyeView.styleManager;
       manager.setPanelCollapsed('global-context-panel', true);
@@ -2713,6 +2749,7 @@ async function main() {
         && !manualTakeover.voiceDucked,
       JSON.stringify(manualTakeover),
     );
+    await removeCollapsedContextHitbox(page);
     await page.evaluate(() => window.__godsEyeView.voiceCommands.setStatus('listening', 'QA standby'));
     const explicitResume = await page.evaluate(async () => {
       const voice = window.__godsEyeView.voiceCommands;
@@ -3776,6 +3813,11 @@ async function main() {
       gev.dataManager.layers.get('flights').enabled = true;
     });
     await sleep(500);
+    // Radio-only camera ownership is driven from the compact controls with
+    // Context collapsed, so the mini player needs a layout box: without one the
+    // waitForSelector below can never see it visible, however correctly the
+    // launcher opens it. See the helper for the mechanism.
+    await applyCollapsedContextHitbox(page);
     await page.evaluate(() => window.__godsEyeView.styleManager.setPanelCollapsed('global-context-panel', true));
     await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
@@ -3948,6 +3990,9 @@ async function main() {
         && Boolean(delayedFallbackOwnership.selectedId),
       JSON.stringify(delayedFallbackOwnership),
     );
+    // Last use of the compact controls in this block (the Previous/Next
+    // ownership chain above) is done.
+    await removeCollapsedContextHitbox(page);
     await page.evaluate(() => {
       const viewer = window.__godsEyeView.viewer;
       viewer.camera.setView({
@@ -4504,6 +4549,9 @@ async function main() {
       }),
     );
 
+    // Waits on a real rect and then issues real clicks on the compact close
+    // button and launcher, all with Context collapsed — needs a hitbox.
+    await applyCollapsedContextHitbox(page);
     await page.evaluate(() => {
       const manager = window.__godsEyeView.styleManager;
       manager.setPanelCollapsed('global-context-panel', true);
@@ -4531,6 +4579,8 @@ async function main() {
       compactHidden: document.getElementById('context-radio-mini').hidden,
     }));
     const splitDetailActions = { closedCompact, repeatedOpen };
+    // Compact-control clicks for this block are done.
+    await removeCollapsedContextHitbox(page);
     check(
       'collapsed Context keeps compact close and full-panel open as separate stable actions',
       !splitDetailActions.closedCompact.radioCollapsed
