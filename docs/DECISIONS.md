@@ -6,6 +6,70 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-21 — Overpass mirrors are de-aliased and carry per-host failure memory
+
+**Symptom.** Traffic stopped loading: `trafficLoad.js` logged
+`Overpass API returned 502` on every viewport move, and each attempt sat for
+roughly 45 s first.
+
+**Root cause.** Two separate things, both upstream-triggered but both made worse
+by our own list.
+
+1. All three real Overpass hosts were down at once (`overpass-api.de` and
+   `lz4.overpass-api.de` refused TCP on 443 and 80; `193.219.97.30` accepted TCP
+   and answered `GET /` in 0.75 s but never answered `/api/status` or
+   `/api/interpreter` — webserver alive, Overpass backend dead). The proxy's
+   serve-stale path only covers viewports already in the 24 h memory / 7-day
+   disk cache, so a fresh viewport legitimately had nothing to serve and
+   returned 502. That part was correct behavior.
+2. `OVERPASS_UPSTREAMS` listed four entries for three machines:
+   `overpass.kumi.systems` is a CNAME to `overpass.private.coffee` (confirmed
+   against the system resolver, 1.1.1.1 and 8.8.8.8 to rule out local
+   tampering — both land on `193.219.97.30`). The duplicated host was the
+   *hanging* one, so each failed request paid `OVERPASS_TIMEOUT_MS` twice for
+   one dead box, and the sweep had no memory: the client's two-pass loader
+   re-paid the full sweep on every viewport move.
+
+**Decision.** Keep one entry per distinct host, and give the sweep failure
+memory, splitting failures by whose fault they are.
+
+- **De-aliased list.** `overpass.kumi.systems` removed. The constant's doc
+  comment now requires resolving a new mirror before adding it. (Note
+  `overpass-api.de` and `lz4.overpass-api.de` *share* `65.109.112.52` in DNS but
+  are documented as distinct instances with separate backends, and behaved
+  differently during the outage, so both stay.)
+- **Host fault parks the mirror.** Timeout/abort, refused connection, DNS, TLS,
+  5xx, and rate limit are properties of the host, so the mirror is parked on a
+  1 min → 5 min → 15 min ladder. The ladder is gentle at first because a single
+  failure is usually a blip, and capped at 15 min so a recovered mirror is
+  always retried within one exploration session — a parked mirror is a pause,
+  never a blacklist. Any usable response resets it to rung one.
+- **Query fault does not.** An Overpass `runtime error`/`timed out` body, or a
+  response above our read cap, means the host answered and *this query* was too
+  expensive. Parking the mirror there would let one multi-MB boundary pivot
+  strand the cheap road fetches queued behind it, so those outcomes clear the
+  memory instead. This is the distinction `noteOverpassEndpointOutcome` owns.
+- **Total outage costs one probe.** When every mirror is parked, the sweep tries
+  exactly one — the mirror closest to recovery, so probes rotate across hosts
+  instead of hammering one. The caller's whole fallback is its stale cache, and
+  that is only worth reaching quickly; spending one timeout per mirror first
+  bought nothing. A failed probe pushes that host's cooldown furthest out, which
+  is what makes the rotation self-organizing with no extra state.
+- **Process-lifetime state, not persisted.** The most common reason to restart
+  the dev server is that the operator changed something, so a restart should
+  start optimistic rather than inherit a stale verdict.
+
+**Why a separate module.** `overpassCore.mjs` was already at the 500-line limit.
+The breaker is self-contained policy whose scheduling decision is a pure
+function of (endpoints, state, now) — the live `Map` is only a default argument —
+so it tests without timers or network and leaves the core's call sites one line
+each.
+
+**Not changed.** The 502 itself, the serve-stale-at-any-age rule, and
+`OVERPASS_TIMEOUT_MS`. When every mirror is genuinely down and the viewport was
+never cached, there is no road geometry to show; this change makes the app say
+so in seconds instead of ~45 s, it does not invent data.
+
 ## 2026-10-12 — CCTV: hls.js first, native HLS only as its fallback
 
 **Decision.** `attachHlsJs` is the single entry for HLS feeds. It tries hls.js

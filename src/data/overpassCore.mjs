@@ -20,17 +20,22 @@ import { promises as fsp } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { readResponseTextCapped } from '../server/proxyInfra.mjs';
+import { noteOverpassEndpointOutcome, planOverpassAttempts } from './overpassBreaker.mjs';
 
 // ---------------------------------------------------------------------------
 // Overpass API proxy constants and cache state
 // ---------------------------------------------------------------------------
-/** Ordered list of Overpass API mirrors; tried sequentially on failure/rate-limit. */
-const OVERPASS_UPSTREAMS = [
+/**
+ * Ordered list of Overpass API mirrors; tried sequentially on failure/rate-limit.
+ * ONE ENTRY PER DISTINCT HOST — resolve any new mirror first and check it is
+ * not a CNAME of one already listed (see docs/DECISIONS.md 2026-10-21).
+ * Exported for tests.
+ */
+export const OVERPASS_UPSTREAMS = [
   'https://overpass-api.de/api/interpreter',
-  'https://overpass.kumi.systems/api/interpreter',
   'https://lz4.overpass-api.de/api/interpreter',
   // Community full-planet instance (privateforge nonprofit) — added 2026-07-30
-  // when all three mirrors above refused this IP (likely a dev-traffic rate
+  // when both mirrors above refused this IP (likely a dev-traffic rate
   // ban; refused connections fail in ms, so healthy mirrors above still win).
   // Verified: planet coverage (Texas query), CORS *, ~5-20 s cold latency.
   'https://overpass.private.coffee/api/interpreter',
@@ -454,6 +459,8 @@ function overpassLooksRuntimeError(bodyText) {
  * mirror. If all mirrors fail, returns the last rate-limited payload
  * (if any) or throws the last error.
  *
+ * Only mirrors outside their breaker cooldown are tried (overpassBreaker.mjs).
+ *
  * @param {string} body - URL-encoded Overpass QL query body.
  * @param {number} [maxResponseBytes] Endpoint-specific response cap.
  * @returns {Promise<{status:number,body:string,contentType:string,endpoint:string,rateLimited:boolean}>}
@@ -462,7 +469,7 @@ export async function fetchOverpassPayload(body, maxResponseBytes = OVERPASS_MAX
   let lastError = null;
   let lastRateLimitPayload = null;
 
-  for (const endpoint of OVERPASS_UPSTREAMS) {
+  for (const endpoint of planOverpassAttempts(OVERPASS_UPSTREAMS)) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
 
@@ -492,25 +499,30 @@ export async function fetchOverpassPayload(body, maxResponseBytes = OVERPASS_MAX
       };
 
       if (rateLimited) {
+        noteOverpassEndpointOutcome(endpoint, 'rate-limited');
         lastRateLimitPayload = payload;
         continue;
       }
       // A 200 body carrying a runtime error / timeout is a transient upstream
       // failure — skip to the next mirror rather than returning or caching it.
       if (runtimeError) {
+        noteOverpassEndpointOutcome(endpoint, 'runtime-error');
         lastError = new Error(`Overpass runtime error (${endpoint})`);
         continue;
       }
       if (status >= 500) {
+        noteOverpassEndpointOutcome(endpoint, 'server-error');
         lastError = new Error(`Overpass upstream returned ${status} (${endpoint})`);
         continue;
       }
 
       // Success: decimate giant boundary geometry before it reaches the cache,
       // the disk, or the client (what makes the 32 MB read cap safe to hold).
+      noteOverpassEndpointOutcome(endpoint, 'ok');
       payload.body = simplifyOverpassPayloadBody(payload.body);
       return payload;
     } catch (error) {
+      noteOverpassEndpointOutcome(endpoint, error);
       lastError = error;
     } finally {
       clearTimeout(timeoutId);
