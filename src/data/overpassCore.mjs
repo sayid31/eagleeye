@@ -21,6 +21,8 @@ import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { readResponseTextCapped } from '../server/proxyInfra.mjs';
 import { noteOverpassEndpointOutcome, planOverpassAttempts } from './overpassBreaker.mjs';
+import { noteOverpassDiskWrite } from './overpassDiskBudget.mjs';
+import { simplifyOverpassPayloadBody } from './overpassSimplify.mjs';
 
 // ---------------------------------------------------------------------------
 // Overpass API proxy constants and cache state
@@ -51,6 +53,12 @@ export const OVERPASS_UPSTREAMS = [
 const OVERPASS_CACHE_MS = 86_400_000;
 /** Disk-cache TTL for Overpass responses (ms) — 7 days. */
 const OVERPASS_DISK_TTL_MS = 7 * 86_400_000;
+/**
+ * Disk-cache TTL for ROAD-class queries (the traffic layer's `highway`
+ * selector) — 60 days. The road graph changes on construction timescales, not
+ * weekly (see docs/DECISIONS.md 2026-10-21).
+ */
+const OVERPASS_ROAD_DISK_TTL_MS = 60 * 86_400_000;
 /**
  * Disk-cache TTL for BOUNDARY-class queries (is_in / admin-relation pivots) — 30
  * days. Admin boundaries change ≈never, and their pivots are the most expensive
@@ -84,113 +92,42 @@ export function isOverpassBoundaryQuery(cacheKey) {
   return /is_in\s*\(|\bpivot\b/i.test(String(cacheKey || ''));
 }
 
-/** Disk TTL for a query: boundary geometry keeps for a month, the rest 7 days. */
-export function overpassDiskTtlMs(cacheKey) {
-  return isOverpassBoundaryQuery(cacheKey) ? OVERPASS_BOUNDARY_DISK_TTL_MS : OVERPASS_DISK_TTL_MS;
-}
-
-/** Iterative Douglas-Peucker on [{lat,lon},...] (planar-degree approx — fine at
- *  the ~44 m tolerance used here). Endpoints always kept. */
-function douglasPeucker(points, toleranceDeg) {
-  const n = points.length;
-  if (n <= 2) return points;
-  const keep = new Uint8Array(n);
-  keep[0] = 1;
-  keep[n - 1] = 1;
-  const stack = [[0, n - 1]];
-  while (stack.length) {
-    const [a, b] = stack.pop();
-    if (b - a < 2) continue;
-    const ax = points[a].lon;
-    const ay = points[a].lat;
-    const vx = points[b].lon - ax;
-    const vy = points[b].lat - ay;
-    const c2 = vx * vx + vy * vy;
-    let worst = -1;
-    let worstDist = toleranceDeg;
-    for (let i = a + 1; i < b; i++) {
-      const wx = points[i].lon - ax;
-      const wy = points[i].lat - ay;
-      let d;
-      if (c2 === 0) {
-        d = Math.hypot(wx, wy);
-      } else {
-        const t = Math.max(0, Math.min(1, (vx * wx + vy * wy) / c2));
-        d = Math.hypot(wx - t * vx, wy - t * vy);
-      }
-      if (d > worstDist) {
-        worstDist = d;
-        worst = i;
-      }
-    }
-    if (worst >= 0) {
-      keep[worst] = 1;
-      stack.push([a, worst], [worst, b]);
-    }
-  }
-  const out = [];
-  for (let i = 0; i < n; i++) if (keep[i]) out.push(points[i]);
-  return out;
-}
-
-/** Simplify one element's geometry array in place if it is big enough. */
-function simplifyElementGeometry(el, minPoints, toleranceDeg) {
-  if (Array.isArray(el?.geometry) && el.geometry.length >= minPoints) {
-    el.geometry = douglasPeucker(el.geometry, toleranceDeg);
-  }
-  if (Array.isArray(el?.members)) {
-    for (const member of el.members) {
-      if (Array.isArray(member?.geometry) && member.geometry.length >= minPoints) {
-        member.geometry = douglasPeucker(member.geometry, toleranceDeg);
-      }
-    }
-  }
+/**
+ * Whether a normalized Overpass query is ROAD-class — the traffic layer's
+ * `highway` selector. Road geometry is as static as admin boundaries in
+ * practice, so it earns a long disk TTL of its own. Exported for tests.
+ */
+export function isOverpassRoadQuery(cacheKey) {
+  return /\[\s*["']?highway["']?\s*[~=]/.test(String(cacheKey || ''));
 }
 
 /**
- * Server-side geometry simplification for large Overpass `out geom` payloads.
- * Region/state boundary pivots return multi-MB coastline rings whose fidelity
- * nothing downstream needs (the client re-simplifies for draw); decimating them
- * HERE shrinks the disk cache, the wire, and client parse time — and is what
- * makes the raised read cap safe. Anything unparseable or below the thresholds
- * passes through byte-identical. Exported for tests (opts override thresholds).
- *
- * @param {string} bodyText - Raw upstream JSON body.
- * @returns {string} Possibly-simplified JSON body.
+ * Disk TTL for a query: boundary geometry keeps for a month, roads for two,
+ * everything else 7 days. Boundary is checked first — a query that is both
+ * (an admin pivot that also filters roads) is the expensive one to refetch.
  */
-export function simplifyOverpassPayloadBody(bodyText, opts = {}) {
-  const minBytes = opts.minBytes ?? OVERPASS_SIMPLIFY_MIN_BYTES;
-  const minPoints = opts.minPoints ?? OVERPASS_SIMPLIFY_MIN_POINTS;
-  const toleranceDeg = opts.toleranceDeg ?? OVERPASS_SIMPLIFY_TOLERANCE_DEG;
-  if (typeof bodyText !== 'string' || bodyText.length < minBytes) return bodyText;
-  let data;
-  try {
-    data = JSON.parse(bodyText);
-  } catch {
-    return bodyText;
-  }
-  if (!Array.isArray(data?.elements)) return bodyText;
-  for (const el of data.elements) simplifyElementGeometry(el, minPoints, toleranceDeg);
-  try {
-    return JSON.stringify(data);
-  } catch {
-    return bodyText;
-  }
+export function overpassDiskTtlMs(cacheKey) {
+  if (isOverpassBoundaryQuery(cacheKey)) return OVERPASS_BOUNDARY_DISK_TTL_MS;
+  if (isOverpassRoadQuery(cacheKey)) return OVERPASS_ROAD_DISK_TTL_MS;
+  return OVERPASS_DISK_TTL_MS;
 }
 
 /** Normalized Overpass query -> stable disk-cache file path. */
-function overpassDiskPath(cacheKey) {
-  return path.join(OVERPASS_DISK_DIR, `${createHash('sha1').update(cacheKey).digest('hex')}.json`);
+function overpassDiskPath(cacheKey, dir = OVERPASS_DISK_DIR) {
+  return path.join(dir, `${createHash('sha1').update(cacheKey).digest('hex')}.json`);
 }
 
 /**
  * Read a disk-cached Overpass payload. maxAgeMs Infinity = any age (the
  * serve-stale path when every mirror is down).
+ * @param {string} cacheKey Normalized query body.
+ * @param {number} maxAgeMs Max acceptable age, or Infinity for any.
+ * @param {{dir?:string}} [opts] Test seam for the cache directory.
  * @returns {Promise<?Object>} Payload with cachedAt, or null.
  */
-export async function readOverpassDisk(cacheKey, maxAgeMs) {
+export async function readOverpassDisk(cacheKey, maxAgeMs, opts = {}) {
   try {
-    const raw = await fsp.readFile(overpassDiskPath(cacheKey), 'utf8');
+    const raw = await fsp.readFile(overpassDiskPath(cacheKey, opts.dir), 'utf8');
     const payload = JSON.parse(raw);
     if (!payload || typeof payload.body !== 'string' || !Number.isFinite(payload.cachedAt)) return null;
     if (Date.now() - payload.cachedAt > maxAgeMs) return null;
@@ -200,10 +137,21 @@ export async function readOverpassDisk(cacheKey, maxAgeMs) {
   }
 }
 
-/** Fire-and-forget disk write for a successful Overpass payload. */
-export function writeOverpassDisk(cacheKey, payload) {
-  fsp.mkdir(OVERPASS_DISK_DIR, { recursive: true })
-    .then(() => fsp.writeFile(overpassDiskPath(cacheKey), JSON.stringify(payload)))
+/**
+ * Fire-and-forget disk write for a successful Overpass payload, which also
+ * drives the periodic size sweep — nothing else deletes from this directory,
+ * so the budget has to ride along with the writes that grow it.
+ *
+ * @param {string} cacheKey Normalized query body.
+ * @param {Object} payload Response payload to persist.
+ * @param {{dir?:string,every?:number,budgetBytes?:number}} [opts] Test seams.
+ * @returns {Promise} Resolves once the write and any sweep have settled.
+ */
+export function writeOverpassDisk(cacheKey, payload, opts = {}) {
+  const { dir = OVERPASS_DISK_DIR } = opts;
+  return fsp.mkdir(dir, { recursive: true })
+    .then(() => fsp.writeFile(overpassDiskPath(cacheKey, dir), JSON.stringify(payload)))
+    .then(() => noteOverpassDiskWrite(dir, opts))
     .catch((err) => console.warn('[Overpass Proxy] disk cache write failed:', err?.message || err));
 }
 
@@ -246,18 +194,6 @@ export async function resolveOverpassPreflight({
     : { source: 'RATE_LIMITED', payload: null };
 }
 const OVERPASS_MAX_RESPONSE_BYTES = 32 * 1024 * 1024; // 32 MB
-/** Only payloads at least this large go through geometry simplification. */
-const OVERPASS_SIMPLIFY_MIN_BYTES = 1_500_000;
-/** Only per-element geometry arrays with at least this many points are simplified. */
-const OVERPASS_SIMPLIFY_MIN_POINTS = 1200;
-/**
- * Douglas-Peucker tolerance (degrees, ≈44 m of latitude). Region/state boundary
- * rings are drawn at regional camera scale and the client simplifies again for
- * draw, so ~44 m fidelity is invisible; building footprints never reach the
- * point threshold above and pass through untouched.
- */
-const OVERPASS_SIMPLIFY_TOLERANCE_DEG = 0.0004;
-/** Max concurrent in-flight upstream Overpass fetches across all distinct queries. */
 /** Server-side timeout ceiling (seconds) we allow inside an Overpass QL query. */
 const OVERPASS_MAX_QL_TIMEOUT = 30;
 /** Max `around:` radius (m) — every app caller uses <= 1800 m. */

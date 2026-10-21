@@ -6,6 +6,62 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-22 — Road tiles keep for 60 days on disk, and the disk cache gained a size bound
+
+**Context.** The mirror de-aliasing + breaker work of 2026-10-21 made a total
+Overpass outage cheap to detect, but it did not make roads *appear*: the proxy's
+serve-stale path can only serve what is on disk, and road tiles expired after
+7 days. The question asked was how to make road data survive a full outage.
+
+**What the measurement showed.** Two findings, and the second one changed the
+plan:
+
+1. Road payloads are not expensive to keep. 598 road payloads were on disk, and
+   their bboxes fell into only 67 distinct 0.05° (~5.5 km) cells — **8.93
+   payloads per cell**. The redundancy is because `clampBoundsAroundCenter`
+   centers each bbox on the live camera with no grid snapping, and the cache key
+   is a SHA-1 of the exact query text, so a bbox differing by meters is a total
+   miss. A longer TTL makes those near-duplicates useful for longer; it does not
+   create them.
+2. Nothing ever deleted a disk entry. `readOverpassDisk` filters expired entries
+   on READ only, so the directory was unbounded — measured at **939 files /
+   369 MB over a 47-day span**.
+
+**Decision.**
+
+- Road-class queries (matched on the traffic layer's `highway` selector) get a
+  60-day disk TTL, between the 7-day default and alongside the 30-day
+  boundary class. 60 days ≈ two months of construction-timescale change, which
+  is the rate the road graph actually moves at; the failure mode of a stale road
+  tile is a missing new road, not a wrong one.
+- A query matching both classes keeps the **boundary** TTL. Boundary pivots are
+  the multi-MB, 10–25 s fetches, so when in doubt keep the expensive one.
+- Eviction became mandatory rather than a nicety. Raising the TTL converts the
+  directory from dead weight into a long-lived store, and an unbounded
+  long-lived store on someone's laptop is a bug. 600 MB was chosen *above* the
+  369 MB that 47 days of real use produced, so ordinary exploration never
+  evicts; coldest-cached entries go first, because the cost of evicting one is
+  exactly one refetch.
+- The sweep runs every 25 writes, not every write: it stats the whole directory,
+  and the thing it guards against accumulates over days, not seconds.
+- The sweep is driven from `writeOverpassDisk` because writes are the only thing
+  that grows this directory; a separate timer would be a second lifecycle to own.
+
+**Why separate modules.** `overpassDiskBudget.mjs` and `overpassSimplify.mjs`
+are both extractions forced by file health — `overpassCore.mjs` was already at
+its ceiling. The split is not arbitrary: budget planning is a pure function of
+(entries, budget) and geometry decimation is pure geometry, so both test without
+a filesystem or network, while the core keeps the cache/fetch orchestration that
+genuinely needs them.
+
+**Not changed.** Grid-snapping the traffic bbox before it becomes a cache key is
+the actual root cause of the 8.93× redundancy and would cut Overpass traffic
+~9×; it is deliberately deferred, because it changes client-side fetch behavior
+and belongs in its own change set. Nothing makes roads appear for an area that
+was never visited while every mirror is down — only bundling static road data
+would, and that is rejected (runtime fetch is the project default, silently
+stale bundled data is worse than an honest miss, and ODbL share-alike applies).
+
 ## 2026-10-21 — Overpass mirrors are de-aliased and carry per-host failure memory
 
 **Symptom.** Traffic stopped loading: `trafficLoad.js` logged

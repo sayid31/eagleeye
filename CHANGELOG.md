@@ -5,6 +5,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- Data jalan dari area yang pernah dibuka kini tersimpan 60 hari (sebelumnya 7 hari), sehingga
+  lalu lintas tetap tampil di area yang sudah pernah dikunjungi walau server peta jalan (Overpass)
+  sedang mati total. Jaringan jalan berubah dalam hitungan bulan, bukan minggu, jadi data sepekan
+  lalu sama validnya. Area yang belum pernah dibuka tetap butuh server hidup.
+- Cache peta di disk sekarang punya batas ukuran 600 MB. Sebelumnya tidak ada yang pernah menghapus
+  isinya, jadi folder cache hanya tumbuh (terukur 369 MB dalam 47 hari pemakaian). Jika batas
+  terlampaui, entri paling lama dibuang lebih dulu — hanya berarti satu kali pengambilan ulang saat
+  area itu dibuka lagi. Pemakaian normal tidak akan mencapai batas ini.
+
 ### Fixed
 
 - Lalu lintas tidak lagi menggantung lama saat server peta jalan (Overpass) bermasalah. Dua dari
