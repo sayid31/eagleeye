@@ -1,6 +1,6 @@
 // Moved out of radio.js (radioOverlay).
 
-import { createRadioClusterOverlayEntry, createRadioSelectedOverlayEntry, createRadioSingletonOverlayEntry, emptyRadioOverlayDiagnostics, radioCameraPositionChanged, radioSingletonLabelLimit, reconcileRadioClusterCandidates, selectRadioClusterCandidates, selectRadioSingletonCandidates } from './radioOverlayEntries.js';
+import { createRadioClusterOverlayEntry, createRadioSelectedOverlayEntry, createRadioSingletonOverlayEntry, emptyRadioOverlayDiagnostics, radioCameraPositionChanged, radioEntityHorizonVisible, radioSingletonLabelLimit, reconcileRadioClusterCandidates, selectRadioClusterCandidates, selectRadioSingletonCandidates } from './radioOverlayEntries.js';
 import { clearOverlaySource, setOverlayEntries, setOverlaySourceVisible } from '../overlays/worldOverlay.js';
 import { buildRadioCategories, filterRadioStations, markerPosition, radioCategoryColor, radioClusterBadgeText, radioClusterCategoryId, radioStationCategoryId, radioStationIdFromPick, stationMatchesRadioCategory } from './radioTunerMath.js';
 import * as Cesium from 'cesium';
@@ -151,7 +151,7 @@ export function updateRenderVisibility({ force = true } = {}) {
   }
   if (S._selectedEntity) {
     const position = S._selectedEntity.position?.getValue?.(Cesium.JulianDate.now());
-    const selectedVisible = !position || occluder.isPointVisible(position);
+    const selectedVisible = radioEntityHorizonVisible(occluder, position);
     if (S._selectedEntity.show !== selectedVisible) visibilityChanged = true;
     S._selectedEntity.show = selectedVisible;
   }

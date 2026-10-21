@@ -358,6 +358,17 @@ interaction limit, so a painted singleton or cluster label always retains a
 pickable point at its anchor throughout the supported high-global view. No
 Radio entity uses native Cesium label text.
 
+The shared horizon pass re-runs only when the camera has translated at least
+1 m, so a stationary camera does not rewrite every station's visibility four
+times per second. The selection marker and bracket therefore resolve their own
+horizon visibility at creation instead of relying on that pass: selecting a
+station without moving the camera — by voice, tuner click, or directory Next
+without rotation — still hides a selection that sits beyond the globe's limb,
+and shows one in front of it. Both parts disable depth testing, so nothing else
+would cull them. Visibility is only assumed when it cannot be decided (position
+or occluder unavailable), which shows the marker rather than blinking out one
+the camera is plainly pointed at.
+
 Delivery constraint: PR #10 is stack-only and unsafe standalone. PR #11 owns
 the required Radio lifecycle/authority repair, so PR #10 must not merge or ship
 unless PR #11 is included in the delivered stack.

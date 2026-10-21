@@ -10,7 +10,7 @@
  */
 
 import { buildRadioCategories, buildRadioTunerBand, buildRadioTunerTicks, filterRadioStations, isEnglishRadioStation, normalizeRadioTag, radioCategoryColor, radioClusterBadgeText, radioClusterCategoryId, radioGlobeNeedsRecentering, radioGlobeRecenterHeight, radioRequestIsCurrent, radioSelectionBracketSvg, radioStationCameraPlan, radioStationCategoryId, radioStationIdFromPick, radioStationResolutionMatches, radioTunerCommitSlot, radioTunerPointerPosition, radioTunerSlot, radioTuningStaticShouldPlay, radioViewIsGlobal, rankRadioStationsForRequest, rankRadioStationsForViewport, stationMatchesRadioCategory } from './radioTunerMath.js';
-import { createRadioClusterOverlayEntry, createRadioSelectedOverlayEntry, createRadioSingletonOverlayEntry, radioCameraPositionChanged, radioGlobeLabel, radioSingletonLabelLimit, reconcileRadioClusterCandidates, selectRadioClusterCandidates, selectRadioSingletonCandidates } from './radioOverlayEntries.js';
+import { createRadioClusterOverlayEntry, createRadioSelectedOverlayEntry, createRadioSingletonOverlayEntry, radioCameraPositionChanged, radioEntityHorizonVisible, radioGlobeLabel, radioSingletonLabelLimit, reconcileRadioClusterCandidates, selectRadioClusterCandidates, selectRadioSingletonCandidates } from './radioOverlayEntries.js';
 import { LAYER_METADATA } from './layerMetadata.js';
 import { clearOverlaySource } from '../overlays/worldOverlay.js';
 import { cancelRadioVolumeTransition } from './radioAudio.js';
@@ -67,6 +67,7 @@ export {
   createRadioSelectedOverlayEntry,
   createRadioSingletonOverlayEntry,
   radioCameraPositionChanged,
+  radioEntityHorizonVisible,
   radioGlobeLabel,
   radioSingletonLabelLimit,
   reconcileRadioClusterCandidates,

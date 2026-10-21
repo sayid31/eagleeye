@@ -1,6 +1,8 @@
 // Moved out of radio.js (radioSelection).
 
 import { markerPosition, radioCategoryColor, radioSelectionBracketSvg, radioStationCategoryId, rankRadioStationsForRequest, stationMatchesRadioCategory } from './radioTunerMath.js';
+import { radioEntityHorizonVisible } from './radioOverlayEntries.js';
+import { horizonOccluder } from './iconOrientation.js';
 import * as Cesium from 'cesium';
 import { warmGroundFloor } from './groundFloor.js';
 import { beginRadioCameraNavigation, cancelActiveRadioCameraFlight, invalidateRadioCameraNavigation, radioCameraNavigationAllowed, radioCameraNavigationOwnsSelection, radioCameraState, rotateRadioStationIntoView } from './radioCamera.js';
@@ -21,10 +23,23 @@ export function updateSelectionEntity() {
   }
   const selectionColor = radioCategoryColor(radioStationCategoryId(station));
   const bracketImage = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(radioSelectionBracketSvg(selectionColor))}`;
+  const selectedPosition = markerPosition(station, SELECTED_LIFT_M);
 
   S._selectedEntity = S._viewer.entities.add({
     id: `${RADIO_PREFIX}selected:${station.id}`,
-    position: markerPosition(station, SELECTED_LIFT_M),
+    position: selectedPosition,
+    // Resolve horizon visibility at birth rather than inheriting Cesium's
+    // default `true`. The shared pass that owns this flag is gated on camera
+    // translation (radioOverlay.updateRenderVisibility + the 1 m epsilon in
+    // radioCameraPositionChanged), so selecting a station while the camera is
+    // stationary — voice command, tuner click, directory Next without rotate —
+    // produced no scan at all, and a far-side selection drew its marker and
+    // bracket through the globe until the camera next moved. Both parts use
+    // disableDepthTestDistance: Infinity, so nothing else culls them.
+    show: radioEntityHorizonVisible(
+      S._viewer.camera ? horizonOccluder(S._viewer.camera) : null,
+      selectedPosition,
+    ),
     point: {
       pixelSize: 14,
       color: Cesium.Color.fromCssColorString(selectionColor),

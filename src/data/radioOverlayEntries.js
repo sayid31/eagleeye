@@ -356,6 +356,23 @@ export function clampRadioVolume(value) {
   return Math.min(1, Math.max(0, Number(value) || 0));
 }
 
+/**
+ * Resolve whether a radio entity at `position` is in front of the horizon.
+ *
+ * Shows the entity when the geometry needed to decide is missing (no position
+ * yet, or no usable occluder): a marker the camera is demonstrably looking at
+ * must not blink out because its sample was taken a frame too early.
+ *
+ * @param {{isPointVisible?: Function}|null} occluder Horizon occluder for the current camera.
+ * @param {object|null} position Cartesian position, or null when unresolved.
+ * @returns {boolean} Whether the entity should be drawn.
+ */
+export function radioEntityHorizonVisible(occluder, position) {
+  if (!position) return true;
+  if (typeof occluder?.isPointVisible !== 'function') return true;
+  return occluder.isPointVisible(position) !== false;
+}
+
 /** Return whether camera translation materially changes horizon visibility. */
 export function radioCameraPositionChanged(previous, current, epsilonM = HORIZON_CAMERA_MOVE_EPSILON_M) {
   if (!previous || !current) return true;
