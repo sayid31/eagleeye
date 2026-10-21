@@ -9,10 +9,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  simplifyOverpassPayloadBody,
   isOverpassBoundaryQuery,
   resolveOverpassPreflight,
 } from './overpassCore.mjs';
+import { simplifyOverpassPayloadBody } from './overpassSimplify.mjs';
 
 test('preflight checks memory, in-flight, then disk before consuming limiter quota', async () => {
   const key = 'normalized query';
