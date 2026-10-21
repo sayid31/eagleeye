@@ -224,8 +224,21 @@ async function main() {
       typeof window.__gevQaRegisterLayer === 'function'
       && typeof window.__gevQaUnregisterLayer === 'function'
     ));
+    // The boot fly-in (flyToDefault) issues setView immediately and the
+    // 4 s cinematic flyTo 500 ms LATER, so a single cancelFlight() here races
+    // it: when the page settles fast the flight has not started yet, survives
+    // the cancel, and then drifts the camera for seconds — which later reads
+    // as a camera-theft failure in the reveal assertions below. Cancel until
+    // the camera is actually still.
+    await page.evaluate(async () => {
+      const { camera } = window.__godsEyeView.viewer;
+      for (let i = 0; i < 60; i++) {
+        camera.cancelFlight();
+        if (i > 4 && !camera._currentFlight) break;
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+    });
     await page.evaluate(() => {
-      window.__godsEyeView.viewer.camera.cancelFlight();
       window.__godsEyeView.styleManager.setPanelCollapsed('pp-toggles', true);
       window.__godsEyeView.styleManager.setPanelCollapsed('cctv-panel', true);
       window.__godsEyeView.styleManager.setPanelCollapsed('radio-panel', true);
@@ -508,6 +521,13 @@ async function main() {
       const camera = gev.viewer.camera.positionWC;
       return {
         scrollTop: scroller.scrollTop,
+        // Whether the Context scroller can scroll at all at this viewport. At
+        // 1440x900 the expanded Context content fits exactly (scrollHeight ===
+        // clientHeight), so the reveal has nowhere to move and demanding a
+        // scrollTop increase would assert something the layout forbids. The
+        // property under test is that directory + Play end up visible; scroll
+        // movement is only required when there is room for it.
+        maxScroll: scroller.scrollHeight - scroller.clientHeight,
         pageY: window.scrollY,
         camera: { x: camera.x, y: camera.y, z: camera.z },
         plays: window.__qaRadioPlayCalls.length,
@@ -599,7 +619,9 @@ async function main() {
     );
     check(
       'expanded Radio Enable reveals the directory and Play inside Context without autoplay or focus/camera theft',
-      explicitRevealAfter.scrollTop > explicitRevealBefore.scrollTop
+      (explicitRevealBefore.maxScroll > 0
+        ? explicitRevealAfter.scrollTop > explicitRevealBefore.scrollTop
+        : explicitRevealAfter.scrollTop === explicitRevealBefore.scrollTop)
         && explicitRevealAfter.directoryVisible && explicitRevealAfter.playVisible
         && explicitRevealAfter.focusId === 'radio-enable-btn'
         && explicitRevealAfter.pageY === explicitRevealBefore.pageY
@@ -1510,6 +1532,22 @@ async function main() {
     check('launcher enables Radio without forcing Context open', !initial.panelExpanded && !initial.contextExpanded && initial.nestedInContext);
     check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Putar stasiun radio terdekat');
 
+    // This block exercises the COLLAPSED-Context route of the launcher:
+    // _syncContextRadioLauncherState() points it at `context-radio-mini` only
+    // while Context is collapsed (expanded, it routes to the detailed
+    // `radio-panel` section instead). But the shell theme removes a collapsed
+    // Context panel from the layout (`display: none` — it is reached from the
+    // left rail), leaving the launcher a 0x0 rect that page.hover/page.click
+    // reject outright. Give it back a box with a scoped override so real
+    // pointer input lands, without touching the `collapsed` class the route
+    // depends on. Removed right after the block.
+    await page.evaluate(async () => {
+      const style = document.createElement('style');
+      style.id = 'qa-radio-collapsed-context-hitbox';
+      style.textContent = 'body.ee-shell #global-context-panel.collapsed { display: block !important; }';
+      document.head.appendChild(style);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    });
     const hoverOnlyDisclosure = await page.evaluate(() => {
       const button = document.getElementById('context-radio-toggle-btn');
       if (button.getAttribute('aria-expanded') === 'true') button.click();
@@ -1613,6 +1651,16 @@ async function main() {
       compactTouchDisclosure.closed && compactTouchDisclosure.reopened,
       JSON.stringify(compactTouchDisclosure),
     );
+    // Collapsed-Context pointer block is done: hand the shell theme back its
+    // own collapsed-panel layout rule. The compact close button legitimately
+    // leaves focus on the launcher, which the restored rule then takes out of
+    // the layout — so blur it first. Otherwise later blocks capture a
+    // `document.activeElement` they can never focus again and read it as a
+    // focus-restoration regression.
+    await page.evaluate(() => {
+      document.getElementById('context-radio-toggle-btn')?.blur();
+      document.getElementById('qa-radio-collapsed-context-hitbox')?.remove();
+    });
     const multiExpandedPanelLayout = await page.evaluate(async () => {
       const manager = window.__godsEyeView.styleManager;
       const ids = ['data-panel', 'scene-panel', 'pp-toggles', 'cctv-panel', 'global-context-panel'];
@@ -1819,6 +1867,12 @@ async function main() {
           focusRestored: !prior.focusId || document.activeElement?.id === prior.focusId,
         };
         result.restoredExactly = Object.values(result.restoreDetails).every(Boolean);
+        // Kept outside restoreDetails: restoredExactly folds that object with
+        // every(Boolean), so a diagnostic string/null would corrupt the verdict.
+        result.focusTrace = {
+          priorFocusId: prior.focusId,
+          activeFocusId: document.activeElement?.id || document.activeElement?.tagName || null,
+        };
       }
 
       return result;
@@ -2154,11 +2208,23 @@ async function main() {
       manager._setModels3dMode('proximity');
       manager._setModels3dEnabled(false);
       const models3dSteps = [];
+      // flights/military are registerLazy entries and this harness only ever
+      // enables `radio`, so their modules are never resolved here and
+      // getLayerParams() returns null by contract (managerParams.js refuses to
+      // force-resolve a module just to apply params). The intent is queued on
+      // entry.pendingParams and replayed on resolution, so read whichever of
+      // the two actually holds the layer's parameters: the property under test
+      // is that one Display control drives both flight layers identically, in
+      // either state.
+      const effectiveLayerParams = (layerId) => {
+        const entry = manager._dataManager.layers.get(layerId);
+        return manager._dataManager.getLayerParams(layerId) || entry?.pendingParams || {};
+      };
       for (let index = 0; index < 3; index += 1) {
         if (index === 0 || index === 2) models3dToggle.click();
         else models3dAll.click();
-        const flightsParams = manager._dataManager.getLayerParams('flights');
-        const militaryParams = manager._dataManager.getLayerParams('military');
+        const flightsParams = effectiveLayerParams('flights');
+        const militaryParams = effectiveLayerParams('military');
         models3dSteps.push({
           label: manager._models3dEnabled ? manager._models3dMode.toUpperCase() : 'OFF',
           flightsEnabled: flightsParams.models3d,
