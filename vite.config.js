@@ -16,6 +16,7 @@
  *   - src/data/aisLiveProxy.mjs — AISStream websocket-backed live vessel
  *     positions and per-MMSI recent-path buffers.
  *   - src/data/overpassCore.mjs (shared fetch/cache machinery) +
+ *     src/data/overpassDiskCache.mjs (the disk layer of that cache) +
  *     src/data/overpassProxy.mjs (`/api/overpass`) +
  *     src/data/osrmRouteProxy.mjs (`/api/route`) +
  *     src/data/militaryInstallationsProxy.mjs (bounded OSM installation
@@ -70,11 +71,13 @@ import {
   _overpassInFlight,
   sanitizeOverpassBody,
   resolveOverpassPreflight,
+  fetchOverpassPayload,
+} from './src/data/overpassCore.mjs';
+import {
   readOverpassDisk,
   writeOverpassDisk,
   overpassDiskTtlMs,
-  fetchOverpassPayload,
-} from './src/data/overpassCore.mjs';
+} from './src/data/overpassDiskCache.mjs';
 import {
   militaryInstallationsProxy,
   validMilitaryInstallationBox,
