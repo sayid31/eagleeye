@@ -25,7 +25,7 @@ import {
   overpassDiskTtlMs,
   readOverpassDisk,
   writeOverpassDisk,
-} from './overpassCore.mjs';
+} from './overpassDiskCache.mjs';
 
 const DAY = 86_400_000;
 

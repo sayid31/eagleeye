@@ -8,10 +8,8 @@
 // Run with: npm test   (node --test)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import {
-  isOverpassBoundaryQuery,
-  resolveOverpassPreflight,
-} from './overpassCore.mjs';
+import { resolveOverpassPreflight } from './overpassCore.mjs';
+import { isOverpassBoundaryQuery } from './overpassDiskCache.mjs';
 import { simplifyOverpassPayloadBody } from './overpassSimplify.mjs';
 
 test('preflight checks memory, in-flight, then disk before consuming limiter quota', async () => {
