@@ -7,6 +7,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Lalu lintas jauh lebih jarang mengambil ulang data jalan saat peta digeser sedikit-sedikit.
+  Sebelumnya setiap gerakan kamera meminta kotak area yang berbeda beberapa meter, sehingga
+  selalu dianggap area baru dan harus diambil dari server. Sekarang titik pusat permintaan
+  dibulatkan ke petak tetap ~1,4 km, jadi geseran kecil memakai data yang sudah tersimpan —
+  pada geseran pelan sejauh ~1 km, 24 pembaruan kamera kini hanya butuh 2 permintaan server
+  (sebelumnya 24). Jalan yang tampil tetap area yang sedang dilihat, dan kepadatan titik
+  lalu lintas tidak berubah.
 - Data jalan dari area yang pernah dibuka kini tersimpan 60 hari (sebelumnya 7 hari), sehingga
   lalu lintas tetap tampil di area yang sudah pernah dikunjungi walau server peta jalan (Overpass)
   sedang mati total. Jaringan jalan berubah dalam hitungan bulan, bukan minggu, jadi data sepekan

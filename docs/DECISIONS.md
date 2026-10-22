@@ -6,6 +6,50 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-22 — The traffic fetch center snaps to a 0.0125° grid
+
+**Context.** This is the root-cause fix deferred by the TTL entry below. Raising
+the road TTL made cached tiles *live longer*; it did nothing about the reason
+they were barely reused.
+
+**Root cause.** The Overpass cache key is a SHA-1 of the exact query text, and
+the query embeds the bbox. `clampBoundsAroundCenter` built that bbox around the
+live camera look-at point with no quantization, so two views metres apart
+produced different query text and therefore a guaranteed cache miss. Measured on
+the real cache: 598 road payloads occupied only 67 distinct 0.05° cells (~8.9x
+redundant fetching); reconstructing fetch-box centers from 500 cached payloads
+showed 372 distinct positions where a grid would have produced far fewer.
+
+**Decision.** Snap the fetch CENTER onto a fixed global grid before building the
+box, pitch 0.0125° (≈1.4 km, a quarter of the 0.05° box span).
+
+- Pitch picked by measurement, not feel. On those same 500 boxes: 0.01° → 4.31x
+  dedupe, **0.0125° → 5.26x**, 0.025° → 6.33x. Coarser dedupes better but slides
+  the box further from the look-at point and starts fighting
+  `MIN_CENTER_SHIFT_KM` (0.35 km), which gates small pans.
+- Bounded error: snapping moves the box at most half a pitch per axis (~700 m),
+  well inside the ~2.8 km half-span, so the point the user is looking at always
+  stays inside the box fetched for it. There is a test asserting exactly this.
+- **The box is moved, not enlarged.** The tempting alternative — grow the box to
+  cover a whole grid cell — is wrong here: `allocateRoadDotBudgets` spreads
+  `MAX_DOTS` (6000) across every road the fetch returns, filtered by road class
+  only, with no viewport cull. A bigger box would hand dots to off-screen roads
+  and visibly thin traffic in view.
+- Longitude snaps on the same degree grid as latitude, so cells narrow toward
+  the poles. Accepted deliberately: it keeps the grid seam-free at any latitude,
+  and the layer only runs below 8 km altitude where cells are small anyway.
+- The quantizer rounds to 6 decimals. Without it the raw pitch multiple carries
+  float noise (`29.999999999999996`) that reaches the cache key as a distinct
+  string and silently defeats the whole mechanism.
+
+**Measured result.** Driven through the real `clampBoundsAroundCenter` →
+`buildOverpassQuery` → normalized-cache-key path, a realistic slow pan (24
+camera updates, ~44 m each) produces **2 distinct Overpass keys instead of 24**.
+
+**Not changed.** The box span, the look-at derivation (`deriveFetchCenter`, C4),
+the overlap/center-shift gate, and the client `_tileCache` keying — which keys on
+the clamped bbox and so inherits the dedupe for free.
+
 ## 2026-10-22 — Road tiles keep for 60 days on disk, and the disk cache gained a size bound
 
 **Context.** The mirror de-aliasing + breaker work of 2026-10-21 made a total

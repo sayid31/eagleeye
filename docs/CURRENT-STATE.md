@@ -1903,7 +1903,15 @@ detection off by hand — would not have.
   decoded client-side (`flowTiles.js`), matched onto Overpass roads
   (`flowMatch.js`), and rendered as green/amber/red dot color + speed/density
   scaling (`trafficFlowStyle.js`); closures spawn no dots; unmatched roads stay
-  white. Road fetch bounds center on the camera look-at point (`trafficBounds.js`).
+  white. Road fetch bounds center on the camera look-at point (`trafficBounds.js`),
+  snapped to a fixed global grid of `FETCH_GRID_PITCH_DEG` (0.0125° ≈ 1.4 km) before
+  the box is built. The bbox is the Overpass cache key, so snapping is what makes a
+  revisited area a cache hit: pans within one cell reuse one key instead of minting a
+  new one per camera update, and the key count tracks cells crossed rather than camera
+  moves. The snap moves the box at most half a pitch (~700 m) per axis, so the look-at
+  point stays inside the box it fetches for. The box span is unchanged — it is moved,
+  not enlarged, because `allocateRoadDotBudgets` spreads `MAX_DOTS` across every road a
+  fetch returns with no viewport cull, so a wider box would thin dot density in view.
 - **`parseRoads()`'s per-road `sampleHeight` fallback is capped, not
   unconditional (fixed 2026-09).** A dense-city detailed fetch (triggered
   whenever camera altitude drops to/below `FAST_FETCH_ALTITUDE`, 4500 m,
