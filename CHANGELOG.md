@@ -5,6 +5,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Added
+
+- Agen suara kini menjawab dalam bahasa yang Anda pakai, termasuk Bahasa Indonesia, dan
+  tetap mengikuti jika Anda berganti bahasa di tengah sesi. Sebelumnya tidak ada instruksi
+  bahasa sama sekali, jadi bahasa jawaban hanya bergantung kebetulan. Nama perintah internal,
+  serta kode yang harus dibacakan apa adanya (callsign, registrasi, kode bandara/stasiun),
+  tetap seperti aslinya supaya aplikasi tetap mengenalinya.
+
 ### Changed
 
 - Lalu lintas jauh lebih jarang mengambil ulang data jalan saat peta digeser sedikit-sedikit.

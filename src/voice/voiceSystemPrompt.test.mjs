@@ -18,12 +18,32 @@ test('the OpenAI voice system prompt is byte-identical to the pre-refactor inlin
   // rest of the split-program branches changed the prompt text again —
   // see CHANGELOG.md "Esri Dark Gray Canvas" for the original rationale;
   // this second re-pin has no independent content change of its own.
-  assert.equal(GEV_VOICE_SYSTEM_PROMPT.length, 18720, 'system prompt length drifted from the pinned release text');
+  // Re-pinned 2026-10-26: added the SPEAK THE USER'S LANGUAGE clause. The
+  // prompt previously said nothing about language at all, so Indonesian
+  // replies were left to model default rather than contract — see the
+  // dedicated language test below for what the clause must keep guaranteeing.
+  assert.equal(GEV_VOICE_SYSTEM_PROMPT.length, 19496, 'system prompt length drifted from the pinned release text');
   assert.equal(
     crypto.createHash('sha256').update(GEV_VOICE_SYSTEM_PROMPT).digest('hex'),
-    'f858b52b6e24f04ec807045e32e0c8fdd4f5d0bfcbe8afe52fce1c9d3d3addf8',
+    '1aba2a9d7f6830d2af4378faa00d70867c449d8f53ffe7dcedbc52232b33740e',
     'the relocated persona/tool-usage contract text must not silently drift',
   );
+});
+
+test('the language clause tells the model to follow the speaker while freezing tool identifiers', () => {
+  // The whole point of the clause: a reply in the user's language, without
+  // translating anything the tool layer parses by exact value. Both halves
+  // are asserted so a future trim cannot drop the identifier guard and leave
+  // a model free to send a translated layer id.
+  assert.match(GEV_VOICE_SYSTEM_PROMPT, /SPEAK THE USER'S LANGUAGE/);
+  assert.match(GEV_VOICE_SYSTEM_PROMPT, /reply in the language the user is speaking/);
+  assert.match(GEV_VOICE_SYSTEM_PROMPT, /when they speak Indonesian, answer in natural conversational Indonesian/);
+  const clause = GEV_VOICE_SYSTEM_PROMPT_LINES.find((line) => line.startsWith("SPEAK THE USER'S LANGUAGE"));
+  assert.ok(clause, 'the language clause must be its own instruction line');
+  for (const frozen of ['a tool name', 'an argument key', 'a layer id', 'a style id']) {
+    assert.ok(clause.includes(frozen), `the clause must forbid translating ${frozen}`);
+  }
+  assert.match(clause, /callsigns, registrations, airport and station codes/);
 });
 
 test('GEV_VOICE_SYSTEM_PROMPT is exactly GEV_VOICE_SYSTEM_PROMPT_LINES joined by newlines', () => {
