@@ -6,6 +6,43 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-26 — Empty env vars are pruned BEFORE `loadEnv`, not filtered after
+
+**Context.** `/api/realtime/token` answered `503 OPENAI_API_KEY is not set`
+under `npm run dev` while `.env` held a valid 164-char key. The same `.env`
+worked under `scripts/dev-fresh.sh`.
+
+**Root cause.** Two layers, and the obvious one was the wrong one. The config
+guarded its assignment with `if (process.env[key] === undefined)`, and because
+`'' === undefined` is false, an empty shell export (`export OPENAI_API_KEY=`)
+appeared to be the override that shadowed `.env`. Fixing *that* guard changes
+nothing, which is how the real cause surfaced: Vite's `loadEnv` **itself**
+defers to a matching `process.env` entry, so with an empty export present
+`loadEnv` returns `''` for that key and the parsed `.env` value never reaches
+the config at all. Measured directly: with the empty var set, `loadEnv` →
+`''`; with `env -u` on the same key, `loadEnv` → `len=164`. Both sides of the
+assignment were `''`, so no assignment-time guard could have recovered it.
+
+**Decision.** `loadCheckoutEnv` reads the dotenv files, prunes from
+`process.env` every key that came back empty, then re-reads with nothing left
+to shadow it. The second read is skipped when nothing was pruned, so the
+normal path still pays for exactly one read.
+
+**Why pruning and not a merge of the parsed files.** Re-parsing `.env`
+ourselves would duplicate Vite's file precedence (`.env`, `.env.local`,
+`.env.[mode]`, `.env.[mode].local`) and drift from it on upgrade. Letting
+`loadEnv` stay the single parser and removing only the entries that confuse it
+keeps one source of truth. `scripts/read-dotenv-value.mjs` already used this
+exact hide-then-read technique for the same reason — the dev server just was
+not doing it for itself.
+
+**Why empty means absent.** Nothing downstream can tell an empty key from a
+missing one: every consumer tests `if (!apiKey)`. A key blank in `.env` still
+stays absent after pruning, so the proxy's 503 remains truthful instead of
+becoming a confusing upstream auth error. Whitespace is treated as empty for
+the same reason. `CCTV_CALTRANS_DISTRICTS` keeps its documented empty-string
+kill switch because `dev-fresh.sh` passes it explicitly, not via this path.
+
 ## 2026-10-22 — The traffic fetch center snaps to a 0.0125° grid
 
 **Context.** This is the root-cause fix deferred by the TTL entry below. Raising

@@ -25,6 +25,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Fitur suara tidak lagi mati dengan pesan "OPENAI_API_KEY is not set" padahal kuncinya sudah
+  benar ada di `.env`. Penyebabnya: variabel kosong yang tertinggal di shell (`export OPENAI_API_KEY=`)
+  dianggap sebagai pilihan yang menimpa `.env`, padahal itu berarti "tidak ada nilai". Sekarang
+  variabel kosong diperlakukan sebagai tidak diisi, jadi nilai dari `.env` tetap dipakai. Nilai
+  shell yang benar-benar berisi masih tetap menang seperti sebelumnya, dan kunci yang memang
+  kosong di `.env` tetap dilaporkan belum dikonfigurasi. Berlaku untuk semua kunci, bukan hanya suara.
 - Lalu lintas tidak lagi menggantung lama saat server peta jalan (Overpass) bermasalah. Dua dari
   empat alamat mirror ternyata mesin yang sama, sehingga setiap permintaan yang gagal menunggu dua kali
   untuk satu server mati; alamat ganda itu dihapus. Mirror yang baru saja gagal kini diingat dan
