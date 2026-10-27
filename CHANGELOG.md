@@ -33,6 +33,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Lalu lintas kini muncul lagi di area yang belum pernah dibuka. Sebelumnya layarnya kosong dan
+  server menjawab galat setelah ~45 detik, seolah server peta jalan (Overpass) sedang mati —
+  padahal server itu hidup dan jawabannya sudah di jalan. Penyebabnya: aplikasi menunggu paling
+  lama 22 detik, sementara server peta jalan mengantre permintaan dan baru menjawab di detik
+  37–55. Jadi setiap jawaban yang benar justru diputus di tengah jalan, lalu semua mirror dianggap
+  mati dan dilewati sampai 15 menit. Sekarang batas tunggunya 60 detik per mirror, dengan batas
+  total 75 detik untuk satu permintaan supaya server yang menggantung tanpa jawaban tidak bisa
+  menahan Anda bermenit-menit. Pemuatan pertama di area baru memang terasa lama sekali (terukur
+  32,8 detik), tetapi kunjungan berikutnya ke area yang sama instan (22 milidetik) karena hasilnya
+  disimpan.
 - Fitur suara tidak lagi mati dengan pesan "OPENAI_API_KEY is not set" padahal kuncinya sudah
   benar ada di `.env`. Penyebabnya: variabel kosong yang tertinggal di shell (`export OPENAI_API_KEY=`)
   dianggap sebagai pilihan yang menimpa `.env`, padahal itu berarti "tidak ada nilai". Sekarang

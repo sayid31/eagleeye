@@ -6,6 +6,73 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-27 — The Overpass deadline follows the mirrors' queue, bounded by a sweep ceiling
+
+**Context.** Traffic drew nothing in any viewport without a cache entry.
+`/api/overpass` returned `502 Overpass proxy error` after ~45 s, which read like
+"the mirrors are down" — the 2026-10-21 outage shape above.
+
+**Root cause — the mirrors were UP and we were hanging up on them.** Measured
+against the traffic layer's own `majorOnly` query body (`out geom qt;`, Jakarta
+viewport, exact proxy User-Agent):
+
+| Mirror | Result |
+|---|---|
+| `overpass-api.de` | **200 in 37.5 / 43.6 / 44.0 / 55.1 s**, 0.5–3.2 MB |
+| `lz4.overpass-api.de` | 406, then 502 "All query workers are busy" |
+| `overpass.private.coffee` | 60 s, zero bytes — accepts TCP, never answers |
+
+`OVERPASS_TIMEOUT_MS` was 22 s, so every one of those successful answers was
+aborted while in flight. The breaker then did exactly its job on bad input:
+three host-attributed failures parked all three mirrors on the 1/5/15 min
+ladder, and the layer failed fast with nothing to serve.
+
+The decisive detail is WHERE the time goes. The query already asks the server
+for `[timeout:12]`, and a 3.2 MB answer arrived at 43.6 s — so the wait is the
+mirrors' **request queue plus transfer**, not query execution. Their own 502
+body says it: "All query workers are busy". A deadline derived from the QL
+timeout is therefore measuring the wrong thing, which is why 22 s looked
+generous and was not.
+
+**Decision.** Raise the per-mirror ceiling to 60 s (above the measured 55 s
+worst case), and add `OVERPASS_SWEEP_BUDGET_MS` (75 s) to bound the sweep.
+
+- **Why not raise the per-mirror timeout alone.** A host that accepts TCP and
+  then hangs costs its full allowance — measured at 60 s for
+  `overpass.private.coffee`. Three of those would strand one request for three
+  minutes, strictly worse than the 66 s the 22 s ladder cost. The ceiling is
+  what makes the higher per-mirror budget safe.
+- **Why the budget is spent, not divided.** `overpassAttemptTimeoutMs` hands the
+  next attempt `min(perMirror, remaining)`. A slow-but-alive first mirror is the
+  common case and deserves the full window; whoever follows gets the remainder.
+  Dividing the budget up front would cap the healthy mirror at 25 s and
+  reintroduce the bug.
+- **Out of budget is not a host fault.** A mirror reached with zero remaining is
+  skipped without `noteOverpassEndpointOutcome` — it was never contacted, so
+  parking it would be a verdict on our clock, not its health. This is the same
+  host-fault / query-fault distinction the 2026-10-21 breaker entry draws, with
+  a third category: our-fault.
+- **Why not simply shorten the query.** The two-pass loader already fetches
+  `majorOnly` first for exactly this reason. The 3.2 MB measured here IS the
+  cheap pass; there is nothing left to trim without dropping road classes the
+  layer renders.
+
+**Evidence it worked.** Same previously-502 bbox through the running proxy:
+`200`, 1.9 MB, 32.8 s, `X-Overpass-Cache: MISS`,
+`X-Overpass-Upstream: https://overpass-api.de/api/interpreter` — a real upstream
+answer, not a cache hit. The repeat request: `200` in 22 ms, `X-Overpass-Cache:
+HIT`, so the long first wait is paid once per viewport and the 60-day road TTL
+keeps it.
+
+**Not changed.** The breaker ladder, the serve-stale-at-any-age rule, the 502
+itself, and `OVERPASS_MAX_QL_TIMEOUT` (30 s) — the server-side query budget is a
+property of the query's cost and was never the thing timing out.
+
+**Still unproven.** Whether 37–55 s is this mirror's steady state or congestion
+on the day. Six samples inside one hour cannot separate those, and
+`overpass.private.coffee` has one observation; it stays in the list rather than
+being removed on a single data point.
+
 ## 2026-10-26 — Empty env vars are pruned BEFORE `loadEnv`, not filtered after
 
 **Context.** `/api/realtime/token` answered `503 OPENAI_API_KEY is not set`
