@@ -33,6 +33,7 @@ const navMixin = fs.readFileSync(path.join(ROOT, 'src', 'navigationLocationMixin
 // mechanical relocation, see that file's header.
 const cockpitMixin = fs.readFileSync(path.join(ROOT, 'src', 'cockpitControlMixin.js'), 'utf8');
 const css = fs.readFileSync(path.join(ROOT, 'style.css'), 'utf8');
+const adaptiveCss = fs.readFileSync(path.join(ROOT, 'src', 'theme', 'adaptive.css'), 'utf8');
 const sceneDirector = fs.readFileSync(path.join(ROOT, 'src', 'scenes', 'director.js'), 'utf8');
 const manager = readLayerSourceText(path.join(ROOT, 'src', 'data', 'manager.js'));
 // Toggle-panel DOM rendering (buildTogglePanel/_renderToggles/etc., including
@@ -328,27 +329,13 @@ test('Cockpit owns a focused shared Display portal and compact Radio controls', 
 test('Display orders 3D above Celestial, Clean UI below it, and Parameters below Detection', () => {
   const display = html.match(/id="pp-toggles"[\s\S]*?id="clean-view-exit"/);
   assert.ok(display, 'Display markup is missing');
-  // Sudut sits between 3D and Celestial: it is a view-geometry control, sibling
-  // with 3D, not a layer toggle. Pinned here because without an ordering guard
-  // it would be the only DISPLAY member free to drift.
   assert.match(
     display[0],
-    /id="detection-toggle"[\s\S]*?id="param-slider-panel"[\s\S]*?id="models3d-toggle"[\s\S]*?id="camera-angle-row"[\s\S]*?id="celestial-toggle"[\s\S]*?id="clean-view-toggle"/,
+    /id="detection-toggle"[\s\S]*?id="param-slider-panel"[\s\S]*?id="models3d-toggle"[\s\S]*?id="celestial-toggle"[\s\S]*?id="clean-view-toggle"/,
   );
   assert.equal((html.match(/id="param-slider-panel"/g) || []).length, 1, 'Parameters must have one DOM owner');
-  assert.equal((html.match(/id="camera-angle-row"/g) || []).length, 1, 'Sudut must have one DOM owner');
-  // The shipped markup is the third surface of the cameraAngle default (the
-  // constant and GLOBAL_POST_DEFAULTS are the other two), so the active button
-  // and its aria-checked pair are asserted, not just the ordering.
-  assert.match(
-    display[0],
-    /id="camera-angle-atas"[^>]*aria-checked="false"/,
-  );
-  assert.match(
-    display[0],
-    /id="camera-angle-samping"[^>]*aria-checked="true"/,
-  );
-  assert.match(display[0], /class="pp-mode-btn active" id="camera-angle-samping"/);
+  // Sudut is deliberately NOT in this rail — see its own test below.
+  assert.doesNotMatch(display[0], /id="camera-angle-row"/);
   assert.match(
     mixin,
     /const detectionGroup = this\._detectionBtn\?\.closest\('\.pp-toggle-group'\);[\s\S]*?detectionGroup\.after\(this\._sliderPanel\)/,
@@ -358,6 +345,36 @@ test('Display orders 3D above Celestial, Clean UI below it, and Parameters below
     /\['detection', this\._detectionBtn\?\.closest\('\.pp-toggle-group'\)\],[\s\S]*?\['parameters', this\._sliderPanel\],[\s\S]*?\['models3d'/,
   );
   assert.doesNotMatch(ui, /\['presets',/);
+});
+
+test('Sudut sits in the globe-actions nav, immediately before the globe button', () => {
+  // Placement regression, owner-reported twice: Sudut began life inside the
+  // DISPLAY rail, which ships collapsed for a first-time visitor
+  // (panelAdaptiveLayoutMixin.js), so the control was invisible until someone
+  // opened a panel. It now lives beside the globe button that prompted the
+  // request. Ordering is asserted because "before the globe button" is the
+  // whole point: set the angle, then press globe, left to right.
+  const nav = html.match(/<nav id="top-center-actions"[\s\S]*?<\/nav>/);
+  assert.ok(nav, 'globe-actions nav is missing');
+  assert.match(nav[0], /id="camera-angle-row"[\s\S]*?id="reset-globe-view"/);
+  assert.equal((html.match(/id="camera-angle-row"/g) || []).length, 1, 'Sudut must have one DOM owner');
+
+  // The shipped markup is the third surface of the cameraAngle default (the
+  // constant and GLOBAL_POST_DEFAULTS are the other two), so the active button
+  // and its aria-checked pair are asserted, not just the ordering.
+  assert.match(nav[0], /id="camera-angle-atas"[^>]*aria-checked="false"/);
+  assert.match(nav[0], /id="camera-angle-samping"[^>]*aria-checked="true"/);
+  assert.match(nav[0], /class="globe-angle-btn active" id="camera-angle-samping"/);
+  assert.match(nav[0], /role="radiogroup"/);
+
+  // Its own classes, not .pp-mode-btn: `#top-center-actions button` forces a
+  // 36 px circle, which would crush a text label. If these classes are ever
+  // renamed back, the control silently becomes two round stubs.
+  assert.match(css, /#top-center-actions \.globe-angle-btn \{[\s\S]*?width:\s*auto/);
+  assert.match(css, /\.globe-angle-seg \{/);
+  // The ee-shell theme strips the plate off every icon button in this nav; a
+  // text pill needs its plate back or it is unreadable over bright terrain.
+  assert.match(adaptiveCss, /body\.ee-shell #top-center-actions \.globe-angle-btn/);
 });
 
 test('Clear Selected Layers uses one adopted batch and discards Context restoration state', () => {

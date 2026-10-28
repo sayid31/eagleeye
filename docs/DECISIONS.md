@@ -141,6 +141,37 @@ prototype, so the public API surface is identical. Resolving the pitch inside
 `flyToLandmark` rather than at its callers covers seven call sites with one
 edit.
 
+**Placement, corrected the same day: the control sits in the globe-actions nav,
+not in the DISPLAY rail.** It shipped first inside DISPLAY, next to the 3D and
+Selestial toggles, on the reasoning that it is a view-geometry control and
+therefore a sibling of those. That reasoning was about taxonomy, and the thing
+that mattered was reach: `panelAdaptiveLayoutMixin.js` ships `pp-toggles`
+collapsed when no preference is stored, and `#pp-toggles.collapsed
+.pp-toggle-group` is `display: none` — so a control born in that rail is
+invisible until someone opens a panel. The owner looked for it twice and did not
+find it, which is the evidence that this is a reach-for-it control rather than a
+settings-rail one: the gesture the request described is set-the-angle-then-press-
+the-globe, and the globe button lives in `#top-center-actions`. Putting the two
+next to each other makes the gesture readable left to right with no panel open.
+
+- **Why not simply un-collapse DISPLAY by default.** The collapse default is a
+  recorded decision governing every control in that rail; flipping it to rescue
+  one new control would trade a first-run screen full of chrome for a placement
+  problem that moving one element solves.
+- **Why new `.globe-angle-seg` / `.globe-angle-btn` classes** instead of the
+  rail's `.pp-mode-seg` / `.pp-mode-btn`. `#top-center-actions button` forces
+  every child to a 36 px circle, which crushes a text label, and
+  `src/theme/adaptive.css` deliberately strips background, border and
+  backdrop-filter from every button in that nav so the icons read as bare glyphs
+  over the map. An icon can survive without a plate; a text pill cannot stay
+  legible over bright terrain, so the new classes restore one. The height is
+  pinned to the same 36 px so the pill and the round icon buttons share a
+  baseline.
+- **No JS changed in the move.** The mixin binds on `data-camera-angle` and
+  `.active`, never on a parent selector — which is the property that made a
+  markup-and-CSS-only relocation possible, and the reason `data-camera-angle`
+  was chosen over `data-mode` in the first place.
+
 ## 2026-10-27 — The Overpass deadline follows the mirrors' queue, bounded by a sweep ceiling
 
 **Context.** Traffic drew nothing in any viewport without a cache entry.

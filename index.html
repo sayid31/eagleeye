@@ -44,6 +44,24 @@
     <button id="share-btn" type="button" aria-label="Salin tautan bagikan" title="Salin tautan bagikan">
       <span class="share-icon" aria-hidden="true">&#x1F517;</span>
     </button>
+    <!-- Sudut kamera (owner directive 2026-10-28, placement revised the same day).
+         It lives HERE, immediately left of the globe button, rather than in the
+         DISPLAY rail where it started: the globe button is what prompted the
+         request, and DISPLAY ships collapsed for a first-time visitor
+         (panelAdaptiveLayoutMixin.js), so a control born inside it is invisible
+         until someone opens the rail. The owner looked for it twice and did not
+         find it — that is the evidence this is a reach-for-it control, not a
+         settings-rail one. Set the angle, then press the globe, without opening
+         a panel.
+
+         SAMPING ships selected, so this markup IS the first-run state — keep it
+         in lockstep with CAMERA_ANGLE_MODE_DEFAULT in cameraAngleMode.js and
+         GLOBAL_POST_DEFAULTS.cameraAngle in uiConstants.js. Pinned in
+         reasonableDefaults.test.mjs and cockpitMarkup.test.mjs. -->
+    <div class="globe-angle-seg" id="camera-angle-row" role="radiogroup" aria-label="Sudut kamera">
+      <button class="globe-angle-btn" id="camera-angle-atas" data-camera-angle="atas" type="button" role="radio" aria-checked="false" title="Atas — kamera tegak lurus dari atas">Atas</button>
+      <button class="globe-angle-btn active" id="camera-angle-samping" data-camera-angle="samping" type="button" role="radio" aria-checked="true" title="Samping — kamera miring seperti saat CCTV aktif">Samping</button>
+    </div>
     <button id="reset-globe-view" type="button" aria-label="Atur ulang ke tampilan globe penuh" title="Atur ulang kamera dan kembali ke tampilan globe penuh">
       <span class="material-symbols-outlined" aria-hidden="true">public</span>
     </button>
@@ -426,22 +444,6 @@
         <div class="pp-mode-seg" role="radiogroup" aria-label="Cakupan model 3D">
           <button class="pp-mode-btn active" id="models3d-mode-proximity" data-mode="proximity" role="radio" aria-checked="true">Dekat</button>
           <button class="pp-mode-btn" id="models3d-mode-all" data-mode="all" role="radio" aria-checked="false">Semua</button>
-        </div>
-      </div>
-    </div>
-    <div class="pp-toggle-group">
-      <!-- Sudut kamera (owner directive 2026-10-28). SAMPING ships selected, so this
-           markup IS the first-run state — keep in lockstep with
-           CAMERA_ANGLE_MODE_DEFAULT in cameraAngleMode.js and
-           GLOBAL_POST_DEFAULTS.cameraAngle in uiConstants.js. Pinned in
-           reasonableDefaults.test.mjs. No parent .pp-toggle-btn here (the mode is
-           always on, there is nothing to switch off), which is why the row needs
-           .camera-angle-row to restore the top border .pp-slider-row drops. -->
-      <div class="pp-slider-row camera-angle-row visible" id="camera-angle-row">
-        <span class="pp-slider-mini-label">Sudut</span>
-        <div class="pp-mode-seg" role="radiogroup" aria-label="Sudut kamera">
-          <button class="pp-mode-btn" id="camera-angle-atas" data-camera-angle="atas" role="radio" aria-checked="false" title="Atas — kamera tegak lurus dari atas">Atas</button>
-          <button class="pp-mode-btn active" id="camera-angle-samping" data-camera-angle="samping" role="radio" aria-checked="true" title="Samping — kamera miring seperti saat CCTV aktif">Samping</button>
         </div>
       </div>
     </div>

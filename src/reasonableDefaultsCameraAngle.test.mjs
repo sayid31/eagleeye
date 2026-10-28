@@ -70,7 +70,7 @@ test('first run opens in Samping, at every surface that decides it', () => {
     'a re-literalized default is exactly the drift this pin exists to catch');
   // Surface 3: the shipped markup. A default is not real until the control
   // the operator sees agrees with it.
-  assert.match(indexHtml, /class="pp-mode-btn active" id="camera-angle-samping"/,
+  assert.match(indexHtml, /class="globe-angle-btn active" id="camera-angle-samping"/,
     'index.html: Samping is the pre-selected segment');
   assert.match(indexHtml, /id="camera-angle-samping"[^>]*aria-checked="true"/,
     'index.html: and assistive tech is told the same thing');

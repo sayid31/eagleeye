@@ -7,10 +7,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
-- Panel DISPLAY punya pilihan baru **Sudut**: **Atas** atau **Samping**. Pilihan ini
-  berlaku untuk semua perpindahan kamera — tombol bola dunia, terbang ke kota atau
-  landmark, fokus ke kapal/kebakaran, dan saat mengaktifkan CCTV — jadi tidak ada tombol
-  yang "lupa" mode yang sedang dipilih.
+- Pilihan baru **Sudut**: **Atas** atau **Samping**, ada di kanan atas tepat di sebelah
+  kiri tombol bola dunia — pilih sudutnya, lalu tekan bola dunia, tanpa perlu membuka
+  panel apa pun. Pilihan ini berlaku untuk semua perpindahan kamera — tombol bola dunia,
+  terbang ke kota atau landmark, fokus ke kapal/kebakaran, dan saat mengaktifkan CCTV —
+  jadi tidak ada tombol yang "lupa" mode yang sedang dipilih.
   - **Samping** adalah pilihan awal dan tidak mengubah apa pun dari perilaku sebelumnya:
     kamera tetap miring seperti saat CCTV aktif, dan sudut yang sudah dipilih khusus untuk
     tiap landmark tetap dipakai (Empire State tetap dilihat dari sisi gedung, bukan dari
