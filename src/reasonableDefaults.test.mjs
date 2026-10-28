@@ -27,6 +27,9 @@
 //     because "default" means "what you get when you said nothing";
 //   • the surrounding override machinery is INTACT, so a default flip cannot
 //     quietly take a separate landed behaviour with it.
+// The Sudut (camera angle) default has the same three parts and lives in
+// `reasonableDefaultsCameraAngle.test.mjs` — a sibling, because adding it here
+// pushed this file past the 20,000-character limit.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

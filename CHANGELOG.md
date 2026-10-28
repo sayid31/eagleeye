@@ -7,6 +7,28 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- Panel DISPLAY punya pilihan baru **Sudut**: **Atas** atau **Samping**. Pilihan ini
+  berlaku untuk semua perpindahan kamera — tombol bola dunia, terbang ke kota atau
+  landmark, fokus ke kapal/kebakaran, dan saat mengaktifkan CCTV — jadi tidak ada tombol
+  yang "lupa" mode yang sedang dipilih.
+  - **Samping** adalah pilihan awal dan tidak mengubah apa pun dari perilaku sebelumnya:
+    kamera tetap miring seperti saat CCTV aktif, dan sudut yang sudah dipilih khusus untuk
+    tiap landmark tetap dipakai (Empire State tetap dilihat dari sisi gedung, bukan dari
+    atap). Tombol bola dunia kini memperlihatkan bola Bumi dari samping dengan lengkung
+    cakrawala terlihat, bukan lagi datar dari atas.
+  - **Atas** membuat kamera tegak lurus dari atas, seperti melihat peta. Arah hadap dan
+    jarak kamera tidak berubah, jadi dari atas Anda masih melihat ke arah yang sama —
+    misalnya area jangkauan sebuah kamera CCTV terbaca sebagai bidang, bukan kehilangan
+    arah.
+  - Pilihan ini ikut tersimpan di tautan bagikan, jadi penerima tautan mendapat mode yang
+    sama. Posisi kamera di tautan tetap persis seperti yang pengirim lihat — mode hanya
+    menentukan penerbangan kamera **berikutnya**, bukan menggeser pemandangan yang baru
+    saja dipulihkan.
+  - **Catatan jujur satu hal:** mencari sebuah kota secara keseluruhan (misalnya mengetik
+    "Jakarta") tetap memakai pandangan dari atas di kedua mode. Penerbangan jenis itu
+    membingkai sebuah kotak area, bukan satu titik, sehingga tidak punya sudut kamera untuk
+    diatur. Ini belum berubah dan sudah dicatat sebagai pekerjaan lanjutan.
+
 - Agen suara kini menjawab dalam bahasa yang Anda pakai, termasuk Bahasa Indonesia, dan
   tetap mengikuti jika Anda berganti bahasa di tengah sesi. Sebelumnya tidak ada instruksi
   bahasa sama sekali, jadi bahasa jawaban hanya bergantung kebetulan. Nama perintah internal,

@@ -6,6 +6,141 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-28 — Sudut: Atas overrides curated pitches, Samping preserves them
+
+**Context.** Owner request: after clicking the globe button the camera ends up
+straight overhead, and they wanted a selectable side/oblique angle "like when
+CCTV is active", modeled on OsirisAI's 2D/3D switch. Asked whether this should
+govern only the globe button or every camera movement, they chose every camera
+movement as a persisted mode: *"Satu sumber kebenaran, tidak ada tombol yang
+'lupa' mode-nya."*
+
+No such mode existed. `Cesium.SceneMode` is never used in app code
+(`sceneModePicker: false`), and the oblique framing the request pointed at was a
+bare inline `toRad(-22)` in `cctvActivation.js` — unnamed, unexported, untested.
+
+**The design tension.** `CITY_POIS` carries ~30 hand-curated per-landmark
+pitches (-12 … -45) chosen to frame specific buildings — Empire State at -12
+with `buildingHeight: 443`, Pentagon at -40 — plus a pitch chooser
+`buildingPitch(bounds)` returning -25/-12/-22/-45/-32 by aspect ratio. A global
+mode and per-landmark curation cannot both win.
+
+**Decision — the two modes are asymmetric.**
+
+| Mode | Curated pitch | Rationale |
+|---|---|---|
+| `Samping` (default) | **preserved** | Those values are already oblique; Samping is a request for oblique. It is therefore a no-op against prior behavior. |
+| `Atas` | **overridden** to -90 | Curation is entirely about how a building's FACE reads. In plan view there is no face, so preserving the number while discarding the intent would be the wrong kind of faithful. |
+
+- **Why Samping is the default.** "Default" means what you get having said
+  nothing, and what the app did at every pitch-bearing seam before the control
+  existed was curated/oblique. Atas-by-default would silently re-aim every
+  existing flight.
+- **Why not "the mode IS the pitch, full stop"** (Atas -90 / Samping -35, ignore
+  curation). It buys total predictability and one number; it costs ~30 curated
+  pitches, frames Empire State's roof instead of its 443 m facade, and orphans
+  `buildingPitch()` as dead-but-still-tested logic. Not worth it.
+- **Why heading and range are untouched.** Only the pitch changes, so Atas reads
+  a CCTV camera's coverage footprint or a vessel's surroundings in plan view
+  rather than losing the aim. An Atas flight that also zeroed the heading would
+  be a different framing, not the same framing from above.
+
+**The globe button needs its own oblique value — derived, not picked by feel.**
+At `GLOBE_VIEW.heightM` (18,000,000 m) the camera sits 24,371 km from Earth's
+center, so the planet's angular radius is `asin(6371/24371) = 15.15°`. Cesium's
+default vertical FOV is 60° (no `fov`/`frustum` override anywhere in `main.js`),
+so half-FOV is 30°.
+
+| Pitch | Axis off nadir | Far limb | Verdict |
+|---|---|---|---|
+| -35 (generic oblique) | 55° | — | aims at empty space |
+| -75 | 15° | ~30.15° | clips the frustum |
+| **-80** | 10° | ~25.1° | full disc off-center, visible curvature |
+
+Hence `GLOBE_OBLIQUE_PITCH_DEG = -80`. This arithmetic is also what established
+that the globe button genuinely CANNOT reuse the generic fallback — a finding
+that changed the design rather than decorating it. The flight's HEIGHT is
+identical in both modes, which is what keeps the >12,000 km view-scale band and
+`resetToGlobeView`'s height watchdog valid.
+
+**Why `CCTV_OBLIQUE_PITCH_DEG` (-22) stays separate from
+`OBLIQUE_PITCH_DEG` (-35).** It is calibrated against `focusCctvRecord`'s own
+`range` and sphere radius, not against a landmark. It equals `buildingPitch`'s
+mid-ratio -22 by coincidence, and a future reader who unifies them on that
+basis would decalibrate the CCTV flight. The test asserts they differ, with that
+reason attached.
+
+**Restore contract: the raw `pitch` beats `ca`.** A link carrying
+`ca=atas&pitch=-30` restores the camera at -30 and leaves the mode Atas, so the
+NEXT flight goes nadir. Three reasons, all this file's own doctrine: `pitch` is
+an OBSERVATION of where the sender's camera was, and restoring their view is the
+point of a share link; `ca` is a PREFERENCE for future navigation, and applying
+it to the restored pose would move the recipient away from the sender's framing
+— exactly what the `scf`/`ko`/`sci` parse-fallback comments exist to prevent;
+and the ordering falls out free with no race, since `applyState` places the
+camera and the `onRestore` payload sets the mode.
+
+**Why `ca` needs no era-specific parse fallback**, unlike `scf`/`ko`/`sci`. Those
+keys answer "what did an old link that omits this field mean, under that era's
+default", and their defaults moved. Every pre-`ca` link was authored when
+curated/oblique framing was the ONLY behavior, and carries its own raw `pitch`
+besides — so the live default already restores what its author saw.
+
+**Excluded seams, each for a reason, not for lack of time.**
+
+- `flyToViewportBounds` flies to a `Cesium.Rectangle` and passes NO orientation,
+  so a whole-city overview stays top-down in both modes. Converting it means
+  re-deriving center and range from the padded box, duplicating
+  `regionFramingPlan`'s swath math, and putting the antimeridian padding logic
+  back in play — that code was paid for. Recorded as a named wart in
+  `CHANGELOG.md`, not papered over.
+- The celestial ring (nadir IS its geometry; its cancel path calls
+  `_autoDisable()`), rocket-launch and radio-footprint plan views (nadir is a
+  framing PRIMITIVE for a trajectory or an RF footprint — tilting makes the data
+  unreadable), and `SceneDirector` (replays RECORDED camera states; overriding
+  them corrupts clips).
+- `flyToLandmark`'s own `pitch = -30` destructuring default is preserved rather
+  than routed through the -35 fallback. It is curation too, not an absence —
+  which is what makes Samping a true no-op. `OBLIQUE_PITCH_DEG` is therefore
+  unreachable through that seam by construction, and reachable through
+  `worldFocus` with an absent `framing.pitchDeg`. The test documents the
+  asymmetry rather than asserting a tidier one.
+
+**Not widening `cameraVerbs.js`'s `[-89, -5]` band.** Atas resolves to -90, one
+degree outside it, so a voice `tilt` right after an Atas flight clamps by 1°.
+This is PRE-EXISTING — `GLOBE_VIEW.pitchDeg` already shipped -90. Documented,
+not patched.
+
+**No voice tool yet.** `move_camera` with `motion:'tilt'` already gives voice a
+pitch verb, so voice is not blind to camera angle today. A dedicated tool costs
+two hard re-pins (`firstRunExperience.test.mjs`'s byte-length, `radioMarkup.test.mjs`'s
+tool count) plus an edit to `voiceSystemPrompt.js`, which is already over the
+character limit. Purely additive later with zero migration, because the setter
+is public and the mode is a string enum.
+
+**Reject vs coerce are two questions, so they are two functions.**
+`normalizeCameraAngleMode` COERCES (a share link, a dataset attribute, and a
+stale hash must all resolve to something renderable), while
+`isCameraAngleMode` merely RECOGNIZES — and the public setter uses the latter,
+because a caller that passed junk is owed an error rather than a silent
+default. The first draft asked the coercer "did it return the value
+unchanged?", which answers the right question only by accident of
+normalization being trim + lowercase, and sits next to a real trap: Samping is
+both a valid mode and the junk fallback, so a validity check built on "the
+default came back" cannot distinguish a caller who asked for Samping from one
+who typed nonsense. Two tests pin exactly that distinction.
+
+**Where the code went, and why not where it would seem to belong.** The mode is
+a module singleton in `src/cameraAngleMode.js` (the `scopeMask.js`
+`getScopeMaskFeather`/`setScopeMaskFeather` idiom) rather than `StyleManager`
+state, because four non-UI modules read it and none should take a UI
+dependency. The public setter went into a new mixin `src/uiCameraAngle.js`
+rather than beside `setCelestialRingEnabled` in `src/uiPublicApi.js`, because
+that file is already over the 20,000-character limit; mixins land on the same
+prototype, so the public API surface is identical. Resolving the pitch inside
+`flyToLandmark` rather than at its callers covers seven call sites with one
+edit.
+
 ## 2026-10-27 — The Overpass deadline follows the mirrors' queue, bounded by a sweep ceiling
 
 **Context.** Traffic drew nothing in any viewport without a cache entry.

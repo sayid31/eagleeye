@@ -1195,6 +1195,15 @@ body.cockpit-mode #cockpit-cloud-effects.active {
   white-space: nowrap;
 }
 
+/* The Sudut row is the only .pp-slider-row with no .pp-toggle-btn above it, so
+   it has to restore the top border and full radius that class drops on the
+   assumption of a button sitting on top of it. Same pattern as
+   .detection-slider-row's own per-row override below. */
+.camera-angle-row {
+  border-top: 1px solid var(--glass-border);
+  border-radius: 8px;
+}
+
 .detection-slider-row {
   min-width: 170px;
   padding: 5px 8px 6px;

@@ -430,6 +430,22 @@
       </div>
     </div>
     <div class="pp-toggle-group">
+      <!-- Sudut kamera (owner directive 2026-10-28). SAMPING ships selected, so this
+           markup IS the first-run state — keep in lockstep with
+           CAMERA_ANGLE_MODE_DEFAULT in cameraAngleMode.js and
+           GLOBAL_POST_DEFAULTS.cameraAngle in uiConstants.js. Pinned in
+           reasonableDefaults.test.mjs. No parent .pp-toggle-btn here (the mode is
+           always on, there is nothing to switch off), which is why the row needs
+           .camera-angle-row to restore the top border .pp-slider-row drops. -->
+      <div class="pp-slider-row camera-angle-row visible" id="camera-angle-row">
+        <span class="pp-slider-mini-label">Sudut</span>
+        <div class="pp-mode-seg" role="radiogroup" aria-label="Sudut kamera">
+          <button class="pp-mode-btn" id="camera-angle-atas" data-camera-angle="atas" role="radio" aria-checked="false" title="Atas — kamera tegak lurus dari atas">Atas</button>
+          <button class="pp-mode-btn active" id="camera-angle-samping" data-camera-angle="samping" role="radio" aria-checked="true" title="Samping — kamera miring seperti saat CCTV aktif">Samping</button>
+        </div>
+      </div>
+    </div>
+    <div class="pp-toggle-group">
       <button class="pp-toggle-btn active" id="scope-toggle" title="Lingkup — masker viewport melingkar" aria-pressed="true">
         <span class="pp-icon material-symbols-outlined" aria-hidden="true">adjust</span>
         <span class="pp-label">Lingkup</span>

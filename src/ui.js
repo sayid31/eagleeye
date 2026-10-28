@@ -54,6 +54,7 @@ import { hudPortalMixin } from './uiHudPortal.js';
 import { publicApiMixin } from './uiPublicApi.js';
 import { cleanViewMixin } from './uiCleanView.js';
 import { loadingFeedbackMixin } from './uiLoadingFeedback.js';
+import { cameraAngleMixin } from './uiCameraAngle.js';
 import { disposeMixin } from './uiDispose.js';
 import { createSettleOnce } from './settleOnce.js';
 import { COCKPIT_ENTRY_COLLAPSE_PANEL_IDS, DETECTION_ALLOCATION_STORAGE_KEY, STYLES, STYLE_STATUS_LABELS } from './uiConstants.js';
@@ -467,6 +468,7 @@ export class StyleManager {
           detectionFadePct,
           detectionOutsideOpacityPct,
           celestialRing,
+          cameraAngle,
           scopeEnabled,
           scopeFeatherPct,
           scopeIntensityPct,
@@ -521,6 +523,12 @@ export class StyleManager {
         if (detectionMode) this._setDetectionMode(detectionMode);
         if (typeof celestialRing === 'boolean') {
           this.setCelestialRingEnabled(celestialRing, { syncShare: false, focus: false });
+        }
+        // `ca` is a preference for FUTURE flights, not an instruction to re-aim the
+        // camera the link just restored: ShareLinkManager already placed the camera
+        // from the link's own raw `pitch`, which is what the sender actually saw.
+        if (typeof cameraAngle === 'string') {
+          this.setCameraAngle(cameraAngle, { syncShare: false });
         }
         if (typeof scopeEnabled === 'boolean') {
           setScopeMaskEnabled(scopeEnabled);
@@ -577,6 +585,10 @@ export class StyleManager {
       document.getElementById('models3d-mode-proximity'),
       document.getElementById('models3d-mode-all'),
     ];
+    this._cameraAngleBtns = [
+      document.getElementById('camera-angle-atas'),
+      document.getElementById('camera-angle-samping'),
+    ];
     // DISPLAY-rail 3D-aircraft toggle (flights layer param). DEFAULT-ON in
     // PROXIMITY (owner directive 2026-08-22) — mirrors the `models3d` default in
     // layerState.js and `_models3dEnabled` in both flight layers, and the `active`
@@ -625,6 +637,7 @@ export class StyleManager {
     this._initResetGlobeButton();
     this._initHUDToggle();
     this._initModels3dToggle();
+    this._initCameraAngleControl();
     this._applyGlobalPostDefaults();
     this._initOrbit();
     this._initRecordingOverlay();
@@ -790,7 +803,7 @@ export class StyleManager {
 }
 
 // Method groups live in ui*.js mixins; attached once at module load.
-Object.assign(StyleManager.prototype, styleStagesMixin, detectionUiMixin, presetDefaultsMixin, shareStateMixin, panelChromeMixin, dataManagerAttachMixin, hudPortalMixin, publicApiMixin, cleanViewMixin, loadingFeedbackMixin, disposeMixin);
+Object.assign(StyleManager.prototype, styleStagesMixin, detectionUiMixin, presetDefaultsMixin, shareStateMixin, panelChromeMixin, dataManagerAttachMixin, hudPortalMixin, publicApiMixin, cleanViewMixin, loadingFeedbackMixin, cameraAngleMixin, disposeMixin);
 
 // Adaptive panel layout, drag/position persistence, and the shared
 // setPanelCollapsed/share-state entry points live in panelAdaptiveLayoutMixin.js

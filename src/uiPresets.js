@@ -141,6 +141,9 @@ export const presetDefaultsMixin = {
     if (typeof defaults.celestialRing === 'boolean') {
       this.setCelestialRingEnabled(defaults.celestialRing, { syncShare: false, focus: false });
     }
+    if (typeof defaults.cameraAngle === 'string') {
+      this.setCameraAngle(defaults.cameraAngle, { syncShare: false });
+    }
   },
 
 /**

@@ -2,6 +2,7 @@
  * One-click camera transfer for layer-owned world targets.
  */
 import * as Cesium from 'cesium';
+import { resolveActiveCameraPitchDeg } from './cameraAngleMode.js';
 
 export const WORLD_FOCUS_REQUEST_EVENT = 'gev:world-request-focus';
 export const WORLD_CLICK_FOCUS_DURATION_SEC = 1.9;
@@ -72,7 +73,9 @@ export function flyToWorldTarget(viewer, target = {}) {
     {
       offset: new Cesium.HeadingPitchRange(
         heading,
-        Cesium.Math.toRadians(framing.pitchDeg),
+        // WORLD_FOCUS_FRAMING's per-kind pitch is the curated value here: -30
+        // for a vessel, -35 for a fire. SAMPING keeps it, ATAS goes nadir.
+        Cesium.Math.toRadians(resolveActiveCameraPitchDeg(framing.pitchDeg)),
         framing.rangeM,
       ),
       duration,

@@ -328,11 +328,27 @@ test('Cockpit owns a focused shared Display portal and compact Radio controls', 
 test('Display orders 3D above Celestial, Clean UI below it, and Parameters below Detection', () => {
   const display = html.match(/id="pp-toggles"[\s\S]*?id="clean-view-exit"/);
   assert.ok(display, 'Display markup is missing');
+  // Sudut sits between 3D and Celestial: it is a view-geometry control, sibling
+  // with 3D, not a layer toggle. Pinned here because without an ordering guard
+  // it would be the only DISPLAY member free to drift.
   assert.match(
     display[0],
-    /id="detection-toggle"[\s\S]*?id="param-slider-panel"[\s\S]*?id="models3d-toggle"[\s\S]*?id="celestial-toggle"[\s\S]*?id="clean-view-toggle"/,
+    /id="detection-toggle"[\s\S]*?id="param-slider-panel"[\s\S]*?id="models3d-toggle"[\s\S]*?id="camera-angle-row"[\s\S]*?id="celestial-toggle"[\s\S]*?id="clean-view-toggle"/,
   );
   assert.equal((html.match(/id="param-slider-panel"/g) || []).length, 1, 'Parameters must have one DOM owner');
+  assert.equal((html.match(/id="camera-angle-row"/g) || []).length, 1, 'Sudut must have one DOM owner');
+  // The shipped markup is the third surface of the cameraAngle default (the
+  // constant and GLOBAL_POST_DEFAULTS are the other two), so the active button
+  // and its aria-checked pair are asserted, not just the ordering.
+  assert.match(
+    display[0],
+    /id="camera-angle-atas"[^>]*aria-checked="false"/,
+  );
+  assert.match(
+    display[0],
+    /id="camera-angle-samping"[^>]*aria-checked="true"/,
+  );
+  assert.match(display[0], /class="pp-mode-btn active" id="camera-angle-samping"/);
   assert.match(
     mixin,
     /const detectionGroup = this\._detectionBtn\?\.closest\('\.pp-toggle-group'\);[\s\S]*?detectionGroup\.after\(this\._sliderPanel\)/,
