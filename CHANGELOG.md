@@ -8,10 +8,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 ### Added
 
 - Pilihan baru **Sudut**: **Atas** atau **Samping**, ada di kanan atas tepat di sebelah
-  kiri tombol bola dunia — pilih sudutnya, lalu tekan bola dunia, tanpa perlu membuka
-  panel apa pun. Pilihan ini berlaku untuk semua perpindahan kamera — tombol bola dunia,
-  terbang ke kota atau landmark, fokus ke kapal/kebakaran, dan saat mengaktifkan CCTV —
-  jadi tidak ada tombol yang "lupa" mode yang sedang dipilih.
+  kiri tombol bola dunia — tanpa perlu membuka panel apa pun. **Menekannya langsung
+  memiringkan kamera di tempat:** pemandangan yang sedang Anda lihat tetap di tengah
+  layar, lokasi, ketinggian, dan arah hadap tidak berubah — hanya sudutnya yang beralih,
+  dengan animasi singkat. Jadi kalau sedang melihat Jakarta lalu menekan **Atas**, Jakarta
+  itu juga yang langsung terlihat dari atas. Pilihan itu juga tersimpan dan ikut berlaku
+  untuk semua perpindahan kamera berikutnya — tombol bola dunia, terbang ke kota atau
+  landmark, fokus ke kapal/kebakaran, dan saat mengaktifkan CCTV — jadi tidak ada tombol
+  yang "lupa" mode yang sedang dipilih.
+  - Kamera tidak dimiringkan saat mode **kokpit** aktif atau saat sedang mengunci sebuah
+    target, karena di dua keadaan itu kamera sudah dikemudikan oleh hal lain. Mode tetap
+    tersimpan, hanya gerakannya yang ditunda sampai perpindahan kamera berikutnya.
   - **Samping** adalah pilihan awal dan tidak mengubah apa pun dari perilaku sebelumnya:
     kamera tetap miring seperti saat CCTV aktif, dan sudut yang sudah dipilih khusus untuk
     tiap landmark tetap dipakai (Empire State tetap dilihat dari sisi gedung, bukan dari
@@ -22,9 +29,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
     misalnya area jangkauan sebuah kamera CCTV terbaca sebagai bidang, bukan kehilangan
     arah.
   - Pilihan ini ikut tersimpan di tautan bagikan, jadi penerima tautan mendapat mode yang
-    sama. Posisi kamera di tautan tetap persis seperti yang pengirim lihat — mode hanya
-    menentukan penerbangan kamera **berikutnya**, bukan menggeser pemandangan yang baru
-    saja dipulihkan.
+    sama. Posisi kamera di tautan tetap persis seperti yang pengirim lihat — saat memulihkan
+    tautan, mode **tidak** memiringkan kamera, karena itu justru akan menggeser pemandangan
+    yang memang jadi alasan tautan itu dibagikan. Mode baru bekerja saat Anda menekannya
+    sendiri atau pada perpindahan kamera selanjutnya.
   - **Catatan jujur satu hal:** mencari sebuah kota secara keseluruhan (misalnya mengetik
     "Jakarta") tetap memakai pandangan dari atas di kedua mode. Penerbangan jenis itu
     membingkai sebuah kotak area, bukan satu titik, sehingga tidak punya sudut kamera untuk

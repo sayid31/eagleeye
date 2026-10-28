@@ -528,7 +528,7 @@ export class StyleManager {
         // camera the link just restored: ShareLinkManager already placed the camera
         // from the link's own raw `pitch`, which is what the sender actually saw.
         if (typeof cameraAngle === 'string') {
-          this.setCameraAngle(cameraAngle, { syncShare: false });
+          this.setCameraAngle(cameraAngle, { syncShare: false, tilt: false });
         }
         if (typeof scopeEnabled === 'boolean') {
           setScopeMaskEnabled(scopeEnabled);

@@ -172,6 +172,62 @@ next to each other makes the gesture readable left to right with no panel open.
   markup-and-CSS-only relocation possible, and the reason `data-camera-angle`
   was chosen over `data-mode` in the first place.
 
+**Behavior, corrected the same day: the click tilts the camera in place.** The
+first build treated the mode purely as a preference for subsequent flights, so
+pressing Atas or Samping moved nothing and read as a dead control — the owner's
+words were *"masih hanya sekedar tombol aja tapi tidak ada fungsi"*. Root cause
+is mine and it is a design error, not a defect: I built what the words "persisted
+mode" described and missed what the reference they named demonstrated. OsirisAI's
+2D/3D switch acts on what you are already looking at. Offered three behaviors —
+tilt in place, always fly to the globe view, or keep it a preference with a
+visual hint — the owner chose tilt in place: *"kamera tetap di lokasi, ketinggian,
+dan arah hadap yang sama — hanya sudutnya yang berubah."*
+
+- **"In place" is a stronger claim than "change the pitch", and that is the whole
+  of the geometry.** Swinging the camera about its own eye point slides the ground
+  away: you ask to look down at Jakarta and end up looking down at somewhere else.
+  So `_tiltCameraToAngle` resolves the point on the globe currently aimed at
+  (`pickEllipsoid` at canvas center), measures the eye-to-target distance, and
+  re-places the eye at the new pitch with the SAME target, distance and heading.
+  `flyToBoundingSphere` with a **zero-radius** `BoundingSphere` gives exactly
+  that — the same centering guarantee `flyToLandmark` already relies on, reused
+  rather than re-derived.
+- **A separate resolver, because a tilt asks a different question than a flight.**
+  `resolveCameraPitchDeg` answers "what pitch should this DESTINATION be framed
+  at", which is why its Samping branch preserves curation. A tilt has no
+  destination and no curation to preserve — the operator is re-aiming at what is
+  already on screen — so the only variable is distance. Hence
+  `resolveTiltPitchDeg(mode, altitudeM)`: Atas is always -90, Samping is -80 at
+  or above `GLOBAL_VIEW_ALTITUDE_M` and -35 below it.
+- **Why that threshold is 150,000 m and not a new number.** It is
+  `viewScaleForAltitude`'s existing `global` band in `detectionPolicy.js`. The
+  reason -35 fails up there is the same reason the globe button needed -80 (the
+  15.15° arithmetic above), so inventing a second constant would give the codebase
+  two thresholds that must be kept equal by vigilance instead of one that is
+  equal by construction. A test asserts the boundary coincides.
+- **The refusals mirror `focusCctvRecord`'s, deliberately.** `cockpit-active` and
+  `tracking-holds-view` are the two owners that drive the camera every frame, so
+  a tilt there would be overwritten next frame and would fight them visibly in
+  the meantime; `no-ground-target` covers a view axis that misses the planet past
+  the limb, where there is no "in place" to pivot around; `already-there` (0.5°
+  epsilon) keeps a re-click from being a pointless animation. In every case the
+  MODE still lands and only the motion is skipped, so the control is never
+  silently inert. The reasons are machine-readable in the manner of
+  `CCTV_FOCUS_RESULT` rather than booleans, which is what let the whole refusal
+  matrix be tested in Node with no viewer.
+- **Why `tilt` is an option defaulting to true, rather than a second method.**
+  The restore paths need "set the mode, move nothing", and that is the SAME
+  operation minus one step — a `setCameraAngleQuietly` sibling would duplicate the
+  guard-and-sync body to express a boolean. Both restore call sites pass
+  `tilt: false` for the reason the `pitch`-beats-`ca` contract above already
+  establishes: tilting on restore moves the recipient away from the framing the
+  link exists to reproduce.
+- **Why the geometry lives in a Cesium-free module.** `src/cameraAngleTilt.js`
+  decides pitch, range, duration and refusal; `uiCameraAngle.js` holds the three
+  Cesium calls. That split is what makes the interesting half testable without a
+  viewer or a GPU — the same reason `trafficFeedPresentation` sits outside the
+  traffic layer.
+
 ## 2026-10-27 — The Overpass deadline follows the mirrors' queue, bounded by a sweep ceiling
 
 **Context.** Traffic drew nothing in any viewport without a cache entry.
