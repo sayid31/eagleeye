@@ -16,6 +16,7 @@ import { lifecycleQueriesMixin } from './managerLifecycleQueries.js';
 import { delegatesMixin } from './managerDelegates.js';
 import { subscriptionsMixin } from './managerSubscriptions.js';
 import { RESTORE_CONCURRENCY, SUPERSEDED_VISIBILITY_INTENT } from './managerConstants.js';
+import { isBootTimingOpen, markLayerPhase } from '../bootTiming.js';
 
 // Re-exported for external consumers (gevActions.js, and every
 // *.test.mjs that imports `layerFeedState` from './manager.js' rather than
@@ -178,6 +179,10 @@ export class DataLayerManager {
     if (!Number.isInteger(intentEpoch)) return;
     const record = entry.visibilityIntentRecords.get(intentEpoch);
     if (record) record.phase = phase;
+    // Boot timing only: a branch on a module boolean that is false for the
+    // whole life of the page after the boot window closes. This seam runs on
+    // every toggle forever, which is why the guard is here and not inside.
+    if (isBootTimingOpen()) markLayerPhase(entry.staticMeta?.id, intentEpoch, phase);
   }
 
   async _doToggle(entry, layerId, origin, {
@@ -618,6 +623,13 @@ export class DataLayerManager {
       resolve: resolveIntentRecord,
     };
     entry.visibilityIntentRecords.set(intentEpoch, intentRecord);
+    // Marking 'queued' here (rather than letting 'resolve' be the first stamp)
+    // is what makes queued→resolve visible, and that window is the
+    // RESTORE_CONCURRENCY queue wait. Separating queue wait from module parse
+    // cost is the difference between "the queue is the wait" and "the module
+    // is slow" — the same distinction DECISIONS 2026-10-27 had to establish by
+    // hand for Overpass.
+    if (isBootTimingOpen()) markLayerPhase(entry.staticMeta?.id, intentEpoch, 'queued');
     for (const [recordEpoch, record] of entry.visibilityIntentRecords) {
       if (entry.visibilityIntentRecords.size <= 16) break;
       if (recordEpoch !== intentEpoch && record.completed) entry.visibilityIntentRecords.delete(recordEpoch);

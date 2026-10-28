@@ -1839,6 +1839,24 @@ detection off by hand — would not have.
 
 ## Operational Notes
 
+- **Boot timing marks ship in production under a `boot:` prefix.**
+  `src/bootTiming.js` emits ~17 one-time `performance.mark()` instants across
+  boot (module eval, viewer, photoreal, mapstack, UI, data registration, share
+  restore, first frame, splash) and derives phase/total `performance.measure()`
+  spans from them; `src/bootTimingReport.js` holds the vocabulary and the pure
+  report shapers. This is a deliberate divergence from `trafficTiming`, which
+  is gated on `import.meta.env.DEV && ?trafficDebug=1`: that gate is right for
+  traffic, which installs listeners, removers and instrumented twins, while
+  boot timing installs nothing but marks — and DEV-gating would make `dist/`
+  unmeasurable, which is exactly where the investigated cost lives (the
+  parser-blocking Cesium script exists only in the built HTML). Nothing is
+  logged: `performance.mark` writes to the entry buffer, never the console, so
+  the clean-console regression gates are untouched by construction. The window
+  closes on the LAST of [splash lifted, saved layers restored] — not the splash
+  alone, since layers deliberately restore behind the visible app — after which
+  the per-toggle seam in `DataLayerManager._setVisibilityIntentPhase()` is a
+  branch on a false boolean. A `BOOT_TIMING_MAX_MARKS = 512` budget is a second
+  bound. Read the entries with `npm run qa:boot-timing`.
 - **Splash screen ("Initializing photorealistic world...") hides on real
   render readiness, not a flat timer.** `src/splashGate.js`'s
   `composeSplashReadiness()` gates hiding `#loading-screen` on
@@ -1999,6 +2017,19 @@ Replay transport uses one Play/Pause toggle plus Cancel. During ascent only the 
   (`QA_BASE_URL=http://localhost:4173 npm run qa:map-source-tray`). Add
   `-- --keyless` to force the no-ion-token expectations on a keyed server; both
   invocations are gates.
+- `scripts/qa-boot-timing.mjs`: boot baseline reporter (`npm run qa:boot-timing`,
+  `--url`/`--runs`/`--json`/`--allow-dev`). Reads the app's own `boot:` User
+  Timing entries from the browser and prints per-phase medians for a cold load
+  and for a reload replaying the hash the app itself wrote, plus the six
+  optimization-candidate facts a page cannot self-report (Cesium's
+  `renderBlockingStatus`, eager entry-chunk size, `modulepreload` count,
+  `/api/*` cache headers as served, service-worker/Cache-Storage counts,
+  navigation timing). It reports and never fails on a duration — a boot-time
+  budget would turn a deliberate hold into a regression — but it does fail a
+  run that logged a console error, and it refuses to publish from a dev server
+  without `--allow-dev` (Vite serves Cesium as a module graph there, hiding the
+  blocking-script cost). Not part of the `npm test` gates; the recorded output
+  lives in `docs/PERFORMANCE.md`.
 - `scripts/qa-l9-matrix.mjs`: the L9 release-candidate QA matrix in one command
   (`node scripts/qa-l9-matrix.mjs --url http://localhost:4173`). Orchestrates
   the `qa-*.mjs` fleet plus `track-regression` as subprocesses and adds

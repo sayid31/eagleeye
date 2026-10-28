@@ -24,7 +24,7 @@ test('every terminal restore path (failure, destroy) also releases the splash ga
 });
 
 test('the splash composes on the view-ready promise, not the full aggregate', () => {
-  const startup = main.slice(main.indexOf('void composeSplashReadiness('), main.indexOf('// Expose for debugging'));
+  const startup = main.slice(main.indexOf('composeSplashReadiness({'), main.indexOf('// Expose for debugging'));
   assert.match(startup, /viewReadyPromise: styleManager\.initialViewReadyPromise/);
 });
 

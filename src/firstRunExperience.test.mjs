@@ -585,9 +585,15 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   // restore promise and a short minimum-visible floor (see splashGate.js),
   // not a flat timer — composeSplashReadiness/waitForFirstFrame replaced the
   // old inline `Promise.all([styleManager.initialRestorePromise, timeout(1000)])`.
-  const startup = main.slice(main.indexOf('void composeSplashReadiness('), main.indexOf('// Expose for debugging'));
+  const startup = main.slice(main.indexOf('composeSplashReadiness({'), main.indexOf('// Expose for debugging'));
   assert.match(startup, /styleManager\.initialViewReadyPromise/);
-  assert.doesNotMatch(startup, /styleManager\.initialRestorePromise/,
+  // Scoped to the composeSplashReadiness call rather than the whole startup
+  // block: boot timing legitimately references initialRestorePromise nearby to
+  // close its measurement window on the LAST of [splash, layers], which is a
+  // different thing from letting saved layers hold the splash. Pinning the
+  // call's own arguments keeps this assertion about the gate.
+  const splashCall = startup.slice(0, startup.indexOf('});'));
+  assert.doesNotMatch(splashCall, /styleManager\.initialRestorePromise/,
     'saved layers must not hold the splash');
   assert.match(startup, /waitForFirstFrame\(viewer\.scene\)/);
   assert.ok(startup.indexOf("loadingScreen.classList.add('hidden')") < startup.indexOf('initFirstRunExperience'));

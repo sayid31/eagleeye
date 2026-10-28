@@ -6,6 +6,84 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-28 — Boot timing ships in production, and labels its deliberate holds instead of removing them
+
+**Context.** The owner said loading *"masih agak membutuhkan waktu"* and asked
+for it to be instant. I said plainly that instant is not promisable — part of
+the latency is third-party upstreams — and offered three paths; they chose
+*"Ukur dulu, baru putuskan"*. So this change is instrumentation and a reported
+baseline only. Six optimization candidates were identified and **none** were
+implemented.
+
+**Why these marks ship in production while `trafficTiming`'s do not.**
+`TRAFFIC_TIMING_ENABLED` is `import.meta.env.DEV && ?trafficDebug=1`, and that
+gate is correct for traffic: it installs event listeners, a `moveEnd` remover,
+correlated trace objects and instrumented twins of real functions. Boot timing
+installs none of that — about 17 one-time `performance.mark()` calls plus 11
+derived measures, which is unmeasurable against a 2.4-second boot. And a DEV
+gate would make `dist/` unmeasurable, which is precisely where the cost under
+investigation lives: the parser-blocking 5.46 MiB `/cesium/Cesium.js` exists
+only in the built HTML, because `npm run dev` serves Cesium as a module graph
+instead. A different cost profile earns a different gate. The module header
+says so, so that nobody "fixes" it into DEV-only.
+
+**Why the deliberate holds are labeled rather than shortened.** Three of the
+slowest spans are recorded decisions: the photoreal tileset await (2026-10-05,
+where created-but-hidden is the point) and the 1500 ms share-restore timer plus
+3.0 s camera flight (2026-10-08, which lists lowering the timer under **Not
+done**). A table row reading `share-wait 1501.9 ms` invites someone to delete
+it. So every `performance.measure` carries a structured-clone-safe
+`detail: {deliberate, decisionRef}`, and the reporter prints
+`share-wait 1501.9 ms (deliberate — DECISIONS 2026-10-08)`. The verdict travels
+with the number as a mechanism rather than as a convention someone has to
+remember.
+
+**The measured correction: layer restore is not the cost.** 2026-10-08 justified
+the 1500 ms timer partly on saved-layer restore needing the window. The capture
+does not support that. On a reload, `layer-restore` is **0.2 ms** and every
+individual layer row reads **0.0 ms**, while `share-wait` + `share-camera`
+together are **4,524.5 ms of the 6,647.4 ms total — about 68%**. The two holds
+*are* the reload. This does not make 2026-10-08 wrong about wanting a hold, and
+the timer is deliberately unchanged here; it means the stated reason no longer
+matches the measurement, and a future decision to lower it should start from
+these numbers rather than from the old rationale. Enabling a saved layer only
+arms its own loading path — the fetch finishes behind the lifted splash, by
+design — so the phase marks correctly show near-zero and the restore cost is
+not where the hold is paying off.
+
+- **The boot window closes on the LAST of [splash lifted, layers restored],**
+  not on the splash. Closing at splash-hide was my first draft and would have
+  discarded exactly the per-layer marks that measuring a restore exists to
+  capture, since layers deliberately restore behind the visible app.
+- **`queued`→`resolve` is the `RESTORE_CONCURRENCY = 4` queue wait.** Marking
+  `queued` at intent-record creation, rather than letting `resolve` be the first
+  stamp, is what separates queue wait from module parse cost — the same
+  distinction 2026-10-27 had to establish by hand for Overpass.
+- **`eager-eval` is anchored at `timeOrigin`, not at a mark.** ES imports
+  evaluate before the module body, so the first mark in `main.js`'s module scope
+  lands at the *end* of eager parse+eval; its own `startTime` IS the cost. A
+  `fromOrigin` span measures from numeric 0, which the User Timing spec reads as
+  `timeOrigin` — the only way to express "everything before our first line of
+  code", for which no mark can exist. At 1,426 ms median it is the largest cold
+  phase after photoreal, so getting this wrong would have hidden the biggest
+  number in the table.
+- **The harness refuses a dev server** (exit 2 without `--allow-dev`), detected
+  by looking for `/@vite/client` in the served HTML rather than guessing from a
+  port number. It also never publishes a number from a run that logged a console
+  error. A number from the wrong target is worse than no number.
+- **Section B replays the hash the app itself wrote,** waiting out
+  `sharelink.js`'s 500 ms debounce. A hand-built hash would exercise my idea of
+  a share link rather than the real serializer; a timeout yields a skip rather
+  than silently measuring a second cold boot and calling it a reload.
+- **It reports, and never fails on a duration.** A boot-time budget would turn
+  one of the three deliberate holds into a regression on the next run.
+
+**Evidence.** `docs/PERFORMANCE.md` §Runnable boot baseline (28 October 2026)
+carries the medians and the candidate table. Candidate 5 came back narrower than
+expected: the near-universal `Cache-Control: no-store` across
+`src/data/*Proxy.mjs` is real in the source, but a whole boot only reaches four
+`/api/*` routes, so those headers cost nothing at startup.
+
 ## 2026-10-28 — The voice system prompt splits into four siblings, proven mechanical by its own hash
 
 **Context.** `src/voice/voiceSystemPrompt.js` had grown to 22,566 characters,

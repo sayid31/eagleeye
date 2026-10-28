@@ -57,6 +57,7 @@ import { loadingFeedbackMixin } from './uiLoadingFeedback.js';
 import { cameraAngleMixin } from './uiCameraAngle.js';
 import { disposeMixin } from './uiDispose.js';
 import { createSettleOnce } from './settleOnce.js';
+import { BOOT_MARKS, markBoot } from './bootTiming.js';
 import { COCKPIT_ENTRY_COLLAPSE_PANEL_IDS, DETECTION_ALLOCATION_STORAGE_KEY, STYLES, STYLE_STATUS_LABELS } from './uiConstants.js';
 export { STYLES } from './uiConstants.js';
 
@@ -664,7 +665,11 @@ export class StyleManager {
         'shared view',
         { cancelPendingSelection: false },
       );
+      // armed→fired IS the deliberate 1500 ms hold below, measured rather than
+      // shortened (DECISIONS 2026-10-08 lists lowering it under "Not done").
+      markBoot(BOOT_MARKS.SHARE_ARMED);
       this._initialShareRestoreTimeout = setTimeout(() => {
+        markBoot(BOOT_MARKS.SHARE_FIRED);
         this._initialShareRestoreTimeout = null;
         if (this._disposed) return;
         const generation = this._initialShareNavigationGeneration;
@@ -678,8 +683,11 @@ export class StyleManager {
             });
             // Camera + visual/panel restore is done; saved layers continue
             // behind the visible app (hash writes stay suppressed below).
+            // This instant contains the deliberate 3.0 s mesh-friendly flight.
+            markBoot(BOOT_MARKS.SHARE_CAMERA_SETTLED);
             this._initialViewReadyGate?.settle({ status: 'settled', share });
             const layers = await (this._layerStateRestorePromise || Promise.resolve([]));
+            markBoot(BOOT_MARKS.LAYERS_RESTORED);
             const tracking = share.camera === 'applied'
               ? await this._layerStateCoordinator?.restoreShareTrackingSelection?.()
               : {
