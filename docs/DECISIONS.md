@@ -6,6 +6,58 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-28 — The voice system prompt splits into four siblings, proven mechanical by its own hash
+
+**Context.** `src/voice/voiceSystemPrompt.js` had grown to 22,566 characters,
+past the 20,000-character file-health limit, and it was blocking a push: the
+owner was offered "push accepting the debt" or "split it first" and chose
+*"pecah dulu"*. Splitting 19 KB of prose that two LLM backends read as a
+behavioral contract is the kind of refactor that can silently change what the
+assistant does, so the question was how to split it without having to trust a
+careful reading of every line.
+
+**What made it safe is a pin that already existed.**
+`voiceSystemPrompt.test.mjs` asserts a sha256 and a length over
+`GEV_VOICE_SYSTEM_PROMPT` — the JOINED string, not the array. So any split that
+concatenates siblings in the original order reproduces the hash, and any split
+that reworded, reordered, dropped or duplicated a line cannot. That turned an
+editorial judgment into a mechanical operation: slice the exact source byte
+ranges into siblings, concatenate, let the hash answer. It did, first try. This
+is the same property `toolSchemas.test.mjs`'s pin on `GEV_REALTIME_TOOLS` was
+built for, now used a second time — worth noting, because a pin that only ever
+guards is cheap insurance, while a pin that also *enables* a refactor has paid
+for itself.
+
+**The boundaries are the array's own, not size-driven.** Each line answers one
+of four questions: who are you (`…Persona.js`, 2.0 KB), how do you answer a
+question (`…Answering.js`, 9.1 KB), how do you drive the app (`…Control.js`,
+6.9 KB), how do you draw on the map (`…Annotation.js`, 4.7 KB). Cutting at
+equal sizes instead would have put the counting contract and the named-view
+mapping in the same file for no reason other than arithmetic.
+
+- **Order is part of the contract.** The persona's language clause says "where a
+  rule below pins an exact failure sentence", so the sections refer backward and
+  forward to each other as one document. The aggregator's spread order is
+  therefore load-bearing, and both the module header and a test say so — a
+  future contributor who alphabetizes those four imports would change model
+  behavior with a diff that looks like tidying.
+- **Why an aggregator rather than four exports the consumers import directly.**
+  Four consumers read this module (`anthropicProxy.mjs`, the realtime proxy,
+  and two test files), and the thing they need is the whole contract. Pushing
+  the concatenation to each of them would put the load-bearing order in four
+  places instead of one.
+- **Why the new tests pin structure when the hash already pins bytes.** The hash
+  proves equality but explains nothing; a reader who wants to know which sibling
+  owns the counting contract should not have to diff a checksum. So the tests
+  also assert the concatenation order, one subject anchor per sibling, and that
+  no line appears in two siblings — that last one because a line duplicated into
+  two siblings while another was dropped is the specific failure a length check
+  cannot see.
+- **`vite.config.js` (936 L / 41,388 C) is still over the limit and was not
+  touched.** It is the other known offender and a genuinely different job —
+  effectively the backend, with ~20 proxy routes. Named here so the remaining
+  debt is explicit rather than implied by this entry's silence.
+
 ## 2026-10-28 — Sudut: Atas overrides curated pitches, Samping preserves them
 
 **Context.** Owner request: after clicking the globe button the camera ends up
