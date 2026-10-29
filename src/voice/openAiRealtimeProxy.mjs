@@ -21,6 +21,7 @@ import { keylessHudSummaryResponse } from '../hudSummaryResponse.js';
 import { VOICE_MODELS, isKnownVoiceTier, resolveVoiceModel } from './voiceCost.js';
 import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './toolSchemas.js';
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
+import { installLiveSessionRoute } from './openAiLiveProxy.mjs';
 
 // Sourced from the shared voice-model registry so the client's cost estimate
 // can never be computed against a different model than the session runs on.
@@ -40,7 +41,7 @@ const REALTIME_DEBUG_LOG_DIR = path.join(process.cwd(), '.gev-logs');
 const REALTIME_DEBUG_LOG_FILE = path.join(REALTIME_DEBUG_LOG_DIR, 'realtime-conversations.jsonl');
 const REALTIME_DEBUG_LOG_MAX_BYTES = 8 * 1024 * 1024;
 
-function readRequestBody(req, maxBytes = 1024 * 1024) {
+export function readRequestBody(req, maxBytes = 1024 * 1024) {
   return new Promise((resolve, reject) => {
     let total = 0;
     const chunks = [];
@@ -60,6 +61,15 @@ function readRequestBody(req, maxBytes = 1024 * 1024) {
 
 export function openAiRealtimeProxy() {
   function install(middlewares) {
+    // GPT-Live full-duplex backend session-create (sibling route). The Realtime
+    // routes below stay in place as the selectable fallback backend.
+    installLiveSessionRoute(middlewares, {
+      readRequestBody,
+      enforceRateLimit: (req, res) => enforceOptInRateLimit(openAiRateLimiter(), req, res),
+      tools: GEV_REALTIME_TOOLS,
+      instructions: GEV_VOICE_SYSTEM_PROMPT,
+    });
+
     middlewares.use('/api/openai/hud-summary', async (req, res) => {
       if (req.method !== 'POST') {
         res.statusCode = 405;
