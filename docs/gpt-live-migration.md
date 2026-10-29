@@ -156,8 +156,33 @@ on an open mic over ~30 s, real spoken (not injected-text) user turns, and the
 - Not yet user-visible: no client controller/UI wiring, so `CURRENT-STATE.md` /
   `CHANGELOG.md` stay untouched until the backend is selectable (Fase 3).
 
-NEXT: Fase 2 — `gevLiveSession.js` client controller (WebRTC + `oai-events`
-handler reusing `gevActions`/`toolSchemas`, echoCancellation preserved).
+## Fase 2 — DONE: client controller + channel handler (unit-proven)
+
+- `src/voice/gevLiveEvents.js` (new): pure `oai-events` handler. `parseLiveMessage`,
+  `extractFunctionCall`, `createLiveChannelHandler({runner,send,isOpen,...})`.
+  Unwraps `response.event` → `response.output_item.done`/`function_call`, runs the
+  reused `gevActions` runner, answers `response.item.create`(function_call_output)
+  + `response.create`. Dedupes by `call_id`; a throwing tool still answers (error
+  output) so the turn never strands; a closed channel skips the send.
+- `src/voice/gevLiveSession.js` (new): `GevLiveController` mirroring
+  `GevClaudeVoiceController`'s surface (`status`/`isActive`/`start`/`stop`/
+  `setStatus`/`setMicrophoneEnabled`/`setVoiceSpeaker`/`syncCostUi`/
+  `getDiagnostics`/`runner`) + `initGevLiveVoice()` factory. WebRTC →
+  `/api/live/session` (SDP POST, answer parsed as `{sdp}` or raw), data channel
+  `oai-events`. Browser globals injected (fetch/mediaDevices/RTCPeerConnection/
+  document) for test; mic constraints echoCancellation-preserving verbatim;
+  epoch guards abandon in-flight resources on stop/restart.
+- Tests: `gevLiveEvents.test.mjs` (10) + `gevLiveSession.test.mjs` (9) — 19/19
+  pass. Cover tool round-trip, dedupe, throw-still-answers, closed-channel skip,
+  negotiate→listening, echoCancellation, mic gate, teardown, SDP-failure → error
+  (no throw, mic released), getUserMedia denial, no-op-while-active.
+- **PROVEN** (unit, no browser): handler + controller logic. **INFERRED** (held
+  to Fase 6 browser proof): the live WebRTC media path, real spoken turns,
+  no-self-trigger on open mic. Not wired into `voiceBackendSwitch.js` yet (Fase 3),
+  so not user-selectable; `CURRENT-STATE.md`/`CHANGELOG.md` stay untouched.
+
+NEXT: Fase 3 — register `gpt-live-1` as a selectable backend in
+`voiceBackendSwitch.js` (Realtime stays fallback) + UI wiring.
 
 ## Image reader (`gpt-5.6-luna`)
 
