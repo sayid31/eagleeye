@@ -11,13 +11,17 @@
  * rows from it, so a renamed mark cannot drift between the two.
  *
  * WHY SOME PHASES CARRY `deliberate`/`decisionRef`: several of the slowest
- * windows in a boot are recorded decisions, not defects — the 1500 ms
- * share-restore wait and the 3.0 s mesh-friendly camera flight (DECISIONS
- * 2026-10-08, which lists lowering the timer under "Not done") and the
+ * windows in a boot are recorded decisions, not defects — the share-restore
+ * hold and its camera flight (DECISIONS 2026-10-29, which lowered both after
+ * this instrumentation measured them; see `shareRestoreTiming.js`) and the
  * photoreal tileset await (DECISIONS 2026-10-05). Labelling them at the
- * source means a report row reads `share-wait 1502 ms (deliberate — DECISIONS
- * 2026-10-08)`, so the number stays visible without inviting anyone to
+ * source means a report row reads `share-wait 501 ms (deliberate — DECISIONS
+ * 2026-10-29)`, so the number stays visible without inviting anyone to
  * re-litigate a landed decision from a table row.
+ *
+ * `deliberate` means "chosen, with a recorded reason" — NOT "untouchable". The
+ * 2026-10-08 values carried this label and were still lowered once measured;
+ * what the label buys is that lowering them required reading the reason first.
  *
  * @module bootTimingReport
  */
@@ -69,11 +73,11 @@ export const BOOT_PHASES = Object.freeze([
   Object.freeze({ phase: 'data-registration', start: 'ui-end', end: 'data-registered' }),
   Object.freeze({
     phase: 'share-wait', start: 'share-armed', end: 'share-fired', optional: true,
-    deliberate: true, decisionRef: '2026-10-08',
+    deliberate: true, decisionRef: '2026-10-29',
   }),
   Object.freeze({
     phase: 'share-camera', start: 'share-fired', end: 'share-camera-settled', optional: true,
-    deliberate: true, decisionRef: '2026-10-08',
+    deliberate: true, decisionRef: '2026-10-29',
   }),
   Object.freeze({
     phase: 'layer-restore', start: 'share-camera-settled', end: 'layers-restored',

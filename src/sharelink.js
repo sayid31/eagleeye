@@ -7,6 +7,7 @@ import {
 import { clampScopeTerminusPct } from './scopeMask.js';
 import { CAMERA_ANGLE_MODE_DEFAULT, normalizeCameraAngleMode } from './cameraAngleMode.js';
 import { decodeLayerStateParams, encodeLayerStateParams } from './data/layerState.js';
+import { SHARE_RESTORE_FLIGHT_S } from './shareRestoreTiming.js';
 
 /**
  * Share Links — URL Hash State Management
@@ -297,7 +298,7 @@ export class ShareLinkManager {
       // navigation. A later user or voice command wins over delayed restore.
       this.viewer.camera.flyTo({
         ...view,
-        duration: 3.0,
+        duration: SHARE_RESTORE_FLIGHT_S,
         easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
         complete: () => {
           if (

@@ -124,6 +124,12 @@ live counts again and match the focus conditions.
 
 Unlike every section above, this one is reproducible:
 
+The cold-load table below is the 28 October capture. The reload table was
+**re-measured on 29 October** after that capture led to lowering the two
+share-restore holds — see [What the first capture
+said](#what-the-first-capture-said-and-what-changed). The cold path carries no
+share hash and is unaffected by that change.
+
 ```bash
 npm run build
 npm run preview                                   # the BUILT app is the target
@@ -139,8 +145,11 @@ browser context per run, median of five.
 
 Rows marked **deliberate** are recorded decisions, not defects: the photoreal
 tileset await (`docs/DECISIONS.md` 2026-10-05) and the share-restore hold plus
-camera flight (2026-10-08). The label travels with the number so a reader does
-not re-litigate a landed decision from a table row.
+camera flight (2026-10-29, which lowered the 2026-10-08 values once this
+capture measured them). The label travels with the number so a reader does not
+re-litigate a landed decision from a table row — it marks a number as *chosen*,
+not as untouchable. The share rows carried it and were still lowered; what the
+label bought was that lowering them meant reading the reason first.
 
 ### Cold first load, no hash
 
@@ -174,17 +183,45 @@ replays the hash the app itself wrote, so the real serializer is exercised.
 | mapstack | 333.5 ms | 283.5 – 461.6 ms |
 | ui | 35.0 ms | 31.1 – 37.3 ms |
 | data-registration | 1.5 ms | 1.3 – 1.7 ms |
-| share-wait **(deliberate — 2026-10-08)** | 1,501.9 ms | 1,500.4 – 1,551.8 ms |
-| share-camera **(deliberate — 2026-10-08)** | 3,022.6 ms | 3,013.4 – 3,098.4 ms |
+| share-wait **(deliberate — 2026-10-29)** | 506.9 ms | 505.1 – 507.1 ms |
+| share-camera **(deliberate — 2026-10-29)** | 1,228.0 ms | 1,223.2 – 1,235.1 ms |
 | layer-restore | 0.2 ms | 0.1 – 0.2 ms |
-| **TOTAL to splash lifted** | **6,647.4 ms** | 6,213.6 – 7,844.8 ms |
+| **TOTAL to splash lifted** | **3,451.7 ms** | 3,061.9 – 4,090.4 ms |
 
-**The two deliberate holds are 4,524.5 ms of the 6,647.4 ms reload — roughly
-68%.** They are also the two tightest rows in the table, which is what a fixed
-timer looks like when measured. Layer restore is 0.2 ms and every individual
-layer row reads 0.0 ms, because enabling a saved layer only arms its own
-loading path; the layer's own fetch finishes behind the lifted splash, by
-design.
+The two holds are still the two tightest rows in the table, which is what a
+fixed timer looks like when measured — but they are now 1,734.9 ms of a
+3,451.7 ms reload instead of 4,524.5 ms of 6,647.4 ms. Layer restore is 0.2 ms
+and every individual layer row reads 0.0 ms, because enabling a saved layer
+only arms its own loading path; the layer's own fetch finishes behind the
+lifted splash, by design.
+
+#### What the first capture said, and what changed
+
+The 28 October capture measured these two rows at **1,501.9 ms** and
+**3,022.6 ms** — together 4,524.5 ms, roughly **68%** of a 6,647.4 ms reload.
+That measurement is what retired them. `docs/DECISIONS.md` 2026-10-08 had kept
+both so "a recipient sees the shared pose animate in", and called them small
+next to layer restore; the capture showed layer restore is 0.2 ms, and reading
+the splash ordering showed the flight runs entirely behind an opaque cover, so
+it was never seen. 2026-10-29 lowered them to 500 ms and 1.2 s.
+
+| | Before (28 Oct) | After (29 Oct) | Δ |
+| --- | ---: | ---: | ---: |
+| share-wait | 1,501.2 ms | 506.9 ms | −994.3 ms |
+| share-camera | 3,021.3 ms | 1,228.0 ms | −1,793.3 ms |
+| **TOTAL to splash lifted** | **6,377.5 ms** | **3,451.7 ms** | **−2,925.8 ms (−46%)** |
+
+Both runs were n=5 on the same machine and build pipeline, so the before-column
+here is re-measured on the same day as the after rather than quoted from the
+table above (which was a separate capture). That is why two shares of the same
+finding are in circulation: **68% of 6,647.4 ms** from the 28 October capture
+that surfaced it, and **71% of 6,377.5 ms** from this controlled pair (the
+figure `src/shareRestoreTiming.js` carries). Quote this table when comparing
+before to after; quote the 28 October one when citing what first measured it.
+The two holds are now the second
+and third largest reload rows; `photoreal` (1,285.6 ms, deliberate) has become
+comparable to `share-camera`, and `eager-eval` (722.8 ms) is the largest cost
+that nobody has yet chosen.
 
 ### Candidate evidence the app cannot self-report
 

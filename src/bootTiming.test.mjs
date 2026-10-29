@@ -78,7 +78,7 @@ test('derived measures carry the deliberate label so a report row cannot lose it
   finalizeBootTiming();
   const [entry] = performance.getEntriesByName('boot:phase:share-wait', 'measure');
   assert.deepEqual(structuredClone(entry.detail), {
-    boot: true, phase: 'share-wait', deliberate: true, decisionRef: '2026-10-08',
+    boot: true, phase: 'share-wait', deliberate: true, decisionRef: '2026-10-29',
   });
 });
 

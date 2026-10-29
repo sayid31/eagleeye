@@ -1868,9 +1868,25 @@ detection off by hand — would not have.
   for WebGL context loss / headless environments), and
   `MIN_SPLASH_VISIBLE_MS = 250` is a pure UX floor against flashing on an
   unusually fast boot — not a readiness gate. The share-link recipient
-  path's own separate, deliberate ~1500ms `_initialShareRestoreTimeout` in
-  `ui.js` still runs before the shared camera flight (see below for what the
-  splash waits on).
+  path's own separate `_initialShareRestoreTimeout` in `ui.js` still runs
+  before the shared camera flight (see below for what the splash waits on).
+- **Both share-restore durations live in `src/shareRestoreTiming.js`, not as
+  literals in their consumers.** `SHARE_RESTORE_HOLD_MS = 500` is the hold
+  `ui.js` waits before applying a shared camera pose; `SHARE_RESTORE_FLIGHT_S =
+  1.2` is the `flyTo` duration `sharelink.js` passes. They are one wait to
+  anyone opening a link, so they have one home, and `src/shareRestoreTiming.test.mjs`
+  pins that neither consumer reintroduces a hardcoded duration. **The hold is a
+  deferred-navigation grace window, not mesh warm-up:** `ui.js` claims camera
+  authority up front and re-checks `_reassertNavigationHandoff()` when the timer
+  fires, so a navigation issued during the window beats the restore — which is
+  why the value is shortened rather than removed, and why it is not zero. In
+  practice only a programmatic claimant (a scene recipe, tracking carried in the
+  link) can use the window: `#loading-screen` gains `pointer-events: none` only
+  with `.hidden`, so the opaque splash swallows every click and drag until it
+  lifts. Both values are reported as `deliberate` rows by `npm run
+  qa:boot-timing` under `decisionRef: '2026-10-29'`; that label means *chosen,
+  with a recorded reason*, not untouchable. Rationale and the measured
+  before/after: `docs/DECISIONS.md` 2026-10-29 and `docs/PERFORMANCE.md`.
 - **Bulk cross-layer restore is throttled to `RESTORE_CONCURRENCY = 4`
   concurrent layer lifecycles**, via one `p-queue` instance owned by
   `DataLayerManager` (`runThroughRestoreQueue()`). This applies at every

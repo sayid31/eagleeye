@@ -6,6 +6,90 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-10-29 — The share-restore holds drop to 500 ms and 1.2 s, because the measurement refuted both halves of their rationale
+
+**Context.** The owner asked to lower the 1500 ms share-restore timer and the
+3.0 s camera flight to *"nilai yang masuk akal"*, and explicitly asked for the
+numbers to be proposed before any edit and for reload time to be re-measured
+before and after. 2026-10-08 had kept both values and listed lowering the timer
+under **Not done**. That clause is superseded here — by direct instruction, and
+by the capture the 2026-10-28 instrumentation made possible.
+
+**Root cause of the latency — two findings, both from reading the code the
+measurement pointed at.**
+
+1. **The flight was never visible.** `#loading-screen` is opaque
+   (`style.css`: `background: var(--bg-dark)`, `inset: 0`, `z-index: 1000`).
+   The splash gates on `initialViewReadyPromise`, which `ui.js` settles *after*
+   `await this.shareLinkManager.applyState(...)`, and `applyState` ends with
+   `const camera = await cameraPromise` — i.e. it awaits the whole flight. So
+   the 3.0 s animation ran entirely behind the cover, plus a 0.8 s fade after
+   it. 2026-10-08 kept both values because "a recipient sees the shared pose
+   animate in". The recipient could not see it.
+2. **It was not small next to layer restore.** The same entry called the holds
+   small beside saved-layer restore. Measured, `layer-restore` is **0.2 ms**,
+   and every individual layer row reads 0.0 ms — enabling a saved layer only
+   arms its loading path. The two holds were **4,524.5 ms of a 6,647.4 ms
+   reload, about 68%**, and were the two tightest rows in the table.
+
+Both halves of the stated rationale were therefore false. That is what
+justified the change; not that the numbers felt large.
+
+**What the 1500 ms actually protected.** Not mesh warm-up. `ui.js` calls
+`_beginDeferredNavigation('shared view')` up front and the timer body
+re-checks `_reassertNavigationHandoff(generation)` before setting
+`applyCamera`, so a navigation issued during the window **wins** over the share
+restore. That is a real mechanism and it is kept — shortened, not removed.
+
+Its practical reach is narrower than it looks: `#loading-screen` only gains
+`pointer-events: none` when it gains `.hidden`, so for the entire window the
+opaque splash swallows every click and drag. **No human can compete in that
+window.** Only a programmatic claimant (a scene recipe, tracking carried in the
+link) can, and those are armed during init. 500 ms is sized for that, and is
+deliberately not 0: at 0 ms the timer body runs in the task that armed it, so
+the handoff re-check could never observe a competing claim.
+
+| Value | Was | Now | Basis |
+| --- | ---: | ---: | --- |
+| `SHARE_RESTORE_HOLD_MS` | 1500 ms | **500 ms** | Grace window kept, sized for programmatic claimants only (see above). Honestly an order-of-magnitude judgement, not a derived number — no in-tree anchor fits. |
+| `SHARE_RESTORE_FLIGHT_S` | 3.0 s | **1.2 s** | Anchored to durations already in this tree: `annotationEngine.js` flies 1.6 s and 1.8 s, `TILT_DURATION_S` is 0.9 s. Inside that band for a short reframe, while still leaving Cesium a window to request destination tiles before the first frame. |
+
+**Evidence (n=5 medians, same machine and build, `npm run qa:boot-timing`).**
+
+| | Before | After | Δ |
+| --- | ---: | ---: | ---: |
+| share-wait | 1,501.2 ms | 506.9 ms | −994.3 ms |
+| share-camera | 3,021.3 ms | 1,228.0 ms | −1,793.3 ms |
+| **TOTAL to splash lifted** | **6,377.5 ms** | **3,451.7 ms** | **−2,925.8 ms (−46%)** |
+
+Both captures reported 10 passed / 0 failed with the harness's console-error
+gate armed. Full tables in `docs/PERFORMANCE.md`.
+
+**Why a new module rather than editing the literals in place.** Both lived as
+bare numbers in two different files — `1500` in `ui.js` (853 L) and `3.0` in
+`sharelink.js` (652 L), both far over the file-health limit. They are consumed
+as *one* wait by anyone opening a shared link, so reasoning about the pair
+required opening two oversized files and knowing to look. `shareRestoreTiming.js`
+gives the pair one home with the rationale attached, and
+`shareRestoreTiming.test.mjs` pins that neither consumer reintroduces a literal.
+
+**Not done, and why.** Lifting the splash *before* the flight so the animation
+is finally visible — offered and explicitly declined for now (*"tidak dulu"*).
+It would make 2026-10-08's original reason true at last, but it changes product
+behavior rather than reducing a number, so it stays a separate decision. Also
+not done: muting the microphone while the assistant speaks (declined — Space
+push-to-talk already makes self-hearing structurally impossible), and widening
+anything about `photoreal` (1,285.6 ms, deliberate per 2026-10-05), now
+comparable in size to `share-camera`. The largest unchosen reload cost is
+`eager-eval` at 722.8 ms.
+
+**A note on the `deliberate` label.** These rows carried
+`deliberate: true, decisionRef` and were still lowered. The label means
+"chosen, with a recorded reason" — not "untouchable". What it bought is that
+changing them required reading the reason first, and the reason turned out to
+be refutable. `bootTimingReport.js` now says so in its header, because a label
+read as a freeze would make the instrumentation worse than none.
+
 ## 2026-10-28 — Boot timing ships in production, and labels its deliberate holds instead of removing them
 
 **Context.** The owner said loading *"masih agak membutuhkan waktu"* and asked
@@ -50,6 +134,12 @@ these numbers rather than from the old rationale. Enabling a saved layer only
 arms its own loading path — the fetch finishes behind the lifted splash, by
 design — so the phase marks correctly show near-zero and the restore cost is
 not where the hold is paying off.
+
+> **Sequel, 2026-10-29.** "A future decision to lower it should start from these
+> numbers" is what happened the next day: the hold is now 500 ms and the flight
+> 1.2 s. The `deliberate` label and the `decisionRef` on both rows survive — it
+> marks a number as chosen, not as frozen — with the ref moved to 2026-10-29.
+> See the entry at the top of this file.
 
 - **The boot window closes on the LAST of [splash lifted, layers restored],**
   not on the splash. Closing at splash-hide was my first draft and would have
@@ -2848,6 +2938,12 @@ Chosen:
 Trade-off: a user who prefers Google 3D re-selects it after each reload, and shared links no longer reproduce the sender's basemap. Chosen explicitly by the owner (Google 3D is opt-in).
 
 Not done: restoring layers lazily after first interaction, or lowering the 1.5 s timer. Both would change when saved layers start and were not requested.
+
+> **SUPERSEDED on 2026-10-29 (timer only).** The 1.5 s timer is now 500 ms and
+> the 3 s flight 1.2 s. Both reasons given above were refuted by measurement:
+> the flight ran behind an opaque splash and was never seen, and `layer-restore`
+> measures 0.2 ms rather than something these were small beside. Lazy layer
+> restore is still not done. See the 2026-10-29 entry at the top of this file.
 
 ## 2026-10-12 — ATCS Yogyakarta: store playlist.m3u8, raise the catalog cap to 2000
 

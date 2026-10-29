@@ -46,6 +46,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Membuka ulang halaman atau membuka tautan bagikan kini **sekitar dua kali lebih cepat
+  sampai aplikasi terlihat**: layar pembuka terangkat pada 3,5 detik, sebelumnya 6,4 detik
+  (diukur 5 kali jalan pada aplikasi hasil build, ambil nilai tengah). Penyebabnya bukan
+  pengambilan data: ada dua jeda tetap di jalur pemulihan tautan — tunggu 1,5 detik sebelum
+  kamera dipindahkan, lalu animasi terbang 3 detik — yang sekarang menjadi 0,5 detik dan
+  1,2 detik. Dua jeda itu dulu dipertahankan dengan alasan supaya penerima tautan "melihat
+  posisi kamera beranimasi masuk"; setelah diukur ternyata animasinya berjalan penuh di
+  balik layar pembuka yang tidak tembus pandang, jadi tidak pernah ada yang melihatnya.
+  Posisi kamera akhir, isi tautan, dan lapisan data yang ikut dipulihkan sama sekali tidak
+  berubah — hanya waktu tunggunya yang hilang. Jeda yang tersisa tetap ada supaya gerakan
+  kamera Anda sendiri pada saat itu masih menang atas pemulihan tautan.
 - Lalu lintas jauh lebih jarang mengambil ulang data jalan saat peta digeser sedikit-sedikit.
   Sebelumnya setiap gerakan kamera meminta kotak area yang berbeda beberapa meter, sehingga
   selalu dianggap area baru dan harus diambil dari server. Sekarang titik pusat permintaan
