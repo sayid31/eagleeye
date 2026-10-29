@@ -35,7 +35,7 @@
 
 import { initGevVoiceCommands, shouldIgnoreVoiceButtonClick } from './gevRealtime.js';
 import { initGevClaudeVoice } from './gevClaudeVoice.js';
-import { initGevLiveVoice } from './gevLiveSession.js';
+import { initGevLiveVoice } from './gevLiveSetup.js';
 
 const SETUP_STATUS_URL = '/api/setup/status';
 

@@ -23,11 +23,8 @@
  * @module voice/gevLiveSession
  */
 
-import { createGevActionRunner } from './gevActions.js';
 import { createLiveChannelHandler } from './gevLiveEvents.js';
 import { createLiveCostMeter } from './liveCost.js';
-import { captureViewportImage } from './gevRealtimeViewport.js';
-import { createViewportReader, READ_SCREEN_TOOL_NAME } from './gevLiveVision.js';
 
 export const LIVE_SESSION_URL = '/api/live/session';
 
@@ -278,31 +275,4 @@ export class GevLiveController {
     this._tearingDown = false;
     if (!preserveStatus) this.setStatus('idle');
   }
-}
-
-/**
- * Build a GPT-Live controller. Reuses a passed-in action runner (the same
- * instance the other backends use — design decision #1) or builds a fresh one.
- * Does NOT touch `window.__gevVoiceCommands`; the coordinator owns that.
- *
- * @param {object} params
- * @returns {GevLiveController}
- */
-export function initGevLiveVoice({
-  viewer,
-  styleManager,
-  dataManager,
-  sceneDirector = null,
-  annotations = null,
-  ui = null,
-  runner = null,
-} = {}) {
-  const actionRunner = runner || createGevActionRunner({ viewer, styleManager, dataManager, sceneDirector, annotations });
-  // `read_screen` is a live-only tool (gpt-live-1 can't see images): route it to
-  // the one-shot gpt-5.6-luna reader instead of the shared gevActions runner,
-  // which has no such handler. Every other tool passes straight through.
-  const reader = createViewportReader({ captureImage: captureViewportImage });
-  const liveRunner = (name, args, opts) =>
-    name === READ_SCREEN_TOOL_NAME ? reader.readScreen({ question: args?.question }) : actionRunner(name, args, opts);
-  return new GevLiveController({ runner: liveRunner, ui });
 }
