@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { createVoiceBackendCoordinator, isAnthropicKeyConfigured } from './voiceBackendSwitch.js';
+import { createVoiceBackendCoordinator, isAnthropicKeyConfigured, fetchConfiguredKeyIds } from './voiceBackendSwitch.js';
 
 /** Minimal fake DOM button — only what the coordinator touches. */
 function fakeButton() {
@@ -154,6 +154,79 @@ test('the backend pill stays hidden when the browser lacks Web Speech support, e
   createVoiceBackendCoordinator({ openaiController, claudeController, ui, fetchImpl });
   await new Promise((resolve) => setTimeout(resolve, 10));
   assert.equal(backendButton.hidden, true);
+});
+
+test('with a live controller the pill cycles GPT -> GPT-LIVE -> CLAUDE -> GPT', () => {
+  const openaiController = fakeController('openai');
+  const liveController = fakeController('live');
+  const claudeController = fakeController('claude');
+  const backendButton = fakeButton();
+  const ui = { button: fakeButton(), backendButton };
+  const coordinator = createVoiceBackendCoordinator({ openaiController, claudeController, liveController, ui });
+
+  assert.equal(coordinator._activeBackend(), 'openai');
+  backendButton.click();
+  assert.equal(coordinator._activeBackend(), 'live');
+  assert.equal(backendButton.textContent, 'GPT-LIVE');
+  assert.equal(backendButton['aria-pressed'], 'true');
+  backendButton.click();
+  assert.equal(coordinator._activeBackend(), 'claude');
+  assert.equal(backendButton.textContent, 'CLAUDE');
+  backendButton.click();
+  assert.equal(coordinator._activeBackend(), 'openai');
+  assert.equal(backendButton.textContent, 'GPT');
+  assert.equal(backendButton['aria-pressed'], 'false');
+});
+
+test('switching to the live backend stops the outgoing one and syncs its cost meter', () => {
+  const openaiController = fakeController('openai');
+  const liveController = fakeController('live');
+  const claudeController = fakeController('claude');
+  const backendButton = fakeButton();
+  const ui = { button: fakeButton(), backendButton };
+  const coordinator = createVoiceBackendCoordinator({ openaiController, claudeController, liveController, ui });
+
+  openaiController.status = 'listening';
+  backendButton.click();
+  assert.equal(coordinator._activeBackend(), 'live');
+  assert.deepEqual(openaiController._calls, ['stop']);
+  assert.deepEqual(liveController._calls, ['syncCostUi']);
+  coordinator.start({ pushToTalk: false });
+  assert.deepEqual(liveController._calls, ['syncCostUi', ['start', { pushToTalk: false }]]);
+});
+
+test('the pill reveals for gpt-live when only the OpenAI key is set (no anthropic)', async () => {
+  const openaiController = fakeController('openai');
+  const liveController = fakeController('live');
+  const claudeController = fakeController('claude');
+  const backendButton = fakeButton();
+  backendButton.hidden = true;
+  const ui = { button: fakeButton(), backendButton };
+  const fetchImpl = async () => jsonResponse({ keys: [{ id: 'openai', set: true }, { id: 'anthropic', set: false }] });
+
+  createVoiceBackendCoordinator({ openaiController, claudeController, liveController, ui, fetchImpl });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(backendButton.hidden, false);
+});
+
+test('without a live controller the OpenAI key alone does not reveal the pill', async () => {
+  const openaiController = fakeController('openai');
+  const claudeController = fakeController('claude');
+  const backendButton = fakeButton();
+  backendButton.hidden = true;
+  const ui = { button: fakeButton(), backendButton };
+  const fetchImpl = async () => jsonResponse({ keys: [{ id: 'openai', set: true }, { id: 'anthropic', set: false }] });
+
+  createVoiceBackendCoordinator({ openaiController, claudeController, ui, fetchImpl });
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  assert.equal(backendButton.hidden, true);
+});
+
+test('fetchConfiguredKeyIds returns the set of configured ids and tolerates failure', async () => {
+  const ids = await fetchConfiguredKeyIds(async () => jsonResponse({ keys: [{ id: 'openai', set: true }, { id: 'anthropic', set: false }] }));
+  assert.ok(ids.has('openai'));
+  assert.ok(!ids.has('anthropic'));
+  assert.deepEqual([...await fetchConfiguredKeyIds(async () => { throw new Error('down'); })], []);
 });
 
 test('isAnthropicKeyConfigured tolerates a failing or malformed status endpoint without throwing', async () => {

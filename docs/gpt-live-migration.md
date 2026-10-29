@@ -181,8 +181,31 @@ on an open mic over ~30 s, real spoken (not injected-text) user turns, and the
   no-self-trigger on open mic. Not wired into `voiceBackendSwitch.js` yet (Fase 3),
   so not user-selectable; `CURRENT-STATE.md`/`CHANGELOG.md` stay untouched.
 
-NEXT: Fase 3 — register `gpt-live-1` as a selectable backend in
-`voiceBackendSwitch.js` (Realtime stays fallback) + UI wiring.
+## Fase 3 — DONE: `gpt-live-1` selectable in the backend pill (unit-proven)
+
+- `voiceBackendSwitch.js`: `createVoiceBackendCoordinator` now takes an optional
+  `liveController`. Backends form an ordered cycle `[openai, live?, claude]`; the
+  pill advances to the next one (wrapping) and labels GPT / GPT-LIVE / CLAUDE.
+  `_activeBackend()` returns `'openai'|'live'|'claude'`. `initGevVoiceBackendSwitch`
+  builds the live controller via `initGevLiveVoice`, reusing the ONE shared
+  `gevActions` runner (same as Claude).
+- **Default stays OpenAI Realtime** — index 0. gpt-live-1's live media path is
+  still INFERRED (Fase 6); flipping the default is a one-liner once proven, and
+  defaulting to an unproven paid-tier path would be a worse regression than
+  keeping it opt-in. `aria-pressed` = "not the default backend".
+- Reveal: pill un-hides when a selectable alternate exists — Claude
+  (`anthropic` key set && `isSupported()`) OR gpt-live (`openai` key set; paid
+  tier can't be probed client-side, surfaces at `start()`). New shared helper
+  `fetchConfiguredKeyIds()`; `isAnthropicKeyConfigured()` kept as a thin wrapper.
+- Tests: `voiceBackendSwitch.test.mjs` extended to 13 (3-way cycle, live switch
+  + cost sync, live-only reveal, no-reveal-without-live-controller,
+  `fetchConfiguredKeyIds`) — 13/13 pass; the original binary-pill cases unchanged.
+- **PROVEN** (unit): coordinator cycle + reveal logic. **INFERRED**: the live
+  session actually running when selected in a real browser (Fase 6). Still not
+  flagged user-visible in `CURRENT-STATE.md`/`CHANGELOG.md` until Fase 6.
+
+NEXT: Fase 4 — per-minute ($0.05/min) cost meter variant selected when the
+active backend is `gpt-live-1`.
 
 ## Image reader (`gpt-5.6-luna`)
 

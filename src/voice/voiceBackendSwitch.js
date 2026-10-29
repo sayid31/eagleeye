@@ -1,10 +1,12 @@
 // src/voice/voiceBackendSwitch.js
 /**
- * Coordinates which voice backend (OpenAI Realtime or Claude/Web Speech) is
- * "active" behind ONE `window.__gevVoiceCommands` object, so nothing else in
- * the app (voice tools, QA harnesses, diagnostics) needs to know two
- * backends exist. See docs/CURRENT-STATE.md's Voice Control section and the
- * plan this backend shipped from (design decision #6).
+ * Coordinates which voice backend (OpenAI Realtime, GPT-Live, or Claude/Web
+ * Speech) is "active" behind ONE `window.__gevVoiceCommands` object, so nothing
+ * else in the app (voice tools, QA harnesses, diagnostics) needs to know
+ * multiple backends exist. See docs/CURRENT-STATE.md's Voice Control section and
+ * the plan this backend shipped from (design decision #6). The backend pill
+ * cycles GPT → GPT-LIVE → CLAUDE across whichever are available; OpenAI Realtime
+ * is always the default active backend (docs/gpt-live-migration.md Fase 3).
  *
  * OpenAI Realtime (`gevRealtime.js`) is always initialized and stays the
  * default active backend — nothing about its behavior changes for a session
@@ -33,19 +35,28 @@
 
 import { initGevVoiceCommands, shouldIgnoreVoiceButtonClick } from './gevRealtime.js';
 import { initGevClaudeVoice } from './gevClaudeVoice.js';
+import { initGevLiveVoice } from './gevLiveSession.js';
 
 const SETUP_STATUS_URL = '/api/setup/status';
 
-/** True only when the server reports ANTHROPIC_API_KEY as configured. Never throws. */
-export async function isAnthropicKeyConfigured(fetchImpl) {
+/** Short pill labels per backend id. */
+const BACKEND_LABELS = { openai: 'GPT', live: 'GPT-LIVE', claude: 'CLAUDE' };
+
+/** The set of provider key ids the server reports as configured. Never throws. */
+export async function fetchConfiguredKeyIds(fetchImpl) {
   try {
     const response = await fetchImpl(SETUP_STATUS_URL, { cache: 'no-store' });
-    if (!response.ok) return false;
+    if (!response.ok) return new Set();
     const data = await response.json();
-    return Boolean(data?.keys?.find((key) => key.id === 'anthropic')?.set);
+    return new Set((data?.keys || []).filter((key) => key.set).map((key) => key.id));
   } catch {
-    return false;
+    return new Set();
   }
+}
+
+/** True only when the server reports ANTHROPIC_API_KEY as configured. Never throws. */
+export async function isAnthropicKeyConfigured(fetchImpl) {
+  return (await fetchConfiguredKeyIds(fetchImpl)).has('anthropic');
 }
 
 /**
@@ -57,14 +68,24 @@ export async function isAnthropicKeyConfigured(fetchImpl) {
  * required. This is what `voiceBackendSwitch.test.mjs` exercises directly.
  *
  * @param {object} params
- * @param {object} params.openaiController - a `GevRealtimeController` (or test double).
+ * @param {object} params.openaiController - a `GevRealtimeController` (or test double). Always the default.
  * @param {object} params.claudeController - a `GevClaudeVoiceController` (or test double).
+ * @param {object} [params.liveController] - a `GevLiveController` (or test double); omit to keep the two-backend pill.
  * @param {object} params.ui - the shared voice-control DOM refs (from `createVoiceControl`).
  * @param {typeof fetch} [params.fetchImpl] - injectable for tests; omit to skip the reveal check.
  * @returns {object} the coordinator assigned to window.__gevVoiceCommands.
  */
-export function createVoiceBackendCoordinator({ openaiController, claudeController, ui, fetchImpl } = {}) {
-  let active = openaiController;
+export function createVoiceBackendCoordinator({ openaiController, claudeController, liveController = null, ui, fetchImpl } = {}) {
+  // Ordered cycle: OpenAI Realtime is index 0 and stays the default active
+  // backend (gpt-live-1's live media path is not yet runtime-proven — see
+  // docs/gpt-live-migration.md Fase 6; flipping the default here is a one-liner
+  // once it is). `live` sits between the two OpenAI-family backends.
+  const backends = [{ id: 'openai', controller: openaiController }];
+  if (liveController) backends.push({ id: 'live', controller: liveController });
+  backends.push({ id: 'claude', controller: claudeController });
+
+  let active = backends[0].controller;
+  let activeId = backends[0].id;
 
   const forward = (methodName) => (...args) => {
     const method = active[methodName];
@@ -84,7 +105,7 @@ export function createVoiceBackendCoordinator({ openaiController, claudeControll
       ? active.getDiagnostics()
       : { status: active.status }),
     // Test/inspection hook — not part of the qa-radio.mjs contract.
-    _activeBackend: () => (active === claudeController ? 'claude' : 'openai'),
+    _activeBackend: () => activeId,
   };
 
   // initGevVoiceCommands already wired ui.button's click straight to
@@ -99,30 +120,37 @@ export function createVoiceBackendCoordinator({ openaiController, claudeControll
     else active.start({ pushToTalk: false });
   });
 
-  function setActiveBackend(next) {
-    if (active === next) return;
+  function applyActive(entry) {
+    if (!entry || active === entry.controller) return;
     if (active.isActive()) active.stop();
-    active = next;
+    active = entry.controller;
+    activeId = entry.id;
     active.syncCostUi?.();
     if (ui.backendButton) {
-      const isClaude = active === claudeController;
-      ui.backendButton.textContent = isClaude ? 'CLAUDE' : 'GPT';
-      ui.backendButton.setAttribute('aria-pressed', isClaude ? 'true' : 'false');
+      ui.backendButton.textContent = BACKEND_LABELS[entry.id] || entry.id.toUpperCase();
+      // Pressed = anything other than the default OpenAI Realtime backend.
+      ui.backendButton.setAttribute('aria-pressed', entry.id === 'openai' ? 'false' : 'true');
     }
   }
-  coordinator._setActiveBackend = setActiveBackend; // test hook
+  // Test hook: accepts a controller, resolves it to its cycle entry.
+  coordinator._setActiveBackend = (controller) => applyActive(backends.find((b) => b.controller === controller));
 
   if (ui.backendButton) {
     ui.backendButton.addEventListener('click', () => {
-      setActiveBackend(active === openaiController ? claudeController : openaiController);
+      const idx = backends.findIndex((b) => b.controller === active);
+      applyActive(backends[(idx + 1) % backends.length]);
     });
-    // Hidden by default (see createVoiceControl's template) — only revealed
-    // once the server confirms ANTHROPIC_API_KEY is set AND this browser
-    // actually supports the Web Speech APIs Claude's backend needs (plan
-    // Risk #2: Firefox has no default SpeechRecognition support).
+    // Hidden by default (see createVoiceControl's template). Revealed once the
+    // server confirms a selectable alternate exists: Claude needs
+    // ANTHROPIC_API_KEY set AND this browser's Web Speech APIs (plan Risk #2:
+    // Firefox has no default SpeechRecognition); gpt-live-1 needs
+    // OPENAI_API_KEY set (its paid-tier requirement can't be probed
+    // client-side — a session attempt surfaces that at start()).
     if (fetchImpl) {
-      isAnthropicKeyConfigured(fetchImpl).then((configured) => {
-        if (configured && claudeController.isSupported()) ui.backendButton.hidden = false;
+      fetchConfiguredKeyIds(fetchImpl).then((ids) => {
+        const claudeOk = ids.has('anthropic') && claudeController.isSupported();
+        const liveOk = Boolean(liveController) && ids.has('openai');
+        if (claudeOk || liveOk) ui.backendButton.hidden = false;
       });
     }
   }
@@ -148,11 +176,14 @@ export function initGevVoiceBackendSwitch({
   const ui = openaiController.ui;
   // Reuse the OpenAI backend's runner unchanged (design decision #1) — a
   // second createGevActionRunner() would re-run installViewTargetPrewarm /
-  // initCameraVerbs a second time for no benefit.
+  // initCameraVerbs a second time for no benefit. Both alternates share it.
   const claudeController = initGevClaudeVoice({
     viewer, styleManager, dataManager, sceneDirector, annotations, ui, runner: openaiController.runner,
   });
-  const coordinator = createVoiceBackendCoordinator({ openaiController, claudeController, ui, fetchImpl: doFetch });
+  const liveController = initGevLiveVoice({
+    viewer, styleManager, dataManager, sceneDirector, annotations, ui, runner: openaiController.runner,
+  });
+  const coordinator = createVoiceBackendCoordinator({ openaiController, claudeController, liveController, ui, fetchImpl: doFetch });
   window.__gevVoiceCommands = coordinator;
   return coordinator;
 }
