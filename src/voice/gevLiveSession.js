@@ -25,6 +25,7 @@
 
 import { createGevActionRunner } from './gevActions.js';
 import { createLiveChannelHandler } from './gevLiveEvents.js';
+import { createLiveCostMeter } from './liveCost.js';
 
 export const LIVE_SESSION_URL = '/api/live/session';
 
@@ -63,13 +64,18 @@ function waitForIceComplete(pc) {
 }
 
 export class GevLiveController {
-  constructor({ runner, ui = null, fetchImpl, mediaDevices, rtcPeerConnection, documentRef } = {}) {
+  constructor({ runner, ui = null, limits, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
     this.runner = runner;
     this.ui = ui;
     this._fetch = fetchImpl || (typeof fetch === 'function' ? fetch.bind(globalThis) : null);
     this._mediaDevices = mediaDevices || (typeof navigator !== 'undefined' ? navigator.mediaDevices : null);
     this._RTCPeerConnection = rtcPeerConnection || (typeof RTCPeerConnection !== 'undefined' ? RTCPeerConnection : null);
     this._document = documentRef || (typeof document !== 'undefined' ? document : null);
+    // Per-minute ($0.05/min) spend meter — ends the session at the hard cap the
+    // same way the Realtime backend does, through the normal stop path.
+    this.costMeter = createLiveCostMeter({
+      ui, limits, onCap: (state) => this._onCostCap(state), now: nowFn, setIntervalFn, clearIntervalFn,
+    });
 
     this.status = 'idle';
     this.pc = null;
@@ -113,14 +119,26 @@ export class GevLiveController {
     if (this.audioEl) this.audioEl.muted = !this._speakerEnabled;
   }
 
-  /** Per-minute cost meter is wired in Fase 4; kept as a no-op hook for now. */
-  syncCostUi() {}
+  /** Paint the shared per-minute cost readout for this backend. */
+  syncCostUi() {
+    this.costMeter.syncUi();
+  }
+
+  /** Hard spend cap crossed — end the session through the normal stop path. */
+  _onCostCap(state) {
+    this.stop({ preserveStatus: true });
+    this.setStatus('idle', `Session ended — cost cap ${state.display}`);
+    this.costMeter.syncUi();
+  }
 
   getDiagnostics() {
+    const cost = this.costMeter.state();
     return {
       backend: 'gpt-live-1',
       status: this.status,
       usageSeconds: this.usageSeconds,
+      costUsd: cost.totalUsd,
+      ratePerMin: cost.ratePerMin,
       channelOpen: this.dc?.readyState === 'open',
       lastError: this.lastError,
     };
@@ -187,10 +205,16 @@ export class GevLiveController {
         onTranscript: () => { if (this.status === 'connecting' || this.status === 'listening') this.setStatus('listening', 'Ask or command'); },
         onToolStart: () => this.setStatus('executing', 'Working…'),
         onToolResult: () => this.setStatus('listening', 'Ask or command'),
-        onUsage: (usage) => { if (typeof usage?.seconds === 'number') { this.usageSeconds = usage.seconds; this.syncCostUi(); } },
+        onUsage: (usage) => {
+          // Reconcile the wall-clock meter with the server's authoritative
+          // billed duration when it reports one (field name inferred until the
+          // Fase 6 browser proof; wall-clock drives the meter regardless).
+          const secs = Number(usage?.seconds ?? usage?.duration_seconds);
+          if (Number.isFinite(secs)) { const s = this.costMeter.recordSeconds(secs); this.usageSeconds = s.seconds; }
+        },
         onError: (error) => { this.lastError = error?.message || String(error?.message || error); },
       });
-      dc.addEventListener('open', () => { if (this.dc === dc) this.setStatus('listening', 'Ask or command'); });
+      dc.addEventListener('open', () => { if (this.dc === dc) { this.costMeter.start(); this.setStatus('listening', 'Ask or command'); } });
       dc.addEventListener('message', (event) => { handleMessage(event.data); });
       dc.addEventListener('close', () => {
         if (!this._tearingDown && this.dc === dc && this.isActive()) this._fatal('Data channel closed');
@@ -238,6 +262,7 @@ export class GevLiveController {
   stop({ preserveStatus = false } = {}) {
     this._tearingDown = true;
     this.startEpoch += 1;
+    this.costMeter.stop();
     try { this.dc?.close?.(); } catch { /* noop */ }
     try { this.pc?.close?.(); } catch { /* noop */ }
     stopStream(this.stream);

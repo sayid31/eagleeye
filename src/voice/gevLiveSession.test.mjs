@@ -74,15 +74,22 @@ function makeController(over = {}) {
   const documentRef = over.documentRef || makeDocument();
   let lastPc = null;
   const rtcPeerConnection = over.rtcPeerConnection || function () { lastPc = new FakeRTCPeerConnection(); return lastPc; };
+  // A controllable clock + captured interval so the cost meter is deterministic
+  // (and never leaves a real timer running across tests).
+  const clock = { nowMs: 0, tick: null };
   const ctrl = new GevLiveController({
     runner: over.runner || (async () => ({ ok: true })),
     ui: over.ui || null,
+    limits: over.limits,
     fetchImpl: over.fetchImpl || makeFetch(),
     mediaDevices,
     rtcPeerConnection,
     documentRef,
+    nowFn: over.nowFn || (() => clock.nowMs),
+    setIntervalFn: over.setIntervalFn || ((fn) => { clock.tick = fn; return 1; }),
+    clearIntervalFn: over.clearIntervalFn || (() => { clock.tick = null; }),
   });
-  return { ctrl, stream, mediaDevices, documentRef, getPc: () => lastPc };
+  return { ctrl, stream, mediaDevices, documentRef, clock, getPc: () => lastPc };
 }
 
 // --- Tests ---------------------------------------------------------------
@@ -182,4 +189,39 @@ test('getDiagnostics reports backend and channel state', async () => {
   assert.equal(d.backend, 'gpt-live-1');
   assert.equal(d.status, 'listening');
   assert.equal(d.channelOpen, true);
+  assert.equal(d.ratePerMin, 0.05);
+});
+
+test('the per-minute cost meter starts on channel open and paints the readout', async () => {
+  const costValue = { dataset: {} };
+  const ui = { status: { }, detail: {}, root: { dataset: {} }, costValue };
+  const { ctrl, getPc, clock } = makeController({ ui });
+  await ctrl.start();
+  getPc().channel.open();
+  clock.nowMs = 120 * 1000; // 2 minutes
+  clock.tick();
+  assert.equal(costValue.textContent, '~$0.10');
+  assert.equal(ctrl.getDiagnostics().costUsd, 0.1);
+});
+
+test('the hard spend cap ends the session through the normal stop path', async () => {
+  const ui = { status: {}, detail: {}, root: { dataset: {} }, costValue: { dataset: {} } };
+  const { ctrl, getPc, stream, clock } = makeController({ ui, limits: { warnUsd: 2, capUsd: 5 } });
+  await ctrl.start();
+  getPc().channel.open();
+  clock.nowMs = 6000 * 1000; // $5.00 at $0.05/min
+  clock.tick();
+  assert.equal(ctrl.status, 'idle');
+  assert.match(ui.detail.textContent, /cost cap/);
+  assert.equal(stream.getAudioTracks()[0].stopped, true, 'mic released at the cap');
+});
+
+test('a server usage duration reconciles the meter', async () => {
+  const { ctrl, getPc } = makeController();
+  await ctrl.start();
+  const dc = getPc().channel;
+  dc.open();
+  await dc._listeners.message[0]({ data: JSON.stringify({ type: 'session.usage.updated', usage: { seconds: 180 } }) });
+  assert.equal(ctrl.usageSeconds, 180);
+  assert.ok(Math.abs(ctrl.getDiagnostics().costUsd - 0.15) < 1e-9);
 });

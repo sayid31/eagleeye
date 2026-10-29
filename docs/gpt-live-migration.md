@@ -204,8 +204,31 @@ on an open mic over ~30 s, real spoken (not injected-text) user turns, and the
   session actually running when selected in a real browser (Fase 6). Still not
   flagged user-visible in `CURRENT-STATE.md`/`CHANGELOG.md` until Fase 6.
 
-NEXT: Fase 4 — per-minute ($0.05/min) cost meter variant selected when the
-active backend is `gpt-live-1`.
+## Fase 4 — DONE: per-minute ($0.05/min) cost meter (unit-proven)
+
+- `src/voice/liveCost.js` (new): the Realtime meter is per-TOKEN; GPT-Live bills
+  a flat **$0.05/min of live audio, per second** (backend model + tools billed
+  separately, NOT estimated here), so it gets its own tracker. Exports
+  `estimateLiveCostUsd`, `createLiveCostTracker` (monotonic seconds → USD, warn/
+  cap latched once each, snapshot shape compatible with the shared readout),
+  `paintLiveCostUi` (writes `#gev-voice-cost-value` text/level/title), and
+  `createLiveCostMeter` (wall-clock 1 s tick + authoritative-duration reconcile +
+  `onCap`). Reuses `formatCostUsd`/`normalizeCostLimits` from `voiceCost.js`.
+- `gevLiveSession.js`: `syncCostUi()` now paints the per-minute readout; the
+  meter starts on channel open, reconciles `session.usage.updated` durations,
+  and the hard cap ends the session through the normal stop path (mic released),
+  mirroring the Realtime backend. Default limits $2 warn / $5 cap = 40 / 100 min.
+- Tests: `liveCost.test.mjs` (10) + 4 new controller cases (meter paints,
+  usage reconcile, hard-cap stop, rate in diagnostics). Full voice suite 433/433.
+- **PROVEN** (unit): pricing, latches, cap-stop, UI paint. **INFERRED** (Fase 6):
+  the real `session.usage.updated` field name (wall-clock drives the meter
+  regardless) and live billing reconciliation. The $0.05/min rate is an external
+  fact — `LIVE_VOICE_RATES_VERIFIED_ON = 2026-10-29`; re-verify at release.
+- NOTE: `gevLiveSession.js` is now at the 300-line service soft-limit; a future
+  split (transport vs. lifecycle) is worth considering if it grows further.
+
+NEXT: Fase 5 — `gpt-5.6-luna` screenshot reader (separate one-shot call; text
+feeds back into the voice turn), reusing `captureViewportImage()`.
 
 ## Image reader (`gpt-5.6-luna`)
 
