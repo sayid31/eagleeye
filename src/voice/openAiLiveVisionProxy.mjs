@@ -190,7 +190,9 @@ export function installLiveVisionRoute(middlewares, deps) {
         return json(res, 502, { error: 'Vision upstream returned non-JSON' });
       }
       const text = extractResponseText(payload);
-      return json(res, 200, { text });
+      // Pass the token usage back so the client can price the read into the live
+      // cost meter (the reader is billed per-token, separate from audio).
+      return json(res, 200, { text, usage: payload.usage || null });
     } catch (error) {
       return json(res, 502, { error: error?.message || 'Failed to reach vision model' });
     }

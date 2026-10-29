@@ -84,12 +84,13 @@ test('a valid POST returns the vision model text', async () => {
   try {
     let sentBody = null;
     const handler = mountVisionRoute({
-      fetchImpl: async (url, opts) => { sentBody = JSON.parse(opts.body); return { ok: true, status: 200, async text() { return JSON.stringify({ output_text: 'A coastal city.' }); } }; },
+      fetchImpl: async (url, opts) => { sentBody = JSON.parse(opts.body); return { ok: true, status: 200, async text() { return JSON.stringify({ output_text: 'A coastal city.', usage: { input_tokens: 1000, output_tokens: 20 } }); } }; },
     });
     const res = makeRes();
     await handler({ method: 'POST' }, res);
     assert.equal(res.statusCode, 200);
     assert.equal(res.json().text, 'A coastal city.');
+    assert.deepEqual(res.json().usage, { input_tokens: 1000, output_tokens: 20 }, 'usage passed through for cost metering');
     assert.equal(sentBody.model, OPENAI_VISION_MODEL_DEFAULT);
   } finally {
     if (prev === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = prev;

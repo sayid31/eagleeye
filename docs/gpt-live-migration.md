@@ -261,10 +261,14 @@ tool result in responses mode). ~$0.0005 per 1080p screenshot input.
 
 ## Cost meter
 
-GPT-Live = **$0.05/min billed per second**, not rounded up; backend + tools
-separate. Current meter (`voiceCost.js`, `gevRealtimeCost.js`) is token-based —
-needs a per-minute variant selected when the active backend is `gpt-live-1`.
-`gpt-5.6-luna` reader billed at $0.20/1M in, $1.20/1M out.
+GPT-Live = **$0.05/min billed per second**, not rounded up; delegated backend
+model billed separately (NOT metered). The `gpt-5.6-luna` screenshot reader
+($0.20/1M in, $1.20/1M out) IS now folded into the same meter: the reader
+returns its token usage, the client prices it (`estimateVisionCostUsd`) with a
+documented ~$0.0005/read fallback, and the controller adds it via
+`costMeter.recordExtraUsd` so the readout and the hard spend cap both account
+for it. Per-minute meter lives in `liveCost.js` (not the token-based
+`voiceCost.js`), selected when the active backend is `gpt-live-1`.
 
 ## Account access (verified structurally, no key printed)
 

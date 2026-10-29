@@ -16,6 +16,8 @@
  * @module voice/gevLiveVision
  */
 
+import { estimateVisionCostUsd, VISION_READ_FALLBACK_USD } from './liveCost.js';
+
 /** The live-only tool name the backend calls to read the screen. */
 export const READ_SCREEN_TOOL_NAME = 'read_screen';
 
@@ -65,7 +67,11 @@ export function createViewportReader({ captureImage, fetchImpl, visionUrl = LIVE
       if (!text) {
         return { ok: false, error: 'empty', text: 'The screen reader returned no description.' };
       }
-      return { ok: true, text };
+      // Report this call's cost so the controller can fold it into the live
+      // meter. Prefer the real token usage; fall back to a documented per-read
+      // estimate so a read is never counted as free.
+      const costUsd = estimateVisionCostUsd(data?.usage) || VISION_READ_FALLBACK_USD;
+      return { ok: true, text, costUsd };
     } catch (error) {
       return { ok: false, error: error?.message || String(error), text: 'The screen reader could not be reached.' };
     }

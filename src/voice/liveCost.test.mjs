@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   estimateLiveCostUsd,
+  estimateVisionCostUsd,
   createLiveCostTracker,
   createLiveCostMeter,
   paintLiveCostUi,
@@ -107,4 +108,47 @@ test('meter.stop clears the interval', () => {
 
 test('the published rate is $0.05/min', () => {
   assert.equal(LIVE_VOICE_RATE_PER_MIN, 0.05);
+});
+
+test('estimateVisionCostUsd prices reader tokens at $0.20/1M in, $1.20/1M out', () => {
+  // 1M in + 1M out = 0.20 + 1.20
+  assert.ok(Math.abs(estimateVisionCostUsd({ input_tokens: 1e6, output_tokens: 1e6 }) - 1.4) < 1e-9);
+  assert.ok(Math.abs(estimateVisionCostUsd({ prompt_tokens: 500000, completion_tokens: 0 }) - 0.1) < 1e-9);
+  assert.equal(estimateVisionCostUsd(null), 0);
+  assert.equal(estimateVisionCostUsd({ input_tokens: -5 }), 0);
+});
+
+test('recordExtraUsd folds a reader charge into the same total and caps', () => {
+  const t = createLiveCostTracker({ limits: { warnUsd: 2, capUsd: 5 } });
+  t.recordSeconds(60); // $0.05 audio
+  const after = t.recordExtraUsd(0.001);
+  assert.ok(Math.abs(after.totalUsd - 0.051) < 1e-9, 'audio + extras combine');
+  assert.equal(after.extrasUsd, 0.001);
+  // A large reader charge alone can trip the hard cap.
+  const capped = t.recordExtraUsd(5);
+  assert.equal(capped.capCrossed, true);
+  assert.equal(capped.level, 'cap');
+  t.recordExtraUsd(-1); // junk ignored, no rollback
+  assert.ok(t.state().totalUsd >= 5);
+});
+
+test('reset clears reader extras too', () => {
+  const t = createLiveCostTracker();
+  t.recordExtraUsd(0.5);
+  assert.equal(t.reset().extrasUsd, 0);
+});
+
+test('meter.recordExtraUsd repaints and can fire onCap', () => {
+  const capHits = [];
+  const meter = createLiveCostMeter({
+    limits: { warnUsd: 2, capUsd: 5 },
+    onCap: (s) => capHits.push(s),
+    now: () => 0,
+    setIntervalFn: () => 1,
+    clearIntervalFn: () => {},
+  });
+  meter.start();
+  meter.recordExtraUsd(5);
+  assert.equal(capHits.length, 1);
+  assert.equal(meter.state().extrasUsd, 5);
 });

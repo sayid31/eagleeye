@@ -203,7 +203,17 @@ export class GevLiveController {
         isOpen: () => this.dc === dc && dc.readyState === 'open' && !this._tearingDown,
         onTranscript: () => { if (this.status === 'connecting' || this.status === 'listening') this.setStatus('listening', 'Ask or command'); },
         onToolStart: () => this.setStatus('executing', 'Working…'),
-        onToolResult: () => this.setStatus('listening', 'Ask or command'),
+        onToolResult: (_fc, result) => {
+          this.setStatus('listening', 'Ask or command');
+          // A tool result carrying its own per-token cost (the screenshot
+          // reader) is folded into the per-minute meter so the readout and the
+          // hard spend cap account for it too.
+          const extra = Number(result?.costUsd);
+          if (Number.isFinite(extra) && extra > 0) {
+            const s = this.costMeter.recordExtraUsd(extra);
+            this.usageSeconds = s.seconds;
+          }
+        },
         onUsage: (usage) => {
           // Reconcile the wall-clock meter with the server's authoritative
           // billed duration when it reports one (field name inferred until the

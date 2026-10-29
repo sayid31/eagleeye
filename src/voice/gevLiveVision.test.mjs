@@ -17,6 +17,16 @@ test('readScreen captures the viewport and POSTs it to the vision endpoint', asy
   assert.equal(calls[0].url, LIVE_VISION_URL);
   assert.equal(calls[0].body.image, DATA_URL);
   assert.equal(calls[0].body.question, 'where am i');
+  assert.ok(out.costUsd > 0, 'reports a per-read cost for the meter');
+});
+
+test('readScreen prices the returned token usage when present', async () => {
+  const reader = createViewportReader({
+    captureImage: async () => DATA_URL,
+    fetchImpl: async () => ({ ok: true, status: 200, async json() { return { text: 'city', usage: { input_tokens: 1e6, output_tokens: 0 } }; } }),
+  });
+  const out = await reader.readScreen({});
+  assert.ok(Math.abs(out.costUsd - 0.2) < 1e-9, '$0.20 for 1M input tokens');
 });
 
 test('a null capture resolves to a spoken fallback, never a throw', async () => {

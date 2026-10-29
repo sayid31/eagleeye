@@ -216,6 +216,17 @@ test('the hard spend cap ends the session through the normal stop path', async (
   assert.equal(stream.getAudioTracks()[0].stopped, true, 'mic released at the cap');
 });
 
+test('a tool result carrying a per-read cost folds into the meter', async () => {
+  const runner = async () => ({ ok: true, text: 'a coastal city', costUsd: 0.0005 });
+  const { ctrl, getPc } = makeController({ runner });
+  await ctrl.start();
+  const dc = getPc().channel;
+  dc.open();
+  const msg = { type: 'response.event', event: { type: 'response.output_item.done', item: { type: 'function_call', name: 'read_screen', call_id: 'v1', arguments: '{}' } } };
+  await dc._listeners.message[0]({ data: JSON.stringify(msg) });
+  assert.ok(Math.abs(ctrl.getDiagnostics().costUsd - 0.0005) < 1e-9, 'reader cost is in the meter total');
+});
+
 test('a server usage duration reconciles the meter', async () => {
   const { ctrl, getPc } = makeController();
   await ctrl.start();
