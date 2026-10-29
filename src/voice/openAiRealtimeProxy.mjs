@@ -22,6 +22,7 @@ import { VOICE_MODELS, isKnownVoiceTier, resolveVoiceModel } from './voiceCost.j
 import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './toolSchemas.js';
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
 import { installLiveSessionRoute } from './openAiLiveProxy.mjs';
+import { installLiveVisionRoute, READ_SCREEN_TOOL } from './openAiLiveVisionProxy.mjs';
 
 // Sourced from the shared voice-model registry so the client's cost estimate
 // can never be computed against a different model than the session runs on.
@@ -66,8 +67,15 @@ export function openAiRealtimeProxy() {
     installLiveSessionRoute(middlewares, {
       readRequestBody,
       enforceRateLimit: (req, res) => enforceOptInRateLimit(openAiRateLimiter(), req, res),
-      tools: GEV_REALTIME_TOOLS,
+      // The live backend additionally gets the live-only `read_screen` tool —
+      // gpt-live-1 can't see images, so it delegates the viewport read to the
+      // one-shot gpt-5.6-luna call behind /api/live/vision (below).
+      tools: [...GEV_REALTIME_TOOLS, READ_SCREEN_TOOL],
       instructions: GEV_VOICE_SYSTEM_PROMPT,
+    });
+    installLiveVisionRoute(middlewares, {
+      readRequestBody,
+      enforceRateLimit: (req, res) => enforceOptInRateLimit(openAiRateLimiter(), req, res),
     });
 
     middlewares.use('/api/openai/hud-summary', async (req, res) => {

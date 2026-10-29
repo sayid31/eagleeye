@@ -227,8 +227,28 @@ on an open mic over ~30 s, real spoken (not injected-text) user turns, and the
 - NOTE: `gevLiveSession.js` is now at the 300-line service soft-limit; a future
   split (transport vs. lifecycle) is worth considering if it grows further.
 
-NEXT: Fase 5 — `gpt-5.6-luna` screenshot reader (separate one-shot call; text
-feeds back into the voice turn), reusing `captureViewportImage()`.
+DONE Fase 5 (2026-10-29): `gpt-5.6-luna` screenshot reader, responses-mode wiring.
+- New `src/voice/openAiLiveVisionProxy.mjs` — `/api/live/vision` one-shot route:
+  pure `buildVisionRequest` (`input_image` @ `detail:'high'`) + `extractResponseText`
+  (`output_text` or `output[].content[]` walk) + `isAllowedVisionImage` SSRF guard
+  (only `data:image/...` accepted, never a client-supplied remote URL). Exports the
+  live-only `READ_SCREEN_TOOL` schema.
+- New `src/voice/gevLiveVision.js` — `createViewportReader({captureImage,fetchImpl})`;
+  `readScreen()` NEVER throws (every failure → `{ok:false,text:<spoken fallback>}`
+  because the result is JSON-stringified straight into `function_call_output`).
+- Wiring: `openAiRealtimeProxy.mjs` registers the vision route and declares the
+  live session tools as `[...GEV_REALTIME_TOOLS, READ_SCREEN_TOOL]` (live-only — the
+  shared gevActions runner has no `read_screen` handler, and Realtime reads the
+  viewport as ambient image context instead). `initGevLiveVoice` wraps the shared
+  runner so `read_screen` routes to the reader; all other tools pass through.
+- Tests: `gevLiveVision.test.mjs` (7), `openAiLiveVisionProxy.test.mjs` (10). Full
+  voice suite 450/450.
+- PROVEN (unit): round-trip shape, SSRF rejection, key-guard, non-throw fallbacks.
+  INFERRED (until Fase 6 browser proof): the backend actually emits `read_screen`
+  on a "what am I looking at" turn, and `gpt-5.6-luna` Responses `input_image` shape.
+- NOTE: `gevLiveSession.js` is now 308 lines (8 over the 300 service soft-limit;
+  under the 500 hard limit). Candidate split: move `initGevLiveVoice` to its own
+  wiring module. Flagged, not done.
 
 ## Image reader (`gpt-5.6-luna`)
 

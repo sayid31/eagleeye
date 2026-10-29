@@ -26,6 +26,8 @@
 import { createGevActionRunner } from './gevActions.js';
 import { createLiveChannelHandler } from './gevLiveEvents.js';
 import { createLiveCostMeter } from './liveCost.js';
+import { captureViewportImage } from './gevRealtimeViewport.js';
+import { createViewportReader, READ_SCREEN_TOOL_NAME } from './gevLiveVision.js';
 
 export const LIVE_SESSION_URL = '/api/live/session';
 
@@ -296,5 +298,11 @@ export function initGevLiveVoice({
   runner = null,
 } = {}) {
   const actionRunner = runner || createGevActionRunner({ viewer, styleManager, dataManager, sceneDirector, annotations });
-  return new GevLiveController({ runner: actionRunner, ui });
+  // `read_screen` is a live-only tool (gpt-live-1 can't see images): route it to
+  // the one-shot gpt-5.6-luna reader instead of the shared gevActions runner,
+  // which has no such handler. Every other tool passes straight through.
+  const reader = createViewportReader({ captureImage: captureViewportImage });
+  const liveRunner = (name, args, opts) =>
+    name === READ_SCREEN_TOOL_NAME ? reader.readScreen({ question: args?.question }) : actionRunner(name, args, opts);
+  return new GevLiveController({ runner: liveRunner, ui });
 }
