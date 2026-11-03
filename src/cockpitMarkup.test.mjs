@@ -251,8 +251,8 @@ test('share startup isolates panel defaults from recipient-local collapse prefer
   assert.ok(panelChrome, 'panel chrome initializer is missing');
   assert.match(
     panelChrome[1],
-    /_restorePanelCollapsedState\(targetId, \{[\s\S]*?allowStored: !this\._initialShareState/,
-    'valid shares must use deterministic markup defaults before applying encoded panel state',
+    /_restorePanelCollapsedState\(targetId, \{ allowStored: false \}\)/,
+    'every panel boots closed from markup defaults; a share link applies its encoded panel state afterwards',
   );
 });
 
@@ -347,34 +347,39 @@ test('Display orders 3D above Celestial, Clean UI below it, and Parameters below
   assert.doesNotMatch(ui, /\['presets',/);
 });
 
-test('Sudut sits in the globe-actions nav, immediately before the globe button', () => {
-  // Placement regression, owner-reported twice: Sudut began life inside the
-  // DISPLAY rail, which ships collapsed for a first-time visitor
-  // (panelAdaptiveLayoutMixin.js), so the control was invisible until someone
-  // opened a panel. It now lives beside the globe button that prompted the
-  // request. Ordering is asserted because "before the globe button" is the
-  // whole point: set the angle, then press globe, left to right.
+test('Sudut is a small 2D | 3D pill pinned bottom-left, outside the globe-actions nav', () => {
+  // Owner directive 2026-11-03: the top-right spot was "kurang oke" and the pill
+  // too big, so it moved beside the coordinate readout and the labels became
+  // 2D / 3D. Ids and data-camera-angle values stay atas/samping: they are the
+  // persisted, share-linked and voice-facing names, only the face changed.
   const nav = html.match(/<nav id="top-center-actions"[\s\S]*?<\/nav>/);
   assert.ok(nav, 'globe-actions nav is missing');
-  assert.match(nav[0], /id="camera-angle-row"[\s\S]*?id="reset-globe-view"/);
+  assert.doesNotMatch(nav[0], /camera-angle/, 'Sudut must no longer live in the top-right nav');
   assert.equal((html.match(/id="camera-angle-row"/g) || []).length, 1, 'Sudut must have one DOM owner');
 
-  // The shipped markup is the third surface of the cameraAngle default (the
-  // constant and GLOBAL_POST_DEFAULTS are the other two), so the active button
-  // and its aria-checked pair are asserted, not just the ordering.
-  assert.match(nav[0], /id="camera-angle-atas"[^>]*aria-checked="false"/);
-  assert.match(nav[0], /id="camera-angle-samping"[^>]*aria-checked="true"/);
-  assert.match(nav[0], /class="globe-angle-btn active" id="camera-angle-samping"/);
-  assert.match(nav[0], /role="radiogroup"/);
+  const row = html.match(/<div class="globe-angle-seg" id="camera-angle-row"[\s\S]*?<\/div>/);
+  assert.ok(row, 'Sudut row is missing');
+  assert.match(row[0], /id="camera-angle-atas"[^>]*aria-checked="false"[^>]*>2D<\/button>/);
+  assert.match(row[0], /class="globe-angle-btn active" id="camera-angle-samping"[^>]*aria-checked="true"[^>]*>3D<\/button>/);
+  assert.match(row[0], /data-camera-angle="atas"/);
+  assert.match(row[0], /data-camera-angle="samping"/);
+  assert.match(row[0], /role="radiogroup"/);
+  assert.doesNotMatch(row[0], />(Atas|Samping)</, 'the visible labels are 2D / 3D now');
 
-  // Its own classes, not .pp-mode-btn: `#top-center-actions button` forces a
-  // 36 px circle, which would crush a text label. If these classes are ever
-  // renamed back, the control silently becomes two round stubs.
-  assert.match(css, /#top-center-actions \.globe-angle-btn \{[\s\S]*?width:\s*auto/);
-  assert.match(css, /\.globe-angle-seg \{/);
-  // The ee-shell theme strips the plate off every icon button in this nav; a
-  // text pill needs its plate back or it is unreadable over bright terrain.
-  assert.match(adaptiveCss, /body\.ee-shell #top-center-actions \.globe-angle-btn/);
+  // Fixed bottom-left above the status bar, and compact (was 36 px tall).
+  const seg = css.match(/\.globe-angle-seg \{([^}]*)\}/);
+  assert.ok(seg, 'segmented control rule is missing');
+  assert.match(seg[1], /position:\s*fixed/);
+  assert.match(seg[1], /left:\s*12px/);
+  assert.match(seg[1], /bottom:\s*calc\(var\(--ee-statusbar-h/);
+  const height = Number(seg[1].match(/height:\s*(\d+)px/)?.[1]);
+  assert.ok(height > 0 && height <= 24, `pill must be small, got ${height}px`);
+  // The ee-shell theme restores the plate on the text segments.
+  assert.match(adaptiveCss, /body\.ee-shell \.globe-angle-btn/);
+  // It hides with the rest of the chrome in clean view, recording and cockpit.
+  assert.match(css, /body\.ui-clean-view #camera-angle-row,/);
+  assert.match(css, /body\.recording-mode #camera-angle-row,/);
+  assert.match(css, /body\.cockpit-mode :is\([^)]*#camera-angle-row/);
 });
 
 test('Clear Selected Layers uses one adopted batch and discards Context restoration state', () => {

@@ -3192,3 +3192,11 @@ a frame early; drawing one extra marker for a frame is the cheaper failure.
 - **Not fixed here:** the same gate still delays *station* markers by up to one
   tick after a teleport. That is the latency the gate was designed to trade for,
   and unlike the selection case it self-corrects on the next camera move.
+
+## 2026-11-03 — Dock polish: click-only preset pill, boot-closed panels, level-driven mic waveform
+
+- **Preset pill opens on click only.** `#control-panel` sits flush against the mic, so hover-open made the neighbouring map-source tray chase the cursor whenever it drifted left of the mic. `_initAutoHoverPanel` gained `hoverOpen` (default true); only `control-panel` passes false. `LOCATIONS` keeps hover — it is not adjacent to the mic.
+- **Stored collapse state is ignored at boot.** The owner wants nothing open on first load; honoring last visit's "expanded" made a returning session open with panels over the map. A share link still applies its encoded panel state afterwards, so recipients see what the sender meant.
+- **CCTV never auto-expands on first activation.** Enabling the layer (list, `C`, voice) is not a request to see the panel; later camera changes still open it, and timed auto-hop never does.
+- **Waveform follows the real mic level, with a CSS fallback.** A purely animated bar set would look "listening" while the mic is dead or muted. An `AnalyserNode` RMS drives `--mic-level` so silence is visibly flat; when Web Audio is unavailable `data-meter="css"` runs an idle shimmer instead. Kept in `theme/voiceWave.css` because `dock.css` is pinned against `display: none`.
+
