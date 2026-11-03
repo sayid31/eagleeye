@@ -12,7 +12,7 @@ const MIXIN_CLASSES = new Map([['cockpitViewController', ['Controls', 'Frame', '
   ['manager', ['Registration', 'Update', 'Params', 'LifecycleQueries', 'Delegates', 'Subscriptions']],
   ['ui', ['StyleStages', 'Detection', 'Presets', 'ShareState', 'PanelChrome', 'DataManager', 'HudPortal', 'PublicApi', 'CleanView', 'LoadingFeedback', 'CameraAngle', 'Dispose', 'Constants']]]);
 
-const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches', 'gevActions', 'traffic', 'satellites', 'gevRealtime', 'radio', 'aisLiveVessels', 'militaryAwareness', 'cockpitViewController', 'manager', 'ui']);
+const SPLIT_LAYERS = new Set(['flights', 'militaryFlights', 'rocketLaunches', 'gevActions', 'traffic', 'satellites', 'radio', 'aisLiveVessels', 'militaryAwareness', 'cockpitViewController', 'manager', 'ui']);
 
 /**
  * Return the normalized source text of a layer module.

@@ -45,7 +45,7 @@ Historical planning documents may not match runtime behavior.
   itself — see `src/navigationLocationMixin.js`'s header.
 - Layer management in `src/data/manager.js`
 - Map stack switching in `src/mapStackController.js`
-- Voice control in `src/voice/` (OpenAI Realtime over WebRTC)
+- Voice control in `src/voice/` (GPT-Live over WebRTC)
 - Voice map whiteboard annotations in `src/annotations/`
 - 3D aircraft/model tracking surfaces in `src/data/flights.js` and `src/data/militaryFlights.js`
 - Detection overlay and tracked-target readout in `src/data/detection.js`, `src/data/detectionDraw.js`, and `src/data/trackedReadout.js`
@@ -99,7 +99,7 @@ Historical planning documents may not match runtime behavior.
 - **No long-lived consumer captures a lazy layer's module.** A module read
   at construction time is `null` for every lazy layer, and because consumers
   reach it through optional chaining, storing that null disables a feature
-  without raising anything. `GevRealtimeController` therefore resolves
+  without raising anything. `createLiveRadioBridge` (`gevLiveRadio.js`) therefore resolves
   `radio` through a live accessor on each access rather than a constructor
   argument, and installs its playback-control subscription when the module
   resolves (watching the manager's change stream, not the layer's own
@@ -142,7 +142,7 @@ Historical planning documents may not match runtime behavior.
   redeclares state. New layers follow the same shape rather than growing a
   single file.
 - **Classes** (`StyleManager` in `ui.js`, `DataLayerManager`,
-  `gevRealtime`, `cockpitViewController`) are split into mixin modules
+  `cockpitViewController`) are split into mixin modules
   (`uiStyleStages.js`, `managerUpdate.js`, …) applied with
   `Object.assign(Class.prototype, …)` in the parent; a method name defined in
   two mixins is won by the later assignment, so a name is defined once. The
@@ -278,7 +278,7 @@ Historical planning documents may not match runtime behavior.
   are expressible with shipped tools (`set_layer_visibility`'s enum already
   carries `local-datacenters`, `local-dams`,
   `telegeography-submarine-cables`, `local-firms`, `earthquakes`;
-  `zoom_to_globe` supplies the camera), so `GEV_REALTIME_TOOLS` stays
+  `zoom_to_globe` supplies the camera), so `GEV_TOOL_SCHEMAS` stays
   byte-identical to `main` and is pinned by sha256 in the unit suite.
 - **ESC arbitration — three rules, kept separate on purpose.** (1) The
   launcher yields: a MutationObserver watches `body` for the surfaces that
@@ -543,7 +543,7 @@ does not enqueue lifecycle or player work.
 Generic `set_layer_visibility` results expose the same atomic `enabled`,
 `lifecycleState`, and `lifecycleUncertain` summary for Radio on success,
 fulfilled-false failure, rejection, cancellation, reversal, and missing-module
-outcomes. Realtime suppression and settlement refresh all three fields together,
+outcomes. Voice suppression and settlement refresh all three fields together,
 so dedicated and generic Radio routes cannot publish mixed lifecycle snapshots.
 `disabled` is inert, while a transitional or uncertain shell is reconciled
 through the manager and may proceed only after a fresh read confirms certain
@@ -882,7 +882,7 @@ silently demoting every later lookup for the session.
   never enters Contacts or Cockpit unless either mode is named explicitly. The
   destination refresh also runs when the requested layer was already enabled.
   The lookup inspects the full loaded fleet and tracks by stable ICAO identity.
-  That complete route is one atomic voice action, so Realtime sibling calls
+  That complete route is one atomic voice action, so sibling voice calls
   cannot race the nearest-aircraft query ahead of layer enablement. A healthy fallback feed is
   queried normally and its source is returned with the selection; fallback with
   no airborne records remains an honest no-data result, not an enable failure.
@@ -911,11 +911,11 @@ silently demoting every later lookup for the session.
 
 ### Voice Control (June 2026)
 
-`GEV MIC` button (bottom UI) starts an OpenAI Realtime session over WebRTC:
+`GEV MIC` button (bottom UI) starts a **GPT-Live** (`gpt-live-1`) full-duplex session over WebRTC. It is the only voice backend (OpenAI Realtime and the Claude/Web-Speech backend were removed — see `docs/DECISIONS.md`). Speak freely; there is no push-to-talk and no backend/tier toggle. See `docs/gpt-live-migration.md` for the build history:
 
-- **Token flow**: browser fetches a short-lived client secret from `/api/realtime/token`; the Vite middleware holds `OPENAI_API_KEY` and posts the full session config (instructions, tool schemas, VAD, truncation) to `api.openai.com/v1/realtime/client_secrets`. SDP exchange goes directly to `api.openai.com/v1/realtime/calls` with the ephemeral token.
-- **Session defaults** (env-tunable): model `gpt-realtime-2` (or `gpt-realtime-2.1-mini` when the MINI tier is selected — see the model-tier entry below), voice `marin`, reasoning effort `low`, semantic VAD with low eagerness, no response interruption, context window truncated to ~3,000 post-instruction tokens with 0.5 retention ratio — the conversational window stays short because map state is fetched live per turn.
-- **Spoken language follows the user.** The system prompt (`src/voice/voiceSystemPrompt.js`, shared with the Claude backend) instructs the model to reply in whatever language the user speaks, naming Indonesian explicitly, and to keep following them across a mid-session switch. Tool names, argument keys, layer ids, style ids, place queries, and read-back identifiers (callsigns, registrations, airport/station codes) stay verbatim English because the tool layer parses them by exact value; the prompt's pinned failure sentences carry their meaning rather than their English letter. The prompt text is sha256-pinned in `voiceSystemPrompt.test.mjs`, so changing it is a deliberate re-pin.
+- **Session flow**: the browser POSTs its WebRTC SDP offer to `/api/live/session`; the Vite middleware (`src/voice/openAiVoiceProxy.mjs` + `openAiLiveProxy.mjs`) holds `OPENAI_API_KEY`, attaches the full session config (instructions, tool schemas, allowed server events) and relays the answer SDP from `api.openai.com/v1/live/sessions`. The browser never sees the key.
+- **Session defaults** (env-tunable): model `OPENAI_LIVE_MODEL` (default `gpt-live-1`), delegated backend model `OPENAI_LIVE_BACKEND_MODEL` (default `gpt-5.6-luna`), voice `OPENAI_LIVE_VOICE` (default `marin`). Mic `echoCancellation` is always on.
+- **Spoken language follows the user.** The system prompt (`src/voice/voiceSystemPrompt.js`) instructs the model to reply in whatever language the user speaks, naming Indonesian explicitly, and to keep following them across a mid-session switch. Tool names, argument keys, layer ids, style ids, place queries, and read-back identifiers (callsigns, registrations, airport/station codes) stay verbatim English because the tool layer parses them by exact value; the prompt's pinned failure sentences carry their meaning rather than their English letter. The prompt text is sha256-pinned in `voiceSystemPrompt.test.mjs`, so changing it is a deliberate re-pin.
   - **The instruction text lives in four siblings; `voiceSystemPrompt.js` is the aggregator.** `voiceSystemPromptPersona.js` (who the assistant is + the language rule), `…Answering.js` (which tool answers which question shape, identity/scene sourcing, the counting contract), `…Control.js` (layers, named views, style, HUD, scenes, radio, tracking, navigation), `…Annotation.js` (the map whiteboard). `GEV_VOICE_SYSTEM_PROMPT_LINES` is their concatenation in exactly that order, and **the order is part of the contract** — the persona's language clause refers forward to "a rule below". A new instruction goes at the END of the sibling that owns its subject, followed by a deliberate re-pin of the hash. The split itself moved no bytes: the sha256 pin is over the joined string, so it passes only if every line kept its original position, and `voiceSystemPrompt.test.mjs` additionally pins the concatenation order, per-sibling subject anchors, and that no line appears in two siblings.
 - **Twenty-eight tools** (schemas defined server-side in `vite.config.js`, executed client-side in `src/voice/gevActions.js`): `fly_to_location`, `select_nearest_aircraft`, `adjust_camera_zoom`, `zoom_to_globe`, `set_layer_visibility`, `show_data_layers_menu`, `set_panel_open`, `set_visual_style`, `get_entity_context`, `get_current_view_state`, `set_hud`, `set_detection`, `set_map_stack`, `set_post_processing`, `control_scene`, `control_cctv`, `set_context_mode`, `control_cockpit`, `control_radio`, `track_entity`, `stop_tracking`, `frame_overhead`, `annotate_map`, `clear_annotations`, `move_camera`, `fly_route`, `analyst_query`, and `next_iss_pass`.
 > **Reading `npm test` totals:** the count depends on the Node major. The two
@@ -941,108 +941,18 @@ silently demoting every later lookup for the session.
   - **One aircraft-proximity engine** (2026-08-22). `collectAircraftProximityWindow` (`src/data/militaryAwareness.js`) is the single computation behind both the Contacts panel window and the voice analyst's entity-centred "how many nearby", so the panel readout and the spoken count for one centre are identical by construction. **Invariant: do not re-derive a proximity count anywhere else.** They diverged before because the panel read live billboard positions (20,000 cap) while the analyst used last-fix coordinates over a 2,000-record slice — 111 on screen, 15 spoken. Explicit regions and arbitrary points deliberately keep the general record engine. Entity-centred results carry `window: {engine:'contacts-window', centeredOn, radiusKm, flights, military, aircraft}`.
   - **Centre precedence for nearby asks**: explicit place in the question > Contacts subject (a selected non-contact entity never silently becomes the centre) > an entity the user names > the current view, said aloud. Contacts active with no subject uses the view rather than reading an empty panel.
   - **Contact-match ties break on hex ascending.** `track_entity` is a mutation fulfilling "follow that one", and the model's observed answer to a non-ok track result is to retry with guesses rather than ask, so the lookup always commits rather than returning an ambiguity. What it owes the caller is stability: hex is unique and always present, so the same query resolves to the same contact for as long as both are loaded.
-- **Visual grounding**: at `local` view scale with no structured identity, the client captures the Cesium canvas (≤1200px JPEG, black-frame detection, double-render for freshness) and sends it as `input_image` with a strict "do not invent labels" instruction.
-- **Context window**: only the latest viewport screenshot stays in context — the client deletes the prior image item (`conversation.item.delete`) before adding a new one (images are the most expensive item, re-billed every turn). Text history is bounded by the **server-side** `truncation: { type: 'retention_ratio', retention_ratio, token_limits.post_instructions }` set in `/api/realtime/token` (cache-friendly batched truncation). There is intentionally **no** client-side per-turn conversation-item cap — deleting from the front of history each turn busts the Realtime prompt cache. A spatially-aware summarize-and-prune policy is specced for a future iteration.
-- **Model tier + spend guard** (`src/voice/voiceCost.js`, August 2026): the voice heading row carries a `STD`/`MINI` toggle and a running session-cost readout (`~$0.42`).
-  - **Tier selection.** `standard` = `gpt-realtime-2` (default), `mini` = `gpt-realtime-2.1-mini` (~3× cheaper per audio token). The client sends `?tier=` to `/api/realtime/token`; the endpoint resolves it through the shared registry, so an unknown, empty, or hostile value falls back to `standard` rather than reaching OpenAI as a model id. Responses echo `X-GEV-Voice-Tier` / `X-GEV-Voice-Model` (plus `X-GEV-Voice-Tier-Fallback: 1` when a bogus tier was downgraded). Persisted at `gev:voice-cost:tier`.
-  - **Applies NEXT session.** The model is fixed when the ephemeral token is minted, so a live session always keeps the model it connected with; toggling mid-session only records the preference (the button title says so). The cost tracker's lifetime is the session's lifetime and its model binding is immutable from `start()` to `stop()` — rebuilding it on toggle would erase accrued spend and let repeated toggles bypass the cap. The tracker may only be replaced once the session is FULLY SETTLED (`isVoiceSessionSettled()`: not active **and** no data channel **and** no peer connection) — `!isActive()` alone is not enough, because the `error` status reports inactive while the transport can still deliver a late `response.done`. The toggle itself reads and writes only the persisted preference, never the live tracker.
-  - **Env overrides.** `OPENAI_REALTIME_MODEL` / `OPENAI_REALTIME_MODEL_MINI` remain authoritative per tier, so a drifted upstream model id is a `.env` fix rather than a code change. Because an override can point a tier at any model, the client prices against the model id the server actually echoed, **not** the tier it requested. An unrecognised id is billed at the most expensive known rates plus one console warning — under-metering is what lets a cap be overrun.
-  - **Metering.** Token usage from each `response.done` is folded into a per-session estimate. Cached tokens are subtracted from their modality totals; any aggregate-minus-details residual (and any payload with no detail at all) is attributed to audio rates, so uncertainty always resolves *upward*.
-  - **Thresholds** (one object, persisted at `gev:voice-cost:limits`): soft warning at **$2** — amber readout plus exactly one console line; hard cap at **$5** — the session ends through the ordinary stop path (data channel and peer connection closed, mic tracks stopped) and the readout reads `Session ended — cost cap`. `0`/negative disables a threshold and round-trips through storage as an `'off'` sentinel (raw `Infinity` would JSON-serialize to `null` and silently restore the default); a corrupt entry falls back to the defaults rather than disarming the cap.
-  - **Cap semantics — in-flight tools COMPLETE and are NOT rolled back.** A session-ending latch (`isSessionEnding()`) is checked at the tool-dispatch site, so no *new* tool is dispatched once the cap trips. `extractFunctionCalls` yields at most one call per event, so that single check covers the whole batch. A tool already executing may still finish its map mutation (a camera flight, a layer toggle, an annotation). This is deliberate: unwinding a partially applied map change has no safe general implementation, and a half-reverted camera/layer/annotation state is worse than a completed one.
-  - **In-flight response at teardown → the accounting is INCOMPLETE.** Usage only arrives with `response.done`, which never comes for a response cut off by teardown (`stop()` closes the peer connection, and the server cancels rather than completes it). Rather than invent a token count for it, the tracker is marked `incomplete`: the chip shows a trailing `*` (`~$1.00*`) as a see-note mark and the tooltip carries the reason. Deliberately **not** presented as a lower bound — the estimate can also run high (residuals and unrecognised models bill at worst-case rates, and sub-cent totals round up), so it is partial rather than directional. (A bounded teardown drain was tried and removed: `pc.close()` closes the data channels a drain would listen on, so it was structurally dead.)
-  - **⚠️ Model ids and rates are external facts** read from OpenAI's model + pricing pages on 2026-08-18 and marked VERIFY-AT-RELEASE in `voiceCost.js`.
+- **Visual grounding**: `gpt-live-1` has no image input, so the backend model calls the live-only `read_screen` tool. `gevLiveVision.js` captures the Cesium canvas (`gevLiveViewport.js`: downscaled JPEG, black-frame detection, double-render for freshness) and POSTs it to `/api/live/vision`, a one-shot `gpt-5.6-luna` call with a strict "do not invent labels" instruction; its text becomes the tool result the voice speaks. Failures resolve to a spoken fallback, never a throw.
+- **Spend guard** (`src/voice/liveCost.js` + `voiceCost.js`): GPT-Live bills a flat **$0.05 per minute of live audio**, per second; the meter ticks on wall-clock while the session is open and each `read_screen` adds its own `gpt-5.6-luna` cost (real token usage, with a per-read fallback estimate). The delegated backend turns' own tokens are NOT separately metered. The readout sits next to the mic (`~$0.42`). Warning at **$2** (amber + one console line), hard cap at **$5** (session ends through the ordinary stop path); thresholds persist at `gev:voice-cost:limits`. ⚠️ The per-minute rate is an external fact marked VERIFY-AT-RELEASE in `liveCost.js`.
 - **Reliability**: tool-call dedupe (2.5s window across call/item/args keys); response-create queueing that respects active responses and defers follow-ups when the user starts speaking; per-tool follow-up instructions so the agent confirms only what actually happened (zoom confirms only on `ok=true`).
 - **Aircraft identity honesty:** “What is this aircraft?” reads callsign, operator, registration, type, and route only from the selected contact context. Missing operator, route, or type enrichment is named explicitly rather than silently omitted or inferred from the callsign.
-- **Diagnostics**: every client/server event is posted to `/api/realtime/debug-log` and appended to `.gev-logs/realtime-conversations.jsonl` (gitignored) with secret/image redaction; last 30 errors persist in `localStorage` (`gev-realtime-errors`); `window.__gevVoiceCommands.getDiagnostics()` in the console.
+- **Diagnostics**: `window.__gevVoiceCommands.getDiagnostics()` reports backend, channel state, cost and recent errors; the last errors persist in `localStorage`. There is no server-side conversation log.
 - **Counting semantics ("near")** — a CONTRACT; new count-bearing tool work inherits it. Three honest numbers exist for one question: the Contacts cohort (250 km around the subject, what the panel shows), `analyst_query`'s count of *currently-loaded* records for the requested scope, and the layer-wide loaded total in `coverage.layersQueried[].records`. They diverge legitimately — the flights layer loads by viewport, so after a camera dive the loaded set can hold a fraction of the cohort (field case: panel 42, analyst 8). The contract:
   1. **Contacts ACTIVE** → "near / nearby / how many aircraft" means the **Contacts window** — the panel's numbers, spoken verbatim. Mechanism: `contactsWindow` (`{centeredOn, radiusKm, flights, military, vessels}`), carried by both `analyst_query` and `get_current_view_state`, derived by `contactsWindowFromSnapshot()` from the same snapshot the panel renders so the two cannot drift. A cohort whose feed cannot answer reports `'unknown'`, never a confident zero.
   2. **Contacts OFF** → "nearby" means **in view**; "near \<place\>" means a radius around that place. A radius query with Contacts active and no explicit centre is centred on the **active contact**, not the camera.
   3. **Every count names its scope in words** — "42 in your window", "8 in view", "about 30 within 250 km of Austin" — never a bare number. `analyst_query` returns `scopeLabel` so this is mechanical. Two different numbers with named scopes are not a contradiction.
   4. **The loaded-data caveat is stated once when relevant**: counts cover loaded data, and the flights layer loads where you look (appended to `coverage.note` for radius/view scopes over viewport-loaded layers).
-- **Degradation**: without `OPENAI_API_KEY`, `/api/realtime/token` returns 503 and the mic button surfaces the error; the rest of the app is unaffected.
-
-### Voice Backend #2: Claude + Web Speech API (September 2026, stopgap)
-
-A second, **additive** voice backend for users without an OpenAI budget —
-per PM decision `ec1f62af-ba33-4f83-b602-76ae742bfc59`, explicitly temporary
-and not a replacement for OpenAI Realtime above. Anthropic has no
-speech-to-speech API, so Claude is paired with the browser's own
-**Web Speech API** (`SpeechRecognition` for STT, `SpeechSynthesis` for TTS)
-— $0 cost, turn-based rather than always-listening.
-
-- **One `window.__gevVoiceCommands`, two backends.** `src/voice/voiceBackendSwitch.js`'s
-  `createVoiceBackendCoordinator` delegates every public call
-  (`start`/`stop`/`setStatus`/`setMicrophoneEnabled`/`setVoiceSpeaker`/
-  `isActive`/`getDiagnostics`) to whichever backend is currently selected.
-  Both backends share the SAME DOM tray (one `#gev-voice-control`, one mic
-  button, one cost readout) and the SAME `gevActions.js` action runner (one
-  `createGevActionRunner()` call, not two) — Claude is a second *caller* of
-  the existing tool runner, not a new tool implementation. `runner` itself
-  is pinned to the OpenAI-built instance regardless of which backend is
-  active, so camera-verb/prewarm wiring is never installed twice.
-- **`[GPT|CLAUDE]` backend pill** sits next to the STD/MINI tier pill inside
-  the voice tray. Hidden by default; revealed only once BOTH hold: the
-  server reports `ANTHROPIC_API_KEY` configured (`GET /api/setup/status`,
-  the `anthropic` key entry's `set` field) AND this browser supports both
-  Web Speech pieces (`isSpeechRecognitionSupported() &&
-  isSpeechSynthesisSupported()` in `src/voice/webSpeechIO.js`) — Firefox has
-  no default `SpeechRecognition` support, so the pill simply never appears
-  there rather than failing on click.
-- **Default backend is GPT-Live (`gpt-live-1`).** The page loads with the pill on
-  `GPT-LIVE` (`DEFAULT_VOICE_BACKEND` in `src/voice/voiceBackendSwitch.js`);
-  cycle order is still GPT → GPT-LIVE → CLAUDE, so OpenAI Realtime is one click
-  away as the fallback and is the active backend if the live controller is
-  absent. Rationale and the still-unproven parts (physical echo test, voice
-  tool-call routing): `docs/gpt-live-migration.md`.
-- **Turn-based state machine, not always-listening.** `GevClaudeVoiceController`
-  (`src/voice/gevClaudeVoice.js`) runs `idle → listening → thinking →
-  toolExecuting → speaking → idle` per utterance — `webSpeechIO.js`'s
-  recognizer is push-to-talk (one result per `start()`), so there is no
-  "connected and waiting" state. **Known limitation, not silently patched:**
-  the hold-Space push-to-talk shortcut always targets OpenAI Realtime, even
-  while Claude is selected — only the mic BUTTON is backend-aware.
-- **Bounded multi-turn tool loop.** Unlike this app's single-shot treatment
-  of an OpenAI Realtime function call, Anthropic's Messages API can return
-  several `tool_use` blocks per response and ask for MORE tools after their
-  `tool_result`s come back. `src/voice/claudeToolLoop.js` holds the pure
-  bookkeeping (`extractToolUseBlocks`, `buildToolResultMessage`,
-  `extractFinalText`, `hasExceededToolLoopLimit`,
-  `trimConversationHistory`) — `MAX_TOOL_LOOP_ITERATIONS` hard-stops a
-  confused model or a tool that always looks actionable, and speaks
-  whatever partial confirmation is available rather than hanging silently.
-  Conversation history is trimmed to a short window, mirroring the OpenAI
-  pipeline's own "map state is fetched live per turn" philosophy.
-- **Non-streaming proxy** (`anthropicProxy()`, `vite.config.js`), mounted at
-  `POST /api/anthropic/messages`: reads `ANTHROPIC_API_KEY` server-side
-  (browser never sees it), injects `tools: toAnthropicTools(GEV_TOOL_SCHEMAS)`
-  server-side — same trust boundary as `GEV_REALTIME_TOOLS`, the client
-  never defines what's callable — and defaults `system` to
-  `GEV_CLAUDE_VOICE_SYSTEM_PROMPT` (`src/voice/voiceSystemPrompt.js`, the
-  same persona/tool-usage contract as OpenAI Realtime's own instructions, so
-  the two backends can't drift apart in what they're allowed to do). Returns
-  `503` if the key is unset, mirroring `/api/realtime/token`. Opt-in per-IP
-  rate limit via `GEV_RATELIMIT_ANTHROPIC_PER_MIN`.
-- **Model tier + cost tracker** (`src/voice/claudeVoiceCost.js`) mirrors
-  `voiceCost.js`'s shape: `standard` = `claude-haiku-4-5-20251001` (default),
-  `pro` = `claude-sonnet-5`, both overridable via `ANTHROPIC_VOICE_MODEL` /
-  `ANTHROPIC_VOICE_MODEL_PRO`. Audio never reaches Claude (STT/TTS happen
-  entirely in the browser), so pricing is plain per-token input/output —
-  no audio-token tier to account for. Shares the same visible cost readout
-  (`#gev-voice-cost-value`) OpenAI uses; whichever backend is active repaints it.
-- **Visual states.** `thinking`/`speaking` are genuine new states (Claude
-  round-trip latency plus TTS playback are both real time the user should
-  see something for); `toolExecuting` deliberately reuses the existing
-  `executing` CSS hook (`DATASET_STATUS` remap table in `gevClaudeVoice.js`)
-  rather than duplicating the amber tool-running treatment.
-- **Explicit manual-QA gap**: real microphone capture and real speech
-  synthesis cannot run in `node:test` or in `npm run test:track`'s puppeteer
-  harness — see `TESTING.md`'s Claude voice backend scenario. `npm run
-  build`/`npm test` prove the pure tool-loop/coordinator logic is correct,
-  not that the end-to-end voice round trip works.
-- **Degradation**: without `ANTHROPIC_API_KEY`, or on a browser lacking Web
-  Speech support, the backend pill never appears — OpenAI Realtime is
-  entirely unaffected either way.
+- **Degradation**: without `OPENAI_API_KEY`, `/api/live/session` returns 503 and the mic tray shows `GALAT` with the reason; the rest of the app is unaffected.
+- **Radio ownership** (`src/voice/gevLiveRadio.js`): Radio is ducked and paused while a session is open. A `control_radio` play-type result hands the speaker to Radio (muted start, verified `playing`, then the voice session closes); a user Play on the Radio panel takes it back the same way. Dropped in the move to GPT-Live: Space push-to-talk, the audio visualizer, the STD/MINI toggle, the backend pill, annotation map-event follow-ups.
 
 ### AI HUD Summary (June 2026)
 
@@ -1626,7 +1536,7 @@ The popup now lines up with the panel's other full-width rows. See
 - A cold OpenSky failure uses the current camera subpoint only to request a cached adsb.lol point fallback capped at 250 nm. A fresh OpenSky response or last-good cache wins; a nominally successful worldwide snapshot more than two minutes old prefers viewport-scoped adsb.lol when available, otherwise the stale source is reported honestly. The fallback is visibly source-labeled and is never presented as a worldwide snapshot.
 - GBFS response size is capped; CCTV health map is bounded.
 - Proxy error payloads are sanitized (no internal error details returned to clients).
-- `OPENAI_API_KEY` is server-side only; the browser receives ephemeral Realtime client secrets from `/api/realtime/token`.
+- `OPENAI_API_KEY` is server-side only; the browser only talks to same-origin `/api/live/session` and `/api/live/vision`.
 - `AISSTREAM_API_KEY` is server-side only; the browser reads the same-origin `/api/ais-live` cache.
 - `/api/google/nearby-places` keeps the Google key out of Places requests issued for voice scene context.
 - `/api/google/text-search` keeps the Google key server-side for view-biased Places recovery used by annotation resolution.
@@ -1640,7 +1550,6 @@ The popup now lines up with the panel's other full-width rows. See
 - `/api/mymaps/<dataset>` serves only datasets named in `src/data/myMapsSources.mjs`; the request never reaches the upstream URL (map ids are fixed server-side), KML bodies are capped at 2 MiB, and the result is cached 6 h with a single-flight refresh and a stale copy on upstream failure.
 - `/api/route` proxies bounded OSRM route requests for annotation routes, with profile allowlisting, distance caps, response caps, caching, and sanitized "no route found" errors.
 - Track endpoints: `/api/ais-live/track?mmsi=` (server-accumulated ring buffers; sub-route handled before the rows snapshot), `/api/opensky-track?icao24=` (OAuth, 60s cache, sanitized errors, independent OpenSky credit bucket), `/api/adsblol/trace?hex=` (60s cache, 5MB cap, ODbL attribution required in UI).
-- Realtime debug logs redact API keys, bearer tokens, client secrets, and image data URLs before writing to disk; request bodies are size-capped.
 
 ## UI Shell (theme layer)
 
@@ -1994,7 +1903,6 @@ detection off by hand — would not have.
   mark only: it arrives about 500 ms after stillness, typically after fetch has
   begun, and fetch never waits for it. Production builds remove the flag, hooks,
   counters, and timing labels.
-- Voice debug log: `tail -f .gev-logs/realtime-conversations.jsonl` (gitignored).
 
 Replay chase-camera updates run in Cesium `preUpdate` before scene traversal, preventing 3D-tile refinement stutter when the mission replay speed is reduced. Replay Ascent first gives the selected launch site a five-second tile-preparation hold before displaying the T-minus countdown. Replay ascent duration is mission-specific: disclosed insertion, SECO, or separation timing is compressed into the replay, while sparse records use reconstructed path length with bounded fallback timing instead of a universal fixed duration. Replay transitions directly from ascent to orbit; stage re-entry/recovery remains static contextual linework and is never a camera-tracked playback phase. The screen-space rocket/thrust symbol renders at 50% of its 92 × 138 px design box, while the separate callout text remains unchanged. Successful/upcoming selected missions show a current orbit marker: green for a reliable TLE match or amber and explicitly estimated when no live match exists. Failed launches show their source status and suppress live/estimated orbit markers and fallback rings. A retained Launch Library orbit is labeled as the planned target, an absent ascent is reported as unavailable, and replay-only controls remain hidden unless the selected mission has a rendered track; authoritative supplied trajectory points remain visible when present. Mission orbit primitives realign by model matrix each tick from the same current-GMST frame as their marker, preventing ring/marker drift; their host annotation reads the position cache updated in that same tick. During depth-dominant ascent segments, the replay rocket retains its last valid path-facing rotation rather than snapping toward the camera. Mission selection and replay overlays never call photoreal `sampleHeight()` from the render loop; the launch-zone ground primitive and precomputed surface-safe replay path avoid remote tile-refinement probes that previously caused a one-second globe texture pulse. The shared host replaces the former mission-label visibility churn and quadratic overlap loop; the layer's remaining frame sweep only culls native point/billboard geometry and refreshes selected UTC copy when its displayed second changes. Replay samples uneven path vertices by cumulative distance and normalizes camera-yaw easing to frame time.
 

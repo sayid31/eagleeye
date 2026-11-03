@@ -30,8 +30,8 @@
  *   - src/data/radioBrowserProxy.mjs, rocketLaunchesProxy.mjs,
  *     googlePlacesContextProxy.mjs — station directory, launch metadata,
  *     keyless place context.
- *   - src/voice/openAiRealtimeProxy.mjs, anthropicProxy.mjs — voice-agent
- *     token/session proxies.
+ *   - src/voice/openAiVoiceProxy.mjs — GPT-Live voice session, screenshot
+ *     reader and HUD-summary proxies.
  *   - src/data/terrainHeightsProxy.js — Re:Earth ellipsoidal point-height
  *     lookups.
  *
@@ -125,8 +125,7 @@ import {
   terrainPointKey,
   validTerrainResult,
 } from './src/data/terrainHeightsProxy.js';
-import { openAiRealtimeProxy } from './src/voice/openAiRealtimeProxy.mjs';
-import { anthropicProxy } from './src/voice/anthropicProxy.mjs';
+import { openAiVoiceProxy } from './src/voice/openAiVoiceProxy.mjs';
 
 /** Resolve __dirname for ESM context. */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -893,8 +892,7 @@ export default defineConfig(({ mode }) => {
       adsbLolProxy(),
       aisLiveProxy(),
       trackBackfillProxies(),
-      openAiRealtimeProxy(),
-      anthropicProxy(),
+      openAiVoiceProxy(),
       googlePlacesContextProxy(),
       nominatimSearchProxy(),
       keySetupEndpoint(),

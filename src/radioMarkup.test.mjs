@@ -19,7 +19,7 @@ const radio = readLayerSourceText(new URL('./data/radio.js', import.meta.url));
 // wiring moved with it.
 const cockpitSrc = readLayerSourceText(new URL('./cockpitViewController.js', import.meta.url));
 const rocketLaunches = readLayerSourceText(new URL('./data/rocketLaunches.js', import.meta.url));
-const realtime = readLayerSourceText(new URL('./voice/gevRealtime.js', import.meta.url));
+const liveRadio = readLayerSourceText(new URL('./voice/gevLiveRadio.js', import.meta.url));
 const css = readFileSync(new URL('../style.css', import.meta.url), 'utf8');
 const toolSchemasSrc = readFileSync(new URL('./voice/toolSchemas.js', import.meta.url), 'utf8');
 // Instruction text now lives in voiceSystemPrompt.js (mechanical relocation
@@ -378,5 +378,5 @@ test('successful explicit user playback hands the speaker from voice to Radio', 
   assert.match(radioMixin, /callLayerMethod\('radio', 'togglePlayback', \{ origin: 'user' \}\)/);
   assert.match(radioMixin, /callLayerMethod\('radio', 'cycleStation', direction, \{[\s\S]*?origin: 'user'/);
   assert.match(radioMixin, /callLayerMethod\('radio', 'commitTuningStation', station\.id, \{ origin: 'user' \}\)/);
-  assert.match(realtime, /event\.origin === 'user' && event\.action === 'play' && this\.isActive\(\)[\s\S]*?this\.stop\(\{ preserveRadioPlayback: true \}\)/);
+  assert.match(liveRadio, /event\.action === 'play' && isActive\?\.\(\)[\s\S]*?stopVoice\?\.\(\)/);
 });

@@ -20,7 +20,7 @@ export { cctvVoiceFocusOutcome, controlCctv } from './gevActionsCctv.js';
 export { readLayerLifecycleSummary } from './gevActionsLayers.js';
 export { formatTrackedEntityLabel, normalizeLocationId, normalizeStackId } from './gevActionsNormalize.js';
 
-// Re-exported for existing call sites (gevActions.test.mjs, gevRealtime.test.mjs)
+// Re-exported for existing call sites (gevActions.test.mjs)
 // that still import controlRadio/knownRadioLocation directly from this module —
 // mechanical relocation, no behavior change.
 export { controlRadio, knownRadioLocation } from './gevRadioActions.js';

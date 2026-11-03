@@ -8,8 +8,7 @@
  * live voice turn then speaks (see docs/gpt-live-migration.md, Fase 5).
  *
  * Kept out of openAiLiveProxy.mjs (the SDP session route) so each module stays
- * one cohesive concern and under the file-size budget — mirrors liveCost.js
- * splitting the per-minute meter out of voiceCost.js.
+ * one cohesive concern and under the file-size budget — kept separate from the session route for cohesion.
  *
  * The request body (`buildVisionRequest`) and the response-text extraction
  * (`extractResponseText`) are pure so the Responses-API shape is unit-tested
@@ -40,8 +39,7 @@ const VISION_READER_INSTRUCTION =
 
 /**
  * Live-only tool schema advertised to the delegated backend model. Not added to
- * GEV_TOOL_SCHEMAS (the shared Realtime/Claude list) because Realtime reads the
- * viewport as ambient image context rather than via a tool, and its gevActions
+ * GEV_TOOL_SCHEMAS (the shared gevActions list) because the gevActions
  * runner has no `read_screen` handler — the live controller wraps the runner to
  * service this one name (gevLiveVision.js).
  */
@@ -124,7 +122,7 @@ export function isAllowedVisionImage(image) {
 
 /**
  * Register the `/api/live/vision` one-shot reader route. Dependencies injected
- * so this file stays free of the Realtime proxy's module-local helpers.
+ * so this file stays free of the other proxy modules' local helpers.
  *
  * @param {import('connect').Server} middlewares
  * @param {object} deps

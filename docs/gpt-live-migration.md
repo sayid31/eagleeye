@@ -1,5 +1,7 @@
 # GPT-Live migration — working design note (branch `feature/gpt-live-voice`)
 
+> **2026-11-03 update:** the OpenAI Realtime and Claude backends are deleted; references below to them or to a "fallback" are historical. See `docs/DECISIONS.md`.
+
 Status: **IN PROGRESS**, started 2026-10-29. No runtime proof yet. This note
 captures the verified connection contract and the one open architecture
 decision, so the work can resume in a fresh session without re-researching.
@@ -144,8 +146,8 @@ on an open mic over ~30 s, real spoken (not injected-text) user turns, and the
   proven shape facts (no `audio.format`; object allowlist with `response_event`
   string selectors). Backend model `OPENAI_LIVE_BACKEND_MODEL` (default
   `gpt-5.6-luna`), frontend `OPENAI_LIVE_MODEL` (default `gpt-live-1`).
-- `src/voice/openAiRealtimeProxy.mjs`: registers the route in `install()`;
-  `readRequestBody` is now exported. `/api/realtime/token` untouched (fallback).
+- `src/voice/openAiVoiceProxy.mjs` (renamed from `openAiRealtimeProxy.mjs`): registers the
+  route; `readRequestBody` is exported. The Realtime route was later deleted.
 - Unit test `openAiLiveProxy.test.mjs` (7 cases) — config-shape regressions
   for every 400 we hit in Fase 0.
 - **Runtime PROVEN** (throwaway puppeteer vs the live dev-server route, 28 real
@@ -238,8 +240,8 @@ DONE Fase 5 (2026-10-29): `gpt-5.6-luna` screenshot reader, responses-mode wirin
 - New `src/voice/gevLiveVision.js` — `createViewportReader({captureImage,fetchImpl})`;
   `readScreen()` NEVER throws (every failure → `{ok:false,text:<spoken fallback>}`
   because the result is JSON-stringified straight into `function_call_output`).
-- Wiring: `openAiRealtimeProxy.mjs` registers the vision route and declares the
-  live session tools as `[...GEV_REALTIME_TOOLS, READ_SCREEN_TOOL]` (live-only — the
+- Wiring: `openAiVoiceProxy.mjs` registers the vision route and declares the
+  live session tools as `[...GEV_VOICE_TOOLS, READ_SCREEN_TOOL]` (live-only — the
   shared gevActions runner has no `read_screen` handler, and Realtime reads the
   viewport as ambient image context instead). `initGevLiveVoice` wraps the shared
   runner so `read_screen` routes to the reader; all other tools pass through.
@@ -279,10 +281,9 @@ all present. `gpt-live-1` refuses Free usage tier.
 
 ## Files in play
 
-- `src/voice/openAiRealtimeProxy.mjs` — add Live session-create (SDP proxy) +
-  sideband relay; `/api/realtime/token` stays for the fallback.
-- `src/voice/gevRealtimeSession.js` — echoCancellation at :78 (preserve).
-- `src/voice/gevRealtimeEvents.js:541` — current `input_image` send site.
+- `src/voice/openAiVoiceProxy.mjs` — Live session-create (SDP proxy). (Realtime route since deleted.)
+- `src/voice/gevLiveSession.js` — mic `echoCancellation` (preserve).
+- `gevRealtimeEvents.js` (deleted) — was the old `input_image` send site.
 - `src/voice/voiceBackendSwitch.js` — add `gpt-live-1` as a backend (today it
   switches OpenAI Realtime ↔ Claude).
 - `src/voice/toolSchemas.js`, `voiceCost.js`, `gevRealtimeCost.js`.

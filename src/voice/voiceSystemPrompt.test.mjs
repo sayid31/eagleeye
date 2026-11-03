@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
 import {
-  GEV_CLAUDE_VOICE_SYSTEM_PROMPT,
   GEV_VOICE_SYSTEM_PROMPT,
   GEV_VOICE_SYSTEM_PROMPT_LINES,
 } from './voiceSystemPrompt.js';
@@ -53,14 +52,6 @@ test('the language clause tells the model to follow the speaker while freezing t
 test('GEV_VOICE_SYSTEM_PROMPT is exactly GEV_VOICE_SYSTEM_PROMPT_LINES joined by newlines', () => {
   assert.equal(GEV_VOICE_SYSTEM_PROMPT, GEV_VOICE_SYSTEM_PROMPT_LINES.join('\n'));
   assert.ok(GEV_VOICE_SYSTEM_PROMPT_LINES.length > 20, 'expected the full multi-paragraph instruction set');
-});
-
-test('the Claude variant carries every OpenAI instruction plus exactly one push-to-talk clarification line', () => {
-  assert.ok(GEV_CLAUDE_VOICE_SYSTEM_PROMPT.startsWith(`${GEV_VOICE_SYSTEM_PROMPT}\n`));
-  const appended = GEV_CLAUDE_VOICE_SYSTEM_PROMPT.slice(GEV_VOICE_SYSTEM_PROMPT.length + 1);
-  assert.equal(appended.includes('\n'), false, 'exactly one extra line should be appended, not more');
-  assert.match(appended, /push-to-talk speech recognition/);
-  assert.doesNotMatch(GEV_VOICE_SYSTEM_PROMPT, /push-to-talk speech recognition/);
 });
 
 test('the mission-mapping paragraph that first-run relies on is present and active', () => {

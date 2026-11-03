@@ -99,7 +99,7 @@ const REEARTH_TERRAIN_URL = 'https://terrain.reearth.land/cesium-mesh/ellipsoid'
 const COVERAGE_SAMPLE_SETTLE_MS = 500; // let tiles stream in after camera.moveEnd before sampling
 const COVERAGE_SAMPLE_MIN_INTERVAL_MS = 2000; // hard floor between samples under rapid repeated moveEnd
 const COVERAGE_BLANK_STRIKES_REQUIRED = 2; // mirrors _watchEsriProvider's 2-strike threshold
-const COVERAGE_SAMPLE_WIDTH = 48; // same scale as gevRealtime.js's isNearlyBlackFrame
+const COVERAGE_SAMPLE_WIDTH = 48; // same scale as gevLiveViewport.js's isNearlyBlackFrame
 const COVERAGE_SAMPLE_HEIGHT = 32;
 // A sample is "suspiciously blank" when it is near-white (mean Rec.709 luma,
 // 0-255) AND near-uniform (stddev, 0-255) — untextured bare terrain renders

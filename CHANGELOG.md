@@ -7,8 +7,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
-- Suara sekarang memakai **GPT-Live** secara bawaan saat aplikasi dibuka (tombol di tray suara
-  menampilkan **GPT-LIVE**). OpenAI Realtime biasa tetap tersedia — klik tombol itu untuk kembali.
+- Suara sekarang **sepenuhnya memakai GPT-Live** (full-duplex, bicara bebas tanpa tombol tahan),
+  dan membaca layar lewat **gpt-5.6-luna**. Tray suara tinggal satu tombol mik + readout biaya.
+  Radio tetap diredam saat suara aktif dan diserahkan kembali saat Anda memutar radio.
+
+### Removed
+
+- Backend suara **OpenAI Realtime** dan **Claude (Anthropic) + Web Speech** dihapus, beserta
+  tombol pemilih backend, toggle STD/MINI, push-to-talk (Space), visualizer audio,
+  `ANTHROPIC_API_KEY`, `OPENAI_REALTIME_*`, dan rute `/api/realtime/*` + `/api/anthropic/*`.
+  Variabel suara kini `OPENAI_LIVE_MODEL`, `OPENAI_LIVE_BACKEND_MODEL`, `OPENAI_LIVE_VOICE`.
 
 ### Added
 

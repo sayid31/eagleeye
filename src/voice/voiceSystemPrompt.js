@@ -5,17 +5,14 @@
  *
  * `GEV_VOICE_SYSTEM_PROMPT_LINES` was mechanically relocated out of
  * `vite.config.js`'s formerly-inline `instructions: [...].join('\n')`
- * literal on the `/api/realtime/token` OpenAI Realtime session-config —
+ * literal on the `/api/live/session` voice session-config —
  * the array content is byte-for-byte the same data, only the module
  * boundary changed (see `voiceSystemPrompt.test.mjs`'s sha256 pin, which
  * follows the same protect-the-refactor pattern as `toolSchemas.test.mjs`'s
- * pin on `GEV_REALTIME_TOOLS`).
+ * pin on `GEV_TOOL_SCHEMAS`).
  *
- * Both the OpenAI Realtime proxy (`/api/realtime/token`, server-side) and
- * the Claude/Web Speech backend (`gevClaudeVoice.js`, client-side, sent as
- * the Anthropic Messages API's `system` field) read from this one array so
- * the two backends can never drift into acting like two different
- * assistants with different rules for the same 28 tools.
+ * The GPT-Live session route (`/api/live/session`, server-side) reads from
+ * this one array as the session `instructions`.
  *
  * SPLIT 2026-10-28: the instruction text grew past the 20,000-character
  * file-health limit, so it now lives in four siblings — persona, answering,
@@ -50,17 +47,5 @@ export const GEV_VOICE_SYSTEM_PROMPT_LINES = [
   ...VOICE_ANNOTATION_LINES,
 ];
 
-/** The joined single-string form, exactly as sent to OpenAI Realtime today. */
+/** The joined single-string form, exactly as sent to GPT-Live. */
 export const GEV_VOICE_SYSTEM_PROMPT = GEV_VOICE_SYSTEM_PROMPT_LINES.join('\n');
-
-/**
- * Claude-flavored variant of the same contract: same rules, with one line
- * appended clarifying Claude's turn-based Web Speech pairing (no
- * always-listening session, no barge-in) so the model doesn't assume
- * OpenAI Realtime's continuous-conversation affordances it does not have
- * on this backend.
- */
-export const GEV_CLAUDE_VOICE_SYSTEM_PROMPT = [
-  ...GEV_VOICE_SYSTEM_PROMPT_LINES,
-  'You are being driven by push-to-talk speech recognition, not a continuous voice session: you receive one complete utterance per turn and cannot hear the user again until they press the mic and speak. Do not say things like "go ahead" or "I\'m listening" — just act on the utterance you were given, call tools as needed, then give one short spoken confirmation.',
-].join('\n');

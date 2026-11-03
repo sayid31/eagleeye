@@ -1,38 +1,29 @@
 #!/usr/bin/env node
 /**
- * qa-voice-routing.mjs — voice-surface QA harness (overnight 2026-07-27).
+ * qa-voice-routing.mjs — voice-surface BEHAVIOR QA harness (free, deterministic,
+ * no model turns).
  *
- * Two independent layers:
+ * Drives window.__gevVoiceCommands.runner(toolName, args) in a headless page
+ * against the dev server and asserts world state via __godsEyeView /
+ * __gevAnnotations (camera altitude bands, annotation counts, route geometry,
+ * framing modes). This is the instrument that gates new tools (analyst
+ * queries, camera verbs) without anyone speaking. The runner is the same one
+ * the GPT-Live session executes tool calls through.
  *
- *  LAYER 1 — ROUTING (costs model turns, budget-capped):
- *    Sends TEXT turns through a real OpenAI Realtime session minted by the
- *    app's own /api/realtime/token endpoint — so the instructions + tool defs
- *    under test are the PRODUCTION config, not a copy. Asserts which tool the
- *    model calls for each phrase (plus a few critical-arg spot checks).
- *    Batches phrases per session (fresh-ish context, amortized mints), hard
- *    budget on model turns, JSONL evidence log per run.
- *
- *  LAYER 2 — BEHAVIOR (free, deterministic, no model):
- *    Drives window.__gevVoiceCommands.runner(toolName, args) in a headless
- *    page against the dev server and asserts world state via __godsEyeView /
- *    __gevAnnotations (camera altitude bands, annotation counts, route
- *    geometry, framing modes). This is the instrument that later gates new
- *    tools (analyst queries, camera verbs) without anyone speaking.
+ * (The former model-routing layer ran text turns through an OpenAI Realtime
+ * session; that backend is gone, so tool-NAME routing is now only provable
+ * with a live GPT-Live session — see scripts/qa-live-fase6.mjs.)
  *
  * Usage:
- *   node scripts/qa-voice-routing.mjs                 # both layers, :4415
- *   node scripts/qa-voice-routing.mjs --layer routing --budget 120
- *   node scripts/qa-voice-routing.mjs --layer behavior --url http://localhost:4173
+ *   node scripts/qa-voice-routing.mjs --url http://localhost:4173
  *
  * House gotchas honored: camera.cancelFlight() before every teleport; puppeteer
- * suites must run sequentially with other harnesses (SwiftShader saturation);
- * routing assertions pin tool NAMES (model wording varies, tool choice must not).
+ * suites must run sequentially with other harnesses (SwiftShader saturation).
  */
 
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import WebSocket from 'ws';
 import puppeteer from 'puppeteer';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,10 +44,6 @@ function getOpt(flag, fallback) {
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : fallback;
 }
 const APP_URL = getOpt('--url', 'http://localhost:4415');
-const LAYER = getOpt('--layer', 'all'); // routing | behavior | all
-const TURN_BUDGET = Number(getOpt('--budget', '120'));
-const PHRASES_PER_SESSION = Number(getOpt('--batch', '6'));
-const ONLY = getOpt('--only', null); // substring filter on phrase text
 
 // ── Reporting ───────────────────────────────────────────────
 let pass = 0, fail = 0, skip = 0;
@@ -72,298 +59,11 @@ function skipped(label, detail) {
 }
 
 // ════════════════════════════════════════════════════════════
-// LAYER 1 — ROUTING
-// ════════════════════════════════════════════════════════════
-
-/**
- * Phrase table. `expect` = tool name(s) the model must call (string, or array
- * meaning "all of these", or {oneOf:[...]} for documented acceptable variance).
- * `expectNone` pins conversational turns that must NOT call tools.
- * `args` = spot-check subset matched against the first matching call's args
- * (substring match for strings, exact for booleans/numbers).
- */
-const PHRASES = [
-  // — navigation & framing —
-  { phrase: 'Take me to Tokyo', expect: 'fly_to_location' },
-  { phrase: 'Fly to the Golden Gate Bridge', expect: 'fly_to_location' },
-  { phrase: 'Go to Sixth Street in Austin', expect: 'fly_to_location' },
-  { phrase: 'Show me the Alps from above', expect: { oneOf: ['fly_to_location', 'frame_overhead'] } },
-  { phrase: 'Zoom in a bit', expect: 'adjust_camera_zoom' },
-  { phrase: 'Zoom out a little', expect: 'adjust_camera_zoom' },
-  { phrase: 'Zoom out to a globe view', expect: 'zoom_to_globe' },
-  { phrase: 'Show me the whole earth', expect: 'zoom_to_globe' },
-  { phrase: 'Frame the aircraft near us from overhead', expect: 'frame_overhead' },
-
-  // — the satellites trap: data layer, never basemap —
-  { phrase: 'Show me the satellites', expect: { oneOf: ['set_layer_visibility', 'frame_overhead'] } },
-  { phrase: 'Turn off the satellites', expect: 'set_layer_visibility', args: { layerId: 'satellites' } },
-  { phrase: 'Switch to Bing aerial', expect: 'set_map_stack' },
-  { phrase: 'Switch the basemap to OSM', expect: 'set_map_stack' },
-
-  // — layers —
-  { phrase: 'Turn on the flights layer', expect: 'set_layer_visibility', args: { layerId: 'flights' } },
-  { phrase: 'Show me live vessels', expect: 'set_layer_visibility' },
-  { phrase: 'Turn on the fires layer', expect: 'set_layer_visibility' },
-  { phrase: 'Turn on street traffic', expect: 'set_layer_visibility', args: { layerId: 'traffic' } },
-  { phrase: 'Open the data layers menu', expect: 'show_data_layers_menu' },
-  { phrase: 'Show me the datacenter layers', expect: 'show_data_layers_menu' },
-  { phrase: 'Turn on the datacenters layer', expect: 'set_layer_visibility' },
-
-  // — visual styles & post-fx —
-  { phrase: 'Give me night vision', expect: 'set_visual_style' },
-  { phrase: 'Switch to thermal view', expect: 'set_visual_style' },
-  { phrase: 'Back to the normal look', expect: 'set_visual_style' },
-  { phrase: 'Turn on bloom', expect: 'set_post_processing' },
-  { phrase: 'Sharpen the image a touch', expect: 'set_post_processing' },
-
-  // — HUD / detection / panels —
-  { phrase: 'Turn the HUD off', expect: 'set_hud' },
-  { phrase: 'Switch to the tactical layout', expect: 'set_hud' },
-  { phrase: 'Turn on detection', expect: 'set_detection' },
-  { phrase: 'Set detection density to fifty percent', expect: 'set_detection' },
-
-  // — context questions —
-  { phrase: 'What am I looking at right now?', expect: 'get_entity_context' },
-  { phrase: 'What city is this below us?', expect: 'get_entity_context' },
-  { phrase: 'Is there anything interesting in view?', expect: 'get_entity_context' },
-
-  // — tracking —
-  // Context-free text turns may reasonably look before tracking; either
-  // routing is correct (production sessions always carry screen context).
-  { phrase: 'Track that plane', expect: { oneOf: ['track_entity', 'get_entity_context'] } },
-  { phrase: 'Follow the nearest aircraft', expect: { oneOf: ['track_entity', 'get_entity_context'] } },
-  { phrase: 'Stop tracking', expect: 'stop_tracking' },
-
-  // — CCTV / scenes / ISS —
-  { phrase: 'Show me the nearest traffic camera', expect: 'control_cctv' },
-  { phrase: 'Turn on the camera viewsheds', expect: 'control_cctv' },
-  { phrase: 'Play a news radio station near Austin', expect: 'control_radio', args: { action: 'select', category: 'news', locationId: 'austin' } },
-  { phrase: 'Turn on the radio', expect: 'control_radio', args: { action: 'play' } },
-  { phrase: 'Set the radio volume to thirty percent', expect: 'control_radio', args: { action: 'volume', volumePct: 30 } },
-  { phrase: 'Pause the radio', expect: 'control_radio', args: { action: 'pause' } },
-  { phrase: 'Stop the radio', expect: 'control_radio', args: { action: 'stop' } },
-  { phrase: 'When does the ISS pass over next?', expect: 'next_iss_pass' },
-
-  // — annotations —
-  { phrase: 'Annotate the Texas State Capitol and its grounds', expect: 'annotate_map' },
-  { phrase: 'Outline the state of Texas', expect: 'annotate_map' },
-  { phrase: 'Outline Lady Bird Lake', expect: 'annotate_map' },
-  { phrase: 'Draw the walking route from the Capitol to Zilker Park', expect: 'annotate_map' },
-  { phrase: 'How far is the Eiffel Tower from the Louvre?', expect: 'annotate_map' },
-  { phrase: 'Clear the map', expect: 'clear_annotations' },
-
-  // — multi-intent (assert ALL tools fire before speech) —
-  {
-    phrase: 'Switch to night vision and turn on the flights layer',
-    expect: ['set_visual_style', 'set_layer_visibility'],
-  },
-  {
-    phrase: 'Turn off the HUD and take me to Paris',
-    expect: ['set_hud', 'fly_to_location'],
-  },
-  {
-    phrase: 'Go to full planet view and then turn on the radio',
-    expect: ['zoom_to_globe', 'control_radio'],
-    argsByTool: { control_radio: { action: 'play' } },
-  },
-
-  // — camera verbs (tools #23/#24) —
-  { phrase: 'Orbit around this area slowly', expect: 'move_camera' },
-  { phrase: 'Pan left a bit', expect: 'move_camera' },
-  { phrase: 'Stop moving the camera', expect: 'move_camera' },
-  { phrase: 'Fly the route we just drew', expect: 'fly_route' },
-
-  // — analyst queries (tool #22) —
-  { phrase: 'How many flights are over Texas right now?', expect: 'analyst_query' },
-  { phrase: 'Which ships are headed to Oakland?', expect: 'analyst_query' },
-  { phrase: 'What is the biggest fire near Los Angeles?', expect: 'analyst_query' },
-  { phrase: 'Is anything flying above forty thousand feet?', expect: 'analyst_query' },
-
-  // — negative controls: conversation must NOT tool-call —
-  { phrase: 'How is your evening going?', expectNone: true },
-  { phrase: 'Tell me a fun fact about maps', expectNone: true },
-];
-
-/** Mint a session via the app's own endpoint. */
-async function mintSession() {
-  const res = await fetch(`${APP_URL}/api/realtime/token`, { method: 'POST' });
-  if (!res.ok) throw new Error(`token mint failed: ${res.status} ${(await res.text()).slice(0, 120)}`);
-  const body = await res.json();
-  const value = body?.value || body?.client_secret?.value;
-  const model = body?.session?.model || 'gpt-realtime';
-  if (!value) throw new Error(`token mint returned no client secret: ${JSON.stringify(body).slice(0, 160)}`);
-  return { value, model };
-}
-
-/** One Realtime WS session that can run several text turns sequentially. */
-class RoutingSession {
-  constructor(secret, model, evidence) {
-    this.secret = secret;
-    this.model = model;
-    this.evidence = evidence;
-    this.ws = null;
-    this.pending = null; // active turn collector
-  }
-
-  connect() {
-    return new Promise((resolve, reject) => {
-      const url = `wss://api.openai.com/v1/realtime?model=${encodeURIComponent(this.model)}`;
-      const ws = new WebSocket(url, { headers: { Authorization: `Bearer ${this.secret}` } });
-      const timer = setTimeout(() => reject(new Error('ws connect timeout')), 15000);
-      ws.on('open', () => { clearTimeout(timer); this.ws = ws; resolve(); });
-      ws.on('error', (e) => { clearTimeout(timer); reject(e); });
-      ws.on('message', (raw) => this.onMessage(raw));
-    });
-  }
-
-  onMessage(raw) {
-    let msg;
-    try { msg = JSON.parse(raw.toString()); } catch { return; }
-    this.evidence.write(`${JSON.stringify({ at: new Date().toISOString(), dir: 'recv', type: msg.type, item: msg.item?.type, name: msg.item?.name ?? msg.name, error: msg.error?.message })}\n`);
-    if (!this.pending) return;
-    if (msg.type === 'response.output_item.done' && msg.item?.type === 'function_call') {
-      let parsed = {};
-      try { parsed = JSON.parse(msg.item.arguments || '{}'); } catch { /* keep {} */ }
-      this.pending.calls.push({ name: msg.item.name, args: parsed });
-      // Feed a neutral tool result (item.create is legal mid-response); the
-      // continuation response is requested ONLY after response.done — sending
-      // response.create while a response is active is an API error (the
-      // pilot's failure mode).
-      this.send({
-        type: 'conversation.item.create',
-        item: {
-          type: 'function_call_output',
-          call_id: msg.item.call_id,
-          output: JSON.stringify({ ok: true, note: 'qa-harness stub result' }),
-        },
-      });
-      this.pending.needContinuation = true;
-    }
-    if (msg.type === 'response.done') {
-      if (this.pending.needContinuation && this.pending.continuations < 4) {
-        this.pending.needContinuation = false;
-        this.pending.continuations += 1;
-        this.send({ type: 'response.create', response: { output_modalities: ['text'] } });
-        return;
-      }
-      const p = this.pending;
-      this.pending = null;
-      p.resolve(p.calls);
-    }
-    if (msg.type === 'error') {
-      // Log-and-continue: a per-turn API hiccup should surface as that turn's
-      // result, not poison the batch. The turn resolves with what it has.
-      this.pending.errors.push(msg.error?.message || 'realtime error');
-    }
-  }
-
-  send(obj) {
-    this.evidence.write(`${JSON.stringify({ at: new Date().toISOString(), dir: 'send', type: obj.type })}\n`);
-    this.ws.send(JSON.stringify(obj));
-  }
-
-  /** Send one user text turn; resolve with the list of tool calls it produced. */
-  runTurn(text) {
-    return new Promise((resolve) => {
-      this.pending = { calls: [], continuations: 0, needContinuation: false, errors: [], resolve };
-      const timer = setTimeout(() => {
-        if (this.pending) { const p = this.pending; this.pending = null; p.resolve(p.calls); }
-      }, 45000);
-      const origResolve = resolve;
-      this.pending.resolve = (v) => { clearTimeout(timer); origResolve(v); };
-      this.send({
-        type: 'conversation.item.create',
-        item: { type: 'message', role: 'user', content: [{ type: 'input_text', text }] },
-      });
-      this.send({ type: 'response.create', response: { output_modalities: ['text'] } });
-    });
-  }
-
-  close() { try { this.ws?.close(); } catch { /* noop */ } }
-}
-
-function matchArgs(expected, actual) {
-  return Object.entries(expected).every(([k, v]) => {
-    const got = actual?.[k];
-    if (typeof v === 'string') return String(got ?? '').toLowerCase().includes(v.toLowerCase());
-    return got === v;
-  });
-}
-
-async function runRoutingLayer() {
-  console.log(`\nLAYER 1 — routing assertions (budget ${TURN_BUDGET} model turns)`);
-  const logDir = path.join(ROOT, '.gev-logs', 'qa-voice-routing');
-  fs.mkdirSync(logDir, { recursive: true });
-  const evidence = fs.createWriteStream(path.join(logDir, `run-${Date.now()}.jsonl`));
-
-  const list = PHRASES.filter((p) => !ONLY || p.phrase.toLowerCase().includes(ONLY.toLowerCase()));
-  let turnsUsed = 0;
-
-  for (let i = 0; i < list.length; i += PHRASES_PER_SESSION) {
-    if (turnsUsed >= TURN_BUDGET) {
-      list.slice(i).forEach((p) => skipped(`route: "${p.phrase}"`, 'turn budget exhausted'));
-      break;
-    }
-    const batch = list.slice(i, i + PHRASES_PER_SESSION);
-    let session;
-    try {
-      const { value, model } = await mintSession();
-      session = new RoutingSession(value, model, evidence);
-      await session.connect();
-    } catch (e) {
-      batch.forEach((p) => report(false, `route: "${p.phrase}"`, `session setup failed: ${e.message}`));
-      continue;
-    }
-    for (const p of batch) {
-      if (turnsUsed >= TURN_BUDGET) { skipped(`route: "${p.phrase}"`, 'turn budget exhausted'); continue; }
-      turnsUsed += 1;
-      let calls = [];
-      try {
-        calls = await session.runTurn(p.phrase);
-      } catch (e) {
-        report(false, `route: "${p.phrase}"`, `turn error: ${e.message}`);
-        continue;
-      }
-      const names = calls.map((c) => c.name);
-      if (p.expectNone) {
-        report(names.length === 0, `route: "${p.phrase}" → (no tool)`, names.length ? `unexpected calls: ${names.join(',')}` : 'clean conversational turn');
-        continue;
-      }
-      let ok; let detail = `called: ${names.join(',') || '(none)'}`;
-      if (Array.isArray(p.expect)) {
-        ok = p.expect.every((n) => names.includes(n));
-      } else if (p.expect && typeof p.expect === 'object' && p.expect.oneOf) {
-        ok = names.some((n) => p.expect.oneOf.includes(n));
-      } else {
-        ok = names.includes(p.expect);
-      }
-      if (ok && p.args) {
-        const call = calls.find((c) => (Array.isArray(p.expect) ? true : c.name === p.expect));
-        if (!matchArgs(p.args, call?.args)) { ok = false; detail += ` args mismatch: ${JSON.stringify(call?.args)}`; }
-      }
-      if (ok && p.argsByTool) {
-        for (const [toolName, expectedArgs] of Object.entries(p.argsByTool)) {
-          const call = calls.find((candidate) => candidate.name === toolName);
-          if (!call || !matchArgs(expectedArgs, call.args)) {
-            ok = false;
-            detail += ` ${toolName} args mismatch: ${JSON.stringify(call?.args)}`;
-          }
-        }
-      }
-      report(ok, `route: "${p.phrase}" → ${Array.isArray(p.expect) ? p.expect.join('+') : (p.expect.oneOf ? p.expect.oneOf.join('|') : p.expect)}`, detail);
-    }
-    session.close();
-  }
-  evidence.end();
-  console.log(`  routing turns used: ${turnsUsed}/${TURN_BUDGET}`);
-}
-
-// ════════════════════════════════════════════════════════════
-// LAYER 2 — BEHAVIOR (runner-driven, no model)
+// BEHAVIOR (runner-driven, no model)
 // ════════════════════════════════════════════════════════════
 
 async function runBehaviorLayer() {
-  console.log('\nLAYER 2 — behavior drives (runner(), no model)');
+  console.log('\nBehavior drives (runner(), no model)');
   try {
     const res = await fetch(APP_URL);
     if (!res.ok) throw new Error(String(res.status));
@@ -998,10 +698,9 @@ async function runBehaviorLayer() {
 // ── Main ────────────────────────────────────────────────────
 console.log('\nVoice-surface QA harness');
 console.log(`  App URL : ${APP_URL}`);
-console.log(`  Layer   : ${LAYER}\n`);
+console.log('');
 
-if (LAYER === 'behavior' || LAYER === 'all') await runBehaviorLayer();
-if (LAYER === 'routing' || LAYER === 'all') await runRoutingLayer();
+await runBehaviorLayer();
 
 console.log('\n────────────────────────────────────────────────────────────');
 console.log(`  RESULT: ${pass} passed, ${fail} failed, ${skip} skipped`);

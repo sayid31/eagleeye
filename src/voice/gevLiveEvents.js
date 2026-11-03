@@ -5,7 +5,7 @@
  * GPT-Live delivers the delegated backend's work as `response.event` envelopes
  * that wrap standard Responses streaming events — a DIFFERENT wire shape from
  * OpenAI Realtime (which emits `response.function_call_arguments.done` etc.),
- * so this cannot reuse `gevRealtimeEvents.js`. What it DOES reuse unchanged is
+ * What it reuses unchanged is
  * the `gevActions` runner: a `function_call` here carries the same
  * `{ name, call_id, arguments }` a Realtime tool call does, and is answered with
  * a `function_call_output` — the one wire difference being that GPT-Live wraps

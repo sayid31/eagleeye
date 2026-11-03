@@ -73,7 +73,7 @@ export function makeOptInRateLimiter(envValue) {
 // the result is cached so the limiter's per-IP window state persists. `null` = unlimited (default).
 let _openAiRateLimiter; // undefined = not built yet; null = unlimited; fn = active limiter
 let _googleRateLimiter;
-/** OpenAI cost endpoints (realtime/token + hud-summary). Null = unlimited (default). */
+/** OpenAI cost endpoints (live/session + live/vision + hud-summary). Null = unlimited (default). */
 export function openAiRateLimiter() {
   if (_openAiRateLimiter === undefined) _openAiRateLimiter = makeOptInRateLimiter(process.env.GEV_RATELIMIT_OPENAI_PER_MIN);
   return _openAiRateLimiter;
@@ -82,14 +82,6 @@ export function openAiRateLimiter() {
 export function googleRateLimiter() {
   if (_googleRateLimiter === undefined) _googleRateLimiter = makeOptInRateLimiter(process.env.GEV_RATELIMIT_GOOGLE_PER_MIN);
   return _googleRateLimiter;
-}
-let _anthropicRateLimiter;
-/** Anthropic cost endpoint (/api/anthropic/messages). Null = unlimited (default). */
-export function anthropicRateLimiter() {
-  if (_anthropicRateLimiter === undefined) {
-    _anthropicRateLimiter = makeOptInRateLimiter(process.env.GEV_RATELIMIT_ANTHROPIC_PER_MIN);
-  }
-  return _anthropicRateLimiter;
 }
 let _nominatimSearchRateLimiter;
 /**

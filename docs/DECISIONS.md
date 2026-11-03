@@ -6,6 +6,18 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-11-03 — GPT-Live is the only voice backend; Realtime and Claude are deleted, not kept as fallbacks
+
+**Decision.** `gpt-live-1` (full duplex) owns the voice; `gpt-5.6-luna` reads screenshots through a one-shot `/api/live/vision` call. The OpenAI Realtime backend (`gevRealtime*`), the Claude + Web Speech backend (`gevClaude*`, `claudeToolLoop`, `webSpeechIO`), the backend switcher, `anthropicProxy`, `/api/realtime/*`, `/api/anthropic/*`, `ANTHROPIC_API_KEY` and `OPENAI_REALTIME_*` are removed. This overrides the earlier "keep Realtime as the selectable fallback" call.
+
+**Why.** Two backends behind one pill meant every voice change had to be reasoned about twice, and the fallback was never going to be the path anyone was meant to use once GPT-Live proved out. Dead-but-reachable code in the hottest part of the app is worse than no fallback: it rots silently and a failure would surface exactly when someone is relying on it. Git history is the rollback.
+
+**What moved, not died.** Tool execution (`gevActions.js`, `createGevActionRunner`), the tray (`createVoiceControl`), the cost-limit helpers (`voiceCost.js`) and the Radio duck/hand-off contract (now `gevLiveRadio.js`, a much smaller bridge than the Realtime reservation machinery) are shared by GPT-Live and survive.
+
+**What was dropped on purpose.** Space push-to-talk (full duplex makes it moot), the audio visualizer, the STD/MINI toggle, the backend pill, the Realtime debug-log route, and annotation map-event/outline follow-ups. If any of these is missed, re-add it against `GevLiveController`, not by resurrecting the old backends.
+
+**Still unproven at the time of the change.** Physical echo/self-trigger on an open mic (manual: `scripts/manual-fase6-echo-test.md`), a spoken command reliably routing to `set_layer_visibility`, and the `read_screen` → `/api/live/vision` round trip under a real GPU.
+
 ## 2026-10-29 — The share-restore holds drop to 500 ms and 1.2 s, because the measurement refuted both halves of their rationale
 
 **Context.** The owner asked to lower the 1500 ms share-restore timer and the

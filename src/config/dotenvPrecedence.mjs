@@ -24,7 +24,7 @@
  * An empty export (`export OPENAI_API_KEY=` still sitting in a shell, or a
  * launcher that exports every known key whether or not it resolved one) is
  * absence, not an override. Treating it as an override is indistinguishable
- * from a missing key to everything downstream: `/api/realtime/token` answered
+ * from a missing key to everything downstream: `/api/live/session` answered
  * 503 "OPENAI_API_KEY is not set" under `npm run dev` with a perfectly good
  * 164-char key in `.env`. Whitespace counts as empty for the same reason — a
  * key that is all spaces cannot authenticate either.

@@ -2,19 +2,17 @@
 /**
  * GPT-Live (`gpt-live-1`) full-duplex voice backend — browser controller.
  *
- * Mirrors `GevClaudeVoiceController`'s public surface so the backend-switch
- * coordinator (`voiceBackendSwitch.js`, wired in Fase 3) can drive it the same
- * way as the OpenAI Realtime and Claude backends: `status`, `isActive()`,
- * `start()`, `stop()`, `setStatus()`, `setMicrophoneEnabled()`,
- * `setVoiceSpeaker()`, `syncCostUi()`, `getDiagnostics()`, `runner`.
+ * This is the app's only voice backend and backs `window.__gevVoiceCommands`:
+ * `status`, `isActive()`, `start()`, `stop()`, `setStatus()`,
+ * `setMicrophoneEnabled()`, `setVoiceSpeaker()`, `syncCostUi()`,
+ * `getDiagnostics()`, `runner`.
  *
- * The WebRTC transport is the same as Realtime's (getUserMedia → addTrack →
- * createDataChannel('oai-events') → SDP offer), with two differences proven by
- * the runtime de-risk: the SDP offer is POSTed to our own `/api/live/session`
- * route (the server creates the session and holds the key — no browser token),
- * and the channel carries `response.event` envelopes handled by
- * `gevLiveEvents.js`. `echoCancellation` on the mic is preserved verbatim from
- * `gevRealtimeSession.js`.
+ * Transport: getUserMedia → addTrack → createDataChannel('oai-events') → SDP
+ * offer POSTed to our own `/api/live/session` route (the server creates the
+ * session and holds the key — no browser token). The channel carries
+ * `response.event` envelopes handled by `gevLiveEvents.js`. The mic keeps
+ * `echoCancellation` on so the open mic does not hear the assistant's own
+ * output (the self-trigger loop).
  *
  * Browser globals are injected (defaulting to real ones) so the non-WebRTC
  * behaviour is unit-testable; the WebRTC path itself is proven by the puppeteer
@@ -29,17 +27,16 @@ import { createLiveCostMeter } from './liveCost.js';
 export const LIVE_SESSION_URL = '/api/live/session';
 
 const STATUS_LABELS = {
-  idle: 'OFF',
-  connecting: 'CONNECTING',
-  listening: 'LISTENING',
-  executing: 'EXECUTING',
-  error: 'ERROR',
+  idle: 'MATI',
+  connecting: 'MENGHUBUNGKAN',
+  listening: 'MENDENGARKAN',
+  executing: 'MENJALANKAN',
+  error: 'GALAT',
 };
 const DATASET_STATUS = { executing: 'executing' };
 
-// Identical to gevRealtimeSession.js:78 — room tone survives browser noise
-// suppression, and a full-duplex open mic hearing its own assistant output is
-// exactly the self-trigger loop this guards against.
+// A full-duplex open mic hearing its own assistant output is exactly the
+// self-trigger loop echoCancellation guards against.
 const MIC_CONSTRAINTS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 };
 
 function stopStream(stream) {
@@ -63,9 +60,12 @@ function waitForIceComplete(pc) {
 }
 
 export class GevLiveController {
-  constructor({ runner, ui = null, limits, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
+  constructor({ runner, ui = null, radio = null, limits, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
     this.runner = runner;
     this.ui = ui;
+    // Voice-vs-Radio speaker ownership (gevLiveRadio.js); optional so the
+    // controller stays testable without a radio layer.
+    this.radio = radio;
     this._fetch = fetchImpl || (typeof fetch === 'function' ? fetch.bind(globalThis) : null);
     this._mediaDevices = mediaDevices || (typeof navigator !== 'undefined' ? navigator.mediaDevices : null);
     this._RTCPeerConnection = rtcPeerConnection || (typeof RTCPeerConnection !== 'undefined' ? RTCPeerConnection : null);
@@ -100,12 +100,17 @@ export class GevLiveController {
     this.status = status;
     if (this.ui?.status) this.ui.status.textContent = STATUS_LABELS[status] || String(status).toUpperCase();
     if (this.ui?.root) this.ui.root.dataset.status = DATASET_STATUS[status] || status;
+    this.radio?.onStatus(status);
   }
 
-  /** Matches GevRealtimeController/GevClaudeVoiceController.setStatus(status, detail). */
+  /** Set the status label and detail line together. */
   setStatus(status, detail) {
     this._setStatus(status);
     if (this.ui?.detail) this.ui.detail.textContent = detail || STATUS_LABELS[status] || '';
+    if (this.ui?.errorDetail) {
+      this.ui.errorDetail.textContent = status === 'error' ? (detail || 'Voice session could not start.') : '';
+    }
+    if (status === 'error') this.ui?.root?.classList?.remove('error-dismissed');
   }
 
   setMicrophoneEnabled(enabled) {
@@ -158,7 +163,7 @@ export class GevLiveController {
   }
 
   async start({ pushToTalk = false } = {}) {
-    void pushToTalk; // GPT-Live is full-duplex; no push-to-talk gating for now.
+    void pushToTalk; // GPT-Live is full-duplex; there is no push-to-talk gating.
     if (this.isActive()) return;
     const epoch = ++this.startEpoch;
     this._tearingDown = false;
@@ -205,6 +210,7 @@ export class GevLiveController {
         onToolStart: () => this.setStatus('executing', 'Working…'),
         onToolResult: (_fc, result) => {
           this.setStatus('listening', 'Ask or command');
+          void this.radio?.onToolResult(result);
           // A tool result carrying its own per-token cost (the screenshot
           // reader) is folded into the per-minute meter so the readout and the
           // hard spend cap account for it too.
@@ -268,10 +274,11 @@ export class GevLiveController {
     }
   }
 
-  stop({ preserveStatus = false } = {}) {
+  stop({ preserveStatus = false, removeUi = false } = {}) {
     this._tearingDown = true;
     this.startEpoch += 1;
     this.costMeter.stop();
+    if (removeUi) this.radio?.dispose();
     try { this.dc?.close?.(); } catch { /* noop */ }
     try { this.pc?.close?.(); } catch { /* noop */ }
     stopStream(this.stream);
@@ -284,5 +291,6 @@ export class GevLiveController {
     this.stream = null;
     this._tearingDown = false;
     if (!preserveStatus) this.setStatus('idle');
+    if (removeUi) this.ui?.root?.remove?.();
   }
 }

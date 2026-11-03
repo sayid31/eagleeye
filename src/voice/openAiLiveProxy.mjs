@@ -1,10 +1,8 @@
 /**
  * openAiLiveProxy.mjs — Vite dev/preview route for the OpenAI **GPT-Live**
- * (`gpt-live-1`) full-duplex voice backend. Sibling of openAiRealtimeProxy.mjs;
- * the OpenAI Realtime path there stays the selectable fallback.
+ * (`gpt-live-1`) full-duplex voice backend, the app's only voice backend.
  *
- * Unlike Realtime (which mints an ephemeral client_secret the browser then
- * POSTs its SDP to), GPT-Live has the *server* create the session: we take the
+ * GPT-Live has the *server* create the session (no ephemeral client token): we take the
  * browser's WebRTC SDP offer and POST it, together with the full session
  * config, to `/v1/live/sessions`, then pass the answer SDP straight back. The
  * key stays server-side; the browser never receives it.
@@ -20,7 +18,7 @@
  *     nested Responses event is selected as
  *     `{ type:'response.event', response_event:'<inner event type string>' }`.
  *
- * Node-only (imported by openAiRealtimeProxy.mjs), never bundled for the browser.
+ * Node-only (imported by openAiVoiceProxy.mjs), never bundled for the browser.
  *
  * @module voice/openAiLiveProxy
  */
@@ -58,7 +56,7 @@ export const LIVE_ALLOWED_SERVER_EVENTS = [
  * @param {string} opts.backendModel Delegated Responses reasoning model.
  * @param {string} opts.voice Output voice id.
  * @param {string} opts.instructions System prompt for the session.
- * @param {Array<object>} opts.tools Tool schemas (same shape Realtime uses).
+ * @param {Array<object>} opts.tools Tool schemas (function-tool schemas).
  * @param {string} [opts.toolChoice='auto'] tool_choice.
  * @returns {object} The `session` object (no `audio.format`; allowlist included).
  */
@@ -79,8 +77,8 @@ export function buildLiveSessionConfig({ model, backendModel, voice, instruction
 
 /**
  * Register the `/api/live/session` SDP-proxy route on a connect middleware
- * stack. Dependencies are injected so this file stays free of the Realtime
- * proxy's module-local helpers (and testable in isolation).
+ * stack. Dependencies are injected so this file stays free of the other proxy
+ * modules' local helpers (and testable in isolation).
  *
  * @param {import('connect').Server} middlewares
  * @param {object} deps
@@ -128,7 +126,7 @@ export function installLiveSessionRoute(middlewares, deps) {
     const session = buildLiveSessionConfig({
       model: process.env.OPENAI_LIVE_MODEL || OPENAI_LIVE_MODEL_DEFAULT,
       backendModel: process.env.OPENAI_LIVE_BACKEND_MODEL || OPENAI_LIVE_BACKEND_MODEL_DEFAULT,
-      voice: process.env.OPENAI_REALTIME_VOICE || LIVE_VOICE_DEFAULT,
+      voice: process.env.OPENAI_LIVE_VOICE || LIVE_VOICE_DEFAULT,
       instructions,
       tools,
     });

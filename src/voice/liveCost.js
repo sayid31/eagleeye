@@ -2,17 +2,15 @@
 /**
  * GPT-Live (`gpt-live-1`) per-MINUTE session cost meter.
  *
- * The OpenAI Realtime meter (`voiceCost.js`) prices per-TOKEN off each
- * `response.done` usage object. GPT-Live bills differently — a flat **$0.05 per
- * minute of live audio, charged per second** (the delegated backend model and
- * the tools it calls are billed separately, which this meter does NOT try to
- * estimate) — so it needs its own tracker rather than a tier in that registry.
+ * GPT-Live bills a flat **$0.05 per minute of live audio, charged per second**
+ * (the delegated backend model and the tools it calls are billed separately,
+ * which this meter does NOT try to estimate).
  *
  * Pure with respect to pricing + threshold latching (`createLiveCostTracker`),
  * with a thin DOM painter (`paintLiveCostUi`) and a wall-clock meter wrapper
  * (`createLiveCostMeter`) that the controller delegates to so `gevLiveSession.js`
- * stays focused on transport. Formatting and the spend-limit normaliser are
- * reused from `voiceCost.js` so the readout and caps match the other backends.
+ * stays focused on transport. Formatting and the spend-limit normaliser live
+ * in `voiceCost.js`.
  *
  * @module voice/liveCost
  */
@@ -81,8 +79,7 @@ export function estimateVisionCostUsd(usage, rates = {}) {
 
 /**
  * Accumulate elapsed live-audio seconds into a running USD total and latch the
- * warn/cap crossings exactly once each, mirroring the Realtime tracker's
- * snapshot shape so the same UI painter can read either.
+ * warn/cap crossings exactly once each, in a snapshot shape the UI painter reads.
  *
  * `recordSeconds` takes the TOTAL elapsed seconds (not a delta) and is
  * monotonic: a smaller value (a late or duplicate usage event) never rolls the

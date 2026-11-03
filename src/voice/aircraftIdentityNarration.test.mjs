@@ -1,9 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { readLayerSourceText } from '../data/layerSourceText.testutil.mjs';
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
-
-const realtime = readLayerSourceText(new URL('./gevRealtime.js', import.meta.url));
 
 test('aircraft identity narration acknowledges missing enrichment', () => {
   // Instruction text now lives in voiceSystemPrompt.js (mechanical relocation
@@ -24,18 +21,4 @@ test('aircraft identity narration acknowledges missing enrichment', () => {
   assert.match(text, /"Route details are unavailable"/);
   assert.match(text, /never silently omit missing enrichment/i);
   assert.match(text, /never .* infer it from the callsign/i);
-
-  const followupStart = realtime.indexOf("if (result?.action === 'get_entity_context')");
-  const followupEnd = realtime.indexOf("if (result?.action === 'get_current_view_state')", followupStart);
-  assert.ok(followupStart >= 0 && followupEnd > followupStart, 'entity-context follow-up instruction is missing');
-  const followup = realtime.slice(followupStart, followupEnd);
-  assert.match(followup, /selectedLayerId === 'flights' \|\| selectedLayerId === 'military'/);
-  assert.match(followup, /Begin with the returned callsign and include the returned registration when available/);
-  assert.match(followup, /explicitly cover operator, aircraft type, and route before finishing/);
-  assert.match(followup, /selectedProperties\.operator/);
-  assert.match(followup, /selectedProperties\.type/);
-  assert.match(followup, /selectedProperties\.route \|\| selectedProperties\.routeOrigin \|\| selectedProperties\.routeDestination/);
-  assert.match(followup, /Operator details are unavailable/);
-  assert.match(followup, /Aircraft type is unavailable/);
-  assert.match(followup, /Route details are unavailable/);
 });

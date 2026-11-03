@@ -4,7 +4,7 @@
 // reshapes every tool call sent to either provider.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { GEV_TOOL_SCHEMAS, toAnthropicTools, toOpenAiRealtimeTools } from './toolSchemas.js';
+import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './toolSchemas.js';
 
 test('GEV_TOOL_SCHEMAS is the authoritative 28-tool inventory, unwrapped', () => {
   assert.equal(GEV_TOOL_SCHEMAS.length, 28);
@@ -37,21 +37,8 @@ test('toOpenAiRealtimeTools adds the type:function wrapper and nothing else', ()
   });
 });
 
-test('toAnthropicTools renames parameters to input_schema and drops the OpenAI wrapper', () => {
-  const tools = toAnthropicTools(GEV_TOOL_SCHEMAS);
-  assert.equal(tools.length, GEV_TOOL_SCHEMAS.length);
-  tools.forEach((tool, i) => {
-    assert.equal(tool.type, undefined, `${tool.name} must not carry OpenAI's type wrapper`);
-    assert.equal(tool.name, GEV_TOOL_SCHEMAS[i].name);
-    assert.equal(tool.description, GEV_TOOL_SCHEMAS[i].description);
-    assert.deepEqual(tool.input_schema, GEV_TOOL_SCHEMAS[i].parameters);
-    assert.equal(Object.keys(tool).length, 3, `${tool.name} must be exactly {name, description, input_schema}`);
-  });
-});
-
-test('both formatters are pure — they do not mutate the shared schema array', () => {
+test('the formatter is pure — it does not mutate the shared schema array', () => {
   const before = JSON.stringify(GEV_TOOL_SCHEMAS);
   toOpenAiRealtimeTools(GEV_TOOL_SCHEMAS);
-  toAnthropicTools(GEV_TOOL_SCHEMAS);
   assert.equal(JSON.stringify(GEV_TOOL_SCHEMAS), before);
 });

@@ -1,14 +1,12 @@
-// Viewport-screenshot capture cluster, mechanically relocated out of
-// gevRealtime.js (that file's own header notes the split). Covers the
-// decision of whether/what to send as a viewport image to the Realtime
-// model, the actual canvas capture + size-guard pipeline, and the benign-
-// delete-error classifier for the screenshot items this module produces.
-//
-// No split-import needed here (unlike gevRadioActions.js/gevGeocodeContext.js):
-// none of these functions call back into anything that stays in
-// gevRealtime.js. shouldSendViewportImage, hasStructuredViewIdentity, and
-// captureViewportImage are exported because their call sites remain inside
-// gevRealtime.js's GevRealtimeController class (sendVisualContextIfUseful).
+// src/voice/gevLiveViewport.js
+/**
+ * Cesium viewport capture for the `read_screen` tool: renders a fresh frame,
+ * downscales under a pixel budget, and encodes a size-capped data URL that
+ * `gevLiveVision.js` posts to the gpt-5.6-luna reader. Returns null whenever no
+ * fresh frame is available, so a stale frame is never described as current.
+ *
+ * @module voice/gevLiveViewport
+ */
 
 // Viewport-screenshot size guards (M13). The old code clamped WIDTH only, so a
 // tall portrait window produced an oversized capture whose dc.send could throw.
@@ -16,19 +14,6 @@
 // encoded data URL is still too big for the data channel.
 const VIEWPORT_MAX_PIXELS = 1200 * 900; // ~1.08 MP, matches the old 1200px-wide landscape budget
 const VIEWPORT_MAX_ENCODED_BYTES = 200 * 1024; // ~200 KB encoded ceiling
-
-export function shouldSendViewportImage(viewScale) {
-  return viewScale === 'local';
-}
-
-export function hasStructuredViewIdentity(result) {
-  return Boolean(
-    result.selected ||
-    result.visible?.length ||
-    result.scene?.basemap?.nearbyPlaces?.length ||
-    result.scene?.basemap?.knownLandmarks?.length
-  );
-}
 
 export async function captureViewportImage() {
   const viewer = window.__godsEyeView?.viewer;
@@ -154,17 +139,4 @@ function isNearlyBlackFrame(ctx, width, height) {
     luminanceTotal += pixels[index] * 0.2126 + pixels[index + 1] * 0.7152 + pixels[index + 2] * 0.0722;
   }
   return visiblePixels === 0 || luminanceTotal / visiblePixels < 2;
-}
-
-// True when an error payload is the benign result of deleting a viewport
-// screenshot the server had already truncated (M14). Non-fatal if EITHER the
-// error code is item_not_found OR it echoes the event_id of a delete we issued.
-// The event_id match narrows the code-only whitelist so an unrelated
-// item_not_found (should one ever arise) still surfaces normally.
-export function isBenignViewportDeleteError(payload, pendingDeleteIds = null) {
-  if (!payload || payload.type !== 'error') return false;
-  const echoedId = payload.event_id;
-  if (echoedId && pendingDeleteIds && pendingDeleteIds.has(echoedId)) return true;
-  const code = payload.error?.code;
-  return code === 'item_not_found';
 }
