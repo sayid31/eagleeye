@@ -1412,6 +1412,7 @@ body.ui-clean-view #clean-view-exit {
 body.ui-clean-view #title-bar,
 body.ui-clean-view #style-indicator,
 body.ui-clean-view #top-center-actions,
+body.ui-clean-view #camera-angle-row,
 body.ui-clean-view #global-loading-status,
 body.ui-clean-view #traffic-sync-chip,
 body.ui-clean-view #cctv-sync-chip,
@@ -1925,57 +1926,51 @@ body.ui-clean-view #scene-runtime.active {
   font-size: 18px;
 }
 
-/* Sudut kamera, sitting inside the globe-actions nav next to the button it
-   governs. It needs its own classes rather than .pp-mode-seg/.pp-mode-btn:
-   those are sized for the 176 px DISPLAY rail, and `#top-center-actions button`
-   above forces every child button to a 36 px circle — which would crush a text
-   label. Height matches that 36 px so the segmented control and the round
-   icon buttons share one baseline. */
+/* Sudut kamera, a small 2D | 3D segmented control pinned bottom-left, just
+   above the coordinate readout (owner directive 2026-11-03: the top-right spot
+   was "kurang oke" and the pill too big). It is a sibling of #top-center-actions,
+   not a child, so the nav's `button` rules (36 px circles) never reach it.
+   `bottom` clears the 32 px status bar the ee-shell theme reserves. */
 .globe-angle-seg {
+  position: fixed;
+  bottom: calc(var(--ee-statusbar-h, 32px) + 8px);
+  left: 12px;
+  z-index: 100;
   display: flex;
-  height: 36px;
+  height: 22px;
   overflow: hidden;
   border: 1px solid var(--glass-border);
-  border-radius: 18px;
+  border-radius: 11px;
   background: var(--glass-bg);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
-#top-center-actions .globe-angle-btn {
+.globe-angle-btn {
   width: auto;
   height: 100%;
-  padding: 0 13px;
+  padding: 0 9px;
   border: none;
   border-radius: 0;
   background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
   color: var(--text-dim);
   font-family: var(--font-mono);
   font-size: 10px;
-  letter-spacing: 0.6px;
-  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  cursor: pointer;
 }
 
-#top-center-actions .globe-angle-btn + .globe-angle-btn {
+.globe-angle-btn + .globe-angle-btn {
   border-left: 1px solid var(--glass-border);
 }
 
-/* The hover/active transforms on the round icon buttons would make a segment
-   jump out of its own pill, so scale is suppressed and only colour responds. */
-#top-center-actions .globe-angle-btn:hover,
-#top-center-actions .globe-angle-btn:focus-visible {
-  transform: none;
+.globe-angle-btn:hover,
+.globe-angle-btn:focus-visible {
   background: rgba(255, 255, 255, 0.06);
   color: var(--text-primary);
 }
 
-#top-center-actions .globe-angle-btn:active {
-  transform: none;
-}
-
-#top-center-actions .globe-angle-btn.active {
+.globe-angle-btn.active {
   background: var(--accent);
   color: #04121a;
 }
@@ -3897,7 +3892,7 @@ body.cockpit-mode #view-switcher button {
 }
 .cockpit-help span { color: var(--cockpit-accent); }
 body.cockpit-mode :is(
-  #title-bar, #style-indicator, #top-center-actions, #traffic-sync-chip, #cctv-sync-chip,
+  #title-bar, #style-indicator, #top-center-actions, #camera-angle-row, #traffic-sync-chip, #cctv-sync-chip,
   #command-dock,
   #military-awareness-panel, #military-awareness-direction-overlay,
   #cockpit-entry
@@ -7034,6 +7029,7 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
 body.recording-mode #title-bar,
 body.recording-mode #style-indicator,
 body.recording-mode #top-center-actions,
+body.recording-mode #camera-angle-row,
 body.recording-mode #global-loading-status,
 body.recording-mode #traffic-sync-chip,
 body.recording-mode #cctv-sync-chip,

@@ -204,6 +204,26 @@ test('the per-minute cost meter starts on channel open and paints the readout', 
   assert.equal(ctrl.getDiagnostics().costUsd, 0.1);
 });
 
+test('a live mic meter flags data-meter="live" and releases it on stop', async () => {
+  const levels = [];
+  const ui = { status: {}, detail: {}, root: { dataset: {}, style: { setProperty: (k, v) => levels.push([k, v]) } }, costValue: { dataset: {} } };
+  const { ctrl } = makeController({ ui });
+  ctrl.micMeter = { start: () => true, stop() { this.stopped = true; } };
+  await ctrl.start();
+  assert.equal(ui.root.dataset.meter, 'live');
+  ctrl.stop();
+  assert.equal(ctrl.micMeter.stopped, true);
+  assert.equal('meter' in ui.root.dataset, false, 'the meter flag is cleared when the session ends');
+});
+
+test('without Web Audio the root falls back to data-meter="css"', async () => {
+  const ui = { status: {}, detail: {}, root: { dataset: {} }, costValue: { dataset: {} } };
+  const { ctrl } = makeController({ ui });
+  ctrl.micMeter = { start: () => false, stop() {} };
+  await ctrl.start();
+  assert.equal(ui.root.dataset.meter, 'css');
+});
+
 test('the hard spend cap ends the session through the normal stop path', async () => {
   const ui = { status: {}, detail: {}, root: { dataset: {} }, costValue: { dataset: {} } };
   const { ctrl, getPc, stream, clock } = makeController({ ui, limits: { warnUsd: 2, capUsd: 5 } });

@@ -32,6 +32,7 @@ export function createVoiceControl({ reset = false } = {}) {
       </div>
       <button id="gev-voice-button" type="button" aria-label="Kontrol suara — klik untuk menyalakan atau mematikan suara" aria-describedby="gev-voice-help">
         <span class="gev-mic-orbit"><img src="/mic.svg" alt="" /></span>
+        <span class="gev-mic-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
         <span class="gev-mic-label">HIDUP/MATI</span>
       </button>
       <div class="gev-voice-readout">

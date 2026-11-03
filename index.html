@@ -44,28 +44,25 @@
     <button id="share-btn" type="button" aria-label="Salin tautan bagikan" title="Salin tautan bagikan">
       <span class="share-icon" aria-hidden="true">&#x1F517;</span>
     </button>
-    <!-- Sudut kamera (owner directive 2026-10-28, placement revised the same day).
-         It lives HERE, immediately left of the globe button, rather than in the
-         DISPLAY rail where it started: the globe button is what prompted the
-         request, and DISPLAY ships collapsed for a first-time visitor
-         (panelAdaptiveLayoutMixin.js), so a control born inside it is invisible
-         until someone opens the rail. The owner looked for it twice and did not
-         find it — that is the evidence this is a reach-for-it control, not a
-         settings-rail one. Set the angle, then press the globe, without opening
-         a panel.
-
-         SAMPING ships selected, so this markup IS the first-run state — keep it
-         in lockstep with CAMERA_ANGLE_MODE_DEFAULT in cameraAngleMode.js and
-         GLOBAL_POST_DEFAULTS.cameraAngle in uiConstants.js. Pinned in
-         reasonableDefaults.test.mjs and cockpitMarkup.test.mjs. -->
-    <div class="globe-angle-seg" id="camera-angle-row" role="radiogroup" aria-label="Sudut kamera">
-      <button class="globe-angle-btn" id="camera-angle-atas" data-camera-angle="atas" type="button" role="radio" aria-checked="false" title="Atas — kamera tegak lurus dari atas">Atas</button>
-      <button class="globe-angle-btn active" id="camera-angle-samping" data-camera-angle="samping" type="button" role="radio" aria-checked="true" title="Samping — kamera miring seperti saat CCTV aktif">Samping</button>
-    </div>
     <button id="reset-globe-view" type="button" aria-label="Atur ulang ke tampilan globe penuh" title="Atur ulang kamera dan kembali ke tampilan globe penuh">
       <span class="material-symbols-outlined" aria-hidden="true">public</span>
     </button>
   </nav>
+  <!-- Sudut kamera (owner directive 2026-10-28; moved 2026-11-03). Labelled 2D / 3D:
+       2D = ATAS (kamera tegak lurus dari atas), 3D = SAMPING (kamera miring). The
+       data-camera-angle values and ids stay atas/samping — they are the persisted,
+       share-linked and voice-facing names. It lives bottom-left beside the
+       coordinate readout, outside #top-center-actions (owner: the top-right spot
+       "kurang oke", and the pill was too big).
+
+       3D (samping) ships selected, so this markup IS the first-run state — keep it
+       in lockstep with CAMERA_ANGLE_MODE_DEFAULT in cameraAngleMode.js and
+       GLOBAL_POST_DEFAULTS.cameraAngle in uiConstants.js. Pinned in
+       reasonableDefaults.test.mjs and cockpitMarkup.test.mjs. -->
+  <div class="globe-angle-seg" id="camera-angle-row" role="radiogroup" aria-label="Sudut kamera">
+    <button class="globe-angle-btn" id="camera-angle-atas" data-camera-angle="atas" type="button" role="radio" aria-checked="false" aria-label="2D — kamera tegak lurus dari atas" title="2D — kamera tegak lurus dari atas">2D</button>
+    <button class="globe-angle-btn active" id="camera-angle-samping" data-camera-angle="samping" type="button" role="radio" aria-checked="true" aria-label="3D — kamera miring seperti saat CCTV aktif" title="3D — kamera miring seperti saat CCTV aktif">3D</button>
+  </div>
   <div id="global-loading-status" role="status" aria-live="polite" aria-atomic="true" hidden>
     <span id="global-loading-label">MEMUAT DATA LIVE</span>
     <span id="global-loading-detail"></span>

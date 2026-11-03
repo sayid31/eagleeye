@@ -57,16 +57,22 @@ export const panelChromeMixin = {
       });
     });
 
+    // Every panel boots closed (owner directive 2026-11-03: nothing may be open
+    // on first load until the operator opens it). A previous visit's stored
+    // expanded state is therefore ignored at boot; a share link still restores
+    // its encoded panel state afterwards via _restorePanelState.
     for (const targetId of targets) {
-      this._restorePanelCollapsedState(targetId, {
-        allowStored: !this._initialShareState,
-      });
+      this._restorePanelCollapsedState(targetId, { allowStored: false });
     }
-    // The command dock always starts compact; either wing reveals on hover,
-    // focus, or click and collapses again after the interaction moves away.
+    // The command dock always starts compact. The location wing reveals on hover,
+    // focus, or click; the preset wing on click or focus only. Both collapse
+    // again after the interaction moves away.
     this.setPanelCollapsed('control-panel', true, { syncShare: false, persist: false });
     this.setPanelCollapsed('location-bar', true, { syncShare: false, persist: false });
-    this._initAutoHoverPanel('control-panel', { openDelayMs: 140, closeDelayMs: 420 });
+    // The visual-preset pill sits flush against the mic, so hover-open made the
+    // map-source tray chase the cursor whenever it drifted left of the mic.
+    // It opens on click only (owner directive 2026-11-03); leave still closes it.
+    this._initAutoHoverPanel('control-panel', { openDelayMs: 140, closeDelayMs: 420, hoverOpen: false });
     this._initAutoHoverPanel('location-bar', { openDelayMs: 140, closeDelayMs: 420 });
     this._initCommandDockPins();
     this._initCommandDockTrayMetrics();
@@ -209,9 +215,10 @@ _setCommandDockPanelPinState(panelId, pin, {
    * @param {object} [options]
    * @param {number} [options.openDelayMs=850] - Hover dwell time before auto-expanding.
    * @param {number} [options.closeDelayMs=1000] - Delay after pointer leaves before collapsing.
+   * @param {boolean} [options.hoverOpen=true] - When false the panel opens on click only; hover never expands it.
    * @returns {void}
    */
-  _initAutoHoverPanel(panelId, { openDelayMs = 850, closeDelayMs = 1000 } = {}) {
+  _initAutoHoverPanel(panelId, { openDelayMs = 850, closeDelayMs = 1000, hoverOpen = true } = {}) {
     const panelEl = document.getElementById(panelId);
     if (!panelEl) return;
     const disclosure = panelEl.querySelector(`[data-dock-toggle-target="${panelId}"]`);
@@ -289,7 +296,7 @@ _setCommandDockPanelPinState(panelId, pin, {
       const pointerType = event.pointerType || 'mouse';
       if (pointerType !== 'mouse' && pointerType !== 'pen') return;
       clearClose();
-      if (panelEl.classList.contains('collapsed')) {
+      if (hoverOpen && panelEl.classList.contains('collapsed')) {
         scheduleOpen();
       }
     });

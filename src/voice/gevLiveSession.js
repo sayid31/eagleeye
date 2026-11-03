@@ -23,6 +23,7 @@
 
 import { createLiveChannelHandler } from './gevLiveEvents.js';
 import { createLiveCostMeter } from './liveCost.js';
+import { createMicLevelMeter } from './gevLiveMicLevel.js';
 
 export const LIVE_SESSION_URL = '/api/live/session';
 
@@ -74,6 +75,13 @@ export class GevLiveController {
     // same way the Realtime backend does, through the normal stop path.
     this.costMeter = createLiveCostMeter({
       ui, limits, onCap: (state) => this._onCostCap(state), now: nowFn, setIntervalFn, clearIntervalFn,
+    });
+
+    // Drives the dock mic's waveform from the real input level (--mic-level).
+    // `data-meter` tells the CSS whether a reactive level exists or it must fall
+    // back to its own idle shimmer.
+    this.micMeter = createMicLevelMeter({
+      onLevel: (level) => this.ui?.root?.style?.setProperty?.('--mic-level', level.toFixed(3)),
     });
 
     this.status = 'idle';
@@ -181,6 +189,7 @@ export class GevLiveController {
       if (abandoned()) { stopStream(localStream); return; }
       this.stream = localStream;
       this.setMicrophoneEnabled(this._micEnabled);
+      if (this.ui?.root?.dataset) this.ui.root.dataset.meter = this.micMeter.start(localStream) ? 'live' : 'css';
 
       if (this._document) {
         this._document.querySelectorAll('audio[data-gev-live-audio="true"]').forEach((el) => el.remove());
@@ -278,6 +287,8 @@ export class GevLiveController {
     this._tearingDown = true;
     this.startEpoch += 1;
     this.costMeter.stop();
+    this.micMeter.stop();
+    if (this.ui?.root?.dataset) delete this.ui.root.dataset.meter;
     if (removeUi) this.radio?.dispose();
     try { this.dc?.close?.(); } catch { /* noop */ }
     try { this.pc?.close?.(); } catch { /* noop */ }

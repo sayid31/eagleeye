@@ -7,6 +7,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Kontrol **Sudut** pindah ke kiri bawah (di atas status bar, dekat koordinat), lebih kecil,
+  dan labelnya kini **2D** (tegak lurus dari atas) dan **3D** (miring, bawaan).
+- Saat pertama dibuka tidak ada menu/panel yang terbuka. Menyalakan CCTV pertama kali juga
+  tidak lagi membuka panel CCTV sendiri.
+- Pil gaya visual ("Normal", dsb.) kini dibuka dengan **klik** saja, bukan hover — menu sumber
+  peta tidak lagi ikut menempel ke kursor saat bergeser ke kiri mik.
+- Saat suara aktif dan Anda berbicara, ikon mik berubah menjadi **gelombang suara** yang
+  bergerak mengikuti volume suara Anda.
 - Suara sekarang **sepenuhnya memakai GPT-Live** (full-duplex, bicara bebas tanpa tombol tahan),
   dan membaca layar lewat **gpt-5.6-luna**. Tray suara tinggal satu tombol mik + readout biaya.
   Radio tetap diredam saat suara aktif dan diserahkan kembali saat Anda memutar radio.

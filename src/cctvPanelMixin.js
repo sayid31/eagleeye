@@ -822,18 +822,20 @@ export const cctvPanelMixin = {
     const activeId = state?.activeCameraId || '';
     const activeCamera = state?.activeCamera || null;
 
-    // Auto-expand the panel when the active camera CHANGES to a new non-null
-    // id while the layer is enabled. Covers click-on-globe, panel controls,
-    // and voice (selectCamera/cycleCamera/focusNearest all notify through
-    // this subscription). The last-seen guard keeps routine notifications
-    // from re-expanding a panel the user deliberately collapsed, and timed
-    // auto-hop transitions only expand on the first activation so the panel
-    // does not pop open on every hop.
+    // Auto-expand the panel when the operator moves to a DIFFERENT camera after
+    // the layer is already running (click-on-globe, panel controls, voice). The
+    // FIRST activation never expands it: turning CCTV on from the layer list, the
+    // C key or voice must not throw a panel over the map the operator did not
+    // ask for (owner directive 2026-11-03) — the CCTV tab in the right rail opens it.
+    // The last-seen guard keeps routine notifications from re-expanding a panel
+    // the user deliberately collapsed, and timed auto-hop transitions never
+    // expand it.
     const effectiveActiveId = enabled ? (activeId || null) : null;
     const isFirstActivation = this._lastSeenCctvActiveId === null;
     if (effectiveActiveId
       && effectiveActiveId !== this._lastSeenCctvActiveId
-      && (!state?.autoHop || isFirstActivation)) {
+      && !isFirstActivation
+      && !state?.autoHop) {
       this.setPanelCollapsed('cctv-panel', false, { explicit: Boolean(state?.explicitSelection) });
     }
     this._lastSeenCctvActiveId = effectiveActiveId;
