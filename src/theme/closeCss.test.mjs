@@ -22,3 +22,8 @@ test('every side panel shows a close icon in place of the text glyph, keeping th
 test('the collapse button keeps its aria-label wiring', () => {
   assert.match(mixin, /btn\.setAttribute\('aria-label', `\$\{action\} \$\{panelName\}`\)/);
 });
+
+test('the nested Radio section uses a disclosure chevron, not the close icon', () => {
+  assert.match(css, /#global-context-panel #radio-panel \.panel-collapse-btn\[data-collapse-target\]::before\s*\{\s*content:\s*'expand_less'/);
+  assert.match(css, /#radio-panel\.collapsed \.panel-collapse-btn\[data-collapse-target\]::before\s*\{\s*content:\s*'expand_more'/);
+});

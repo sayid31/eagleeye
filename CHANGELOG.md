@@ -24,6 +24,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Bagian **Radio** di panel Konteks yang tertutup kini memakai panah buka/tutup (bukan ikon ×), sehingga
+  jelas bahwa mengkliknya membentangkan pemilih stasiun, filter, dan tombol putar.
+
 - Tanda panah di pil gaya visual ("Normal ▾") tidak lagi tampil sebagai `â-¾`; semua glyph dekoratif
   CSS kini memakai escape, jadi tidak rusak walau browser salah menebak encoding.
 

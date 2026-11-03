@@ -613,6 +613,8 @@ destroy fails semantically, preventing an active orphan and allowing retry.
 When Context is collapsed, explicitly activating its Radio header icon reveals
 the compact transport; hover and focus alone do not open it. When Context is
 expanded, the icon instead expands and scrolls to the embedded Radio section.
+The embedded section's own toggle is a disclosure chevron (down = expand, up = collapse), not
+the panel close icon, because it opens the tuner/station picker rather than closing anything.
 Its accessible label, controlled region, and expanded state keep describing the
 current route throughout enabling, enabled, disabling, and uncertain lifecycle
 renders. Both routes preserve Radio power, playback, station, filter, and volume

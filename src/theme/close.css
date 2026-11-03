@@ -43,3 +43,15 @@ body.ee-shell :is(#data-panel, #cctv-panel, #scene-panel, #pp-toggles, #global-c
 body.ee-shell #pp-toggles .pp-header-row .panel-divider {
   display: none;
 }
+
+/* Radio is a collapsible section NESTED inside Context, not a panel of its own:
+   the rule above also matches its button, so a collapsed Radio row read as
+   "close" while the click actually expands the tuner/station picker. Use a
+   disclosure chevron there instead (down = expand, up = collapse). */
+body.ee-shell #global-context-panel #radio-panel .panel-collapse-btn[data-collapse-target]::before {
+  content: 'expand_less';
+}
+
+body.ee-shell #global-context-panel #radio-panel.collapsed .panel-collapse-btn[data-collapse-target]::before {
+  content: 'expand_more';
+}
