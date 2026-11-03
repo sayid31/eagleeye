@@ -37,6 +37,10 @@ export const S = {
   _lastBounds: null,
   /** @type {boolean} True while an Overpass fetch is in flight */
   _fetching: false,
+  /** @type {number|null} performance.now() when the in-flight Overpass road fetch began; null when none */
+  _osmWaitStartedAt: null,
+  /** @type {number} Monotonic id of the latest Overpass fetch, so a superseded fetch cannot clear a newer one's wait clock */
+  _osmWaitSeq: 0,
   /** @type {number} Current count of rendered dots */
   _count: 0,
   /** @type {number|null} Timestamp of last successful render */

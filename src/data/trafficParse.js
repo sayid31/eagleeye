@@ -48,12 +48,22 @@ export async function fetchRoads(
       'last-camera-change-to-fetch-start', state, trace.cameraChangeMark, fetchStart,
     );
   }
-  const response = await fetch(OVERPASS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: `data=${encodeURIComponent(query)}`,
-    signal,
-  });
+  // Wait clock for the honest "queued at the OSM mirror" copy. Tokened: an
+  // aborted fetch settles AFTER its successor has started, and must not clear
+  // the successor's clock.
+  const waitSeq = ++S._osmWaitSeq;
+  S._osmWaitStartedAt = performance.now();
+  let response;
+  try {
+    response = await fetch(OVERPASS_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: `data=${encodeURIComponent(query)}`,
+      signal,
+    });
+  } finally {
+    if (waitSeq === S._osmWaitSeq) S._osmWaitStartedAt = null;
+  }
 
   if (!response.ok) {
     throw new Error(`Overpass API returned ${response.status}`);

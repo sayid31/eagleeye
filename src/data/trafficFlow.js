@@ -51,6 +51,8 @@ export function deriveTrafficFlowError(error) {
  * @param {string|null} [input.flowError] - `deriveTrafficFlowError` result, if any.
  * @param {number} [input.coveragePct] - Matched-road coverage, 0–100.
  * @param {boolean} [input.statusUnavailable] - The status probe itself failed.
+ * @param {string|null} [input.waitLabel] - `osmWaitLabel` copy while the road
+ *   fetch is queued at the OSM mirror; replaces the in-flight label only.
  * @returns {{mode:'live'|'sim', error:string|null, loadingLabel:string}}
  */
 export function trafficFeedPresentation({
@@ -59,6 +61,7 @@ export function trafficFeedPresentation({
   flowError = null,
   coveragePct = 0,
   statusUnavailable = false,
+  waitLabel = null,
 } = {}) {
   // `mode` is the CONFIGURED source (live key present vs keyless), not this
   // instant's health — health rides on `error`. The qa-traffic harness pins
@@ -77,19 +80,22 @@ export function trafficFeedPresentation({
       mode,
       error: null,
       loadingLabel: fetching
-        ? 'menyinkronkan aliran lalu lintas LIVE'
+        ? (waitLabel || 'menyinkronkan aliran lalu lintas LIVE')
         : `LIVE · aliran TomTom · cakupan ${coveragePct}%`,
     };
   }
   // Keyless simulation — one terse line that names the mode and the remedy
   // (owner's copy shape). The chip's own progress text carries "working";
   // this line must never imply a live feed.
+  // A queued road fetch is the one thing worth saying over the remedy line,
+  // and it keeps the leading mode word so it still cannot read as live.
+  const idleLabel = statusUnavailable
+    ? 'SIMULASI — layanan lalu lintas tidak terjangkau'
+    : 'SIMULASI — tambahkan kunci TomTom untuk live';
   return {
     mode,
     error: null,
-    loadingLabel: statusUnavailable
-      ? 'SIMULASI — layanan lalu lintas tidak terjangkau'
-      : 'SIMULASI — tambahkan kunci TomTom untuk live',
+    loadingLabel: fetching && waitLabel ? `SIMULASI — ${waitLabel}` : idleLabel,
   };
 }
 

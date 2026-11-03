@@ -24,6 +24,7 @@ export function normalizeLayerLoading(layer = {}) {
   const keyRequired = stats.keyRequired === true || stats.missingKey === true;
   const degraded = stats.degraded === true || Boolean(error);
   const accepted = Boolean(stats.lastUpdate) || count > 0;
+  const waitNote = loading && typeof stats.waitNote === 'string' ? stats.waitNote.trim() : '';
   return {
     id: String(layer.id || ''),
     label: String(layer.name || layer.id || 'Layer'),
@@ -37,6 +38,7 @@ export function normalizeLayerLoading(layer = {}) {
     unavailable,
     keyRequired,
     degraded,
+    waitNote,
   };
 }
 
@@ -291,11 +293,14 @@ export function presentLoadingFeedback(state, summary, nowMs) {
     : summary.refresh ? 'MEMPERBARUI DATA LIVE' : 'MEMUAT DATA LIVE';
   const names = active.slice(0, 2).map((record) => record.label).join(' · ');
   const suffix = active.length > 2 ? ` +${active.length - 2}` : '';
+  // A layer that knows WHY it is slow (e.g. traffic queued at the OSM mirror)
+  // outranks the bare roster: "waiting, and for what" beats a silent timer.
+  const waitNote = active.find((record) => record.waitNote)?.waitNote;
   return {
     state: elapsed >= LOADING_LONG_THRESHOLD_MS
       ? 'long'
       : summary.disabling ? 'disabling' : summary.refresh ? 'refresh' : 'loading',
     label,
-    detail: `${names}${suffix}`,
+    detail: waitNote ? `${names}${suffix} · ${waitNote}` : `${names}${suffix}`,
   };
 }
