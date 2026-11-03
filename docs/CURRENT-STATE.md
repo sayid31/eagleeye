@@ -989,6 +989,12 @@ speech-to-speech API, so Claude is paired with the browser's own
   isSpeechSynthesisSupported()` in `src/voice/webSpeechIO.js`) — Firefox has
   no default `SpeechRecognition` support, so the pill simply never appears
   there rather than failing on click.
+- **Default backend is GPT-Live (`gpt-live-1`).** The page loads with the pill on
+  `GPT-LIVE` (`DEFAULT_VOICE_BACKEND` in `src/voice/voiceBackendSwitch.js`);
+  cycle order is still GPT → GPT-LIVE → CLAUDE, so OpenAI Realtime is one click
+  away as the fallback and is the active backend if the live controller is
+  absent. Rationale and the still-unproven parts (physical echo test, voice
+  tool-call routing): `docs/gpt-live-migration.md`.
 - **Turn-based state machine, not always-listening.** `GevClaudeVoiceController`
   (`src/voice/gevClaudeVoice.js`) runs `idle → listening → thinking →
   toolExecuting → speaking → idle` per utterance — `webSpeechIO.js`'s

@@ -5,6 +5,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- Suara sekarang memakai **GPT-Live** secara bawaan saat aplikasi dibuka (tombol di tray suara
+  menampilkan **GPT-LIVE**). OpenAI Realtime biasa tetap tersedia — klik tombol itu untuk kembali.
+
 ### Added
 
 - Pilihan baru **Sudut**: **Atas** atau **Samping**, ada di kanan atas tepat di sebelah

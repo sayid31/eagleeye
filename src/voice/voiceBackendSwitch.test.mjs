@@ -178,6 +178,32 @@ test('with a live controller the pill cycles GPT -> GPT-LIVE -> CLAUDE -> GPT', 
   assert.equal(backendButton['aria-pressed'], 'false');
 });
 
+test('defaultBackend "live" starts on GPT-LIVE with pill painted and cost synced', () => {
+  const openaiController = fakeController('openai');
+  const liveController = fakeController('live');
+  const claudeController = fakeController('claude');
+  const backendButton = fakeButton();
+  const ui = { button: fakeButton(), backendButton };
+  const coordinator = createVoiceBackendCoordinator({ openaiController, claudeController, liveController, defaultBackend: 'live', ui });
+
+  assert.equal(coordinator._activeBackend(), 'live');
+  assert.equal(backendButton.textContent, 'GPT-LIVE');
+  assert.equal(backendButton['aria-pressed'], 'true');
+  assert.deepEqual(liveController._calls, ['syncCostUi']);
+  backendButton.click();
+  assert.equal(coordinator._activeBackend(), 'claude', 'cycle order is unchanged');
+  backendButton.click();
+  assert.equal(coordinator._activeBackend(), 'openai');
+});
+
+test('defaultBackend "live" without a live controller falls back to OpenAI', () => {
+  const openaiController = fakeController('openai');
+  const claudeController = fakeController('claude');
+  const ui = { button: fakeButton(), backendButton: fakeButton() };
+  const coordinator = createVoiceBackendCoordinator({ openaiController, claudeController, defaultBackend: 'live', ui });
+  assert.equal(coordinator._activeBackend(), 'openai');
+});
+
 test('switching to the live backend stops the outgoing one and syncs its cost meter', () => {
   const openaiController = fakeController('openai');
   const liveController = fakeController('live');

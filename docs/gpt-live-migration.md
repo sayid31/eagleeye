@@ -189,10 +189,12 @@ on an open mic over ~30 s, real spoken (not injected-text) user turns, and the
   `_activeBackend()` returns `'openai'|'live'|'claude'`. `initGevVoiceBackendSwitch`
   builds the live controller via `initGevLiveVoice`, reusing the ONE shared
   `gevActions` runner (same as Claude).
-- **Default stays OpenAI Realtime** — index 0. gpt-live-1's live media path is
-  still INFERRED (Fase 6); flipping the default is a one-liner once proven, and
-  defaulting to an unproven paid-tier path would be a worse regression than
-  keeping it opt-in. `aria-pressed` = "not the default backend".
+- **Default is GPT-Live (flipped on explicit owner request).** `DEFAULT_VOICE_BACKEND
+  = 'live'`; the coordinator takes `defaultBackend` and falls back to OpenAI when no
+  live controller exists. Flipped BEFORE Fase 6 proof 4 (physical echo/self-trigger)
+  was run, and with voice-driven `set_layer_visibility` and the `/api/live/vision`
+  round trip still unproven end-to-end (headless `captureViewportImage()` is flaky) —
+  OpenAI Realtime remains one pill click away. `aria-pressed` = "not OpenAI".
 - Reveal: pill un-hides when a selectable alternate exists — Claude
   (`anthropic` key set && `isSupported()`) OR gpt-live (`openai` key set; paid
   tier can't be probed client-side, surfaces at `start()`). New shared helper
