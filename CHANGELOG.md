@@ -7,6 +7,69 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Suara sekarang **sepenuhnya memakai GPT-Live** (full-duplex, bicara bebas tanpa tombol tahan),
+  dan membaca layar lewat **gpt-5.6-luna**. Tray suara tinggal satu tombol mik + readout biaya.
+  Radio tetap diredam saat suara aktif dan diserahkan kembali saat Anda memutar radio.
+
+### Removed
+
+- Backend suara **OpenAI Realtime** dan **Claude (Anthropic) + Web Speech** dihapus, beserta
+  tombol pemilih backend, toggle STD/MINI, push-to-talk (Space), visualizer audio,
+  `ANTHROPIC_API_KEY`, `OPENAI_REALTIME_*`, dan rute `/api/realtime/*` + `/api/anthropic/*`.
+  Variabel suara kini `OPENAI_LIVE_MODEL`, `OPENAI_LIVE_BACKEND_MODEL`, `OPENAI_LIVE_VOICE`.
+
+### Added
+
+- Pilihan baru **Sudut**: **Atas** atau **Samping**, ada di kanan atas tepat di sebelah
+  kiri tombol bola dunia — tanpa perlu membuka panel apa pun. **Menekannya langsung
+  memiringkan kamera di tempat:** pemandangan yang sedang Anda lihat tetap di tengah
+  layar, lokasi, ketinggian, dan arah hadap tidak berubah — hanya sudutnya yang beralih,
+  dengan animasi singkat. Jadi kalau sedang melihat Jakarta lalu menekan **Atas**, Jakarta
+  itu juga yang langsung terlihat dari atas. Pilihan itu juga tersimpan dan ikut berlaku
+  untuk semua perpindahan kamera berikutnya — tombol bola dunia, terbang ke kota atau
+  landmark, fokus ke kapal/kebakaran, dan saat mengaktifkan CCTV — jadi tidak ada tombol
+  yang "lupa" mode yang sedang dipilih.
+  - Kamera tidak dimiringkan saat mode **kokpit** aktif atau saat sedang mengunci sebuah
+    target, karena di dua keadaan itu kamera sudah dikemudikan oleh hal lain. Mode tetap
+    tersimpan, hanya gerakannya yang ditunda sampai perpindahan kamera berikutnya.
+  - **Samping** adalah pilihan awal dan tidak mengubah apa pun dari perilaku sebelumnya:
+    kamera tetap miring seperti saat CCTV aktif, dan sudut yang sudah dipilih khusus untuk
+    tiap landmark tetap dipakai (Empire State tetap dilihat dari sisi gedung, bukan dari
+    atap). Tombol bola dunia kini memperlihatkan bola Bumi dari samping dengan lengkung
+    cakrawala terlihat, bukan lagi datar dari atas.
+  - **Atas** membuat kamera tegak lurus dari atas, seperti melihat peta. Arah hadap dan
+    jarak kamera tidak berubah, jadi dari atas Anda masih melihat ke arah yang sama —
+    misalnya area jangkauan sebuah kamera CCTV terbaca sebagai bidang, bukan kehilangan
+    arah.
+  - Pilihan ini ikut tersimpan di tautan bagikan, jadi penerima tautan mendapat mode yang
+    sama. Posisi kamera di tautan tetap persis seperti yang pengirim lihat — saat memulihkan
+    tautan, mode **tidak** memiringkan kamera, karena itu justru akan menggeser pemandangan
+    yang memang jadi alasan tautan itu dibagikan. Mode baru bekerja saat Anda menekannya
+    sendiri atau pada perpindahan kamera selanjutnya.
+  - **Catatan jujur satu hal:** mencari sebuah kota secara keseluruhan (misalnya mengetik
+    "Jakarta") tetap memakai pandangan dari atas di kedua mode. Penerbangan jenis itu
+    membingkai sebuah kotak area, bukan satu titik, sehingga tidak punya sudut kamera untuk
+    diatur. Ini belum berubah dan sudah dicatat sebagai pekerjaan lanjutan.
+
+- Agen suara kini menjawab dalam bahasa yang Anda pakai, termasuk Bahasa Indonesia, dan
+  tetap mengikuti jika Anda berganti bahasa di tengah sesi. Sebelumnya tidak ada instruksi
+  bahasa sama sekali, jadi bahasa jawaban hanya bergantung kebetulan. Nama perintah internal,
+  serta kode yang harus dibacakan apa adanya (callsign, registrasi, kode bandara/stasiun),
+  tetap seperti aslinya supaya aplikasi tetap mengenalinya.
+
+### Changed
+
+- Membuka ulang halaman atau membuka tautan bagikan kini **sekitar dua kali lebih cepat
+  sampai aplikasi terlihat**: layar pembuka terangkat pada 3,5 detik, sebelumnya 6,4 detik
+  (diukur 5 kali jalan pada aplikasi hasil build, ambil nilai tengah). Penyebabnya bukan
+  pengambilan data: ada dua jeda tetap di jalur pemulihan tautan — tunggu 1,5 detik sebelum
+  kamera dipindahkan, lalu animasi terbang 3 detik — yang sekarang menjadi 0,5 detik dan
+  1,2 detik. Dua jeda itu dulu dipertahankan dengan alasan supaya penerima tautan "melihat
+  posisi kamera beranimasi masuk"; setelah diukur ternyata animasinya berjalan penuh di
+  balik layar pembuka yang tidak tembus pandang, jadi tidak pernah ada yang melihatnya.
+  Posisi kamera akhir, isi tautan, dan lapisan data yang ikut dipulihkan sama sekali tidak
+  berubah — hanya waktu tunggunya yang hilang. Jeda yang tersisa tetap ada supaya gerakan
+  kamera Anda sendiri pada saat itu masih menang atas pemulihan tautan.
 - Lalu lintas jauh lebih jarang mengambil ulang data jalan saat peta digeser sedikit-sedikit.
   Sebelumnya setiap gerakan kamera meminta kotak area yang berbeda beberapa meter, sehingga
   selalu dianggap area baru dan harus diambil dari server. Sekarang titik pusat permintaan
@@ -25,6 +88,22 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Lalu lintas kini muncul lagi di area yang belum pernah dibuka. Sebelumnya layarnya kosong dan
+  server menjawab galat setelah ~45 detik, seolah server peta jalan (Overpass) sedang mati —
+  padahal server itu hidup dan jawabannya sudah di jalan. Penyebabnya: aplikasi menunggu paling
+  lama 22 detik, sementara server peta jalan mengantre permintaan dan baru menjawab di detik
+  37–55. Jadi setiap jawaban yang benar justru diputus di tengah jalan, lalu semua mirror dianggap
+  mati dan dilewati sampai 15 menit. Sekarang batas tunggunya 60 detik per mirror, dengan batas
+  total 75 detik untuk satu permintaan supaya server yang menggantung tanpa jawaban tidak bisa
+  menahan Anda bermenit-menit. Pemuatan pertama di area baru memang terasa lama sekali (terukur
+  32,8 detik), tetapi kunjungan berikutnya ke area yang sama instan (22 milidetik) karena hasilnya
+  disimpan.
+- Fitur suara tidak lagi mati dengan pesan "OPENAI_API_KEY is not set" padahal kuncinya sudah
+  benar ada di `.env`. Penyebabnya: variabel kosong yang tertinggal di shell (`export OPENAI_API_KEY=`)
+  dianggap sebagai pilihan yang menimpa `.env`, padahal itu berarti "tidak ada nilai". Sekarang
+  variabel kosong diperlakukan sebagai tidak diisi, jadi nilai dari `.env` tetap dipakai. Nilai
+  shell yang benar-benar berisi masih tetap menang seperti sebelumnya, dan kunci yang memang
+  kosong di `.env` tetap dilaporkan belum dikonfigurasi. Berlaku untuk semua kunci, bukan hanya suara.
 - Lalu lintas tidak lagi menggantung lama saat server peta jalan (Overpass) bermasalah. Dua dari
   empat alamat mirror ternyata mesin yang sama, sehingga setiap permintaan yang gagal menunggu dua kali
   untuk satu server mati; alamat ganda itu dihapus. Mirror yang baru saja gagal kini diingat dan

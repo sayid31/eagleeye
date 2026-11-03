@@ -5,7 +5,9 @@ import {
   normalizeAllocationStrategy,
 } from './data/detectionPolicy.js';
 import { clampScopeTerminusPct } from './scopeMask.js';
+import { CAMERA_ANGLE_MODE_DEFAULT, normalizeCameraAngleMode } from './cameraAngleMode.js';
 import { decodeLayerStateParams, encodeLayerStateParams } from './data/layerState.js';
+import { SHARE_RESTORE_FLIGHT_S } from './shareRestoreTiming.js';
 
 /**
  * Share Links — URL Hash State Management
@@ -113,6 +115,9 @@ export class ShareLinkManager {
     // the session actually renders; the `ko` PARSE fallback below is a separate
     // question and deliberately stays at 5.
     this._detectionOutsideOpacityPct = 1;
+    // Mirrors CAMERA_ANGLE_MODE_DEFAULT in cameraAngleMode.js — the live state
+    // the link THIS session generates starts from.
+    this._cameraAngle = CAMERA_ANGLE_MODE_DEFAULT;
     this._celestialRingEnabled = false;
     this._scopeEnabled = true;
     // Feather opens on a soft 11% scope-mask edge (owner final lock 2026-08-24,
@@ -210,6 +215,19 @@ export class ShareLinkManager {
       // celestialRing.js.
       detectionOutsideOpacityPct: Math.max(0, Math.min(100, Math.round(parseOr(params.get('ko'), 5)))),
       celestialRing: params.has('cr') ? params.get('cr') === '1' : false,
+      // An absent `ca` resolves to SAMPING, and that is also its first-run
+      // default — unlike `ko`/`scf` there is no divergence to protect, because
+      // every link predating this field was authored when curated/oblique was
+      // the only behavior the app had. Such a link also carries its own raw
+      // `pitch`, which already restores whatever pose its author saw.
+      //
+      // `ca` and `pitch` are deliberately orthogonal: `pitch` is an OBSERVATION
+      // of where the sender's camera was and wins for the restored pose; `ca` is
+      // a PREFERENCE for future navigation and governs only subsequent flights.
+      // Applying `ca` to the restored pose would move the recipient away from
+      // the sender's framing, which is exactly what the `scf`/`ko` fallback
+      // reasoning above exists to prevent.
+      cameraAngle: normalizeCameraAngleMode(params.get('ca')),
       scopeEnabled: params.has('sc') ? params.get('sc') === '1' : true,
       // Deliberately still 35 through both later default moves (0 on
       // 2026-08-22, 8 on 2026-08-23). This is the PARSE fallback for a link that
@@ -280,7 +298,7 @@ export class ShareLinkManager {
       // navigation. A later user or voice command wins over delayed restore.
       this.viewer.camera.flyTo({
         ...view,
-        duration: 3.0,
+        duration: SHARE_RESTORE_FLIGHT_S,
         easingFunction: Cesium.EasingFunction.CUBIC_IN_OUT,
         complete: () => {
           if (
@@ -329,6 +347,7 @@ export class ShareLinkManager {
         detectionFadePct: visualCurrent ? state.detectionFadePct : undefined,
         detectionOutsideOpacityPct: visualCurrent ? state.detectionOutsideOpacityPct : undefined,
         celestialRing: visualCurrent ? state.celestialRing : undefined,
+        cameraAngle: visualCurrent ? state.cameraAngle : undefined,
         scopeEnabled: visualCurrent ? state.scopeEnabled : undefined,
         scopeFeatherPct: visualCurrent ? state.scopeFeatherPct : undefined,
         scopeIntensityPct: visualCurrent ? state.scopeIntensityPct : undefined,
@@ -438,6 +457,7 @@ export class ShareLinkManager {
       );
     }
     if (typeof extras.celestialRingEnabled === 'boolean') this._celestialRingEnabled = extras.celestialRingEnabled;
+    if (typeof extras.cameraAngle === 'string') this._cameraAngle = normalizeCameraAngleMode(extras.cameraAngle);
     if (typeof extras.scopeEnabled === 'boolean') this._scopeEnabled = extras.scopeEnabled;
     if (typeof extras.scopeFeatherPct === 'number') {
       this._scopeFeatherPct = Math.max(0, Math.min(100, Math.round(extras.scopeFeatherPct)));
@@ -509,6 +529,9 @@ export class ShareLinkManager {
     params.set('kf', Math.round(this._detectionFadePct).toString());
     params.set('ko', Math.round(this._detectionOutsideOpacityPct).toString());
     params.set('cr', this._celestialRingEnabled ? '1' : '0');
+    // Always written — a plain two-value enum, so there is no adaptive default
+    // to protect by omission.
+    params.set('ca', this._cameraAngle);
     params.set('sc', this._scopeEnabled ? '1' : '0');
     params.set('scf', Math.round(this._scopeFeatherPct).toString());
     // Always written — this is a plain 0..100 dial, not a "pinned vs adaptive"

@@ -7,7 +7,7 @@ import { LAYER_METADATA } from './data/layerMetadata.js';
 import { LAYER_STATE_REGISTRY } from './data/layerState.js';
 import { registerDataCredits } from './data/dataCredits.js';
 import { SceneDirector } from './scenes/director.js';
-import { initGevVoiceBackendSwitch } from './voice/voiceBackendSwitch.js';
+import { initGevLiveVoice } from './voice/gevLiveSetup.js';
 import { DEFAULT_BOOT_STACK, MapStackController } from './mapStackController.js';
 import { initAnnotations } from './annotations/index.js';
 import { initLogoGaze } from './logoGaze.js';
@@ -27,6 +27,14 @@ import { initKeySetup } from './keySetup.js';
 import { loadPhotorealisticTileset } from './mapStartup.js';
 import { runStorageKeyMigrations } from './storageKeyMigration.js';
 import { waitForFirstFrame, composeSplashReadiness } from './splashGate.js';
+import { BOOT_MARKS, finalizeBootTiming, markBoot } from './bootTiming.js';
+
+// First statement of the entry chunk's module scope. ES imports evaluate
+// BEFORE the module body, so this mark lands at the END of eager parse+eval —
+// its own startTime (measured from timeOrigin) IS the eager-eval cost, which
+// is why `boot:phase:eager-eval` spans timeOrigin→here rather than starting
+// here. The span from here to `init-start` is only the synchronous body work.
+markBoot(BOOT_MARKS.MODULE_EVAL);
 
 // One-time carry-forward of pre-rebrand `godsEyeView.*` localStorage keys
 // onto the current `gev:*` convention — must run before any layer/panel
@@ -68,6 +76,7 @@ function describeError(error) {
  * style system, intelligence HUD, location presets, and share links.
  */
 async function init() {
+  markBoot(BOOT_MARKS.INIT_START);
   const loadingScreen = document.getElementById('loading-screen');
   const loaderStatus = loadingScreen.querySelector('.loader-status');
 
@@ -124,6 +133,8 @@ async function init() {
     // 120 Hz hardware; a no-op on 60 Hz displays. (perf item 2)
     viewer.targetFrameRate = 60;
 
+    markBoot(BOOT_MARKS.VIEWER_CREATED);
+
     // Register per-layer data attribution into the "Data attribution" popover.
     // Required by each source's license (ODbL, CC BY-NC-SA, NASA FIRMS, etc.);
     // strings are verbatim from DATA_SOURCES.md. Static + always-present in the
@@ -148,10 +159,12 @@ async function init() {
     loaderStatus.textContent = googleApiKey || cesiumToken
       ? 'Memuat Google 3D Tiles...'
       : 'Memuat globe tanpa kunci...';
+    markBoot(BOOT_MARKS.PHOTOREAL_START);
     const photoreal = await loadPhotorealisticTileset(Cesium, {
       googleApiKey,
       cesiumToken,
     });
+    markBoot(BOOT_MARKS.PHOTOREAL_END);
     const tileset = photoreal.tileset;
     if (tileset) {
       // Hidden from the start: the boot basemap is Esri Satellite (below), and
@@ -188,10 +201,14 @@ async function init() {
       },
       onError: (message) => console.warn('[MapStack]', message),
     });
+    markBoot(BOOT_MARKS.MAPSTACK_START);
     await mapStackController.setStack(DEFAULT_BOOT_STACK, { silent: true });
+    markBoot(BOOT_MARKS.MAPSTACK_END);
 
     // Initialize the style manager (post-processing, HUD, locations, share links)
+    markBoot(BOOT_MARKS.UI_START);
     const styleManager = new StyleManager(viewer, { mapStackController });
+    markBoot(BOOT_MARKS.UI_END);
     // The previous multi-canvas weather compositor remains disabled. Cockpit
     // clouds use a separate, capped low-resolution GPU pass that never attaches
     // Cesium fog or post-process stages and is fully stopped in map mode.
@@ -269,6 +286,9 @@ async function init() {
     }
     // Restoration starts only after the complete production registry is sealed.
     dataManager.finalizeRegistrations(LAYER_STATE_REGISTRY);
+    // Separates registration (cheap, eager) from activation (the per-layer
+    // marks below), so a slow boot can be attributed to one or the other.
+    markBoot(BOOT_MARKS.DATA_REGISTERED);
     if (import.meta.env.DEV) {
       window.__gevQaRegisterLayer = (targetManager, layerModule) => {
         if (targetManager !== dataManager) throw new Error('QA layer manager mismatch');
@@ -297,11 +317,25 @@ async function init() {
     // boot. Saved layers (CCTV etc.) are deliberately NOT part of this gate:
     // they keep restoring behind the visible app, with their own loading chips,
     // until the full `initialRestorePromise` aggregate settles.
-    void composeSplashReadiness({
+    void styleManager.initialViewReadyPromise
+      .finally(() => markBoot(BOOT_MARKS.VIEW_READY));
+    const splashReadiness = composeSplashReadiness({
       viewReadyPromise: styleManager.initialViewReadyPromise,
-      firstFramePromise: waitForFirstFrame(viewer.scene),
-    }).finally(() => {
+      firstFramePromise: waitForFirstFrame(viewer.scene)
+        .then(() => { markBoot(BOOT_MARKS.FIRST_FRAME); }),
+    });
+    // The boot window closes on the LAST of [splash lifted, saved layers
+    // restored] — not on the splash alone. Saved layers deliberately keep
+    // restoring behind the visible app (see the comment below), so closing at
+    // splash-hide would discard the per-layer phase marks that are the whole
+    // point of measuring a restore. After this resolves, the data manager's
+    // phase seam is a branch on a false boolean, which is the "instrumentation
+    // must not change boot timing" guarantee as a cost you can read.
+    void Promise.allSettled([splashReadiness, styleManager.initialRestorePromise])
+      .then(() => finalizeBootTiming());
+    void splashReadiness.finally(() => {
       loadingScreen.classList.add('hidden');
+      markBoot(BOOT_MARKS.SPLASH_HIDDEN);
       // Reveal only after the loading cover has yielded. transitionend can be
       // absent under reduced motion, so a bounded fallback makes this reliable.
       let firstRunRevealed = false;
@@ -376,7 +410,7 @@ async function init() {
       getRenderGovernorDiagnostics,
       requestRender: governorRequestRender,
     };
-    window.__godsEyeView.voiceCommands = initGevVoiceBackendSwitch({ viewer, styleManager, dataManager, sceneDirector, annotations });
+    window.__godsEyeView.voiceCommands = initGevLiveVoice({ viewer, styleManager, dataManager, sceneDirector, annotations });
 
   } catch (error) {
     console.error("EagleEye View initialization failed:", error);

@@ -6,6 +6,564 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-11-03 — GPT-Live is the only voice backend; Realtime and Claude are deleted, not kept as fallbacks
+
+**Decision.** `gpt-live-1` (full duplex) owns the voice; `gpt-5.6-luna` reads screenshots through a one-shot `/api/live/vision` call. The OpenAI Realtime backend (`gevRealtime*`), the Claude + Web Speech backend (`gevClaude*`, `claudeToolLoop`, `webSpeechIO`), the backend switcher, `anthropicProxy`, `/api/realtime/*`, `/api/anthropic/*`, `ANTHROPIC_API_KEY` and `OPENAI_REALTIME_*` are removed. This overrides the earlier "keep Realtime as the selectable fallback" call.
+
+**Why.** Two backends behind one pill meant every voice change had to be reasoned about twice, and the fallback was never going to be the path anyone was meant to use once GPT-Live proved out. Dead-but-reachable code in the hottest part of the app is worse than no fallback: it rots silently and a failure would surface exactly when someone is relying on it. Git history is the rollback.
+
+**What moved, not died.** Tool execution (`gevActions.js`, `createGevActionRunner`), the tray (`createVoiceControl`), the cost-limit helpers (`voiceCost.js`) and the Radio duck/hand-off contract (now `gevLiveRadio.js`, a much smaller bridge than the Realtime reservation machinery) are shared by GPT-Live and survive.
+
+**What was dropped on purpose.** Space push-to-talk (full duplex makes it moot), the audio visualizer, the STD/MINI toggle, the backend pill, the Realtime debug-log route, and annotation map-event/outline follow-ups. If any of these is missed, re-add it against `GevLiveController`, not by resurrecting the old backends.
+
+**Still unproven at the time of the change.** Physical echo/self-trigger on an open mic (manual: `scripts/manual-fase6-echo-test.md`), a spoken command reliably routing to `set_layer_visibility`, and the `read_screen` → `/api/live/vision` round trip under a real GPU.
+
+## 2026-10-29 — The share-restore holds drop to 500 ms and 1.2 s, because the measurement refuted both halves of their rationale
+
+**Context.** The owner asked to lower the 1500 ms share-restore timer and the
+3.0 s camera flight to *"nilai yang masuk akal"*, and explicitly asked for the
+numbers to be proposed before any edit and for reload time to be re-measured
+before and after. 2026-10-08 had kept both values and listed lowering the timer
+under **Not done**. That clause is superseded here — by direct instruction, and
+by the capture the 2026-10-28 instrumentation made possible.
+
+**Root cause of the latency — two findings, both from reading the code the
+measurement pointed at.**
+
+1. **The flight was never visible.** `#loading-screen` is opaque
+   (`style.css`: `background: var(--bg-dark)`, `inset: 0`, `z-index: 1000`).
+   The splash gates on `initialViewReadyPromise`, which `ui.js` settles *after*
+   `await this.shareLinkManager.applyState(...)`, and `applyState` ends with
+   `const camera = await cameraPromise` — i.e. it awaits the whole flight. So
+   the 3.0 s animation ran entirely behind the cover, plus a 0.8 s fade after
+   it. 2026-10-08 kept both values because "a recipient sees the shared pose
+   animate in". The recipient could not see it.
+2. **It was not small next to layer restore.** The same entry called the holds
+   small beside saved-layer restore. Measured, `layer-restore` is **0.2 ms**,
+   and every individual layer row reads 0.0 ms — enabling a saved layer only
+   arms its loading path. The two holds were **4,524.5 ms of a 6,647.4 ms
+   reload, about 68%**, and were the two tightest rows in the table.
+
+Both halves of the stated rationale were therefore false. That is what
+justified the change; not that the numbers felt large.
+
+**What the 1500 ms actually protected.** Not mesh warm-up. `ui.js` calls
+`_beginDeferredNavigation('shared view')` up front and the timer body
+re-checks `_reassertNavigationHandoff(generation)` before setting
+`applyCamera`, so a navigation issued during the window **wins** over the share
+restore. That is a real mechanism and it is kept — shortened, not removed.
+
+Its practical reach is narrower than it looks: `#loading-screen` only gains
+`pointer-events: none` when it gains `.hidden`, so for the entire window the
+opaque splash swallows every click and drag. **No human can compete in that
+window.** Only a programmatic claimant (a scene recipe, tracking carried in the
+link) can, and those are armed during init. 500 ms is sized for that, and is
+deliberately not 0: at 0 ms the timer body runs in the task that armed it, so
+the handoff re-check could never observe a competing claim.
+
+| Value | Was | Now | Basis |
+| --- | ---: | ---: | --- |
+| `SHARE_RESTORE_HOLD_MS` | 1500 ms | **500 ms** | Grace window kept, sized for programmatic claimants only (see above). Honestly an order-of-magnitude judgement, not a derived number — no in-tree anchor fits. |
+| `SHARE_RESTORE_FLIGHT_S` | 3.0 s | **1.2 s** | Anchored to durations already in this tree: `annotationEngine.js` flies 1.6 s and 1.8 s, `TILT_DURATION_S` is 0.9 s. Inside that band for a short reframe, while still leaving Cesium a window to request destination tiles before the first frame. |
+
+**Evidence (n=5 medians, same machine and build, `npm run qa:boot-timing`).**
+
+| | Before | After | Δ |
+| --- | ---: | ---: | ---: |
+| share-wait | 1,501.2 ms | 506.9 ms | −994.3 ms |
+| share-camera | 3,021.3 ms | 1,228.0 ms | −1,793.3 ms |
+| **TOTAL to splash lifted** | **6,377.5 ms** | **3,451.7 ms** | **−2,925.8 ms (−46%)** |
+
+Both captures reported 10 passed / 0 failed with the harness's console-error
+gate armed. Full tables in `docs/PERFORMANCE.md`.
+
+**Why a new module rather than editing the literals in place.** Both lived as
+bare numbers in two different files — `1500` in `ui.js` (853 L) and `3.0` in
+`sharelink.js` (652 L), both far over the file-health limit. They are consumed
+as *one* wait by anyone opening a shared link, so reasoning about the pair
+required opening two oversized files and knowing to look. `shareRestoreTiming.js`
+gives the pair one home with the rationale attached, and
+`shareRestoreTiming.test.mjs` pins that neither consumer reintroduces a literal.
+
+**Not done, and why.** Lifting the splash *before* the flight so the animation
+is finally visible — offered and explicitly declined for now (*"tidak dulu"*).
+It would make 2026-10-08's original reason true at last, but it changes product
+behavior rather than reducing a number, so it stays a separate decision. Also
+not done: muting the microphone while the assistant speaks (declined — Space
+push-to-talk already makes self-hearing structurally impossible), and widening
+anything about `photoreal` (1,285.6 ms, deliberate per 2026-10-05), now
+comparable in size to `share-camera`. The largest unchosen reload cost is
+`eager-eval` at 722.8 ms.
+
+**A note on the `deliberate` label.** These rows carried
+`deliberate: true, decisionRef` and were still lowered. The label means
+"chosen, with a recorded reason" — not "untouchable". What it bought is that
+changing them required reading the reason first, and the reason turned out to
+be refutable. `bootTimingReport.js` now says so in its header, because a label
+read as a freeze would make the instrumentation worse than none.
+
+## 2026-10-28 — Boot timing ships in production, and labels its deliberate holds instead of removing them
+
+**Context.** The owner said loading *"masih agak membutuhkan waktu"* and asked
+for it to be instant. I said plainly that instant is not promisable — part of
+the latency is third-party upstreams — and offered three paths; they chose
+*"Ukur dulu, baru putuskan"*. So this change is instrumentation and a reported
+baseline only. Six optimization candidates were identified and **none** were
+implemented.
+
+**Why these marks ship in production while `trafficTiming`'s do not.**
+`TRAFFIC_TIMING_ENABLED` is `import.meta.env.DEV && ?trafficDebug=1`, and that
+gate is correct for traffic: it installs event listeners, a `moveEnd` remover,
+correlated trace objects and instrumented twins of real functions. Boot timing
+installs none of that — about 17 one-time `performance.mark()` calls plus 11
+derived measures, which is unmeasurable against a 2.4-second boot. And a DEV
+gate would make `dist/` unmeasurable, which is precisely where the cost under
+investigation lives: the parser-blocking 5.46 MiB `/cesium/Cesium.js` exists
+only in the built HTML, because `npm run dev` serves Cesium as a module graph
+instead. A different cost profile earns a different gate. The module header
+says so, so that nobody "fixes" it into DEV-only.
+
+**Why the deliberate holds are labeled rather than shortened.** Three of the
+slowest spans are recorded decisions: the photoreal tileset await (2026-10-05,
+where created-but-hidden is the point) and the 1500 ms share-restore timer plus
+3.0 s camera flight (2026-10-08, which lists lowering the timer under **Not
+done**). A table row reading `share-wait 1501.9 ms` invites someone to delete
+it. So every `performance.measure` carries a structured-clone-safe
+`detail: {deliberate, decisionRef}`, and the reporter prints
+`share-wait 1501.9 ms (deliberate — DECISIONS 2026-10-08)`. The verdict travels
+with the number as a mechanism rather than as a convention someone has to
+remember.
+
+**The measured correction: layer restore is not the cost.** 2026-10-08 justified
+the 1500 ms timer partly on saved-layer restore needing the window. The capture
+does not support that. On a reload, `layer-restore` is **0.2 ms** and every
+individual layer row reads **0.0 ms**, while `share-wait` + `share-camera`
+together are **4,524.5 ms of the 6,647.4 ms total — about 68%**. The two holds
+*are* the reload. This does not make 2026-10-08 wrong about wanting a hold, and
+the timer is deliberately unchanged here; it means the stated reason no longer
+matches the measurement, and a future decision to lower it should start from
+these numbers rather than from the old rationale. Enabling a saved layer only
+arms its own loading path — the fetch finishes behind the lifted splash, by
+design — so the phase marks correctly show near-zero and the restore cost is
+not where the hold is paying off.
+
+> **Sequel, 2026-10-29.** "A future decision to lower it should start from these
+> numbers" is what happened the next day: the hold is now 500 ms and the flight
+> 1.2 s. The `deliberate` label and the `decisionRef` on both rows survive — it
+> marks a number as chosen, not as frozen — with the ref moved to 2026-10-29.
+> See the entry at the top of this file.
+
+- **The boot window closes on the LAST of [splash lifted, layers restored],**
+  not on the splash. Closing at splash-hide was my first draft and would have
+  discarded exactly the per-layer marks that measuring a restore exists to
+  capture, since layers deliberately restore behind the visible app.
+- **`queued`→`resolve` is the `RESTORE_CONCURRENCY = 4` queue wait.** Marking
+  `queued` at intent-record creation, rather than letting `resolve` be the first
+  stamp, is what separates queue wait from module parse cost — the same
+  distinction 2026-10-27 had to establish by hand for Overpass.
+- **`eager-eval` is anchored at `timeOrigin`, not at a mark.** ES imports
+  evaluate before the module body, so the first mark in `main.js`'s module scope
+  lands at the *end* of eager parse+eval; its own `startTime` IS the cost. A
+  `fromOrigin` span measures from numeric 0, which the User Timing spec reads as
+  `timeOrigin` — the only way to express "everything before our first line of
+  code", for which no mark can exist. At 1,426 ms median it is the largest cold
+  phase after photoreal, so getting this wrong would have hidden the biggest
+  number in the table.
+- **The harness refuses a dev server** (exit 2 without `--allow-dev`), detected
+  by looking for `/@vite/client` in the served HTML rather than guessing from a
+  port number. It also never publishes a number from a run that logged a console
+  error. A number from the wrong target is worse than no number.
+- **Section B replays the hash the app itself wrote,** waiting out
+  `sharelink.js`'s 500 ms debounce. A hand-built hash would exercise my idea of
+  a share link rather than the real serializer; a timeout yields a skip rather
+  than silently measuring a second cold boot and calling it a reload.
+- **It reports, and never fails on a duration.** A boot-time budget would turn
+  one of the three deliberate holds into a regression on the next run.
+
+**Evidence.** `docs/PERFORMANCE.md` §Runnable boot baseline (28 October 2026)
+carries the medians and the candidate table. Candidate 5 came back narrower than
+expected: the near-universal `Cache-Control: no-store` across
+`src/data/*Proxy.mjs` is real in the source, but a whole boot only reaches four
+`/api/*` routes, so those headers cost nothing at startup.
+
+## 2026-10-28 — The voice system prompt splits into four siblings, proven mechanical by its own hash
+
+**Context.** `src/voice/voiceSystemPrompt.js` had grown to 22,566 characters,
+past the 20,000-character file-health limit, and it was blocking a push: the
+owner was offered "push accepting the debt" or "split it first" and chose
+*"pecah dulu"*. Splitting 19 KB of prose that two LLM backends read as a
+behavioral contract is the kind of refactor that can silently change what the
+assistant does, so the question was how to split it without having to trust a
+careful reading of every line.
+
+**What made it safe is a pin that already existed.**
+`voiceSystemPrompt.test.mjs` asserts a sha256 and a length over
+`GEV_VOICE_SYSTEM_PROMPT` — the JOINED string, not the array. So any split that
+concatenates siblings in the original order reproduces the hash, and any split
+that reworded, reordered, dropped or duplicated a line cannot. That turned an
+editorial judgment into a mechanical operation: slice the exact source byte
+ranges into siblings, concatenate, let the hash answer. It did, first try. This
+is the same property `toolSchemas.test.mjs`'s pin on `GEV_REALTIME_TOOLS` was
+built for, now used a second time — worth noting, because a pin that only ever
+guards is cheap insurance, while a pin that also *enables* a refactor has paid
+for itself.
+
+**The boundaries are the array's own, not size-driven.** Each line answers one
+of four questions: who are you (`…Persona.js`, 2.0 KB), how do you answer a
+question (`…Answering.js`, 9.1 KB), how do you drive the app (`…Control.js`,
+6.9 KB), how do you draw on the map (`…Annotation.js`, 4.7 KB). Cutting at
+equal sizes instead would have put the counting contract and the named-view
+mapping in the same file for no reason other than arithmetic.
+
+- **Order is part of the contract.** The persona's language clause says "where a
+  rule below pins an exact failure sentence", so the sections refer backward and
+  forward to each other as one document. The aggregator's spread order is
+  therefore load-bearing, and both the module header and a test say so — a
+  future contributor who alphabetizes those four imports would change model
+  behavior with a diff that looks like tidying.
+- **Why an aggregator rather than four exports the consumers import directly.**
+  Four consumers read this module (`anthropicProxy.mjs`, the realtime proxy,
+  and two test files), and the thing they need is the whole contract. Pushing
+  the concatenation to each of them would put the load-bearing order in four
+  places instead of one.
+- **Why the new tests pin structure when the hash already pins bytes.** The hash
+  proves equality but explains nothing; a reader who wants to know which sibling
+  owns the counting contract should not have to diff a checksum. So the tests
+  also assert the concatenation order, one subject anchor per sibling, and that
+  no line appears in two siblings — that last one because a line duplicated into
+  two siblings while another was dropped is the specific failure a length check
+  cannot see.
+- **`vite.config.js` (936 L / 41,388 C) is still over the limit and was not
+  touched.** It is the other known offender and a genuinely different job —
+  effectively the backend, with ~20 proxy routes. Named here so the remaining
+  debt is explicit rather than implied by this entry's silence.
+
+## 2026-10-28 — Sudut: Atas overrides curated pitches, Samping preserves them
+
+**Context.** Owner request: after clicking the globe button the camera ends up
+straight overhead, and they wanted a selectable side/oblique angle "like when
+CCTV is active", modeled on OsirisAI's 2D/3D switch. Asked whether this should
+govern only the globe button or every camera movement, they chose every camera
+movement as a persisted mode: *"Satu sumber kebenaran, tidak ada tombol yang
+'lupa' mode-nya."*
+
+No such mode existed. `Cesium.SceneMode` is never used in app code
+(`sceneModePicker: false`), and the oblique framing the request pointed at was a
+bare inline `toRad(-22)` in `cctvActivation.js` — unnamed, unexported, untested.
+
+**The design tension.** `CITY_POIS` carries ~30 hand-curated per-landmark
+pitches (-12 … -45) chosen to frame specific buildings — Empire State at -12
+with `buildingHeight: 443`, Pentagon at -40 — plus a pitch chooser
+`buildingPitch(bounds)` returning -25/-12/-22/-45/-32 by aspect ratio. A global
+mode and per-landmark curation cannot both win.
+
+**Decision — the two modes are asymmetric.**
+
+| Mode | Curated pitch | Rationale |
+|---|---|---|
+| `Samping` (default) | **preserved** | Those values are already oblique; Samping is a request for oblique. It is therefore a no-op against prior behavior. |
+| `Atas` | **overridden** to -90 | Curation is entirely about how a building's FACE reads. In plan view there is no face, so preserving the number while discarding the intent would be the wrong kind of faithful. |
+
+- **Why Samping is the default.** "Default" means what you get having said
+  nothing, and what the app did at every pitch-bearing seam before the control
+  existed was curated/oblique. Atas-by-default would silently re-aim every
+  existing flight.
+- **Why not "the mode IS the pitch, full stop"** (Atas -90 / Samping -35, ignore
+  curation). It buys total predictability and one number; it costs ~30 curated
+  pitches, frames Empire State's roof instead of its 443 m facade, and orphans
+  `buildingPitch()` as dead-but-still-tested logic. Not worth it.
+- **Why heading and range are untouched.** Only the pitch changes, so Atas reads
+  a CCTV camera's coverage footprint or a vessel's surroundings in plan view
+  rather than losing the aim. An Atas flight that also zeroed the heading would
+  be a different framing, not the same framing from above.
+
+**The globe button needs its own oblique value — derived, not picked by feel.**
+At `GLOBE_VIEW.heightM` (18,000,000 m) the camera sits 24,371 km from Earth's
+center, so the planet's angular radius is `asin(6371/24371) = 15.15°`. Cesium's
+default vertical FOV is 60° (no `fov`/`frustum` override anywhere in `main.js`),
+so half-FOV is 30°.
+
+| Pitch | Axis off nadir | Far limb | Verdict |
+|---|---|---|---|
+| -35 (generic oblique) | 55° | — | aims at empty space |
+| -75 | 15° | ~30.15° | clips the frustum |
+| **-80** | 10° | ~25.1° | full disc off-center, visible curvature |
+
+Hence `GLOBE_OBLIQUE_PITCH_DEG = -80`. This arithmetic is also what established
+that the globe button genuinely CANNOT reuse the generic fallback — a finding
+that changed the design rather than decorating it. The flight's HEIGHT is
+identical in both modes, which is what keeps the >12,000 km view-scale band and
+`resetToGlobeView`'s height watchdog valid.
+
+**Why `CCTV_OBLIQUE_PITCH_DEG` (-22) stays separate from
+`OBLIQUE_PITCH_DEG` (-35).** It is calibrated against `focusCctvRecord`'s own
+`range` and sphere radius, not against a landmark. It equals `buildingPitch`'s
+mid-ratio -22 by coincidence, and a future reader who unifies them on that
+basis would decalibrate the CCTV flight. The test asserts they differ, with that
+reason attached.
+
+**Restore contract: the raw `pitch` beats `ca`.** A link carrying
+`ca=atas&pitch=-30` restores the camera at -30 and leaves the mode Atas, so the
+NEXT flight goes nadir. Three reasons, all this file's own doctrine: `pitch` is
+an OBSERVATION of where the sender's camera was, and restoring their view is the
+point of a share link; `ca` is a PREFERENCE for future navigation, and applying
+it to the restored pose would move the recipient away from the sender's framing
+— exactly what the `scf`/`ko`/`sci` parse-fallback comments exist to prevent;
+and the ordering falls out free with no race, since `applyState` places the
+camera and the `onRestore` payload sets the mode.
+
+**Why `ca` needs no era-specific parse fallback**, unlike `scf`/`ko`/`sci`. Those
+keys answer "what did an old link that omits this field mean, under that era's
+default", and their defaults moved. Every pre-`ca` link was authored when
+curated/oblique framing was the ONLY behavior, and carries its own raw `pitch`
+besides — so the live default already restores what its author saw.
+
+**Excluded seams, each for a reason, not for lack of time.**
+
+- `flyToViewportBounds` flies to a `Cesium.Rectangle` and passes NO orientation,
+  so a whole-city overview stays top-down in both modes. Converting it means
+  re-deriving center and range from the padded box, duplicating
+  `regionFramingPlan`'s swath math, and putting the antimeridian padding logic
+  back in play — that code was paid for. Recorded as a named wart in
+  `CHANGELOG.md`, not papered over.
+- The celestial ring (nadir IS its geometry; its cancel path calls
+  `_autoDisable()`), rocket-launch and radio-footprint plan views (nadir is a
+  framing PRIMITIVE for a trajectory or an RF footprint — tilting makes the data
+  unreadable), and `SceneDirector` (replays RECORDED camera states; overriding
+  them corrupts clips).
+- `flyToLandmark`'s own `pitch = -30` destructuring default is preserved rather
+  than routed through the -35 fallback. It is curation too, not an absence —
+  which is what makes Samping a true no-op. `OBLIQUE_PITCH_DEG` is therefore
+  unreachable through that seam by construction, and reachable through
+  `worldFocus` with an absent `framing.pitchDeg`. The test documents the
+  asymmetry rather than asserting a tidier one.
+
+**Not widening `cameraVerbs.js`'s `[-89, -5]` band.** Atas resolves to -90, one
+degree outside it, so a voice `tilt` right after an Atas flight clamps by 1°.
+This is PRE-EXISTING — `GLOBE_VIEW.pitchDeg` already shipped -90. Documented,
+not patched.
+
+**No voice tool yet.** `move_camera` with `motion:'tilt'` already gives voice a
+pitch verb, so voice is not blind to camera angle today. A dedicated tool costs
+two hard re-pins (`firstRunExperience.test.mjs`'s byte-length, `radioMarkup.test.mjs`'s
+tool count) plus an edit to `voiceSystemPrompt.js`, which is already over the
+character limit. Purely additive later with zero migration, because the setter
+is public and the mode is a string enum.
+
+**Reject vs coerce are two questions, so they are two functions.**
+`normalizeCameraAngleMode` COERCES (a share link, a dataset attribute, and a
+stale hash must all resolve to something renderable), while
+`isCameraAngleMode` merely RECOGNIZES — and the public setter uses the latter,
+because a caller that passed junk is owed an error rather than a silent
+default. The first draft asked the coercer "did it return the value
+unchanged?", which answers the right question only by accident of
+normalization being trim + lowercase, and sits next to a real trap: Samping is
+both a valid mode and the junk fallback, so a validity check built on "the
+default came back" cannot distinguish a caller who asked for Samping from one
+who typed nonsense. Two tests pin exactly that distinction.
+
+**Where the code went, and why not where it would seem to belong.** The mode is
+a module singleton in `src/cameraAngleMode.js` (the `scopeMask.js`
+`getScopeMaskFeather`/`setScopeMaskFeather` idiom) rather than `StyleManager`
+state, because four non-UI modules read it and none should take a UI
+dependency. The public setter went into a new mixin `src/uiCameraAngle.js`
+rather than beside `setCelestialRingEnabled` in `src/uiPublicApi.js`, because
+that file is already over the 20,000-character limit; mixins land on the same
+prototype, so the public API surface is identical. Resolving the pitch inside
+`flyToLandmark` rather than at its callers covers seven call sites with one
+edit.
+
+**Placement, corrected the same day: the control sits in the globe-actions nav,
+not in the DISPLAY rail.** It shipped first inside DISPLAY, next to the 3D and
+Selestial toggles, on the reasoning that it is a view-geometry control and
+therefore a sibling of those. That reasoning was about taxonomy, and the thing
+that mattered was reach: `panelAdaptiveLayoutMixin.js` ships `pp-toggles`
+collapsed when no preference is stored, and `#pp-toggles.collapsed
+.pp-toggle-group` is `display: none` — so a control born in that rail is
+invisible until someone opens a panel. The owner looked for it twice and did not
+find it, which is the evidence that this is a reach-for-it control rather than a
+settings-rail one: the gesture the request described is set-the-angle-then-press-
+the-globe, and the globe button lives in `#top-center-actions`. Putting the two
+next to each other makes the gesture readable left to right with no panel open.
+
+- **Why not simply un-collapse DISPLAY by default.** The collapse default is a
+  recorded decision governing every control in that rail; flipping it to rescue
+  one new control would trade a first-run screen full of chrome for a placement
+  problem that moving one element solves.
+- **Why new `.globe-angle-seg` / `.globe-angle-btn` classes** instead of the
+  rail's `.pp-mode-seg` / `.pp-mode-btn`. `#top-center-actions button` forces
+  every child to a 36 px circle, which crushes a text label, and
+  `src/theme/adaptive.css` deliberately strips background, border and
+  backdrop-filter from every button in that nav so the icons read as bare glyphs
+  over the map. An icon can survive without a plate; a text pill cannot stay
+  legible over bright terrain, so the new classes restore one. The height is
+  pinned to the same 36 px so the pill and the round icon buttons share a
+  baseline.
+- **No JS changed in the move.** The mixin binds on `data-camera-angle` and
+  `.active`, never on a parent selector — which is the property that made a
+  markup-and-CSS-only relocation possible, and the reason `data-camera-angle`
+  was chosen over `data-mode` in the first place.
+
+**Behavior, corrected the same day: the click tilts the camera in place.** The
+first build treated the mode purely as a preference for subsequent flights, so
+pressing Atas or Samping moved nothing and read as a dead control — the owner's
+words were *"masih hanya sekedar tombol aja tapi tidak ada fungsi"*. Root cause
+is mine and it is a design error, not a defect: I built what the words "persisted
+mode" described and missed what the reference they named demonstrated. OsirisAI's
+2D/3D switch acts on what you are already looking at. Offered three behaviors —
+tilt in place, always fly to the globe view, or keep it a preference with a
+visual hint — the owner chose tilt in place: *"kamera tetap di lokasi, ketinggian,
+dan arah hadap yang sama — hanya sudutnya yang berubah."*
+
+- **"In place" is a stronger claim than "change the pitch", and that is the whole
+  of the geometry.** Swinging the camera about its own eye point slides the ground
+  away: you ask to look down at Jakarta and end up looking down at somewhere else.
+  So `_tiltCameraToAngle` resolves the point on the globe currently aimed at
+  (`pickEllipsoid` at canvas center), measures the eye-to-target distance, and
+  re-places the eye at the new pitch with the SAME target, distance and heading.
+  `flyToBoundingSphere` with a **zero-radius** `BoundingSphere` gives exactly
+  that — the same centering guarantee `flyToLandmark` already relies on, reused
+  rather than re-derived.
+- **A separate resolver, because a tilt asks a different question than a flight.**
+  `resolveCameraPitchDeg` answers "what pitch should this DESTINATION be framed
+  at", which is why its Samping branch preserves curation. A tilt has no
+  destination and no curation to preserve — the operator is re-aiming at what is
+  already on screen — so the only variable is distance. Hence
+  `resolveTiltPitchDeg(mode, altitudeM)`: Atas is always -90, Samping is -80 at
+  or above `GLOBAL_VIEW_ALTITUDE_M` and -35 below it.
+- **Why that threshold is 150,000 m and not a new number.** It is
+  `viewScaleForAltitude`'s existing `global` band in `detectionPolicy.js`. The
+  reason -35 fails up there is the same reason the globe button needed -80 (the
+  15.15° arithmetic above), so inventing a second constant would give the codebase
+  two thresholds that must be kept equal by vigilance instead of one that is
+  equal by construction. A test asserts the boundary coincides.
+- **The refusals mirror `focusCctvRecord`'s, deliberately.** `cockpit-active` and
+  `tracking-holds-view` are the two owners that drive the camera every frame, so
+  a tilt there would be overwritten next frame and would fight them visibly in
+  the meantime; `no-ground-target` covers a view axis that misses the planet past
+  the limb, where there is no "in place" to pivot around; `already-there` (0.5°
+  epsilon) keeps a re-click from being a pointless animation. In every case the
+  MODE still lands and only the motion is skipped, so the control is never
+  silently inert. The reasons are machine-readable in the manner of
+  `CCTV_FOCUS_RESULT` rather than booleans, which is what let the whole refusal
+  matrix be tested in Node with no viewer.
+- **Why `tilt` is an option defaulting to true, rather than a second method.**
+  The restore paths need "set the mode, move nothing", and that is the SAME
+  operation minus one step — a `setCameraAngleQuietly` sibling would duplicate the
+  guard-and-sync body to express a boolean. Both restore call sites pass
+  `tilt: false` for the reason the `pitch`-beats-`ca` contract above already
+  establishes: tilting on restore moves the recipient away from the framing the
+  link exists to reproduce.
+- **Why the geometry lives in a Cesium-free module.** `src/cameraAngleTilt.js`
+  decides pitch, range, duration and refusal; `uiCameraAngle.js` holds the three
+  Cesium calls. That split is what makes the interesting half testable without a
+  viewer or a GPU — the same reason `trafficFeedPresentation` sits outside the
+  traffic layer.
+
+## 2026-10-27 — The Overpass deadline follows the mirrors' queue, bounded by a sweep ceiling
+
+**Context.** Traffic drew nothing in any viewport without a cache entry.
+`/api/overpass` returned `502 Overpass proxy error` after ~45 s, which read like
+"the mirrors are down" — the 2026-10-21 outage shape above.
+
+**Root cause — the mirrors were UP and we were hanging up on them.** Measured
+against the traffic layer's own `majorOnly` query body (`out geom qt;`, Jakarta
+viewport, exact proxy User-Agent):
+
+| Mirror | Result |
+|---|---|
+| `overpass-api.de` | **200 in 37.5 / 43.6 / 44.0 / 55.1 s**, 0.5–3.2 MB |
+| `lz4.overpass-api.de` | 406, then 502 "All query workers are busy" |
+| `overpass.private.coffee` | 60 s, zero bytes — accepts TCP, never answers |
+
+`OVERPASS_TIMEOUT_MS` was 22 s, so every one of those successful answers was
+aborted while in flight. The breaker then did exactly its job on bad input:
+three host-attributed failures parked all three mirrors on the 1/5/15 min
+ladder, and the layer failed fast with nothing to serve.
+
+The decisive detail is WHERE the time goes. The query already asks the server
+for `[timeout:12]`, and a 3.2 MB answer arrived at 43.6 s — so the wait is the
+mirrors' **request queue plus transfer**, not query execution. Their own 502
+body says it: "All query workers are busy". A deadline derived from the QL
+timeout is therefore measuring the wrong thing, which is why 22 s looked
+generous and was not.
+
+**Decision.** Raise the per-mirror ceiling to 60 s (above the measured 55 s
+worst case), and add `OVERPASS_SWEEP_BUDGET_MS` (75 s) to bound the sweep.
+
+- **Why not raise the per-mirror timeout alone.** A host that accepts TCP and
+  then hangs costs its full allowance — measured at 60 s for
+  `overpass.private.coffee`. Three of those would strand one request for three
+  minutes, strictly worse than the 66 s the 22 s ladder cost. The ceiling is
+  what makes the higher per-mirror budget safe.
+- **Why the budget is spent, not divided.** `overpassAttemptTimeoutMs` hands the
+  next attempt `min(perMirror, remaining)`. A slow-but-alive first mirror is the
+  common case and deserves the full window; whoever follows gets the remainder.
+  Dividing the budget up front would cap the healthy mirror at 25 s and
+  reintroduce the bug.
+- **Out of budget is not a host fault.** A mirror reached with zero remaining is
+  skipped without `noteOverpassEndpointOutcome` — it was never contacted, so
+  parking it would be a verdict on our clock, not its health. This is the same
+  host-fault / query-fault distinction the 2026-10-21 breaker entry draws, with
+  a third category: our-fault.
+- **Why not simply shorten the query.** The two-pass loader already fetches
+  `majorOnly` first for exactly this reason. The 3.2 MB measured here IS the
+  cheap pass; there is nothing left to trim without dropping road classes the
+  layer renders.
+
+**Evidence it worked.** Same previously-502 bbox through the running proxy:
+`200`, 1.9 MB, 32.8 s, `X-Overpass-Cache: MISS`,
+`X-Overpass-Upstream: https://overpass-api.de/api/interpreter` — a real upstream
+answer, not a cache hit. The repeat request: `200` in 22 ms, `X-Overpass-Cache:
+HIT`, so the long first wait is paid once per viewport and the 60-day road TTL
+keeps it.
+
+**Not changed.** The breaker ladder, the serve-stale-at-any-age rule, the 502
+itself, and `OVERPASS_MAX_QL_TIMEOUT` (30 s) — the server-side query budget is a
+property of the query's cost and was never the thing timing out.
+
+**Still unproven.** Whether 37–55 s is this mirror's steady state or congestion
+on the day. Six samples inside one hour cannot separate those, and
+`overpass.private.coffee` has one observation; it stays in the list rather than
+being removed on a single data point.
+
+## 2026-10-26 — Empty env vars are pruned BEFORE `loadEnv`, not filtered after
+
+**Context.** `/api/realtime/token` answered `503 OPENAI_API_KEY is not set`
+under `npm run dev` while `.env` held a valid 164-char key. The same `.env`
+worked under `scripts/dev-fresh.sh`.
+
+**Root cause.** Two layers, and the obvious one was the wrong one. The config
+guarded its assignment with `if (process.env[key] === undefined)`, and because
+`'' === undefined` is false, an empty shell export (`export OPENAI_API_KEY=`)
+appeared to be the override that shadowed `.env`. Fixing *that* guard changes
+nothing, which is how the real cause surfaced: Vite's `loadEnv` **itself**
+defers to a matching `process.env` entry, so with an empty export present
+`loadEnv` returns `''` for that key and the parsed `.env` value never reaches
+the config at all. Measured directly: with the empty var set, `loadEnv` →
+`''`; with `env -u` on the same key, `loadEnv` → `len=164`. Both sides of the
+assignment were `''`, so no assignment-time guard could have recovered it.
+
+**Decision.** `loadCheckoutEnv` reads the dotenv files, prunes from
+`process.env` every key that came back empty, then re-reads with nothing left
+to shadow it. The second read is skipped when nothing was pruned, so the
+normal path still pays for exactly one read.
+
+**Why pruning and not a merge of the parsed files.** Re-parsing `.env`
+ourselves would duplicate Vite's file precedence (`.env`, `.env.local`,
+`.env.[mode]`, `.env.[mode].local`) and drift from it on upgrade. Letting
+`loadEnv` stay the single parser and removing only the entries that confuse it
+keeps one source of truth. `scripts/read-dotenv-value.mjs` already used this
+exact hide-then-read technique for the same reason — the dev server just was
+not doing it for itself.
+
+**Why empty means absent.** Nothing downstream can tell an empty key from a
+missing one: every consumer tests `if (!apiKey)`. A key blank in `.env` still
+stays absent after pruning, so the proxy's 503 remains truthful instead of
+becoming a confusing upstream auth error. Whitespace is treated as empty for
+the same reason. `CCTV_CALTRANS_DISTRICTS` keeps its documented empty-string
+kill switch because `dev-fresh.sh` passes it explicitly, not via this path.
+
 ## 2026-10-22 — The traffic fetch center snaps to a 0.0125° grid
 
 **Context.** This is the root-cause fix deferred by the TTL entry below. Raising
@@ -2392,6 +2950,12 @@ Chosen:
 Trade-off: a user who prefers Google 3D re-selects it after each reload, and shared links no longer reproduce the sender's basemap. Chosen explicitly by the owner (Google 3D is opt-in).
 
 Not done: restoring layers lazily after first interaction, or lowering the 1.5 s timer. Both would change when saved layers start and were not requested.
+
+> **SUPERSEDED on 2026-10-29 (timer only).** The 1.5 s timer is now 500 ms and
+> the 3 s flight 1.2 s. Both reasons given above were refuted by measurement:
+> the flight ran behind an opaque splash and was never seen, and `layer-restore`
+> measures 0.2 ms rather than something these were small beside. Lazy layer
+> restore is still not done. See the 2026-10-29 entry at the top of this file.
 
 ## 2026-10-12 — ATCS Yogyakarta: store playlist.m3u8, raise the catalog cap to 2000
 

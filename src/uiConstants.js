@@ -1,5 +1,6 @@
 // Module constants moved out of ui.js.
 import { BLOOM_INTENSITY_DEFAULT } from './bloom.js';
+import { CAMERA_ANGLE_MODE_DEFAULT } from './cameraAngleMode.js';
 import { animeShader } from './styles/anime.js';
 import { nightVisionShader } from './styles/surveillance.js';
 import { noirShader } from './styles/noir.js';
@@ -87,6 +88,10 @@ export const GLOBAL_POST_DEFAULTS = {
   detectionFadePct: 7,
   detectionOutsideOpacityPct: 1,
   celestialRing: false,
+  // Imported, never re-literalized: the default must agree across the constant,
+  // the markup (`index.html` #camera-angle-samping ships `.active`), and this
+  // baseline (three-surfaces rule, docs/CURRENT-STATE.md).
+  cameraAngle: CAMERA_ANGLE_MODE_DEFAULT,
 };
 
 // Tactical style defaults applied when users select military style presets.

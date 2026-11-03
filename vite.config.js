@@ -30,8 +30,8 @@
  *   - src/data/radioBrowserProxy.mjs, rocketLaunchesProxy.mjs,
  *     googlePlacesContextProxy.mjs — station directory, launch metadata,
  *     keyless place context.
- *   - src/voice/openAiRealtimeProxy.mjs, anthropicProxy.mjs — voice-agent
- *     token/session proxies.
+ *   - src/voice/openAiVoiceProxy.mjs — GPT-Live voice session, screenshot
+ *     reader and HUD-summary proxies.
  *   - src/data/terrainHeightsProxy.js — Re:Earth ellipsoidal point-height
  *     lookups.
  *
@@ -51,6 +51,7 @@ import fs from 'node:fs';
 import { promises as fsp } from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
+import { loadCheckoutEnv } from './src/config/dotenvPrecedence.mjs';
 import { celestrakProxy } from './src/data/celestrakProxy.mjs';
 import { tomtomProxy } from './src/data/tomtomProxy.mjs';
 import { firmsProxy } from './src/data/firmsProxy.mjs';
@@ -124,8 +125,7 @@ import {
   terrainPointKey,
   validTerrainResult,
 } from './src/data/terrainHeightsProxy.js';
-import { openAiRealtimeProxy } from './src/voice/openAiRealtimeProxy.mjs';
-import { anthropicProxy } from './src/voice/anthropicProxy.mjs';
+import { openAiVoiceProxy } from './src/voice/openAiVoiceProxy.mjs';
 
 /** Resolve __dirname for ESM context. */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -863,12 +863,11 @@ function keySetupEndpoint() {
  * API keys to the client as import.meta.env defines.
  */
 export default defineConfig(({ mode }) => {
-  // Load only this checkout's dotenv files. Shell/Keychain values still win,
-  // and no sibling workspace is consulted implicitly.
-  const loaded = loadEnv(mode, __dirname, '');
-  for (const [key, val] of Object.entries(loaded)) {
-    if (process.env[key] === undefined) process.env[key] = val;
-  }
+  // Load only this checkout's dotenv files. A real shell/Keychain value still
+  // wins, an EMPTY one counts as absence (loadEnv itself defers to empties, so
+  // they must be pruned before it reads), and no sibling workspace is
+  // consulted implicitly — see src/config/dotenvPrecedence.mjs.
+  loadCheckoutEnv({ target: process.env, loadEnv, mode, dir: __dirname });
   const env = { ...process.env };
   const localAllowedHosts = ['localhost', '127.0.0.1', '.local'];
   return {
@@ -893,8 +892,7 @@ export default defineConfig(({ mode }) => {
       adsbLolProxy(),
       aisLiveProxy(),
       trackBackfillProxies(),
-      openAiRealtimeProxy(),
-      anthropicProxy(),
+      openAiVoiceProxy(),
       googlePlacesContextProxy(),
       nominatimSearchProxy(),
       keySetupEndpoint(),

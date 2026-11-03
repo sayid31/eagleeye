@@ -6,6 +6,12 @@ specification and should not be used to predict performance on untested systems.
 The original capture artifacts are not included here, so this page records
 results rather than defining a runnable benchmark.
 
+The 22 August 2026 capture below remains the record for that date and machine
+and is not re-run or revised. One part of this page *is* now runnable: the
+boot baseline in [Runnable boot baseline](#runnable-boot-baseline-28-october-2026)
+comes from `npm run qa:boot-timing`, which anyone can repeat against their own
+build. Everything above that section is still a recorded result only.
+
 ## Test context
 
 The baseline was captured on 22 August 2026 with these conditions:
@@ -114,20 +120,150 @@ must not be compared directly with the foreground-controlled scenes above.
 These populations change continuously. A future comparison must record the
 live counts again and match the focus conditions.
 
+## Runnable boot baseline (28 October 2026)
+
+Unlike every section above, this one is reproducible:
+
+The cold-load table below is the 28 October capture. The reload table was
+**re-measured on 29 October** after that capture led to lowering the two
+share-restore holds — see [What the first capture
+said](#what-the-first-capture-said-and-what-changed). The cold path carries no
+share hash and is unaffected by that change.
+
+```bash
+npm run build
+npm run preview                                   # the BUILT app is the target
+npm run qa:boot-timing -- --runs 5                # add --url if preview took another port
+```
+
+The app emits `performance.mark`/`measure` entries under a `boot:` prefix in
+production, and the harness reads them from the browser. It reports numbers and
+never passes or fails on a duration — a boot-time budget would turn a
+deliberate hold into a regression. Captured on the same Apple M5 as the August
+run, Chrome 145 via Puppeteer at 1280 x 800, browser cache disabled, a fresh
+browser context per run, median of five.
+
+Rows marked **deliberate** are recorded decisions, not defects: the photoreal
+tileset await (`docs/DECISIONS.md` 2026-10-05) and the share-restore hold plus
+camera flight (2026-10-29, which lowered the 2026-10-08 values once this
+capture measured them). The label travels with the number so a reader does not
+re-litigate a landed decision from a table row — it marks a number as *chosen*,
+not as untouchable. The share rows carried it and were still lowered; what the
+label bought was that lowering them meant reading the reason first.
+
+### Cold first load, no hash
+
+| Phase | Median | Range |
+| --- | ---: | --- |
+| eager-eval (timeOrigin → first line of our code) | 1,426.4 ms | 1,015.3 – 1,783.9 ms |
+| bootstrap | 108.7 ms | 47.1 – 192.3 ms |
+| viewer | 81.8 ms | 49.7 – 104.7 ms |
+| photoreal **(deliberate — 2026-10-05)** | 1,453.2 ms | 1,013.2 – 1,828.3 ms |
+| mapstack | 354.2 ms | 337.5 – 567.5 ms |
+| ui | 34.0 ms | 32.1 – 55.9 ms |
+| data-registration | 1.9 ms | 1.7 – 2.2 ms |
+| **TOTAL to interactive** | **2,041.6 ms** | 1,655.7 – 2,550.0 ms |
+| **TOTAL to splash lifted** | **2,377.6 ms** | 1,924.7 – 2,799.5 ms |
+
+Phases overlap rather than summing to the total: `photoreal` and `mapstack` sit
+inside the window `bootstrap` opens.
+
+### Reload carrying a share hash
+
+Per `docs/DECISIONS.md` 2026-10-08 every reload of the same tab is a share
+restore, so this is the common case rather than the exotic one. The harness
+replays the hash the app itself wrote, so the real serializer is exercised.
+
+| Phase | Median | Range |
+| --- | ---: | --- |
+| eager-eval | 918.6 ms | 842.0 – 1,205.1 ms |
+| bootstrap | 40.5 ms | 34.3 – 54.0 ms |
+| viewer | 57.4 ms | 49.8 – 90.9 ms |
+| photoreal **(deliberate — 2026-10-05)** | 1,644.9 ms | 1,094.9 – 2,815.9 ms |
+| mapstack | 333.5 ms | 283.5 – 461.6 ms |
+| ui | 35.0 ms | 31.1 – 37.3 ms |
+| data-registration | 1.5 ms | 1.3 – 1.7 ms |
+| share-wait **(deliberate — 2026-10-29)** | 506.9 ms | 505.1 – 507.1 ms |
+| share-camera **(deliberate — 2026-10-29)** | 1,228.0 ms | 1,223.2 – 1,235.1 ms |
+| layer-restore | 0.2 ms | 0.1 – 0.2 ms |
+| **TOTAL to splash lifted** | **3,451.7 ms** | 3,061.9 – 4,090.4 ms |
+
+The two holds are still the two tightest rows in the table, which is what a
+fixed timer looks like when measured — but they are now 1,734.9 ms of a
+3,451.7 ms reload instead of 4,524.5 ms of 6,647.4 ms. Layer restore is 0.2 ms
+and every individual layer row reads 0.0 ms, because enabling a saved layer
+only arms its own loading path; the layer's own fetch finishes behind the
+lifted splash, by design.
+
+#### What the first capture said, and what changed
+
+The 28 October capture measured these two rows at **1,501.9 ms** and
+**3,022.6 ms** — together 4,524.5 ms, roughly **68%** of a 6,647.4 ms reload.
+That measurement is what retired them. `docs/DECISIONS.md` 2026-10-08 had kept
+both so "a recipient sees the shared pose animate in", and called them small
+next to layer restore; the capture showed layer restore is 0.2 ms, and reading
+the splash ordering showed the flight runs entirely behind an opaque cover, so
+it was never seen. 2026-10-29 lowered them to 500 ms and 1.2 s.
+
+| | Before (28 Oct) | After (29 Oct) | Δ |
+| --- | ---: | ---: | ---: |
+| share-wait | 1,501.2 ms | 506.9 ms | −994.3 ms |
+| share-camera | 3,021.3 ms | 1,228.0 ms | −1,793.3 ms |
+| **TOTAL to splash lifted** | **6,377.5 ms** | **3,451.7 ms** | **−2,925.8 ms (−46%)** |
+
+Both runs were n=5 on the same machine and build pipeline, so the before-column
+here is re-measured on the same day as the after rather than quoted from the
+table above (which was a separate capture). That is why two shares of the same
+finding are in circulation: **68% of 6,647.4 ms** from the 28 October capture
+that surfaced it, and **71% of 6,377.5 ms** from this controlled pair (the
+figure `src/shareRestoreTiming.js` carries). Quote this table when comparing
+before to after; quote the 28 October one when citing what first measured it.
+The two holds are now the second
+and third largest reload rows; `photoreal` (1,285.6 ms, deliberate) has become
+comparable to `share-camera`, and `eager-eval` (722.8 ms) is the largest cost
+that nobody has yet chosen.
+
+### Candidate evidence the app cannot self-report
+
+| # | Candidate | Measured |
+| --- | --- | --- |
+| 1 | Parser-blocking Cesium bundle | `/cesium/Cesium.js` reports `renderBlockingStatus=blocking`, 5.46 MiB decoded, 311.3 ms — the browser's own classification, not a reading of the HTML |
+| 2 | Lazy layers leaking into the eager chunk | entry chunk 1,239 KiB decoded, 115.6 ms |
+| 3 | Preload hints | `link[rel=modulepreload]` count is 0 in the live document |
+| 4 | The reload holds | the two `deliberate` rows above |
+| 5 | Proxy cache headers | 4 `/api/*` responses in a whole boot: `no-cache` on `/api/setup/status`, no `cache-control` at all on `/api/realtime/debug-log`, `no-store` on `/api/google/nearby-places` |
+| 6 | Offline caches | `serviceWorkers=0`, `cacheStorageKeys=0` — refuted by measurement, not by absence of a grep hit |
+
+Navigation timing for the same run: `responseEnd` 6.0 ms, DOMContentLoaded
+1,114.2 ms, `load` 1,325.6 ms.
+
+Candidate 5 is narrower than expected. The near-universal `no-store` across
+`src/data/*Proxy.mjs` is real in the source, but a boot only reaches four
+`/api/*` routes, so those headers cost nothing at startup — they would matter
+to a session that re-enables layers repeatedly, which this capture does not
+cover.
+
 ## Controls for a future capture
 
-Use the same controls before attributing a difference to the application:
+Use the same controls before attributing a difference to the application. The
+right-hand column marks which ones `scripts/qa-boot-timing.mjs` enforces on its
+own; the rest still have to be arranged by whoever captures.
 
-1. Record the exact GPU renderer and reject software-rendered or unavailable GPU
-   strings.
-2. Use a 1440 x 900 viewport at device pixel ratio 1 and keep the page focused.
-3. Measure cache-disabled startup separately from cold layer activation and warm
-   option switching.
-4. Repeat startup three times and compare medians.
-5. Sample each option for 5 seconds in scripted motion and 5 seconds at rest.
-6. Record live object counts before attributing a difference to the client.
-7. Treat a live-source outage as missing coverage, not as evidence of low client
-   rendering cost.
+| # | Control | Enforced by the boot harness |
+| --- | --- | --- |
+| 1 | Record the exact GPU renderer and reject software-rendered or unavailable GPU strings. | No — record it alongside the run |
+| 2 | Use a 1440 x 900 viewport at device pixel ratio 1 and keep the page focused. | Partly — it pins 1280 x 800; a headless page is never the focused window |
+| 3 | Measure cache-disabled startup separately from cold layer activation and warm option switching. | Yes — `setCacheEnabled(false)` and a fresh browser context per run |
+| 4 | Repeat startup three times and compare medians. | Yes — `--runs` defaults to repetition and reports medians |
+| 5 | Sample each option for 5 seconds in scripted motion and 5 seconds at rest. | No — out of scope; this harness measures boot, not steady state |
+| 6 | Record live object counts before attributing a difference to the client. | No — but per-layer phase marks attribute a slow restore to a layer |
+| 7 | Treat a live-source outage as missing coverage, not as evidence of low client rendering cost. | Partly — a phase that never fired is named in `missing` rather than omitted, and a run with console errors is never published |
+
+Two further controls the harness adds, both because a number from the wrong
+target is worse than no number: it refuses to publish a baseline from a dev
+server unless `--allow-dev` is passed (Vite serves Cesium as a module graph, so
+the blocking-script cost measured above is invisible there), and it discards any
+run that logged a console error.
 
 ## What is not established yet
 
@@ -139,6 +275,21 @@ Use the same controls before attributing a difference to the application:
   camera context.
 - The keyed pass has no controlled rerun suitable for comparison with the
   option scenes.
+
+The boot baseline adds four limits of its own. It is captured against
+`vite preview` on localhost, so it establishes none of:
+
+- Real-network or CDN latency. Localhost has none, so upstream costs — the
+  Overpass mirror queue of `docs/DECISIONS.md` 2026-10-27, where a first
+  uncached road load can legitimately take tens of seconds — are measured as
+  this machine's path rather than a user's.
+- GPU tile streaming on other hardware. `PHOTOREAL_MAXIMUM_SCREEN_SPACE_ERROR`
+  is a hardware-dependent trade, so the `photoreal` row is one machine's.
+- HTTP/2 or HTTP/3 multiplexing, which `vite preview` does not do. A real
+  deployment fetches the blocking Cesium bundle and the entry chunk under
+  different connection behavior.
+- A genuinely cold operating-system or browser disk cache. Disabling the HTTP
+  cache is not the same as a first-ever visit on a cold machine.
 
 Use this page as a regression baseline for one known hardware and browser
 configuration, not as a compatibility guarantee.

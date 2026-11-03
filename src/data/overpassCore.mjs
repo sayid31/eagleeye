@@ -47,8 +47,31 @@ export const OVERPASS_UPSTREAMS = [
  * keeps 7 days and also survives dev-server restarts.
  */
 const OVERPASS_CACHE_MS = 86_400_000;
-/** Per-upstream fetch timeout (ms). */
-const OVERPASS_TIMEOUT_MS = 22000;
+/**
+ * Per-upstream fetch timeout (ms).
+ *
+ * What we wait on is Overpass's QUEUE, not its query execution. Measured
+ * 2026-10-27 against the traffic layer's own `majorOnly` query — which already
+ * asks the server for `[timeout:12]` — a successful answer took 37–55 s and
+ * carried 3.2 MB, while the same mirror's 502 body reads "All query workers are
+ * busy". The old 22 s deadline therefore aborted answers that were already on
+ * their way: the breaker parked every mirror in turn and the traffic layer
+ * rendered nothing in any viewport it had no cache for. See docs/DECISIONS.md
+ * 2026-10-27.
+ */
+const OVERPASS_TIMEOUT_MS = 60_000;
+/**
+ * Ceiling on ONE sweep across all mirrors (ms).
+ *
+ * The per-mirror budget above cannot simply be raised on its own: a host that
+ * accepts TCP and then never answers costs its whole timeout (measured same
+ * day — `overpass.private.coffee`: 60 s, zero bytes), so three such hosts would
+ * strand one request for three minutes, worse than the 22 s ladder this
+ * replaces. The sweep instead spends its budget on whoever answers first and
+ * gives up in bounded time — the caller's fallback is serve-stale and then a
+ * 502, and that is only worth reaching quickly.
+ */
+const OVERPASS_SWEEP_BUDGET_MS = 75_000;
 /** Max entries in the Overpass response cache (LRU-like, oldest evicted first). Exported: overpassProxy.mjs's own trimOverpassCache() reads this cap. */
 export const OVERPASS_CACHE_MAX_ENTRIES = 120;
 /**
@@ -294,13 +317,40 @@ function overpassLooksRuntimeError(bodyText) {
 }
 
 /**
+ * How long the NEXT mirror attempt may run, given what the sweep already spent.
+ *
+ * Returns 0 when the sweep is out of budget, which the caller reads as "stop
+ * trying" — so a slow-but-alive first mirror cannot be followed by two more
+ * full-length attempts. Pure, so the budget arithmetic is testable without
+ * timers or network.
+ *
+ * @param {number} elapsedMs - Ms consumed by this sweep so far.
+ * @param {number} [perMirrorMs] - Per-upstream ceiling.
+ * @param {number} [sweepBudgetMs] - Whole-sweep ceiling.
+ * @returns {number} Ms to allow the next attempt; 0 means abandon the sweep.
+ */
+export function overpassAttemptTimeoutMs(
+  elapsedMs,
+  perMirrorMs = OVERPASS_TIMEOUT_MS,
+  sweepBudgetMs = OVERPASS_SWEEP_BUDGET_MS,
+) {
+  const spent = Number.isFinite(elapsedMs) ? Math.max(elapsedMs, 0) : 0;
+  const remaining = sweepBudgetMs - spent;
+  if (remaining <= 0) return 0;
+  return Math.min(perMirrorMs, remaining);
+}
+
+/**
  * Try each Overpass upstream in order until one succeeds.
  *
  * Skips rate-limited or 5xx responses and falls through to the next
  * mirror. If all mirrors fail, returns the last rate-limited payload
  * (if any) or throws the last error.
  *
- * Only mirrors outside their breaker cooldown are tried (overpassBreaker.mjs).
+ * Only mirrors outside their breaker cooldown are tried (overpassBreaker.mjs),
+ * and the sweep as a whole is bounded by OVERPASS_SWEEP_BUDGET_MS — a mirror
+ * reached after the budget is gone is left untried rather than parked, since
+ * running out of clock says nothing about that host's health.
  *
  * @param {string} body - URL-encoded Overpass QL query body.
  * @param {number} [maxResponseBytes] Endpoint-specific response cap.
@@ -309,10 +359,16 @@ function overpassLooksRuntimeError(bodyText) {
 export async function fetchOverpassPayload(body, maxResponseBytes = OVERPASS_MAX_RESPONSE_BYTES) {
   let lastError = null;
   let lastRateLimitPayload = null;
+  const sweepStart = Date.now();
 
   for (const endpoint of planOverpassAttempts(OVERPASS_UPSTREAMS)) {
+    const attemptMs = overpassAttemptTimeoutMs(Date.now() - sweepStart);
+    if (attemptMs === 0) {
+      lastError = lastError || new Error('Overpass sweep budget exhausted');
+      break;
+    }
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+    const timeoutId = setTimeout(() => controller.abort(), attemptMs);
 
     try {
       const upstream = await fetch(endpoint, {

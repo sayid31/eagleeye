@@ -2,6 +2,12 @@ import * as Cesium from 'cesium';
 import { placesNearViewRecovery } from './annotations/annotationResolver.js';
 import { activeGeocodeProvider, forwardGeocode, viewerRectDegrees } from './geocodeProvider.js';
 import { LOCATION_SEARCH_OSM_CREDIT, registerDynamicCredit } from './data/dataCredits.js';
+import {
+  CAMERA_ANGLE_MODES,
+  GLOBE_OBLIQUE_PITCH_DEG,
+  getCameraAngleMode,
+  resolveActiveCameraPitchDeg,
+} from './cameraAngleMode.js';
 
 /**
  * Points of Interest per city.
@@ -261,7 +267,16 @@ export function flyToGlobeView(viewer, options = {}) {
     destination: Cesium.Cartesian3.fromDegrees(longitude, latitude, GLOBE_VIEW.heightM),
     orientation: {
       heading: 0,
-      pitch: Cesium.Math.toRadians(GLOBE_VIEW.pitchDeg),
+      // The globe needs its OWN oblique value, not the generic fallback: at this
+      // height the planet's angular radius is only 15.15 deg against a 30 deg
+      // half-FOV, so -35 would aim at empty space. See GLOBE_OBLIQUE_PITCH_DEG.
+      // Height is unchanged in both modes, which keeps the >12,000 km global
+      // view-scale band and resetToGlobeView's height watchdog intact.
+      pitch: Cesium.Math.toRadians(
+        getCameraAngleMode() === CAMERA_ANGLE_MODES.ATAS
+          ? GLOBE_VIEW.pitchDeg
+          : GLOBE_OBLIQUE_PITCH_DEG,
+      ),
       roll: 0,
     },
     duration: finitePositive(options.duration) || GLOBE_VIEW.durationS,
@@ -332,9 +347,15 @@ export function flyToLandmark(viewer, lat, lon, options = {}) {
     ? Math.max(rangeForBoundingSphere(viewer, boundingRadius), boundingRadius * 1.35)
     : range;
 
+  // The camera-angle chokepoint. Resolving here rather than at each caller
+  // covers all seven flyToLandmark sites at once — the four in this file plus
+  // gevActionsTracking's two and gevActionsLocation's one. In SAMPING the
+  // caller's curated `pitch` passes through untouched; in ATAS it goes nadir.
+  const resolvedPitch = resolveActiveCameraPitchDeg(pitch);
+
   const hpr = new Cesium.HeadingPitchRange(
     Cesium.Math.toRadians(heading),
-    Cesium.Math.toRadians(pitch),
+    Cesium.Math.toRadians(resolvedPitch),
     framingRange
   );
 

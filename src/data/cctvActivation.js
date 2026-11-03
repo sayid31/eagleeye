@@ -4,6 +4,7 @@ import { createCalibrationGizmo } from './cctvGizmo.js';
 import * as Cesium from 'cesium';
 import { bindTrackingClickGesture, isTrackingClickGesture } from './trackingClickGesture.js';
 import { CCTV_ACTIVATION_RESULT } from '../cctvFocusRequest.js';
+import { CCTV_OBLIQUE_PITCH_DEG, resolveActiveCameraPitchDeg } from '../cameraAngleMode.js';
 import { resolvePickId } from './pickRegistry.js';
 import { CCTV_FOCUS_RESULT } from './cctvFocusResult.js';
 import { clearHoverCard, refreshAmbientCards, teardownAmbientCards } from './cctvAmbientCards.js';
@@ -351,8 +352,10 @@ export function focusCctvRecord(viewer, record, duration = 2.2) {
     new Cesium.BoundingSphere(record.position, Math.max(40, camera.rangeM * 0.36)),
     {
       offset: new Cesium.HeadingPitchRange(
+        // Heading and range stay the device's own in BOTH modes, so ATAS reads a
+        // camera's coverage footprint in plan view rather than losing its aim.
         toRad(camera.headingDeg),
-        toRad(-22),
+        toRad(resolveActiveCameraPitchDeg(CCTV_OBLIQUE_PITCH_DEG)),
         range
       ),
       duration: Math.max(0.2, duration || 0),

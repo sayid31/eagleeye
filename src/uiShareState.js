@@ -1,5 +1,6 @@
 // StyleManager share-link state, sync chips and initial restore settlement.
 import { BLOOM_SCALE_VERSION } from './bloom.js';
+import { getCameraAngleMode } from './cameraAngleMode.js';
 import { canPresentDeferredStatusNotice, reduceTrafficSyncFeedback } from './loadingFeedback.js';
 import { getMode as getDetectionMode, getDetectionTuning } from './data/detection.js';
 import {
@@ -53,6 +54,7 @@ _syncShareState() {
       detectionFadePct: parseInt(this._detectionFadeSlider?.value || '7', 10),
       detectionOutsideOpacityPct: parseInt(this._detectionOpacitySlider?.value || '1', 10),
       celestialRingEnabled: this.celestialRingEnabled,
+      cameraAngle: getCameraAngleMode(),
       scopeEnabled: isScopeMaskEnabled(),
       scopeFeatherPct: Math.round(getScopeMaskFeather() * 100),
       scopeIntensityPct: Math.round(getScopeMaskOpacity() * 100),

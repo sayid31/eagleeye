@@ -141,6 +141,11 @@ export const presetDefaultsMixin = {
     if (typeof defaults.celestialRing === 'boolean') {
       this.setCelestialRingEnabled(defaults.celestialRing, { syncShare: false, focus: false });
     }
+    if (typeof defaults.cameraAngle === 'string') {
+      // tilt: false — applying a default must not re-aim a camera the operator
+      // (or a share link) has already placed. See uiCameraAngle.js setCameraAngle.
+      this.setCameraAngle(defaults.cameraAngle, { syncShare: false, tilt: false });
+    }
   },
 
 /**

@@ -8,7 +8,7 @@ EagleEye View (product name "God's Eye View" in commit history/docs) — a
 browser-based, real-time geospatial intelligence console. Vanilla JS +
 CesiumJS + Vite, no framework. Photorealistic 3D globe with live aircraft,
 ships, satellites, earthquakes, traffic, CCTV, and a voice agent (OpenAI
-Realtime API over WebRTC) that can drive the whole console hands-free.
+GPT-Live over WebRTC) that can drive the whole console hands-free.
 
 `docs/CURRENT-STATE.md` is the **authoritative runtime reference** — read it
 before making non-trivial changes; it documents current behavior, not
@@ -96,10 +96,12 @@ with secrets directly from the browser.
 - **`src/mapStackController.js`** — basemap switching (Google Photorealistic
   3D / Esri / OSM / Cesium ion-hosted stacks), including automatic OSM
   fallback if Esri is unreachable.
-- **`src/voice/`** — OpenAI Realtime session (`gevRealtime.js`) + the tool
-  execution layer (`gevActions.js`, 28 tools). Tools are *declared*
-  server-side (`GEV_REALTIME_TOOLS` in `vite.config.js`) and *executed*
-  client-side in `gevActions.js` — a new voice capability touches both. Voice
+- **`src/voice/`** — GPT-Live (`gpt-live-1`) full-duplex session
+  (`gevLiveSession.js`, wired by `gevLiveSetup.js`; `read_screen` goes to a
+  one-shot `gpt-5.6-luna` reader) + the tool execution layer
+  (`gevActions.js`, 28 tools). Tools are *declared* server-side
+  (`GEV_TOOL_SCHEMAS` in `src/voice/toolSchemas.js`, served by
+  `openAiVoiceProxy.mjs`) and *executed* client-side in `gevActions.js` — a new voice capability touches both. Voice
   responses only ever confirm actions that actually succeeded.
 - **`src/annotations/`** — the voice-driven map whiteboard (persistent
   polygons/marks/routes drawn onto the 3D world by voice command).
@@ -124,7 +126,7 @@ bundle via `import.meta.env.*` — only `GOOGLE_MAPS_API_KEY` and
 `CESIUM_ION_TOKEN` are ever browser-exposed by design; every other key
 (`OPENAI_API_KEY`, `AISSTREAM_API_KEY`, `TOMTOM_API_KEY`, `FIRMS_MAP_KEY`,
 OpenSky credentials) is server-side only, and the browser receives only
-ephemeral tokens (e.g. `/api/realtime/token` for OpenAI Realtime) or
+same-origin proxy routes (e.g. `/api/live/session` for the GPT-Live SDP exchange) or
 same-origin cached responses.
 
 When adding any new external data source: add the proxy route here, add the

@@ -17,7 +17,7 @@ The golden rule: **secret-bearing API keys stay on the server side.** The dev/pr
 
 | Key | Where it lives | How the browser uses it |
 |-----|----------------|--------------------------|
-| `OPENAI_API_KEY` | Server only | Browser fetches a short-lived **ephemeral** Realtime session token from `/api/realtime/token`; the real key never ships |
+| `OPENAI_API_KEY` | Server only | Browser fetches a SDP offer to `/api/live/session` (and screenshots to `/api/live/vision`); the server attaches the key, which never ships |
 | `AISSTREAM_API_KEY` | Server only | Server holds the AISStream websocket; browser polls the same-origin `/api/ais-live` cache |
 | OpenSky OAuth (`OPENSKY_CLIENT_ID/SECRET`) | Server only | Server mints + refreshes the token behind `/api/opensky` |
 

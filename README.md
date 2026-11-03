@@ -4,7 +4,7 @@
 
 ### A spy-satellite simulator in your browser — then you realize the sources are public and the data is real.
 
-Photorealistic 3D globe. Live aircraft, ships, satellites, earthquakes, traffic, and public cameras. Hands-free voice control powered by a realtime AI agent.
+Photorealistic 3D globe. Live aircraft, ships, satellites, earthquakes, traffic, and public cameras. Hands-free voice control powered by a full-duplex AI agent (GPT-Live).
 
 *No place left behind.*
 
@@ -332,7 +332,7 @@ Some of the engineering that makes it feel real rather than like a tech demo:
 - **Sits on the real ground.** Entity heights run through a real vertical datum — geoid-aware, sampled against the *rendered* terrain mesh — so aircraft park on aprons and cameras stand on street corners instead of floating.
 - **Spends your quota like it's its own.** The paid feeds run behind cached, budget-governed proxies — an OpenSky credit governor, a TomTom daily tile budget, disk-cached TLEs — so an afternoon of exploring doesn't torch an API allowance.
 - **Secure by design.** Every API that touches a private key (OpenAI, AISStream, OpenSky OAuth, camera frames) is brokered through a hardened server-side proxy with SSRF protection, response caps, and sanitized errors. The only keys the browser sees are Google Maps and Cesium ion (restrict both at the provider).
-- **No framework.** Vanilla JavaScript, **CesiumJS**, and **Vite** — plus **Google Photorealistic 3D Tiles** for the planet and the **OpenAI Realtime API** for voice. Fast to read, fast to hack on.
+- **No framework.** Vanilla JavaScript, **CesiumJS**, and **Vite** — plus **Google Photorealistic 3D Tiles** for the planet and **OpenAI GPT-Live** for voice. Fast to read, fast to hack on.
 
 ```
 src/
@@ -342,7 +342,7 @@ src/
 ├── keySetup.js             # POWER UP panel — in-app provider keys (dev server only)
 ├── mapStackController.js   # Basemap switching — Google 3D / Esri / OSM / ion stacks
 ├── iconOrientation.js      # Screen-projected world-space headings + horizon cull
-├── voice/                  # OpenAI Realtime session + 28 voice tools
+├── voice/                  # GPT-Live session + 28 voice tools
 ├── data/                   # One module per layer + orchestration + context store
 │   └── local_data/         # Bundled datasets (per-folder provenance)
 └── scenes/                 # Cinematic scene director
@@ -387,7 +387,6 @@ Six keys. Four have a free tier, and the two 🔴 ones are metered:
 |---|-----|-----|--------|
 | 🟡 | **OpenSky** | ✈️ More flight-polling credits (🟢 anonymous works without) | [opensky-network.org](https://opensky-network.org) |
 | 🟡 | **Launch Library 2** | 🚀 Higher space-missions request allowance (🟢 works without) | [thespacedevs.com](https://thespacedevs.com) |
-| 🔴 | **Anthropic** | 🎙️ Optional *alternative* voice backend (Claude + your browser's own Web Speech API for STT/TTS) — a stopgap, turn-based experience, not a replacement for the OpenAI key above and not required alongside it | [console.anthropic.com](https://console.anthropic.com) — metered |
 
 All of them are worth getting. None of them are required to start.
 
@@ -424,7 +423,7 @@ Honest numbers, roughly, as of mid-2026 — always check the provider pricing pa
 | **🟢 Most layers** | **$0, no signup.** OpenSky anon, USGS, CelesTrak, adsb.lol, city CCTV, Radio Browser, GBFS, Launch Library 2, bundled datasets. |
 | **🟡 The free-key tier** | **$0 with a signup.** AISStream, FIRMS, TomTom, OpenSky, plus Cesium ion for eligible personal/non-commercial use. Provider quotas and eligibility still apply. |
 | **🗺️ Google 3D tiles** | **Free through an eligible Cesium ion Community account within its quota; metered through a direct Google key.** Use the direct route for commercial deployment, verify current provider terms, and set budget alerts where billing is enabled. Place search itself is $0/keyless by default (OSM Nominatim) regardless of which 3D route you pick. |
-| **🔴 OpenAI voice** | **The one that costs real money — so the app meters it for you.** Realtime audio runs a few cents per active minute; an evening of heavy use is single-digit dollars. A live session-spend readout sits next to the mic, with an STD/MINI model toggle, a $2 warning, and a **$5 hard cap that ends the session**. The voice context window is kept deliberately short too. |
+| **🔴 OpenAI voice** | **The one that costs real money — so the app meters it for you.** GPT-Live audio is a flat $0.05 per active minute (screenshot reads are metered on top); an evening of heavy use is single-digit dollars. A live session-spend readout sits next to the mic, with a $2 warning and a **$5 hard cap that ends the session**. The voice context window is kept deliberately short too. |
 
 Google's direct 3D route is surprisingly generous: the first 1,000 Photorealistic
 3D Tiles sessions each month are currently free, and one root request supports

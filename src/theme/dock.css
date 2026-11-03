@@ -67,7 +67,6 @@ body.ee-shell #command-dock #control-panel .panel-mini-label,
 body.ee-shell #command-dock .location-mini-poi,
 body.ee-shell #command-dock .gev-voice-heading,
 body.ee-shell #command-dock .gev-voice-kicker,
-body.ee-shell #command-dock .gev-voice-visualizer,
 body.ee-shell #command-dock .gev-voice-readout,
 body.ee-shell #command-dock .gev-mic-label {
   position: absolute !important;

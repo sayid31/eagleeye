@@ -5,7 +5,7 @@ import {
   isHudSummaryUnconfigured,
   keylessHudSummaryResponse,
 } from './hudSummaryResponse.js';
-import { openAiRealtimeProxy } from './voice/openAiRealtimeProxy.mjs';
+import { openAiVoiceProxy } from './voice/openAiVoiceProxy.mjs';
 
 const UNCONFIGURED_PAYLOAD = {
   configured: false,
@@ -16,7 +16,7 @@ const UNCONFIGURED_PAYLOAD = {
 
 function installOpenAiRoutes() {
   const routes = new Map();
-  openAiRealtimeProxy().configureServer({
+  openAiVoiceProxy().configureServer({
     middlewares: {
       use(path, handler) {
         routes.set(path, handler);
@@ -103,13 +103,13 @@ test('the installed keyless HUD route stays successful after the voice quota is 
   process.env.GEV_RATELIMIT_OPENAI_PER_MIN = '1';
   try {
     const routes = installOpenAiRoutes();
-    const token = routes.get('/api/realtime/token');
+    const token = routes.get('/api/live/session');
     const hud = routes.get('/api/openai/hud-summary');
     assert.equal(typeof token, 'function');
     assert.equal(typeof hud, 'function');
 
-    const firstToken = await invokeRoute(token);
-    const secondToken = await invokeRoute(token);
+    const firstToken = await invokeRoute(token, { method: 'POST' });
+    const secondToken = await invokeRoute(token, { method: 'POST' });
     assert.equal(firstToken.statusCode, 503);
     assert.deepEqual(firstToken.body, { error: 'OPENAI_API_KEY is not set' });
     assert.equal(secondToken.statusCode, 429);

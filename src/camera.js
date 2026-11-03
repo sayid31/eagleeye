@@ -1,4 +1,5 @@
 import * as Cesium from 'cesium';
+import { resolveActiveCameraPitchDeg } from './cameraAngleMode.js';
 
 /**
  * Camera presets for notable locations.
@@ -74,7 +75,9 @@ export function flyToDefault(viewer) {
       destination: Cesium.Cartesian3.fromDegrees(106.8456, -6.2088, 600),
       orientation: {
         heading: Cesium.Math.toRadians(15),
-        pitch: Cesium.Math.toRadians(-30),
+        // The fly-in's curated pitch. The setView above stays at -90 in both
+        // modes: that is the flight's STARTING altitude, not its framing.
+        pitch: Cesium.Math.toRadians(resolveActiveCameraPitchDeg(-30)),
         roll: 0.0,
       },
       duration: 4.0,

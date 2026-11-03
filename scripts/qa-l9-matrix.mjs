@@ -993,16 +993,14 @@ check({
 });
 
 check({
-  id: 'B19', group: 'B', desc: 'Realtime token endpoint mints an EPHEMERAL secret and never the raw key',
-  needsKey: 'OPENAI', costly: true,
+  id: 'B19', group: 'B', desc: 'Live session route rejects a missing SDP offer without echoing the key',
+  needsKey: 'OPENAI',
   run: async () => {
-    const r = await jget('/api/realtime/token', { method: 'POST', timeoutMs: 30000 });
-    if (!r.ok) return fail(`HTTP ${r.status}: ${r.text.slice(0, 120)}`);
-    const blob = r.text;
-    if (/\bsk-[A-Za-z0-9]{20,}/.test(blob)) return fail('response contains a raw sk- key');
-    return /ek_|client_secret|value/.test(blob)
-      ? pass('ephemeral client secret returned; no raw key in the payload')
-      : fail(`unexpected token payload: ${blob.slice(0, 120)}`);
+    const r = await jget('/api/live/session', { method: 'POST', timeoutMs: 30000 });
+    if (/\bsk-[A-Za-z0-9]{20,}/.test(r.text)) return fail('response contains a raw sk- key');
+    return r.status === 400
+      ? pass('400 on an empty SDP offer; no raw key in the payload')
+      : fail(`expected 400 for an empty offer, got ${r.status} ${r.text.slice(0, 120)}`);
   },
 });
 
@@ -1012,7 +1010,7 @@ check({
     const guard = keyGuard('OPENAI', env.keys.OPENAI);
     if (guard) return guard;
     if (env.keys.OPENAI === true) return skip('server HAS an OpenAI key — the keyless path needs an unkeyed server', 'N/A');
-    const r = await jget('/api/realtime/token', { method: 'POST' });
+    const r = await jget('/api/live/session', { method: 'POST' });
     return r.status === 503 && /OPENAI_API_KEY is not set/.test(r.text)
       ? pass('503 "OPENAI_API_KEY is not set"')
       : fail(`expected 503, got ${r.status} ${r.text.slice(0, 120)}`);
@@ -1152,8 +1150,8 @@ check({
   }),
 });
 check({
-  id: 'D10', group: 'D', desc: 'qa-voice-routing (behavior layer) — tool behavior without model turns',
-  heavy: true, run: harness({ id: 'D10', script: 'qa-voice-routing.mjs', args: ['--layer', 'behavior', '--url', APP_URL], timeoutMs: 1500000 }),
+  id: 'D10', group: 'D', desc: 'qa-voice-routing (behavior) — tool behavior without model turns',
+  heavy: true, run: harness({ id: 'D10', script: 'qa-voice-routing.mjs', args: ['--url', APP_URL], timeoutMs: 1500000 }),
 });
 check({
   id: 'D11', group: 'D', desc: 'qa-firms — live fire rendering and interaction', needsKey: 'FIRMS', heavy: true,
@@ -1988,13 +1986,13 @@ async function runBrowserGroup(record) {
     const guard = keyGuard('OPENAI', env.keys.OPENAI);
     if (guard) return guard;
     if (env.keys.OPENAI === true) {
-      // Never start a session against a keyed server: that is a real Realtime
+      // Never start a session against a keyed server: that is a real GPT-Live
       // connection and it costs money. The keyless claim needs a thin server.
       return skip(`voice surface present (status=${v.status}); the keyless-degradation claim needs an UNKEYED server, and a real mic round trip is owner-run — see runbook M1-M3`, 'OWNER-RUN');
     }
     if (!v.hasRunner) return fail('voice controller present but exposes no runner');
 
-    // Actually exercise the failure: with no key the token mint 503s, and the
+    // Actually exercise the failure: with no key the session route 503s, and the
     // product's job is to SAY SO. "A runner function exists" proved nothing.
     // (Free: the 503 happens before any session is created.)
     const beforeR = await mustEval(() => document.querySelectorAll('#gev-voice-control').length, null, 45000);
@@ -2087,12 +2085,12 @@ async function preflight() {
     else env.keys.OPENSKY = 'error';
   } catch { env.keys.OPENSKY = 'error'; }
   if (CHEAP) {
-    // Minting a Realtime token is free, but --cheap promises to touch nothing
+    // --cheap promises to touch nothing
     // cost-bearing; leave OpenAI presence unknown and let its checks skip.
     env.keys.OPENAI = null;
   } else {
     try {
-      const t = await jget('/api/realtime/token', { method: 'POST' });
+      const t = await jget('/api/live/session', { method: 'POST' });
       if (t.status === 503 && /OPENAI_API_KEY is not set/.test(t.text)) env.keys.OPENAI = false;
       else if (t.ok) env.keys.OPENAI = true;
       else env.keys.OPENAI = 'error';

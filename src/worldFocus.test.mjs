@@ -13,6 +13,12 @@ import {
   requestWorldFocus,
   routeWorldFocusRequest,
 } from './worldFocus.js';
+import {
+  CAMERA_ANGLE_MODES,
+  NADIR_PITCH_DEG,
+  setCameraAngleMode,
+  _resetCameraAngleModeForTest,
+} from './cameraAngleMode.js';
 
 const POSITION = Cesium.Cartesian3.fromDegrees(-97.74, 30.26, 0);
 
@@ -127,6 +133,36 @@ test('the transfer flight supersedes any flight in progress and keeps the operat
   // Heading is preserved so the transfer never spins the operator around.
   assert.equal(options.offset.heading, camera.heading);
   assert.equal(options.easingFunction, Cesium.EasingFunction.CUBIC_IN_OUT);
+});
+
+test('the Sudut mode decides the transfer pitch: SAMPING keeps the curated value, ATAS goes nadir', () => {
+  _resetCameraAngleModeForTest();
+  try {
+    setCameraAngleMode(CAMERA_ANGLE_MODES.SAMPING);
+    const samping = stubCamera();
+    flyToWorldTarget({ camera: samping }, { kind: 'vessel', id: '123', position: POSITION });
+    assert.equal(
+      Math.round(Cesium.Math.toDegrees(samping.calls.flights[0].options.offset.pitch)),
+      WORLD_FOCUS_FRAMING.vessel.pitchDeg,
+    );
+
+    setCameraAngleMode(CAMERA_ANGLE_MODES.ATAS);
+    const atas = stubCamera();
+    flyToWorldTarget({ camera: atas }, { kind: 'vessel', id: '123', position: POSITION });
+    assert.equal(
+      Math.round(Cesium.Math.toDegrees(atas.calls.flights[0].options.offset.pitch)),
+      NADIR_PITCH_DEG,
+    );
+    // ATAS changes only the pitch: range, radius and the operator heading are
+    // untouched, so a plan view still frames the same patch of water.
+    assert.equal(
+      atas.calls.flights[0].options.offset.range,
+      samping.calls.flights[0].options.offset.range,
+    );
+    assert.equal(atas.calls.flights[0].options.offset.heading, atas.heading);
+  } finally {
+    _resetCameraAngleModeForTest();
+  }
 });
 
 test('fires frame wider than vessels — a fire is read by its surroundings', () => {

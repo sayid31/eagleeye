@@ -13,11 +13,10 @@
  * wrapper and the module boundary changed. No tool was added, removed, or
  * edited by this move.
  *
- * Both the existing OpenAI Realtime proxy (`/api/realtime/token`) and the
- * Anthropic proxy (`/api/anthropic/messages`) derive their wire-format tool
- * list from this one array, so the two providers can never drift out of
- * sync with each other or with `gevActions.js`'s `createGevActionRunner`,
- * which is the actual executor for every tool named here.
+ * The GPT-Live session route (`/api/live/session`) derives its wire-format
+ * tool list from this one array, so it can never drift out of sync with
+ * `gevActions.js`'s `createGevActionRunner`, which is the actual executor
+ * for every tool named here.
  *
  * Pure data + two pure functions — no DOM, no network, no imports.
  *
@@ -629,19 +628,4 @@ export const GEV_TOOL_SCHEMAS = [
  */
 export function toOpenAiRealtimeTools(schemas) {
   return schemas.map((schema) => ({ type: 'function', ...schema }));
-}
-
-/**
- * Format the shared schemas for Anthropic's Messages API `tools` array
- * shape: `{name, description, input_schema}` (Anthropic's `input_schema` is
- * structurally identical to OpenAI's `parameters`, just renamed).
- * @param {Array<{name: string, description: string, parameters: object}>} schemas
- * @returns {Array<object>}
- */
-export function toAnthropicTools(schemas) {
-  return schemas.map(({ name, description, parameters }) => ({
-    name,
-    description,
-    input_schema: parameters,
-  }));
 }
