@@ -12,6 +12,14 @@
 export const OVERPASS_URL = '/api/overpass';
 
 /**
+ * @const {{major:number, full:number}} Server-side Overpass timeouts (seconds)
+ * for the two road passes. They are part of the query text and therefore of the
+ * proxy's cache key, so `loadRoadsForBounds` and the cache-warm plan must read
+ * the SAME values from here or warmed entries would never be hit.
+ */
+export const ROAD_FETCH_TIMEOUT_SEC = Object.freeze({ major: 12, full: 20 });
+
+/**
  * Build an Overpass QL query string to fetch road ways within a bounding box.
  *
  * The query uses a highway tag regex filter. When `majorOnly` is true, only

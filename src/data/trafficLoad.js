@@ -5,6 +5,7 @@ import { FAST_FETCH_ALTITUDE, TILE_CACHE_MAX_ENTRIES } from './trafficConstants.
 import { applyFlowThenRender, ensureFlowStatus } from './trafficFlow.js';
 import { _parseRoads } from './trafficInstances.js';
 import { fetchRoads } from './trafficParse.js';
+import { ROAD_FETCH_TIMEOUT_SEC } from './trafficOverpassQuery.js';
 import { S, _tileCache } from './trafficState.js';
 import { cancelActiveFetch, clampBounds, getBoundsCenter } from './trafficView.js';
 
@@ -93,7 +94,7 @@ export async function loadRoadsForBounds(bounds, altitude, trace = null) {
       console.log(`[Data:Traffic] Fast fetch major roads [${cacheKey}]`);
       const majorData = await fetchRoads(
         clamped.south, clamped.west, clamped.north, clamped.east,
-        { majorOnly: true, timeoutSec: 12, signal: S._activeFetchAbort.signal },
+        { majorOnly: true, timeoutSec: ROAD_FETCH_TIMEOUT_SEC.major, signal: S._activeFetchAbort.signal },
         trace,
       );
       // Discard stale response if a newer load was triggered while waiting
@@ -113,7 +114,7 @@ export async function loadRoadsForBounds(bounds, altitude, trace = null) {
     console.log(`[Data:Traffic] Full fetch local roads [${cacheKey}]`);
     const fullData = await fetchRoads(
       clamped.south, clamped.west, clamped.north, clamped.east,
-      { majorOnly: false, timeoutSec: 20, signal: S._activeFetchAbort.signal },
+      { majorOnly: false, timeoutSec: ROAD_FETCH_TIMEOUT_SEC.full, signal: S._activeFetchAbort.signal },
       trace,
     );
     if (generation !== S._loadGeneration) return;
