@@ -347,11 +347,12 @@ test('Display orders 3D above Celestial, Clean UI below it, and Parameters below
   assert.doesNotMatch(ui, /\['presets',/);
 });
 
-test('Sudut is a small 2D | 3D pill floating lower-left, outside the globe-actions nav', () => {
-  // Owner directive 2026-11-03: the top-right spot was "kurang oke" and the pill
-  // too big, so it moved beside the coordinate readout and the labels became
-  // 2D / 3D. Ids and data-camera-angle values stay atas/samping: they are the
-  // persisted, share-linked and voice-facing names, only the face changed.
+test('Sudut is a small 2D | 3D pill in the top-right beside the globe icons, outside the globe-actions nav', () => {
+  // Owner directive 2026-11-03: the control left the nav (it was too big and
+  // the labels became 2D / 3D), tried the bottom-left corner ("terlalu mojok"),
+  // and settled just left of the globe icons. Ids and data-camera-angle values
+  // stay atas/samping: they are the persisted, share-linked and voice-facing
+  // names, only the face and place changed.
   const nav = html.match(/<nav id="top-center-actions"[\s\S]*?<\/nav>/);
   assert.ok(nav, 'globe-actions nav is missing');
   assert.doesNotMatch(nav[0], /camera-angle/, 'Sudut must no longer live in the top-right nav');
@@ -366,15 +367,14 @@ test('Sudut is a small 2D | 3D pill floating lower-left, outside the globe-actio
   assert.match(row[0], /role="radiogroup"/);
   assert.doesNotMatch(row[0], />(Atas|Samping)</, 'the visible labels are 2D / 3D now');
 
-  // Fixed bottom-left above the status bar, and compact (was 36 px tall).
+  // Fixed, and compact (was 36 px tall).
   const seg = css.match(/\.globe-angle-seg \{([^}]*)\}/);
   assert.ok(seg, 'segmented control rule is missing');
   assert.match(seg[1], /position:\s*fixed/);
-  // Floats over the map's lower-left (owner circled that spot after the corner
-  // proved "terlalu mojok"): viewport-relative, clear of the left accordion and
-  // never below the status bar.
-  assert.match(seg[1], /left:\s*max\(240px, 13vw\)/);
-  assert.match(seg[1], /bottom:\s*max\(calc\(var\(--ee-statusbar-h[^;]*\), 26vh\)/);
+  // Top-right, immediately left of the three globe-action icons: the nav's
+  // 16 px inset + 3x36 px buttons + 2x8 px gaps + a 10 px gap = 150 px.
+  assert.match(seg[1], /top:\s*17px/);
+  assert.match(seg[1], /right:\s*150px/);
   const height = Number(seg[1].match(/height:\s*(\d+)px/)?.[1]);
   assert.ok(height > 0 && height <= 24, `pill must be small, got ${height}px`);
   // The ee-shell theme restores the plate on the text segments.

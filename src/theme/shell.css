@@ -140,6 +140,20 @@ body.ee-shell #title-bar .subtitle { display: none; }
 body.ee-shell #title-bar .brand-logo { width: 44px; height: 44px; filter: none; }
 body.ee-shell #title-bar .title-glow { display: none; }
 
+/* Legibility scrim: the bright wordmark and logo vanish into light imagery
+   (rooftops, haze). A soft dark radial wash behind them, fading to nothing,
+   restores contrast without recolouring the brand (owner picked this option).
+   The title bar is a fixed stacking context, so the -1 layer stays behind its
+   content and never covers the map. */
+body.ee-shell #title-bar::before {
+  content: '';
+  position: absolute;
+  inset: -30px -80px -30px -44px;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(ellipse closest-side at 42% 50%, rgba(4, 10, 16, 0.48) 0%, rgba(4, 10, 16, 0.24) 55%, rgba(4, 10, 16, 0) 100%);
+}
+
 /* Existing globe actions (clear layers / share / reset) sit at the bar's right. */
 body.ee-shell #top-center-actions {
   top: 10px;

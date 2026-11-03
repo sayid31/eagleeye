@@ -7,10 +7,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
-- Pil **2D/3D** tidak lagi menempel di sudut: sekarang melayang di kiri-bawah peta, di sebelah
-  kanan rail kiri dan di atas koordinat, dengan posisi relatif terhadap ukuran layar.
-- Kontrol **Sudut** pindah ke kiri bawah (di atas status bar, dekat koordinat), lebih kecil,
-  dan labelnya kini **2D** (tegak lurus dari atas) dan **3D** (miring, bawaan).
+- Pil **2D/3D** kini berada di kanan-atas, tepat di kiri tiga ikon aksi globe, lebih kecil dari
+  sebelumnya.
+- Logo dan tulisan EAGLEEYE VIEW diberi lapisan gelap tipis yang memudar di belakangnya, supaya
+  tetap terbaca di atas citra yang terang (warna merek tidak berubah).
+- Label kontrol **Sudut** kini **2D** (tegak lurus dari atas) dan **3D** (miring, bawaan).
 - Saat pertama dibuka tidak ada menu/panel yang terbuka. Menyalakan CCTV pertama kali juga
   tidak lagi membuka panel CCTV sendiri.
 - Pil gaya visual ("Normal", dsb.) kini dibuka dengan **klik** saja, bukan hover — menu sumber

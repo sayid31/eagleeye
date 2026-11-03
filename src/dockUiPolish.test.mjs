@@ -57,3 +57,12 @@ test('dock/CSS glyphs are CSS escapes, not raw non-ASCII, so a wrong charset gue
   // A space after a hex escape is swallowed as its terminator; \20 keeps the gap.
   assert.match(read('./theme/inspector.css'), /summary::before \{ content: '\\25B8\\20'/);
 });
+
+test('the brand has a dark legibility scrim so it never vanishes into bright imagery', () => {
+  const shell = read('./theme/shell.css').replace(/\/\*[\s\S]*?\*\//g, '');
+  const scrim = shell.match(/body\.ee-shell #title-bar::before \{([^}]*)\}/);
+  assert.ok(scrim, 'title-bar scrim rule is missing');
+  assert.match(scrim[1], /z-index:\s*-1/, 'the wash stays behind the logo and wordmark');
+  assert.match(scrim[1], /pointer-events:\s*none/, 'the wash never blocks the globe');
+  assert.match(scrim[1], /radial-gradient\([^)]*rgba\(4, 10, 16, 0\.\d+\)[\s\S]*rgba\(4, 10, 16, 0\)/, 'fades to fully transparent');
+});

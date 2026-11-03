@@ -1926,19 +1926,19 @@ body.ui-clean-view #scene-runtime.active {
   font-size: 18px;
 }
 
-/* Sudut kamera, a small 2D | 3D segmented control floating over the map's
-   lower-left, clear of the left rail and the coordinate readout (owner
-   directive 2026-11-03: first the top-right spot was "kurang oke", then the
-   bottom-left corner was "terlalu mojok"; the owner circled this spot). It is
-   a sibling of #top-center-actions, not a child, so the nav's `button` rules
-   (36 px circles) never reach it. Viewport-relative so it keeps its place on
-   other screen sizes: `left` clears the 176 px left accordion, `bottom` never
-   drops below the 32 px status bar the ee-shell theme reserves. */
+/* Sudut kamera, a small 2D | 3D segmented control in the top-right, just left
+   of the three globe-action icons (owner directive 2026-11-03: the top-right
+   spot was first "kurang oke" and the corner then "terlalu mojok", but with the
+   pill small and the icons plate-less the owner circled this spot as the best
+   one). It is a sibling of #top-center-actions, not a child, so the nav's
+   `button` rules (36 px circles) never reach it. `right` = nav inset 16 px +
+   the nav's three 36 px buttons and two 8 px gaps (124 px) + a 10 px gap;
+   `top` centres the 22 px pill on the 36 px icons. */
 .globe-angle-seg {
   position: fixed;
-  bottom: max(calc(var(--ee-statusbar-h, 32px) + 8px), 26vh);
-  left: max(240px, 13vw);
-  z-index: 100;
+  top: 17px;
+  right: 150px;
+  z-index: 121;
   display: flex;
   height: 22px;
   overflow: hidden;
