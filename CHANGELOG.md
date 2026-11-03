@@ -7,6 +7,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Pil **2D/3D** tidak lagi menempel di sudut: sekarang melayang di kiri-bawah peta, di sebelah
+  kanan rail kiri dan di atas koordinat, dengan posisi relatif terhadap ukuran layar.
 - Kontrol **Sudut** pindah ke kiri bawah (di atas status bar, dekat koordinat), lebih kecil,
   dan labelnya kini **2D** (tegak lurus dari atas) dan **3D** (miring, bawaan).
 - Saat pertama dibuka tidak ada menu/panel yang terbuka. Menyalakan CCTV pertama kali juga
@@ -18,6 +20,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Suara sekarang **sepenuhnya memakai GPT-Live** (full-duplex, bicara bebas tanpa tombol tahan),
   dan membaca layar lewat **gpt-5.6-luna**. Tray suara tinggal satu tombol mik + readout biaya.
   Radio tetap diredam saat suara aktif dan diserahkan kembali saat Anda memutar radio.
+
+### Fixed
+
+- Tanda panah di pil gaya visual ("Normal ▾") tidak lagi tampil sebagai `â-¾`; semua glyph dekoratif
+  CSS kini memakai escape, jadi tidak rusak walau browser salah menebak encoding.
 
 ### Removed
 
@@ -95,6 +102,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   area itu dibuka lagi. Pemakaian normal tidak akan mencapai batas ini.
 
 ### Fixed
+
+- Tanda panah di pil gaya visual ("Normal ▾") tidak lagi tampil sebagai `â-¾`; semua glyph dekoratif
+  CSS kini memakai escape, jadi tidak rusak walau browser salah menebak encoding.
 
 - Lalu lintas kini muncul lagi di area yang belum pernah dibuka. Sebelumnya layarnya kosong dan
   server menjawab galat setelah ~45 detik, seolah server peta jalan (Overpass) sedang mati —

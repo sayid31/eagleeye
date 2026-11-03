@@ -41,3 +41,19 @@ test('the voice button markup carries five decorative wave bars', () => {
   const wave = voiceUi.match(/<span class="gev-mic-wave" aria-hidden="true">((?:<i><\/i>){5})<\/span>/);
   assert.ok(wave, 'five-bar aria-hidden waveform is missing from the mic button');
 });
+
+test('dock/CSS glyphs are CSS escapes, not raw non-ASCII, so a wrong charset guess cannot mojibake them', () => {
+  // Owner screenshot 2026-11-03: the style pill showed "â-¾" — the UTF-8 bytes of
+  // the down-triangle read as Windows-1252, because the CSS reached the browser
+  // without a charset. Escapes are pure ASCII and immune to that.
+  for (const rel of ['./theme/dock.css', './theme/inspector.css', '../style.css']) {
+    const css = read(rel).replace(/\/\*[\s\S]*?\*\//g, '');
+    const raw = [...css.matchAll(/content:\s*'([^']*)'/g)].map((m) => m[1]).filter((v) => /[^\x00-\x7F]/.test(v));
+    assert.deepEqual(raw, [], `${rel} has raw non-ASCII generated content`);
+  }
+  const dock = read('./theme/dock.css');
+  assert.match(dock, /#style-mini-value::after \{\s*content: '\\25BE'/);
+  assert.match(dock, /content: '\\25B4'/);
+  // A space after a hex escape is swallowed as its terminator; \20 keeps the gap.
+  assert.match(read('./theme/inspector.css'), /summary::before \{ content: '\\25B8\\20'/);
+});

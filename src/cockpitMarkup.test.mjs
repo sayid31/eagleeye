@@ -347,7 +347,7 @@ test('Display orders 3D above Celestial, Clean UI below it, and Parameters below
   assert.doesNotMatch(ui, /\['presets',/);
 });
 
-test('Sudut is a small 2D | 3D pill pinned bottom-left, outside the globe-actions nav', () => {
+test('Sudut is a small 2D | 3D pill floating lower-left, outside the globe-actions nav', () => {
   // Owner directive 2026-11-03: the top-right spot was "kurang oke" and the pill
   // too big, so it moved beside the coordinate readout and the labels became
   // 2D / 3D. Ids and data-camera-angle values stay atas/samping: they are the
@@ -370,8 +370,11 @@ test('Sudut is a small 2D | 3D pill pinned bottom-left, outside the globe-action
   const seg = css.match(/\.globe-angle-seg \{([^}]*)\}/);
   assert.ok(seg, 'segmented control rule is missing');
   assert.match(seg[1], /position:\s*fixed/);
-  assert.match(seg[1], /left:\s*12px/);
-  assert.match(seg[1], /bottom:\s*calc\(var\(--ee-statusbar-h/);
+  // Floats over the map's lower-left (owner circled that spot after the corner
+  // proved "terlalu mojok"): viewport-relative, clear of the left accordion and
+  // never below the status bar.
+  assert.match(seg[1], /left:\s*max\(240px, 13vw\)/);
+  assert.match(seg[1], /bottom:\s*max\(calc\(var\(--ee-statusbar-h[^;]*\), 26vh\)/);
   const height = Number(seg[1].match(/height:\s*(\d+)px/)?.[1]);
   assert.ok(height > 0 && height <= 24, `pill must be small, got ${height}px`);
   // The ee-shell theme restores the plate on the text segments.
