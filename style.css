@@ -1926,16 +1926,19 @@ body.ui-clean-view #scene-runtime.active {
   font-size: 18px;
 }
 
-/* Sudut kamera, a small 2D | 3D segmented control pinned bottom-left, just
-   above the coordinate readout (owner directive 2026-11-03: the top-right spot
-   was "kurang oke" and the pill too big). It is a sibling of #top-center-actions,
-   not a child, so the nav's `button` rules (36 px circles) never reach it.
-   `bottom` clears the 32 px status bar the ee-shell theme reserves. */
+/* Sudut kamera, a small 2D | 3D segmented control in the top-right, just left
+   of the three globe-action icons (owner directive 2026-11-03: the top-right
+   spot was first "kurang oke" and the corner then "terlalu mojok", but with the
+   pill small and the icons plate-less the owner circled this spot as the best
+   one). It is a sibling of #top-center-actions, not a child, so the nav's
+   `button` rules (36 px circles) never reach it. `right` = nav inset 16 px +
+   the nav's three 36 px buttons and two 8 px gaps (124 px) + a 10 px gap;
+   `top` centres the 22 px pill on the 36 px icons. */
 .globe-angle-seg {
   position: fixed;
-  bottom: calc(var(--ee-statusbar-h, 32px) + 8px);
-  left: 12px;
-  z-index: 100;
+  top: 17px;
+  right: 150px;
+  z-index: 121;
   display: flex;
   height: 22px;
   overflow: hidden;
@@ -7663,14 +7666,14 @@ body.recording-mode #cesium-credits {
 
 #command-dock .panel-title::after,
 #command-dock .location-toolbar-label::after {
-  content: '›';
+  content: '\203A';
   margin-left: 0.45rem;
   color: rgba(54, 220, 255, 0.68);
   font-size: 0.7rem;
 }
 
 #command-dock #control-panel .panel-title::after {
-  content: '‹';
+  content: '\2039';
   margin-right: 0.45rem;
   margin-left: 0;
   float: left;

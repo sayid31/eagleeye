@@ -198,7 +198,7 @@ body.ee-shell #cctv-panel .cctv-advanced > summary {
 }
 
 body.ee-shell #cctv-panel .cctv-advanced > summary::-webkit-details-marker { display: none; }
-body.ee-shell #cctv-panel .cctv-advanced > summary::before { content: '▸ '; }
-body.ee-shell #cctv-panel .cctv-advanced[open] > summary::before { content: '▾ '; }
+body.ee-shell #cctv-panel .cctv-advanced > summary::before { content: '\25B8\20'; }
+body.ee-shell #cctv-panel .cctv-advanced[open] > summary::before { content: '\25BE\20'; }
 body.ee-shell #cctv-panel .cctv-advanced[open] > summary { margin-bottom: 8px; }
 body.ee-shell #cctv-panel .cctv-advanced > .cctv-controls + .cctv-controls { margin-top: 8px; }

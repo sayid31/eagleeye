@@ -107,7 +107,7 @@ body.ee-shell #command-dock .location-mini-city {
 }
 
 body.ee-shell #command-dock .location-mini-city::after {
-  content: '▾';
+  content: '\25BE';
   margin-left: 8px;
   color: var(--ee-text-muted);
 }
@@ -148,7 +148,7 @@ body.ee-shell #command-dock #control-panel .panel-mini-status::before {
 }
 
 body.ee-shell #command-dock #control-panel:not(.collapsed) #style-mini-value::after {
-  content: '▴';
+  content: '\25B4';
   color: var(--ee-accent);
 }
 body.ee-shell #command-dock #control-panel .panel-mini-status {
@@ -168,7 +168,7 @@ body.ee-shell #command-dock #control-panel #style-mini-value::first-letter {
 }
 
 body.ee-shell #command-dock #control-panel #style-mini-value::after {
-  content: '▾';
+  content: '\25BE';
   margin-left: 8px;
   color: var(--ee-text-muted);
 }
