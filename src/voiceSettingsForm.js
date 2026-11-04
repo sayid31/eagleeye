@@ -63,6 +63,20 @@ export function settingsFromForm(base, form) {
   };
 }
 
+/**
+ * One-line truth about what the SERVER currently enforces for topics, shown in
+ * the panel so a gray placeholder or an unchecked box is never mistaken for an
+ * active restriction.
+ * @param {object} settings Server settings snapshot.
+ */
+export function describeTopicState(settings) {
+  const t = settings?.topics;
+  if (t?.enabled === true && Array.isArray(t.allowed) && t.allowed.length) {
+    return `Pembatasan topik: AKTIF (${t.allowed.length} topik) — berlaku untuk sesi suara berikutnya.`;
+  }
+  return 'Pembatasan topik: MATI — asisten menjawab semua topik. Centang saklar, isi topik, lalu simpan.';
+}
+
 /** Human message for a failed save, from the server's `{error, details}` body. */
 export function describeSaveError(payload, status) {
   const details = Array.isArray(payload?.details) ? payload.details.slice(0, 3).join('; ') : '';

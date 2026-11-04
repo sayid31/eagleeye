@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { describeSaveError, formFromSettings, settingsFromForm, textToLimit } from './voiceSettingsForm.js';
+import { describeTopicState, describeSaveError, formFromSettings, settingsFromForm, textToLimit } from './voiceSettingsForm.js';
 import { defaultVoiceSettings } from './voice/voiceSettingsCore.mjs';
 
 test('textToLimit: empty = default, off = disabled, number, garbage rejected', () => {
@@ -45,4 +45,10 @@ test('describeSaveError joins at most three server details', () => {
   const msg = describeSaveError({ error: 'Pengaturan tidak valid', details: ['a', 'b', 'c', 'd'] }, 422);
   assert.equal(msg, 'Pengaturan tidak valid — a; b; c');
   assert.match(describeSaveError({}, 500), /500/);
+});
+
+test('describeTopicState says MATI by default and AKTIF with the topic count', () => {
+  assert.match(describeTopicState(defaultVoiceSettings()), /MATI/);
+  assert.match(describeTopicState({ topics: { enabled: true, allowed: ['a', 'b'] } }), /AKTIF \(2 topik\)/);
+  assert.match(describeTopicState({ topics: { enabled: true, allowed: [] } }), /MATI/);
 });

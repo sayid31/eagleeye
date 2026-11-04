@@ -9,7 +9,7 @@
  */
 
 import { VOICE_SETTINGS_SAVED_EVENT } from './voice/voiceConfigClient.js';
-import { describeSaveError, formFromSettings, settingsFromForm } from './voiceSettingsForm.js';
+import { describeSaveError, describeTopicState, formFromSettings, settingsFromForm } from './voiceSettingsForm.js';
 
 const SETTINGS_URL = '/api/setup/voice';
 
@@ -55,6 +55,7 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
   const topicsOn = el(doc, 'input', { type: 'checkbox' });
   const topics = el(doc, 'textarea', { rows: 3, placeholder: 'Satu topik per baris, mis.\npenerbangan\nkapal\ncuaca' });
   const refusal = el(doc, 'input', { type: 'text', maxLength: 160, placeholder: 'Maaf, itu di luar topik yang bisa saya bantu. (bawaan)', autocomplete: 'off' });
+  const topicState = el(doc, 'p', { className: 'voice-settings-state', role: 'status' });
   const status = el(doc, 'p', { className: 'key-setup-note', role: 'status' });
   const save = el(doc, 'button', { type: 'button', className: 'key-setup-apply', textContent: 'SIMPAN PENGATURAN SUARA' });
   status.setAttribute('aria-live', 'polite');
@@ -69,6 +70,8 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
     topicsOn.checked = form.topicsEnabled;
     topics.value = form.topics;
     refusal.value = form.refusal;
+    topicState.textContent = describeTopicState(base);
+    topicState.dataset.active = String(base.topics?.enabled === true);
   };
 
   host.textContent = '';
@@ -80,6 +83,7 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
     field(doc, 'Batas keras biaya (USD)', cap, 'Sesi diakhiri saat tercapai. "off" = tanpa batas.'),
     field(doc, 'Nama asisten', name),
     field(doc, 'Catatan gaya', instructions, 'Hanya nada & gaya; tidak mengubah aturan atau tool.'),
+    topicState,
     field(doc, 'Batasi topik pembicaraan', topicsOn, 'Bawaan mati. Berbasis prompt: usaha terbaik, bukan jaminan. Perintah aplikasi dan pertanyaan "ini di mana" tidak pernah ditolak.'),
     field(doc, 'Topik yang diizinkan', topics, 'Maks 20 topik, satu per baris.'),
     field(doc, 'Pesan penolakan (satu kalimat)', refusal, 'Diucapkan apa adanya, jadi buat singkat.'),
@@ -115,7 +119,7 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
       if (!response.ok) { status.textContent = describeSaveError(payload, response.status); return; }
       base = payload.settings;
       fill();
-      status.textContent = 'Tersimpan. Berlaku untuk sesi suara berikutnya.';
+      status.textContent = `Tersimpan. ${describeTopicState(base)}`;
       globalThis.dispatchEvent?.(new globalThis.CustomEvent(VOICE_SETTINGS_SAVED_EVENT));
     } catch (error) {
       status.textContent = `Gagal menyimpan: ${error?.message || error}`;
