@@ -17,6 +17,7 @@ import { captureViewportImage } from './gevLiveViewport.js';
 import { createViewportReader, READ_SCREEN_TOOL_NAME } from './gevLiveVision.js';
 import { createVoiceControl } from './gevLiveVoiceControlUi.js';
 import { createLiveRadioBridge } from './gevLiveRadio.js';
+import { DEFAULT_VOICE_CONFIG, loadVoiceConfig, VOICE_SETTINGS_SAVED_EVENT } from './voiceConfigClient.js';
 
 /**
  * Wrap the gevActions runner so the live-only `read_screen` tool goes to the
@@ -59,9 +60,30 @@ export function initGevLiveVoice({
   });
   controller = new GevLiveController({ runner: createLiveRunner(actionRunner), ui, radio });
 
+  // Owner settings (POWER UP > Suara). The click handler stays synchronous —
+  // awaiting a fetch before start() could cost the mic/audio their user
+  // activation — so the config is cached and refreshed at init, after every
+  // session, and when the panel saves. Fail-open: no endpoint = old behavior.
+  // The off switch itself is enforced server-side (403 on /api/live/session).
+  let voiceConfig = DEFAULT_VOICE_CONFIG;
+  const refreshVoiceConfig = async () => {
+    voiceConfig = await loadVoiceConfig();
+    if (!controller.isActive()) controller.applyCostLimits(voiceConfig.costLimits);
+  };
+  void refreshVoiceConfig();
+  window.addEventListener(VOICE_SETTINGS_SAVED_EVENT, () => { void refreshVoiceConfig(); });
+
   ui.button.addEventListener('click', () => {
-    if (controller.isActive()) controller.stop();
-    else controller.start();
+    if (controller.isActive()) {
+      controller.stop();
+      void refreshVoiceConfig();
+      return;
+    }
+    if (!voiceConfig.enabled) {
+      controller.setStatus('error', 'Suara dinonaktifkan di POWER UP > Suara.');
+      return;
+    }
+    controller.start();
   });
   controller.syncCostUi();
   window.__gevVoiceCommands = controller;

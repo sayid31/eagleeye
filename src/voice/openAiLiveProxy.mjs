@@ -85,16 +85,24 @@ export function buildLiveSessionConfig({ model, backendModel, voice, instruction
  * @param {(req: any, maxBytes?: number) => Promise<string>} deps.readRequestBody
  * @param {(req: any, res: any) => boolean} deps.enforceRateLimit Returns false when it already responded.
  * @param {Array<object>} deps.tools Tool schemas to declare for delegation.
- * @param {string} deps.instructions System prompt.
+ * @param {string | (() => string)} deps.instructions System prompt, or a getter
+ *   evaluated per session so owner settings take effect without a restart.
+ * @param {() => boolean} [deps.isEnabled] Owner on/off switch; false => 403.
  * @param {typeof fetch} [deps.fetchImpl]
  */
 export function installLiveSessionRoute(middlewares, deps) {
-  const { readRequestBody, enforceRateLimit, tools, instructions, fetchImpl = fetch } = deps;
+  const { readRequestBody, enforceRateLimit, tools, instructions, isEnabled = () => true, fetchImpl = fetch } = deps;
   middlewares.use('/api/live/session', async (req, res) => {
     if (req.method !== 'POST') {
       res.statusCode = 405;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error: 'Method not allowed' }));
+      return;
+    }
+    if (!isEnabled()) {
+      res.statusCode = 403;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: 'voice_disabled' }));
       return;
     }
     if (!enforceRateLimit(req, res)) return;
@@ -127,7 +135,7 @@ export function installLiveSessionRoute(middlewares, deps) {
       model: process.env.OPENAI_LIVE_MODEL || OPENAI_LIVE_MODEL_DEFAULT,
       backendModel: process.env.OPENAI_LIVE_BACKEND_MODEL || OPENAI_LIVE_BACKEND_MODEL_DEFAULT,
       voice: process.env.OPENAI_LIVE_VOICE || LIVE_VOICE_DEFAULT,
-      instructions,
+      instructions: typeof instructions === 'function' ? instructions() : instructions,
       tools,
     });
 

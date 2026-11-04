@@ -5,6 +5,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Added
+
+- Panel **POWER UP** kini punya bagian **Suara**: saklar fitur suara, peringatan dan batas keras biaya,
+  nama asisten, dan catatan gaya bicara. Pengaturan disimpan lokal, terpisah dari kunci API (kunci tidak
+  pernah ditampilkan atau diubah dari sini). Jika belum pernah disimpan, suara berperilaku persis seperti
+  sebelumnya.
+
 ### Changed
 
 - Pil **2D/3D** kini berada di kanan-atas, tepat di kiri tiga ikon aksi globe, lebih kecil dari

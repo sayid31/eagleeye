@@ -68,3 +68,46 @@ test('session body is embedded whole under the WebRTC transport request', () => 
   assert.equal(s.session, undefined);
   assert.equal(s.transport, undefined);
 });
+
+test('installLiveSessionRoute: owner off-switch returns 403 before any upstream call', async () => {
+  const { installLiveSessionRoute } = await import('./openAiLiveProxy.mjs');
+  let handler;
+  let upstreamCalls = 0;
+  installLiveSessionRoute({ use: (_p, h) => { handler = h; } }, {
+    readRequestBody: async () => 'v=0',
+    enforceRateLimit: () => true,
+    tools: TOOLS,
+    instructions: () => 'sys',
+    isEnabled: () => false,
+    fetchImpl: async () => { upstreamCalls += 1; return { status: 200, headers: new Map(), text: async () => '' }; },
+  });
+  const res = { headers: {}, setHeader() {}, end(t) { this.body = t; } };
+  await handler({ method: 'POST' }, res);
+  assert.equal(res.statusCode, 403);
+  assert.match(res.body, /voice_disabled/);
+  assert.equal(upstreamCalls, 0);
+});
+
+test('installLiveSessionRoute: instructions getter is evaluated per session', async () => {
+  const { installLiveSessionRoute } = await import('./openAiLiveProxy.mjs');
+  const previous = process.env.OPENAI_API_KEY;
+  process.env.OPENAI_API_KEY = 'test-only-not-a-real-key'; // test-only
+  let handler;
+  const sent = [];
+  let n = 0;
+  installLiveSessionRoute({ use: (_p, h) => { handler = h; } }, {
+    readRequestBody: async () => 'v=0',
+    enforceRateLimit: () => true,
+    tools: TOOLS,
+    instructions: () => `prompt-${++n}`,
+    fetchImpl: async (_u, opts) => { sent.push(JSON.parse(opts.body).session.instructions); return { status: 200, headers: new Map(), text: async () => '{}' }; },
+  });
+  try {
+    const mk = () => ({ headers: {}, setHeader() {}, end() {} });
+    await handler({ method: 'POST' }, mk());
+    await handler({ method: 'POST' }, mk());
+  } finally {
+    if (previous === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previous;
+  }
+  assert.deepEqual(sent, ['prompt-1', 'prompt-2']);
+});

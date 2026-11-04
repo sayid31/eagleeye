@@ -1513,6 +1513,18 @@ The popup now lines up with the panel's other full-width rows. See
 - General replay/timeline systems outside the Space Missions experience
 - LiDAR explorer and paired-point CCTV calibration experiments
 
+### Voice Settings (POWER UP → Suara)
+
+The owner edits voice behavior from the existing POWER UP dialog (`#key-setup`, section `[data-voice-settings]`), not from a separate admin page. Nothing here exists for a never-saved install: the defaults reproduce the pre-settings voice exactly.
+
+- **Fields.** Voice on/off, cost warning + hard cap (USD; empty = built-in $2/$5, `off` = disabled), assistant name, style notes. Topic restriction is described in its own section below once enabled.
+- **Storage.** `.gev-cache/voice-settings.json` (gitignored, mode 0600, atomic write, symlink refused) — a separate file from the `.env` key store, so settings and API keys never share a file. A missing, unreadable or invalid file reads as the defaults.
+- **Endpoints** (`src/voice/voiceSettingsRoutes.mjs`, installed from `openAiVoiceProxy.mjs`, not `vite.config.js`): `GET/PUT /api/setup/voice` (owner-only, full settings, PUT replaces, validated server-side: types, lengths, numeric range, unknown fields rejected → 422) and `GET /api/voice/config` (public slice for the mic: `enabled`, `assistantName`, `costLimits` only). No response or stored field can carry an API key.
+- **Access guard.** Every owner route goes through the single `requireAdmin(req)` (`src/voice/requireAdmin.mjs`). Today it wraps `admitKeySetupRequest` (loopback, local Host, exact Origin, JSON content type, no proxy headers, no Pinokio sharing); PUT/PATCH/DELETE get the same Origin/content-type check as POST. See DECISIONS "Voice settings: deploy plan".
+- **How voice reads it.** `/api/live/session` evaluates the prompt per session (`buildVoiceSystemPrompt`, `voiceSystemPromptSettings.js`: base prompt byte-identical when settings are default; persona additions are appended after it and framed as subordinate) and answers `403 voice_disabled` when the switch is off. The mic reads `/api/voice/config` at init, after each session and after a panel save, and applies the cost limits between sessions only (`GevLiveController.applyCostLimits`). A session already running keeps its settings until it ends.
+- **Not metered (known gap).** The delegated backend model (`gpt-5.6-luna` via `delegation`) and its tool calls are billed separately and are not in the cost meter; only audio minutes and the screenshot reader are. The configured cap therefore understates real spend.
+- **Proof status.** PROVEN by test + a live Vite instance on a scratch port: save/read round-trip, defaults when empty, 403 on disabled session, non-loopback/forwarded/foreign-Host/missing-Origin rejected, no key material in responses or file. INFERRED (needs the owner's manual run): the panel's rendering in a real browser and the spoken behavior of a custom name/style notes.
+
 ## Auth + Launch
 
 - Recommended launcher: `./scripts/dev-fresh.sh` (also: `dev-secure.sh` for stricter bindings, `dev-cctv.sh` for CCTV source-pack tuning)

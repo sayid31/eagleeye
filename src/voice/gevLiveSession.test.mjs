@@ -256,3 +256,15 @@ test('a server usage duration reconciles the meter', async () => {
   assert.equal(ctrl.usageSeconds, 180);
   assert.ok(Math.abs(ctrl.getDiagnostics().costUsd - 0.15) < 1e-9);
 });
+
+test('applyCostLimits swaps the cap between sessions only; null keeps the built-in $2/$5', async () => {
+  const { ctrl, getPc } = makeController();
+  assert.equal(ctrl.applyCostLimits({ warnUsd: 0.5, capUsd: 1 }), true);
+  assert.equal(ctrl.costMeter.state().capUsd, 1);
+  assert.equal(ctrl.applyCostLimits({ warnUsd: null, capUsd: null }), true);
+  assert.equal(ctrl.costMeter.state().capUsd, 5, 'null falls back to the built-in cap');
+  await ctrl.start();
+  getPc().channel.open();
+  assert.equal(ctrl.applyCostLimits({ warnUsd: 0.5, capUsd: 1 }), false, 'refused mid-session');
+  assert.equal(ctrl.costMeter.state().capUsd, 5);
+});

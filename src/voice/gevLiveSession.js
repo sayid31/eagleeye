@@ -73,9 +73,8 @@ export class GevLiveController {
     this._document = documentRef || (typeof document !== 'undefined' ? document : null);
     // Per-minute ($0.05/min) spend meter — ends the session at the hard cap the
     // same way the Realtime backend does, through the normal stop path.
-    this.costMeter = createLiveCostMeter({
-      ui, limits, onCap: (state) => this._onCostCap(state), now: nowFn, setIntervalFn, clearIntervalFn,
-    });
+    this._meterDeps = { ui, now: nowFn, setIntervalFn, clearIntervalFn };
+    this.costMeter = this._buildCostMeter(limits);
 
     // Drives the dock mic's waveform from the real input level (--mic-level).
     // `data-meter` tells the CSS whether a reactive level exists or it must fall
@@ -129,6 +128,23 @@ export class GevLiveController {
   setVoiceSpeaker(enabled) {
     this._speakerEnabled = enabled !== false;
     if (this.audioEl) this.audioEl.muted = !this._speakerEnabled;
+  }
+
+  _buildCostMeter(limits) {
+    return createLiveCostMeter({ ...this._meterDeps, limits, onCap: (state) => this._onCostCap(state) });
+  }
+
+  /**
+   * Apply the owner's saved cost limits (null/absent = built-in $2/$5). Only
+   * between sessions: swapping the meter mid-session would reset its total.
+   * @returns {boolean} whether the limits were applied
+   */
+  applyCostLimits(limits) {
+    if (this.isActive()) return false;
+    this.costMeter.stop();
+    this.costMeter = this._buildCostMeter(limits);
+    this.costMeter.syncUi();
+    return true;
   }
 
   /** Paint the shared per-minute cost readout for this backend. */

@@ -17,7 +17,7 @@
 import { enforceOptInRateLimit, openAiRateLimiter } from '../server/proxyInfra.mjs';
 import { keylessHudSummaryResponse } from '../hudSummaryResponse.js';
 import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './toolSchemas.js';
-import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
+import { buildVoiceSystemPrompt } from './voiceSystemPromptSettings.js';
 import { installLiveSessionRoute } from './openAiLiveProxy.mjs';
 import { installLiveVisionRoute, READ_SCREEN_TOOL } from './openAiLiveVisionProxy.mjs';
 import { createVoiceSettingsStore } from './voiceSettingsStore.mjs';
@@ -57,7 +57,8 @@ export function openAiVoiceProxy({ settingsStore = createVoiceSettingsStore() } 
       // gpt-live-1 can't see images, so it delegates the viewport read to the
       // one-shot gpt-5.6-luna call behind /api/live/vision (below).
       tools: [...GEV_VOICE_TOOLS, READ_SCREEN_TOOL],
-      instructions: GEV_VOICE_SYSTEM_PROMPT,
+      instructions: () => buildVoiceSystemPrompt(settingsStore.read().settings),
+      isEnabled: () => settingsStore.read().settings.enabled,
     });
     installLiveVisionRoute(middlewares, {
       readRequestBody,

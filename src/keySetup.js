@@ -14,6 +14,8 @@
  * the chip and the dialog are removed outright.
  */
 
+import { mountVoiceSettings } from './voiceSettingsPanel.js';
+
 /** Chip label — pure, exported for tests. */
 export function keySetupChipLabel(status) {
   const missing = Math.max(0, (status?.total || 0) - (status?.setCount || 0));
@@ -337,6 +339,14 @@ export async function initKeySetup({ documentRef = globalThis.document, fetchImp
   });
 
   render(status);
+
+  // Voice settings share this dialog but not its key flow: separate endpoint,
+  // separate store. If /api/setup/voice is unavailable the section removes itself.
+  const voiceHost = root.querySelector('[data-voice-settings]');
+  if (voiceHost) {
+    voiceHost.hidden = false;
+    void mountVoiceSettings({ host: voiceHost, documentRef, fetchImpl: doFetch });
+  }
 
   // Re-entry for a fully-keyed setup, demos, and support: ?setup=1 opens the
   // dialog even though the chip has retired.
