@@ -3200,3 +3200,19 @@ a frame early; drawing one extra marker for a frame is the cheaper failure.
 - **CCTV never auto-expands on first activation.** Enabling the layer (list, `C`, voice) is not a request to see the panel; later camera changes still open it, and timed auto-hop never does.
 - **Waveform follows the real mic level, with a CSS fallback.** A purely animated bar set would look "listening" while the mic is dead or muted. An `AnalyserNode` RMS drives `--mic-level` so silence is visibly flat; when Web Audio is unavailable `data-meter="css"` runs an idle shimmer instead. Kept in `theme/voiceWave.css` because `dock.css` is pinned against `display: none`.
 
+## 2026-11-04 — Slow first traffic paint: warm the cache and say what we wait for, instead of shrinking the query
+
+**Context.** A cold-area traffic first paint took tens of seconds. A DevTools capture showed one `/api/overpass` request at ~45 s with `X-Overpass-Cache: MISS` and upstream `overpass-api.de`; revisits returned from the disk cache in milliseconds. So the wait is the public mirror's queue (DECISIONS 2026-10-27), not browser parse/render work.
+
+**Decision.**
+
+- **Warm the disk cache** (`scripts/warm-overpass-cache.mjs`) for the cities in `src/locations.js`. It goes through the app's own `/api/overpass` proxy, so rate limits, the mirror breaker and the 75 s sweep budget apply; it is serial and pauses after each upstream MISS. Entries are keyed by the normalized query text, so the plan reuses `clampBoundsAroundCenter` + `buildOverpassQuery` and the new shared `ROAD_FETCH_TIMEOUT_SEC` rather than copying them — a copy that drifted by one character would warm entries nobody ever reads. Nothing is bundled or committed (runtime fetch, per `DATA_SOURCES.md` policy).
+- **Say what the wait is** instead of the generic "updating live data". The note appears after 4 s so cache hits stay silent, quotes the typical ~45 s, and drops that promise once it is exceeded.
+- **The clock is a token-guarded field around the fetch only.** An aborted fetch settles after its successor has started; without the sequence guard it would clear the successor's clock and the note would vanish mid-wait.
+
+**Not chosen.**
+
+- *Smaller first query / bigger fetch pieces:* the wait is queue time, not execution time, so a smaller body does not move it and changes every cache key.
+- *Private mirror or self-hosted Overpass:* the real fix for cold areas, but an operational commitment the owner has not asked for. Warming covers the places the owner actually visits.
+
+**Limit.** Warming covers the standard 0.05° box. A view tighter than that on either axis requests a smaller box (a different key) and still pays the queue once.

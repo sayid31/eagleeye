@@ -2008,7 +2008,9 @@ body.ui-clean-view #scene-runtime.active {
 }
 #global-loading-detail {
   min-width: 34px;
-  max-width: min(220px, 38vw);
+  /* Wide enough for the traffic wait note ("menunggu server peta OSM (antre,
+     bisa ~45 dtk) · 12 dtk"); the ellipsis still guards narrow viewports. */
+  max-width: min(460px, 70vw);
   overflow: hidden;
   color: #00e1ff;
   font-weight: 600;

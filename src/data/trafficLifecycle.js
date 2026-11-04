@@ -8,6 +8,7 @@ import { TRAFFIC_TIMING_ENABLED } from './trafficConstants.js';
 import { animate, clearDots, syncTrafficRenderHold } from './trafficDots.js';
 import { ensureFlowStatus, trafficFeedPresentation } from './trafficFlow.js';
 import { S } from './trafficState.js';
+import { osmWaitLabel } from './trafficWaitFeedback.js';
 import { refreshBucketColors, setStylePreset } from './trafficStyle.js';
 import { clearTrafficTimingEntries, getTrafficTimingDiagnostics, markTrafficTimingMoveEnd } from './trafficTiming.js';
 import { cancelActiveFetch, onCameraChanged } from './trafficView.js';
@@ -26,6 +27,7 @@ export function initTrafficLayer(viewer) {
     S._lastUpdate = null;
     S._lastBounds = null;
     S._fetching = false;
+    S._osmWaitStartedAt = null;
     S._loadGeneration = 0;
     S._densityScale = 1.0;
     S._speedScale = 1.0;
@@ -147,7 +149,9 @@ export function getTrafficStats() {
     // TomTom request in flight after the roads have settled, and the shared
     // loading batch has to stay open long enough to announce its failure.
     const loading = S._fetching || S._flowPending > 0;
+    const waitLabel = osmWaitLabel(S._osmWaitStartedAt, performance.now());
     const feed = trafficFeedPresentation({
+      waitLabel,
       liveMode: S._liveMode,
       fetching: loading,
       flowError: S._flowError,
@@ -181,5 +185,8 @@ export function getTrafficStats() {
       // SIMULATED mode is surfaced, and it must never imply a live feed the
       // layer does not have.
       loadingLabel: feed.loadingLabel,
+      // Read by the global loading banner so it can say WHY it is waiting
+      // instead of the generic "updating live data". Null when nothing to say.
+      waitNote: waitLabel,
     };
   }

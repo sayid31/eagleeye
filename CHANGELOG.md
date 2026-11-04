@@ -21,6 +21,17 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Suara sekarang **sepenuhnya memakai GPT-Live** (full-duplex, bicara bebas tanpa tombol tahan),
   dan membaca layar lewat **gpt-5.6-luna**. Tray suara tinggal satu tombol mik + readout biaya.
   Radio tetap diredam saat suara aktif dan diserahkan kembali saat Anda memutar radio.
+- Saat jalan raya (Traffic) menunggu server peta OSM yang antre di area baru, banner status kini
+  menjelaskannya — "menunggu server peta OSM (antre, bisa ~45 dtk) · N dtk" — lengkap dengan
+  hitungan detik, bukan lagi sekadar "MEMPERBARUI DATA LIVE" yang tampak macet. Teks baru muncul
+  setelah 4 detik; area yang sudah pernah dibuka tetap instan dan tidak menampilkan apa-apa.
+
+### Added
+
+- Skrip `scripts/warm-overpass-cache.mjs` memanaskan cache jalan untuk kota-kota di daftar lokasi
+  (atau `--cities jakarta,tokyo`) lewat server dev yang sedang berjalan, sehingga kunjungan pertama
+  ke kota itu langsung terbaca dari cache disk, bukan antre ±45 detik di server OSM publik.
+  Data diambil saat dijalankan dan tidak disertakan dalam repo.
 
 ### Fixed
 
