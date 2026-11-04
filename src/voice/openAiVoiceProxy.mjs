@@ -20,6 +20,8 @@ import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './toolSchemas.js';
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
 import { installLiveSessionRoute } from './openAiLiveProxy.mjs';
 import { installLiveVisionRoute, READ_SCREEN_TOOL } from './openAiLiveVisionProxy.mjs';
+import { createVoiceSettingsStore } from './voiceSettingsStore.mjs';
+import { installVoiceSettingsRoutes } from './voiceSettingsRoutes.mjs';
 
 const OPENAI_HUD_SUMMARY_MODEL_DEFAULT = 'gpt-5-nano';
 
@@ -41,8 +43,11 @@ export function readRequestBody(req, maxBytes = 1024 * 1024) {
   });
 }
 
-export function openAiVoiceProxy() {
+export function openAiVoiceProxy({ settingsStore = createVoiceSettingsStore() } = {}) {
   function install(middlewares) {
+    // Owner-editable voice settings (POWER UP → Suara). Registered before the
+    // session route so /api/live/session can read the same store.
+    installVoiceSettingsRoutes(middlewares, { store: settingsStore, readRequestBody });
     // GPT-Live full-duplex session create: the server holds the key and
     // exchanges the browser's SDP offer.
     installLiveSessionRoute(middlewares, {
