@@ -1,9 +1,28 @@
 /* POWER UP → "Suara" section. Reuses the .key-setup-* look; only the form
    controls specific to this section live here. */
+.key-setup-scroll {
+  display: grid;
+  gap: 0.42rem;
+  margin-top: 1rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(54, 220, 255, 0.45) transparent;
+  scrollbar-gutter: stable;
+}
+
+/* The wrapper scrolls the key rows and the voice section together; the rows
+   no longer scroll on their own (nested scrollers would clip the voice form). */
+.key-setup-scroll > .key-setup-rows {
+  margin-top: 0;
+  overflow: visible;
+}
+
 .key-setup-voice {
   display: grid;
   gap: 0.4rem;
-  margin-top: 0.7rem;
+  margin-top: 0.3rem;
   padding: 0.6rem 0.7rem;
   background: rgba(29, 69, 81, 0.14);
   border: 1px solid rgba(100, 200, 220, 0.15);
