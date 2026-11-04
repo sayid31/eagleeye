@@ -11,6 +11,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   nama asisten, dan catatan gaya bicara. Pengaturan disimpan lokal, terpisah dari kunci API (kunci tidak
   pernah ditampilkan atau diubah dari sini). Jika belum pernah disimpan, suara berperilaku persis seperti
   sebelumnya.
+- Bagian **Suara** juga punya **pembatasan topik** (bawaan mati): daftar topik yang diizinkan dan satu kalimat
+  penolakan. Perintah aplikasi dan pertanyaan seperti "ini di mana" tidak pernah ditolak. Ini panduan berbasis
+  prompt (usaha terbaik), bukan pengaman mutlak.
 
 ### Changed
 

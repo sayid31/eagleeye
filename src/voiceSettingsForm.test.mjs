@@ -17,14 +17,21 @@ test('untouched default form round-trips to the default settings', () => {
   assert.deepEqual(r.settings, base);
 });
 
-test('form save keeps fields it does not own (topic rules) and sends no key field', () => {
-  const base = { ...defaultVoiceSettings(), topics: { enabled: true, allowed: ['a'], refusal: 'No.' } };
-  const form = { ...formFromSettings(base), warn: '1', cap: '3', name: ' Ela ' };
+test('form save maps topic lines, trims blanks, and sends no key field', () => {
+  const base = defaultVoiceSettings();
+  const form = { ...formFromSettings(base), warn: '1', cap: '3', name: ' Ela ', topicsEnabled: true, topics: ' penerbangan \n\nkapal\n', refusal: ' Maaf. ' };
   const r = settingsFromForm(base, form);
-  assert.deepEqual(r.settings.topics, base.topics);
+  assert.deepEqual(r.settings.topics, { enabled: true, allowed: ['penerbangan', 'kapal'], refusal: 'Maaf.' });
   assert.deepEqual(r.settings.costLimits, { warnUsd: 1, capUsd: 3 });
   assert.equal(r.settings.persona.name, 'Ela');
   assert.deepEqual(Object.keys(r.settings).sort(), ['costLimits', 'enabled', 'persona', 'topics', 'version']);
+});
+
+test('enabling topics with an empty list blocks the save; disabled keeps the list', () => {
+  const base = defaultVoiceSettings();
+  assert.equal(settingsFromForm(base, { ...formFromSettings(base), topicsEnabled: true, topics: '  \n' }).ok, false);
+  const off = settingsFromForm(base, { ...formFromSettings(base), topicsEnabled: false, topics: 'kapal' });
+  assert.deepEqual(off.settings.topics.allowed, ['kapal']);
 });
 
 test('bad limit text blocks the save with a message', () => {

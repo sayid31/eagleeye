@@ -3,9 +3,8 @@
  * Pure form <-> settings mapping for the POWER UP "Suara" section. No DOM.
  *
  * The server replaces settings wholesale on PUT, so `settingsFromForm` starts
- * from the settings last loaded from the server and overwrites only the fields
- * this form owns — anything the form does not edit (e.g. the topic rules, which
- * have their own controls) survives a save untouched.
+ * from the settings last loaded from the server (so `version` and any future
+ * field this form does not edit survive a save) and overwrites what it owns.
  *
  * The server validates everything again; client checks here only give an
  * instant message and never replace that.
@@ -33,6 +32,9 @@ export function formFromSettings(settings) {
     cap: limitToText(settings.costLimits?.capUsd),
     name: settings.persona?.name || '',
     instructions: settings.persona?.instructions || '',
+    topicsEnabled: settings.topics?.enabled === true,
+    topics: (settings.topics?.allowed || []).join('\n'),
+    refusal: settings.topics?.refusal || '',
   };
 }
 
@@ -45,6 +47,10 @@ export function settingsFromForm(base, form) {
   const warn = textToLimit(form.warn);
   const cap = textToLimit(form.cap);
   if (!warn.ok || !cap.ok) return { ok: false, error: 'Batas biaya: isi angka dolar, "off", atau kosongkan untuk bawaan.' };
+  const allowed = String(form.topics ?? '').split('\n').map((t) => t.trim()).filter(Boolean);
+  if (form.topicsEnabled && allowed.length === 0) {
+    return { ok: false, error: 'Pembatasan topik aktif: isi minimal satu topik (satu per baris).' };
+  }
   return {
     ok: true,
     settings: {
@@ -52,6 +58,7 @@ export function settingsFromForm(base, form) {
       enabled: Boolean(form.enabled),
       costLimits: { warnUsd: warn.value, capUsd: cap.value },
       persona: { name: String(form.name ?? '').trim(), instructions: String(form.instructions ?? '').trim() },
+      topics: { enabled: Boolean(form.topicsEnabled), allowed, refusal: String(form.refusal ?? '').trim() },
     },
   };
 }

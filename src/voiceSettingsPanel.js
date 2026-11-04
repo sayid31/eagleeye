@@ -52,6 +52,9 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
   const cap = el(doc, 'input', { type: 'text', inputMode: 'decimal', placeholder: '5 (bawaan)', autocomplete: 'off' });
   const name = el(doc, 'input', { type: 'text', maxLength: 40, placeholder: 'EagleEye Voice Control (bawaan)', autocomplete: 'off' });
   const instructions = el(doc, 'textarea', { rows: 3, maxLength: 1000, placeholder: 'Catatan gaya bicara (opsional, maks 1000 karakter)' });
+  const topicsOn = el(doc, 'input', { type: 'checkbox' });
+  const topics = el(doc, 'textarea', { rows: 3, placeholder: 'Satu topik per baris, mis.\npenerbangan\nkapal\ncuaca' });
+  const refusal = el(doc, 'input', { type: 'text', maxLength: 160, placeholder: 'Maaf, itu di luar topik yang bisa saya bantu. (bawaan)', autocomplete: 'off' });
   const status = el(doc, 'p', { className: 'key-setup-note', role: 'status' });
   const save = el(doc, 'button', { type: 'button', className: 'key-setup-apply', textContent: 'SIMPAN PENGATURAN SUARA' });
   status.setAttribute('aria-live', 'polite');
@@ -63,6 +66,9 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
     cap.value = form.cap;
     name.value = form.name;
     instructions.value = form.instructions;
+    topicsOn.checked = form.topicsEnabled;
+    topics.value = form.topics;
+    refusal.value = form.refusal;
   };
 
   host.textContent = '';
@@ -74,6 +80,9 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
     field(doc, 'Batas keras biaya (USD)', cap, 'Sesi diakhiri saat tercapai. "off" = tanpa batas.'),
     field(doc, 'Nama asisten', name),
     field(doc, 'Catatan gaya', instructions, 'Hanya nada & gaya; tidak mengubah aturan atau tool.'),
+    field(doc, 'Batasi topik pembicaraan', topicsOn, 'Bawaan mati. Berbasis prompt: usaha terbaik, bukan jaminan. Perintah aplikasi dan pertanyaan "ini di mana" tidak pernah ditolak.'),
+    field(doc, 'Topik yang diizinkan', topics, 'Maks 20 topik, satu per baris.'),
+    field(doc, 'Pesan penolakan (satu kalimat)', refusal, 'Diucapkan apa adanya, jadi buat singkat.'),
     el(doc, 'div', { className: 'key-setup-footer' }, save),
     status,
   );
@@ -84,6 +93,7 @@ export async function mountVoiceSettings({ host, documentRef = globalThis.docume
     if (busy) return;
     const form = {
       enabled: enabled.checked, warn: warn.value, cap: cap.value, name: name.value, instructions: instructions.value,
+      topicsEnabled: topicsOn.checked, topics: topics.value, refusal: refusal.value,
     };
     const next = settingsFromForm(base, form);
     if (!next.ok) { status.textContent = next.error; return; }

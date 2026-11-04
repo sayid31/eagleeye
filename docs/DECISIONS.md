@@ -3216,3 +3216,29 @@ a frame early; drawing one extra marker for a frame is the cheaper failure.
 - *Private mirror or self-hosted Overpass:* the real fix for cold areas, but an operational commitment the owner has not asked for. Warming covers the places the owner actually visits.
 
 **Limit.** Warming covers the standard 0.05° box. A view tighter than that on either axis requests a smaller box (a different key) and still pays the queue once.
+
+## 2026-11-04 — Voice settings in POWER UP: owner-only store, swappable guard, prompt-only topic scope
+
+**Context.** The owner wanted voice limits, assistant name/style, an on/off switch and a topic scope editable from the existing POWER UP dialog (modeled on the `jenna-admin` harness), without a new admin page and without ever exposing API keys.
+
+**Decision.**
+
+- **Separate store** `.gev-cache/voice-settings.json` (0600, atomic, symlink refused), never the `.env` key file. Full-replace `PUT`, unknown fields rejected, error text never echoes input. Routes are installed from `openAiVoiceProxy.mjs` because `vite.config.js` is already far over the size limit.
+- **One guard function**, `requireAdmin(req)` in its own module, wraps `admitKeySetupRequest` (loopback). Non-GET/HEAD methods are presented as `POST` because that function only enforces Origin and JSON content-type for POST; without the mapping a `PUT` skipped the CSRF check (caught by test).
+- **Fail-open client, fail-closed-to-defaults store.** A missing/failed config read leaves voice exactly as before; a corrupt file reads as defaults, never as "restricted" or "disabled". The off switch itself is enforced **server-side** (`403 voice_disabled` on `/api/live/session`), the client only explains it.
+- **Topic scope is prompt-only and default OFF.** It is appended after the pinned base prompt with absolute exemptions (tool commands, "ini di mana", app help) and "answer when unsure". Wrongly refusing a command is a worse failure than letting an off-topic chat through, so the wording leans to answer. It is not a security boundary.
+
+**Not chosen.**
+
+- *A classifier / server-side gate on every utterance:* audio goes WebRTC straight to OpenAI, so the server never sees the transcript in time; it would add a hop and cost for a best-effort feature.
+- *Putting the topic list into the pinned base prompt:* would break the byte-identical-by-default invariant.
+
+**Limits.** A running session keeps the settings it started with. The cost cap is enforced in the browser. The delegation model (`gpt-5.6-luna` via `delegation`) and its tool calls are billed separately and are **not in the cost meter** (only audio minutes and the screenshot reader are) — INFERRED fix, unimplemented: read usage from `response.completed` / `session.usage.updated` (already in `LIVE_ALLOWED_SERVER_EVENTS`) into `recordExtraUsd`, with an estimate fallback.
+
+## 2026-11-04 — Voice settings: deploy plan (not built)
+
+Today everything assumes one trusted owner on loopback. Before the console is reachable by other people:
+
+1. **Admin login.** Replace the body of `requireAdmin` (session/OIDC/basic-auth behind HTTPS). Routes and the POWER UP UI call only that function, so they do not change. Loopback-only is then no longer the gate; keep Origin/CSRF checks.
+2. **Public voice route that uses the API key.** Visitors must not hold or see a key. Add a public session route that mints GPT-Live sessions with the server key, with its own authentication or invite token, per-IP/per-user rate limits and abuse protection. It reads `GET /api/voice/config` semantics server-side (enabled flag, persona, topic scope) — those already apply per session on the server.
+3. **Cost limits move to the server.** The warn/cap is client-enforced today, which is fine for the owner and meaningless for the public. Deploy needs server-side session accounting (per-visitor and global daily budget, session timeouts) and metering of the delegation model (see Limits above). Until then do not expose the public route.
