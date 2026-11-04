@@ -6,7 +6,7 @@
  * emitted by `src/data/traffic.js` when `?trafficDebug=1` is present:
  *
  *   1. exact-viewport revisit (traffic module's full-road cache),
- *   2. adjacent 0.4–2 km pan (new exact bbox with heavy spatial overlap),
+ *   2. adjacent ~1.4 km pan (new exact bbox with heavy spatial overlap),
  *   3. cold city (no traffic-module entry for that city),
  *   4. degraded upstream (synthetic delay on `/api/overpass` only).
  *
@@ -50,7 +50,12 @@ const getNumberOpt = (name, dflt) => {
 
 const APP_URL = getOpt('--url', 'http://localhost:4173');
 const HEADFUL = argv.includes('--headful');
-const TIMEOUT_MS = Math.max(10_000, getNumberOpt('--timeout-ms', 120_000));
+// Per-capture budget. A cold city that is not in .gev-cache/overpass is a real
+// upstream MISS on the public Overpass mirrors, which queue ~35-50 s per pass
+// (docs/DECISIONS.md, 2026-11-04). Major and full run back to back, so 120 s
+// could be exceeded; 240 s covers two queued passes. Warm the city first with
+// scripts/warm-overpass-cache.mjs for a fast run.
+const TIMEOUT_MS = Math.max(10_000, getNumberOpt('--timeout-ms', 240_000));
 const DEGRADED_DELAY_MS = Math.max(0, getNumberOpt('--degraded-delay-ms', 2500));
 
 const CHROME_EXECUTABLE_CANDIDATES = [
@@ -75,8 +80,11 @@ const VIEWS = {
     lon: -97.7431, lat: 30.2672, height: 1500, heading: 8, pitch: -78,
   },
   adjacent: {
-    // 0.0105° longitude at Austin's latitude is ~1.0 km.
-    lon: -97.7326, lat: 30.2672, height: 1500, heading: 8, pitch: -78,
+    // 0.015° longitude at Austin's latitude is ~1.4 km: more than one
+    // FETCH_GRID_PITCH_DEG (0.0125°, src/data/trafficBounds.js), so the snapped
+    // fetch center is guaranteed to move to the next grid cell. A smaller pan
+    // can snap onto Austin's own cell and the app (correctly) skips the fetch.
+    lon: -97.7281, lat: 30.2672, height: 1500, heading: 8, pitch: -78,
   },
   coldCity: {
     lon: -122.4194, lat: 37.7749, height: 1500, heading: 18, pitch: -78,
@@ -85,6 +93,9 @@ const VIEWS = {
     lon: -98.4936, lat: 29.4241, height: 1500, heading: 12, pitch: -78,
   },
 };
+
+/** Where the app's default intro fly-to lands (flyToDefault in src/camera.js). */
+const INTRO_VIEW = { lon: 106.8456, height: 600 };
 
 /** Add `trafficDebug=1` while preserving the caller's path/query/hash. */
 function debugUrl(rawUrl) {
@@ -347,6 +358,20 @@ async function main() {
       { timeout: 60_000 },
     );
 
+    // The app's default intro (flyToDefault in src/camera.js) setViews over
+    // Jakarta, then 500 ms later starts a 4 s flyTo down to 600 m. Moving the
+    // camera before it lands races that timer and the intro overwrites the
+    // Austin pose, so every capture waits for a load that never matches.
+    // Wait for the intro to settle at its destination before measuring.
+    await page.waitForFunction((introLon, introHeight) => {
+      const carto = window.__godsEyeView?.viewer?.camera?.positionCartographic;
+      if (!carto) return false;
+      return carto.height <= introHeight * 1.1
+        && Math.abs(carto.longitude * 180 / Math.PI - introLon) < 0.05;
+    }, { timeout: 60_000, polling: 250 }, INTRO_VIEW.lon, INTRO_VIEW.height).catch((error) => {
+      throw new Error(`default intro fly-to did not settle before the capture: ${error.message}`);
+    });
+
     // Disable all persisted overlays, park above traffic's activation ceiling,
     // then enable traffic without accidentally starting an unmeasured load.
     await page.evaluate(async (highView) => {
@@ -406,7 +431,7 @@ async function main() {
     captures.push(await captureState(page, 'exact-viewport revisit', VIEWS.austin, (msValue) => {
       activeProxyDelayMs = msValue;
     }));
-    captures.push(await captureState(page, 'adjacent ~1.0 km pan', VIEWS.adjacent, (msValue) => {
+    captures.push(await captureState(page, 'adjacent ~1.4 km pan', VIEWS.adjacent, (msValue) => {
       activeProxyDelayMs = msValue;
     }));
     captures.push(await captureState(page, 'cold city (client)', VIEWS.coldCity, (msValue) => {
