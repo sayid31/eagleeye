@@ -947,16 +947,22 @@
     </header>
     <h2 id="key-setup-title">Aktifkan globe</h2>
     <p id="key-setup-description">Globe sudah berjalan tanpa kunci. Setiap kunci di bawah menyalakan feed nyata lainnya — tempel satu kunci dan kunci itu disimpan ke konfigurasi lokal aplikasi ini, lalu server memulai ulang sendiri. Kunci sisi server tetap di mesin ini; Google Maps dan Cesium ion berjalan di browser dan harus dibatasi pada penyedia. Kunci yang Anda atur di tempat lain ditampilkan tetapi tidak pernah disentuh.</p>
-    <div class="key-setup-scroll">
+    <div class="key-setup-tabs" role="tablist" aria-label="Pengaturan" data-key-setup-tabs hidden>
+      <button type="button" role="tab" id="key-setup-tab-keys" aria-controls="key-setup-pane-keys" aria-selected="true" data-key-setup-tab="keys">KUNCI</button>
+      <button type="button" role="tab" id="key-setup-tab-voice" aria-controls="key-setup-pane-voice" aria-selected="false" tabindex="-1" data-key-setup-tab="voice">SUARA</button>
+    </div>
+    <div class="key-setup-pane" id="key-setup-pane-keys" role="tabpanel" aria-labelledby="key-setup-tab-keys" data-key-setup-pane="keys">
       <div class="key-setup-rows" data-key-setup-rows></div>
+      <div class="key-setup-footer">
+        <button type="button" class="key-setup-apply" data-key-setup-apply>SIMPAN KUNCI</button>
+        <span class="key-setup-hint">ESC untuk menutup</span>
+      </div>
+      <p class="key-setup-note" data-key-setup-status role="status" aria-live="polite">Kunci Google Maps membuka planet fotorealistis — semua yang lain menumpuk di atasnya.</p>
+    </div>
     <!-- Suara: owner voice settings (src/voiceSettingsPanel.js). Hidden until /api/setup/voice answers. -->
+    <div class="key-setup-pane key-setup-pane-voice" id="key-setup-pane-voice" role="tabpanel" aria-labelledby="key-setup-tab-voice" data-key-setup-pane="voice" hidden>
       <section class="key-setup-voice" data-voice-settings hidden></section>
     </div>
-    <div class="key-setup-footer">
-      <button type="button" class="key-setup-apply" data-key-setup-apply>SIMPAN KUNCI</button>
-      <span class="key-setup-hint">ESC untuk menutup</span>
-    </div>
-    <p class="key-setup-note" data-key-setup-status role="status" aria-live="polite">Kunci Google Maps membuka planet fotorealistis — semua yang lain menumpuk di atasnya.</p>
   </aside>
 
   <!-- Intelligence HUD Overlay -->

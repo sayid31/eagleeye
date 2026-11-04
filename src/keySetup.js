@@ -14,6 +14,7 @@
  * the chip and the dialog are removed outright.
  */
 
+import { wireKeySetupTabs } from './keySetupTabs.js';
 import { mountVoiceSettings } from './voiceSettingsPanel.js';
 
 /** Chip label — pure, exported for tests. */
@@ -344,8 +345,10 @@ export async function initKeySetup({ documentRef = globalThis.document, fetchImp
   // separate store. If /api/setup/voice is unavailable the section removes itself.
   const voiceHost = root.querySelector('[data-voice-settings]');
   if (voiceHost) {
+    const tabs = wireKeySetupTabs(root);
     voiceHost.hidden = false;
-    void mountVoiceSettings({ host: voiceHost, documentRef, fetchImpl: doFetch });
+    void mountVoiceSettings({ host: voiceHost, documentRef, fetchImpl: doFetch })
+      .then((mounted) => { if (mounted) tabs.enable(); });
   }
 
   // Re-entry for a fully-keyed setup, demos, and support: ?setup=1 opens the
