@@ -1,0 +1,30 @@
+/* Admin dashboard theme: plain dashboard look, dark + light via data-admin-theme. */
+:root, [data-admin-theme='dark'] {
+  --adm-bg: #0f1216; --adm-surface: #171c22; --adm-border: #2a323c;
+  --adm-text: #e6eaef; --adm-muted: #8b96a3; --adm-accent: #4da3ff; --adm-accent-text: #07131f;
+}
+[data-admin-theme='light'] {
+  --adm-bg: #f4f6f8; --adm-surface: #ffffff; --adm-border: #d9dfe6;
+  --adm-text: #1b2430; --adm-muted: #5d6b7a; --adm-accent: #1a6fd1; --adm-accent-text: #ffffff;
+}
+body { margin: 0; background: var(--adm-bg); color: var(--adm-text); font: 14px/1.5 system-ui, -apple-system, 'Segoe UI', sans-serif; }
+.adm-shell { display: flex; min-height: 100vh; }
+.adm-sidebar { width: 240px; flex: none; background: var(--adm-surface); border-right: 1px solid var(--adm-border); padding: 16px 12px; }
+.adm-brand { font-weight: 600; font-size: 16px; padding: 4px 8px 16px; }
+.adm-brand span { color: var(--adm-muted); font-weight: 400; }
+.adm-nav-group { margin-bottom: 12px; }
+.adm-nav-heading { color: var(--adm-muted); font-size: 11px; text-transform: uppercase; letter-spacing: .06em; padding: 8px 8px 4px; }
+.adm-nav-link { display: flex; justify-content: space-between; align-items: center; padding: 7px 10px; border-radius: 6px; color: var(--adm-text); text-decoration: none; }
+.adm-nav-link:hover { background: var(--adm-bg); }
+.adm-nav-link.active { background: var(--adm-accent); color: var(--adm-accent-text); }
+.adm-nav-child { margin-left: 8px; }
+.adm-badge { font-size: 10px; border: 1px solid currentColor; border-radius: 8px; padding: 0 6px; opacity: .7; }
+.adm-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.adm-topbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 24px; border-bottom: 1px solid var(--adm-border); background: var(--adm-surface); }
+.adm-link { color: var(--adm-accent); text-decoration: none; }
+.adm-btn { background: transparent; color: var(--adm-text); border: 1px solid var(--adm-border); border-radius: 6px; padding: 5px 12px; cursor: pointer; font: inherit; }
+.adm-btn:hover { border-color: var(--adm-accent); }
+.adm-content { padding: 24px; }
+.adm-card { background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 8px; padding: 20px 24px; max-width: 720px; }
+.adm-card h1 { margin: 0 0 8px; font-size: 20px; }
+.adm-card p { margin: 0; color: var(--adm-muted); }

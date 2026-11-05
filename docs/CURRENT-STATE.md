@@ -1528,6 +1528,17 @@ The owner edits voice behavior from the existing POWER UP dialog (`#key-setup`, 
 - **Topic proof.** PROVEN (text, `scripts/qa-voice-topics.mjs`, real prompt + 28 real tool schemas against the `gpt-5.6-luna` Responses backend): 5/5 off-topic prompts refused with the exact sentence and no tool call (including an "ignore the rules" injection); 7/7 in-scope prompts not refused (aviation/vessel knowledge, app help, greeting) and `Ini di mana?`, `Zoom ke Jakarta`, `Nyalakan layer satelit` produced `get_entity_context` / `fly_to_location` / `set_layer_visibility`. INFERRED: the same wording on `gpt-live-1` spoken audio, and that `instructions` also steer the delegation model in a live session (the text test hits the backend model directly).
 - **Proof status.** PROVEN by test + a live Vite instance on a scratch port: save/read round-trip, defaults when empty, 403 on disabled session, non-loopback/forwarded/foreign-Host/missing-Origin rejected, no key material in responses or file. INFERRED (needs the owner's manual run, `scripts/manual-voice-settings-test.md`): the panel's rendering in a real browser and the spoken behavior of a custom name/style notes.
 
+### Admin dashboard shell (`/admin`)
+
+A separate page for owner administration. Only the **shell** exists so far: layout, menu, light/dark theme and placeholder pages. Login, Server Log, AI Configuration and API Keys are built in later stages; until login lands, `/admin` has no access control and no `/api/admin/*` route exists, so the shell exposes no data.
+
+- **Entry.** `admin.html` → `src/admin/main.jsx` (React 19 + React Router 8, `basename="/admin"`). React is a devDependency bundled only into this entry; the map app (`index.html`) stays plain JS. `@vitejs/plugin-react` is limited to `src/admin/**/*.jsx` and pinned to 5.x because 6.x requires Vite 8 (this repo is on Vite 6).
+- **Routing.** `src/admin/adminRoute.mjs` rewrites GET/HEAD page navigations under `/admin` (no file extension) to `/admin.html` in dev and preview; `/api/*` and asset requests are untouched. A production host must do the same SPA fallback.
+- **No Cesium on the admin page.** `vite-plugin-cesium` injects `Cesium.js` into every HTML entry; `skipOnAdminPage` wraps it so `admin.html` does not load the globe engine.
+- **Menu** (`src/admin/adminNav.js`): Server Log (Server Log, Audit Log *soon*, System Health *soon*), AI Configuration (General, AI Provider, Persona, Usage & Cost), API Keys. `/admin` opens Server Log.
+- **Theme.** Dark and light via `data-admin-theme`, choice saved in `localStorage` (`gev-admin-theme`), first visit follows the OS. Styles in `src/admin/adminTheme.css`, separate from the map theme tokens.
+- **Proof status.** PROVEN: `npm run build` emits `admin.html` + a separate admin bundle without Cesium tags; the dev server serves `/admin`, `/admin/server-log` and `/admin/ai/persona` as the admin page and `/` as the map; unit tests cover the rewrite, the Cesium skip, theme choice and menu. INFERRED (not opened in a browser): visual layout and the theme toggle.
+
 ## Auth + Launch
 
 - Recommended launcher: `./scripts/dev-fresh.sh` (also: `dev-secure.sh` for stricter bindings, `dev-cctv.sh` for CCTV source-pack tuning)

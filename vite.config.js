@@ -86,6 +86,8 @@ import {
 import { fileURLToPath } from 'node:url';
 import { defineConfig, loadEnv } from 'vite';
 import cesium from 'vite-plugin-cesium';
+import react from '@vitejs/plugin-react';
+import { adminRoute, skipOnAdminPage } from './src/admin/adminRoute.mjs';
 import { radioBrowserProxy } from './src/data/radioBrowserProxy.mjs';
 import {
   regionalBriefProxy,
@@ -872,7 +874,10 @@ export default defineConfig(({ mode }) => {
   const localAllowedHosts = ['localhost', '127.0.0.1', '.local'];
   return {
     plugins: [
-      cesium(),
+      skipOnAdminPage(cesium()),
+      // React is for the /admin dashboard only; the map app stays plain JS.
+      react({ include: /src\/admin\/.*\.jsx$/ }),
+      adminRoute(),
       openSkyProxy(),
       celestrakProxy(),
       tomtomProxy(),
@@ -929,6 +934,12 @@ export default defineConfig(({ mode }) => {
       // The Cesium engine bundle is inherently large; raise the warning ceiling
       // so the build log isn't dominated by an expected chunk-size notice.
       chunkSizeWarningLimit: 1500,
+      rollupOptions: {
+        input: {
+          main: path.resolve(__dirname, 'index.html'),
+          admin: path.resolve(__dirname, 'admin.html'),
+        },
+      },
     },
   };
 });
