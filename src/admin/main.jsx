@@ -3,10 +3,11 @@
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { AdminApp } from './AdminApp.jsx';
+import { AdminGate } from './AdminGate.jsx';
 import './adminTheme.css';
 
 createRoot(document.getElementById('admin-root')).render(
   <BrowserRouter basename="/admin">
-    <AdminApp />
+    <AdminGate>{(session) => <AdminApp session={session} />}</AdminGate>
   </BrowserRouter>,
 );

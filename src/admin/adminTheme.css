@@ -28,3 +28,10 @@ body { margin: 0; background: var(--adm-bg); color: var(--adm-text); font: 14px/
 .adm-card { background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 8px; padding: 20px 24px; max-width: 720px; }
 .adm-card h1 { margin: 0 0 8px; font-size: 20px; }
 .adm-card p { margin: 0; color: var(--adm-muted); }
+.adm-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
+.adm-login .adm-card { text-align: center; }
+.adm-login .adm-card .adm-btn { display: inline-block; margin-top: 16px; text-decoration: none; }
+.adm-btn-primary { background: var(--adm-accent); color: var(--adm-accent-text); border-color: var(--adm-accent); }
+.adm-error { color: #e5484d; margin-top: 12px; }
+.adm-muted { color: var(--adm-muted); }
+.adm-topbar-actions { display: flex; align-items: center; gap: 12px; }

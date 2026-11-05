@@ -1530,7 +1530,7 @@ The owner edits voice behavior from the existing POWER UP dialog (`#key-setup`, 
 
 ### Admin dashboard shell (`/admin`)
 
-A separate page for owner administration. Only the **shell** exists so far: layout, menu, light/dark theme and placeholder pages. Login, Server Log, AI Configuration and API Keys are built in later stages; until login lands, `/admin` has no access control and no `/api/admin/*` route exists, so the shell exposes no data.
+A separate page for owner administration. The shell (layout, menu, light/dark theme, placeholder pages) and **Google login** exist. Server Log, AI Configuration and API Keys are built in later stages; their pages are placeholders and no data route exists yet.
 
 - **Entry.** `admin.html` → `src/admin/main.jsx` (React 19 + React Router 8, `basename="/admin"`). React is a devDependency bundled only into this entry; the map app (`index.html`) stays plain JS. `@vitejs/plugin-react` is limited to `src/admin/**/*.jsx` and pinned to 5.x because 6.x requires Vite 8 (this repo is on Vite 6).
 - **Routing.** `src/admin/adminRoute.mjs` rewrites GET/HEAD page navigations under `/admin` (no file extension) to `/admin.html` in dev and preview; `/api/*` and asset requests are untouched. A production host must do the same SPA fallback.
@@ -1538,6 +1538,16 @@ A separate page for owner administration. Only the **shell** exists so far: layo
 - **Menu** (`src/admin/adminNav.js`): Server Log (Server Log, Audit Log *soon*, System Health *soon*), AI Configuration (General, AI Provider, Persona, Usage & Cost), API Keys. `/admin` opens Server Log.
 - **Theme.** Dark and light via `data-admin-theme`, choice saved in `localStorage` (`gev-admin-theme`), first visit follows the OS. Styles in `src/admin/adminTheme.css`, separate from the map theme tokens.
 - **Proof status.** PROVEN: `npm run build` emits `admin.html` + a separate admin bundle without Cesium tags; the dev server serves `/admin`, `/admin/server-log` and `/admin/ai/persona` as the admin page and `/` as the map; unit tests cover the rewrite, the Cesium skip, theme choice and menu. INFERRED (not opened in a browser): visual layout and the theme toggle.
+
+#### Admin login (Google, single admin)
+
+- **Env (names only).** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`, `ADMIN_SESSION_SECRET` (≥32 chars). Optional: `ADMIN_OAUTH_REDIRECT_URI` (default `http://localhost:<PORT|4173>/api/admin/auth/callback`; must be registered in Google Console; an `https` URI turns on `Secure` cookies), `ADMIN_SESSION_TTL_HOURS` (default 24). Anything missing → `/api/admin/auth/session` answers `configured:false` with the missing NAMES and login redirects to `/admin/login?error=not_configured`.
+- **Flow** (`src/admin/auth/`). `GET /api/admin/auth/login` → Google (authorization code + PKCE S256, `state`, `nonce`, scope `openid email`) with a signed 10-minute `gev_admin_oauth` cookie (SameSite=Lax, needed for the cross-site return). `GET /callback` checks `state` against that cookie, redeems the code server-side, validates `iss`, `aud`, `exp`, `nonce`, `email_verified === true` and an exact case-insensitive match with `ADMIN_EMAIL`, then sets the `gev_admin_session` cookie (HttpOnly, SameSite=Strict, 24 h, Secure on https). `GET /session` reports state; `POST /logout` clears it.
+- **Access control.** `requireAdminSession(req)` is the guard for future `/api/admin/*` routes: valid signed session for `ADMIN_EMAIL`; PUT/POST/PATCH/DELETE also need the exact `Origin` and `application/json`. Required from any location, including localhost. The legacy `/api/setup/*` routes still use `requireAdmin` (loopback gate) until they move in the API Keys stage.
+- **ID token signature is not verified**: the token is read directly from Google's token endpoint over TLS in the request that redeemed our one-time code (OIDC Core 3.1.3.7). Claims are validated as above. Not re-checked against Google's current docs in this change (web lookup failed).
+- **Logging.** Only reason codes (`bad_state`, `not_admin`, `email_unverified`, …) reach the server console; never an email or token.
+- **Sessions are stateless** (HMAC-signed); logout clears the cookie but a copied cookie stays valid until it expires or `ADMIN_SESSION_SECRET` changes.
+- **Proof status.** PROVEN by unit tests with Google mocked (admin passes; other account, bad state/nonce/issuer/audience, expiry, unverified email, forged/expired/wrong-kind token, CSRF checks, Google outage all fail closed) and by curl on a dev server (unconfigured state). NOT YET PROVEN: a real Google sign-in end to end — blocked until `ADMIN_SESSION_SECRET` is set and the redirect URI is registered.
 
 ## Auth + Launch
 

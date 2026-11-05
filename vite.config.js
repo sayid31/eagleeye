@@ -88,6 +88,7 @@ import { defineConfig, loadEnv } from 'vite';
 import cesium from 'vite-plugin-cesium';
 import react from '@vitejs/plugin-react';
 import { adminRoute, skipOnAdminPage } from './src/admin/adminRoute.mjs';
+import { adminAuthPlugin } from './src/admin/auth/adminAuthPlugin.mjs';
 import { radioBrowserProxy } from './src/data/radioBrowserProxy.mjs';
 import {
   regionalBriefProxy,
@@ -878,6 +879,7 @@ export default defineConfig(({ mode }) => {
       // React is for the /admin dashboard only; the map app stays plain JS.
       react({ include: /src\/admin\/.*\.jsx$/ }),
       adminRoute(),
+      adminAuthPlugin(),
       openSkyProxy(),
       celestrakProxy(),
       tomtomProxy(),

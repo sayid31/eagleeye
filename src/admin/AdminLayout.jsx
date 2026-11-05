@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router';
 import { ADMIN_NAV } from './adminNav.js';
+import { logout } from './adminSessionApi.js';
 import { ADMIN_THEME_KEY, nextTheme, resolveTheme } from './adminTheme.js';
 
 function readInitialTheme() {
@@ -28,13 +29,17 @@ function NavGroup({ group }) {
   );
 }
 
-export function AdminLayout() {
+export function AdminLayout({ session }) {
   const [theme, setTheme] = useState(readInitialTheme);
 
   useEffect(() => {
     document.documentElement.dataset.adminTheme = theme;
     try { window.localStorage.setItem(ADMIN_THEME_KEY, theme); } catch { /* storage blocked: choice lasts this visit only */ }
   }, [theme]);
+
+  const signOut = () => logout()
+    .catch((error) => console.warn(`[admin] ${error.message}`))
+    .finally(() => window.location.assign('/admin'));
 
   return (
     <div className="adm-shell">
@@ -45,9 +50,13 @@ export function AdminLayout() {
       <div className="adm-main">
         <header className="adm-topbar">
           <a className="adm-link" href="/">Back to map</a>
-          <button type="button" className="adm-btn" onClick={() => setTheme(nextTheme(theme))} aria-label={`Switch to ${nextTheme(theme)} mode`}>
-            {theme === 'dark' ? 'Light mode' : 'Dark mode'}
-          </button>
+          <div className="adm-topbar-actions">
+            <span className="adm-muted">{session?.email}</span>
+            <button type="button" className="adm-btn" onClick={() => setTheme(nextTheme(theme))} aria-label={`Switch to ${nextTheme(theme)} mode`}>
+              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </button>
+            <button type="button" className="adm-btn" onClick={signOut}>Sign out</button>
+          </div>
         </header>
         <main className="adm-content"><Outlet /></main>
       </div>

@@ -8,7 +8,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 ### Added
 
 - Halaman **/admin** (kerangka awal): menu Server Log, AI Configuration, dan API Keys, dengan mode gelap dan
-  terang. Isi halaman belum ada dan login menyusul; peta tidak berubah.
+  terang. Peta tidak berubah.
+- Login **/admin** memakai akun Google. Hanya email di `ADMIN_EMAIL` yang bisa masuk; sesi berlaku 24 jam dan
+  login wajib juga di komputer lokal. Perlu `ADMIN_SESSION_SECRET` (minimal 32 karakter) di `.env`.
 - Panel **POWER UP** kini punya bagian **Suara**: saklar fitur suara, peringatan dan batas keras biaya,
   nama asisten, dan catatan gaya bicara. Pengaturan disimpan lokal, terpisah dari kunci API (kunci tidak
   pernah ditampilkan atau diubah dari sini). Jika belum pernah disimpan, suara berperilaku persis seperti

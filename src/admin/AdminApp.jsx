@@ -5,11 +5,13 @@ import { ADMIN_HOME_PATH, ADMIN_NAV, adminLeaves, groupLanding } from './adminNa
 import { AdminLayout } from './AdminLayout.jsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx';
 
-export function AdminApp() {
+export function AdminApp({ session }) {
   return (
     <Routes>
-      <Route element={<AdminLayout />}>
+      <Route element={<AdminLayout session={session} />}>
         <Route index element={<Navigate to={ADMIN_HOME_PATH} replace />} />
+        {/* Signed-in visitors who reopen the login URL land on the dashboard. */}
+        <Route path="login" element={<Navigate to={ADMIN_HOME_PATH} replace />} />
         {ADMIN_NAV.filter((group) => group.children).map((group) => (
           <Route key={group.id} path={group.path.slice(1)} element={<Navigate to={groupLanding(group)} replace />} />
         ))}
