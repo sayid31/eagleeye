@@ -84,14 +84,19 @@ export function buildLiveSessionConfig({ model, backendModel, voice, instruction
  * @param {object} deps
  * @param {(req: any, maxBytes?: number) => Promise<string>} deps.readRequestBody
  * @param {(req: any, res: any) => boolean} deps.enforceRateLimit Returns false when it already responded.
- * @param {Array<object>} deps.tools Tool schemas to declare for delegation.
+ * @param {Array<object> | (() => Array<object>)} deps.tools Tool schemas to declare
+ *   for delegation, or a getter evaluated per session (owner tool groups).
  * @param {string | (() => string)} deps.instructions System prompt, or a getter
  *   evaluated per session so owner settings take effect without a restart.
  * @param {() => boolean} [deps.isEnabled] Owner on/off switch; false => 403.
+ * @param {() => ({status: number, error: string} | null)} [deps.admitSession]
+ *   Extra owner gate (daily minutes); a non-null result is sent as the refusal.
  * @param {typeof fetch} [deps.fetchImpl]
  */
 export function installLiveSessionRoute(middlewares, deps) {
-  const { readRequestBody, enforceRateLimit, tools, instructions, isEnabled = () => true, fetchImpl = fetch } = deps;
+  const {
+    readRequestBody, enforceRateLimit, tools, instructions, isEnabled = () => true, admitSession = () => null, fetchImpl = fetch,
+  } = deps;
   middlewares.use('/api/live/session', async (req, res) => {
     if (req.method !== 'POST') {
       res.statusCode = 405;
@@ -103,6 +108,13 @@ export function installLiveSessionRoute(middlewares, deps) {
       res.statusCode = 403;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error: 'voice_disabled' }));
+      return;
+    }
+    const refusal = admitSession();
+    if (refusal) {
+      res.statusCode = refusal.status;
+      res.setHeader('Content-Type', 'application/json');
+      res.end(JSON.stringify({ error: refusal.error }));
       return;
     }
     if (!enforceRateLimit(req, res)) return;
@@ -136,7 +148,7 @@ export function installLiveSessionRoute(middlewares, deps) {
       backendModel: process.env.OPENAI_LIVE_BACKEND_MODEL || OPENAI_LIVE_BACKEND_MODEL_DEFAULT,
       voice: process.env.OPENAI_LIVE_VOICE || LIVE_VOICE_DEFAULT,
       instructions: typeof instructions === 'function' ? instructions() : instructions,
-      tools,
+      tools: typeof tools === 'function' ? tools() : tools,
     });
 
     try {

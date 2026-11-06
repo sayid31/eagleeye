@@ -22,6 +22,9 @@ import { installLiveSessionRoute } from './openAiLiveProxy.mjs';
 import { installLiveVisionRoute, READ_SCREEN_TOOL } from './openAiLiveVisionProxy.mjs';
 import { createVoiceSettingsStore } from './voiceSettingsStore.mjs';
 import { installVoiceSettingsRoutes } from './voiceSettingsRoutes.mjs';
+import { createVoiceUsageStore } from './voiceUsageStore.mjs';
+import { dailyLimitRefusal } from './voiceUsageCore.mjs';
+import { filterToolsByGroups } from './voiceToolGroups.js';
 
 const OPENAI_HUD_SUMMARY_MODEL_DEFAULT = 'gpt-5-nano';
 
@@ -43,11 +46,14 @@ export function readRequestBody(req, maxBytes = 1024 * 1024) {
   });
 }
 
-export function openAiVoiceProxy({ settingsStore = createVoiceSettingsStore() } = {}) {
+export function openAiVoiceProxy({
+  settingsStore = createVoiceSettingsStore(),
+  usageStore = createVoiceUsageStore(),
+} = {}) {
   function install(middlewares) {
-    // Owner-editable voice settings (POWER UP → Suara). Registered before the
-    // session route so /api/live/session can read the same store.
-    installVoiceSettingsRoutes(middlewares, { store: settingsStore, readRequestBody });
+    // Owner-editable voice settings (POWER UP → Suara and /admin). Registered
+    // before the session route so /api/live/session can read the same store.
+    installVoiceSettingsRoutes(middlewares, { store: settingsStore, usageStore, readRequestBody });
     // GPT-Live full-duplex session create: the server holds the key and
     // exchanges the browser's SDP offer.
     installLiveSessionRoute(middlewares, {
@@ -55,10 +61,14 @@ export function openAiVoiceProxy({ settingsStore = createVoiceSettingsStore() } 
       enforceRateLimit: (req, res) => enforceOptInRateLimit(openAiRateLimiter(), req, res),
       // The live backend additionally gets the live-only `read_screen` tool —
       // gpt-live-1 can't see images, so it delegates the viewport read to the
-      // one-shot gpt-5.6-luna call behind /api/live/vision (below).
-      tools: [...GEV_VOICE_TOOLS, READ_SCREEN_TOOL],
+      // one-shot gpt-5.6-luna call behind /api/live/vision (below). Tool groups
+      // the owner switched off are not declared at all.
+      tools: () => filterToolsByGroups(LIVE_SESSION_TOOLS, settingsStore.read().settings.toolGroups),
       instructions: () => buildVoiceSystemPrompt(settingsStore.read().settings),
       isEnabled: () => settingsStore.read().settings.enabled,
+      admitSession: () => dailyLimitRefusal(
+        usageStore.read(), usageStore.today(), settingsStore.read().settings.limits.dailyMinutes,
+      ),
     });
     installLiveVisionRoute(middlewares, {
       readRequestBody,
@@ -162,3 +172,4 @@ function toFiveWordHudSummary(value) {
 }
 
 const GEV_VOICE_TOOLS = toOpenAiRealtimeTools(GEV_TOOL_SCHEMAS);
+const LIVE_SESSION_TOOLS = [...GEV_VOICE_TOOLS, READ_SCREEN_TOOL];

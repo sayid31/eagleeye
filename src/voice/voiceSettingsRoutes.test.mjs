@@ -8,6 +8,7 @@ import { installVoiceSettingsRoutes } from './voiceSettingsRoutes.mjs';
 import { createVoiceSettingsStore } from './voiceSettingsStore.mjs';
 import { defaultVoiceSettings } from './voiceSettingsCore.mjs';
 import { requireAdmin } from './requireAdmin.mjs';
+import { createVoiceUsageStore } from './voiceUsageStore.mjs';
 
 const ORIGIN = 'http://localhost:4173';
 const SECRET = 'sk-test-SECRET-should-never-appear';
@@ -15,13 +16,14 @@ const SECRET = 'sk-test-SECRET-should-never-appear';
 function setup(requireAdminImpl) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gev-vr-'));
   const store = createVoiceSettingsStore({ filePath: path.join(dir, 'v.json') });
+  const usageStore = createVoiceUsageStore({ filePath: path.join(dir, 'u.json'), now: () => new Date(2026, 10, 6, 12) });
   const routes = new Map();
   const middlewares = { use: (p, h) => routes.set(p, h) };
   const readRequestBody = async (req) => req.__body ?? '';
   installVoiceSettingsRoutes(middlewares, {
-    store, readRequestBody, ...(requireAdminImpl ? { requireAdmin: requireAdminImpl } : {}),
+    store, usageStore, readRequestBody, ...(requireAdminImpl ? { requireAdmin: requireAdminImpl } : {}),
   });
-  return { routes, store };
+  return { routes, store, usageStore };
 }
 
 async function call(routes, route, {
@@ -62,7 +64,13 @@ test('PUT saves; GET and /api/voice/config read it back without private fields',
   const get = await call(routes, '/api/setup/voice');
   assert.equal(get.json.settings.persona.name, 'Ela');
   const pub = await call(routes, '/api/voice/config');
-  assert.deepEqual(pub.json, { enabled: false, assistantName: 'Ela', costLimits: { warnUsd: 1, capUsd: 3 } });
+  assert.deepEqual(pub.json, {
+    enabled: false,
+    assistantName: 'Ela',
+    costLimits: { warnUsd: 1, capUsd: 3 },
+    limits: { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 },
+    today: { remainingSeconds: null },
+  });
   assert.ok(!JSON.stringify(pub.json).includes('Be brief'));
 });
 
@@ -108,4 +116,34 @@ test('requireAdmin currently delegates to the localhost gate', () => {
 test('/api/voice/config rejects non-GET', async () => {
   const { routes } = setup();
   assert.equal((await call(routes, '/api/voice/config', { method: 'PUT', body: {} })).status, 405);
+});
+
+const usageHeaders = { origin: ORIGIN, 'content-type': 'application/json' };
+
+test('POST /api/voice/usage records a same-origin JSON report into today', async () => {
+  const { routes, usageStore } = setup();
+  const r = await call(routes, '/api/voice/usage', { method: 'POST', body: { seconds: 90, extrasUsd: 0.001 }, headers: usageHeaders });
+  assert.equal(r.status, 200);
+  assert.deepEqual(usageStore.read().days['2026-11-06'], { seconds: 90, sessions: 1, extrasUsd: 0.001 });
+});
+
+test('POST /api/voice/usage refuses cross-origin, missing origin, non-JSON and bad bodies', async () => {
+  const { routes, usageStore } = setup();
+  const post = (body, headers) => call(routes, '/api/voice/usage', { method: 'POST', body, headers });
+  assert.equal((await post({ seconds: 5 }, { origin: 'http://evil.example.com', 'content-type': 'application/json' })).status, 403);
+  assert.equal((await post({ seconds: 5 }, { 'content-type': 'application/json' })).status, 403);
+  assert.equal((await post({ seconds: 5 }, { origin: ORIGIN, 'content-type': 'text/plain' })).status, 403);
+  assert.equal((await post({ seconds: -5 }, usageHeaders)).status, 422);
+  assert.equal((await post('{nope', usageHeaders)).status, 400);
+  assert.equal((await call(routes, '/api/voice/usage')).status, 405);
+  assert.deepEqual(usageStore.read().days, {});
+});
+
+test('/api/voice/config reports the seconds left under the daily cap', async () => {
+  const { routes, usageStore } = setup();
+  await call(routes, '/api/setup/voice', { method: 'PUT', body: { limits: { dailyMinutes: 2 } } });
+  usageStore.record({ seconds: 90, extrasUsd: 0 });
+  const pub = await call(routes, '/api/voice/config');
+  assert.equal(pub.json.today.remainingSeconds, 30);
+  assert.equal(pub.json.limits.dailyMinutes, 2);
 });

@@ -24,6 +24,7 @@
 import { createLiveChannelHandler } from './gevLiveEvents.js';
 import { createLiveCostMeter } from './liveCost.js';
 import { createMicLevelMeter } from './gevLiveMicLevel.js';
+import { createSessionLimitGuard } from './liveSessionLimits.js';
 
 export const LIVE_SESSION_URL = '/api/live/session';
 
@@ -61,7 +62,7 @@ function waitForIceComplete(pc) {
 }
 
 export class GevLiveController {
-  constructor({ runner, ui = null, radio = null, limits, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
+  constructor({ runner, ui = null, radio = null, limits, onSessionEnd, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
     this.runner = runner;
     this.ui = ui;
     // Voice-vs-Radio speaker ownership (gevLiveRadio.js); optional so the
@@ -75,6 +76,10 @@ export class GevLiveController {
     // same way the Realtime backend does, through the normal stop path.
     this._meterDeps = { ui, now: nowFn, setIntervalFn, clearIntervalFn };
     this.costMeter = this._buildCostMeter(limits);
+    // Owner session limits (length / idle / daily minutes, liveSessionLimits.js)
+    // and the end-of-session usage report hook (daily ledger).
+    this.sessionLimits = createSessionLimitGuard({ ...this._meterDeps, onLimit: (reason) => this._onSessionLimit(reason) });
+    this.onSessionEnd = onSessionEnd;
 
     // Drives the dock mic's waveform from the real input level (--mic-level).
     // `data-meter` tells the CSS whether a reactive level exists or it must fall
@@ -159,6 +164,12 @@ export class GevLiveController {
     this.costMeter.syncUi();
   }
 
+  /** A session limit was reached — same stop path as the cost cap. */
+  _onSessionLimit(reason) {
+    this.stop({ preserveStatus: true });
+    this.setStatus('idle', reason.message);
+  }
+
   getDiagnostics() {
     const cost = this.costMeter.state();
     return {
@@ -231,8 +242,9 @@ export class GevLiveController {
         runner: this.runner,
         send: (event) => this._send(event),
         isOpen: () => this.dc === dc && dc.readyState === 'open' && !this._tearingDown,
-        onTranscript: () => { if (this.status === 'connecting' || this.status === 'listening') this.setStatus('listening', 'Ask or command'); },
-        onToolStart: () => this.setStatus('executing', 'Working…'),
+        onTranscript: () => { this.sessionLimits.touch(); if (this.status === 'connecting' || this.status === 'listening') this.setStatus('listening', 'Ask or command'); },
+        onInputTranscript: () => this.sessionLimits.touch(),
+        onToolStart: () => { this.sessionLimits.touch(); this.setStatus('executing', 'Working…'); },
         onToolResult: (_fc, result) => {
           this.setStatus('listening', 'Ask or command');
           void this.radio?.onToolResult(result);
@@ -254,7 +266,7 @@ export class GevLiveController {
         },
         onError: (error) => { this.lastError = error?.message || String(error?.message || error); },
       });
-      dc.addEventListener('open', () => { if (this.dc === dc) { this.costMeter.start(); this.setStatus('listening', 'Ask or command'); } });
+      dc.addEventListener('open', () => { if (this.dc === dc) { this.costMeter.start(); this.sessionLimits.start(); this.setStatus('listening', 'Ask or command'); } });
       dc.addEventListener('message', (event) => { handleMessage(event.data); });
       dc.addEventListener('close', () => {
         if (!this._tearingDown && this.dc === dc && this.isActive()) this._fatal('Data channel closed');
@@ -303,6 +315,7 @@ export class GevLiveController {
     this._tearingDown = true;
     this.startEpoch += 1;
     this.costMeter.stop();
+    if (this.sessionLimits.stop()) this.onSessionEnd?.(this.costMeter.state());
     this.micMeter.stop();
     if (this.ui?.root?.dataset) delete this.ui.root.dataset.meter;
     if (removeUi) this.radio?.dispose();

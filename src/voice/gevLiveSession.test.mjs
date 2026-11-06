@@ -81,6 +81,7 @@ function makeController(over = {}) {
     runner: over.runner || (async () => ({ ok: true })),
     ui: over.ui || null,
     limits: over.limits,
+    onSessionEnd: over.onSessionEnd,
     fetchImpl: over.fetchImpl || makeFetch(),
     mediaDevices,
     rtcPeerConnection,
@@ -267,4 +268,63 @@ test('applyCostLimits swaps the cap between sessions only; null keeps the built-
   getPc().channel.open();
   assert.equal(ctrl.applyCostLimits({ warnUsd: 0.5, capUsd: 1 }), false, 'refused mid-session');
   assert.equal(ctrl.costMeter.state().capUsd, 5);
+});
+
+function multiTimer() {
+  const ticks = new Map();
+  let next = 1;
+  return {
+    setIntervalFn: (fn) => { ticks.set(next, fn); return next++; },
+    clearIntervalFn: (id) => { ticks.delete(id); },
+    tickAll: () => [...ticks.values()].forEach((fn) => fn()),
+  };
+}
+
+test('a session limit ends the session with its reason and reports usage once', async () => {
+  const ui = { status: {}, detail: {}, root: { dataset: {} }, costValue: { dataset: {} } };
+  const timers = multiTimer();
+  const clock = { nowMs: 0 };
+  const reports = [];
+  const { ctrl, getPc, stream } = makeController({
+    ui, ...timers, nowFn: () => clock.nowMs, onSessionEnd: (state) => reports.push(state.seconds),
+  });
+  ctrl.sessionLimits.configure({ sessionMinutes: 1 });
+  await ctrl.start();
+  getPc().channel.open();
+  clock.nowMs = 60_000;
+  timers.tickAll();
+  assert.equal(ctrl.status, 'idle');
+  assert.match(ui.detail.textContent, /batas durasi 1 menit/);
+  assert.equal(stream.getAudioTracks()[0].stopped, true, 'mic released at the limit');
+  assert.equal(reports.length, 1);
+  assert.ok(reports[0] >= 59, 'reports the elapsed seconds');
+  ctrl.stop();
+  assert.equal(reports.length, 1, 'a second stop does not report again');
+});
+
+test('conversation activity keeps an idle-limited session open', async () => {
+  const timers = multiTimer();
+  const clock = { nowMs: 0 };
+  const { ctrl, getPc } = makeController({ ...timers, nowFn: () => clock.nowMs });
+  ctrl.sessionLimits.configure({ idleSeconds: 30 });
+  await ctrl.start();
+  const dc = getPc().channel;
+  dc.open();
+  clock.nowMs = 25_000;
+  await dc._listeners.message[0]({ data: JSON.stringify({ type: 'session.input_transcript.delta', delta: 'halo' }) });
+  clock.nowMs = 50_000;
+  timers.tickAll();
+  assert.ok(ctrl.isActive(), 'user speech reset the idle clock');
+  clock.nowMs = 56_000;
+  timers.tickAll();
+  assert.equal(ctrl.isActive(), false);
+});
+
+test('a session that never opened reports no usage', async () => {
+  const reports = [];
+  const fetchImpl = async () => ({ ok: false, status: 429, async text() { return '{"error":"voice_daily_limit"}'; } });
+  const { ctrl } = makeController({ fetchImpl, onSessionEnd: () => reports.push(1) });
+  await ctrl.start();
+  assert.equal(ctrl.status, 'error');
+  assert.deepEqual(reports, []);
 });

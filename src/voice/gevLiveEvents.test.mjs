@@ -115,3 +115,15 @@ test('usage + error events dispatch to their callbacks', async () => {
   assert.deepEqual(usage, { seconds: 12 });
   assert.deepEqual(err, { message: 'boom' });
 });
+
+test('user speech (input transcript) fires onInputTranscript, not onTranscript', async () => {
+  let heard = 0;
+  const deltas = [];
+  const handle = createLiveChannelHandler({
+    runner: async () => ({}), onTranscript: (d) => deltas.push(d), onInputTranscript: () => { heard += 1; },
+  });
+  const r = await handle(JSON.stringify({ type: 'session.input_transcript.delta', delta: 'zoom ke' }));
+  assert.equal(heard, 1);
+  assert.deepEqual(deltas, []);
+  assert.deepEqual(r, { inputTranscript: true });
+});

@@ -68,6 +68,7 @@ export function extractFunctionCall(event) {
  * @param {(event: object) => any} [deps.send] Sends a client event over the channel.
  * @param {() => boolean} [deps.isOpen] True while the channel is live and the turn is current.
  * @param {(delta: string) => void} [deps.onTranscript]
+ * @param {() => void} [deps.onInputTranscript] The user spoke (session-limit idle clock).
  * @param {(fc: object) => void} [deps.onToolStart]
  * @param {(fc: object, result: any) => void} [deps.onToolResult]
  * @param {(usage: object) => void} [deps.onUsage]
@@ -80,6 +81,7 @@ export function createLiveChannelHandler({
   send,
   isOpen = () => true,
   onTranscript,
+  onInputTranscript,
   onToolStart,
   onToolResult,
   onUsage,
@@ -126,6 +128,9 @@ export function createLiveChannelHandler({
       case 'session.output_transcript.delta':
         if (msg.delta) onTranscript?.(msg.delta);
         return { transcript: msg.delta || '' };
+      case 'session.input_transcript.delta':
+        onInputTranscript?.();
+        return { inputTranscript: true };
       case 'session.usage.updated':
         onUsage?.(msg.usage);
         return { usage: msg.usage };

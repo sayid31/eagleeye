@@ -111,3 +111,49 @@ test('installLiveSessionRoute: instructions getter is evaluated per session', as
   }
   assert.deepEqual(sent, ['prompt-1', 'prompt-2']);
 });
+
+test('installLiveSessionRoute: admitSession refusal (daily cap) is sent before any upstream call', async () => {
+  const { installLiveSessionRoute } = await import('./openAiLiveProxy.mjs');
+  let handler;
+  let upstreamCalls = 0;
+  installLiveSessionRoute({ use: (_p, h) => { handler = h; } }, {
+    readRequestBody: async () => 'v=0',
+    enforceRateLimit: () => true,
+    tools: TOOLS,
+    instructions: () => 'sys',
+    admitSession: () => ({ status: 429, error: 'voice_daily_limit' }),
+    fetchImpl: async () => { upstreamCalls += 1; return { status: 200, headers: new Map(), text: async () => '' }; },
+  });
+  const res = { headers: {}, setHeader() {}, end(t) { this.body = t; } };
+  await handler({ method: 'POST' }, res);
+  assert.equal(res.statusCode, 429);
+  assert.match(res.body, /voice_daily_limit/);
+  assert.equal(upstreamCalls, 0);
+});
+
+test('installLiveSessionRoute: a tools getter is evaluated per session', async () => {
+  const { installLiveSessionRoute } = await import('./openAiLiveProxy.mjs');
+  const previous = process.env.OPENAI_API_KEY;
+  process.env.OPENAI_API_KEY = 'test-only-not-a-real-key'; // test-only
+  let handler;
+  const sent = [];
+  const declared = [[{ type: 'function', name: 'a' }, { type: 'function', name: 'b' }], [{ type: 'function', name: 'a' }]];
+  installLiveSessionRoute({ use: (_p, h) => { handler = h; } }, {
+    readRequestBody: async () => 'v=0',
+    enforceRateLimit: () => true,
+    tools: () => declared.shift(),
+    instructions: 'sys',
+    fetchImpl: async (_u, opts) => {
+      sent.push(JSON.parse(opts.body).session.delegation.responses.tools.map((t) => t.name));
+      return { status: 200, headers: new Map(), text: async () => '{}' };
+    },
+  });
+  try {
+    const mk = () => ({ headers: {}, setHeader() {}, end() {} });
+    await handler({ method: 'POST' }, mk());
+    await handler({ method: 'POST' }, mk());
+  } finally {
+    if (previous === undefined) delete process.env.OPENAI_API_KEY; else process.env.OPENAI_API_KEY = previous;
+  }
+  assert.deepEqual(sent, [['a', 'b'], ['a']]);
+});

@@ -65,12 +65,50 @@ test('topics: enabling needs a list; caps, dedupe, one-sentence refusal', () => 
   assert.equal(validateVoiceSettings({ topics: { refusal: 'a\nb' } }).ok, false);
 });
 
-test('publicVoiceConfig exposes only enabled, assistantName, costLimits', () => {
+test('publicVoiceConfig exposes only enabled, assistantName, costLimits, limits', () => {
   const s = validateVoiceSettings({
     persona: { name: 'Ela', instructions: 'private rules' },
     topics: { enabled: true, allowed: ['x'], refusal: 'No.' },
+    toolGroups: { media: false },
+    limits: { sessionMinutes: 15 },
   }).value;
   const pub = publicVoiceConfig(s);
-  assert.deepEqual(Object.keys(pub).sort(), ['assistantName', 'costLimits', 'enabled']);
+  assert.deepEqual(Object.keys(pub).sort(), ['assistantName', 'costLimits', 'enabled', 'limits']);
+  assert.equal(pub.limits.sessionMinutes, 15);
   assert.ok(!JSON.stringify(pub).includes('private rules'));
+  assert.ok(!('toolGroups' in pub));
+});
+
+test('defaults keep every tool group on and every session limit off', () => {
+  const d = defaultVoiceSettings();
+  assert.deepEqual(d.toolGroups, { readOnly: true, camera: true, display: true, media: true, annotate: true });
+  assert.deepEqual(d.limits, { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 });
+});
+
+test('a file saved before toolGroups/limits existed still reads as valid', () => {
+  const legacy = { version: 1, enabled: true, costLimits: { warnUsd: 1, capUsd: 2 }, persona: { name: 'A', instructions: '' }, topics: { enabled: false, allowed: [], refusal: '' } };
+  const r = normalizeStoredSettings(legacy);
+  assert.equal(r.valid, true);
+  assert.equal(r.settings.toolGroups.media, true);
+  assert.equal(r.settings.limits.dailyMinutes, 0);
+});
+
+test('toolGroups: booleans only, unknown group rejected', () => {
+  assert.equal(validateVoiceSettings({ toolGroups: { annotate: false } }).value.toolGroups.annotate, false);
+  assert.equal(validateVoiceSettings({ toolGroups: { annotate: 'no' } }).ok, false);
+  const r = validateVoiceSettings({ toolGroups: { shell: true } });
+  assert.equal(r.ok, false);
+  assert.ok(r.errors.some((e) => e.startsWith('toolGroups.shell')));
+});
+
+test('limits: whole numbers in the jenna-admin ranges, 0 = off', () => {
+  const ok = validateVoiceSettings({ limits: { dailyMinutes: 1440, sessionMinutes: 120, idleSeconds: 10 } });
+  assert.deepEqual(ok.value.limits, { dailyMinutes: 1440, sessionMinutes: 120, idleSeconds: 10 });
+  assert.deepEqual(validateVoiceSettings({ limits: { dailyMinutes: 0, sessionMinutes: null } }).value.limits,
+    { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 });
+  for (const [field, bad] of [['dailyMinutes', 1441], ['dailyMinutes', -5], ['sessionMinutes', 121], ['sessionMinutes', 1.5],
+    ['idleSeconds', 9], ['idleSeconds', 3601], ['idleSeconds', '30']]) {
+    assert.equal(validateVoiceSettings({ limits: { [field]: bad } }).ok, false, `${field}=${bad}`);
+  }
+  assert.equal(validateVoiceSettings({ limits: { monthlyUsd: 5 } }).ok, false);
 });

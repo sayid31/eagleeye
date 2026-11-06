@@ -15,6 +15,7 @@
  */
 
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
+import { disabledToolGroups } from './voiceToolGroups.js';
 
 /** Persona block: display name + owner style notes, subordinate to the base rules. */
 export function personaPromptLines(persona = {}) {
@@ -56,10 +57,28 @@ export function topicPromptLines(topics = {}) {
 }
 
 /**
+ * Switched-off tool groups. The tools themselves are already withheld from the
+ * session (`filterToolsByGroups`); this only tells the model to say so instead
+ * of improvising or claiming an action happened.
+ */
+export function toolGroupPromptLines(toolGroups = {}) {
+  const off = disabledToolGroups(toolGroups);
+  if (off.length === 0) return [];
+  return [
+    `CAPABILITIES TURNED OFF BY THE OWNER: ${off.map((g) => `${g.label} (${g.description})`).join('; ')}`,
+    'You have no tools for these in this session. If the user asks for one, say in one short sentence that the owner has turned that capability off, never claim it was done, and offer what you can still do.',
+  ];
+}
+
+/**
  * @param {object} [settings] Normalized settings (see voiceSettingsCore).
  * @returns {string} The full system prompt for a new live session.
  */
 export function buildVoiceSystemPrompt(settings = {}) {
-  const extra = [...personaPromptLines(settings.persona), ...topicPromptLines(settings.topics)];
+  const extra = [
+    ...personaPromptLines(settings.persona),
+    ...topicPromptLines(settings.topics),
+    ...toolGroupPromptLines(settings.toolGroups),
+  ];
   return extra.length ? [GEV_VOICE_SYSTEM_PROMPT, ...extra].join('\n') : GEV_VOICE_SYSTEM_PROMPT;
 }

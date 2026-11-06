@@ -24,7 +24,14 @@ test('form save maps topic lines, trims blanks, and sends no key field', () => {
   assert.deepEqual(r.settings.topics, { enabled: true, allowed: ['penerbangan', 'kapal'], refusal: 'Maaf.' });
   assert.deepEqual(r.settings.costLimits, { warnUsd: 1, capUsd: 3 });
   assert.equal(r.settings.persona.name, 'Ela');
-  assert.deepEqual(Object.keys(r.settings).sort(), ['costLimits', 'enabled', 'persona', 'topics', 'version']);
+  assert.deepEqual(Object.keys(r.settings).sort(), ['costLimits', 'enabled', 'limits', 'persona', 'toolGroups', 'topics', 'version']);
+});
+
+test('a POWER UP save keeps the tool groups and limits set from /admin', () => {
+  const base = { ...defaultVoiceSettings(), toolGroups: { ...defaultVoiceSettings().toolGroups, media: false }, limits: { dailyMinutes: 30, sessionMinutes: 10, idleSeconds: 60 } };
+  const r = settingsFromForm(base, { ...formFromSettings(base), name: 'Ela' });
+  assert.equal(r.settings.toolGroups.media, false);
+  assert.deepEqual(r.settings.limits, { dailyMinutes: 30, sessionMinutes: 10, idleSeconds: 60 });
 });
 
 test('enabling topics with an empty list blocks the save; disabled keeps the list', () => {

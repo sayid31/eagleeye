@@ -17,7 +17,10 @@ import { captureViewportImage } from './gevLiveViewport.js';
 import { createViewportReader, READ_SCREEN_TOOL_NAME } from './gevLiveVision.js';
 import { createVoiceControl } from './gevLiveVoiceControlUi.js';
 import { createLiveRadioBridge } from './gevLiveRadio.js';
-import { DEFAULT_VOICE_CONFIG, loadVoiceConfig, VOICE_SETTINGS_SAVED_EVENT } from './voiceConfigClient.js';
+import { DEFAULT_VOICE_CONFIG, loadVoiceConfig, reportVoiceUsage, VOICE_SETTINGS_SAVED_EVENT } from './voiceConfigClient.js';
+
+/** Mic detail line when the owner's daily voice minutes are used up. */
+export const DAILY_LIMIT_REACHED_MESSAGE = 'Menit suara harian sudah habis. Atur batasnya di /admin > AI Configuration > General.';
 
 /**
  * Wrap the gevActions runner so the live-only `read_screen` tool goes to the
@@ -58,20 +61,35 @@ export function initGevLiveVoice({
     stopVoice: () => controller?.stop(),
     isActive: () => Boolean(controller?.isActive()),
   });
-  controller = new GevLiveController({ runner: createLiveRunner(actionRunner), ui, radio });
+  controller = new GevLiveController({
+    runner: createLiveRunner(actionRunner),
+    ui,
+    radio,
+    // Each finished session goes into the daily ledger; the config is re-read
+    // AFTER the report lands so "minutes left today" is current. (The hook only
+    // fires after a session ends, long after refreshVoiceConfig is defined.)
+    onSessionEnd: (state) => {
+      void reportVoiceUsage({ seconds: state.seconds, extrasUsd: state.extrasUsd }).finally(() => refreshVoiceConfig());
+    },
+  });
 
-  // Owner settings (POWER UP > Suara). The click handler stays synchronous —
-  // awaiting a fetch before start() could cost the mic/audio their user
-  // activation — so the config is cached and refreshed at init, after every
-  // session, and when the panel saves. Fail-open: no endpoint = old behavior.
-  // The off switch itself is enforced server-side (403 on /api/live/session).
+  // Owner settings (POWER UP > Suara and /admin). The click handler stays
+  // synchronous — awaiting a fetch before start() could cost the mic/audio
+  // their user activation — so the config is cached and refreshed at init,
+  // after every session, and when the panel saves. Fail-open: no endpoint =
+  // old behavior. The off switch and the daily cap are enforced server-side
+  // (403 / 429 on /api/live/session).
   let voiceConfig = DEFAULT_VOICE_CONFIG;
   const refreshVoiceConfig = async () => {
     voiceConfig = await loadVoiceConfig();
-    if (!controller.isActive()) controller.applyCostLimits(voiceConfig.costLimits);
+    if (controller.isActive()) return;
+    controller.applyCostLimits(voiceConfig.costLimits);
+    controller.sessionLimits.configure({ ...voiceConfig.limits, remainingSeconds: voiceConfig.today.remainingSeconds });
   };
   void refreshVoiceConfig();
   window.addEventListener(VOICE_SETTINGS_SAVED_EVENT, () => { void refreshVoiceConfig(); });
+  // Closing the tab ends the session through stop(), so its usage is reported.
+  window.addEventListener('pagehide', () => { if (controller.isActive()) controller.stop(); });
 
   ui.button.addEventListener('click', () => {
     if (controller.isActive()) {
@@ -81,6 +99,10 @@ export function initGevLiveVoice({
     }
     if (!voiceConfig.enabled) {
       controller.setStatus('error', 'Suara dinonaktifkan di POWER UP > Suara.');
+      return;
+    }
+    if (voiceConfig.today.remainingSeconds === 0) {
+      controller.setStatus('error', DAILY_LIMIT_REACHED_MESSAGE);
       return;
     }
     controller.start();

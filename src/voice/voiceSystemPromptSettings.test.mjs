@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
-import { buildVoiceSystemPrompt, DEFAULT_TOPIC_REFUSAL, topicPromptLines } from './voiceSystemPromptSettings.js';
+import { buildVoiceSystemPrompt, DEFAULT_TOPIC_REFUSAL, toolGroupPromptLines, topicPromptLines } from './voiceSystemPromptSettings.js';
 import { defaultVoiceSettings } from './voiceSettingsCore.mjs';
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
@@ -62,4 +62,17 @@ test('empty refusal falls back to the default sentence; topic strings are JSON-q
 test('persona and topics both append, persona first', () => {
   const out = buildVoiceSystemPrompt({ persona: { name: 'Ela', instructions: '' }, ...topics() });
   assert.ok(out.indexOf('named this assistant') < out.indexOf('TOPIC SCOPE'));
+});
+
+test('all tool groups on adds nothing to the prompt', () => {
+  assert.deepEqual(toolGroupPromptLines(defaultVoiceSettings().toolGroups), []);
+});
+
+test('switched-off tool groups are named after the base contract', () => {
+  const out = buildVoiceSystemPrompt({ toolGroups: { ...defaultVoiceSettings().toolGroups, media: false, annotate: false } });
+  assert.ok(out.startsWith(GEV_VOICE_SYSTEM_PROMPT));
+  assert.match(out, /CAPABILITIES TURNED OFF BY THE OWNER: Media \(CCTV & radio\)/);
+  assert.match(out, /Map drawing/);
+  assert.doesNotMatch(out, /Camera & navigation/);
+  assert.match(out, /never claim it was done/);
 });

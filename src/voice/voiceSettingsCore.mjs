@@ -4,7 +4,8 @@
  *
  * Contract: an absent/empty/never-saved settings object is the DEFAULT, and the
  * default reproduces the pre-settings voice behavior exactly — voice enabled,
- * built-in $2/$5 cost limits, built-in persona, topic restriction OFF.
+ * built-in $2/$5 cost limits, built-in persona, topic restriction OFF, every
+ * tool group on, every session limit off (see voiceSettingsSections.mjs).
  *
  * Holds no secrets by design: there is no field here that could carry an API
  * key, and `validateVoiceSettings` rejects unknown fields so one cannot be
@@ -16,6 +17,10 @@
  */
 
 import { VOICE_COST_LIMIT_OFF } from './voiceCost.js';
+import { defaultToolGroups } from './voiceToolGroups.js';
+import {
+  SECTION_KEYS as EXTRA_SECTION_KEYS, defaultSessionLimits, readSessionLimits, readToolGroups,
+} from './voiceSettingsSections.mjs';
 
 export const VOICE_SETTINGS_VERSION = 1;
 export const COST_LIMIT_MIN_USD = 0.1;
@@ -34,14 +39,17 @@ export function defaultVoiceSettings() {
     costLimits: { warnUsd: null, capUsd: null },
     persona: { name: '', instructions: '' },
     topics: { enabled: false, allowed: [], refusal: '' },
+    toolGroups: defaultToolGroups(),
+    limits: defaultSessionLimits(),
   };
 }
 
-const ROOT_KEYS = ['version', 'enabled', 'costLimits', 'persona', 'topics'];
+const ROOT_KEYS = ['version', 'enabled', 'costLimits', 'persona', 'topics', 'toolGroups', 'limits'];
 const SECTION_KEYS = {
   costLimits: ['warnUsd', 'capUsd'],
   persona: ['name', 'instructions'],
   topics: ['enabled', 'allowed', 'refusal'],
+  ...EXTRA_SECTION_KEYS,
 };
 
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
@@ -156,6 +164,8 @@ export function validateVoiceSettings(input) {
     persona.instructions, 'persona.instructions', PERSONA_INSTRUCTIONS_MAX, errors, { keepNewlines: true },
   );
   value.topics = readTopics(input.topics || {}, errors);
+  value.toolGroups = readToolGroups(input.toolGroups || {}, errors);
+  value.limits = readSessionLimits(input.limits || {}, errors);
   return errors.length ? { ok: false, errors } : { ok: true, value };
 }
 
@@ -173,13 +183,15 @@ export function normalizeStoredSettings(raw) {
 
 /**
  * The slice the voice CLIENT needs at session start. Deliberately excludes
- * persona instructions and topic rules (server-side prompt material) and has
- * no key-bearing field of any kind.
+ * persona instructions, topic rules and tool groups (server-side session
+ * material) and has no key-bearing field of any kind. `limits` lets the mic
+ * close a session on length/idle; the daily cap is ALSO enforced server-side.
  */
 export function publicVoiceConfig(settings) {
   return {
     enabled: settings.enabled,
     assistantName: settings.persona.name,
     costLimits: { ...settings.costLimits },
+    limits: { ...settings.limits },
   };
 }
