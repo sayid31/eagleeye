@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { governorRequestRender } from './renderGovernor.js';
+import { logClientEvent } from './log/clientLog.js';
 
 export const MAP_STACKS = [
   {
@@ -134,7 +135,11 @@ export class MapStackController {
     this.googleTileset = googleTileset;
     this.cesiumToken = String(cesiumToken || '').trim();
     this._onChange = onChange;
-    this._onError = onError;
+    // Every basemap failure/fallback also goes to the Server Log (checklist 1E).
+    this._onError = (message, stack) => {
+      logClientEvent({ level: 'warn', source: 'map', code: 'map.stack_error', message, detail: { stack: stack?.id ?? '' } });
+      onError?.(message, stack);
+    };
     this._activeId = googleTileset ? initialStack : DEFAULT_BOOT_STACK;
     this._imageryLayer = null;
     this._activeImageryProvider = null;

@@ -107,6 +107,8 @@ import { createProviderKeyStore } from './src/admin/keys/providerKeyStore.mjs';
 import { legacyKeySetupPlugin } from './src/admin/keys/legacyKeySetupPlugin.mjs';
 import { adminKeysPlugin } from './src/admin/keys/adminKeysRoutes.mjs';
 import { createAdminAuditLog } from './src/admin/audit/adminAuditLog.mjs';
+import { serverLogPlugin } from './src/admin/log/serverLogPlugin.mjs';
+import { logServerEvent } from './src/admin/log/serverLogStore.mjs';
 import {
   makeRateLimiter,
   nominatimSearchRateLimiter,
@@ -162,8 +164,19 @@ const DEV_FRESH_EXTERNAL_KEYS_AT_BOOT = new Set(
     .filter((name) => knownKeySetupEnvVars().has(name)),
 );
 
+/** package.json version, for the browser Server Log entries. */
+const APP_VERSION = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version;
+
 /** Owner audit trail (key changes, tests, settings saves) — names only, never values. */
-const adminAudit = createAdminAuditLog();
+const adminAudit = createAdminAuditLog({
+  // Mirrored into the Server Log (source 'audit') until the Audit Log page exists.
+  onRecord: (entry) => logServerEvent({
+    level: entry.event.endsWith('failed') ? 'warn' : 'info',
+    source: 'audit',
+    code: entry.event,
+    message: [entry.provider, entry.result, ...(entry.saved ?? []), ...(entry.removed ?? []).map((n) => `${n} removed`)].filter(Boolean).join(', '),
+  }),
+});
 
 /**
  * The provider-key store behind POWER UP and /admin → API Keys
@@ -632,6 +645,8 @@ export default defineConfig(({ mode }) => {
       // React is for the /admin dashboard only; the map app stays plain JS.
       react({ include: /src\/admin\/.*\.jsx$/ }),
       adminRoute(),
+      // First of the server plugins: its failure watch must see every /api response.
+      serverLogPlugin({ audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
       adminAuthPlugin(),
       openSkyProxy(),
       celestrakProxy(),
@@ -687,6 +702,8 @@ export default defineConfig(({ mode }) => {
     define: {
       'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(env.GOOGLE_MAPS_API_KEY),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(env.CESIUM_ION_TOKEN),
+      // App version stamped on browser Server Log entries (to reproduce a bug).
+      'import.meta.env.GEV_APP_VERSION': JSON.stringify(APP_VERSION),
     },
     build: {
       // The Cesium engine bundle is inherently large; raise the warning ceiling

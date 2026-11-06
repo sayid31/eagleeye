@@ -25,6 +25,8 @@
  */
 
 import path from 'node:path';
+import { logServerEvent } from '../admin/log/serverLogStore.mjs';
+
 import { promises as fsp } from 'node:fs';
 import {
   isValidTileCoord as isValidTomTomTile,
@@ -32,6 +34,9 @@ import {
   normalizeBudget as normalizeTomTomBudget,
   isOverBudget as isTomTomOverBudget,
 } from './tomtomTiles.js';
+
+/** Share of the daily tile budget at which the Server Log gets a quota warning. */
+const TOMTOM_QUOTA_WARN_SHARE = 0.8;
 
 /**
  * @returns {import('vite').Plugin}
@@ -86,7 +91,12 @@ export function tomtomProxy() {
 
   /** Count one upstream fetch attempt against today's budget (async persist). */
   function recordUpstreamFetch() {
-    currentBudget().count += 1;
+    const today = currentBudget();
+    today.count += 1;
+    // One Server Log warning when today's fetches cross the warn share of the budget.
+    if (today.count === Math.ceil(dailyBudgetLimit() * TOMTOM_QUOTA_WARN_SHARE)) {
+      logServerEvent({ level: 'warn', source: 'proxy', code: 'proxy.quota_low', message: 'TomTom daily tile budget is nearly used up', detail: { provider: 'tomtom', used: today.count, budget: dailyBudgetLimit() } });
+    }
     void persistBudget();
   }
 

@@ -26,6 +26,8 @@ import { createVoiceUsageStore } from './voiceUsageStore.mjs';
 import { dailyLimitRefusal } from './voiceUsageCore.mjs';
 import { filterToolsByGroups } from './voiceToolGroups.js';
 import { installAdminVoiceRoutes } from '../admin/api/adminVoiceRoutes.mjs';
+import { installAnswerJudgeRoute } from './answerJudgeRoute.mjs';
+import { logServerEvent } from '../admin/log/serverLogStore.mjs';
 
 const OPENAI_HUD_SUMMARY_MODEL_DEFAULT = 'gpt-5-nano';
 
@@ -80,6 +82,13 @@ export function openAiVoiceProxy({
       admitSession: () => dailyLimitRefusal(
         usageStore.read(), usageStore.today(), settingsStore.read().settings.limits.dailyMinutes,
       ),
+    });
+    // Off-topic judge (Server Log only; never holds an answer back).
+    installAnswerJudgeRoute(middlewares, {
+      usageStore,
+      log: logServerEvent,
+      readRequestBody,
+      enforceRateLimit: (req, res) => enforceOptInRateLimit(openAiRateLimiter(), req, res),
     });
     installLiveVisionRoute(middlewares, {
       readRequestBody,

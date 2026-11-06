@@ -124,7 +124,7 @@ test('POST /api/voice/usage records a same-origin JSON report into today', async
   const { routes, usageStore } = setup();
   const r = await call(routes, '/api/voice/usage', { method: 'POST', body: { seconds: 90, extrasUsd: 0.001 }, headers: usageHeaders });
   assert.equal(r.status, 200);
-  assert.deepEqual(usageStore.read().days['2026-11-06'], { seconds: 90, sessions: 1, extrasUsd: 0.001 });
+  assert.deepEqual(usageStore.read().days['2026-11-06'], { seconds: 90, sessions: 1, extrasUsd: 0.001, judgeCalls: 0, judgeUsd: 0 });
 });
 
 test('POST /api/voice/usage refuses cross-origin, missing origin, non-JSON and bad bodies', async () => {

@@ -20,6 +20,7 @@
 import { publicVoiceConfig, validateVoiceSettings } from './voiceSettingsCore.mjs';
 import { remainingDailySeconds, validateUsageReport } from './voiceUsageCore.mjs';
 import { requireAdmin as defaultRequireAdmin } from './requireAdmin.mjs';
+import { isSameOriginJson } from '../server/sameOrigin.mjs';
 
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_USAGE_BODY_BYTES = 1024;
@@ -31,19 +32,6 @@ function sendJson(res, status, payload) {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Content-Security-Policy', "frame-ancestors 'none'");
   res.end(JSON.stringify(payload));
-}
-
-/**
- * The usage report is not owner-only (the map has no login), so it must at
- * least come from this app's own page: exact same-origin and a JSON body,
- * which a cross-site form cannot send.
- */
-function isSameOriginJson(req) {
-  const host = req.headers?.host;
-  const origin = req.headers?.origin;
-  if (!host || !origin) return false;
-  const sameOrigin = origin === `http://${host}` || origin === `https://${host}`;
-  return sameOrigin && /^application\/json\b/i.test(String(req.headers?.['content-type'] ?? ''));
 }
 
 /**

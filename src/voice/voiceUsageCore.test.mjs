@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {
-  USAGE_RETENTION_DAYS, addUsage, dailyLimitRefusal, emptyLedger, localDayKey, normalizeLedger, pruneLedger,
+  USAGE_RETENTION_DAYS, addJudgeUsage, addUsage, dailyLimitRefusal, emptyLedger, judgeCallsOn, localDayKey, normalizeLedger, pruneLedger,
   remainingDailySeconds, shiftDayKey, summarizeUsage, validateUsageReport,
 } from './voiceUsageCore.mjs';
 import { createVoiceUsageStore } from './voiceUsageStore.mjs';
@@ -29,7 +29,7 @@ test('addUsage sums seconds, sessions and extras per day without mutating', () =
   const start = emptyLedger();
   const one = addUsage(start, '2026-11-06', { seconds: 60, extrasUsd: 0.01 });
   const two = addUsage(one, '2026-11-06', { seconds: 30, extrasUsd: 0 });
-  assert.deepEqual(two.days['2026-11-06'], { seconds: 90, sessions: 2, extrasUsd: 0.01 });
+  assert.deepEqual(two.days['2026-11-06'], { seconds: 90, sessions: 2, extrasUsd: 0.01, judgeCalls: 0, judgeUsd: 0 });
   assert.deepEqual(start.days, {});
 });
 
@@ -63,7 +63,7 @@ test('summarizeUsage fills empty days, newest first, and prices audio + extras',
 
 test('normalizeLedger drops malformed days and values', () => {
   const n = normalizeLedger({ days: { '2026-11-06': { seconds: 5, sessions: 1.7, extrasUsd: -3 }, nope: {}, '2026-11-05': 'x' } });
-  assert.deepEqual(n.days, { '2026-11-06': { seconds: 5, sessions: 1, extrasUsd: 0 } });
+  assert.deepEqual(n.days, { '2026-11-06': { seconds: 5, sessions: 1, extrasUsd: 0, judgeCalls: 0, judgeUsd: 0 } });
   assert.deepEqual(normalizeLedger('junk').days, {});
 });
 
@@ -72,7 +72,7 @@ test('usage store: missing file is empty, record persists 0600, corrupt file rea
   const store = createVoiceUsageStore({ filePath: path.join(dir, 'u.json'), now: () => new Date(2026, 10, 6, 12) });
   assert.deepEqual(store.read().days, {});
   store.record({ seconds: 45, extrasUsd: 0 });
-  assert.deepEqual(store.read().days['2026-11-06'], { seconds: 45, sessions: 1, extrasUsd: 0 });
+  assert.deepEqual(store.read().days['2026-11-06'], { seconds: 45, sessions: 1, extrasUsd: 0, judgeCalls: 0, judgeUsd: 0 });
   assert.equal(fs.statSync(store.filePath).mode & 0o777, 0o600);
   assert.equal(store.today(), '2026-11-06');
   fs.writeFileSync(store.filePath, '{broken');
@@ -86,4 +86,16 @@ test('dailyLimitRefusal refuses only when the cap is on and used up', () => {
   assert.equal(dailyLimitRefusal(ledger, '2026-11-06', 0), null);
   assert.equal(dailyLimitRefusal(ledger, '2026-11-06', 10), null);
   assert.deepEqual(dailyLimitRefusal(ledger, '2026-11-06', 5), { status: 429, error: 'voice_daily_limit' });
+});
+
+test('judge calls are counted per day and priced into the day estimate', () => {
+  let ledger = addUsage(emptyLedger(), '2026-11-06', { seconds: 60, extrasUsd: 0 });
+  ledger = addJudgeUsage(ledger, '2026-11-06', 0.0002);
+  ledger = addJudgeUsage(ledger, '2026-11-06', -5);
+  assert.equal(judgeCallsOn(ledger, '2026-11-06'), 2);
+  assert.equal(judgeCallsOn(ledger, '2026-11-05'), 0);
+  const s = summarizeUsage(ledger, '2026-11-06', { days: 2, ratePerMin: 0.05 });
+  assert.ok(Math.abs(s.today.estimatedUsd - 0.0502) < 1e-9);
+  assert.equal(s.total.judgeCalls, 2);
+  assert.equal(s.today.sessions, 1, 'a judge call is not a session');
 });

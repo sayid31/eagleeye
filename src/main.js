@@ -28,6 +28,7 @@ import { loadPhotorealisticTileset } from './mapStartup.js';
 import { runStorageKeyMigrations } from './storageKeyMigration.js';
 import { waitForFirstFrame, composeSplashReadiness } from './splashGate.js';
 import { BOOT_MARKS, finalizeBootTiming, markBoot } from './bootTiming.js';
+import { installClientLog } from './log/clientLog.js';
 
 // First statement of the entry chunk's module scope. ES imports evaluate
 // BEFORE the module body, so this mark lands at the END of eager parse+eval —
@@ -35,6 +36,9 @@ import { BOOT_MARKS, finalizeBootTiming, markBoot } from './bootTiming.js';
 // is why `boot:phase:eager-eval` spans timeOrigin→here rather than starting
 // here. The span from here to `init-start` is only the synchronous body work.
 markBoot(BOOT_MARKS.MODULE_EVAL);
+
+// Uncaught errors and app events go to the owner's Server Log (/admin).
+installClientLog({ version: import.meta.env.GEV_APP_VERSION });
 
 // One-time carry-forward of pre-rebrand `godsEyeView.*` localStorage keys
 // onto the current `gev:*` convention — must run before any layer/panel

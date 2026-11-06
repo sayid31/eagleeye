@@ -62,7 +62,7 @@ function waitForIceComplete(pc) {
 }
 
 export class GevLiveController {
-  constructor({ runner, ui = null, radio = null, limits, onSessionEnd, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
+  constructor({ runner, ui = null, radio = null, limits, onSessionEnd, observer = null, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
     this.runner = runner;
     this.ui = ui;
     // Voice-vs-Radio speaker ownership (gevLiveRadio.js); optional so the
@@ -80,6 +80,8 @@ export class GevLiveController {
     // and the end-of-session usage report hook (daily ledger).
     this.sessionLimits = createSessionLimitGuard({ ...this._meterDeps, onLimit: (reason) => this._onSessionLimit(reason) });
     this.onSessionEnd = onSessionEnd;
+    // Read-only turn/status observer for the Server Log (liveVoiceLog.js).
+    this.observer = observer;
 
     // Drives the dock mic's waveform from the real input level (--mic-level).
     // `data-meter` tells the CSS whether a reactive level exists or it must fall
@@ -117,6 +119,7 @@ export class GevLiveController {
 
   /** Set the status label and detail line together. */
   setStatus(status, detail) {
+    this.observer?.onStatus?.(status, detail);
     this._setStatus(status);
     if (this.ui?.detail) this.ui.detail.textContent = detail || STATUS_LABELS[status] || '';
     if (this.ui?.errorDetail) {
@@ -243,9 +246,11 @@ export class GevLiveController {
         send: (event) => this._send(event),
         isOpen: () => this.dc === dc && dc.readyState === 'open' && !this._tearingDown,
         onTranscript: () => { this.sessionLimits.touch(); if (this.status === 'connecting' || this.status === 'listening') this.setStatus('listening', 'Ask or command'); },
-        onInputTranscript: () => this.sessionLimits.touch(),
-        onToolStart: () => { this.sessionLimits.touch(); this.setStatus('executing', 'Working…'); },
-        onToolResult: (_fc, result) => {
+        onInputTranscript: (delta) => { this.sessionLimits.touch(); this.observer?.onInput?.(delta); },
+        onSpokenTranscript: (delta) => this.observer?.onOutput?.(delta),
+        onToolStart: (fc) => { this.sessionLimits.touch(); this.observer?.onTool?.(fc.name); this.setStatus('executing', 'Working…'); },
+        onToolResult: (fc, result) => {
+          this.observer?.onToolResult?.(fc.name, result);
           this.setStatus('listening', 'Ask or command');
           void this.radio?.onToolResult(result);
           // A tool result carrying its own per-token cost (the screenshot

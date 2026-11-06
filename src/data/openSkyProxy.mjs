@@ -14,6 +14,7 @@
  * this proxy uses to survive a full day of continuous polling).
  */
 import { coalesceProxyRequest, readResponseJsonCapped } from '../server/proxyInfra.mjs';
+import { logServerEvent } from '../admin/log/serverLogStore.mjs';
 import { normalizeAdsbLolPointResponse } from './adsbLolFallback.js';
 import { requiredFiniteQueryNumber } from './regionalProxyHandlers.mjs';
 
@@ -39,6 +40,8 @@ let _openskyCacheSourceEpochMs = null;
 /** TTL for the OpenSky response cache (ms). */
 const OPENSKY_CACHE_MS = 9000;
 // --- OpenSky credit governor (field-test fix 2026-07-06) -------------------
+/** Remaining daily credits at which the Server Log gets a quota warning. */
+const OPENSKY_QUOTA_WARN_REMAINING = 400;
 // The global /states/all this proxy fetches costs 4 CREDITS per call against
 // OpenSky's ~4000/day authenticated budget — a day with the app open burned
 // the whole quota in ~8h and the layer then hard-died until the daily reset
@@ -559,6 +562,9 @@ export function openSkyProxy() {
             // exhausting the quota mid-day. Success also clears any cooldown.
             const remaining = Number(upstream.headers.get('x-rate-limit-remaining'));
             _openskyTtlMs = openskyAdaptiveTtlMs(remaining);
+            if (Number.isFinite(remaining) && remaining <= OPENSKY_QUOTA_WARN_REMAINING) {
+              logServerEvent({ level: 'warn', source: 'proxy', code: 'proxy.quota_low', message: 'OpenSky daily credits are nearly used up', detail: { provider: 'opensky', remaining } });
+            }
             _openskyCooldownUntil = 0;
           }
 

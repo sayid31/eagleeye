@@ -25,6 +25,8 @@ export const MAX_REPORT_EXTRAS_USD = 100;
 
 const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
 const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+/** One day with nothing recorded. */
+const EMPTY_DAY = Object.freeze({ seconds: 0, sessions: 0, extrasUsd: 0, judgeCalls: 0, judgeUsd: 0 });
 const nonNegative = (v) => (typeof v === 'number' && Number.isFinite(v) && v >= 0 ? v : 0);
 
 /** @returns {{version: number, days: Record<string, {seconds: number, sessions: number, extrasUsd: number}>}} */
@@ -58,6 +60,8 @@ export function normalizeLedger(raw) {
       seconds: nonNegative(entry.seconds),
       sessions: Math.floor(nonNegative(entry.sessions)),
       extrasUsd: nonNegative(entry.extrasUsd),
+      judgeCalls: Math.floor(nonNegative(entry.judgeCalls)),
+      judgeUsd: nonNegative(entry.judgeUsd),
     };
   }
   return ledger;
@@ -96,13 +100,31 @@ export function pruneLedger(ledger, todayKey, retentionDays = USAGE_RETENTION_DA
  * @param {{seconds: number, extrasUsd: number}} report
  */
 export function addUsage(ledger, dayKey, report) {
-  const prev = ledger.days[dayKey] ?? { seconds: 0, sessions: 0, extrasUsd: 0 };
+  const prev = { ...EMPTY_DAY, ...ledger.days[dayKey] };
   const next = {
+    ...prev,
     seconds: prev.seconds + report.seconds,
     sessions: prev.sessions + 1,
     extrasUsd: prev.extrasUsd + report.extrasUsd,
   };
   return pruneLedger({ ...ledger, days: { ...ledger.days, [dayKey]: next } }, dayKey);
+}
+
+/**
+ * Add one off-topic judge call (answerJudge.mjs) to `dayKey`. Returns a NEW ledger.
+ * @param {ReturnType<typeof emptyLedger>} ledger
+ * @param {string} dayKey
+ * @param {number} usd Estimated cost of the call.
+ */
+export function addJudgeUsage(ledger, dayKey, usd) {
+  const prev = { ...EMPTY_DAY, ...ledger.days[dayKey] };
+  const next = { ...prev, judgeCalls: prev.judgeCalls + 1, judgeUsd: prev.judgeUsd + nonNegative(usd) };
+  return pruneLedger({ ...ledger, days: { ...ledger.days, [dayKey]: next } }, dayKey);
+}
+
+/** Judge calls already made on `dayKey`. */
+export function judgeCallsOn(ledger, dayKey) {
+  return ledger.days[dayKey]?.judgeCalls ?? 0;
 }
 
 /**
@@ -133,7 +155,7 @@ export function dailyLimitRefusal(ledger, dayKey, dailyMinutes) {
 
 /**
  * Per-day rows for the Usage & Cost page, newest first, with empty days filled
- * so the table has no gaps. USD = audio minutes × rate + reader extras.
+ * so the table has no gaps. USD = audio minutes × rate + reader extras + judge calls.
  * @param {ReturnType<typeof emptyLedger>} ledger
  * @param {string} todayKey
  * @param {{days?: number, ratePerMin?: number}} [options]
@@ -141,13 +163,15 @@ export function dailyLimitRefusal(ledger, dayKey, dailyMinutes) {
 export function summarizeUsage(ledger, todayKey, { days = 30, ratePerMin } = {}) {
   const rows = Array.from({ length: days }, (_, offset) => {
     const day = shiftDayKey(todayKey, offset);
-    const entry = ledger.days[day] ?? { seconds: 0, sessions: 0, extrasUsd: 0 };
-    return { day, ...entry, estimatedUsd: estimateLiveCostUsd(entry.seconds, ratePerMin) + entry.extrasUsd };
+    const entry = { ...EMPTY_DAY, ...ledger.days[day] };
+    return { day, ...entry, estimatedUsd: estimateLiveCostUsd(entry.seconds, ratePerMin) + entry.extrasUsd + entry.judgeUsd };
   });
   const total = rows.reduce((sum, row) => ({
     seconds: sum.seconds + row.seconds,
     sessions: sum.sessions + row.sessions,
+    judgeCalls: sum.judgeCalls + row.judgeCalls,
+    judgeUsd: sum.judgeUsd + row.judgeUsd,
     estimatedUsd: sum.estimatedUsd + row.estimatedUsd,
-  }), { seconds: 0, sessions: 0, estimatedUsd: 0 });
+  }), { seconds: 0, sessions: 0, judgeCalls: 0, judgeUsd: 0, estimatedUsd: 0 });
   return { today: rows[0], rows, total };
 }

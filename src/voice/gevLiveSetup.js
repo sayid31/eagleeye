@@ -18,6 +18,8 @@ import { createViewportReader, READ_SCREEN_TOOL_NAME } from './gevLiveVision.js'
 import { createVoiceControl } from './gevLiveVoiceControlUi.js';
 import { createLiveRadioBridge } from './gevLiveRadio.js';
 import { DEFAULT_VOICE_CONFIG, loadVoiceConfig, reportVoiceUsage, VOICE_SETTINGS_SAVED_EVENT } from './voiceConfigClient.js';
+import { createLiveVoiceLog } from './liveVoiceLog.js';
+import { logClientEvent } from '../log/clientLog.js';
 
 /** Mic detail line when the owner's daily voice minutes are used up. */
 export const DAILY_LIMIT_REACHED_MESSAGE = 'Menit suara harian sudah habis. Atur batasnya di /admin > AI Configuration > General.';
@@ -55,6 +57,20 @@ export function initGevLiveVoice({
   const actionRunner = createGevActionRunner({ viewer, styleManager, dataManager, sceneDirector, annotations });
   const ui = createVoiceControl({ reset: true });
 
+  // Server Log: session/tool events + finished turns for the off-topic judge.
+  // `--mic-level` is the live meter's own output (0..1); absent = no meter.
+  const voiceLog = createLiveVoiceLog({
+    log: logClientEvent,
+    readMicLevel: () => {
+      const raw = ui.root?.dataset?.meter === 'live' ? ui.root.style.getPropertyValue('--mic-level') : '';
+      return raw === '' ? null : Number(raw);
+    },
+  });
+  const layerCount = (layerId) => {
+    const count = Number(dataManager?.getLayerStatsRaw?.(layerId)?.count);
+    return Number.isFinite(count) ? count : null;
+  };
+
   let controller = null;
   const radio = createLiveRadioBridge({
     dataManager,
@@ -62,13 +78,15 @@ export function initGevLiveVoice({
     isActive: () => Boolean(controller?.isActive()),
   });
   controller = new GevLiveController({
-    runner: createLiveRunner(actionRunner),
+    runner: voiceLog.wrapRunner(createLiveRunner(actionRunner), { getLayerCount: layerCount }),
     ui,
     radio,
+    observer: voiceLog.observer,
     // Each finished session goes into the daily ledger; the config is re-read
     // AFTER the report lands so "minutes left today" is current. (The hook only
     // fires after a session ends, long after refreshVoiceConfig is defined.)
     onSessionEnd: (state) => {
+      voiceLog.sessionEnded(state);
       void reportVoiceUsage({ seconds: state.seconds, extrasUsd: state.extrasUsd }).finally(() => refreshVoiceConfig());
     },
   });

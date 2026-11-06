@@ -11,6 +11,7 @@ import { watchNativeHls } from './cctvNativeHlsWatch.js';
 import { isSourceOffline } from './cctvSourceHealth.mjs';
 import { notifyListeners } from './cctvPublicState.js';
 import { S } from './cctvState.js';
+import { logClientEvent } from '../log/clientLog.js';
 
 /**
  * Plays an HLS feed through the browser's own engine, with the no-data watchdog
@@ -102,6 +103,10 @@ export function attachHlsJs(runtime, video, url, loadHlsModule = () => import('h
  * @param {string|null} [reason] - 'no-data' when nothing arrived from the source.
  */
 export function setPlayback(runtime, state, attempt, reason = null) {
+  // A camera entering a failed state is reported once per transition (checklist 1E).
+  if ((state === 'unavailable' || state === 'retrying') && runtime.playback?.state !== state) {
+    logClientEvent({ level: 'warn', source: 'cctv', code: `cctv.${state}`, message: `Camera stream ${state}${reason ? ` (${reason})` : ''}`, detail: { camera: String(runtime.cameraId ?? '') } });
+  }
   runtime.playback = { state, attempt, reason };
   runtime.lastPlaceholderPaintAt = 0;
   notifyListeners();

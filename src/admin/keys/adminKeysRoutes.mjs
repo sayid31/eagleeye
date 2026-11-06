@@ -21,6 +21,19 @@ import { requireAdminSession } from '../auth/requireAdminSession.mjs';
 import { readSmallBody, respondNoStore, summarize } from './keyHttp.mjs';
 import { KEY_TEST_NOTES, testProviderKey } from './keyConnectionTests.mjs';
 import { scheduleDevServerRestart } from './providerKeyStore.mjs';
+import { logServerEvent } from '../log/serverLogStore.mjs';
+
+/** A failed connection test → Server Log entry (checklist 1E); ok/untestable log nothing. */
+export function keyTestLogEvent(entry, outcome) {
+  if (outcome.result !== 'rejected' && outcome.result !== 'unreachable') return null;
+  return {
+    level: outcome.result === 'rejected' ? 'error' : 'warn',
+    source: 'keys',
+    code: outcome.result === 'rejected' ? 'keys.rejected' : 'keys.unreachable',
+    message: `${entry.title}: ${outcome.message}`,
+    detail: { provider: entry.id, ...(outcome.httpStatus ? { httpStatus: outcome.httpStatus } : {}) },
+  };
+}
 
 async function readJsonBody(req) {
   let body;
@@ -47,9 +60,10 @@ const statusPayload = (store) => ({ ...store.status(), testNotes: KEY_TEST_NOTES
  * @param {{record: (entry: object) => boolean}} deps.audit
  * @param {(req: any) => {ok: boolean, status?: number, error?: string}} [deps.guard]
  * @param {(entry: object) => Promise<object>} [deps.testKey]
+ * @param {(event: object) => void} [deps.log] Server Log producer.
  */
 export function installAdminKeysRoutes(middlewares, {
-  store, restart, audit, guard = (req) => requireAdminSession(req), testKey = (entry) => testProviderKey(entry),
+  store, restart, audit, guard = (req) => requireAdminSession(req), testKey = (entry) => testProviderKey(entry), log = logServerEvent,
 }) {
   middlewares.use('/api/admin/keys', async (req, res) => {
     const admitted = guard(req);
@@ -64,6 +78,8 @@ export function installAdminKeysRoutes(middlewares, {
       if (!entry) return respondNoStore(res, 400, { error: 'Unknown provider' });
       const outcome = await testKey(entry);
       audit.record({ event: 'keys.tested', provider: entry.id, result: outcome.result, httpStatus: outcome.httpStatus });
+      const logEvent = keyTestLogEvent(entry, outcome);
+      if (logEvent) log(logEvent);
       return respondNoStore(res, 200, { id: entry.id, ...outcome });
     }
     if (route !== '/') return respondNoStore(res, 404, { error: 'Not found' });

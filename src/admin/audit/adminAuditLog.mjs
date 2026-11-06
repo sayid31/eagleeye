@@ -58,10 +58,12 @@ export function sanitizeAuditEntry(input, at) {
 }
 
 /**
- * @param {{filePath?: string, fileSystem?: typeof fs, now?: () => Date, maxLines?: number}} [options]
+ * @param {{filePath?: string, fileSystem?: typeof fs, now?: () => Date, maxLines?: number,
+ *   onRecord?: (entry: object) => void}} [options] `onRecord` receives each sanitized
+ *   entry (the Server Log mirrors audit events until the Audit Log page exists).
  */
 export function createAdminAuditLog({
-  filePath = DEFAULT_ADMIN_AUDIT_PATH, fileSystem = fs, now = () => new Date(), maxLines = AUDIT_MAX_LINES,
+  filePath = DEFAULT_ADMIN_AUDIT_PATH, fileSystem = fs, now = () => new Date(), maxLines = AUDIT_MAX_LINES, onRecord,
 } = {}) {
   function trim() {
     const lines = fileSystem.readFileSync(filePath, 'utf8').split('\n').filter(Boolean);
@@ -73,6 +75,7 @@ export function createAdminAuditLog({
   function record(input) {
     const entry = sanitizeAuditEntry(input, now());
     if (!entry) return false;
+    onRecord?.(entry);
     try {
       fileSystem.mkdirSync(path.dirname(filePath), { recursive: true });
       fileSystem.appendFileSync(filePath, `${JSON.stringify(entry)}\n`, { mode: 0o600 });

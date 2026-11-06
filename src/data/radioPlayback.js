@@ -9,6 +9,7 @@ import { selectRadioStation, updateSelectionEntity } from './radioSelection.js';
 import { emitPlaybackControl, emitState, getRadioUIState, rankedVisibleStations, resetRadioClusterOverlayIdentities, selectedStation, subscribeToRadio } from './radioSelectors.js';
 import { S } from './radioState.js';
 import { endRadioTuning, recordDirectoryClick, tryRadioFallback } from './radioTuning.js';
+import { logClientEvent } from '../log/clientLog.js';
 
 /** Play the selected broadcaster stream after an explicit user action. */
 export async function playSelectedRadio({ origin = 'programmatic', attemptId = null } = {}) {
@@ -68,6 +69,7 @@ export async function playSelectedRadio({ origin = 'programmatic', attemptId = n
     S._audioError = error?.name === 'NotAllowedError'
       ? 'Pemutaran memerlukan klik atau ketukan langsung.'
       : 'Aliran penyiar tidak dapat dimulai.';
+    logClientEvent({ level: 'warn', source: 'radio', code: 'radio.play_failed', message: `Station could not play: ${error?.name || 'error'}`, detail: { station: String(station.name ?? station.id) } });
     emitState();
     return false;
   }

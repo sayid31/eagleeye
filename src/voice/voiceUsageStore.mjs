@@ -10,7 +10,7 @@
 import fs from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { writeJsonFileAtomic } from '../server/atomicJsonFile.mjs';
-import { addUsage, emptyLedger, localDayKey, normalizeLedger } from './voiceUsageCore.mjs';
+import { addJudgeUsage, addUsage, emptyLedger, localDayKey, normalizeLedger } from './voiceUsageCore.mjs';
 
 /** Default location: `<repo>/.gev-cache/voice-usage.json` (gitignored). */
 export const DEFAULT_VOICE_USAGE_PATH = fileURLToPath(
@@ -48,5 +48,12 @@ export function createVoiceUsageStore({ filePath = DEFAULT_VOICE_USAGE_PATH, fil
     return next;
   }
 
-  return { read, record, today: () => localDayKey(now()), filePath };
+  /** Add one judge call's estimated cost to today's row and persist. */
+  function recordJudge(usd) {
+    const next = addJudgeUsage(read(), localDayKey(now()), usd);
+    writeJsonFileAtomic(filePath, next, { fileSystem, label: 'voice usage' });
+    return next;
+  }
+
+  return { read, record, recordJudge, today: () => localDayKey(now()), filePath };
 }

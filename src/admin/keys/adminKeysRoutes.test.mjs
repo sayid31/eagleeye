@@ -122,3 +122,14 @@ test('legacy POWER UP routes still work on loopback and share the same store', a
   assert.equal((await request(routes.get('/api/setup/status'), { remote: '192.168.1.5' })).status, 403);
   assert.equal((await request(routes.get('/api/setup/keys'), { method: 'POST', body: {}, headers: { 'content-type': 'application/json' } })).status, 403);
 });
+
+test('keyTestLogEvent logs rejected as error, unreachable as warn, and nothing for ok/untestable', async () => {
+  const { keyTestLogEvent } = await import('./adminKeysRoutes.mjs');
+  const entry = { id: 'openai', title: 'OPENAI' };
+  assert.deepEqual(keyTestLogEvent(entry, { result: 'rejected', httpStatus: 401, message: 'The provider rejected the key.' }), {
+    level: 'error', source: 'keys', code: 'keys.rejected', message: 'OPENAI: The provider rejected the key.', detail: { provider: 'openai', httpStatus: 401 },
+  });
+  assert.equal(keyTestLogEvent(entry, { result: 'unreachable', message: 'x' }).level, 'warn');
+  assert.equal(keyTestLogEvent(entry, { result: 'ok', message: 'x' }), null);
+  assert.equal(keyTestLogEvent(entry, { result: 'untestable', message: 'x' }), null);
+});
