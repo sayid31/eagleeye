@@ -23,7 +23,6 @@ import {
 } from './renderGovernor.js';
 import { installScopeMask } from './scopeMask.js';
 import { initFirstRunExperience } from './firstRunExperience.js';
-import { initKeySetup } from './keySetup.js';
 import { loadPhotorealisticTileset } from './mapStartup.js';
 import { runStorageKeyMigrations } from './storageKeyMigration.js';
 import { waitForFirstFrame, composeSplashReadiness } from './splashGate.js';
@@ -354,11 +353,6 @@ async function init() {
       loadingScreen.addEventListener('transitionend', revealFirstRun, { once: true });
       setTimeout(revealFirstRun, 900);
     });
-
-    // Provider Settings (the POWER UP chip + dialog). Fire-and-forget: the
-    // module removes its own surface when the dev-server endpoint is absent
-    // (prod builds, non-local visitors), so this costs prod exactly nothing.
-    void initKeySetup();
 
     // Expose for debugging
     // Idle render governor: flips the scene into requestRenderMode whenever

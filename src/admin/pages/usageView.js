@@ -2,7 +2,7 @@
 /**
  * Presentation helpers for AI Configuration → Usage & Cost: duration and
  * money formatting, the daily-cap status line, and the per-session cost-limit
- * form (same text rules as POWER UP: empty = built-in default, "off" = none).
+ * form (empty = built-in default, "off" = none, else USD).
  *
  * Pure — no DOM, no network.
  *
@@ -10,7 +10,21 @@
  */
 
 import { formatCostUsd } from '../../voice/voiceCost.js';
-import { limitToText, textToLimit } from '../../voiceSettingsForm.js';
+
+/** Cost-limit value → field text: '' = built-in default, 'off' = disabled, else USD. */
+export function limitToText(value) {
+  if (value === null || value === undefined) return '';
+  return String(value);
+}
+
+/** Field text → cost-limit value; a comma decimal is accepted ("1,5"). */
+export function textToLimit(text) {
+  const raw = String(text ?? '').trim().toLowerCase();
+  if (raw === '') return { ok: true, value: null };
+  if (raw === 'off') return { ok: true, value: 'off' };
+  const n = Number(raw.replace(',', '.'));
+  return Number.isFinite(n) ? { ok: true, value: n } : { ok: false };
+}
 
 /** "0 min", "4 min 05 s", "2 h 03 min" — rounded down to whole seconds. */
 export function formatDuration(seconds) {

@@ -55,7 +55,7 @@ export function openAiVoiceProxy({
   audit = null,
 } = {}) {
   function install(middlewares) {
-    // Owner-editable voice settings (POWER UP → Suara and /admin). Registered
+    // Owner-editable voice settings (edited from /admin). Registered
     // before the session route so /api/live/session can read the same store.
     installVoiceSettingsRoutes(middlewares, { store: settingsStore, usageStore, readRequestBody });
     installAdminVoiceRoutes(middlewares, {

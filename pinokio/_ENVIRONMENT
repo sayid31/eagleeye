@@ -1,7 +1,7 @@
 # EagleEye View works without any API keys.
-# Easiest way to add one: open PROVIDER SETTINGS inside the running app (the
-# POWER UP chip, bottom-right). It saves into this file for you with owner-only
-# permissions and restarts the app — you never need to edit this file by hand.
+# Easiest way to add one: open /admin -> API Keys in the running app (needs the
+# one-time admin Google sign-in setup). It saves into this file for you with
+# owner-only permissions and restarts the app.
 # Manual fallback: use Pinokio's File Explorer to reveal this ignored
 # pinokio/ENVIRONMENT file, edit it with a trusted local text editor, uncomment
 # only the providers you need, then Stop and Start the app. This file is

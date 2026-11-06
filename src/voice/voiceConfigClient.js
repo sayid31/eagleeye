@@ -16,9 +16,6 @@
 export const VOICE_CONFIG_URL = '/api/voice/config';
 export const VOICE_USAGE_URL = '/api/voice/usage';
 
-/** Window event the POWER UP panel fires after a successful save. */
-export const VOICE_SETTINGS_SAVED_EVENT = 'gev:voice-settings-saved';
-
 /** What "no settings" means: enabled, `null` cost limits = built-in $2/$5, no session limits. */
 export const DEFAULT_VOICE_CONFIG = Object.freeze({
   enabled: true,

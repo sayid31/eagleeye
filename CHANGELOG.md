@@ -11,10 +11,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   terang. Peta tidak berubah.
 - Login **/admin** memakai akun Google. Hanya email di `ADMIN_EMAIL` yang bisa masuk; sesi berlaku 24 jam dan
   login wajib juga di komputer lokal. Perlu `ADMIN_SESSION_SECRET` (minimal 32 karakter) di `.env`.
-- Panel **POWER UP** kini punya bagian **Suara**: saklar fitur suara, peringatan dan batas keras biaya,
-  nama asisten, dan catatan gaya bicara. Pengaturan disimpan lokal, terpisah dari kunci API (kunci tidak
-  pernah ditampilkan atau diubah dari sini). Jika belum pernah disimpan, suara berperilaku persis seperti
-  sebelumnya.
+- Pengaturan suara disimpan lokal, terpisah dari kunci API (kunci tidak pernah ditampilkan atau diubah dari
+  sana). Jika belum pernah disimpan, suara berperilaku persis seperti sebelumnya.
 - **/admin → AI Configuration → General**: saklar suara, nama asisten, catatan kepribadian, pembatasan
   topik, lima kelompok izin tool (baca-saja, kamera, tampilan/layer, media CCTV/radio, menggambar di peta),
   serta batas menit suara harian, durasi maksimum sesi, dan tutup otomatis saat diam. Kelompok yang
@@ -33,15 +31,22 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   yang memeriksa kunci langsung ke penyedianya (Google Maps tidak bisa diuji dari server). Kunci OpenAI
   dikelola terpisah di **AI Configuration → AI Provider**. Nilai kunci
   tidak pernah ditampilkan. Kunci yang diset di luar aplikasi (shell, Keychain) tampil hanya-baca.
-  POWER UP tetap berfungsi dan memakai penyimpanan yang sama.
 - Perubahan kunci, uji koneksi, dan penyimpanan pengaturan suara dicatat ke jejak audit lokal (hanya
   nama variabel, tanpa nilai atau email).
 - **/admin → AI Configuration → Usage & Cost**: menit dan perkiraan biaya suara hari ini dan per hari
   (7/30/90 hari), sisa menit harian, serta peringatan dan batas keras biaya per sesi. Angka adalah
   perkiraan dari meteran mic, bukan tagihan OpenAI.
-- Bagian **Suara** juga punya **pembatasan topik** (bawaan mati): daftar topik yang diizinkan dan satu kalimat
-  penolakan. Perintah aplikasi dan pertanyaan seperti "ini di mana" tidak pernah ditolak. Ini panduan berbasis
-  prompt (usaha terbaik), bukan pengaman mutlak.
+- **Pembatasan topik** suara (bawaan mati): daftar topik yang diizinkan dan satu kalimat penolakan. Perintah
+  aplikasi dan pertanyaan seperti "ini di mana" tidak pernah ditolak. Ini panduan berbasis prompt (usaha
+  terbaik), bukan pengaman mutlak.
+
+### Removed
+
+- Panel **POWER UP** (chip di kanan bawah, tab KUNCI dan SUARA, `?setup=1`) beserta rute `/api/setup/*`.
+  Kunci kini dikelola di **/admin → API Keys** (kunci OpenAI di **AI Configuration → AI Provider**) dan
+  pengaturan suara di **/admin → AI Configuration**. `/admin` perlu login Google sekali disiapkan di `.env`;
+  tanpa itu, kunci tetap bisa ditulis langsung ke `.env`. Tab peta membaca ulang pengaturan suara saat
+  tab itu kembali terlihat.
 
 ### Changed
 

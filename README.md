@@ -126,21 +126,22 @@ manually.
 **macOS shortcut:** `./scripts/dev-fresh.sh` clears the Vite cache and pulls any
 configured keys straight from the Keychain. It starts keyless too.
 
-### Then power it up — in the app, not in a file
+### Then power it up — from the owner dashboard
 
-Keys are upgrades, not prerequisites. When you want one, click the **POWER UP**
-chip in the bottom-right corner: Provider Settings lists every supported key,
-what it switches on, and where to get it. Paste, hit **SAVE KEYS**, and the app
-restarts itself with the new capability on. Once everything is configured the
-chip reads **POWERED UP** — and if a compact layout hides it, `?setup=1`
-reopens the same panel. The owner dashboard at `/admin` → **API Keys** (Google
-sign-in) manages the same keys and can test each provider connection.
+Keys are upgrades, not prerequisites. When you want one, open **`/admin`** →
+**API Keys** (the OpenAI key is under **AI Configuration → AI Provider**): every
+supported key, what it switches on, where to get it, and a **Test connection**
+button. Paste, save, and the app restarts itself with the new capability on.
+`/admin` needs a one-time Google sign-in setup in `.env` — `GOOGLE_CLIENT_ID`,
+`GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`, `ADMIN_SESSION_SECRET` (details in
+[docs/CURRENT-STATE.md](docs/CURRENT-STATE.md), "Admin login"); until then, add
+keys to `.env` directly.
 
 - **Where keys land:** Pinokio → the app's ignored `pinokio/ENVIRONMENT`; a
   terminal clone → the repo-root `.env`. Either file is made owner-only
   *before* a secret is written into it, and it never leaves your machine.
 - **Keys you already have stay yours:** values from your shell or the macOS
-  Keychain show as *configured externally* and are read-only to the panel.
+  Keychain show as *set outside this app* and are read-only in `/admin`.
 - **What to get first:** the free [Cesium ion](https://cesium.com/ion) token
   (eligible personal, non-commercial use; current terms and quotas apply) for
   photorealistic 3D and world terrain; a Google Maps key only for the direct,
@@ -151,12 +152,12 @@ sign-in) manages the same keys and can test each provider connection.
 > [!WARNING]
 > Do not enter credentials in Pinokio 8.0.40's native **Configure** panel: that
 > release does not save this nested app file correctly, and it logs submitted
-> values. Use Provider Settings inside the app instead. Both file stores are
+> values. Use `/admin` → API Keys instead. Both file stores are
 > local plaintext; on macOS the Keychain via `./scripts/dev-fresh.sh` remains
 > the stronger option.
 
-The server binds to **localhost** on both paths, and Provider Settings answers
-requests only from your machine. Browser-side keys (Google Maps, Cesium ion)
+The server binds to **localhost** on both paths, and the `/admin` key routes
+answer only a signed-in admin session. Browser-side keys (Google Maps, Cesium ion)
 must be restricted at their providers — [SECURITY.md](SECURITY.md) shows how,
 and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
@@ -340,7 +341,6 @@ src/
 ├── main.js                 # Bootstrap: Google 3D tiles, layer registration
 ├── ui.js                   # Runtime UI — panels, HUD, styles, control facade
 ├── hud.js                  # Intelligence HUD + AI scene summary
-├── keySetup.js             # POWER UP panel — in-app provider keys (dev server only)
 ├── mapStackController.js   # Basemap switching — Google 3D / Esri / OSM / ion stacks
 ├── iconOrientation.js      # Screen-projected world-space headings + horizon cull
 ├── voice/                  # GPT-Live session + 28 voice tools
@@ -359,10 +359,9 @@ See [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md) for the authoritative runti
 
 Most of the globe is 🟢: flights (anonymous), military traffic, satellites, earthquakes, CCTV, radio, bikeshare, space missions, mapped installations, and every bundled dataset run with **zero keys**.
 
-**And you never have to edit a file to add one.** Click **POWER UP** in the
-bottom-right corner of the running app, paste the key into Provider Settings,
-hit **SAVE KEYS** — the app writes it to its own local store with owner-only
-permissions and restarts itself. Everything below is the map of what each key
+**Once `/admin` is set up you never have to edit a file to add one.** Open
+`/admin` → API Keys, paste the key, save — the app writes it to its own local
+store with owner-only permissions and restarts itself. Everything below is the map of what each key
 actually buys you.
 
 ### What you need for the good experience
@@ -442,11 +441,10 @@ Everything above is the deliberately cheap baseline — enough to get a real tas
 
 By default nobody else can reach your server — it binds to localhost. To share on your LAN, opt in explicitly (`npm run dev -- --host 0.0.0.0 --port 4173`, or `HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** Set the per-IP throttles (`GEV_RATELIMIT_OPENAI_PER_MIN`, `GEV_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) and, before anything else, **set provider-side budget caps** (Google Cloud budgets, OpenAI usage limits): the throttles are app-level guards, not billing caps. Full threat model in [SECURITY.md](SECURITY.md).
 
-Provider Settings switches itself off whenever the server is shared. The panel
-answers loopback requests only, and any sharing mode disables the surface
-outright rather than trusting the socket — tunnelled traffic reaches the server
-from loopback too, so socket identity can't carry that boundary. Nobody on your
-LAN gets a key-entry form.
+Key management lives behind the `/admin` Google sign-in: every key route needs
+the signed admin session cookie, plus the exact Origin and a JSON body for
+writes, and the routes exist only on the dev server. Nobody on your LAN gets a
+key-entry form without signing in as `ADMIN_EMAIL`.
 
 Pinokio LAN and Cloudflare sharing are currently unavailable for this launcher.
 The supported Pinokio release can activate sharing again when the Open-action

@@ -35,8 +35,7 @@
  *   - src/data/terrainHeightsProxy.js — Re:Earth ellipsoidal point-height
  *     lookups.
  *
- *   - src/admin/keys/ — the provider-key store (POWER UP + /admin → API
- *     Keys). Its boot-time provenance snapshots stay in this file because
+ *   - src/admin/keys/ — the provider-key store behind /admin → API Keys. Its boot-time provenance snapshots stay in this file because
  *     they must be captured when THIS module first loads.
  *
  * `nominatimSearchProxy()` (forward geocode) stays defined in this file —
@@ -104,7 +103,6 @@ import {
 } from './src/data/regionalProxyHandlers.mjs';
 import { knownKeySetupEnvVars } from './src/keySetupCore.mjs';
 import { createProviderKeyStore } from './src/admin/keys/providerKeyStore.mjs';
-import { legacyKeySetupPlugin } from './src/admin/keys/legacyKeySetupPlugin.mjs';
 import { adminKeysPlugin } from './src/admin/keys/adminKeysRoutes.mjs';
 import { createAdminAuditLog } from './src/admin/audit/adminAuditLog.mjs';
 import { serverLogPlugin } from './src/admin/log/serverLogPlugin.mjs';
@@ -179,7 +177,7 @@ const adminAudit = createAdminAuditLog({
 });
 
 /**
- * The provider-key store behind POWER UP and /admin → API Keys
+ * The provider-key store behind /admin → API Keys
  * (src/admin/keys/providerKeyStore.mjs). It is handed the BOOT snapshots
  * above so a restart's re-evaluation cannot reclassify keys.
  */
@@ -670,9 +668,7 @@ export default defineConfig(({ mode }) => {
       openAiVoiceProxy({ audit: adminAudit }),
       googlePlacesContextProxy(),
       nominatimSearchProxy(),
-      // Provider keys: POWER UP's loopback routes (until POWER UP is removed)
-      // and /admin → API Keys share ONE store; both are dev-server only.
-      legacyKeySetupPlugin({ store: providerKeyStore, onEvent: (entry) => adminAudit.record(entry) }),
+      // Provider keys are managed only from /admin → API Keys (dev server only).
       adminKeysPlugin({ store: providerKeyStore, audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
     ],
     server: {

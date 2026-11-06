@@ -3294,3 +3294,15 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Not chosen.** *Blocking or rewriting answers:* audio is already spoken (decision B). *A larger judge model:* not needed at this accuracy for a record-only signal; `OPENAI_JUDGE_MODEL` allows it. *Logging cost warnings:* 1D was not chosen.
 
 **Limits.** The judge is a sampled signal, not proof (accuracy varies run to run). Transcript event names are from the session allowlist and not yet observed in a live session.
+
+## 2026-11-06 — POWER UP removed; /admin is the only in-app key and voice-settings surface
+
+**Context.** T8 (plan decision 7): remove POWER UP once API Keys and General work, so two surfaces never manage the same keys and settings.
+
+**Decision.**
+
+- Removed the chip/dialog (`keySetup.js`, `keySetupTabs.js`, `voiceSettingsPanel.js`, `voiceSettingsForm.js`, their CSS and markup), the loopback routes `/api/setup/status`, `/api/setup/keys`, `/api/setup/voice`, the loopback guard `requireAdmin.mjs` and `admitKeySetupRequest`. This is step 1 of "Voice settings: deploy plan": the admin login replaces loopback as the gate; Origin/JSON checks stay (`requireAdminSession`).
+- The map tab re-reads `/api/voice/config` on `visibilitychange` instead of the panel's save event, because settings are now saved in another tab.
+- `KEY_SETUP_APPEND_HEADER` keeps its POWER UP-era text so existing `.env` files keep one header.
+
+**Trade-off (accepted by the plan).** In-app key entry now needs the one-time Google sign-in setup (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`, `ADMIN_SESSION_SECRET`); POWER UP needed nothing. A brand-new clone adds keys to `.env` (or Keychain via `dev-fresh.sh`) until `/admin` is set up. Lost niceties: the "keys waiting" chip and stripping the keyless `map=osm` share hash after the first Google key.

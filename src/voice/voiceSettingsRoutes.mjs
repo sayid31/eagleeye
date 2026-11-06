@@ -1,9 +1,8 @@
 // src/voice/voiceSettingsRoutes.mjs
 /**
- * HTTP surface for voice settings.
+ * Public HTTP surface for voice settings (the owner edits them in /admin →
+ * AI Configuration, `src/admin/api/adminVoiceRoutes.mjs`).
  *
- *  - GET/PUT /api/setup/voice — owner-only (guarded by `requireAdmin`), full
- *    settings in/out. PUT replaces; validation is server-side.
  *  - GET /api/voice/config — the minimal slice the voice client needs
  *    (`publicVoiceConfig`: enabled flag, assistant name, cost limits, session
  *    limits) plus `today.remainingSeconds` of the daily cap. No persona
@@ -17,12 +16,10 @@
  * @module voice/voiceSettingsRoutes
  */
 
-import { publicVoiceConfig, validateVoiceSettings } from './voiceSettingsCore.mjs';
+import { publicVoiceConfig } from './voiceSettingsCore.mjs';
 import { remainingDailySeconds, validateUsageReport } from './voiceUsageCore.mjs';
-import { requireAdmin as defaultRequireAdmin } from './requireAdmin.mjs';
 import { isSameOriginJson } from '../server/sameOrigin.mjs';
 
-const MAX_BODY_BYTES = 16 * 1024;
 const MAX_USAGE_BODY_BYTES = 1024;
 
 function sendJson(res, status, payload) {
@@ -37,12 +34,11 @@ function sendJson(res, status, payload) {
 /**
  * @param {import('connect').Server} middlewares
  * @param {object} deps
- * @param {{read: Function, write: Function}} deps.store
+ * @param {{read: Function}} deps.store
  * @param {{read: Function, record: Function, today: () => string}} [deps.usageStore]
  * @param {(req: any, maxBytes?: number) => Promise<string>} deps.readRequestBody
- * @param {typeof defaultRequireAdmin} [deps.requireAdmin]
  */
-export function installVoiceSettingsRoutes(middlewares, { store, usageStore, readRequestBody, requireAdmin = defaultRequireAdmin }) {
+export function installVoiceSettingsRoutes(middlewares, { store, usageStore, readRequestBody }) {
   middlewares.use('/api/voice/config', (req, res) => {
     if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
     const { settings } = store.read();
@@ -72,30 +68,4 @@ export function installVoiceSettingsRoutes(middlewares, { store, usageStore, rea
       return sendJson(res, 200, { ok: true });
     });
   }
-
-  middlewares.use('/api/setup/voice', async (req, res) => {
-    const admitted = requireAdmin(req);
-    if (!admitted.ok) return sendJson(res, admitted.status, { error: admitted.error });
-
-    if (req.method === 'GET') {
-      const { settings, valid } = store.read();
-      return sendJson(res, 200, { settings, storedValid: valid });
-    }
-    if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
-
-    let parsed;
-    try {
-      parsed = JSON.parse(await readRequestBody(req, MAX_BODY_BYTES));
-    } catch {
-      return sendJson(res, 400, { error: 'Body bukan JSON yang valid atau terlalu besar' });
-    }
-    const result = validateVoiceSettings(parsed);
-    if (!result.ok) return sendJson(res, 422, { error: 'Pengaturan tidak valid', details: result.errors });
-    try {
-      store.write(result.value);
-    } catch (error) {
-      return sendJson(res, 500, { error: error.message });
-    }
-    return sendJson(res, 200, { settings: result.value, storedValid: true });
-  });
 }

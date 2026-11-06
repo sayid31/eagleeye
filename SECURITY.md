@@ -34,9 +34,9 @@ Never commit real keys. `.env` is gitignored; only `.env.example` (placeholder n
 
 The official Pinokio launcher stores optional values in its ignored local
 `pinokio/ENVIRONMENT` file and Vite explicitly denies that filename. Add,
-replace, or remove those values through the in-app **POWER UP → Provider
-Settings** panel; the server restricts the file before writing and restarts the
-local app after a save. Do not submit credentials through Pinokio 8.0.40's
+replace, or remove those values through **`/admin` → API Keys** (Google
+sign-in as `ADMIN_EMAIL`); the server restricts the file before writing and
+restarts the local app after a save. Do not submit credentials through Pinokio 8.0.40's
 native Configure form: that release targets the wrong file for this nested
 launcher layout and logs the submitted values. The ignored file is local
 plaintext, not encrypted storage. The macOS Keychain remains the stronger local

@@ -5,7 +5,7 @@
  *  - GET  /api/admin/keys       → registry + presence + source ('file' editable,
  *    'external' read-only) + which store this launch writes + test notes.
  *  - PUT  /api/admin/keys       → {ENV_VAR: value|null} (null = remove), same
- *    validation and external-key protection as POWER UP; then the dev server
+ *    validation and external-key protection (`providerKeyStore.mjs`); then the dev server
  *    restarts so browser-exposed keys re-inject (the page reloads itself).
  *  - POST /api/admin/keys/test  → {id} → connection test with the key the
  *    server holds (`keyConnectionTests.mjs`).

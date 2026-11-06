@@ -1,7 +1,7 @@
 // src/voice/voiceSystemPromptSettings.js
 /**
  * Composes the session prompt from the pinned base contract plus the owner's
- * saved settings (POWER UP → Suara).
+ * saved settings (/admin → AI Configuration).
  *
  * Invariant: with default/empty settings the result is BYTE-IDENTICAL to
  * `GEV_VOICE_SYSTEM_PROMPT` (pinned by voiceSystemPrompt.test.mjs), so a

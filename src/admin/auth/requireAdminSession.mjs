@@ -4,9 +4,6 @@
  * required. State-changing methods must also carry the exact allowed Origin
  * and a JSON content type (CSRF defence on top of SameSite=Strict).
  *
- * `src/voice/requireAdmin.mjs` stays as the guard for the legacy
- * `/api/setup/*` routes until they are moved under `/api/admin/*`.
- *
  * @module admin/auth/requireAdminSession
  */
 import { readAdminAuthConfig } from './adminAuthConfig.mjs';

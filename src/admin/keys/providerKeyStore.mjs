@@ -1,8 +1,8 @@
 // src/admin/keys/providerKeyStore.mjs
 /**
- * The provider-key credential store behind POWER UP and /admin → API Keys.
- * Moved out of vite.config.js unchanged in behavior; both HTTP surfaces
- * (`legacyKeySetupPlugin.mjs`, `adminKeysRoutes.mjs`) are thin shells over it.
+ * The provider-key credential store behind /admin → API Keys
+ * (`adminKeysRoutes.mjs` is the only HTTP surface over it). Moved out of
+ * vite.config.js with the original (POWER UP-era) behavior unchanged.
  *
  * Which store this launch owns: a Pinokio-managed launch writes the app-scoped
  * `pinokio/ENVIRONMENT`; every other launch writes the repo-root `.env` that
@@ -152,7 +152,7 @@ export function createProviderKeyStore({
     const inStore = storeValues();
     for (const name of Object.keys(verdict.updates)) {
       if (isExternallyManaged(name, inStore)) {
-        return { ok: false, httpStatus: 409, error: `${name} is configured outside Provider Settings and can only be changed where it was set` };
+        return { ok: false, httpStatus: 409, error: `${name} is configured outside this app (shell, Keychain or launcher) and can only be changed where it was set` };
       }
     }
     try {

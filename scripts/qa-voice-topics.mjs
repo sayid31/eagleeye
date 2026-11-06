@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // scripts/qa-voice-topics.mjs
 /**
- * Text-only check of the topic-restriction prompt (POWER UP → Suara).
+ * Text-only check of the topic-restriction prompt (/admin → AI Configuration → General).
  *
  * Sends in/out-of-scope questions to the Responses backend model with the
  * REAL assembled prompt + REAL tool schemas and reports refuse / tool / answer
@@ -36,7 +36,7 @@ const CASES = [
   ['allow', 'Ini di mana?'],
   ['allow', 'Zoom ke Jakarta.'],
   ['allow', 'Nyalakan layer satelit.'],
-  ['allow', 'Bagaimana cara memakai panel POWER UP?'],
+  ['allow', 'Bagaimana cara menyalakan layer kapal?'],
   ['allow', 'Halo, kamu siapa?'],
 ];
 

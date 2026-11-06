@@ -1,10 +1,10 @@
 /**
- * Key setup ("POWER UP") — the pure core.
+ * Provider key setup — the pure core.
  *
- * One registry, three pure functions, zero dependencies. The dev server's
- * /api/setup endpoints (vite.config.js) and the in-app panel (keySetup.js)
- * are both thin shells over this module, so what a key is called, what it
- * unlocks, and how a .env line is written each live in exactly one place.
+ * One registry, a few pure functions, zero dependencies. The /admin → API
+ * Keys store and routes (src/admin/keys/) are thin shells over this module,
+ * so what a key is called, what it unlocks, and how a .env line is written
+ * each live in exactly one place.
  *
  * Nothing here touches the filesystem, the network, or process.env — callers
  * pass environments in and write text out, which is also what makes every
@@ -17,7 +17,11 @@ export const KEY_SETUP_VALUE_LIMIT = 512;
 /** Most env vars accepted in one save. The registry defines nine. */
 export const KEY_SETUP_UPDATE_LIMIT = 16;
 
-/** Header line written above keys the panel appends to a .env file. */
+/**
+ * Header line written above keys appended to a .env file. The text predates
+ * /admin (POWER UP wrote it); it stays as is so existing .env files keep ONE
+ * header instead of gaining a second one.
+ */
 export const KEY_SETUP_APPEND_HEADER = '# Keys added by the in-app POWER UP panel';
 
 /**
@@ -96,24 +100,6 @@ export const KEY_SETUP_KEYS = Object.freeze([
   }),
 ]);
 
-/** Hostnames a Provider Settings request may arrive under or originate from. */
-const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '::1', '[::1]']);
-/** Socket addresses that count as this machine. */
-const LOOPBACK_ADDRESSES = new Set(['127.0.0.1', '::1', '::ffff:127.0.0.1']);
-
-/** Parse an exact local request authority from a Host header. */
-function localAuthority(hostHeader, protocol) {
-  const raw = String(hostHeader || '').trim().toLowerCase();
-  const scheme = String(protocol || '').toLowerCase();
-  if (!raw || !['http:', 'https:'].includes(scheme) || /[\s/?#@]/.test(raw)) return null;
-  try {
-    const parsed = new URL(`${scheme}//${raw}`);
-    return LOCAL_HOSTNAMES.has(parsed.hostname.toLowerCase()) ? parsed.origin : null;
-  } catch {
-    return null;
-  }
-}
-
 /** True only for a subprocess that exited normally and successfully. */
 export function commandCompletedSuccessfully(result) {
   return !!result && !result.error && !result.signal && result.status === 0;
@@ -163,95 +149,6 @@ export function parseWindowsUserSid(stdout) {
   return /^(?:S-1-5-21-(?:\d+-){3}\d+|S-1-12-1-(?:\d+-){3}\d+)$/i.test(sid)
     ? sid
     : null;
-}
-
-/**
- * The admission gate for the Provider Settings endpoints — pure, exported so
- * every refusal below is pinned by a unit assertion rather than a review note.
- *
- * Why each check exists:
- *  - sharing signals: any tunnel/LAN sharing mode disables the surface
- *    outright — a credential-writing endpoint has no business existing on a
- *    shared instance, and tunnel traffic reaches the server FROM loopback, so
- *    the socket check below cannot carry that boundary alone;
- *  - loopback socket: refuses LAN peers when the server is bound wide;
- *  - local Host header: tunnel and DNS-rebinding traffic carries a foreign
- *    Host even when the socket says loopback;
- *  - exact same Origin on POST: a hostile web page can make a browser POST to
- *    localhost, and a non-browser caller must not bypass that boundary merely
- *    by omitting the header;
- *  - JSON Content-Type on POST: forces cross-origin browsers into a CORS
- *    preflight this server never answers, closing the simple-request CSRF
- *    write primitive.
- *
- * @returns {{ok: true} | {ok: false, status: number, error: string}}
- */
-export function admitKeySetupRequest({
-  method,
-  remoteAddress,
-  hostHeader,
-  protocol = 'http:',
-  origin,
-  contentType,
-  proxyHeaders = {},
-  env = {},
-} = {}) {
-  // A request carrying reverse-proxy / CDN forwarding headers did not originate
-  // on this machine, whatever its socket says. Refuse them outright as defense
-  // in depth — the shipped tunnel (Pinokio) is force-closed at boot, so these
-  // only appear when someone has deliberately fronted the dev server.
-  const PROXY_SIGNALS = ['forwarded', 'via', 'x-forwarded-for', 'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-proto', 'x-real-ip', 'cf-connecting-ip', 'cf-ray'];
-  if (PROXY_SIGNALS.some((name) => String(proxyHeaders[name] || '').trim() !== '')) {
-    return { ok: false, status: 403, error: 'Pengaturan Penyedia tidak melayani permintaan lewat proxy' };
-  }
-  // Every sharing signal the launcher recognizes (scripts/pinokio-preflight.mjs)
-  // also disables this surface — so the gate's set is complete, not a subset the
-  // two files could drift apart on. One DELIBERATE divergence: preflight is a
-  // boot check that treats an empty PINOKIO_SHARE_VAR as sharing-on (fail closed
-  // before Start), but here an empty/unset value is the NORMAL git-clone and
-  // Pinokio state — treating it as sharing would disable Provider Settings for
-  // every ordinary launch. So a bare/sentinel value is not sharing; only a real
-  // tunnel var is. This is defense in depth regardless: the loopback+Host checks
-  // below independently refuse LAN/tunnel traffic, and under Pinokio the launcher
-  // refuses to boot at all when sharing is genuinely on.
-  const shareVar = String(env.PINOKIO_SHARE_VAR ?? '').trim();
-  const sharingEnabled = ['PINOKIO_SHARE_CLOUDFLARE', 'PINOKIO_SHARE_LOCAL']
-    .some((name) => /^(1|true)$/i.test(String(env[name] || '').trim()))
-    || (shareVar !== '' && shareVar !== '__gev_sharing_disabled__');
-  if (sharingEnabled) {
-    return { ok: false, status: 403, error: 'Pengaturan Penyedia dinonaktifkan saat berbagi aktif' };
-  }
-  if (!LOOPBACK_ADDRESSES.has(String(remoteAddress || ''))) {
-    return { ok: false, status: 403, error: 'Pengaturan Penyedia hanya melayani mesin yang menjalankan server' };
-  }
-  const authority = localAuthority(hostHeader, protocol);
-  if (!authority) {
-    return { ok: false, status: 403, error: 'Pengaturan Penyedia hanya melayani nama host lokal' };
-  }
-  if (method === 'POST' && (origin === undefined || origin === null || origin === '')) {
-    return { ok: false, status: 403, error: 'Pengaturan Penyedia memerlukan Origin lokal yang tepat' };
-  }
-  if (origin !== undefined && origin !== null && origin !== '') {
-    let parsedOrigin;
-    try {
-      parsedOrigin = new URL(String(origin));
-    } catch {
-      return { ok: false, status: 403, error: 'Origin tidak dikenal ditolak' };
-    }
-    const exactOrigin = parsedOrigin.username === ''
-      && parsedOrigin.password === ''
-      && parsedOrigin.pathname === '/'
-      && parsedOrigin.search === ''
-      && parsedOrigin.hash === ''
-      && parsedOrigin.origin === authority;
-    if (!exactOrigin) {
-      return { ok: false, status: 403, error: 'Permintaan lintas-origin ditolak' };
-    }
-  }
-  if (method === 'POST' && !String(contentType || '').toLowerCase().startsWith('application/json')) {
-    return { ok: false, status: 415, error: 'Content-Type harus application/json' };
-  }
-  return { ok: true };
 }
 
 /** @returns {Set<string>} every env var the panel is allowed to write. */

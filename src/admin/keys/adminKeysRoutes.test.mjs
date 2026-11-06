@@ -5,12 +5,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { installAdminKeysRoutes } from './adminKeysRoutes.mjs';
-import { installLegacyKeySetupRoutes } from './legacyKeySetupPlugin.mjs';
 import { createProviderKeyStore } from './providerKeyStore.mjs';
 
 // test-only fixtures, not real credentials
 const FAKE = 'test-only-key-0123456789abcdef';
-const ORIGIN = 'http://localhost:4173';
 
 function makeStore() {
   const rootDir = fs.mkdtempSync(path.join(os.tmpdir(), 'gev-keyroutes-'));
@@ -101,26 +99,6 @@ test('admin keys: /test runs the provider check and audits the result code', asy
   assert.deepEqual(audit.entries, [{ event: 'keys.tested', provider: 'openai', result: 'rejected', httpStatus: 401 }]);
   assert.equal((await call({ method: 'POST', url: '/test', body: { id: 'nope' } })).status, 400);
   assert.equal((await call({ url: '/test' })).status, 405);
-});
-
-test('legacy POWER UP routes still work on loopback and share the same store', async () => {
-  const { store, envPath } = makeStore();
-  const events = [];
-  let restarts = 0;
-  const routes = new Map();
-  installLegacyKeySetupRoutes({ use: (p, h) => routes.set(p, h) }, { store, env: {}, onEvent: (e) => events.push(e), restart: () => { restarts += 1; } });
-  const status = await request(routes.get('/api/setup/status'));
-  assert.equal(status.status, 200);
-  assert.equal(status.json.total, 8);
-  const json = { origin: ORIGIN, 'content-type': 'application/json' };
-  const save = await request(routes.get('/api/setup/keys'), { method: 'POST', body: { FIRMS_MAP_KEY: FAKE }, headers: json });
-  assert.equal(save.status, 200);
-  assert.deepEqual(save.json.saved, ['FIRMS_MAP_KEY']);
-  assert.equal(restarts, 1);
-  assert.match(fs.readFileSync(envPath, 'utf8'), /FIRMS_MAP_KEY=/);
-  assert.deepEqual(events, [{ event: 'keys.changed', source: 'power-up', saved: ['FIRMS_MAP_KEY'], removed: [] }]);
-  assert.equal((await request(routes.get('/api/setup/status'), { remote: '192.168.1.5' })).status, 403);
-  assert.equal((await request(routes.get('/api/setup/keys'), { method: 'POST', body: {}, headers: { 'content-type': 'application/json' } })).status, 403);
 });
 
 test('keyTestLogEvent logs rejected as error, unreachable as warn, and nothing for ok/untestable', async () => {

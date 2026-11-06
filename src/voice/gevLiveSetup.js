@@ -17,9 +17,12 @@ import { captureViewportImage } from './gevLiveViewport.js';
 import { createViewportReader, READ_SCREEN_TOOL_NAME } from './gevLiveVision.js';
 import { createVoiceControl } from './gevLiveVoiceControlUi.js';
 import { createLiveRadioBridge } from './gevLiveRadio.js';
-import { DEFAULT_VOICE_CONFIG, loadVoiceConfig, reportVoiceUsage, VOICE_SETTINGS_SAVED_EVENT } from './voiceConfigClient.js';
+import { DEFAULT_VOICE_CONFIG, loadVoiceConfig, reportVoiceUsage } from './voiceConfigClient.js';
 import { createLiveVoiceLog } from './liveVoiceLog.js';
 import { logClientEvent } from '../log/clientLog.js';
+
+/** Mic detail line when the owner switched voice off. */
+export const VOICE_DISABLED_MESSAGE = 'Suara dinonaktifkan di /admin > AI Configuration > General.';
 
 /** Mic detail line when the owner's daily voice minutes are used up. */
 export const DAILY_LIMIT_REACHED_MESSAGE = 'Menit suara harian sudah habis. Atur batasnya di /admin > AI Configuration > General.';
@@ -91,11 +94,12 @@ export function initGevLiveVoice({
     },
   });
 
-  // Owner settings (POWER UP > Suara and /admin). The click handler stays
+  // Owner settings (/admin > AI Configuration). The click handler stays
   // synchronous — awaiting a fetch before start() could cost the mic/audio
   // their user activation — so the config is cached and refreshed at init,
-  // after every session, and when the panel saves. Fail-open: no endpoint =
-  // old behavior. The off switch and the daily cap are enforced server-side
+  // after every session, and whenever this tab becomes visible again (the
+  // owner edits settings in the /admin tab). Fail-open: no endpoint = old
+  // behavior. The off switch and the daily cap are enforced server-side
   // (403 / 429 on /api/live/session).
   let voiceConfig = DEFAULT_VOICE_CONFIG;
   const refreshVoiceConfig = async () => {
@@ -105,7 +109,9 @@ export function initGevLiveVoice({
     controller.sessionLimits.configure({ ...voiceConfig.limits, remainingSeconds: voiceConfig.today.remainingSeconds });
   };
   void refreshVoiceConfig();
-  window.addEventListener(VOICE_SETTINGS_SAVED_EVENT, () => { void refreshVoiceConfig(); });
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') void refreshVoiceConfig();
+  });
   // Closing the tab ends the session through stop(), so its usage is reported.
   window.addEventListener('pagehide', () => { if (controller.isActive()) controller.stop(); });
 
@@ -116,7 +122,7 @@ export function initGevLiveVoice({
       return;
     }
     if (!voiceConfig.enabled) {
-      controller.setStatus('error', 'Suara dinonaktifkan di POWER UP > Suara.');
+      controller.setStatus('error', VOICE_DISABLED_MESSAGE);
       return;
     }
     if (voiceConfig.today.remainingSeconds === 0) {

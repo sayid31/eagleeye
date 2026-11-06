@@ -2,7 +2,7 @@
 /**
  * /admin data routes for AI Configuration → General and Usage & Cost:
  *
- *  - GET/PUT /api/admin/voice/settings — the same voice-settings store POWER UP
+ *  - GET/PUT /api/admin/voice/settings — the voice-settings store the session
  *    uses (PUT replaces, validated by `validateVoiceSettings`), plus the tool
  *    group catalog and limit ranges the form needs.
  *  - GET /api/admin/voice/usage?days=7|30|90 — the daily usage ledger priced

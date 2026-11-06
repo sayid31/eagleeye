@@ -929,42 +929,6 @@
     <p class="first-run-note" data-first-run-status role="status" aria-live="polite">Tips: tombol MIK GEV di dock memungkinkan Anda berbicara dengan peta.</p>
   </aside>
 
-  <!-- POWER UP — in-app key setup. Dev-server only: src/keySetup.js removes
-       both the chip and this dialog outright when /api/setup/status is not
-       there to answer (prod builds, LAN visitors). Rows are rendered from
-       that payload, so the key registry lives in src/keySetupCore.mjs alone. -->
-  <button id="key-setup-chip" type="button" hidden aria-haspopup="dialog" aria-controls="key-setup">
-    <span class="material-symbols-outlined" aria-hidden="true">bolt</span>
-    <span data-key-setup-chip-label>AKTIFKAN KUNCI</span>
-  </button>
-  <aside id="key-setup" role="dialog" aria-labelledby="key-setup-title" aria-describedby="key-setup-description" hidden>
-    <div class="key-setup-scanline" aria-hidden="true"></div>
-    <header class="key-setup-header">
-      <span class="key-setup-kicker">STASIUN DARAT · PENGATURAN PENYEDIA</span>
-      <button type="button" class="key-setup-close" data-key-setup-close aria-label="Tutup pengaturan kunci">
-        <span class="material-symbols-outlined" aria-hidden="true">close</span>
-      </button>
-    </header>
-    <h2 id="key-setup-title">Aktifkan globe</h2>
-    <p id="key-setup-description">Globe sudah berjalan tanpa kunci. Setiap kunci di bawah menyalakan feed nyata lainnya — tempel satu kunci dan kunci itu disimpan ke konfigurasi lokal aplikasi ini, lalu server memulai ulang sendiri. Kunci sisi server tetap di mesin ini; Google Maps dan Cesium ion berjalan di browser dan harus dibatasi pada penyedia. Kunci yang Anda atur di tempat lain ditampilkan tetapi tidak pernah disentuh.</p>
-    <div class="key-setup-tabs" role="tablist" aria-label="Pengaturan" data-key-setup-tabs hidden>
-      <button type="button" role="tab" id="key-setup-tab-keys" aria-controls="key-setup-pane-keys" aria-selected="true" data-key-setup-tab="keys">KUNCI</button>
-      <button type="button" role="tab" id="key-setup-tab-voice" aria-controls="key-setup-pane-voice" aria-selected="false" tabindex="-1" data-key-setup-tab="voice">SUARA</button>
-    </div>
-    <div class="key-setup-pane" id="key-setup-pane-keys" role="tabpanel" aria-labelledby="key-setup-tab-keys" data-key-setup-pane="keys">
-      <div class="key-setup-rows" data-key-setup-rows></div>
-      <div class="key-setup-footer">
-        <button type="button" class="key-setup-apply" data-key-setup-apply>SIMPAN KUNCI</button>
-        <span class="key-setup-hint">ESC untuk menutup</span>
-      </div>
-      <p class="key-setup-note" data-key-setup-status role="status" aria-live="polite">Kunci Google Maps membuka planet fotorealistis — semua yang lain menumpuk di atasnya.</p>
-    </div>
-    <!-- Suara: owner voice settings (src/voiceSettingsPanel.js). Hidden until /api/setup/voice answers. -->
-    <div class="key-setup-pane key-setup-pane-voice" id="key-setup-pane-voice" role="tabpanel" aria-labelledby="key-setup-tab-voice" data-key-setup-pane="voice" hidden>
-      <section class="key-setup-voice" data-voice-settings hidden></section>
-    </div>
-  </aside>
-
   <!-- Intelligence HUD Overlay -->
   <div id="intel-hud"></div>
 

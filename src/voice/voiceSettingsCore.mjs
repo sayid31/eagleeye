@@ -1,6 +1,6 @@
 // src/voice/voiceSettingsCore.mjs
 /**
- * Pure model for the owner-editable voice settings (POWER UP → Suara).
+ * Pure model for the owner-editable voice settings (/admin → AI Configuration).
  *
  * Contract: an absent/empty/never-saved settings object is the DEFAULT, and the
  * default reproduces the pre-settings voice behavior exactly — voice enabled,

@@ -1,6 +1,6 @@
 // src/admin/keys/keyHttp.mjs
 /**
- * HTTP helpers shared by the POWER UP key routes and /admin → API Keys.
+ * HTTP helpers for the /admin → API Keys routes.
  * @module admin/keys/keyHttp
  */
 

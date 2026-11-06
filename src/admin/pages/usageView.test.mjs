@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultVoiceSettings, validateVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
-import { costFormFromSettings, describeDailyCap, formatDuration, formatEstimate, settingsFromCostForm } from './usageView.js';
+import { costFormFromSettings, describeDailyCap, formatDuration, formatEstimate, limitToText, settingsFromCostForm, textToLimit } from './usageView.js';
 
 test('formatDuration covers zero, seconds, minutes and hours', () => {
   assert.equal(formatDuration(0), '0 min');
@@ -31,4 +31,14 @@ test('cost form: empty = built-in default, off = none, number = USD; base fields
   assert.equal(r.settings.limits.dailyMinutes, 30);
   assert.equal(validateVoiceSettings(r.settings).ok, true);
   assert.equal(settingsFromCostForm(base, { warn: 'abc', cap: '' }).ok, false);
+});
+
+test('textToLimit / limitToText: empty = default, off = disabled, number, garbage rejected', () => {
+  assert.deepEqual(textToLimit(''), { ok: true, value: null });
+  assert.deepEqual(textToLimit(' OFF '), { ok: true, value: 'off' });
+  assert.deepEqual(textToLimit('2,5'), { ok: true, value: 2.5 });
+  assert.deepEqual(textToLimit('abc'), { ok: false });
+  assert.equal(limitToText(null), '');
+  assert.equal(limitToText('off'), 'off');
+  assert.equal(limitToText(3), '3');
 });

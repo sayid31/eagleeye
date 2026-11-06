@@ -1,7 +1,7 @@
 // src/admin/adminTheme.js
 /**
  * Light/dark choice for the admin dashboard. Kept separate from the map
- * app's theme tokens on purpose: /admin is a plain dashboard, not POWER UP.
+ * app's theme tokens on purpose: /admin is a plain dashboard, not the map console.
  *
  * @module admin/adminTheme
  */

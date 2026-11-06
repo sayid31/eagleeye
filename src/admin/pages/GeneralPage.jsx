@@ -2,7 +2,7 @@
 /**
  * AI Configuration → General: voice on/off, assistant name and personality
  * notes, topic restriction, the five tool permission groups and the session
- * limits. Reads and writes the same store as POWER UP → Suara.
+ * limits. Reads and writes the voice-settings store (`.gev-cache/voice-settings.json`).
  */
 import { useEffect, useState } from 'react';
 import { fetchVoiceSettings, saveVoiceSettings } from '../api/adminVoiceApi.js';
