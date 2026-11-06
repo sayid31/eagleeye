@@ -7,10 +7,12 @@ import { AiProviderPage } from './pages/AiProviderPage.jsx';
 import { ApiKeysPage } from './pages/ApiKeysPage.jsx';
 import { GeneralPage } from './pages/GeneralPage.jsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx';
+import { ServerLogPage } from './pages/ServerLogPage.jsx';
 import { UsagePage } from './pages/UsagePage.jsx';
 
 /** Leaves that are built; every other leaf renders its placeholder. */
 const PAGES = {
+  '/server-log': ServerLogPage,
   '/ai/general': GeneralPage,
   '/ai/provider': AiProviderPage,
   '/ai/usage': UsagePage,

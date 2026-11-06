@@ -3278,3 +3278,19 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Limits.** The audit file is single-process append; fine for one dev server.
 
 **Correction (same day).** The first AISStream test reported a valid key as "rejected": AISStream caps concurrent connections per key and refuses the extra handshake with HTTP 429, and the probe read any close-without-message as a rejection. Now the test first asks the running vessel feed (`aisStreamKeyEvidence`), which already holds the one connection, and only probes when the feed is not live; a socket refused before it opened is `unreachable`, never `rejected`.
+
+## 2026-11-06 — Server Log: one redacting store for server + browser, a post-hoc judge on low reasoning
+
+**Context.** T5: the owner wants certainty that errors are recorded (73 checklist items), with merging, 30-day retention, a size cap, a clear button, and the off-topic judge (decision B).
+
+**Decision.**
+
+- **Redaction in the store, not in producers.** Producers range from proxies to browser code; one choke point (`normalizeLogEvent`) is the only way to guarantee "no key, email, token or conversation text" for all of them, including future ones. The browser can only post browser sources, so it cannot forge an `admin` or `keys` entry.
+- **JSON file + in-memory merge, not append-only JSONL.** Merging repeats into one row with a count is the main volume control; rewriting a small JSON file (debounced, atomic) is simpler than compacting a JSONL. One store per process on `globalThis`, so a Vite in-process restart does not fork it; memory-only under `node --test` so tests never touch the owner's log.
+- **Generic watches instead of per-proxy edits** for "service failing repeatedly" and "refused admin access": one response-status middleware covers every current and future `/api` route. Quota warnings are the two places that already compute quota (OpenSky header, TomTom budget).
+- **Voice events via a read-only observer + runner wrapper**, so the over-size WebRTC controller grew by 5 lines and none of its behavior changed.
+- **Judge: `gpt-5-nano`, effort `low`, strict JSON schema, ordered decision rules.** `gpt-5-nano` is the model this repo already calls (HUD summary). `minimal` reasoning misclassified refusals and honest failures (3–4/7 on the sample set); `low` reached 7/7 in two of three runs at ~$0.00016 per turn. Turns with a failed tool are judged too, because that is the only way to catch "says it flew to Surabaya" (checklist 1A) — a deliberate widening of "only answers without a tool call". The secret-pattern check needs no model and runs even with the judge off.
+
+**Not chosen.** *Blocking or rewriting answers:* audio is already spoken (decision B). *A larger judge model:* not needed at this accuracy for a record-only signal; `OPENAI_JUDGE_MODEL` allows it. *Logging cost warnings:* 1D was not chosen.
+
+**Limits.** The judge is a sampled signal, not proof (accuracy varies run to run). Transcript event names are from the session allowlist and not yet observed in a live session.

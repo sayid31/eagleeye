@@ -16,16 +16,16 @@ function UsageTable({ rows, total }) {
   return (
     <div className="adm-table-wrap">
       <table className="adm-table">
-        <thead><tr><th>Day</th><th>Sessions</th><th>Audio</th><th>Screen reads</th><th>Estimated cost</th></tr></thead>
+        <thead><tr><th>Day</th><th>Sessions</th><th>Audio</th><th>Screen reads</th><th>Judge calls</th><th>Estimated cost</th></tr></thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.day} className={row.sessions ? undefined : 'adm-row-empty'}>
               <td>{row.day}</td><td>{row.sessions}</td><td>{formatDuration(row.seconds)}</td>
-              <td>{formatEstimate(row.extrasUsd)}</td><td>{formatEstimate(row.estimatedUsd)}</td>
+              <td>{formatEstimate(row.extrasUsd)}</td><td>{row.judgeCalls}</td><td>{formatEstimate(row.estimatedUsd)}</td>
             </tr>
           ))}
         </tbody>
-        <tfoot><tr><th>Total</th><th>{total.sessions}</th><th>{formatDuration(total.seconds)}</th><th /><th>{formatEstimate(total.estimatedUsd)}</th></tr></tfoot>
+        <tfoot><tr><th>Total</th><th>{total.sessions}</th><th>{formatDuration(total.seconds)}</th><th /><th>{total.judgeCalls}</th><th>{formatEstimate(total.estimatedUsd)}</th></tr></tfoot>
       </table>
     </div>
   );
@@ -113,7 +113,10 @@ export function UsagePage() {
           <li>Live audio ({rates.liveModel}): ${rates.livePerMin.toFixed(2)} per minute, billed per second.</li>
           <li>Screen reader ({rates.readerModel}): ${rates.readerInPerMTok} / ${rates.readerOutPerMTok} per 1M input / output tokens.</li>
           <li>Not included: the delegated backend model and its tool calls (billed separately by OpenAI).</li>
-          <li>Off-topic judge: not active yet (arrives with Server Log); its cost will be listed here.</li>
+          <li>
+            Off-topic judge ({rates.judgeModel}): ${rates.judgeInPerMTok} / ${rates.judgeOutPerMTok} per 1M input / output tokens, about $0.0002 per judged answer;
+            {rates.judgeEnabled ? ' included in the table above (Judge calls).' : ' turned off (GEV_VOICE_JUDGE=off).'}
+          </li>
         </ul>
       </Section>
     </div>

@@ -20,6 +20,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   serta batas menit suara harian, durasi maksimum sesi, dan tutup otomatis saat diam. Kelompok yang
   dimatikan tidak bisa dipakai asisten sama sekali. Semua batas bawaan mati; tanpa diubah, suara
   berperilaku seperti sebelumnya.
+- **/admin → Server Log**: satu log untuk server dan semua browser. Isinya error JavaScript, sesi dan tool suara
+  yang gagal, kamera CCTV/radio/basemap yang gagal, layanan luar yang gagal beruntun, kuota hampir habis, akses
+  admin yang ditolak, login admin, dan perubahan pengaturan. Bisa difilter per level/sumber, entri berulang
+  digabung, disimpan 30 hari, dan ada tombol bersihkan. Key, token, email, dan isi percakapan tidak pernah
+  disimpan.
+- **Penilai jawaban suara**: setiap jawaban suara tanpa tool (atau setelah tool gagal) dinilai model kecil di
+  server, lalu hasilnya dicatat di Server Log (misal menjawab di luar topik, atau mengaku berhasil padahal gagal).
+  Hanya mencatat, tidak menahan jawaban. Biayanya tampil di Usage & Cost; bisa dimatikan dengan
+  `GEV_VOICE_JUDGE=off`.
 - **/admin → API Keys**: status tiap kunci penyedia data, isi/ganti/hapus, dan tombol **Test connection**
   yang memeriksa kunci langsung ke penyedianya (Google Maps tidak bisa diuji dari server). Kunci OpenAI
   dikelola terpisah di **AI Configuration → AI Provider**. Nilai kunci

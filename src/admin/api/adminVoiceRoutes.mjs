@@ -27,6 +27,7 @@ import {
   VISION_RATE_IN_PER_MTOK, VISION_RATE_OUT_PER_MTOK, VISION_READER_MODEL_ID,
 } from '../../voice/liveCost.js';
 import { VOICE_COST_LIMITS, normalizeCostLimits } from '../../voice/voiceCost.js';
+import { JUDGE_MODEL_DEFAULT, JUDGE_RATE_IN_PER_MTOK, JUDGE_RATE_OUT_PER_MTOK } from '../../voice/answerJudge.mjs';
 
 const MAX_BODY_BYTES = 16 * 1024;
 const USAGE_DAY_OPTIONS = [7, 30, USAGE_RETENTION_DAYS];
@@ -81,6 +82,10 @@ function usagePayload(settings, usageStore, days) {
       readerInPerMTok: VISION_RATE_IN_PER_MTOK,
       readerOutPerMTok: VISION_RATE_OUT_PER_MTOK,
       verifiedOn: LIVE_VOICE_RATES_VERIFIED_ON,
+      judgeModel: process.env.OPENAI_JUDGE_MODEL || JUDGE_MODEL_DEFAULT,
+      judgeInPerMTok: JUDGE_RATE_IN_PER_MTOK,
+      judgeOutPerMTok: JUDGE_RATE_OUT_PER_MTOK,
+      judgeEnabled: String(process.env.GEV_VOICE_JUDGE ?? '').toLowerCase() !== 'off',
     },
   };
 }
