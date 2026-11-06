@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router';
 import { AdminApp } from './AdminApp.jsx';
 import { AdminGate } from './AdminGate.jsx';
 import './adminTheme.css';
+import './adminForms.css';
 
 createRoot(document.getElementById('admin-root')).render(
   <BrowserRouter basename="/admin">

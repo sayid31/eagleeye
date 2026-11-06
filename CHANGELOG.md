@@ -15,6 +15,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   nama asisten, dan catatan gaya bicara. Pengaturan disimpan lokal, terpisah dari kunci API (kunci tidak
   pernah ditampilkan atau diubah dari sini). Jika belum pernah disimpan, suara berperilaku persis seperti
   sebelumnya.
+- **/admin → AI Configuration → General**: saklar suara, nama asisten, catatan kepribadian, pembatasan
+  topik, lima kelompok izin tool (baca-saja, kamera, tampilan/layer, media CCTV/radio, menggambar di peta),
+  serta batas menit suara harian, durasi maksimum sesi, dan tutup otomatis saat diam. Kelompok yang
+  dimatikan tidak bisa dipakai asisten sama sekali. Semua batas bawaan mati; tanpa diubah, suara
+  berperilaku seperti sebelumnya.
+- **/admin → AI Configuration → Usage & Cost**: menit dan perkiraan biaya suara hari ini dan per hari
+  (7/30/90 hari), sisa menit harian, serta peringatan dan batas keras biaya per sesi. Angka adalah
+  perkiraan dari meteran mic, bukan tagihan OpenAI.
 - Bagian **Suara** juga punya **pembatasan topik** (bawaan mati): daftar topik yang diizinkan dan satu kalimat
   penolakan. Perintah aplikasi dan pertanyaan seperti "ini di mana" tidak pernah ditolak. Ini panduan berbasis
   prompt (usaha terbaik), bukan pengaman mutlak.

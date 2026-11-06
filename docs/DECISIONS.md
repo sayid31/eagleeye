@@ -3242,3 +3242,22 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 1. **Admin login.** Replace the body of `requireAdmin` (session/OIDC/basic-auth behind HTTPS). Routes and the POWER UP UI call only that function, so they do not change. Loopback-only is then no longer the gate; keep Origin/CSRF checks.
 2. **Public voice route that uses the API key.** Visitors must not hold or see a key. Add a public session route that mints GPT-Live sessions with the server key, with its own authentication or invite token, per-IP/per-user rate limits and abuse protection. It reads `GET /api/voice/config` semantics server-side (enabled flag, persona, topic scope) — those already apply per session on the server.
 3. **Cost limits move to the server.** The warn/cap is client-enforced today, which is fine for the owner and meaningless for the public. Deploy needs server-side session accounting (per-visitor and global daily budget, session timeouts) and metering of the delegation model (see Limits above). Until then do not expose the public route.
+
+## 2026-11-06 — Admin General / Usage & Cost: tool groups withheld server-side, limits split client/server, local usage ledger
+
+**Context.** T3 of the /admin plan: five owner-switchable tool groups (G2) and the `jenna-admin` session limits (G4: daily minutes, session length, idle close; "putus otomatis"), plus a Usage & Cost page.
+
+**Decision.**
+
+- **Tool groups are enforced by not declaring the tools** to the GPT-Live session, not by a runner check. The model cannot call an undeclared tool, and the server already builds the session config per request. A short appended prompt block keeps the model from improvising ("turned off by the owner, never claim it was done"). All-on keeps the pinned prompt byte-identical.
+- **Length and idle limits live in the browser; the daily cap is ALSO server-side.** Audio goes WebRTC straight to OpenAI, so only the client sees when a session is quiet or long. The daily cap can be checked where sessions are created (`429 voice_daily_limit`), so a skipped client guard still cannot start a new session once the day is used.
+- **Usage ledger fed by the client meter** at session end (`keepalive`, plus `pagehide` → stop). The server never sees session end otherwise. It is the same estimate the cost readout shows; it gives Usage & Cost real per-day numbers without a new upstream call.
+- **0 = off for every limit, default off.** G4 had no default numbers; any non-zero default would change existing behavior silently. The owner sets them in /admin (the settings file is the config).
+- **Cost warn/cap moved to Usage & Cost, not General**, because they are money; General owns behavior. Both pages save the full object, starting from the loaded one, so neither wipes the other's fields.
+
+**Not chosen.**
+
+- *Re-checking groups in `gevActions` too:* redundant while the declaration is the gate; worth adding together with G6 server-side parameter validation before any public exposure.
+- *Server-side session timers via a heartbeat:* more moving parts for the same owner-on-loopback threat model.
+
+**Limits.** The usage report route is not owner-only (no map login), so a reachable client can inflate the day's count; see the deploy plan above. "Today" is the server's local day. One ledger per install.

@@ -1,0 +1,43 @@
+/* Admin settings pages: sections, fields, switches, tables. Uses the tokens from adminTheme.css. */
+.adm-page { display: flex; flex-direction: column; gap: 16px; max-width: 860px; }
+.adm-page-header h1 { margin: 0 0 4px; font-size: 22px; }
+.adm-page-header p { margin: 0; }
+.adm-section { max-width: none; }
+.adm-section h2 { margin: 0 0 4px; font-size: 16px; }
+.adm-section-lead { margin: 0 0 12px; color: var(--adm-muted); }
+.adm-section-body { display: flex; flex-direction: column; gap: 14px; }
+.adm-card .adm-section-body p { margin: 0; }
+.adm-field { display: flex; flex-direction: column; gap: 4px; }
+.adm-field-label { font-weight: 500; }
+.adm-field-hint { color: var(--adm-muted); font-size: 12px; }
+.adm-input { font: inherit; color: var(--adm-text); background: var(--adm-bg); border: 1px solid var(--adm-border); border-radius: 6px; padding: 7px 10px; box-sizing: border-box; width: 100%; }
+.adm-input:focus { outline: 2px solid var(--adm-accent); outline-offset: 1px; border-color: var(--adm-accent); }
+textarea.adm-input { resize: vertical; min-height: 72px; }
+.adm-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+
+.adm-toggle { position: relative; display: flex; align-items: flex-start; gap: 12px; cursor: pointer; }
+.adm-toggle input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.adm-toggle-track { flex: none; width: 36px; height: 20px; margin-top: 1px; border-radius: 10px; background: var(--adm-border); position: relative; transition: background .15s; }
+.adm-toggle-track::after { content: ''; position: absolute; top: 2px; left: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.adm-toggle input:checked + .adm-toggle-track { background: var(--adm-accent); }
+.adm-toggle input:checked + .adm-toggle-track::after { transform: translateX(16px); }
+.adm-toggle input:focus-visible + .adm-toggle-track { outline: 2px solid var(--adm-accent); outline-offset: 2px; }
+.adm-toggle input:disabled + .adm-toggle-track { opacity: .5; }
+.adm-toggle-text { display: flex; flex-direction: column; gap: 2px; }
+.adm-toggle-title { font-weight: 500; }
+
+.adm-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.adm-btn:disabled { opacity: .6; cursor: progress; }
+.adm-success { color: #30a46c; margin: 0; }
+.adm-error-list { margin: 0; padding-left: 18px; }
+.adm-stat { font-size: 28px; font-weight: 600; }
+.adm-segmented { display: flex; gap: 8px; flex-wrap: wrap; }
+.adm-list { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+
+.adm-table-wrap { overflow-x: auto; max-height: 420px; overflow-y: auto; border: 1px solid var(--adm-border); border-radius: 6px; }
+.adm-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.adm-table th, .adm-table td { padding: 6px 10px; text-align: right; border-bottom: 1px solid var(--adm-border); white-space: nowrap; }
+.adm-table th:first-child, .adm-table td:first-child { text-align: left; }
+.adm-table thead th { position: sticky; top: 0; background: var(--adm-surface); color: var(--adm-muted); font-weight: 500; }
+.adm-table tfoot th { position: sticky; bottom: 0; background: var(--adm-surface); }
+.adm-row-empty td { color: var(--adm-muted); }

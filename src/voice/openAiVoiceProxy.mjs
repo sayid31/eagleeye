@@ -25,6 +25,7 @@ import { installVoiceSettingsRoutes } from './voiceSettingsRoutes.mjs';
 import { createVoiceUsageStore } from './voiceUsageStore.mjs';
 import { dailyLimitRefusal } from './voiceUsageCore.mjs';
 import { filterToolsByGroups } from './voiceToolGroups.js';
+import { installAdminVoiceRoutes } from '../admin/api/adminVoiceRoutes.mjs';
 
 const OPENAI_HUD_SUMMARY_MODEL_DEFAULT = 'gpt-5-nano';
 
@@ -54,6 +55,7 @@ export function openAiVoiceProxy({
     // Owner-editable voice settings (POWER UP → Suara and /admin). Registered
     // before the session route so /api/live/session can read the same store.
     installVoiceSettingsRoutes(middlewares, { store: settingsStore, usageStore, readRequestBody });
+    installAdminVoiceRoutes(middlewares, { store: settingsStore, usageStore, readRequestBody });
     // GPT-Live full-duplex session create: the server holds the key and
     // exchanges the browser's SDP offer.
     installLiveSessionRoute(middlewares, {
