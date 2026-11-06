@@ -1544,6 +1544,7 @@ The owner edits voice behavior from the existing POWER UP dialog (`#key-setup`, 
 - An empty string is not "unset" on either side of the launcher, and both sides are handled. `scripts/read-dotenv-value.mjs` hides the requested key from `process.env` for the duration of the read (Vite's `loadEnv` otherwise lets an inherited empty export win over the parsed files) and restores it after. A key the launcher resolves to nothing is then removed from the dev server's environment outright (`env -u`), not merely omitted — the child inherits this shell's environment. `CCTV_CALTRANS_DISTRICTS` is the deliberate exception: empty is its documented Caltrans kill switch and is passed through as-is
 - The dev server applies the same rule itself, so a bare `npm run dev` is not weaker than the launcher. `loadCheckoutEnv` (`src/config/dotenvPrecedence.mjs`) reads the dotenv files, prunes every key that came back empty from `process.env`, then re-reads — because `loadEnv` defers to a matching `process.env` entry, an empty export makes `loadEnv` itself return `''` and the configured value never reaches the config at all. A *real* shell/Keychain value still wins; whitespace counts as empty; a key genuinely blank in `.env` stays absent so the consuming proxy's own `if (!apiKey)` 503 remains truthful. See `docs/DECISIONS.md` 2026-10-26
 - `.env` supported via `.env.example` template
+- stg server: `docs/STAGING.md` (pm2 + `ecosystem.config.cjs`); cost guards and login there are deferred — see `docs/DECISIONS.md` 2026-11-06
 
 ### Proxy/Security Baseline
 
