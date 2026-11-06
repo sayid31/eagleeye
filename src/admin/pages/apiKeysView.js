@@ -65,10 +65,18 @@ export function buildKeyRemoval(key) {
   return Object.fromEntries(key.envVars.map((name) => [name, null]));
 }
 
-const TEST_TONES = { ok: 'ok', rejected: 'error', unreachable: 'warn', untestable: 'muted', not_set: 'muted' };
+/** Result code → tone (colour) and a word that says the status without colour. */
+const TEST_RESULTS = Object.freeze({
+  ok: { tone: 'ok', label: 'OK' },
+  rejected: { tone: 'error', label: 'Rejected' },
+  unreachable: { tone: 'warn', label: 'Not checked' },
+  untestable: { tone: 'muted', label: 'Not testable' },
+  not_set: { tone: 'muted', label: 'No key' },
+});
 
 /** Line shown under a provider after "Test connection". */
 export function describeTestResult(outcome) {
   const http = outcome.httpStatus ? ` (HTTP ${outcome.httpStatus})` : '';
-  return { text: `${outcome.message}${http}`, tone: TEST_TONES[outcome.result] ?? 'muted' };
+  const { tone, label } = TEST_RESULTS[outcome.result] ?? { tone: 'muted', label: 'Unknown' };
+  return { text: `${outcome.message}${http}`, tone, label };
 }

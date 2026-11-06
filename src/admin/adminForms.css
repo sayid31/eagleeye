@@ -52,11 +52,13 @@ textarea.adm-input { resize: vertical; min-height: 72px; }
 .adm-pill-info { color: var(--adm-accent); border-color: currentColor; }
 .adm-pill-muted { color: var(--adm-muted); }
 .adm-btn-danger { color: #e5484d; border-color: #e5484d; }
-.adm-test { margin: 0; font-size: 13px; }
-.adm-test-ok { color: #30a46c; }
-.adm-test-error { color: #e5484d; }
-.adm-test-warn { color: #d9a400; }
-.adm-test-muted { color: var(--adm-muted); }
+/* `.adm-card .adm-test-*` so the tone beats `.adm-card p { color: muted }`. */
+.adm-card .adm-test { margin: 0; font-size: 13px; }
+.adm-card .adm-test-ok { color: #30a46c; }
+.adm-card .adm-test-error { color: #e5484d; }
+.adm-card .adm-test-warn { color: #d9a400; }
+.adm-card .adm-test-muted { color: var(--adm-muted); }
+.adm-test-label { font-weight: 600; margin-right: 6px; }
 
 /* Server Log page */
 .adm-page-wide { max-width: 1200px; }

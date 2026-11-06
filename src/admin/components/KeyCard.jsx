@@ -28,7 +28,7 @@ export function KeyCard({ keyInfo, note, busy, onSave, onRemove }) {
     try {
       setTestLine(describeTestResult(await testKey(keyInfo.id)));
     } catch (failure) {
-      setTestLine({ text: failure.message, tone: 'error' });
+      setTestLine({ text: failure.message, tone: 'error', label: 'Failed' });
     } finally {
       setTesting(false);
     }
@@ -73,7 +73,11 @@ export function KeyCard({ keyInfo, note, busy, onSave, onRemove }) {
         <button type="button" className="adm-btn" disabled={!keyInfo.set || testing} onClick={runTest}>{testing ? 'Testing…' : 'Test connection'}</button>
         <small className="adm-field-hint">{note}</small>
       </div>
-      {testLine ? <p className={`adm-test adm-test-${testLine.tone}`} role="status">{testLine.text}</p> : null}
+      {testLine ? (
+        <p className={`adm-test adm-test-${testLine.tone}`} role="status">
+          <span className="adm-test-label">{testLine.label}</span>{testLine.text}
+        </p>
+      ) : null}
     </article>
   );
 }

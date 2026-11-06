@@ -32,7 +32,10 @@ test('buildKeyRemoval nulls every variable of the provider', () => {
 
 test('describeTestResult maps result codes to tones and adds the HTTP status', () => {
   assert.deepEqual(describeTestResult({ result: 'ok', httpStatus: 200, message: 'The provider accepted the key.' }),
-    { text: 'The provider accepted the key. (HTTP 200)', tone: 'ok' });
+    { text: 'The provider accepted the key. (HTTP 200)', tone: 'ok', label: 'OK' });
+  assert.equal(describeTestResult({ result: 'ok', message: 'The live vessel feed on this server is receiving data with this key.' }).label, 'OK');
+  assert.equal(describeTestResult({ result: 'unreachable', message: 'x' }).label, 'Not checked');
+  assert.equal(describeTestResult({ result: 'weird', message: 'x' }).label, 'Unknown');
   assert.equal(describeTestResult({ result: 'rejected', message: 'x' }).tone, 'error');
   assert.equal(describeTestResult({ result: 'untestable', message: 'x' }).text, 'x');
 });
@@ -45,4 +48,10 @@ test('partitionKeys moves the OpenAI key to AI Provider and counts each side', (
   assert.deepEqual(data.keys.map((k) => k.id), ['google-maps', 'firms']);
   assert.deepEqual({ setCount: data.setCount, total: data.total }, { setCount: 1, total: 2 });
   assert.deepEqual(AI_PROVIDER_KEY_IDS, ['openai']);
+});
+
+test('test-result colours are scoped to beat the card paragraph colour', async () => {
+  const fs = await import('node:fs');
+  const css = fs.readFileSync(new URL('../adminForms.css', import.meta.url), 'utf8');
+  for (const tone of ['ok', 'error', 'warn', 'muted']) assert.match(css, new RegExp(`\\.adm-card \\.adm-test-${tone} \\{`), tone);
 });
