@@ -3,13 +3,19 @@
 import { Navigate, Route, Routes } from 'react-router';
 import { ADMIN_HOME_PATH, ADMIN_NAV, adminLeaves, groupLanding } from './adminNav.js';
 import { AdminLayout } from './AdminLayout.jsx';
+import { AiProviderPage } from './pages/AiProviderPage.jsx';
 import { ApiKeysPage } from './pages/ApiKeysPage.jsx';
 import { GeneralPage } from './pages/GeneralPage.jsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx';
 import { UsagePage } from './pages/UsagePage.jsx';
 
 /** Leaves that are built; every other leaf renders its placeholder. */
-const PAGES = { '/ai/general': GeneralPage, '/ai/usage': UsagePage, '/api-keys': ApiKeysPage };
+const PAGES = {
+  '/ai/general': GeneralPage,
+  '/ai/provider': AiProviderPage,
+  '/ai/usage': UsagePage,
+  '/api-keys': ApiKeysPage,
+};
 
 function pageFor(leaf) {
   const Page = PAGES[leaf.path];

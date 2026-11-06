@@ -6,6 +6,25 @@
  * @module admin/pages/apiKeysView
  */
 
+/**
+ * Keys that belong to the AI model provider. They are managed on
+ * AI Configuration → AI Provider, not on the API Keys page (owner request).
+ */
+export const AI_PROVIDER_KEY_IDS = Object.freeze(['openai']);
+
+/**
+ * Split GET /api/admin/keys into the AI-provider keys and the data-source keys,
+ * each with its own configured count.
+ * @param {Array<{id: string, set: boolean}>} keys
+ */
+export function partitionKeys(keys) {
+  const pick = (inAi) => {
+    const list = keys.filter((key) => AI_PROVIDER_KEY_IDS.includes(key.id) === inAi);
+    return { keys: list, setCount: list.filter((key) => key.set).length, total: list.length };
+  };
+  return { ai: pick(true), data: pick(false) };
+}
+
 /** Status pill for one registry entry from GET /api/admin/keys. */
 export function keyStatusBadge(key) {
   if (!key.set) return { label: 'Missing', tone: 'muted' };

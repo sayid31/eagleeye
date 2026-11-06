@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildKeyRemoval, buildKeyUpdate, describeTestResult, isEditable, keyStatusBadge, storeLabel } from './apiKeysView.js';
+import { AI_PROVIDER_KEY_IDS, partitionKeys, buildKeyRemoval, buildKeyUpdate, describeTestResult, isEditable, keyStatusBadge, storeLabel } from './apiKeysView.js';
 
 const openai = { title: 'OPENAI', envVars: ['OPENAI_API_KEY'] };
 const opensky = { title: 'OPENSKY', envVars: ['OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET'] };
@@ -35,4 +35,14 @@ test('describeTestResult maps result codes to tones and adds the HTTP status', (
     { text: 'The provider accepted the key. (HTTP 200)', tone: 'ok' });
   assert.equal(describeTestResult({ result: 'rejected', message: 'x' }).tone, 'error');
   assert.equal(describeTestResult({ result: 'untestable', message: 'x' }).text, 'x');
+});
+
+test('partitionKeys moves the OpenAI key to AI Provider and counts each side', () => {
+  const keys = [{ id: 'google-maps', set: false }, { id: 'openai', set: true }, { id: 'firms', set: true }];
+  const { ai, data } = partitionKeys(keys);
+  assert.deepEqual(ai.keys.map((k) => k.id), ['openai']);
+  assert.deepEqual({ setCount: ai.setCount, total: ai.total }, { setCount: 1, total: 1 });
+  assert.deepEqual(data.keys.map((k) => k.id), ['google-maps', 'firms']);
+  assert.deepEqual({ setCount: data.setCount, total: data.total }, { setCount: 1, total: 2 });
+  assert.deepEqual(AI_PROVIDER_KEY_IDS, ['openai']);
 });
