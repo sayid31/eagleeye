@@ -102,10 +102,16 @@ export function attachHlsJs(runtime, video, url, loadHlsModule = () => import('h
  * @param {number} attempt
  * @param {string|null} [reason] - 'no-data' when nothing arrived from the source.
  */
+/**
+ * Camera ids are public provider ids, but long ones look like tokens to the
+ * Server Log redaction (32+ chars). A 24-char prefix still identifies the camera.
+ */
+const CAMERA_ID_LOG_CHARS = 24;
+
 export function setPlayback(runtime, state, attempt, reason = null) {
   // A camera entering a failed state is reported once per transition (checklist 1E).
   if ((state === 'unavailable' || state === 'retrying') && runtime.playback?.state !== state) {
-    logClientEvent({ level: 'warn', source: 'cctv', code: `cctv.${state}`, message: `Camera stream ${state}${reason ? ` (${reason})` : ''}`, detail: { camera: String(runtime.cameraId ?? '') } });
+    logClientEvent({ level: 'warn', source: 'cctv', code: `cctv.${state}`, message: `Camera stream ${state}${reason ? ` (${reason})` : ''}`, detail: { camera: String(runtime.cameraId ?? '').slice(0, CAMERA_ID_LOG_CHARS) } });
   }
   runtime.playback = { state, attempt, reason };
   runtime.lastPlaceholderPaintAt = 0;
