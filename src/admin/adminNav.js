@@ -55,5 +55,15 @@ export function groupLanding(group) {
   return group.children?.[0]?.path ?? group.path;
 }
 
+/**
+ * Groups whose bare path must redirect to their first page. A group whose
+ * first page IS the group path (Server Log) gets no redirect: a route that
+ * navigates to its own URL renders nothing and hides the real page route.
+ * @returns {AdminGroup[]}
+ */
+export function groupRedirects() {
+  return ADMIN_NAV.filter((group) => group.children && groupLanding(group) !== group.path);
+}
+
 /** Page opened when the visitor lands on `/admin` itself. */
 export const ADMIN_HOME_PATH = ADMIN_NAV[0].children[0].path;
