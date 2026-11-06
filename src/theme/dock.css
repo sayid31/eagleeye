@@ -222,11 +222,14 @@ body.ee-shell #command-dock #gev-voice-button {
   border-radius: 50%;
   /* Solid rings only: an outer halo and an inner top highlight, no blur glow. */
   box-shadow: 0 0 0 3px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition: box-shadow 0.15s ease;
 }
 
+/* Hover is paint-only: the halo ring widens, nothing scales. A transform here put
+   the button on its own compositor layer inside the translateX(-50%)-centred dock,
+   which re-snapped the row and nudged the style pill beside the mic. */
 body.ee-shell #command-dock #gev-voice-button:hover {
-  transform: scale(1.06);
+  box-shadow: 0 0 0 4px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 body.ee-shell #command-dock #gev-voice-button:focus-visible {
