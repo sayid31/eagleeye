@@ -29,9 +29,27 @@ body { margin: 0; background: var(--adm-bg); color: var(--adm-text); font: 14px/
 .adm-card h1 { margin: 0 0 8px; font-size: 20px; }
 .adm-card p { margin: 0; color: var(--adm-muted); }
 .adm-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 12px; }
-.adm-login .adm-card { text-align: center; }
-.adm-login .adm-card .adm-btn { display: inline-block; margin-top: 16px; text-decoration: none; }
 .adm-btn-primary { background: var(--adm-accent); color: var(--adm-accent-text); border-color: var(--adm-accent); }
 .adm-error { color: #e5484d; margin-top: 12px; }
 .adm-muted { color: var(--adm-muted); }
 .adm-topbar-actions { display: flex; align-items: center; gap: 12px; }
+
+/* Login screen */
+.adm-login { position: relative; overflow: hidden; background:
+  radial-gradient(900px 500px at 15% 10%, color-mix(in srgb, var(--adm-accent) 22%, transparent), transparent 60%),
+  radial-gradient(700px 500px at 90% 95%, color-mix(in srgb, var(--adm-accent) 14%, transparent), transparent 60%),
+  var(--adm-bg); }
+.adm-login::before { content: ''; position: absolute; inset: 0; opacity: .5; pointer-events: none;
+  background-image: linear-gradient(var(--adm-border) 1px, transparent 1px), linear-gradient(90deg, var(--adm-border) 1px, transparent 1px);
+  background-size: 48px 48px; mask-image: radial-gradient(circle at center, #000 0%, transparent 70%); -webkit-mask-image: radial-gradient(circle at center, #000 0%, transparent 70%); }
+.adm-login-card { position: relative; width: min(380px, calc(100vw - 32px)); box-sizing: border-box; text-align: center; padding: 36px 32px 28px;
+  background: var(--adm-surface); border: 1px solid var(--adm-border); border-radius: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, .35); }
+.adm-login-logo { display: block; margin: 0 auto 16px; }
+.adm-login-card h1 { margin: 0; font-size: 24px; letter-spacing: -.01em; }
+.adm-login-card h1 span { color: var(--adm-accent); }
+.adm-login-lead { margin: 8px 0 24px; color: var(--adm-muted); }
+.adm-google-btn { display: flex; align-items: center; justify-content: center; gap: 12px; height: 44px; border-radius: 8px; text-decoration: none; font-weight: 500;
+  background: #fff; color: #1f1f1f; border: 1px solid #dadce0; transition: box-shadow .15s, background .15s; }
+.adm-google-btn:hover { background: #f8f9fa; box-shadow: 0 1px 3px rgba(60, 64, 67, .3); }
+.adm-google-btn:focus-visible { outline: 2px solid var(--adm-accent); outline-offset: 2px; }
+.adm-login-note { margin: 20px 0 0; font-size: 12px; color: var(--adm-muted); }
