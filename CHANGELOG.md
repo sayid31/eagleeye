@@ -20,6 +20,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   serta batas menit suara harian, durasi maksimum sesi, dan tutup otomatis saat diam. Kelompok yang
   dimatikan tidak bisa dipakai asisten sama sekali. Semua batas bawaan mati; tanpa diubah, suara
   berperilaku seperti sebelumnya.
+- **/admin → API Keys**: status tiap kunci penyedia, isi/ganti/hapus, dan tombol **Test connection**
+  yang memeriksa kunci langsung ke penyedianya (Google Maps tidak bisa diuji dari server). Nilai kunci
+  tidak pernah ditampilkan. Kunci yang diset di luar aplikasi (shell, Keychain) tampil hanya-baca.
+  POWER UP tetap berfungsi dan memakai penyimpanan yang sama.
+- Perubahan kunci, uji koneksi, dan penyimpanan pengaturan suara dicatat ke jejak audit lokal (hanya
+  nama variabel, tanpa nilai atau email).
 - **/admin → AI Configuration → Usage & Cost**: menit dan perkiraan biaya suara hari ini dan per hari
   (7/30/90 hari), sisa menit harian, serta peringatan dan batas keras biaya per sesi. Angka adalah
   perkiraan dari meteran mic, bukan tagihan OpenAI.

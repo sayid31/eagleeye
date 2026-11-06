@@ -3261,3 +3261,18 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - *Server-side session timers via a heartbeat:* more moving parts for the same owner-on-loopback threat model.
 
 **Limits.** The usage report route is not owner-only (no map login), so a reachable client can inflate the day's count; see the deploy plan above. "Today" is the server's local day. One ledger per install.
+
+## 2026-11-06 — Admin API Keys: one shared key store, live-verified cheapest checks, names-only audit file
+
+**Context.** T4 of the /admin plan: replace POWER UP's key rows with an admin page (status, set/replace, test connection, never show a value) and move the `/api/setup/*` logic out of `vite.config.js`; key changes go to the audit.
+
+**Decision.**
+
+- **Move, don't fork.** `keySetupEndpoint()` became `providerKeyStore.mjs` with the same behavior; POWER UP's routes and the admin routes are two thin guards over it, so there is one place that decides store ownership, external keys and atomic writes. The boot-time provenance snapshots stay in `vite.config.js` because a restart re-evaluates the config in-process and only that module's first load sees the pre-`loadEnv` environment.
+- **Test = cheapest call that tells valid from rejected**, each probed live with a real and a bogus key before it was written. Free metadata calls where they exist; TomTom costs one tile; AISStream needs a short websocket. Google Maps is not tested: it is a browser key, usually referrer-restricted, and its cheap-looking calls are billed — a server-side "rejected" would be misleading.
+- **Results are codes, not text.** Upstream bodies and error strings can echo the key, so the route returns a code, the HTTP status and a fixed sentence.
+- **Audit now, viewer later.** A tiny append-only JSONL with an allowlist sanitizer, so T7 has history from today; the sanitizer (not callers) guarantees names-only.
+
+**Not chosen.** *Routing the TomTom test through the app's tile governor:* one tile per click is negligible and the governor's budget is for the map. *A real Google check via the browser:* deferred; the 3D globe loading is the honest check.
+
+**Limits.** The AISStream test opens a second connection on the same key (INFERRED harmless). The audit file is single-process append; fine for one dev server.

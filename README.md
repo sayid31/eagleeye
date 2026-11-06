@@ -133,7 +133,8 @@ chip in the bottom-right corner: Provider Settings lists every supported key,
 what it switches on, and where to get it. Paste, hit **SAVE KEYS**, and the app
 restarts itself with the new capability on. Once everything is configured the
 chip reads **POWERED UP** — and if a compact layout hides it, `?setup=1`
-reopens the same panel.
+reopens the same panel. The owner dashboard at `/admin` → **API Keys** (Google
+sign-in) manages the same keys and can test each provider connection.
 
 - **Where keys land:** Pinokio → the app's ignored `pinokio/ENVIRONMENT`; a
   terminal clone → the repo-root `.env`. Either file is made owner-only

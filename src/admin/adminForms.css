@@ -41,3 +41,19 @@ textarea.adm-input { resize: vertical; min-height: 72px; }
 .adm-table thead th { position: sticky; top: 0; background: var(--adm-surface); color: var(--adm-muted); font-weight: 500; }
 .adm-table tfoot th { position: sticky; bottom: 0; background: var(--adm-surface); }
 .adm-row-empty td { color: var(--adm-muted); }
+
+/* API Keys page */
+.adm-key { max-width: none; display: flex; flex-direction: column; gap: 10px; }
+.adm-key-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.adm-key-head h2 { margin: 0; font-size: 16px; }
+.adm-key-form { display: flex; flex-direction: column; gap: 8px; }
+.adm-pill { font-size: 12px; border-radius: 999px; padding: 2px 10px; border: 1px solid var(--adm-border); white-space: nowrap; }
+.adm-pill-ok { color: #30a46c; border-color: currentColor; }
+.adm-pill-info { color: var(--adm-accent); border-color: currentColor; }
+.adm-pill-muted { color: var(--adm-muted); }
+.adm-btn-danger { color: #e5484d; border-color: #e5484d; }
+.adm-test { margin: 0; font-size: 13px; }
+.adm-test-ok { color: #30a46c; }
+.adm-test-error { color: #e5484d; }
+.adm-test-warn { color: #d9a400; }
+.adm-test-muted { color: var(--adm-muted); }
