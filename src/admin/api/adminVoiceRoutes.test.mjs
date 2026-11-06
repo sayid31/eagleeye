@@ -74,7 +74,7 @@ test('PUT /settings validates, stores and logs only a lifecycle event', async ()
   assert.equal(r.status, 200);
   assert.equal(store.read().settings.toolGroups.media, false);
   assert.deepEqual(store.read().settings.limits, { dailyMinutes: 30, sessionMinutes: 10, idleSeconds: 60 });
-  assert.deepEqual(events, ['voice settings saved']);
+  assert.deepEqual(events, ['voice_settings.saved']);
 });
 
 test('PUT /settings rejects invalid bodies without storing or echoing them', async () => {

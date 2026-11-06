@@ -50,12 +50,21 @@ export function readRequestBody(req, maxBytes = 1024 * 1024) {
 export function openAiVoiceProxy({
   settingsStore = createVoiceSettingsStore(),
   usageStore = createVoiceUsageStore(),
+  audit = null,
 } = {}) {
   function install(middlewares) {
     // Owner-editable voice settings (POWER UP → Suara and /admin). Registered
     // before the session route so /api/live/session can read the same store.
     installVoiceSettingsRoutes(middlewares, { store: settingsStore, usageStore, readRequestBody });
-    installAdminVoiceRoutes(middlewares, { store: settingsStore, usageStore, readRequestBody });
+    installAdminVoiceRoutes(middlewares, {
+      store: settingsStore,
+      usageStore,
+      readRequestBody,
+      onEvent: (event) => {
+        console.info(`[admin] ${event}`);
+        audit?.record({ event, source: 'admin' });
+      },
+    });
     // GPT-Live full-duplex session create: the server holds the key and
     // exchanges the browser's SDP offer.
     installLiveSessionRoute(middlewares, {
