@@ -12,9 +12,8 @@
  */
 
 import fs from 'node:fs';
-import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { randomBytes } from 'node:crypto';
+import { writeJsonFileAtomic } from '../server/atomicJsonFile.mjs';
 import { normalizeStoredSettings } from './voiceSettingsCore.mjs';
 
 /** Default location: `<repo>/.gev-cache/voice-settings.json` (gitignored). */
@@ -43,28 +42,7 @@ export function createVoiceSettingsStore({ filePath = DEFAULT_VOICE_SETTINGS_PAT
   }
 
   function write(settings) {
-    fileSystem.mkdirSync(path.dirname(filePath), { recursive: true });
-    try {
-      if (fileSystem.lstatSync(filePath).isSymbolicLink()) {
-        throw new Error('voice settings path is a symlink; refusing to write');
-      }
-    } catch (error) {
-      if (error?.code !== 'ENOENT') throw error;
-    }
-    const temp = `${filePath}.${process.pid}.${randomBytes(4).toString('hex')}.tmp`;
-    let fd;
-    try {
-      fd = fileSystem.openSync(temp, 'wx', 0o600);
-      fileSystem.writeSync(fd, `${JSON.stringify(settings, null, 2)}\n`);
-      fileSystem.fsyncSync(fd);
-      fileSystem.closeSync(fd);
-      fd = undefined;
-      fileSystem.renameSync(temp, filePath);
-    } catch (error) {
-      if (fd !== undefined) fileSystem.closeSync(fd);
-      try { fileSystem.unlinkSync(temp); } catch { /* temp may not exist; nothing to clean */ }
-      throw new Error(`Failed to save voice settings: ${error.message}`);
-    }
+    writeJsonFileAtomic(filePath, settings, { fileSystem, label: 'voice settings' });
   }
 
   return { read, write, filePath };
