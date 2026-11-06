@@ -33,6 +33,23 @@ export function groupCoreRules(groups, rules) {
     .filter((group) => group.rules.length > 0);
 }
 
+/**
+ * One-line overview of the core rules for the top of the Persona page.
+ * @param {Array<{rules: Array<{guard: string}>}>} groups Output of `groupCoreRules`.
+ */
+export function summarizeCoreRules(groups) {
+  const rules = groups.flatMap((group) => group.rules);
+  const backed = rules.filter((rule) => rule.guard === 'prompt+code').length;
+  return `${rules.length} rules in ${groups.length} groups · ${backed} also enforced by app code, the rest by the voice prompt only`;
+}
+
+/** "7 rules" / "6 rules · 1 enforced by code" for a collapsed group header. */
+export function describeRuleGroup(group) {
+  const backed = group.rules.filter((rule) => rule.guard === 'prompt+code').length;
+  const count = `${group.rules.length} rule${group.rules.length === 1 ? '' : 's'}`;
+  return backed ? `${count} · ${backed} enforced by code` : count;
+}
+
 /** @param {object} settings Server settings snapshot. */
 export function extraRuleRows(settings) {
   return (settings.persona?.extraRules ?? []).map(({ forbid, instead }) => ({ forbid, instead }));

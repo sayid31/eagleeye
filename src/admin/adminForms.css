@@ -72,3 +72,22 @@ textarea.adm-input { resize: vertical; min-height: 72px; }
 .adm-pill-level-error { color: #e5484d; border-color: currentColor; }
 .adm-pill-level-warn { color: #d9a400; border-color: currentColor; }
 .adm-pill-level-info { color: var(--adm-muted); }
+
+/* Persona rules: a wrapping list, not a numeric table (long Indonesian sentences). */
+.adm-rule-group { border: 1px solid var(--adm-border); border-radius: 6px; padding: 0 12px; }
+.adm-rule-group > summary { cursor: pointer; display: flex; align-items: baseline; gap: 10px; padding: 10px 0; list-style-position: inside; }
+.adm-rule-group-title { font-weight: 600; }
+.adm-rules { list-style: none; margin: 0; padding: 0 0 8px; display: flex; flex-direction: column; gap: 8px; }
+.adm-rule { display: grid; grid-template-columns: 2.5em minmax(0, 1fr) auto; gap: 12px; align-items: start; padding: 10px 0; border-top: 1px solid var(--adm-border); }
+.adm-rules > .adm-rule:first-child { border-top: none; }
+.adm-rule-num { color: var(--adm-muted); font-variant-numeric: tabular-nums; text-align: right; padding-top: 2px; }
+.adm-rule-body { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.adm-card .adm-rule-body p { color: var(--adm-text); overflow-wrap: anywhere; }
+.adm-rule-tag { display: inline-block; min-width: 5.5em; margin-right: 8px; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: #e5484d; }
+.adm-rule-tag-instead { color: #30a46c; }
+.adm-rule-field { display: flex; align-items: center; gap: 4px; }
+.adm-rule-field .adm-input { flex: 1; }
+@media (max-width: 640px) {
+  .adm-rule { grid-template-columns: 2em minmax(0, 1fr); }
+  .adm-rule > .adm-pill, .adm-rule > .adm-btn { grid-column: 2; justify-self: start; }
+}

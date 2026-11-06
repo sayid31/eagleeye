@@ -30,3 +30,14 @@ test('half-filled, too-long and too-many rules are refused with a message', () =
   assert.equal(r.ok, false);
   assert.match(r.errors[0], /Up to 20/);
 });
+
+test('summarizeCoreRules and describeRuleGroup count rules and code-backed ones', async () => {
+  const { summarizeCoreRules, describeRuleGroup } = await import('./personaForm.js');
+  const groups = [
+    { id: 'topic', label: 'Topik', rules: [{ guard: 'prompt' }, { guard: 'prompt' }] },
+    { id: 'actions', label: 'Tindakan', rules: [{ guard: 'prompt+code' }] },
+  ];
+  assert.equal(summarizeCoreRules(groups), '3 rules in 2 groups · 1 also enforced by app code, the rest by the voice prompt only');
+  assert.equal(describeRuleGroup(groups[0]), '2 rules');
+  assert.equal(describeRuleGroup(groups[1]), '1 rule · 1 enforced by code');
+});
