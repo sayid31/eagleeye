@@ -299,6 +299,22 @@ function ensureAisStreamConnection() {
     keyFingerprint: aisKeyFingerprint(),
   });
 }
+/**
+ * Live-feed evidence for /admin → API Keys "Test connection": how the feed is
+ * doing with the CURRENT key, without opening another socket (AISStream
+ * refuses concurrent connections per key with HTTP 429). Runs one watchdog
+ * pass first, as the background tick does, so a just-replaced key is never
+ * judged by the previous key's state. Before the vessel layer ever connected
+ * it reports 'idle' and connects nothing.
+ * @returns {{status: string, lastMessageAt: number | null}}
+ */
+export function aisStreamKeyEvidence() {
+  if (!_aisAdapter) return { status: 'idle', lastMessageAt: null };
+  ensureAisStreamConnection();
+  const { status, lastMessageAt } = aisStreamStatusSnapshot();
+  return { status, lastMessageAt };
+}
+
 /** Status metadata for /api/ais-live, safe to call before the first connect. */
 function aisStreamStatusSnapshot() {
   const snapshot = _aisAdapter ? _aisAdapter.snapshot() : null;

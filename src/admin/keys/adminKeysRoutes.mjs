@@ -81,13 +81,22 @@ export function installAdminKeysRoutes(middlewares, {
   });
 }
 
-/** Vite plugin wrapper. Dev server only: the store and restart exist only under `vite dev`. */
-export function adminKeysPlugin({ store, audit }) {
+/**
+ * Vite plugin wrapper. Dev server only: the store and restart exist only under `vite dev`.
+ * `aisFeedEvidence` lets the AISStream test read the running vessel feed
+ * instead of opening a second connection on the same key.
+ */
+export function adminKeysPlugin({ store, audit, aisFeedEvidence }) {
   return {
     name: 'gev-admin-keys',
     apply: (_config, { command, isPreview }) => command === 'serve' && !isPreview,
     configureServer(server) {
-      installAdminKeysRoutes(server.middlewares, { store, audit, restart: () => scheduleDevServerRestart(server) });
+      installAdminKeysRoutes(server.middlewares, {
+        store,
+        audit,
+        restart: () => scheduleDevServerRestart(server),
+        testKey: (entry) => testProviderKey(entry, { aisFeedEvidence }),
+      });
     },
   };
 }

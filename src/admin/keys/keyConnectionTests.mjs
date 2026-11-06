@@ -12,7 +12,11 @@
  *   tomtom          GET  one zoom-0 traffic-flow tile                   1 tile of the daily quota
  *   opensky         POST OAuth client_credentials token endpoint        free
  *   launch-library  GET  ll.thespacedevs.com/2.3.0/api-throttle/        free
- *   aisstream       WSS  subscribe; valid key gets a first message      short second connection
+ *   aisstream       the live vessel feed's own status when it is connected (no
+ *                   second socket); otherwise WSS subscribe, valid key gets a
+ *                   first message. AISStream refuses concurrent connections per
+ *                   key (HTTP 429 at the handshake), so a socket that never opens
+ *                   is "unreachable", never "rejected".
  *   google-maps     —    not testable from the server (browser key, usually referrer-restricted)
  *
  * Results never contain the key, a response body or an upstream error text —
@@ -31,6 +35,9 @@ const AIS_PROBE_BOX = [[[0, 0], [0.01, 0.01]]];
 
 const MESSAGES = Object.freeze({
   ok: 'The provider accepted the key.',
+  aisLive: 'The live vessel feed on this server is receiving data with this key.',
+  aisAuthFailed: 'AISStream refused this key on the live vessel feed.',
+  aisBusy: 'AISStream refused a new connection: it limits connections per key, and the live vessel feed or another running copy of this app already holds one. The key was not checked; turn on the Ships layer to check it through the live feed.',
   rejected: 'The provider rejected the key.',
   unreachable: 'The provider could not be reached; the key was not checked.',
   not_set: 'No key is configured for this provider.',
@@ -54,11 +61,19 @@ async function httpCheck(fetchFn, url, init = {}, accept = (r) => r.ok) {
   }
 }
 
-/** Valid key → the server sends a first frame; a bad key is closed without one. */
-function aisCheck(key, WebSocketImpl) {
+/**
+ * Prefer the running feed's evidence; otherwise probe. In the probe a valid
+ * key gets a first frame and a bad key is closed AFTER the socket opened; a
+ * socket refused at the handshake (429, connection limit) proves nothing.
+ */
+function aisCheck(key, WebSocketImpl, feedEvidence) {
+  const feed = safeEvidence(feedEvidence);
+  if (feed?.status === 'live') return Promise.resolve({ result: 'ok', message: MESSAGES.aisLive });
+  if (feed?.status === 'auth-failed') return Promise.resolve({ result: 'rejected', message: MESSAGES.aisAuthFailed });
   if (typeof WebSocketImpl !== 'function') return Promise.resolve({ result: 'untestable', message: 'WebSocket is not available on this server.' });
   return new Promise((resolve) => {
     let settled = false;
+    let opened = false;
     let socket;
     const finish = (value) => {
       if (settled) return;
@@ -74,11 +89,26 @@ function aisCheck(key, WebSocketImpl) {
       finish({ result: 'unreachable', message: MESSAGES.unreachable });
       return;
     }
-    socket.onopen = () => socket.send(JSON.stringify({ APIKey: key, BoundingBoxes: AIS_PROBE_BOX, FilterMessageTypes: ['PositionReport'] }));
+    socket.onopen = () => {
+      opened = true;
+      socket.send(JSON.stringify({ APIKey: key, BoundingBoxes: AIS_PROBE_BOX, FilterMessageTypes: ['PositionReport'] }));
+    };
     socket.onmessage = () => finish({ result: 'ok', message: MESSAGES.ok });
-    socket.onclose = () => finish({ result: 'rejected', message: MESSAGES.rejected });
+    socket.onclose = () => finish(opened
+      ? { result: 'rejected', message: MESSAGES.rejected }
+      : { result: 'unreachable', message: MESSAGES.aisBusy });
     socket.onerror = () => {};
   });
+}
+
+function safeEvidence(read) {
+  if (typeof read !== 'function') return null;
+  try {
+    return read();
+  } catch (error) {
+    console.warn(`[admin-keys] live AIS feed status unavailable: ${error?.message || error}`);
+    return null;
+  }
 }
 
 const CHECKS = {
@@ -98,7 +128,7 @@ const CHECKS = {
     },
   ),
   'launch-library': ({ LL2_API_TOKEN: key }, f) => httpCheck(f, 'https://ll.thespacedevs.com/2.3.0/api-throttle/', { headers: { Authorization: `Token ${key}` } }),
-  aisstream: ({ AISSTREAM_API_KEY: key }, _f, ws) => aisCheck(key, ws),
+  aisstream: ({ AISSTREAM_API_KEY: key }, _f, ws, aisFeedEvidence) => aisCheck(key, ws, aisFeedEvidence),
 };
 
 /** Ids that have a server-side check, plus the one-line cost note shown beside the button. */
@@ -109,19 +139,23 @@ export const KEY_TEST_NOTES = Object.freeze({
   tomtom: 'Fetches one traffic tile from the daily quota.',
   opensky: 'Requests one OAuth token.',
   'launch-library': 'Reads the request allowance.',
-  aisstream: 'Opens a short second stream connection.',
+  aisstream: 'Uses the live vessel feed when it is running; otherwise opens a short stream connection.',
   'google-maps': 'Not testable from the server: this key is used by the browser. Check that the 3D globe loads.',
 });
 
 /**
  * @param {{id: string, envVars: string[]}} entry Registry entry (`KEY_SETUP_KEYS`).
- * @param {{env?: object, fetchFn?: typeof fetch, WebSocketImpl?: typeof WebSocket}} [deps]
+ * @param {{env?: object, fetchFn?: typeof fetch, WebSocketImpl?: typeof WebSocket,
+ *   aisFeedEvidence?: () => {status: string}}} [deps] `aisFeedEvidence` = the running
+ *   vessel feed's status (`aisStreamKeyEvidence` in aisLiveProxy.mjs).
  * @returns {Promise<KeyTestResult>}
  */
-export async function testProviderKey(entry, { env = process.env, fetchFn = fetch, WebSocketImpl = globalThis.WebSocket } = {}) {
+export async function testProviderKey(entry, {
+  env = process.env, fetchFn = fetch, WebSocketImpl = globalThis.WebSocket, aisFeedEvidence,
+} = {}) {
   const check = CHECKS[entry.id];
   if (!check) return { result: 'untestable', message: KEY_TEST_NOTES[entry.id] ?? 'This key has no connection test.' };
   const values = Object.fromEntries(entry.envVars.map((name) => [name, String(env[name] ?? '').trim()]));
   if (Object.values(values).some((value) => !value)) return { result: 'not_set', message: MESSAGES.not_set };
-  return check(values, fetchFn, WebSocketImpl);
+  return check(values, fetchFn, WebSocketImpl, aisFeedEvidence);
 }

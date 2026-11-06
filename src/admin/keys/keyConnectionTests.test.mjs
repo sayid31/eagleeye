@@ -66,6 +66,8 @@ class FakeSocket {
     this.closed = false;
     FakeSocket.last = this;
     queueMicrotask(() => {
+      // 'refused' = AISStream's 429 at the handshake: the socket never opens.
+      if (FakeSocket.mode === 'refused') { this.onerror?.(); this.onclose?.({ code: 1006 }); return; }
       this.onopen?.();
       if (FakeSocket.mode === 'message') this.onmessage?.({ data: '{}' });
       if (FakeSocket.mode === 'close') this.onclose?.({ code: 1006 });
@@ -83,4 +85,35 @@ test('AISStream: a first message is ok, a close without one is rejected; the soc
   assert.equal(FakeSocket.last.closed, true);
   FakeSocket.mode = 'close';
   assert.equal((await testProviderKey(entry('aisstream'), { env: ENV, WebSocketImpl: FakeSocket })).result, 'rejected');
+});
+
+test('AISStream: a socket refused before it opened (connection limit) is unreachable, not rejected', async () => {
+  FakeSocket.mode = 'refused';
+  const r = await testProviderKey(entry('aisstream'), { env: ENV, WebSocketImpl: FakeSocket });
+  assert.equal(r.result, 'unreachable');
+  assert.match(r.message, /limits connections per key/);
+});
+
+test('AISStream: a live feed proves the key without opening a socket; auth-failed rejects', async () => {
+  FakeSocket.last = null;
+  const live = await testProviderKey(entry('aisstream'), { env: ENV, WebSocketImpl: FakeSocket, aisFeedEvidence: () => ({ status: 'live' }) });
+  assert.equal(live.result, 'ok');
+  assert.match(live.message, /live vessel feed/);
+  assert.equal(FakeSocket.last, null, 'no second connection');
+  const refused = await testProviderKey(entry('aisstream'), { env: ENV, WebSocketImpl: FakeSocket, aisFeedEvidence: () => ({ status: 'auth-failed' }) });
+  assert.equal(refused.result, 'rejected');
+  assert.equal(FakeSocket.last, null);
+});
+
+test('AISStream: an idle/stale feed or a throwing status reader falls back to the probe', async () => {
+  FakeSocket.mode = 'message';
+  for (const aisFeedEvidence of [() => ({ status: 'idle' }), () => ({ status: 'stale' }), () => { throw new Error('boom'); }]) {
+    FakeSocket.last = null;
+    const warn = console.warn;
+    console.warn = () => {};
+    try {
+      assert.equal((await testProviderKey(entry('aisstream'), { env: ENV, WebSocketImpl: FakeSocket, aisFeedEvidence })).result, 'ok');
+    } finally { console.warn = warn; }
+    assert.ok(FakeSocket.last, 'probe ran');
+  }
 });

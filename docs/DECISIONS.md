@@ -3275,4 +3275,6 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 
 **Not chosen.** *Routing the TomTom test through the app's tile governor:* one tile per click is negligible and the governor's budget is for the map. *A real Google check via the browser:* deferred; the 3D globe loading is the honest check.
 
-**Limits.** The AISStream test opens a second connection on the same key (INFERRED harmless). The audit file is single-process append; fine for one dev server.
+**Limits.** The audit file is single-process append; fine for one dev server.
+
+**Correction (same day).** The first AISStream test reported a valid key as "rejected": AISStream caps concurrent connections per key and refuses the extra handshake with HTTP 429, and the probe read any close-without-message as a rejection. Now the test first asks the running vessel feed (`aisStreamKeyEvidence`), which already holds the one connection, and only probes when the feed is not live; a socket refused before it opened is `unreachable`, never `rejected`.

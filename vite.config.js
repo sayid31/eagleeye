@@ -67,7 +67,7 @@ import { osrmRouteProxy } from './src/data/osrmRouteProxy.mjs';
 import { openSkyProxy, adsbLolFallbackAnchor } from './src/data/openSkyProxy.mjs';
 import { adsbLolProxy } from './src/data/adsbLolProxy.mjs';
 import { trackBackfillProxies } from './src/data/trackBackfillProxies.mjs';
-import { aisLiveProxy } from './src/data/aisLiveProxy.mjs';
+import { aisLiveProxy, aisStreamKeyEvidence } from './src/data/aisLiveProxy.mjs';
 import {
   OVERPASS_CACHE_MAX_ENTRIES,
   _overpassCache,
@@ -658,7 +658,7 @@ export default defineConfig(({ mode }) => {
       // Provider keys: POWER UP's loopback routes (until POWER UP is removed)
       // and /admin → API Keys share ONE store; both are dev-server only.
       legacyKeySetupPlugin({ store: providerKeyStore, onEvent: (entry) => adminAudit.record(entry) }),
-      adminKeysPlugin({ store: providerKeyStore, audit: adminAudit }),
+      adminKeysPlugin({ store: providerKeyStore, audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
     ],
     server: {
       host: env.HOST || 'localhost',
