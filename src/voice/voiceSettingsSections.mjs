@@ -67,3 +67,40 @@ export function readSessionLimits(section, errors) {
     idleSeconds: readWhole(section.idleSeconds, 'limits.idleSeconds', { min: IDLE_SECONDS_MIN, max: IDLE_SECONDS_MAX }, errors),
   };
 }
+
+export const EXTRA_RULES_MAX = 20;
+export const EXTRA_RULE_TEXT_MAX = 200;
+
+/**
+ * Owner-added Persona rules (Forbidden → Instead). Both halves required, one
+ * line each; they can only add restrictions (see voiceCoreRules.js).
+ * @param {unknown} value `persona.extraRules` from the request.
+ * @param {string[]} errors
+ * @returns {Array<{forbid: string, instead: string}>}
+ */
+export function readExtraRules(value, errors) {
+  if (value === undefined || value === null) return [];
+  if (!Array.isArray(value) || value.length > EXTRA_RULES_MAX) {
+    errors.push(`persona.extraRules: daftar maksimal ${EXTRA_RULES_MAX} aturan`);
+    return [];
+  }
+  const rules = [];
+  value.forEach((item, index) => {
+    const where = `persona.extraRules[${index}]`;
+    if (item === null || typeof item !== 'object' || Array.isArray(item)
+      || Object.keys(item).some((key) => key !== 'forbid' && key !== 'instead')) {
+      errors.push(`${where}: harus berisi forbid dan instead saja`);
+      return;
+    }
+    const [forbid, instead] = ['forbid', 'instead'].map((key) => {
+      const raw = item[key];
+      if (typeof raw !== 'string') return null;
+      return raw.replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ').replace(/\s+/g, ' ').trim();
+    });
+    if (!forbid || !instead) errors.push(`${where}: larangan dan gantinya wajib diisi`);
+    else if (forbid.length > EXTRA_RULE_TEXT_MAX || instead.length > EXTRA_RULE_TEXT_MAX) {
+      errors.push(`${where}: maksimal ${EXTRA_RULE_TEXT_MAX} karakter per kolom`);
+    } else rules.push({ forbid, instead });
+  });
+  return rules;
+}

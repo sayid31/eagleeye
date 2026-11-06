@@ -3306,3 +3306,19 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - `KEY_SETUP_APPEND_HEADER` keeps its POWER UP-era text so existing `.env` files keep one header.
 
 **Trade-off (accepted by the plan).** In-app key entry now needs the one-time Google sign-in setup (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`, `ADMIN_SESSION_SECRET`); POWER UP needed nothing. A brand-new clone adds keys to `.env` (or Keychain via `dev-fresh.sh`) until `/admin` is set up. Lost niceties: the "keys waiting" chip and stripping the keyless `map=osm` share hash after the first Google key.
+
+## 2026-11-06 — Persona core rules always on; voice and backend model chosen in /admin
+
+**Context.** T6 of the /admin plan: Persona (Larangan → Gantinya, decision P10) with the topic scope on by default (G1), and AI Provider model/voice (decision 6).
+
+**Decision.**
+
+- **Core rules are code, not settings.** The 37 draft rules (`planAdmin/larangan-gantinya.md`, Koreksi column empty, taken as approved when the owner ordered T6) live frozen in `voiceCoreRules.js` and are always appended after the pinned base prompt. G1 is met by this block, not by flipping `topics.enabled`: that switch needs an owner topic list, and a default list would be a guess. The General topic list stays as an optional extra narrowing.
+- **Base prompt pin untouched; a second pin for the core block.** Appending keeps the tool contract byte-identical (its pin still holds) and makes a rule edit a deliberate re-pin of `voiceCoreRules.test.mjs` only. The "default = byte-identical base prompt" invariant is replaced by "default = base + core block".
+- **Exemptions first, inside the core block.** Same lesson as the topic restriction: refusing an app command is the worse failure, so "always handle app commands / on-screen questions; when unsure, in scope" precedes the 37 rules.
+- **Extra rules are add-only by framing.** They are JSON-quoted and told to yield to core rules and the tool contract. This is prompt-level, not enforced — the same limit as every prompt rule.
+- **Provider precedence admin → env → default**, so a never-saved install keeps its env behavior. Allowlists come from the OpenAI Live reference (31 voices) and the delegation guide (`gpt-6-luna` to start, `gpt-6-sol` for complex tasks), checked 2026-11-06. The default backend stays `gpt-5.6-luna`: switching it changes cost and behavior and was not asked for.
+
+**Not chosen.** *Editable core rules:* the plan locks them. *A frontend model picker:* `gpt-live-1` is the only Live model listed. *Runtime enforcement of rule 33 (N tool calls in a row):* no mechanism yet; it stays prompt-only.
+
+**Limits.** Every rule marked `Prompt` can slip (audio is spoken before any check); the Server Log judge only records. Prompt length grows by ~6 KB; not yet measured against latency on a spoken session.

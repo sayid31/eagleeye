@@ -110,3 +110,26 @@ test('parseUsageDays accepts only the offered windows', () => {
   assert.equal(parseUsageDays('/usage?days=1000'), 30);
   assert.equal(parseUsageDays('/usage'), 30);
 });
+
+test('GET /settings carries the 37 locked core rules and the provider options with effective values', async () => {
+  const { call } = setup({ guard: allow });
+  const { status, json } = await call('GET', '/settings');
+  assert.equal(status, 200);
+  assert.equal(json.coreRules.rules.length, 37);
+  assert.ok(json.coreRules.groups.length >= 8);
+  assert.ok(json.provider.voices.includes('marin'));
+  assert.ok(json.provider.backendModels.includes('gpt-5.6-luna'));
+  assert.equal(json.provider.effective.model.value, 'gpt-live-1');
+});
+
+test('PUT /settings stores extra rules and a provider choice, and refuses a voice outside the list', async () => {
+  const { call, store } = setup({ guard: allow });
+  const headers = { 'content-type': 'application/json', origin: ORIGIN };
+  const body = { ...defaultVoiceSettings(), persona: { name: '', instructions: '', extraRules: [{ forbid: 'Cuaca', instead: 'Tolak' }] }, provider: { voice: 'cedar', backendModel: '' } };
+  assert.equal((await call('PUT', '/settings', { body, headers })).status, 200);
+  assert.deepEqual(store.read().settings.persona.extraRules, [{ forbid: 'Cuaca', instead: 'Tolak' }]);
+  assert.equal(store.read().settings.provider.voice, 'cedar');
+  const bad = await call('PUT', '/settings', { body: { ...body, provider: { voice: 'robot', backendModel: '' } }, headers });
+  assert.equal(bad.status, 422);
+  assert.equal(store.read().settings.provider.voice, 'cedar');
+});

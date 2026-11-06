@@ -70,7 +70,7 @@ export function settingsFromGeneralForm(base, form, ranges) {
     settings: {
       ...base,
       enabled: Boolean(form.enabled),
-      persona: { name: String(form.name ?? '').trim(), instructions: String(form.instructions ?? '').trim() },
+      persona: { ...base.persona, name: String(form.name ?? '').trim(), instructions: String(form.instructions ?? '').trim() },
       topics: { enabled: Boolean(form.topicsEnabled), allowed, refusal: String(form.refusal ?? '').trim() },
       toolGroups: { ...base.toolGroups, ...form.toolGroups },
       limits,
@@ -83,7 +83,8 @@ export function describeEnforced(settings) {
   const off = Object.entries(settings.toolGroups ?? {}).filter(([, on]) => on === false).length;
   const parts = [
     settings.enabled === false ? 'Voice OFF' : 'Voice ON',
-    settings.topics?.enabled ? `topic restriction ON (${settings.topics.allowed.length})` : 'topic restriction OFF',
+    'core rules ON',
+    settings.topics?.enabled ? `topic list ON (${settings.topics.allowed.length})` : 'topic list OFF',
     off ? `${off} tool group${off > 1 ? 's' : ''} off` : 'all tool groups on',
   ];
   return parts.join(' · ');

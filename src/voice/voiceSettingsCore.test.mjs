@@ -4,12 +4,13 @@ import {
   defaultVoiceSettings, normalizeStoredSettings, publicVoiceConfig, validateVoiceSettings,
 } from './voiceSettingsCore.mjs';
 
-test('default settings mean old behavior: enabled, no limits override, no persona, topics OFF', () => {
+test('default settings: enabled, no limits override, no persona or extra rules, topic list OFF, no provider choice', () => {
   const d = defaultVoiceSettings();
   assert.equal(d.enabled, true);
   assert.deepEqual(d.costLimits, { warnUsd: null, capUsd: null });
-  assert.deepEqual(d.persona, { name: '', instructions: '' });
+  assert.deepEqual(d.persona, { name: '', instructions: '', extraRules: [] });
   assert.deepEqual(d.topics, { enabled: false, allowed: [], refusal: '' });
+  assert.deepEqual(d.provider, { voice: '', backendModel: '' });
 });
 
 test('empty object validates to the defaults', () => {
@@ -111,4 +112,32 @@ test('limits: whole numbers in the jenna-admin ranges, 0 = off', () => {
     assert.equal(validateVoiceSettings({ limits: { [field]: bad } }).ok, false, `${field}=${bad}`);
   }
   assert.equal(validateVoiceSettings({ limits: { monthlyUsd: 5 } }).ok, false);
+});
+
+test('persona.extraRules: valid pairs are stored, control characters collapse to spaces', () => {
+  const r = validateVoiceSettings({ persona: { extraRules: [{ forbid: 'Bahas\ncuaca', instead: 'Tolak  singkat' }] } });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.value.persona.extraRules, [{ forbid: 'Bahas cuaca', instead: 'Tolak singkat' }]);
+});
+
+test('persona.extraRules: half-filled, unknown keys, too long or too many are rejected without echo', () => {
+  const bad = [
+    [{ forbid: 'x', instead: '' }],
+    [{ forbid: 'x', instead: 'y', loosen: 'core' }],
+    [{ forbid: 'secret-text'.repeat(30), instead: 'y' }],
+    Array.from({ length: 21 }, () => ({ forbid: 'f', instead: 'i' })),
+    'not-a-list',
+  ];
+  for (const extraRules of bad) {
+    const r = validateVoiceSettings({ persona: { extraRules } });
+    assert.equal(r.ok, false);
+    assert.ok(r.errors.every((e) => !e.includes('secret-text')));
+  }
+});
+
+test('provider: allowlisted voice/backend model are stored; anything else is rejected', () => {
+  assert.deepEqual(validateVoiceSettings({ provider: { voice: 'cedar', backendModel: 'gpt-6-luna' } }).value.provider,
+    { voice: 'cedar', backendModel: 'gpt-6-luna' });
+  assert.equal(validateVoiceSettings({ provider: { voice: 'robot' } }).ok, false);
+  assert.equal(validateVoiceSettings({ provider: { model: 'gpt-live-2' } }).ok, false);
 });

@@ -3,10 +3,10 @@
  * Composes the session prompt from the pinned base contract plus the owner's
  * saved settings (/admin → AI Configuration).
  *
- * Invariant: with default/empty settings the result is BYTE-IDENTICAL to
- * `GEV_VOICE_SYSTEM_PROMPT` (pinned by voiceSystemPrompt.test.mjs), so a
- * never-saved install behaves exactly as before. Additions are only ever
- * APPENDED after the base contract, and are framed as subordinate to it — the
+ * Invariant: the result always STARTS with the byte-identical
+ * `GEV_VOICE_SYSTEM_PROMPT` (pinned by voiceSystemPrompt.test.mjs), followed by
+ * the locked core rules (decision G1: on by default, not a setting). Owner
+ * additions are only ever APPENDED after those, framed as subordinate — the
  * tool-usage rules above are never replaced or reordered.
  *
  * Pure — no DOM, no network, no fs.
@@ -15,6 +15,7 @@
  */
 
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
+import { coreRulePromptLines, extraRulePromptLines } from './voiceCoreRules.js';
 import { disabledToolGroups } from './voiceToolGroups.js';
 
 /** Persona block: display name + owner style notes, subordinate to the base rules. */
@@ -75,10 +76,12 @@ export function toolGroupPromptLines(toolGroups = {}) {
  * @returns {string} The full system prompt for a new live session.
  */
 export function buildVoiceSystemPrompt(settings = {}) {
-  const extra = [
+  return [
+    GEV_VOICE_SYSTEM_PROMPT,
+    ...coreRulePromptLines(),
+    ...extraRulePromptLines(settings.persona?.extraRules),
     ...personaPromptLines(settings.persona),
     ...topicPromptLines(settings.topics),
     ...toolGroupPromptLines(settings.toolGroups),
-  ];
-  return extra.length ? [GEV_VOICE_SYSTEM_PROMPT, ...extra].join('\n') : GEV_VOICE_SYSTEM_PROMPT;
+  ].join('\n');
 }

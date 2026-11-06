@@ -4,7 +4,8 @@
  *
  *  - GET/PUT /api/admin/voice/settings — the voice-settings store the session
  *    uses (PUT replaces, validated by `validateVoiceSettings`), plus the tool
- *    group catalog and limit ranges the form needs.
+ *    group catalog, limit ranges, the locked Persona core rules, and the AI
+ *    Provider voice/model options with what a new session would use.
  *  - GET /api/admin/voice/usage?days=7|30|90 — the daily usage ledger priced
  *    with the current GPT-Live rates, today's remaining daily minutes and the
  *    effective per-session cost limits.
@@ -28,6 +29,8 @@ import {
 } from '../../voice/liveCost.js';
 import { VOICE_COST_LIMITS, normalizeCostLimits } from '../../voice/voiceCost.js';
 import { JUDGE_MODEL_DEFAULT, JUDGE_RATE_IN_PER_MTOK, JUDGE_RATE_OUT_PER_MTOK } from '../../voice/answerJudge.mjs';
+import { CORE_RULE_GROUPS, VOICE_CORE_RULES } from '../../voice/voiceCoreRules.js';
+import { BACKEND_MODEL_OPTIONS, VOICE_OPTIONS, resolveLiveProvider } from '../../voice/voiceProviderOptions.mjs';
 
 const MAX_BODY_BYTES = 16 * 1024;
 const USAGE_DAY_OPTIONS = [7, 30, USAGE_RETENTION_DAYS];
@@ -116,7 +119,11 @@ export function installAdminVoiceRoutes(middlewares, {
 
     if (req.method === 'GET') {
       const { settings, valid } = store.read();
-      return sendJson(res, 200, { settings, storedValid: valid, toolGroups: TOOL_GROUP_CATALOG, limitRanges: LIMIT_RANGES });
+      return sendJson(res, 200, {
+        settings, storedValid: valid, toolGroups: TOOL_GROUP_CATALOG, limitRanges: LIMIT_RANGES,
+        coreRules: { groups: CORE_RULE_GROUPS, rules: VOICE_CORE_RULES },
+        provider: { voices: VOICE_OPTIONS, backendModels: BACKEND_MODEL_OPTIONS, effective: resolveLiveProvider(settings.provider, process.env) },
+      });
     }
     if (req.method !== 'PUT') return sendJson(res, 405, { error: 'Method not allowed' });
 

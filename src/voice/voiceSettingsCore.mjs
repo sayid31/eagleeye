@@ -2,16 +2,13 @@
 /**
  * Pure model for the owner-editable voice settings (/admin → AI Configuration).
  *
- * Contract: an absent/empty/never-saved settings object is the DEFAULT, and the
- * default reproduces the pre-settings voice behavior exactly — voice enabled,
- * built-in $2/$5 cost limits, built-in persona, topic restriction OFF, every
- * tool group on, every session limit off (see voiceSettingsSections.mjs).
+ * Default (absent/never-saved): voice on, built-in $2/$5 cost limits, built-in
+ * persona, no extra rules, owner topic list OFF, all tool groups on, no session
+ * limits, voice/backend model from env or defaults. The locked core rules
+ * (voiceCoreRules.js) are not a setting: they always apply.
  *
- * Holds no secrets by design: there is no field here that could carry an API
- * key, and `validateVoiceSettings` rejects unknown fields so one cannot be
- * smuggled in. Keys stay in the server `.env` (see keySetupCore.mjs).
- *
- * Pure — no fs, no network, no DOM.
+ * No secrets by design: no field can carry an API key, and unknown fields are
+ * rejected so one cannot be smuggled in. Pure — no fs, no network, no DOM.
  *
  * @module voice/voiceSettingsCore
  */
@@ -19,8 +16,9 @@
 import { VOICE_COST_LIMIT_OFF } from './voiceCost.js';
 import { defaultToolGroups } from './voiceToolGroups.js';
 import {
-  SECTION_KEYS as EXTRA_SECTION_KEYS, defaultSessionLimits, readSessionLimits, readToolGroups,
+  SECTION_KEYS as EXTRA_SECTION_KEYS, defaultSessionLimits, readExtraRules, readSessionLimits, readToolGroups,
 } from './voiceSettingsSections.mjs';
+import { PROVIDER_KEYS, defaultProviderSettings, readProviderSettings } from './voiceProviderOptions.mjs';
 
 export const VOICE_SETTINGS_VERSION = 1;
 export const COST_LIMIT_MIN_USD = 0.1;
@@ -37,18 +35,20 @@ export function defaultVoiceSettings() {
     version: VOICE_SETTINGS_VERSION,
     enabled: true,
     costLimits: { warnUsd: null, capUsd: null },
-    persona: { name: '', instructions: '' },
+    persona: { name: '', instructions: '', extraRules: [] },
     topics: { enabled: false, allowed: [], refusal: '' },
     toolGroups: defaultToolGroups(),
     limits: defaultSessionLimits(),
+    provider: defaultProviderSettings(),
   };
 }
 
-const ROOT_KEYS = ['version', 'enabled', 'costLimits', 'persona', 'topics', 'toolGroups', 'limits'];
+const ROOT_KEYS = ['version', 'enabled', 'costLimits', 'persona', 'topics', 'toolGroups', 'limits', 'provider'];
 const SECTION_KEYS = {
   costLimits: ['warnUsd', 'capUsd'],
-  persona: ['name', 'instructions'],
+  persona: ['name', 'instructions', 'extraRules'],
   topics: ['enabled', 'allowed', 'refusal'],
+  provider: PROVIDER_KEYS,
   ...EXTRA_SECTION_KEYS,
 };
 
@@ -166,6 +166,8 @@ export function validateVoiceSettings(input) {
   value.topics = readTopics(input.topics || {}, errors);
   value.toolGroups = readToolGroups(input.toolGroups || {}, errors);
   value.limits = readSessionLimits(input.limits || {}, errors);
+  value.persona.extraRules = readExtraRules(persona.extraRules, errors);
+  value.provider = readProviderSettings(input.provider || {}, errors);
   return errors.length ? { ok: false, errors } : { ok: true, value };
 }
 

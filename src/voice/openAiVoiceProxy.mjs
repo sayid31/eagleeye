@@ -18,6 +18,7 @@ import { enforceOptInRateLimit, openAiRateLimiter } from '../server/proxyInfra.m
 import { keylessHudSummaryResponse } from '../hudSummaryResponse.js';
 import { GEV_TOOL_SCHEMAS, toOpenAiRealtimeTools } from './toolSchemas.js';
 import { buildVoiceSystemPrompt } from './voiceSystemPromptSettings.js';
+import { resolveLiveProvider } from './voiceProviderOptions.mjs';
 import { installLiveSessionRoute } from './openAiLiveProxy.mjs';
 import { installLiveVisionRoute, READ_SCREEN_TOOL } from './openAiLiveVisionProxy.mjs';
 import { createVoiceSettingsStore } from './voiceSettingsStore.mjs';
@@ -79,6 +80,10 @@ export function openAiVoiceProxy({
       tools: () => filterToolsByGroups(LIVE_SESSION_TOOLS, settingsStore.read().settings.toolGroups),
       instructions: () => buildVoiceSystemPrompt(settingsStore.read().settings),
       isEnabled: () => settingsStore.read().settings.enabled,
+      provider: () => {
+        const chosen = resolveLiveProvider(settingsStore.read().settings.provider, process.env);
+        return { model: chosen.model.value, backendModel: chosen.backendModel.value, voice: chosen.voice.value };
+      },
       admitSession: () => dailyLimitRefusal(
         usageStore.read(), usageStore.today(), settingsStore.read().settings.limits.dailyMinutes,
       ),

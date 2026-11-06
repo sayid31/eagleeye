@@ -27,6 +27,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   server, lalu hasilnya dicatat di Server Log (misal menjawab di luar topik, atau mengaku berhasil padahal gagal).
   Hanya mencatat, tidak menahan jawaban. Biayanya tampil di Usage & Cost; bisa dimatikan dengan
   `GEV_VOICE_JUDGE=off`.
+- **/admin → AI Configuration → Persona**: 37 aturan inti asisten suara (Larangan → Gantinya) yang selalu
+  berlaku dan terkunci, termasuk batasan topik yang kini hidup secara bawaan: asisten hanya membahas konsol ini,
+  tetapi perintah aplikasi dan pertanyaan tentang peta tetap selalu dilayani. Pemilik bisa menambah sampai 20
+  larangan tambahan; larangan tambahan hanya bisa memperketat, tidak melonggarkan.
+- **/admin → AI Configuration → AI Provider**: pilih suara (31 suara bawaan) dan model backend asisten suara.
+  Kosong berarti tetap memakai `.env` atau bawaan; halaman menunjukkan nilai yang sedang dipakai.
 - **/admin → API Keys**: status tiap kunci penyedia data, isi/ganti/hapus, dan tombol **Test connection**
   yang memeriksa kunci langsung ke penyedianya (Google Maps tidak bisa diuji dari server). Kunci OpenAI
   dikelola terpisah di **AI Configuration → AI Provider**. Nilai kunci

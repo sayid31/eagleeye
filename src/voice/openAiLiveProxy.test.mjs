@@ -157,3 +157,34 @@ test('installLiveSessionRoute: a tools getter is evaluated per session', async (
   }
   assert.deepEqual(sent, [['a', 'b'], ['a']]);
 });
+
+test('installLiveSessionRoute: provider getter picks voice/backend model per session, env fills the gaps', async () => {
+  const { installLiveSessionRoute } = await import('./openAiLiveProxy.mjs');
+  const previous = { key: process.env.OPENAI_API_KEY, voice: process.env.OPENAI_LIVE_VOICE };
+  process.env.OPENAI_API_KEY = 'test-only-not-a-real-key'; // test-only
+  process.env.OPENAI_LIVE_VOICE = 'cedar';
+  let handler;
+  const sent = [];
+  const choices = [{ voice: 'sage', backendModel: 'gpt-6-luna' }, {}];
+  installLiveSessionRoute({ use: (_p, h) => { handler = h; } }, {
+    readRequestBody: async () => 'v=0',
+    enforceRateLimit: () => true,
+    tools: TOOLS,
+    instructions: 'p',
+    provider: () => choices.shift(),
+    fetchImpl: async (_u, opts) => { sent.push(JSON.parse(opts.body).session); return { status: 200, headers: new Map(), text: async () => '{}' }; },
+  });
+  try {
+    const mk = () => ({ headers: {}, setHeader() {}, end() {} });
+    await handler({ method: 'POST' }, mk());
+    await handler({ method: 'POST' }, mk());
+  } finally {
+    for (const [name, value] of [['OPENAI_API_KEY', previous.key], ['OPENAI_LIVE_VOICE', previous.voice]]) {
+      if (value === undefined) delete process.env[name]; else process.env[name] = value;
+    }
+  }
+  assert.equal(sent[0].audio.output.voice, 'sage');
+  assert.equal(sent[0].delegation.responses.model, 'gpt-6-luna');
+  assert.equal(sent[0].model, 'gpt-live-1');
+  assert.equal(sent[1].audio.output.voice, 'cedar');
+});

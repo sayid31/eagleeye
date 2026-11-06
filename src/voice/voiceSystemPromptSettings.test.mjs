@@ -3,13 +3,18 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { GEV_VOICE_SYSTEM_PROMPT } from './voiceSystemPrompt.js';
 import { buildVoiceSystemPrompt, DEFAULT_TOPIC_REFUSAL, toolGroupPromptLines, topicPromptLines } from './voiceSystemPromptSettings.js';
+import { coreRulePromptLines } from './voiceCoreRules.js';
 import { defaultVoiceSettings } from './voiceSettingsCore.mjs';
 
 const sha = (s) => createHash('sha256').update(s).digest('hex');
 
-test('default / empty / missing settings give the byte-identical base prompt', () => {
+// Decision G1 (2026-11-06): the core rules are ON by default, so the default
+// prompt is the pinned base contract followed by exactly the core block.
+const DEFAULT_PROMPT = [GEV_VOICE_SYSTEM_PROMPT, ...coreRulePromptLines()].join('\n');
+
+test('default / empty / missing settings give the base prompt plus only the core rules', () => {
   for (const settings of [undefined, {}, defaultVoiceSettings()]) {
-    assert.equal(sha(buildVoiceSystemPrompt(settings)), sha(GEV_VOICE_SYSTEM_PROMPT));
+    assert.equal(sha(buildVoiceSystemPrompt(settings)), sha(DEFAULT_PROMPT));
   }
 });
 
@@ -34,7 +39,7 @@ test('a quote in the name cannot break out of the sentence (JSON-quoted)', () =>
 const topics = (over = {}) => ({ topics: { enabled: true, allowed: ['penerbangan', 'kapal'], refusal: 'Maaf, di luar topik.', ...over } });
 
 test('topic restriction OFF (default) adds nothing, even with a stored list', () => {
-  assert.equal(sha(buildVoiceSystemPrompt(topics({ enabled: false }))), sha(GEV_VOICE_SYSTEM_PROMPT));
+  assert.equal(sha(buildVoiceSystemPrompt(topics({ enabled: false }))), sha(DEFAULT_PROMPT));
   assert.deepEqual(topicPromptLines({ enabled: true, allowed: [] }), []);
 });
 
@@ -75,4 +80,14 @@ test('switched-off tool groups are named after the base contract', () => {
   assert.match(out, /Map drawing/);
   assert.doesNotMatch(out, /Camera & navigation/);
   assert.match(out, /never claim it was done/);
+});
+
+test('order is base contract → core rules → owner extra rules → persona notes', () => {
+  const out = buildVoiceSystemPrompt({ persona: { name: '', instructions: 'Be warm.', extraRules: [{ forbid: 'Cuaca', instead: 'Tolak' }] } });
+  assert.ok(out.startsWith(DEFAULT_PROMPT));
+  const core = out.indexOf('CORE RULES');
+  const extra = out.indexOf('OWNER EXTRA RULES');
+  const notes = out.indexOf('OWNER STYLE NOTES');
+  assert.ok(core > 0 && core < extra && extra < notes);
+  assert.ok(out.includes('E1. FORBIDDEN: "Cuaca" -> INSTEAD: "Tolak"'));
 });

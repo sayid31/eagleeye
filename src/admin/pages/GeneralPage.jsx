@@ -73,8 +73,8 @@ export function GeneralPage() {
         </Field>
       </Section>
 
-      <Section title="Topic restriction" description="Prompt-based best effort, not a guarantee. App commands and “where is this” questions are never refused.">
-        <Toggle checked={form.topicsEnabled} onChange={(topicsEnabled) => set({ topicsEnabled })} title="Restrict conversation topics" />
+      <Section title="Topic restriction" description="The Persona core rules always keep the assistant on this console. This optional list narrows conversation further. Prompt-based best effort; app commands and “where is this” questions are never refused.">
+        <Toggle checked={form.topicsEnabled} onChange={(topicsEnabled) => set({ topicsEnabled })} title="Restrict to these topics only" />
         <Field label="Allowed topics" hint="One per line, up to 20.">
           <textarea className="adm-input" rows={4} value={form.topics} onChange={(e) => set({ topics: e.target.value })} />
         </Field>

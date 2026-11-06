@@ -91,11 +91,14 @@ export function buildLiveSessionConfig({ model, backendModel, voice, instruction
  * @param {() => boolean} [deps.isEnabled] Owner on/off switch; false => 403.
  * @param {() => ({status: number, error: string} | null)} [deps.admitSession]
  *   Extra owner gate (daily minutes); a non-null result is sent as the refusal.
+ * @param {() => ({model?: string, backendModel?: string, voice?: string})} [deps.provider]
+ *   Owner-chosen voice/backend model per session (voiceProviderOptions.mjs);
+ *   a missing field falls back to the env var, then the built-in default.
  * @param {typeof fetch} [deps.fetchImpl]
  */
 export function installLiveSessionRoute(middlewares, deps) {
   const {
-    readRequestBody, enforceRateLimit, tools, instructions, isEnabled = () => true, admitSession = () => null, fetchImpl = fetch,
+    readRequestBody, enforceRateLimit, tools, instructions, isEnabled = () => true, admitSession = () => null, provider = () => ({}), fetchImpl = fetch,
   } = deps;
   middlewares.use('/api/live/session', async (req, res) => {
     if (req.method !== 'POST') {
@@ -143,10 +146,11 @@ export function installLiveSessionRoute(middlewares, deps) {
       return;
     }
 
+    const chosen = provider() || {};
     const session = buildLiveSessionConfig({
-      model: process.env.OPENAI_LIVE_MODEL || OPENAI_LIVE_MODEL_DEFAULT,
-      backendModel: process.env.OPENAI_LIVE_BACKEND_MODEL || OPENAI_LIVE_BACKEND_MODEL_DEFAULT,
-      voice: process.env.OPENAI_LIVE_VOICE || LIVE_VOICE_DEFAULT,
+      model: chosen.model || process.env.OPENAI_LIVE_MODEL || OPENAI_LIVE_MODEL_DEFAULT,
+      backendModel: chosen.backendModel || process.env.OPENAI_LIVE_BACKEND_MODEL || OPENAI_LIVE_BACKEND_MODEL_DEFAULT,
+      voice: chosen.voice || process.env.OPENAI_LIVE_VOICE || LIVE_VOICE_DEFAULT,
       instructions: typeof instructions === 'function' ? instructions() : instructions,
       tools: typeof tools === 'function' ? tools() : tools,
     });

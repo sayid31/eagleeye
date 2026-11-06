@@ -50,7 +50,17 @@ test('the save keeps fields this page does not own (cost limits) and maps tool s
 });
 
 test('describeEnforced summarizes the saved state', () => {
-  assert.equal(describeEnforced(defaultVoiceSettings()), 'Voice ON · topic restriction OFF · all tool groups on');
+  assert.equal(describeEnforced(defaultVoiceSettings()), 'Voice ON · core rules ON · topic list OFF · all tool groups on');
   const s = { ...defaultVoiceSettings(), enabled: false, topics: { enabled: true, allowed: ['a', 'b'], refusal: '' }, toolGroups: { ...defaultVoiceSettings().toolGroups, media: false, annotate: false } };
-  assert.equal(describeEnforced(s), 'Voice OFF · topic restriction ON (2) · 2 tool groups off');
+  assert.equal(describeEnforced(s), 'Voice OFF · core rules ON · topic list ON (2) · 2 tool groups off');
+});
+
+test('saving General keeps the Persona extra rules and the provider choice', () => {
+  const base = { ...defaultVoiceSettings(), persona: { name: '', instructions: '', extraRules: [{ forbid: 'Cuaca', instead: 'Tolak' }] }, provider: { voice: 'cedar', backendModel: '' } };
+  const ranges = { dailyMinutes: { min: 1, max: 1440 }, sessionMinutes: { min: 1, max: 120 }, idleSeconds: { min: 10, max: 3600 } };
+  const r = settingsFromGeneralForm(base, { ...generalFormFromSettings(base), name: 'Ela' }, ranges);
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.settings.persona.extraRules, [{ forbid: 'Cuaca', instead: 'Tolak' }]);
+  assert.equal(r.settings.persona.name, 'Ela');
+  assert.equal(r.settings.provider.voice, 'cedar');
 });
