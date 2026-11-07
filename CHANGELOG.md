@@ -35,6 +35,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   kamera alih-alih ID mentah, dan kartu yang videonya belum muncul menampilkan satu baris "MEMUAT VIDEO" yang
   terbaca, bukan teks kecil di pojok.
 - Daftar pilihan kamera CCTV tidak lagi memberi tanda "⚠" pada kamera portal pemda.
+- Peta digambar jauh lebih cepat: anti-aliasing kini memakai FXAA alih-alih MSAA 4×. Di layar ±1920×1000
+  dengan lalu lintas dan CCTV menyala, kecepatan render naik dari ±28 ke ±39 frame per detik tanpa beda
+  tampilan yang terlihat.
 - Konsol lebih ringan saat CCTV menyala: panel tidak lagi menghitung ulang tata letak setiap kali teksnya
   berubah, dan status ribuan kamera tidak lagi dibangun ulang penuh setiap beberapa ratus milidetik.
 - Chip status pemuatan kini berbentuk pil rapi dengan titik status dan teks biasa (bukan huruf kapital

@@ -3360,3 +3360,15 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Decision.** The owner ruled the UI badge unnecessary: these portals publish the feeds for public viewing. The badge and its amber style are removed; the badge shows `<FEEDTYPE> · <STATUS>` and the meta line shows the operator plus the location-precision note (`src/data/cctvProviderLabel.js`). Camera names drop their `(… — Live — Unofficial)` suffix at catalog build and the map callout shows the plain name instead of the raw id. The camera picker drops its `⚠ ` prefix for these cameras (`cctvCameraOptionLabel`). The credits panel line that warned "unofficial, reverse-engineered… internal demo only" is replaced by a plain attribution to the public CCTV portals (`indonesia-cctv` in `src/data/dataCredits.js`).
 
 **Unchanged on purpose.** The config `provider`/`license` strings, the revocation levers (`CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`), the dropdown ordering and the `DATA_SOURCES.md` disclosure are untouched, so the provenance is still recorded where the data is defined.
+
+## 2026-11-07 — FXAA instead of 4× MSAA (owner decision)
+
+**Context.** The owner reported the console as very slow with traffic and CCTV on. A headless profile on real hardware (AMD Radeon Pro 555X, Metal ANGLE, Yogyakarta at ~900 m) first pointed at CCTV, but per-feature A/B counting actual scene renders (not rAF ticks, which read 60 whenever the render governor idles) showed CCTV changed almost nothing. The empty scene alone rendered ~43/s with `msaaSamples: 4` and 60/s (vsync) without it.
+
+**Measured (renders/s, traffic + CCTV on).** 1440×900: MSAA 4× 36.8, MSAA 2× 42.4, MSAA 1 + FXAA 51.3. 1920×1000 (the owner's window): 27.9 / 33.0 / 40.0. As shipped: 49.6 and 38.8. Photoreal tile SSE 24 → 48 changed nothing.
+
+**Decision.** `msaaSamples: 1` plus Cesium's built-in FXAA stage (`src/main.js`). Side-by-side screenshots of the same photoreal view showed no visible difference: the map is texture-dominated, and MSAA's edge sampling buys little on it.
+
+**Not chosen.** MSAA 2× (half the gain). Building CCTV only for cameras in view: measured as not the bottleneck (hiding all 3,106 icons, coverage or the projection plane each moved renders/s by <1).
+
+**Still open.** The detection overlay costs ~10 renders/s on its own (43 → 53 on the empty scene with it off). `preserveDrawingBuffer: true` (kept for canvas snapshots) was not measured.

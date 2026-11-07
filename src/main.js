@@ -119,7 +119,8 @@ async function init() {
         document.body.appendChild(el);
         return el;
       })(),
-      msaaSamples: 4,
+      // No MSAA: anti-aliasing comes from FXAA below. See the note there.
+      msaaSamples: 1,
       contextOptions: {
         webgl: {
           preserveDrawingBuffer: true,
@@ -135,6 +136,12 @@ async function init() {
     // 2026-08-05 perf investigation as a strict halving of idle burn on
     // 120 Hz hardware; a no-op on 60 Hz displays. (perf item 2)
     viewer.targetFrameRate = 60;
+
+    // FXAA instead of 4x MSAA: MSAA alone held an EMPTY scene to ~43 renders/s
+    // on an AMD Radeon Pro 555X (60 without it) and traffic+CCTV at 1920x1000
+    // to ~28/s; FXAA gives ~40/s there with no visible difference on the
+    // photoreal map (A/B screenshots, docs/DECISIONS.md 2026-11-07).
+    viewer.scene.postProcessStages.fxaa.enabled = true;
 
     markBoot(BOOT_MARKS.VIEWER_CREATED);
 

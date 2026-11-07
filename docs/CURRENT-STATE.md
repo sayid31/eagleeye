@@ -176,6 +176,7 @@ Historical planning documents may not match runtime behavior.
 
 ### Render Governor and Scope Mask
 
+- Anti-aliasing is FXAA (`scene.postProcessStages.fxaa`), with `msaaSamples: 1`. 4× MSAA was the single largest GPU cost; see `docs/DECISIONS.md` 2026-11-07 "FXAA instead of 4× MSAA".
 - The app idles via an explicit render governor (`src/renderGovernor.js`):
   every per-frame animator holds/releases against it, and discrete mutators
   call `governorRequestRender`. Any new per-frame visual animation must
