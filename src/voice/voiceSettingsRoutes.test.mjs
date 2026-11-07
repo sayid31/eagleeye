@@ -39,8 +39,8 @@ test('/api/voice/config returns the public slice only, never private fields', as
     enabled: false,
     assistantName: 'Ela',
     costLimits: { warnUsd: 1, capUsd: 3 },
-    limits: { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 },
-    today: { remainingSeconds: null },
+    limits: { dailyMinutes: 60, sessionMinutes: 30, idleSeconds: 300 },
+    today: { remainingSeconds: 3600 },
   });
   assert.ok(!JSON.stringify(pub.json).includes('Be brief'));
   assert.equal(pub.headers['Cache-Control'], 'no-store');

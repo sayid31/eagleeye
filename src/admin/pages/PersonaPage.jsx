@@ -2,15 +2,18 @@
 /**
  * AI Configuration → Persona: the locked core rules (read-only, always in
  * force) and the owner's extra Forbidden → Instead rules, which can only add
- * restrictions. One fixed speaking style; there is no style picker (P7).
+ * restrictions, plus the optional topic restriction. One fixed speaking style;
+ * there is no style picker (P7).
  */
 import { useEffect, useState } from 'react';
 import { fetchVoiceSettings, saveVoiceSettings } from '../api/adminVoiceApi.js';
-import { SaveStatus, Section } from '../components/FormControls.jsx';
+import { Field, SaveStatus, Section, Toggle } from '../components/FormControls.jsx';
 import {
   EXTRA_RULES_MAX, EXTRA_RULE_TEXT_MAX, describeRuleGroup, extraRuleRows, groupCoreRules, guardLabel,
-  settingsFromPersonaForm, summarizeCoreRules,
+  settingsFromPersonaForm, summarizeCoreRules, topicFormFromSettings,
 } from './personaForm.js';
+
+const REFUSAL_MAX = 160;
 
 /** One read-only rule: number, Forbidden over Instead (text wraps), and what enforces it. */
 function CoreRule({ rule }) {
@@ -29,6 +32,7 @@ function CoreRule({ rule }) {
 export function PersonaPage() {
   const [data, setData] = useState(null);
   const [rows, setRows] = useState([]);
+  const [topics, setTopics] = useState(null);
   const [loadError, setLoadError] = useState('');
   const [status, setStatus] = useState(null);
   const [saving, setSaving] = useState(false);
@@ -36,7 +40,7 @@ export function PersonaPage() {
   useEffect(() => {
     let cancelled = false;
     fetchVoiceSettings()
-      .then((payload) => { if (!cancelled) { setData(payload); setRows(extraRuleRows(payload.settings)); } })
+      .then((payload) => { if (!cancelled) { setData(payload); setRows(extraRuleRows(payload.settings)); setTopics(topicFormFromSettings(payload.settings)); } })
       .catch((error) => { if (!cancelled) setLoadError(error.message); });
     return () => { cancelled = true; };
   }, []);
@@ -45,9 +49,10 @@ export function PersonaPage() {
   if (!data) return <section className="adm-card"><h1>Persona</h1><p>Memuat…</p></section>;
 
   const coreGroups = groupCoreRules(data.coreRules.groups, data.coreRules.rules);
+  const setTopic = (patch) => setTopics((prev) => ({ ...prev, ...patch }));
   const setRow = (index, patch) => setRows((prev) => prev.map((row, i) => (i === index ? { ...row, ...patch } : row)));
   const save = async () => {
-    const next = settingsFromPersonaForm(data.settings, rows);
+    const next = settingsFromPersonaForm(data.settings, rows, topics);
     if (!next.ok) { setStatus({ errors: next.errors }); return; }
     setSaving(true);
     setStatus(null);
@@ -55,6 +60,7 @@ export function PersonaPage() {
       const saved = await saveVoiceSettings(next.settings);
       setData((prev) => ({ ...prev, settings: saved.settings, storedValid: true }));
       setRows(extraRuleRows(saved.settings));
+      setTopics(topicFormFromSettings(saved.settings));
       setStatus({ message: 'Tersimpan. Sesi suara baru memakai aturan ini; sesi yang sedang berjalan tetap memakai yang lama.' });
     } catch (error) {
       setStatus({ errors: [error.message] });
@@ -104,6 +110,16 @@ export function PersonaPage() {
         ) : null}
         <button type="button" className="adm-btn" disabled={rows.length >= EXTRA_RULES_MAX}
           onClick={() => setRows((prev) => [...prev, { forbid: '', instead: '' }])}>Tambah aturan</button>
+      </Section>
+
+      <Section title="Batasan topik" description="Aturan inti selalu menjaga asisten tetap di konsol ini. Daftar opsional ini mempersempit percakapan lagi. Berbasis prompt (best effort); perintah aplikasi dan pertanyaan “ini di mana” tidak pernah ditolak.">
+        <Toggle checked={topics.topicsEnabled} onChange={(topicsEnabled) => setTopic({ topicsEnabled })} title="Batasi hanya ke topik ini" />
+        <Field label="Topik yang diizinkan" hint="Satu per baris, maksimal 20.">
+          <textarea className="adm-input" rows={4} value={topics.topics} onChange={(e) => setTopic({ topics: e.target.value })} />
+        </Field>
+        <Field label="Kalimat penolakan" hint={`Satu kalimat, maksimal ${REFUSAL_MAX} karakter. Kosong = kalimat bawaan.`}>
+          <input className="adm-input" type="text" maxLength={REFUSAL_MAX} value={topics.refusal} onChange={(e) => setTopic({ refusal: e.target.value })} />
+        </Field>
       </Section>
 
       <div className="adm-actions">

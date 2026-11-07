@@ -59,10 +59,13 @@ export function extraRuleRows(settings) {
  * Fully empty rows are dropped; a half-filled row is an error.
  * @param {object} base Settings last loaded from the server.
  * @param {Array<{forbid: string, instead: string}>} rows
+ * @param {{topicsEnabled: boolean, topics: string, refusal: string}} [topicForm] Defaults to the saved topics.
  * @returns {{ok: true, settings: object} | {ok: false, errors: string[]}}
  */
-export function settingsFromPersonaForm(base, rows) {
+export function settingsFromPersonaForm(base, rows, topicForm = topicFormFromSettings(base)) {
   const errors = [];
+  const allowed = String(topicForm.topics ?? '').split('\n').map((t) => t.trim()).filter(Boolean);
+  if (topicForm.topicsEnabled && allowed.length === 0) errors.push('Batasan topik aktif: tambahkan minimal satu topik yang diizinkan (satu per baris).');
   const extraRules = [];
   rows.forEach((row, index) => {
     const forbid = String(row.forbid ?? '').trim();
@@ -75,5 +78,26 @@ export function settingsFromPersonaForm(base, rows) {
   });
   if (extraRules.length > EXTRA_RULES_MAX) errors.push(`Maksimal ${EXTRA_RULES_MAX} aturan tambahan.`);
   if (errors.length) return { ok: false, errors };
-  return { ok: true, settings: { ...base, persona: { ...base.persona, extraRules } } };
+  return {
+    ok: true,
+    settings: {
+      ...base,
+      persona: { ...base.persona, extraRules },
+      topics: { enabled: Boolean(topicForm.topicsEnabled), allowed, refusal: String(topicForm.refusal ?? '').trim() },
+    },
+  };
+}
+
+/**
+ * Topic-restriction fields of the Persona page (moved from General: they shape
+ * what the assistant talks about, which is Persona territory).
+ * @param {object} settings
+ * @returns {{topicsEnabled: boolean, topics: string, refusal: string}}
+ */
+export function topicFormFromSettings(settings) {
+  return {
+    topicsEnabled: settings.topics?.enabled === true,
+    topics: (settings.topics?.allowed ?? []).join('\n'),
+    refusal: settings.topics?.refusal ?? '',
+  };
 }

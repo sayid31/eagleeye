@@ -80,10 +80,15 @@ test('publicVoiceConfig exposes only enabled, assistantName, costLimits, limits'
   assert.ok(!('toolGroups' in pub));
 });
 
-test('defaults keep every tool group on and every session limit off', () => {
+test('defaults keep every tool group on and the built-in session limits on', () => {
   const d = defaultVoiceSettings();
   assert.deepEqual(d.toolGroups, { readOnly: true, camera: true, display: true, media: true, annotate: true });
-  assert.deepEqual(d.limits, { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 });
+  assert.deepEqual(d.limits, { dailyMinutes: 60, sessionMinutes: 30, idleSeconds: 300 });
+  // An absent limit takes its default; an explicit 0 or null switches it off.
+  assert.deepEqual(validateVoiceSettings({ limits: { dailyMinutes: 0, sessionMinutes: null, idleSeconds: 0 } }).value.limits,
+    { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 });
+  assert.deepEqual(validateVoiceSettings({ limits: { dailyMinutes: 0 } }).value.limits,
+    { dailyMinutes: 0, sessionMinutes: 30, idleSeconds: 300 });
 });
 
 test('a file saved before toolGroups/limits existed still reads as valid', () => {
@@ -91,7 +96,8 @@ test('a file saved before toolGroups/limits existed still reads as valid', () =>
   const r = normalizeStoredSettings(legacy);
   assert.equal(r.valid, true);
   assert.equal(r.settings.toolGroups.media, true);
-  assert.equal(r.settings.limits.dailyMinutes, 0);
+  // No limits section on disk = the built-in limits, not "off".
+  assert.equal(r.settings.limits.dailyMinutes, 60);
 });
 
 test('toolGroups: booleans only, unknown group rejected', () => {
@@ -106,7 +112,7 @@ test('limits: whole numbers in the jenna-admin ranges, 0 = off', () => {
   const ok = validateVoiceSettings({ limits: { dailyMinutes: 1440, sessionMinutes: 120, idleSeconds: 10 } });
   assert.deepEqual(ok.value.limits, { dailyMinutes: 1440, sessionMinutes: 120, idleSeconds: 10 });
   assert.deepEqual(validateVoiceSettings({ limits: { dailyMinutes: 0, sessionMinutes: null } }).value.limits,
-    { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 });
+    { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 300 });
   for (const [field, bad] of [['dailyMinutes', 1441], ['dailyMinutes', -5], ['sessionMinutes', 121], ['sessionMinutes', 1.5],
     ['idleSeconds', 9], ['idleSeconds', 3601], ['idleSeconds', '30']]) {
     assert.equal(validateVoiceSettings({ limits: { [field]: bad } }).ok, false, `${field}=${bad}`);

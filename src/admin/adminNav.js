@@ -66,3 +66,21 @@ export function groupRedirects() {
 
 /** Page opened when the visitor lands on `/admin` itself. */
 export const ADMIN_HOME_PATH = ADMIN_NAV[0].children[0].path;
+
+/**
+ * Breadcrumb above the page: group then page, e.g. ['Konfigurasi AI', 'Umum'].
+ * A top-level page is one crumb; an unknown path yields none.
+ * @param {string} pathname Router path without the `/admin` basename.
+ * @returns {string[]}
+ */
+export function breadcrumbFor(pathname) {
+  for (const group of ADMIN_NAV) {
+    if (!group.children) {
+      if (group.path === pathname) return [group.label];
+      continue;
+    }
+    const leaf = group.children.find((child) => child.path === pathname);
+    if (leaf) return leaf.label === group.label ? [group.label] : [group.label, leaf.label];
+  }
+  return [];
+}

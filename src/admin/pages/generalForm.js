@@ -20,6 +20,27 @@ export const LIMIT_FIELDS = Object.freeze([
   { key: 'idleSeconds', label: 'Tutup saat diam setelah', unit: 'detik' },
 ]);
 
+/**
+ * Indonesian display text per tool group. The server's English label and
+ * description also go into the voice prompt, so they are translated here only.
+ */
+export const TOOL_GROUP_TEXT = Object.freeze({
+  readOnly: { label: 'Hanya baca', description: 'Melihat isi layar dan menjawab pertanyaan tentangnya.' },
+  camera: { label: 'Kamera & navigasi', description: 'Terbang, zoom, menggerakkan kamera, dan melacak pesawat atau kapal.' },
+  display: { label: 'Tampilan & layer', description: 'Menyalakan atau mematikan layer, panel, HUD, gaya visual, basemap, dan skenario.' },
+  media: { label: 'Media (CCTV & radio)', description: 'Membuka video CCTV pihak ketiga dan streaming radio internet.' },
+  annotate: { label: 'Menggambar di peta', description: 'Menggambar tanda, area, dan rute di peta, lalu menghapusnya.' },
+});
+
+/** Title + description for one tool group from GET /api/admin/voice/settings. */
+export function describeToolGroup(group) {
+  const text = TOOL_GROUP_TEXT[group.id];
+  return {
+    title: `${text?.label ?? group.label} (${group.toolCount} tools)`,
+    description: text?.description ?? group.description,
+  };
+}
+
 const limitText = (n) => (n ? String(n) : '');
 
 /** @param {object} settings Server settings snapshot. */
@@ -28,9 +49,6 @@ export function generalFormFromSettings(settings) {
     enabled: settings.enabled !== false,
     name: settings.persona?.name ?? '',
     instructions: settings.persona?.instructions ?? '',
-    topicsEnabled: settings.topics?.enabled === true,
-    topics: (settings.topics?.allowed ?? []).join('\n'),
-    refusal: settings.topics?.refusal ?? '',
     toolGroups: { ...settings.toolGroups },
     limits: Object.fromEntries(LIMIT_FIELDS.map(({ key }) => [key, limitText(settings.limits?.[key])])),
   };
@@ -62,8 +80,6 @@ export function settingsFromGeneralForm(base, form, ranges) {
     if (parsed.ok) limits[key] = parsed.value;
     else errors.push(`${label}: bilangan bulat ${ranges[key].min}–${ranges[key].max} ${unit}, atau kosong untuk tanpa batas`);
   }
-  const allowed = String(form.topics ?? '').split('\n').map((t) => t.trim()).filter(Boolean);
-  if (form.topicsEnabled && allowed.length === 0) errors.push('Batasan topik aktif: tambahkan minimal satu topik yang diizinkan (satu per baris).');
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
@@ -71,7 +87,6 @@ export function settingsFromGeneralForm(base, form, ranges) {
       ...base,
       enabled: Boolean(form.enabled),
       persona: { ...base.persona, name: String(form.name ?? '').trim(), instructions: String(form.instructions ?? '').trim() },
-      topics: { enabled: Boolean(form.topicsEnabled), allowed, refusal: String(form.refusal ?? '').trim() },
       toolGroups: { ...base.toolGroups, ...form.toolGroups },
       limits,
     },

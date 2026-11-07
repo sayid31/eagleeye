@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultVoiceSettings, validateVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
-import { describeEnforced, generalFormFromSettings, parseLimit, settingsFromGeneralForm } from './generalForm.js';
+import { TOOL_GROUP_TEXT, describeEnforced, describeToolGroup, generalFormFromSettings, parseLimit, settingsFromGeneralForm } from './generalForm.js';
+import { VOICE_TOOL_GROUP_IDS } from '../../voice/voiceToolGroups.js';
 
 const RANGES = { dailyMinutes: { min: 1, max: 1440 }, sessionMinutes: { min: 1, max: 120 }, idleSeconds: { min: 10, max: 3600 } };
 
@@ -28,19 +29,20 @@ test('parseLimit: empty/0 = off, decimals, words and out-of-range rejected', () 
   for (const bad of ['9', '3601', '1.5', 'ten', '-5']) assert.equal(parseLimit(bad, RANGES.idleSeconds).ok, false, bad);
 });
 
-test('bad limits and an empty topic list block the save with every message', () => {
+test('bad limits block the save with one message each', () => {
   const base = defaultVoiceSettings();
   const form = generalFormFromSettings(base);
-  const r = settingsFromGeneralForm(base, { ...form, topicsEnabled: true, limits: { ...form.limits, sessionMinutes: '500', idleSeconds: '5' } }, RANGES);
+  const r = settingsFromGeneralForm(base, { ...form, limits: { ...form.limits, sessionMinutes: '500', idleSeconds: '5' } }, RANGES);
   assert.equal(r.ok, false);
-  assert.equal(r.errors.length, 3);
+  assert.equal(r.errors.length, 2);
   assert.match(r.errors[0], /Durasi sesi maksimal: bilangan bulat 1–120 menit/);
 });
 
-test('the save keeps fields this page does not own (cost limits) and maps tool switches', () => {
-  const base = { ...defaultVoiceSettings(), costLimits: { warnUsd: 1, capUsd: 'off' } };
+test('the save keeps fields this page does not own (cost limits, topics) and maps tool switches', () => {
+  const base = { ...defaultVoiceSettings(), costLimits: { warnUsd: 1, capUsd: 'off' }, topics: { enabled: true, allowed: ['kapal'], refusal: '' } };
   const form = generalFormFromSettings(base);
-  const r = settingsFromGeneralForm(base, { ...form, toolGroups: { ...form.toolGroups, annotate: false }, name: ' Ela ', topics: ' kapal \n\n' }, RANGES);
+  assert.ok(!('topics' in form), 'topic fields moved to Persona');
+  const r = settingsFromGeneralForm(base, { ...form, toolGroups: { ...form.toolGroups, annotate: false }, name: ' Ela ' }, RANGES);
   assert.deepEqual(r.settings.costLimits, { warnUsd: 1, capUsd: 'off' });
   assert.equal(r.settings.toolGroups.annotate, false);
   assert.equal(r.settings.toolGroups.camera, true);
@@ -63,4 +65,12 @@ test('saving General keeps the Persona extra rules and the provider choice', () 
   assert.deepEqual(r.settings.persona.extraRules, [{ forbid: 'Cuaca', instead: 'Tolak' }]);
   assert.equal(r.settings.persona.name, 'Ela');
   assert.equal(r.settings.provider.voice, 'cedar');
+});
+
+test('every tool group has Indonesian display text; an unknown group falls back to the server text', () => {
+  assert.deepEqual(Object.keys(TOOL_GROUP_TEXT).sort(), [...VOICE_TOOL_GROUP_IDS].sort());
+  assert.deepEqual(describeToolGroup({ id: 'camera', label: 'Camera & navigation', description: 'x', toolCount: 9 }),
+    { title: 'Kamera & navigasi (9 tools)', description: TOOL_GROUP_TEXT.camera.description });
+  assert.deepEqual(describeToolGroup({ id: 'future', label: 'Future', description: 'Later.', toolCount: 1 }),
+    { title: 'Future (1 tools)', description: 'Later.' });
 });

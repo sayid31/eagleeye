@@ -7,11 +7,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Batas sesi suara kini aktif secara bawaan: 60 menit suara per hari, sesi maksimal 30 menit, dan sesi
+  ditutup setelah diam 300 detik. Batas yang sengaja dikosongkan lalu disimpan tetap mati.
 - Tampilan **/admin** kini bergaya HUD seperti konsol peta, dengan logo EagleEye, lencana status berwarna
   (Terisi / Kosong / Ditolak), dan mode terang yang tetap ada. Teks admin kini berbahasa Indonesia; istilah
   teknis seperti Server Log, API Key, dan Persona tetap dalam bahasa Inggris.
 - Kolom key menampilkan `•••• tersimpan` atau `Belum diisi`, jadi terlihat apakah key sudah terisi tanpa
   menampilkan isinya. Tombol mata hanya memperlihatkan key baru yang sedang diketik.
+- Admin tanpa header atas: tombol kembali ke peta, akun, mode terang/gelap, dan Keluar pindah ke sidebar.
+  Latar kini bergrid ala peta, kartu tersusun dua kolom di layar lebar, dan nama izin tools berbahasa Indonesia.
+- Batasan topik pindah dari halaman Umum ke halaman Persona.
 - Sisa teks berbahasa Inggris di konsol peta kini berbahasa Indonesia: status peluncuran pertama, pemilih
   dan impor skenario, chip grid CCTV, ringkasan kamera CCTV, keterangan kelas satelit, label rute (mis.
   "15 min berkendara", "garis lurus (tanpa rute)"), status "di darat" di kokpit, dan pesan Google Places
@@ -28,8 +33,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - **/admin → AI Configuration → General**: saklar suara, nama asisten, catatan kepribadian, pembatasan
   topik, lima kelompok izin tool (baca-saja, kamera, tampilan/layer, media CCTV/radio, menggambar di peta),
   serta batas menit suara harian, durasi maksimum sesi, dan tutup otomatis saat diam. Kelompok yang
-  dimatikan tidak bisa dipakai asisten sama sekali. Semua batas bawaan mati; tanpa diubah, suara
-  berperilaku seperti sebelumnya.
+  dimatikan tidak bisa dipakai asisten sama sekali.
 - **/admin → Server Log**: satu log untuk server dan semua browser. Isinya error JavaScript, sesi dan tool suara
   yang gagal, kamera CCTV/radio/basemap yang gagal, layanan luar yang gagal beruntun, kuota hampir habis, akses
   admin yang ditolak, login admin, dan perubahan pengaturan. Bisa difilter per level/sumber, entri berulang
