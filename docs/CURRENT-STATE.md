@@ -2010,11 +2010,18 @@ detection off by hand — would not have.
   to `MAX_SAMPLES_PER_CALL = 40`) — enough sustained main-thread blocking to
   trigger Chrome's "Page Unresponsive" dialog. `MAX_HEIGHT_FALLBACK_SAMPLES`
   (40, exported from `traffic.js`) now caps that raycast per `parseRoads()`
-  call; roads past the cap simply keep `baseHeight=0` until Phase 2/3's
-  batched, cached ground-floor resolution (`groundFloor.js`) fills in their
-  real per-waypoint height, which is the common case anyway — the fallback
-  raycast was already redundant for any road whose cell resolves in time.
-  Pinned in `src/data/traffic.roadHeight.test.mjs`.
+  call. A waypoint whose floor cell is still cold after the 1.2 s bounded wait
+  takes, in order: the road's own sample, else the **median of every height
+  this fetch did resolve** (`batchFallbackHeight`), else 0 only when nothing at
+  all is known. When the background floor resolve lands, cold roads are
+  **re-heighted in place** (`reheightRoad`; dots share the waypoint arrays) and
+  dots on them — stopped ones included — are repositioned
+  (`repositionDotsOnRoads`), all in `src/data/trafficHeights.js` (2026-11-07).
+  Before this, cold roads stayed at ellipsoid 0 m + 3 m for the life of the
+  fetch: 100 m+ under Central Java terrain, and because dots draw through the
+  terrain within their depth-test punch distance they slid off their roads as
+  the camera moved. Pinned in `src/data/traffic.roadHeight.test.mjs` and
+  `src/data/trafficHeights.test.mjs`.
 - Development captures opened with `?trafficDebug=1` mint an interaction anchor
   from the exact `camera.changed` event that arms each debounced load, then emit
   scheduling-correlated User Timing entries for production `response.json`, road

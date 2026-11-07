@@ -2,7 +2,8 @@
 
 import { OVERPASS_URL, buildOverpassQuery } from './trafficOverpassQuery.js';
 import * as Cesium from 'cesium';
-import { cachedGroundFloor, resolveGroundFloorCellsBounded, warmGroundFloor } from './groundFloor.js';
+import { FLOOR_RESOLVE_DEADLINE_MS, cachedGroundFloor, resolveGroundFloorCells, warmGroundFloor } from './groundFloor.js';
+import { batchFallbackHeight, materializeWaypoints, reheightRoad, repositionDotsOnRoads } from './trafficHeights.js';
 import { sampleMeshFloorCells } from './meshFloorSampler.js';
 import { DOT_HEIGHT_OFFSET, MAX_HEIGHT_FALLBACK_SAMPLES, MAX_WAYPOINTS_PER_ROAD, TRAFFIC_TIMING_ENABLED } from './trafficConstants.js';
 import { S } from './trafficState.js';
@@ -172,9 +173,9 @@ export async function parseRoads(overpassData) {
     // at MAX_HEIGHT_FALLBACK_SAMPLES per call — Phase 2/3 below already
     // resolve real per-waypoint height for every road via the batched/cached
     // ground-floor system, so this raycast is a rare degrade path, not a
-    // per-road requirement; roads past the cap simply keep baseHeight=0 until
-    // their own cell resolves.
-    let baseHeight = 0;
+    // per-road requirement; roads past the cap use the batch median instead
+    // (trafficHeights.js) until their own cell resolves.
+    let baseHeight = null;
     const firstCoord = coords[0];
     if (S._viewer?.scene?.sampleHeightSupported && firstCoord && heightFallbackSamples < MAX_HEIGHT_FALLBACK_SAMPLES) {
       heightFallbackSamples++;
@@ -200,25 +201,34 @@ export async function parseRoads(overpassData) {
   const viewerLonDeg = carto ? Cesium.Math.toDegrees(carto.longitude) : undefined;
   warmGroundFloor(warmPoints);
   sampleMeshFloorCells(S._viewer?.scene, warmPoints, { viewerLat: viewerLatDeg, viewerLon: viewerLonDeg });
-  await resolveGroundFloorCellsBounded(warmPoints);
+  // Bounded wait (first paint uses what is warm); the full resolve keeps
+  // running and re-heights cold roads when it lands (Phase 4).
+  const fullResolve = resolveGroundFloorCells(warmPoints);
+  await Promise.race([fullResolve, new Promise((resolve) => setTimeout(resolve, FLOOR_RESOLVE_DEADLINE_MS))]);
 
   // Phase 3: materialize waypoints — per-coordinate height from its own
-  // resolved cell, falling back to the road's baseHeight when cold.
+  // resolved cell; cold cells fall back to the road's sample, then the batch
+  // median, never straight to the ellipsoid when anything better is known.
+  const floorAt = (lat, lng) => cachedGroundFloor(lat, lng);
+  const batchHeight = batchFallbackHeight([
+    ...warmPoints.map((p) => floorAt(p.lat, p.lon)),
+    ...pending.map((road) => road.baseHeight),
+  ]);
   const roads = [];
+  const coldRoads = [];
   for (const { coords, type, oneway, baseHeight } of pending) {
-    const waypoints = coords.map(([lng, lat]) => {
-      const floor = cachedGroundFloor(lat, lng);
-      const h = (floor ?? baseHeight) + DOT_HEIGHT_OFFSET;
-      return Cesium.Cartesian3.fromDegrees(lng, lat, h);
+    const { waypoints, segmentDist, cold } = materializeWaypoints(coords, floorAt, baseHeight, batchHeight, DOT_HEIGHT_OFFSET);
+    const road = { coords, type, oneway, waypoints, segmentDist };
+    roads.push(road);
+    if (cold) coldRoads.push(road);
+  }
+
+  // Phase 4: once the late cells land, move cold roads (and their dots) onto them.
+  if (coldRoads.length) {
+    fullResolve.then(() => {
+      const moved = new Set(coldRoads.filter((road) => reheightRoad(road, floorAt, DOT_HEIGHT_OFFSET) > 0));
+      if (moved.size) repositionDotsOnRoads(moved);
     });
-
-    // Pre-compute segment distances in meters for speed-to-t conversion
-    const segmentDist = [];
-    for (let i = 0; i < waypoints.length - 1; i++) {
-      segmentDist.push(Cesium.Cartesian3.distance(waypoints[i], waypoints[i + 1]));
-    }
-
-    roads.push({ coords, type, oneway, waypoints, segmentDist });
   }
 
   return roads;

@@ -5,6 +5,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Fixed
+
+- Titik lalu lintas kini tetap di jalannya saat peta digeser. Sebelumnya jalan yang data ketinggiannya belum
+  siap digambar di ketinggian 0 m (ratusan meter di bawah permukaan di Jawa Tengah), sehingga titiknya
+  terlihat bergeser dari jalan saat kamera bergerak.
+
 ### Changed
 
 - Batas sesi suara kini aktif secara bawaan: 60 menit suara per hari, sesi maksimal 30 menit, dan sesi

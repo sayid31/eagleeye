@@ -120,13 +120,14 @@ test('the per-road sampleHeight fallback is capped, not called once per road unc
     assert.equal(roads.length, wayCount);
     assert.equal(sampleHeightCalls, MAX_HEIGHT_FALLBACK_SAMPLES,
       `sampleHeight must be called at most ${MAX_HEIGHT_FALLBACK_SAMPLES} times per parseRoads() call, got ${sampleHeightCalls}`);
-    // Roads past the cap never resolved a warm cell (unique/far-apart coords,
-    // never reported) and got no fallback sample either, so they degrade to
-    // the documented baseHeight=0 — not a crash, not a stale/incorrect value.
+    // Roads past the cap never resolved a warm cell and got no sample of their
+    // own: they take the batch median (every sample here is 10 m), never the
+    // ellipsoid — a 0 m road sits 100 m+ under Central Java terrain and slides
+    // against the imagery as the camera moves (owner report 2026-11-07).
     const uncappedRoad = roads[roads.length - 1];
     for (const wp of uncappedRoad.waypoints) {
-      assert.ok(Math.abs(heightOf(wp) - DOT_HEIGHT_OFFSET) < 0.05,
-        'a road past the fallback-sample cap with a cold cell keeps baseHeight=0');
+      assert.ok(Math.abs(heightOf(wp) - (10 + DOT_HEIGHT_OFFSET)) < 0.05,
+        'a road past the fallback-sample cap with a cold cell takes the batch median');
     }
   } finally {
     _setViewerForTest(null);

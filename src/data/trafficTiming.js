@@ -1,7 +1,8 @@
 // Moved out of traffic.js (trafficTiming).
 
 import * as Cesium from 'cesium';
-import { cachedGroundFloor, resolveGroundFloorCellsBounded, warmGroundFloor } from './groundFloor.js';
+import { FLOOR_RESOLVE_DEADLINE_MS, cachedGroundFloor, resolveGroundFloorCells, warmGroundFloor } from './groundFloor.js';
+import { batchFallbackHeight, materializeWaypoints, reheightRoad, repositionDotsOnRoads } from './trafficHeights.js';
 import { sampleMeshFloorCells } from './meshFloorSampler.js';
 import { DOT_HEIGHT_OFFSET, MAX_HEIGHT_FALLBACK_SAMPLES, MAX_WAYPOINTS_PER_ROAD, TRAFFIC_TIMING_ENABLED } from './trafficConstants.js';
 import { loadRoadsForBounds } from './trafficLoad.js';
@@ -233,7 +234,7 @@ export async function parseRoadsTimed(overpassData, trace) {
       ? 1
       : (onewayTag === '-1' ? -1 : 0);
 
-    let baseHeight = 0;
+    let baseHeight = null;
     const firstCoord = coords[0];
     if (S._viewer?.scene?.sampleHeightSupported && firstCoord && heightFallbackSamples < MAX_HEIGHT_FALLBACK_SAMPLES) {
       heightFallbackSamples++;
@@ -266,30 +267,38 @@ export async function parseRoadsTimed(overpassData, trace) {
   const viewerLonDeg = carto ? Cesium.Math.toDegrees(carto.longitude) : undefined;
   warmGroundFloor(warmPoints);
   sampleMeshFloorCells(S._viewer?.scene, warmPoints, { viewerLat: viewerLatDeg, viewerLon: viewerLonDeg });
-  await resolveGroundFloorCellsBounded(warmPoints);
+  // Same height policy as parseRoads (trafficParse.js) so debug timings match production.
+  const fullResolve = resolveGroundFloorCells(warmPoints);
+  await Promise.race([fullResolve, new Promise((resolve) => setTimeout(resolve, FLOOR_RESOLVE_DEADLINE_MS))]);
   /* TRACE_ONLY_BEGIN */
   const _trafficTimingWarmMs = performance.now() - _trafficTimingWarmStart;
   /* TRACE_ONLY_END */
 
+  const floorAt = (lat, lng) => cachedGroundFloor(lat, lng);
+  const batchHeight = batchFallbackHeight([
+    ...warmPoints.map((p) => floorAt(p.lat, p.lon)),
+    ...pending.map((road) => road.baseHeight),
+  ]);
   const roads = [];
+  const coldRoads = [];
   for (const { coords, type, oneway, baseHeight } of pending) {
     /* TRACE_ONLY_BEGIN */
     const _trafficTimingMaterializeStart = performance.now();
     /* TRACE_ONLY_END */
-    const waypoints = coords.map(([lng, lat]) => {
-      const floor = cachedGroundFloor(lat, lng);
-      const h = (floor ?? baseHeight) + DOT_HEIGHT_OFFSET;
-      return Cesium.Cartesian3.fromDegrees(lng, lat, h);
-    });
-    const segmentDist = [];
-    for (let i = 0; i < waypoints.length - 1; i++) {
-      segmentDist.push(Cesium.Cartesian3.distance(waypoints[i], waypoints[i + 1]));
-    }
+    const { waypoints, segmentDist, cold } = materializeWaypoints(coords, floorAt, baseHeight, batchHeight, DOT_HEIGHT_OFFSET);
     /* TRACE_ONLY_BEGIN */
     _trafficTimingWaypointMaterializationMs += performance.now() - _trafficTimingMaterializeStart;
     /* TRACE_ONLY_END */
 
-    roads.push({ coords, type, oneway, waypoints, segmentDist });
+    const road = { coords, type, oneway, waypoints, segmentDist };
+    roads.push(road);
+    if (cold) coldRoads.push(road);
+  }
+  if (coldRoads.length) {
+    fullResolve.then(() => {
+      const moved = new Set(coldRoads.filter((road) => reheightRoad(road, floorAt, DOT_HEIGHT_OFFSET) > 0));
+      if (moved.size) repositionDotsOnRoads(moved);
+    });
   }
 
   /* TRACE_ONLY_BEGIN */
