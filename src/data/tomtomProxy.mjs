@@ -41,6 +41,14 @@ const TOMTOM_QUOTA_WARN_SHARE = 0.8;
 /**
  * @returns {import('vite').Plugin}
  */
+/** Today's TomTom tile count vs budget, published by the running proxy for System Health. */
+let _tomtomBudgetStatus = null;
+
+/** @returns {{date: string, used: number, budget: number} | null} null until the proxy counted a fetch. */
+export function tomtomBudgetStatus() {
+  return _tomtomBudgetStatus ? { ..._tomtomBudgetStatus } : null;
+}
+
 export function tomtomProxy() {
   const TILE_TTL_MS = 120_000;
   const CACHE_DIR = path.join(process.cwd(), '.gev-cache', 'tomtom');
@@ -93,6 +101,7 @@ export function tomtomProxy() {
   function recordUpstreamFetch() {
     const today = currentBudget();
     today.count += 1;
+    _tomtomBudgetStatus = { date: today.date, used: today.count, budget: dailyBudgetLimit() };
     // One Server Log warning when today's fetches cross the warn share of the budget.
     if (today.count === Math.ceil(dailyBudgetLimit() * TOMTOM_QUOTA_WARN_SHARE)) {
       logServerEvent({ level: 'warn', source: 'proxy', code: 'proxy.quota_low', message: 'TomTom daily tile budget is nearly used up', detail: { provider: 'tomtom', used: today.count, budget: dailyBudgetLimit() } });

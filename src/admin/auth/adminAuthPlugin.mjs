@@ -11,14 +11,24 @@ export const AUTH_LOG_EVENTS = Object.freeze({
   login_failed: { level: 'error', code: 'admin.login_failed', message: 'Google sign-in could not be completed' },
 });
 
-// Reason codes only; never an email or any other account detail (logging rule).
-const onEvent = (event, detail = {}) => {
-  console.warn(`[admin-auth] ${event}${detail.reason ? ` (${detail.reason})` : ''}`);
-  const entry = AUTH_LOG_EVENTS[event];
-  if (entry) logServerEvent({ ...entry, source: 'admin', message: detail.reason ? `${entry.message} (${detail.reason}).` : entry.message });
-};
+/**
+ * Auth route event → Server Log entry and audit-trail entry. Reason codes
+ * only; never an email or any other account detail (logging rule).
+ * @param {{record: (entry: object) => boolean}} [audit]
+ */
+export function createAuthEventSink(audit, log = logServerEvent) {
+  return (event, detail = {}) => {
+    console.warn(`[admin-auth] ${event}${detail.reason ? ` (${detail.reason})` : ''}`);
+    const entry = AUTH_LOG_EVENTS[event];
+    if (!entry) return;
+    log({ ...entry, source: 'admin', message: detail.reason ? `${entry.message} (${detail.reason}).` : entry.message });
+    audit?.record({ event: entry.code, source: 'google', result: detail.reason ? String(detail.reason).slice(0, 64).replace(/[^A-Za-z0-9_.:-]/g, '_') : 'ok' });
+  };
+}
 
-export function adminAuthPlugin() {
+/** @param {{audit?: {record: (entry: object) => boolean}}} [deps] */
+export function adminAuthPlugin({ audit } = {}) {
+  const onEvent = createAuthEventSink(audit);
   return {
     name: 'gev-admin-auth',
     configureServer(server) { installAdminAuthRoutes(server.middlewares, { onEvent }); },

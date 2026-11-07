@@ -55,6 +55,7 @@ export function createServerLog({
   let lastPruneAt = now();
   let flushPending = false;
   let writeFailedReported = false;
+  let lastWrite = { at: null, bytes: null };
 
   function load() {
     try {
@@ -70,8 +71,10 @@ export function createServerLog({
     flushPending = false;
     entries = capLogSize(entries, maxLogBytes(env));
     try {
-      writeJsonFileAtomic(filePath, { version: 1, entries }, { fileSystem, label: 'server log' });
+      const payload = { version: 1, entries };
+      writeJsonFileAtomic(filePath, payload, { fileSystem, label: 'server log' });
       writeFailedReported = false;
+      lastWrite = { at: now(), bytes: Buffer.byteLength(JSON.stringify(payload, null, 2)) + 1 };
     } catch (error) {
       if (writeFailedReported) return;
       writeFailedReported = true;
@@ -114,6 +117,8 @@ export function createServerLog({
     query: (filter) => queryLog(entries, filter),
     flushNow: flush,
     size: () => entries.length,
+    /** For System Health: rows, last successful write, whether writing is failing, the size cap. */
+    stats: () => ({ entries: entries.length, lastWriteAt: lastWrite.at, bytes: lastWrite.bytes, writeFailing: writeFailedReported, maxBytes: maxLogBytes(env) }),
     filePath,
   };
 }

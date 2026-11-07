@@ -45,3 +45,14 @@ test('a write failure is reported, not thrown', () => {
   } finally { console.warn = warn; }
   assert.deepEqual(warned, ['[admin-audit] could not record keys.changed: EACCES']);
 });
+
+test('sections keep only short codes; list pages and filters by prefix', () => {
+  const log = createAdminAuditLog({ filePath: tmpFile(), now: () => AT });
+  assert.deepEqual(sanitizeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'has space', 5] }, AT).sections, ['limits']);
+  log.record({ event: 'keys.changed' });
+  log.record({ event: 'admin.login' });
+  log.record({ event: 'keys.tested' });
+  assert.deepEqual(log.list({ prefix: 'keys.' }).map((e) => e.event), ['keys.tested', 'keys.changed']);
+  assert.deepEqual(log.list({ limit: 1, offset: 1 }).map((e) => e.event), ['admin.login']);
+  assert.equal(log.list(2).length, 2);
+});

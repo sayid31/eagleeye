@@ -40,3 +40,15 @@ test('the middleware observes the finished response status and always calls next
   assert.equal(nextCalls, 2);
   assert.deepEqual(events.map((e) => e.code), ['proxy.failing']);
 });
+
+test('snapshot reports the last status per route and whether it is failing', async () => {
+  const { createFailureTracker: make } = await import('./proxyFailureWatch.mjs');
+  const tracker = make(2);
+  tracker.observe('/api/tomtom', 200, 10);
+  tracker.observe('/api/overpass', 502, 20);
+  tracker.observe('/api/overpass', 504, 30);
+  assert.deepEqual(tracker.snapshot(), [
+    { route: '/api/overpass', lastStatus: 504, lastAt: 30, streak: 2, failing: true },
+    { route: '/api/tomtom', lastStatus: 200, lastAt: 10, streak: 0, failing: false },
+  ]);
+});

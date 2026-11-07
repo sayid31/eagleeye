@@ -11,7 +11,8 @@
 
 import { readRequestBodyCapped } from '../../server/proxyInfra.mjs';
 import { adminDenialMiddleware } from './adminDenialWatch.mjs';
-import { proxyFailureMiddleware } from './proxyFailureWatch.mjs';
+import { installAdminAuditRoutes } from '../audit/adminAuditRoutes.mjs';
+import { getProxyFailureTracker, proxyFailureMiddleware } from './proxyFailureWatch.mjs';
 import { installServerLogRoutes } from './serverLogRoutes.mjs';
 import { getServerLog, logServerEvent } from './serverLogStore.mjs';
 
@@ -29,9 +30,10 @@ export function serverLogPlugin({ audit, aisFeedEvidence } = {}) {
     }
   };
   const install = (middlewares) => {
-    middlewares.use(proxyFailureMiddleware(logServerEvent));
+    middlewares.use(proxyFailureMiddleware(logServerEvent, getProxyFailureTracker()));
     middlewares.use(adminDenialMiddleware(logServerEvent));
     installServerLogRoutes(middlewares, { log: getServerLog(), readRequestBody: readRequestBodyCapped, audit: (entry) => audit?.record(entry) });
+    if (audit) installAdminAuditRoutes(middlewares, { audit });
     if (aisFeedEvidence && !feedTimer) {
       feedTimer = setInterval(() => {
         try { checkFeed(); } catch (error) { console.warn(`[server-log] AIS feed check failed: ${error?.message || error}`); }

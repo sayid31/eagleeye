@@ -22,14 +22,22 @@ export function routeGroup(url) {
 }
 
 /**
- * Pure streak tracker. `observe` returns the event to log, if any.
- * @returns {{observe: (group: string, status: number) => object | null}}
+ * Pure streak tracker. `observe` returns the event to log, if any;
+ * `snapshot` is the per-route state System Health shows.
+ * @returns {{observe: (group: string, status: number, at?: number) => object | null,
+ *   snapshot: () => Array<{route: string, lastStatus: number, lastAt: number, streak: number, failing: boolean}>}}
  */
 export function createFailureTracker(threshold = FAILURE_STREAK) {
   const streaks = new Map();
   const failing = new Set();
+  const last = new Map();
   return {
-    observe(group, status) {
+    snapshot() {
+      return [...last].map(([route, seen]) => ({ route, ...seen, streak: streaks.get(route) ?? 0, failing: failing.has(route) }))
+        .sort((a, b) => a.route.localeCompare(b.route));
+    },
+    observe(group, status, at = Date.now()) {
+      last.set(group, { lastStatus: status, lastAt: at });
       if (status >= 500) {
         const streak = (streaks.get(group) ?? 0) + 1;
         streaks.set(group, streak);
@@ -44,6 +52,12 @@ export function createFailureTracker(threshold = FAILURE_STREAK) {
       return { level: 'info', source: 'proxy', code: 'proxy.recovered', message: `${group} answers normally again`, detail: { route: group, status } };
     },
   };
+}
+
+/** The process-wide tracker (survives a Vite in-process restart), read by System Health. */
+export function getProxyFailureTracker() {
+  globalThis.__GEV_PROXY_TRACKER__ ??= createFailureTracker();
+  return globalThis.__GEV_PROXY_TRACKER__;
 }
 
 /**

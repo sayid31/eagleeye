@@ -33,7 +33,14 @@ const FIELDS = {
   httpStatus: (v) => (Number.isInteger(v) && v >= 100 && v < 600 ? v : null),
   saved: (v) => namesOnly(v),
   removed: (v) => namesOnly(v),
+  sections: (v) => codesOnly(v),
 };
+
+function codesOnly(value) {
+  if (!Array.isArray(value)) return null;
+  const codes = value.filter((c) => typeof c === 'string' && CODE.test(c)).slice(0, 12);
+  return codes.length ? codes : null;
+}
 
 function namesOnly(value) {
   if (!Array.isArray(value)) return null;
@@ -87,8 +94,13 @@ export function createAdminAuditLog({
     }
   }
 
-  /** Newest first, at most `limit` entries; unreadable lines are skipped. */
-  function list(limit = 100) {
+  /**
+   * Newest first; unreadable lines are skipped. `prefix` keeps events whose
+   * code starts with it (e.g. 'keys.'); `offset` pages.
+   * @param {number | {limit?: number, offset?: number, prefix?: string}} [options] A number = limit.
+   */
+  function list(options = 100) {
+    const { limit = 100, offset = 0, prefix = '' } = typeof options === 'number' ? { limit: options } : options;
     let text;
     try {
       text = fileSystem.readFileSync(filePath, 'utf8');
@@ -96,9 +108,9 @@ export function createAdminAuditLog({
       if (error?.code !== 'ENOENT') console.warn(`[admin-audit] could not read the audit log: ${error?.code || 'read failed'}`);
       return [];
     }
-    return text.split('\n').filter(Boolean).reverse().slice(0, limit).flatMap((line) => {
+    return text.split('\n').filter(Boolean).reverse().flatMap((line) => {
       try { return [JSON.parse(line)]; } catch { return []; }
-    });
+    }).filter((entry) => !prefix || String(entry.event).startsWith(prefix)).slice(offset, offset + limit);
   }
 
   return { record, list, filePath };

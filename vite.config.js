@@ -106,7 +106,7 @@ import { createProviderKeyStore } from './src/admin/keys/providerKeyStore.mjs';
 import { adminKeysPlugin } from './src/admin/keys/adminKeysRoutes.mjs';
 import { createAdminAuditLog } from './src/admin/audit/adminAuditLog.mjs';
 import { serverLogPlugin } from './src/admin/log/serverLogPlugin.mjs';
-import { logServerEvent } from './src/admin/log/serverLogStore.mjs';
+import { systemHealthPlugin } from './src/admin/health/systemHealthPlugin.mjs';
 import {
   makeRateLimiter,
   nominatimSearchRateLimiter,
@@ -165,16 +165,8 @@ const DEV_FRESH_EXTERNAL_KEYS_AT_BOOT = new Set(
 /** package.json version, for the browser Server Log entries. */
 const APP_VERSION = JSON.parse(fs.readFileSync(path.join(__dirname, 'package.json'), 'utf8')).version;
 
-/** Owner audit trail (key changes, tests, settings saves) — names only, never values. */
-const adminAudit = createAdminAuditLog({
-  // Mirrored into the Server Log (source 'audit') until the Audit Log page exists.
-  onRecord: (entry) => logServerEvent({
-    level: entry.event.endsWith('failed') ? 'warn' : 'info',
-    source: 'audit',
-    code: entry.event,
-    message: [entry.provider, entry.result, ...(entry.saved ?? []), ...(entry.removed ?? []).map((n) => `${n} removed`)].filter(Boolean).join(', '),
-  }),
-});
+/** Owner audit trail, shown on /admin → Audit Log (names and codes only, never values). */
+const adminAudit = createAdminAuditLog();
 
 /**
  * The provider-key store behind /admin → API Keys
@@ -645,7 +637,7 @@ export default defineConfig(({ mode }) => {
       adminRoute(),
       // First of the server plugins: its failure watch must see every /api response.
       serverLogPlugin({ audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
-      adminAuthPlugin(),
+      adminAuthPlugin({ audit: adminAudit }),
       openSkyProxy(),
       celestrakProxy(),
       tomtomProxy(),
@@ -670,6 +662,7 @@ export default defineConfig(({ mode }) => {
       nominatimSearchProxy(),
       // Provider keys are managed only from /admin → API Keys (dev server only).
       adminKeysPlugin({ store: providerKeyStore, audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
+      systemHealthPlugin({ keyStore: providerKeyStore, audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence, appVersion: APP_VERSION }),
     ],
     server: {
       host: env.HOST || 'localhost',

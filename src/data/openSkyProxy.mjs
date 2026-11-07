@@ -41,7 +41,14 @@ let _openskyCacheSourceEpochMs = null;
 const OPENSKY_CACHE_MS = 9000;
 // --- OpenSky credit governor (field-test fix 2026-07-06) -------------------
 /** Remaining daily credits at which the Server Log gets a quota warning. */
-const OPENSKY_QUOTA_WARN_REMAINING = 400;
+export const OPENSKY_QUOTA_WARN_REMAINING = 400;
+/** Last `x-rate-limit-remaining` OpenSky reported, for /admin → System Health. */
+let _openskyCredits = null;
+
+/** @returns {{remaining: number, at: number} | null} null until the first OpenSky answer. */
+export function openSkyCreditStatus() {
+  return _openskyCredits ? { ..._openskyCredits } : null;
+}
 // The global /states/all this proxy fetches costs 4 CREDITS per call against
 // OpenSky's ~4000/day authenticated budget — a day with the app open burned
 // the whole quota in ~8h and the layer then hard-died until the daily reset
@@ -562,6 +569,7 @@ export function openSkyProxy() {
             // exhausting the quota mid-day. Success also clears any cooldown.
             const remaining = Number(upstream.headers.get('x-rate-limit-remaining'));
             _openskyTtlMs = openskyAdaptiveTtlMs(remaining);
+            if (Number.isFinite(remaining)) _openskyCredits = { remaining, at: Date.now() };
             if (Number.isFinite(remaining) && remaining <= OPENSKY_QUOTA_WARN_REMAINING) {
               logServerEvent({ level: 'warn', source: 'proxy', code: 'proxy.quota_low', message: 'OpenSky daily credits are nearly used up', detail: { provider: 'opensky', remaining } });
             }

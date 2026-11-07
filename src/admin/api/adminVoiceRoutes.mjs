@@ -46,6 +46,12 @@ const TOOL_GROUP_CATALOG = VOICE_TOOL_GROUPS.map(({ id, label, description, tool
   id, label, description, toolCount: tools.length,
 }));
 
+/** Top-level settings sections whose value differs between two snapshots (for the audit trail). */
+export function changedSections(before, after) {
+  const keys = new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})]);
+  return [...keys].filter((key) => key !== 'version' && JSON.stringify(before?.[key]) !== JSON.stringify(after?.[key])).sort();
+}
+
 function sendJson(res, status, payload) {
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -100,7 +106,8 @@ function usagePayload(settings, usageStore, days) {
  * @param {{read: Function, today: () => string}} deps.usageStore Daily usage ledger.
  * @param {(req: any, maxBytes?: number) => Promise<string>} deps.readRequestBody
  * @param {(req: any) => {ok: boolean, status?: number, error?: string}} [deps.guard]
- * @param {(event: string) => void} [deps.onEvent] Lifecycle event codes (no values, no PII).
+ * @param {(event: string, detail?: {sections?: string[]}) => void} [deps.onEvent] Lifecycle event codes;
+ *   `sections` names the top-level settings sections a save changed (no values, no PII).
  */
 export function installAdminVoiceRoutes(middlewares, {
   store, usageStore, readRequestBody, guard = (req) => requireAdminSession(req),
@@ -135,13 +142,14 @@ export function installAdminVoiceRoutes(middlewares, {
     }
     const result = validateVoiceSettings(parsed);
     if (!result.ok) return sendJson(res, 422, { error: 'Pengaturan tidak valid', details: result.errors });
+    const sections = changedSections(store.read().settings, result.value);
     try {
       store.write(result.value);
     } catch (error) {
       onEvent('voice_settings.save_failed');
       return sendJson(res, 500, { error: error.message });
     }
-    onEvent('voice_settings.saved');
+    onEvent('voice_settings.saved', { sections });
     return sendJson(res, 200, { settings: result.value, storedValid: true });
   });
 }

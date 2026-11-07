@@ -133,3 +133,10 @@ test('PUT /settings stores extra rules and a provider choice, and refuses a voic
   assert.equal(bad.status, 422);
   assert.equal(store.read().settings.provider.voice, 'cedar');
 });
+
+test('changedSections names only the top-level sections that differ', async () => {
+  const { changedSections } = await import('./adminVoiceRoutes.mjs');
+  const before = { version: 1, enabled: true, limits: { dailyMinutes: 0 }, persona: { name: '' } };
+  assert.deepEqual(changedSections(before, { ...before, version: 2, limits: { dailyMinutes: 5 } }), ['limits']);
+  assert.deepEqual(changedSections(before, before), []);
+});
