@@ -5,6 +5,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
+
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -134,6 +140,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   ke kota itu langsung terbaca dari cache disk, bukan antre ±45 detik di server OSM publik.
   Data diambil saat dijalankan dan tidak disertakan dalam repo.
 
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
+
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -227,6 +239,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   terlampaui, entri paling lama dibuang lebih dulu — hanya berarti satu kali pengambilan ulang saat
   area itu dibuka lagi. Pemakaian normal tidak akan mencapai batas ini.
 
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
+
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -280,6 +298,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Toasts and status/error messages shown to the user (Context mode, Space Missions, key setup, CCTV source
   health, AIS watchdog, cockpit navigation) are Indonesian too. Messages returned to voice tools and server
   proxy errors stay English.
+
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
 
 ### Fixed
 
@@ -350,6 +374,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - The CCTV panel opens with the camera screen, then a "Cari kamera CCTV" search, then the earlier
   controls.
   While a camera's video shows, its 3D frustum stays hidden unless you are calibrating.
+
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
 
 ### Fixed
 
@@ -540,6 +570,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   loads Esri and then Google 3D on top of it. Google 3D and the other basemaps are
   still one click (or one voice command) away, but are no longer remembered across
   reloads, and an old link carrying `map=photoreal` opens on Esri.
+
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
 
 ### Fixed
 
@@ -756,6 +792,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   (only used by the now-removed inline Round 6 loop) was trimmed.
   `flights.js` drops from 5,338 to 5,210 lines, `militaryFlights.js` from
   3,876 to 3,833 lines. New `modelGroundHandoff.js`: 265 lines.
+
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
 
 ### Fixed
 
@@ -1210,6 +1252,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   Flying back to a covered city and re-selecting Google 3D re-arms the
   detector.
 
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
+
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -1447,6 +1495,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   (`src/sharelink.js`) and to saved scenes via `getVisualState()`/
   `applyVisualState()` (`src/ui.js`).
 
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
+
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -1483,6 +1537,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 - Tightened the README opening around keyless setup, source freshness, modeled
   experiences, and the accessibility of the provider stack.
+
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
 
 ### Fixed
 
@@ -1575,6 +1635,12 @@ represent previously published GitHub Releases.
 - Public documentation and the L9 release matrix no longer reference non-public
   planning material or repository history.
 
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
+
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -1641,6 +1707,12 @@ represent previously published GitHub Releases.
 - Improved cockpit layout, context restoration, keyless feed honesty, and
   aircraft 2D/3D handoffs.
 
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
+
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -1684,6 +1756,12 @@ represent previously published GitHub Releases.
   annotations, trails, and terrain-aware rendering.
 - Added aircraft class silhouettes, path-derived display heading, ADSBDB
   enrichment, cached CelesTrak TLE lookup, and next-ISS-pass prediction.
+
+### Added
+
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
 
 ### Fixed
 

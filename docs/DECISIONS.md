@@ -3392,3 +3392,13 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Root cause.** The proxy's cache key is the sanitized FORM body (`data=%5Bout%3Ajson%5D…`), where `[` and `"` are percent-encoded. `isOverpassRoadQuery` matched `["highway"~` against that raw key and never matched, so every traffic road tile fell to the 7-day default. The boundary check happened to work because `is_in(` and `pivot` survive encoding. The tests used plain QL strings, not real proxy keys.
 
 **Fix.** `overpassQueryText()` decodes a `data=` key once; both classifiers read the decoded QL. A test now builds the key through `sanitizeOverpassBody`, like the proxy does. Side effect, intended: road tiles on disk aged 7–60 days are valid again.
+
+## 2026-11-07 — Serve road misses from a cached tile that contains them
+
+**Context.** After the span fix, a low-altitude request (e.g. 0.025°) still could not use a cached 0.05° tile of the same streets, because the key is the exact query text. That request went upstream, where the mirrors answered in 9–60 s or with 429/502.
+
+**Decision.** An index of road tiles keyed by template + bbox (`overpassCoverIndex.mjs`). On a miss or rate limit, the smallest containing tile within its TTL is cropped to the request bbox and served as `COVER`. Verified end to end on the dev server with a real disk tile: the exact tile came back as a `DISK` hit (169 ways), a smaller box inside it as `COVER` in 24 ms (13 ways) with no upstream contact, and the repeat as `HIT` in 7 ms.
+
+**Why crop rather than return the whole tile.** `allocateRoadDotBudgets` spreads `MAX_DOTS` over every returned road with no viewport cull, so handing back the bigger tile would thin dots in view (the 2026-10-22 objection to growing the box).
+
+**Limits.** Road queries only (they carry `out geom`). The index learns tiles as they are written or hit: the disk records store no query text, so older files join only once their exact key is requested again. Adjacent tiles that only partially overlap a request are not stitched together.

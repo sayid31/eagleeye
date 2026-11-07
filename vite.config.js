@@ -80,6 +80,8 @@ import {
   writeOverpassDisk,
   overpassDiskTtlMs,
 } from './src/data/overpassDiskCache.mjs';
+import { serveFromCover } from './src/data/overpassCoverIndex.mjs';
+import { createOverpassCoverStore } from './src/data/overpassCoverStore.mjs';
 import {
   militaryInstallationsProxy,
   validMilitaryInstallationBox,
@@ -378,6 +380,10 @@ function sendOverpassResponse(res, payload, cacheStatus = 'MISS') {
  * @returns {import('vite').Plugin}
  */
 function overpassProxy() {
+  // Remembers cached road tiles so a miss inside one is answered by cropping it
+  // (src/data/overpassCoverIndex.mjs) instead of waiting on the public mirrors.
+  const coverIndex = createOverpassCoverStore();
+  const readCover = (key) => _overpassCache.get(key) || readOverpassDisk(key, overpassDiskTtlMs(key));
   return {
     name: 'overpass-proxy',
     configureServer(server) {
@@ -431,6 +437,17 @@ function overpassProxy() {
             readDisk: () => readOverpassDisk(cacheKey, overpassDiskTtlMs(cacheKey)),
             allowUpstream: () => _overpassRateLimiter(clientKey(req)),
           });
+          if (preflight.source === 'RATE_LIMITED' || preflight.source === 'UPSTREAM') {
+            const covered = await serveFromCover(coverIndex, cacheKey, readCover);
+            if (covered) {
+              // Memory only (not disk, not the index): repeats skip the crop,
+              // and the disk keeps one copy per real upstream answer.
+              _overpassCache.set(cacheKey, covered);
+              trimOverpassCache();
+              sendOverpassResponse(res, covered, 'COVER');
+              return;
+            }
+          }
           if (preflight.source === 'RATE_LIMITED') {
             res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': '5' });
             res.end(JSON.stringify({ error: 'Rate limit exceeded' }));
@@ -440,6 +457,7 @@ function overpassProxy() {
             if (preflight.source === 'DISK') {
               _overpassCache.set(cacheKey, preflight.payload);
               trimOverpassCache();
+              coverIndex.record(cacheKey, preflight.payload.cachedAt);
             }
             sendOverpassResponse(res, preflight.payload, preflight.source);
             return;
@@ -460,6 +478,7 @@ function overpassProxy() {
                 _overpassCache.set(cacheKey, entry);
                 trimOverpassCache();
                 writeOverpassDisk(cacheKey, entry);
+                coverIndex.record(cacheKey, entry.cachedAt);
               }
               return payload;
             })
