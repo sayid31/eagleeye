@@ -3330,3 +3330,15 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Known exposure accepted for now.** Anyone who can reach stg can open `/api/live/session`, `/api/live/vision` and `/api/openai/hud-summary` on the owner's OpenAI key; the voice cost cap is enforced only in the browser. The AISStream, TomTom, FIRMS and OpenSky proxies are equally reachable, and `GOOGLE_MAPS_API_KEY` / `CESIUM_ION_TOKEN` are in the client bundle by design. The provider-side budget (OpenAI usage limit) is the only hard backstop.
 
 **Revisit when** stg is shared beyond the owner: follow the 2026-11-04 "Voice settings: deploy plan" (admin login via `requireAdmin`, server-side session accounting) — the server-side session/daily-minute limits on `feature/admin-dashboard` are not part of this deploy.
+
+## 2026-11-07 — Audit Log + System Health: read what the server already knows
+
+**Context.** T7: Audit Log (keys/settings changed, sign-ins, log cleared) and System Health (key/service status, quotas).
+
+**Decision.**
+
+- **System Health never calls a provider.** Key status is the last "Test connection" from the audit trail, services are the `/api` answers the server already saw, quotas are the numbers the proxies already read (OpenSky header, TomTom counter). A health page that tests on every load would spend quota (TomTom tile) and open AISStream connections that collide with the live feed (see the AISStream correction above). Missing evidence is shown as "No data", not as a failure.
+- **Sign-ins go to the audit trail** (reason code only), and a voice-settings save records which top-level sections changed — "what changed" without any value.
+- **The audit → Server Log mirror is removed**: it was the stop-gap until this page existed, and it duplicated sign-in rows.
+
+**Limits.** Quota and service items are per server process and reset on restart; they read "No data" until the first matching request.

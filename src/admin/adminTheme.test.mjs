@@ -19,10 +19,10 @@ test('nextTheme toggles between dark and light', () => {
   assert.equal(nextTheme('light'), 'dark');
 });
 
-test('nav lists the agreed menus, with Server Log first and the later two marked soon', () => {
+test('nav lists the agreed menus, with Server Log first and every page built (none marked soon)', () => {
   assert.deepEqual(ADMIN_NAV.map((g) => g.label), ['Server Log', 'AI Configuration', 'API Keys']);
   assert.deepEqual(ADMIN_NAV[0].children.map((c) => [c.label, Boolean(c.soon)]),
-    [['Server Log', false], ['Audit Log', true], ['System Health', true]]);
+    [['Server Log', false], ['Audit Log', false], ['System Health', false]]);
   assert.deepEqual(ADMIN_NAV[1].children.map((c) => c.label), ['General', 'AI Provider', 'Persona', 'Usage & Cost']);
 });
 

@@ -91,3 +91,14 @@ textarea.adm-input { resize: vertical; min-height: 72px; }
   .adm-rule { grid-template-columns: 2em minmax(0, 1fr); }
   .adm-rule > .adm-pill, .adm-rule > .adm-btn { grid-column: 2; justify-self: start; }
 }
+
+/* Audit Log + System Health */
+.adm-pill-error { color: #e5484d; border-color: currentColor; }
+.adm-pill-warn { color: #d9a400; border-color: currentColor; }
+.adm-health { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.adm-health-item { display: grid; grid-template-columns: 6.5em minmax(10em, 16em) minmax(0, 1fr); gap: 12px; align-items: baseline; padding: 8px 0; border-top: 1px solid var(--adm-border); }
+.adm-health-item:first-child { border-top: none; }
+.adm-health-item .adm-pill { justify-self: start; }
+.adm-health-label { font-weight: 500; overflow-wrap: anywhere; }
+.adm-health-detail { color: var(--adm-muted); overflow-wrap: anywhere; }
+@media (max-width: 640px) { .adm-health-item { grid-template-columns: 6.5em minmax(0, 1fr); } .adm-health-detail { grid-column: 2; } }

@@ -3,8 +3,7 @@
  * Menu structure of the /admin dashboard. Pure data so the sidebar, the
  * router and the tests all read one source of truth.
  *
- * `soon` marks entries that are planned but not built yet (Audit Log and
- * System Health follow Server Log, see planAdmin/plandiskusiadmin.md).
+ * `soon` marks entries that are planned but not built yet (none at present).
  *
  * @module admin/adminNav
  */
@@ -20,8 +19,8 @@ export const ADMIN_NAV = [
     path: '/server-log',
     children: [
       { label: 'Server Log', path: '/server-log' },
-      { label: 'Audit Log', path: '/server-log/audit', soon: true },
-      { label: 'System Health', path: '/server-log/health', soon: true },
+      { label: 'Audit Log', path: '/server-log/audit' },
+      { label: 'System Health', path: '/server-log/health' },
     ],
   },
   {

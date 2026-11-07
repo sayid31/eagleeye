@@ -33,6 +33,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   larangan tambahan; larangan tambahan hanya bisa memperketat, tidak melonggarkan.
 - **/admin → AI Configuration → AI Provider**: pilih suara (31 suara bawaan) dan model backend asisten suara.
   Kosong berarti tetap memakai `.env` atau bawaan; halaman menunjukkan nilai yang sedang dipakai.
+- **/admin → Audit Log**: riwayat semua perubahan dari /admin — kunci diganti/dihapus/diuji, pengaturan suara
+  disimpan (bagian mana yang berubah), login admin (berhasil/ditolak), dan Server Log dibersihkan. Bisa
+  difilter. Tanpa nilai kunci atau email.
+- **/admin → System Health**: satu halaman status — kunci (hasil uji terakhir), feed kapal AIS, layanan luar
+  yang sedang gagal, kuota OpenSky/TomTom, menit suara dan panggilan penilai hari ini, serta file log. Tidak
+  memanggil penyedia mana pun.
 - **/admin → API Keys**: status tiap kunci penyedia data, isi/ganti/hapus, dan tombol **Test connection**
   yang memeriksa kunci langsung ke penyedianya (Google Maps tidak bisa diuji dari server). Kunci OpenAI
   dikelola terpisah di **AI Configuration → AI Provider**. Nilai kunci

@@ -5,6 +5,8 @@ import { ADMIN_HOME_PATH, adminLeaves, groupLanding, groupRedirects } from './ad
 import { AdminLayout } from './AdminLayout.jsx';
 import { AiProviderPage } from './pages/AiProviderPage.jsx';
 import { ApiKeysPage } from './pages/ApiKeysPage.jsx';
+import { AuditLogPage } from './pages/AuditLogPage.jsx';
+import { SystemHealthPage } from './pages/SystemHealthPage.jsx';
 import { GeneralPage } from './pages/GeneralPage.jsx';
 import { PersonaPage } from './pages/PersonaPage.jsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx';
@@ -14,6 +16,8 @@ import { UsagePage } from './pages/UsagePage.jsx';
 /** Leaves that are built; every other leaf renders its placeholder. */
 const PAGES = {
   '/server-log': ServerLogPage,
+  '/server-log/audit': AuditLogPage,
+  '/server-log/health': SystemHealthPage,
   '/ai/general': GeneralPage,
   '/ai/provider': AiProviderPage,
   '/ai/persona': PersonaPage,
