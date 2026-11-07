@@ -43,9 +43,9 @@ const CAMERAS = [
   { id: 'cam-c', city: 'Denpasar', name: 'Kuta', sourceKind: 'official' },
 ];
 
-test('cctvCameraOptionLabel formats unofficial sources with a warning prefix', () => {
+test('cctvCameraOptionLabel is city · name for every source, with no unofficial warning prefix', () => {
   assert.equal(cctvCameraOptionLabel(CAMERAS[0]), 'Jakarta · Sudirman');
-  assert.equal(cctvCameraOptionLabel(CAMERAS[1]), '⚠ Bandung · Dago');
+  assert.equal(cctvCameraOptionLabel(CAMERAS[1]), 'Bandung · Dago');
   assert.equal(cctvCameraOptionLabel({}), ' · ');
 });
 
@@ -58,7 +58,7 @@ test('renderCctvCameraListboxOptions builds one <li role="option"> per camera, i
   assert.deepEqual(listbox.children.map((li) => li.id), ['cctv-cam-opt-cam-a', 'cctv-cam-opt-cam-b', 'cctv-cam-opt-cam-c']);
   assert.deepEqual(listbox.children.map((li) => li.getAttribute('role')), ['option', 'option', 'option']);
   assert.deepEqual(listbox.children.map((li) => li.textContent), [
-    'Jakarta · Sudirman', '⚠ Bandung · Dago', 'Denpasar · Kuta',
+    'Jakarta · Sudirman', 'Bandung · Dago', 'Denpasar · Kuta',
   ]);
   assert.ok(listbox.children.every((li) => li.className === CCTV_CAMERA_OPTION_CLASS));
   // Freshly built items start unselected; syncCctvCameraListboxState owns aria-selected.
@@ -96,7 +96,7 @@ test('syncCctvCameraListboxState marks the active item selected and clears the r
   syncCctvCameraListboxState({ trigger, listbox }, { cameras: CAMERAS, activeId: 'cam-b', enabled: true });
 
   assert.deepEqual(listbox.children.map((li) => li.getAttribute('aria-selected')), ['false', 'true', 'false']);
-  assert.equal(trigger.textContent, '⚠ Bandung · Dago');
+  assert.equal(trigger.textContent, 'Bandung · Dago');
   assert.equal(trigger.dataset.selectedCameraId, 'cam-b');
   assert.equal(trigger.disabled, false);
 });

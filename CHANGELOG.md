@@ -34,6 +34,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Label kamera CCTV kini bersih: nama tanpa akhiran "(… — Live — Unofficial)", label di peta hanya nama
   kamera alih-alih ID mentah, dan kartu yang videonya belum muncul menampilkan satu baris "MEMUAT VIDEO" yang
   terbaca, bukan teks kecil di pojok.
+- Daftar pilihan kamera CCTV tidak lagi memberi tanda "⚠" pada kamera portal pemda.
+- Konsol lebih ringan saat CCTV menyala: panel tidak lagi menghitung ulang tata letak setiap kali teksnya
+  berubah, dan status ribuan kamera tidak lagi dibangun ulang penuh setiap beberapa ratus milidetik.
 - Chip status pemuatan kini berbentuk pil rapi dengan titik status dan teks biasa (bukan huruf kapital
   renggang), memakai nama layer berbahasa Indonesia, dan pesan antre server OSM hanya tampil sekali.
 

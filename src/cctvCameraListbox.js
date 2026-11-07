@@ -18,14 +18,13 @@ export const CCTV_CAMERA_OPTION_CLASS = 'cctv-camera-option';
 /**
  * Display label for one camera, shared by the popup's `<li>` items and the
  * trigger's own text so the two can never drift onto different formats.
- * Unofficial/demo-only sources (see DATA_SOURCES.md) get a `⚠ ` prefix.
- * @param {{city?: string, name?: string, sourceKind?: string}} camera
+ * No warning prefix for government-portal cameras (owner ruling 2026-11-07,
+ * docs/DECISIONS.md).
+ * @param {{city?: string, name?: string}} camera
  * @returns {string}
  */
 export function cctvCameraOptionLabel(camera) {
-  const unofficial = String(camera?.sourceKind || '').startsWith('unofficial');
-  const base = `${camera?.city ?? ''} · ${camera?.name ?? ''}`;
-  return unofficial ? `⚠ ${base}` : base;
+  return `${camera?.city ?? ''} · ${camera?.name ?? ''}`;
 }
 
 /**
