@@ -7,7 +7,7 @@ import {
 import { shouldHideCollapsedRightPanels } from './rightRailPolicy.js';
 import { resolveHudRailLayout } from './cockpitMath.js';
 import { PANEL_POSITION_STORAGE_VERSION, PANEL_Z_BASE, PANEL_Z_MAX } from './panelPositionConstants.js';
-import { isLayoutRelevantMutation } from './panelLayoutMutations.js';
+import { createObstacleSizeGate, isLayoutRelevantMutation, isLayoutRelevantResize } from './panelLayoutTriggers.js';
 
 /** Versioned localStorage namespace prefix to invalidate stale panel layouts. */
 const PANEL_LAYOUT_STORAGE_VERSION = 'v6';
@@ -212,21 +212,23 @@ export const panelAdaptiveLayoutMixin = {
       else this._ppToggles.append(this._sliderPanel);
     }
     if (typeof ResizeObserver !== 'undefined') {
-      this._rightStackResizeObserver = new ResizeObserver(() => {
-        this._scheduleRightPanelLayout();
+      const obstacles = new Set(document.querySelectorAll(RIGHT_STACK_OBSTACLE_SELECTOR));
+      const gate = createObstacleSizeGate();
+      this._rightStackResizeObserver = new ResizeObserver((entries) => {
+        if (isLayoutRelevantResize(entries, obstacles, gate)) this._scheduleRightPanelLayout();
       });
       this._rightStackResizeObserver.observe(stack);
       for (const panel of [this._ppToggles, this._cctvPanel, globalContextPanel]) {
         if (panel) this._rightStackResizeObserver.observe(panel);
       }
-      document.querySelectorAll(RIGHT_STACK_OBSTACLE_SELECTOR).forEach((element) => {
+      obstacles.forEach((element) => {
         this._rightStackResizeObserver.observe(element);
       });
     }
 
     if (typeof MutationObserver !== 'undefined') {
       // Text-only writes are ignored: a size change from text reaches the
-      // ResizeObserver above (see panelLayoutMutations.js).
+      // ResizeObserver above (see panelLayoutTriggers.js).
       this._rightStackMutationObserver = new MutationObserver((records) => {
         if (isLayoutRelevantMutation(records)) this._scheduleRightPanelLayout();
       });
@@ -478,8 +480,10 @@ export const panelAdaptiveLayoutMixin = {
     if (!stack) return;
 
     if (typeof ResizeObserver !== 'undefined') {
-      this._leftStackResizeObserver = new ResizeObserver(() => {
-        this._scheduleLeftPanelLayout();
+      const obstacles = new Set(document.querySelectorAll(LEFT_STACK_OBSTACLE_SELECTOR));
+      const gate = createObstacleSizeGate();
+      this._leftStackResizeObserver = new ResizeObserver((entries) => {
+        if (isLayoutRelevantResize(entries, obstacles, gate)) this._scheduleLeftPanelLayout();
       });
       this._leftStackResizeObserver.observe(stack);
       stack.querySelectorAll(':scope > [data-panel-id]').forEach((panel) => {
@@ -487,7 +491,7 @@ export const panelAdaptiveLayoutMixin = {
         const inner = [...panel.children].find((child) => !child.classList.contains('panel-glow'));
         if (inner) this._leftStackResizeObserver.observe(inner);
       });
-      document.querySelectorAll(LEFT_STACK_OBSTACLE_SELECTOR).forEach((element) => {
+      obstacles.forEach((element) => {
         this._leftStackResizeObserver.observe(element);
       });
     }
