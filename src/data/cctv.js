@@ -306,8 +306,9 @@ const cctvLayer = {
       objects.push({
         position: S._records[i].position,
         sourceId: camera.id,
-        // Callout text only; overlay identity is (layer, sourceId).
-        id: cctvMapLabel(camera),
+        // Callout text only; overlay identity is (layer, sourceId). Precomputed
+        // at catalog build — this runs every detection frame for every camera.
+        id: camera.mapLabel || cctvMapLabel(camera),
         type: 'CAM',
       });
       if (objects.length >= maxCount) break;
