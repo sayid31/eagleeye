@@ -3,7 +3,7 @@
 import * as Cesium from 'cesium';
 import { CITY_POIS } from '../locations.js';
 import { SOURCE_ENDPOINT } from './cctvConstants.js';
-import { cctvCameraName } from './cctvProviderLabel.js';
+import { cctvCameraName, cctvMapLabel } from './cctvProviderLabel.js';
 import { ensureCameraPose } from './cctvGeometry.js';
 import { clamp, headingFromId, normalizeHeading, offsetDegrees, safeNumber } from './cctvMath.js';
 import { S } from './cctvState.js';
@@ -248,6 +248,8 @@ export function buildCatalogFromSources(rawSources) {
       license: String(source.license || source.licenseNote || ''),
       poseSource,
     };
+    // Built once here: detection asks every frame for all cameras (3k+ in Indonesia).
+    camera.mapLabel = cctvMapLabel(camera);
     ensureCameraPose(camera);
     catalog.push(camera);
   }
