@@ -1977,6 +1977,11 @@ test('getPublicCameraState: frameUrl is populated for a still-image camera', () 
   }]);
   const state = _getPublicCameraStateForTest(camera);
   assert.match(state.frameUrl, /^\/api\/cctv\/frame\/austin-cam-1\?/);
+  // Built lazily (perf): still an enumerable own property, stable once read.
+  assert.ok(Object.keys(state).includes('frameUrl'));
+  assert.equal(state.frameUrl, state.frameUrl);
+  assert.equal({ ...state }.frameUrl, state.frameUrl);
+  assert.match(JSON.parse(JSON.stringify(state)).frameUrl, /^\/api\/cctv\/frame\/austin-cam-1\?/);
 });
 
 // cctvLayer.getOcclusionPlanes() — backs the Universal Detection Overlay's

@@ -61,9 +61,12 @@ export const GEO_TRACKING_BATCH_SIZE = 2;
 
 export const GEO_TRACKING_BATCH_DELAY_MS = 250;
 
-export const GEO_PROGRESS_NOTIFY_INTERVAL_MS = 300;
+// Each progress notify republishes every camera and re-renders the panel; at
+// 300 ms / 10 batches a 3k-camera load did that ~300 times (profile 2026-11-07).
+// Progress text updating once a second is plenty.
+export const GEO_PROGRESS_NOTIFY_INTERVAL_MS = 1000;
 
-export const GEO_PROGRESS_NOTIFY_BATCH_LIMIT = 10;
+export const GEO_PROGRESS_NOTIFY_BATCH_LIMIT = 30;
 
 // Throttle for placeholder repaints — the projection RAF loop must not
 // re-fill a 1080p canvas on every frame while a feed image is still loading.

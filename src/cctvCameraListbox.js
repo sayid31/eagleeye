@@ -57,6 +57,7 @@ export function renderCctvCameraListboxOptions(listboxEl, orderedCameras, doc) {
   if (!ownerDoc?.createElement) return;
 
   listboxEl.innerHTML = '';
+  if (listboxEl.dataset) delete listboxEl.dataset.syncedSelectedId;
   for (const camera of orderedCameras) {
     const option = ownerDoc.createElement('li');
     option.id = `cctv-cam-opt-${camera.id}`;
@@ -83,17 +84,27 @@ export function syncCctvCameraListboxState({ trigger, listbox } = {}, { cameras 
   const cameraList = Array.isArray(cameras) ? cameras : [];
   const activeCamera = activeId ? cameraList.find((camera) => camera.id === activeId) || null : null;
 
+  // Writes only what changed: this runs on every CCTV state publish, and each
+  // DOM write is a mutation the panel observers and the browser must process.
   if (trigger) {
-    trigger.disabled = !enabled || cameraList.length === 0;
-    trigger.textContent = activeCamera ? cctvCameraOptionLabel(activeCamera) : 'Pilih kamera';
-    trigger.dataset.selectedCameraId = activeCamera ? activeCamera.id : '';
+    const disabled = !enabled || cameraList.length === 0;
+    const label = activeCamera ? cctvCameraOptionLabel(activeCamera) : 'Pilih kamera';
+    const selectedId = activeCamera ? activeCamera.id : '';
+    if (trigger.disabled !== disabled) trigger.disabled = disabled;
+    if (trigger.textContent !== label) trigger.textContent = label;
+    if (trigger.dataset.selectedCameraId !== selectedId) trigger.dataset.selectedCameraId = selectedId;
   }
 
   if (listbox) {
+    const selectedId = activeCamera ? activeCamera.id : '';
+    // Same selection over the same options (a rebuild clears the marker): skip
+    // the walk over every option (3k+ with the Indonesia pack).
+    if (listbox.dataset && listbox.dataset.syncedSelectedId === selectedId) return;
     for (const option of Array.from(listbox.children || [])) {
-      const isActive = !!activeCamera && option?.dataset?.cameraId === activeCamera.id;
-      option.setAttribute?.('aria-selected', String(isActive));
+      const want = String(!!activeCamera && option?.dataset?.cameraId === activeCamera.id);
+      if (option.getAttribute?.('aria-selected') !== want) option.setAttribute?.('aria-selected', want);
     }
+    if (listbox.dataset) listbox.dataset.syncedSelectedId = selectedId;
   }
 }
 

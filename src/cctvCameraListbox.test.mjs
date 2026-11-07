@@ -169,3 +169,27 @@ test('handleCctvListboxKeydown: unhandled keys return null', () => {
   assert.equal(handleCctvListboxKeydown('a', { items: ITEM_IDS, highlightedId: 'cam-a' }), null);
   assert.equal(handleCctvListboxKeydown('Tab', { items: ITEM_IDS, highlightedId: 'cam-a' }), null);
 });
+
+test('syncCctvCameraListboxState skips DOM writes when nothing changed, and a rebuild re-arms it', () => {
+  const listbox = makeElement('ul');
+  const trigger = makeElement('button');
+  renderCctvCameraListboxOptions(listbox, CAMERAS, doc);
+  syncCctvCameraListboxState({ trigger, listbox }, { cameras: CAMERAS, activeId: 'cam-b', enabled: true });
+
+  let writes = 0;
+  for (const li of listbox.children) {
+    const original = li.setAttribute;
+    li.setAttribute = (...args) => { writes += 1; original(...args); };
+  }
+  syncCctvCameraListboxState({ trigger, listbox }, { cameras: CAMERAS, activeId: 'cam-b', enabled: true });
+  assert.equal(writes, 0, 'same selection: no option is touched');
+
+  syncCctvCameraListboxState({ trigger, listbox }, { cameras: CAMERAS, activeId: 'cam-c', enabled: true });
+  assert.equal(writes, 2, 'selection moved: only the old and the new option change');
+  assert.deepEqual(listbox.children.map((li) => li.getAttribute('aria-selected')), ['false', 'false', 'true']);
+
+  renderCctvCameraListboxOptions(listbox, CAMERAS, doc);
+  syncCctvCameraListboxState({ trigger, listbox }, { cameras: CAMERAS, activeId: 'cam-c', enabled: true });
+  assert.deepEqual(listbox.children.map((li) => li.getAttribute('aria-selected')), ['false', 'false', 'true'],
+    'freshly rebuilt options get the selection again');
+});

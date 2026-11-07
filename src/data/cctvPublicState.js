@@ -59,7 +59,7 @@ function getPublicCameraState(record, activeId = null) {
   const isActive = camera.id === resolvedActiveId;
   const refreshMs = isActive ? ACTIVE_FRAME_REFRESH_MS : IDLE_FRAME_REFRESH_MS;
   const isVideo = isVideoFeedType(normalizeFeedType(camera.feedType));
-  return {
+  const state = {
     id: camera.id,
     name: camera.name,
     city: camera.city,
@@ -116,12 +116,25 @@ function getPublicCameraState(record, activeId = null) {
     // frameUrl here stops the panel's still-image preview (_cctvFrame in
     // cctvFrameMixin.js) from polling /frame/:id for these cameras at all —
     // their live view is the mediaUrl-driven monitor plane instead.
-    frameUrl: isVideo ? null : frameUrlFor(camera, refreshMs),
     mediaUrl: mediaUrlFor(camera),
     // Lets the panel (cctvFrameMixin.js) pick the <video>-mirror path over
     // the frameUrl/<img> path without re-deriving feed-type logic itself.
     isVideo,
   };
+  // frameUrl is built on first read: uiState() publishes every camera (3k+ with
+  // the Indonesia pack) on each notify, but only the active camera's preview and
+  // QA ever read it, and URLSearchParams per camera dominated the publish
+  // (profile 2026-11-07). Still an enumerable own property for spreads/JSON.
+  let frameUrl;
+  Object.defineProperty(state, 'frameUrl', {
+    enumerable: true,
+    configurable: true,
+    get() {
+      if (frameUrl === undefined) frameUrl = isVideo ? null : frameUrlFor(camera, refreshMs);
+      return frameUrl;
+    },
+  });
+  return state;
 }
 
 /**
