@@ -130,13 +130,15 @@ export function clampBoundsAroundCenter(bounds, center, maxSpanDeg = 0.05) {
   const latSpan = quantizeFetchSpan(Math.min(bounds.north - bounds.south, maxSpanDeg), maxSpanDeg);
   const lonSpan = quantizeFetchSpan(Math.min(bounds.east - bounds.west, maxSpanDeg), maxSpanDeg);
   const snapped = snapFetchCenter(center);
-  // Edges rounded like the center: float noise in `center ± span/2` would
-  // otherwise reach the query text, and the query text is the cache key.
+  // Edges are deliberately NOT rounded: the same (center, span) always gives
+  // the same floats, so keys stay stable, and capped 0.05° boxes keep the exact
+  // query text they had before span rounding — rounding them would orphan every
+  // tile already on disk (warm-up script tiles included).
   return {
-    south: round6(snapped.lat - latSpan / 2),
-    north: round6(snapped.lat + latSpan / 2),
-    west: round6(snapped.lon - lonSpan / 2),
-    east: round6(snapped.lon + lonSpan / 2),
+    south: snapped.lat - latSpan / 2,
+    north: snapped.lat + latSpan / 2,
+    west: snapped.lon - lonSpan / 2,
+    east: snapped.lon + lonSpan / 2,
   };
 }
 

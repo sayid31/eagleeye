@@ -7,6 +7,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Titik lalu lintas kini tetap di jalannya saat peta digeser. Sebelumnya jalan yang data ketinggiannya belum
   siap digambar di ketinggian 0 m (ratusan meter di bawah permukaan di Jawa Tengah), sehingga titiknya
   terlihat bergeser dari jalan saat kamera bergerak.
@@ -129,6 +132,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Mengarahkan kursor ke tombol mik di dock tidak lagi ikut menyalakan pil gaya visual ("Normal") di
   sebelahnya, dan mengklik mik tidak lagi ikut membuka menu gaya peta: area klik pil kini persis seukuran
   pilnya. Efek hover mik hanya menebalkan cincin cahayanya, tanpa membesarkan tombol.
@@ -216,6 +222,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Tanda panah di pil gaya visual ("Normal ▾") tidak lagi tampil sebagai `â-¾`; semua glyph dekoratif
   CSS kini memakai escape, jadi tidak rusak walau browser salah menebak encoding.
 
@@ -264,6 +273,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Penanda stasiun radio terpilih tidak lagi tembus bola bumi. Saat kamera diam — memilih stasiun lewat
   suara, klik tuner, atau Berikutnya tanpa rotasi — penanda dan braket stasiun di sisi belakang bumi tetap
   tergambar sampai kamera digerakkan lagi.
@@ -328,6 +340,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - A data layer whose code failed to download (for example CCTV, after a network
   change while the page was open) can now be turned on again without reloading the
   page. Before, one failed download stayed cached and every later toggle failed the same way.
@@ -512,6 +527,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - CCTV live HLS video no longer freezes a few seconds after it starts on
   current Chrome. The player was picked by `canPlayType()`, which Chrome now
   answers "maybe" even though its native HLS engine cannot parse these feeds, so
@@ -722,6 +740,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - **Traffic/aircraft/vessel detection labels (e.g. `VEH-XXXX` vehicle IDs)
   drew through the 3D CCTV monitor plane instead of being hidden behind
   it.** Root cause: the Universal Detection Overlay (`src/data/detection.js`)
@@ -1169,6 +1190,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Indonesia unofficial HLS cameras' 3D monitor plane no longer goes solid
   BLACK instead of live video (a separate bug from the Viewshed-occlusion
   fix below, which only addressed the plane being COVERED by a colored
@@ -1400,6 +1424,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Traffic dots (Street Traffic layer) no longer drift off the road into
   nearby buildings. `parseRoads()`/`parseRoadsTimed()` in
   `src/data/traffic.js` previously sampled terrain/building height once, at
@@ -1431,6 +1458,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Pinokio now recognizes its nested successful-install marker, so a completed
   one-click install exposes Start instead of returning to Install.
 - The keyless `dev-fresh.sh` startup summary now names Esri World Imagery with
@@ -1516,6 +1546,9 @@ represent previously published GitHub Releases.
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - A missing optional FIRMS key no longer turns the complete Environmental
   mission into `LOAD FAILED`. The FIRMS row still reports `KEY REQUIRED`, while
   earthquakes continue to load. Real lifecycle and fetch failures retain
@@ -1576,6 +1609,9 @@ represent previously published GitHub Releases.
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Fixed degenerate depth picks, map-source restore states, route-camera motion,
   bright-ground label readability, grounded display flooring, and cross-layer
   tracking cleanup.
@@ -1614,6 +1650,9 @@ represent previously published GitHub Releases.
 
 ### Fixed
 
+- Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
+  rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
+  hampir selalu meleset dan harus menunggu server OSM lagi.
 - Fixed elevated-airport aircraft placement, vessel sea-surface placement,
   close-zoom FIRMS anchors, antimeridian region framing, annotation resolution,
   cross-layer tracking ownership, and CCTV projection lifecycle issues.

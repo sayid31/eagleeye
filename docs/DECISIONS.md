@@ -3374,3 +3374,13 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Follow-up, same day: detection glow.** A/B on the detection surface (1920×1000, traffic + CCTV) split its cost: the CSS `drop-shadow` glow, re-blurred by the compositor over the whole surface every frame, cost ~7 renders/s (34.1 → 41.3); `contrast/saturate` ~1; the `screen` blend nothing; the JS paint ~2.5 ms/frame. The default style now sets `surfaceGlow: false` (`src/overlays/worldOverlayTokens.js`); CRT/NVG/FLIR keep the glow as part of their look. As shipped: 1920×1000 42.9 renders/s, 1440×900 53.3 (from 27.9 / 36.8 before both changes).
 
 **Still open.** `preserveDrawingBuffer: true` (kept for canvas snapshots) was not measured.
+
+## 2026-11-07 — The road-fetch span is rounded too, not just the center
+
+**Context.** Asked to "cache road data per area", the audit found per-area caching already in place: the 0.0125° center grid (2026-10-22), the 60-day disk TTL, serve-stale, and the warm-up script. Yet a probe of every `/api/overpass` request over Yogyakarta at 900 m showed two requests on the same grid center with bbox edges differing in the 7th decimal, both missing.
+
+**Root cause.** `clampBoundsAroundCenter` used `min(viewSpan, 0.05)`. Below the cap the span is `computeViewRectangle()`'s, continuous in altitude and pitch, so every low-altitude pose still minted a new key. The 2026-10-22 tests used a 0.1° view (always capped), so they never exercised it.
+
+**Decision.** Round the span to the nearest 0.00625° (half the grid pitch, `quantizeFetchSpan`): at most ~350 m per axis, so it is not the "grow the box" option rejected on 2026-10-22. Edges are deliberately not rounded: the same inputs give the same floats, and capped 0.05° boxes keep byte-identical query text (a test inlines the old formula), so the 1,077 tiles already on disk stay valid.
+
+**Not done (yet).** Serving a smaller request from a cached tile that contains it. The disk records store no query or bbox (the filename is a hash of the query), so the existing 444 MB cannot be indexed retroactively, and it could not be validated live: during this work the upstream answered 429/502 and the breaker was open.

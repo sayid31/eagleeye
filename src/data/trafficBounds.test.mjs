@@ -256,7 +256,19 @@ test('a low-altitude view (span under the cap, jittering with pitch) still reuse
   assert.equal(keys.size, 1);
 });
 
-test('clamped edges carry at most 6 decimals (no float noise in the query text)', () => {
-  const box = clampBoundsAroundCenter({ south: 0, north: 0.0243, west: 0, east: 0.0243 }, { lat: -7.8436, lon: 110.375 });
-  for (const value of Object.values(box)) assert.ok(/^-?\d+(\.\d{1,6})?$/.test(String(value)), String(value));
+test('capped boxes keep the exact pre-rounding query numbers (disk cache stays valid)', () => {
+  // The pre-2026-11-07 formula, inlined: snapped center ± min(span, 0.05)/2.
+  const legacy = (view, center) => {
+    const snapped = snapFetchCenter(center);
+    const latSpan = Math.min(view.north - view.south, 0.05);
+    const lonSpan = Math.min(view.east - view.west, 0.05);
+    return { south: snapped.lat - latSpan / 2, north: snapped.lat + latSpan / 2, west: snapped.lon - lonSpan / 2, east: snapped.lon + lonSpan / 2 };
+  };
+  for (let i = 0; i < 200; i++) {
+    const center = { lat: -8 + i * 0.0731, lon: 95 + i * 0.1373 };
+    const view = { south: center.lat - 0.2, north: center.lat + 0.2, west: center.lon - 0.2, east: center.lon + 0.2 };
+    const now = clampBoundsAroundCenter(view, center);
+    const before = legacy(view, center);
+    assert.equal(`${now.south},${now.west},${now.north},${now.east}`, `${before.south},${before.west},${before.north},${before.east}`);
+  }
 });

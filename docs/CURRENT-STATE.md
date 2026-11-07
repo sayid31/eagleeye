@@ -1999,7 +1999,10 @@ detection off by hand — would not have.
   revisited area a cache hit: pans within one cell reuse one key instead of minting a
   new one per camera update, and the key count tracks cells crossed rather than camera
   moves. The snap moves the box at most half a pitch (~700 m) per axis, so the look-at
-  point stays inside the box it fetches for. The box span is unchanged — it is moved,
+  point stays inside the box it fetches for. Below the 0.05° cap the span (from
+  `computeViewRectangle()`) is rounded to the nearest `FETCH_SPAN_STEP_DEG` (0.00625°,
+  `quantizeFetchSpan`), so low-altitude views at the same height reuse a key too; capped
+  0.05° boxes keep their exact pre-2026-11-07 query text. The box span is otherwise unchanged — it is moved,
   not enlarged, because `allocateRoadDotBudgets` spreads `MAX_DOTS` across every road a
   fetch returns with no viewport cull, so a wider box would thin dot density in view.
 - **`parseRoads()`'s per-road `sampleHeight` fallback is capped, not
