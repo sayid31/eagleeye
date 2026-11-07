@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { extraRuleRows, groupCoreRules, guardLabel, settingsFromPersonaForm } from './personaForm.js';
+import { extraRuleRows, groupCoreRules, guardLabel, settingsFromPersonaForm, topicFormFromSettings } from './personaForm.js';
 import { defaultVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
 import { CORE_RULE_GROUPS, VOICE_CORE_RULES } from '../../voice/voiceCoreRules.js';
 
@@ -19,6 +19,22 @@ test('saving keeps every other section and replaces only extraRules; blank rows 
   assert.deepEqual(r.settings.persona, { name: 'Ela', instructions: 'Hangat.', extraRules: [{ forbid: 'Bahas cuaca', instead: 'Tolak' }] });
   assert.equal(r.settings.enabled, false);
   assert.deepEqual(extraRuleRows(r.settings), [{ forbid: 'Bahas cuaca', instead: 'Tolak' }]);
+});
+
+test('topic restriction is saved from Persona: trimmed list, empty list refused while on', () => {
+  const base = { ...defaultVoiceSettings(), persona: { name: 'Ela', instructions: '', extraRules: [] } };
+  const form = topicFormFromSettings(base);
+  assert.deepEqual(form, { topicsEnabled: false, topics: '', refusal: '' });
+  const r = settingsFromPersonaForm(base, [], { topicsEnabled: true, topics: ' kapal \n\n pesawat ', refusal: ' Maaf. ' });
+  assert.equal(r.ok, true);
+  assert.deepEqual(r.settings.topics, { enabled: true, allowed: ['kapal', 'pesawat'], refusal: 'Maaf.' });
+  assert.equal(r.settings.persona.name, 'Ela');
+  const empty = settingsFromPersonaForm(base, [], { topicsEnabled: true, topics: '  ', refusal: '' });
+  assert.equal(empty.ok, false);
+  assert.match(empty.errors[0], /minimal satu topik/);
+  // Without a topic form the saved topics are kept as they are.
+  const saved = { ...base, topics: { enabled: true, allowed: ['radio'], refusal: '' } };
+  assert.deepEqual(settingsFromPersonaForm(saved, []).settings.topics, saved.topics);
 });
 
 test('half-filled, too-long and too-many rules are refused with a message', () => {

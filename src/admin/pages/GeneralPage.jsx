@@ -1,17 +1,16 @@
 // src/admin/pages/GeneralPage.jsx
 /**
  * AI Configuration → General: voice on/off, assistant name and personality
- * notes, topic restriction, the five tool permission groups and the session
- * limits. Reads and writes the voice-settings store (`.gev-cache/voice-settings.json`).
+ * notes, the five tool permission groups and the session limits (the topic
+ * restriction lives on Persona). Reads and writes the voice-settings store (`.gev-cache/voice-settings.json`).
  */
 import { useEffect, useState } from 'react';
 import { fetchVoiceSettings, saveVoiceSettings } from '../api/adminVoiceApi.js';
 import { Field, SaveStatus, Section, Toggle } from '../components/FormControls.jsx';
-import { LIMIT_FIELDS, describeEnforced, generalFormFromSettings, settingsFromGeneralForm } from './generalForm.js';
+import { LIMIT_FIELDS, describeEnforced, describeToolGroup, generalFormFromSettings, settingsFromGeneralForm } from './generalForm.js';
 
 const NAME_MAX = 40;
 const NOTES_MAX = 1000;
-const REFUSAL_MAX = 160;
 
 export function GeneralPage() {
   const [data, setData] = useState(null);
@@ -73,24 +72,14 @@ export function GeneralPage() {
         </Field>
       </Section>
 
-      <Section title="Batasan topik" description="Aturan inti Persona selalu menjaga asisten tetap di konsol ini. Daftar opsional ini mempersempit percakapan lagi. Berbasis prompt (best effort); perintah aplikasi dan pertanyaan “ini di mana” tidak pernah ditolak.">
-        <Toggle checked={form.topicsEnabled} onChange={(topicsEnabled) => set({ topicsEnabled })} title="Batasi hanya ke topik ini" />
-        <Field label="Topik yang diizinkan" hint="Satu per baris, maksimal 20.">
-          <textarea className="adm-input" rows={4} value={form.topics} onChange={(e) => set({ topics: e.target.value })} />
-        </Field>
-        <Field label="Kalimat penolakan" hint={`Satu kalimat, maksimal ${REFUSAL_MAX} karakter. Kosong = kalimat bawaan.`}>
-          <input className="adm-input" type="text" maxLength={REFUSAL_MAX} value={form.refusal} onChange={(e) => set({ refusal: e.target.value })} />
-        </Field>
-      </Section>
-
       <Section title="Izin tools" description="Grup yang dimatikan sama sekali tidak ditawarkan ke model suara, jadi tools itu tidak bisa dipanggil.">
-        {data.toolGroups.map((group) => (
-          <Toggle key={group.id} checked={form.toolGroups[group.id] !== false} onChange={(on) => setGroup(group.id, on)}
-            title={`${group.label} (${group.toolCount} tools)`} description={group.description} />
-        ))}
+        {data.toolGroups.map((group) => {
+          const text = describeToolGroup(group);
+          return <Toggle key={group.id} checked={form.toolGroups[group.id] !== false} onChange={(on) => setGroup(group.id, on)} title={text.title} description={text.description} />;
+        })}
       </Section>
 
-      <Section title="Batas sesi" description="Kosong = tanpa batas. Sesi ditutup otomatis saat batas tercapai.">
+      <Section title="Batas sesi" description="Sesi ditutup otomatis saat batas tercapai. Kosongkan kolom lalu simpan untuk mematikan batas itu.">
         <div className="adm-grid">
           {LIMIT_FIELDS.map(({ key, label, unit }) => (
             <Field key={key} label={label} hint={`${data.limitRanges[key].min}–${data.limitRanges[key].max} ${unit}`}>
