@@ -1,7 +1,8 @@
 // src/admin/adminTheme.js
 /**
- * Light/dark choice for the admin dashboard. Kept separate from the map
- * app's theme tokens on purpose: /admin is a plain dashboard, not the map console.
+ * Light/dark choice for the admin dashboard. Its tokens (`--adm-*` in
+ * adminTheme.css) borrow the map console's HUD look but stay separate from the
+ * map's own tokens, so restyling one never shifts the other.
  *
  * @module admin/adminTheme
  */
