@@ -45,8 +45,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
-- Mengarahkan kursor ke tombol mik di dock tidak lagi menggeser pil gaya visual ("Normal") di
-  sebelahnya; efek hover mik kini hanya menebalkan cincin cahayanya, tanpa membesarkan tombol.
+- Mengarahkan kursor ke tombol mik di dock tidak lagi ikut menyalakan pil gaya visual ("Normal") di
+  sebelahnya, dan mengklik mik tidak lagi ikut membuka menu gaya peta: area klik pil kini persis seukuran
+  pilnya. Efek hover mik hanya menebalkan cincin cahayanya, tanpa membesarkan tombol.
 
 - Bagian **Radio** di panel Konteks yang tertutup kini memakai panah buka/tutup (bukan ikon ×), sehingga
   jelas bahwa mengkliknya membentangkan pemilih stasiun, filter, dan tombol putar.

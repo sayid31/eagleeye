@@ -33,3 +33,16 @@ test('the hovered mic halo stays inside the gap to the style pill', () => {
   const gap = Number(dockBody.match(/gap:\s*(\d+)px/)[1]);
   assert.ok(spread < gap, `halo ${spread}px must be smaller than the ${gap}px dock gap`);
 });
+
+test('the style pill click layer resets the inherited min-width so it cannot overhang the mic', () => {
+  // style.css gives the tray header a 144px min-width from the old wide dock;
+  // the 110px pill's absolute click layer must drop it or it covers the mic.
+  const [layer] = bodyOf('body.ee-shell #command-dock #control-panel .dock-tray-toggle');
+  assert.ok(layer, 'click layer rule exists');
+  assert.match(layer, /position:\s*absolute/);
+  assert.match(layer, /inset:\s*0/);
+  assert.match(layer, /min-width:\s*0\s*;/);
+  const styleCss = readFileSync(new URL('../../style.css', import.meta.url), 'utf8');
+  assert.match(styleCss, /\.panel-header[^{]*\{[^}]*min-width:\s*calc\(var\(--dock-side-compact\)/,
+    'if style.css drops this min-width, this guard can be relaxed');
+});

@@ -173,11 +173,17 @@ body.ee-shell #command-dock #control-panel #style-mini-value::after {
   color: var(--ee-text-muted);
 }
 
+/* The tray header becomes an invisible click layer exactly the pill's size.
+   style.css gives the header `min-width: calc(var(--dock-side-compact) - 1.5rem)`
+   (144px, from the older wide dock); without the reset the layer overhung the
+   110px pill by 34px onto the mic, so hovering the mic lit the pill and clicking
+   the mic opened the style menu. */
 body.ee-shell #command-dock #control-panel .dock-tray-toggle {
   position: absolute;
   inset: 0;
   z-index: 1;
   width: 100%;
+  min-width: 0;
   margin: 0;
   opacity: 0;
 }
@@ -225,9 +231,8 @@ body.ee-shell #command-dock #gev-voice-button {
   transition: box-shadow 0.15s ease;
 }
 
-/* Hover is paint-only: the halo ring widens, nothing scales. A transform here put
-   the button on its own compositor layer inside the translateX(-50%)-centred dock,
-   which re-snapped the row and nudged the style pill beside the mic. */
+/* Hover is paint-only: the halo ring widens, nothing scales, so the mic never
+   grows into the 8px gap toward the style pill. */
 body.ee-shell #command-dock #gev-voice-button:hover {
   box-shadow: 0 0 0 4px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }

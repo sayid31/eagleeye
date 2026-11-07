@@ -1602,7 +1602,7 @@ The owner edits voice behavior from the existing POWER UP dialog (`#key-setup`, 
   action icons, which have no plate). `initShell` sets `body[data-map-tone]` from the active map stack
   (`src/shell/mapTone.js`: `light` only for OSM) and updates it on `gev:map-stack-changed`.
 - The dock (`dock.css`) is about 48 px tall (`min-height: 0 !important` overrides the legacy 3.75rem; 6 px padding), its pills are a fixed 28 px and not stretched, and the mic glyph fills its 18 px orbit so it is centred. It is a compact style menu (palette icon, active style, accent border when open) and a 34 px round
-  gradient mic. Mic hover is paint-only (the halo ring widens from 3 to 4 px; no transform), so it never shifts the style pill beside it. The location pill is clipped, not removed (location code reads it). Tray titles, the
+  gradient mic. Mic hover is paint-only (the halo ring widens from 3 to 4 px; no transform). The style pill's click target is its tray header made an invisible `position:absolute; inset:0` layer with `min-width: 0`, so it is exactly the pill's size and never covers the mic. The location pill is clipped, not removed (location code reads it). Tray titles, the
   AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
 - In the CCTV panel a slim header row (title clipped, close icon) comes first, then the camera screen
   (`#cctv-frame-wrap`), then the "Cari kamera CCTV" search, all by CSS `order`. `searchCameras`
