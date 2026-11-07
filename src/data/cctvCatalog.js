@@ -3,6 +3,7 @@
 import * as Cesium from 'cesium';
 import { CITY_POIS } from '../locations.js';
 import { SOURCE_ENDPOINT } from './cctvConstants.js';
+import { cctvCameraName } from './cctvProviderLabel.js';
 import { ensureCameraPose } from './cctvGeometry.js';
 import { clamp, headingFromId, normalizeHeading, offsetDegrees, safeNumber } from './cctvMath.js';
 import { S } from './cctvState.js';
@@ -227,7 +228,7 @@ export function buildCatalogFromSources(rawSources) {
 
     const camera = {
       id,
-      name: String(source.name || seed?.name || id),
+      name: cctvCameraName(source.name || seed?.name) || id,
       cityId,
       city: String(source.city || city?.name || seed?.city || 'Global'),
       provider: String(source.provider || seed?.provider || 'Configured CCTV Source'),

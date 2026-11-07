@@ -1,3 +1,5 @@
+import { layerLabel } from './shell/layerStatus.js';
+
 export const LOADING_REVEAL_DELAY_MS = 160;
 export const LOADING_TERMINAL_DWELL_MS = 2200;
 export const LOADING_FAILURE_DWELL_MS = 5000;
@@ -27,7 +29,8 @@ export function normalizeLayerLoading(layer = {}) {
   const waitNote = loading && typeof stats.waitNote === 'string' ? stats.waitNote.trim() : '';
   return {
     id: String(layer.id || ''),
-    label: String(layer.name || layer.id || 'Layer'),
+    // Same Indonesian label as the layer panel; the module's English name is only a fallback.
+    label: layerLabel(String(layer.id || ''), String(layer.name || layer.id || 'Layer')),
     loading,
     disabling,
     refresh: loading && layer.enabled && (stats.refreshing === true || accepted),

@@ -576,7 +576,7 @@ test('aggregates Mapped Installations refresh beside CCTV without changing eithe
   const visible = reduceLoadingFeedback(pending, summary, 200);
   assert.deepEqual(
     presentLoadingFeedback(visible, summary, 200),
-    { state: 'refresh', label: 'MEMPERBARUI DATA LIVE', detail: 'CCTV · Mapped Installations' },
+    { state: 'refresh', label: 'MEMPERBARUI DATA LIVE', detail: 'CCTV · Instalasi militer' },
   );
 });
 

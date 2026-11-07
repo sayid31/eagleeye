@@ -87,6 +87,7 @@ import { refreshProjectionImage } from './cctvProjectionFrames.js';
 import { ensureProjectionRuntime, getActiveProjectionMirrorStream, startProjectionLoop, stopProjectionLoop } from './cctvProjectionRuntime.js';
 import { notifyListeners, syncHealthState, uiState } from './cctvPublicState.js';
 import { S } from './cctvState.js';
+import { cctvMapLabel } from './cctvProviderLabel.js';
 
 export { _extractPickedCameraIdForTest, bindCctvWorldClickGesture, cctvCycleIndex, cctvEmptyClickDeselects, cctvRecordNeedsActivation, clearProbeClampOnDeactivation, deactivateActiveCamera, focusCctvRecord, maybeAutoHop, setActiveCamera } from './cctvActivation.js';
 export { _pushAmbientCardEntriesForTest, _setCctvOverlayHostForTest, setCctvCardPresentationOptions } from './cctvAmbientCards.js';
@@ -305,7 +306,8 @@ const cctvLayer = {
       objects.push({
         position: S._records[i].position,
         sourceId: camera.id,
-        id: `CAM-${camera.id}`,
+        // Callout text only; overlay identity is (layer, sourceId).
+        id: cctvMapLabel(camera),
         type: 'CAM',
       });
       if (objects.length >= maxCount) break;

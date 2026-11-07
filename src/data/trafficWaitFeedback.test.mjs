@@ -83,7 +83,7 @@ test('the global banner carries the layer wait note only while that layer is loa
 
   const state = { ...createLoadingFeedbackState(), visible: true, phase: 'loading', startedAt: 0 };
   const shown = presentLoadingFeedback(state, aggregateLayerLoading([loading]), 9000);
-  assert.equal(shown.detail, `Traffic · ${note}`);
+  assert.equal(shown.detail, `Lalu lintas · ${note}`);
   const plain = { ...loading, stats: { loading: true } };
-  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([plain]), 9000).detail, 'Traffic');
+  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([plain]), 9000).detail, 'Lalu lintas');
 });
