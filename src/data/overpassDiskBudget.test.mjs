@@ -22,6 +22,7 @@ import {
 import {
   isOverpassBoundaryQuery,
   isOverpassRoadQuery,
+  overpassQueryText,
   overpassDiskTtlMs,
   readOverpassDisk,
   writeOverpassDisk,
@@ -38,6 +39,19 @@ test('road queries earn the long disk TTL', () => {
   assert.equal(isOverpassRoadQuery(ALL_ROADS), true);
   assert.equal(overpassDiskTtlMs(MAJOR_ROADS) / DAY, 60);
   assert.equal(overpassDiskTtlMs(ALL_ROADS) / DAY, 60);
+});
+
+test('the REAL proxy key (sanitized, percent-encoded form body) is classified on its decoded QL', async () => {
+  // The proxy keys on `sanitizeOverpassBody(...).body`, i.e. `data=%5Bout…`.
+  // Classifying that raw string missed `["highway"~` and gave roads 7 days.
+  const { sanitizeOverpassBody } = await import('./overpassCore.mjs');
+  const proxyKey = (ql) => sanitizeOverpassBody(`data=${encodeURIComponent(ql)}`).body.replace(/\s+/g, ' ').trim();
+  assert.match(proxyKey(ALL_ROADS), /^data=%5B/, 'fixture really is the encoded form');
+  assert.equal(overpassQueryText(proxyKey(ALL_ROADS)), ALL_ROADS);
+  assert.equal(isOverpassRoadQuery(proxyKey(MAJOR_ROADS)), true);
+  assert.equal(overpassDiskTtlMs(proxyKey(ALL_ROADS)) / DAY, 60);
+  const boundary = '[out:json][timeout:25];is_in(37.5,14.2)->.a;area.a["boundary"="administrative"];out tags;';
+  assert.equal(overpassDiskTtlMs(proxyKey(boundary)) / DAY, 30);
 });
 
 test('non-road queries keep their existing TTLs', () => {

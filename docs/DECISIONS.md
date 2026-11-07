@@ -3384,3 +3384,11 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Decision.** Round the span to the nearest 0.00625° (half the grid pitch, `quantizeFetchSpan`): at most ~350 m per axis, so it is not the "grow the box" option rejected on 2026-10-22. Edges are deliberately not rounded: the same inputs give the same floats, and capped 0.05° boxes keep byte-identical query text (a test inlines the old formula), so the 1,077 tiles already on disk stay valid.
 
 **Not done (yet).** Serving a smaller request from a cached tile that contains it. The disk records store no query or bbox (the filename is a hash of the query), so the existing 444 MB cannot be indexed retroactively, and it could not be validated live: during this work the upstream answered 429/502 and the breaker was open.
+
+## 2026-11-07 — Road/boundary TTL classification reads the decoded query
+
+**Symptom.** Road tiles older than a week were refetched even though road queries have a 60-day disk TTL (2026-10-22).
+
+**Root cause.** The proxy's cache key is the sanitized FORM body (`data=%5Bout%3Ajson%5D…`), where `[` and `"` are percent-encoded. `isOverpassRoadQuery` matched `["highway"~` against that raw key and never matched, so every traffic road tile fell to the 7-day default. The boundary check happened to work because `is_in(` and `pivot` survive encoding. The tests used plain QL strings, not real proxy keys.
+
+**Fix.** `overpassQueryText()` decodes a `data=` key once; both classifiers read the decoded QL. A test now builds the key through `sanitizeOverpassBody`, like the proxy does. Side effect, intended: road tiles on disk aged 7–60 days are valid again.

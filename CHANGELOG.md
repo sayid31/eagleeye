@@ -7,6 +7,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -133,6 +136,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -223,6 +229,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -274,6 +283,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -341,6 +353,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -528,6 +543,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -741,6 +759,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -1191,6 +1212,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -1425,6 +1449,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -1459,6 +1486,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -1547,6 +1577,9 @@ represent previously published GitHub Releases.
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -1610,6 +1643,9 @@ represent previously published GitHub Releases.
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.
@@ -1651,6 +1687,9 @@ represent previously published GitHub Releases.
 
 ### Fixed
 
+- Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
+  aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
+  server OSM.
 - Data jalan lalu lintas kini lebih sering diambil dari cache saat kembali ke area yang sama dari ketinggian
   rendah. Sebelumnya ukuran area permintaan berubah sedikit setiap kali kamera bergerak, sehingga cache
   hampir selalu meleset dan harus menunggu server OSM lagi.

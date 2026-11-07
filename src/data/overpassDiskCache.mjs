@@ -47,7 +47,26 @@ const OVERPASS_DISK_DIR = path.join(process.cwd(), '.gev-cache', 'overpass');
  * default TTL. Exported for tests.
  */
 export function isOverpassBoundaryQuery(cacheKey) {
-  return /is_in\s*\(|\bpivot\b/i.test(String(cacheKey || ''));
+  return /is_in\s*\(|\bpivot\b/i.test(overpassQueryText(cacheKey));
+}
+
+/**
+ * The Overpass QL inside a cache key. The proxy keys on the sanitized FORM
+ * body (`data=%5Bout%3Ajson%5D…`), where `[` and `"` are percent-encoded, so a
+ * classifier reading the raw key never saw `["highway"~` — every traffic road
+ * tile silently got the 7-day default instead of its 60-day TTL (found
+ * 2026-11-07; the tests used plain QL). Plain-QL keys pass through unchanged.
+ * @param {string} cacheKey
+ * @returns {string}
+ */
+export function overpassQueryText(cacheKey) {
+  const text = String(cacheKey || '');
+  if (!text.startsWith('data=')) return text;
+  try {
+    return new URLSearchParams(text).get('data') ?? text;
+  } catch {
+    return text;
+  }
 }
 
 /**
@@ -56,7 +75,7 @@ export function isOverpassBoundaryQuery(cacheKey) {
  * practice, so it earns a long disk TTL of its own. Exported for tests.
  */
 export function isOverpassRoadQuery(cacheKey) {
-  return /\[\s*["']?highway["']?\s*[~=]/.test(String(cacheKey || ''));
+  return /\[\s*["']?highway["']?\s*[~=]/.test(overpassQueryText(cacheKey));
 }
 
 /**
