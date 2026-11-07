@@ -7,6 +7,7 @@ import {
 import { shouldHideCollapsedRightPanels } from './rightRailPolicy.js';
 import { resolveHudRailLayout } from './cockpitMath.js';
 import { PANEL_POSITION_STORAGE_VERSION, PANEL_Z_BASE, PANEL_Z_MAX } from './panelPositionConstants.js';
+import { isLayoutRelevantMutation } from './panelLayoutMutations.js';
 
 /** Versioned localStorage namespace prefix to invalidate stale panel layouts. */
 const PANEL_LAYOUT_STORAGE_VERSION = 'v6';
@@ -224,13 +225,14 @@ export const panelAdaptiveLayoutMixin = {
     }
 
     if (typeof MutationObserver !== 'undefined') {
-      this._rightStackMutationObserver = new MutationObserver(() => {
-        this._scheduleRightPanelLayout();
+      // Text-only writes are ignored: a size change from text reaches the
+      // ResizeObserver above (see panelLayoutMutations.js).
+      this._rightStackMutationObserver = new MutationObserver((records) => {
+        if (isLayoutRelevantMutation(records)) this._scheduleRightPanelLayout();
       });
       this._rightStackMutationObserver.observe(stack, {
         subtree: true,
         childList: true,
-        characterData: true,
         attributes: true,
         attributeFilter: ['class', 'hidden', 'data-variant'],
       });
@@ -491,13 +493,12 @@ export const panelAdaptiveLayoutMixin = {
     }
 
     if (typeof MutationObserver !== 'undefined') {
-      this._leftStackMutationObserver = new MutationObserver(() => {
-        this._scheduleLeftPanelLayout();
+      this._leftStackMutationObserver = new MutationObserver((records) => {
+        if (isLayoutRelevantMutation(records)) this._scheduleLeftPanelLayout();
       });
       this._leftStackMutationObserver.observe(stack, {
         subtree: true,
         childList: true,
-        characterData: true,
         attributes: true,
         attributeFilter: ['class'],
       });
