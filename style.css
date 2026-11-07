@@ -1985,37 +1985,54 @@ body.ui-clean-view #scene-runtime.active {
   z-index: 102;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   max-width: calc(100vw - 32px);
-  padding: 6px 10px;
-  border-radius: 7px;
-  border: 1px solid rgba(108, 180, 250, 0.24);
-  background: rgba(3, 10, 18, 0.78);
+  padding: 5px 14px 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(108, 180, 250, 0.22);
+  background: rgba(6, 12, 22, 0.82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  color: rgba(170, 252, 255, 0.92);
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: 1.35px;
-  text-transform: uppercase;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.1px;
   transform: translateX(-50%);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.34), 0 0 14px rgba(108, 180, 250, 0.08);
   pointer-events: none;
 }
 #global-loading-status[hidden] { display: none; }
+/* Status pills (global banner + traffic/CCTV sync chips): a pulsing dot, a
+   small mono caps label, then plain sentence text — no wide all-caps runs. */
+#global-loading-status::before,
+#traffic-sync-chip::before,
+#cctv-sync-chip::before {
+  content: '';
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+  animation: status-pill-pulse 1.4s ease-in-out infinite;
+}
+@keyframes status-pill-pulse { 50% { opacity: 0.35; } }
+@media (prefers-reduced-motion: reduce) {
+  #global-loading-status::before, #traffic-sync-chip::before, #cctv-sync-chip::before { animation: none; }
+}
 #global-loading-label {
-  color: rgba(184, 244, 255, 0.92);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: rgba(232, 234, 237, 0.62);
 }
 #global-loading-detail {
-  min-width: 34px;
-  /* Wide enough for the traffic wait note ("menunggu server peta OSM (antre,
-     bisa ~45 dtk) · 12 dtk"); the ellipsis still guards narrow viewports. */
-  max-width: min(460px, 70vw);
+  min-width: 0;
+  max-width: min(420px, 70vw);
   overflow: hidden;
-  color: #00e1ff;
-  font-weight: 600;
-  letter-spacing: 1.6px;
-  text-align: right;
+  color: #cfeeff;
+  font-weight: 500;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2051,18 +2068,18 @@ body.ui-clean-view #scene-runtime.active {
   z-index: 101;
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 6px 10px;
-  border-radius: 7px;
-  border: 1px solid rgba(108, 180, 250, 0.24);
-  background: rgba(3, 10, 18, 0.78);
+  gap: 8px;
+  max-width: calc(100vw - 32px);
+  padding: 5px 14px 5px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(108, 180, 250, 0.22);
+  background: rgba(6, 12, 22, 0.82);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  color: rgba(170, 252, 255, 0.92);
-  font-family: var(--font-mono);
-  font-size: 8px;
-  letter-spacing: 1.35px;
-  text-transform: uppercase;
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  letter-spacing: 0.1px;
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.22s ease, transform 0.22s ease;
@@ -2082,15 +2099,23 @@ body.ui-clean-view #scene-runtime.active {
 
 #traffic-sync-label,
 #cctv-sync-label {
-  color: rgba(184, 244, 255, 0.92);
+  color: #cfeeff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#traffic-sync-label::first-letter,
+#cctv-sync-label::first-letter {
+  text-transform: uppercase;
 }
 
 #traffic-sync-progress,
 #cctv-sync-progress {
-  color: #00e1ff;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 10px;
   font-weight: 600;
-  letter-spacing: 1.6px;
-  min-width: 34px;
+  min-width: 28px;
   text-align: right;
 }
 

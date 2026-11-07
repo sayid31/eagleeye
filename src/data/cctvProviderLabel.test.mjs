@@ -33,12 +33,12 @@ test('camera names lose the pack suffix; other names pass through', () => {
   assert.equal(cctvCameraName(undefined), '');
 });
 
-test('map label is CCTV · name, cut to the budget with an ellipsis, falling back to the id', () => {
-  assert.equal(cctvMapLabel({ id: 'x', name: 'Simpang Lima (Live — Unofficial)' }), 'CCTV · Simpang Lima');
+test('map label is the plain name, cut to the budget with an ellipsis, falling back to the id', () => {
+  assert.equal(cctvMapLabel({ id: 'x', name: 'Simpang Lima (Live — Unofficial)' }), 'Simpang Lima');
   const long = cctvMapLabel({ id: 'x', name: 'Traffic Light Pace - Pace Utara Kabupaten Nganjuk (APPROX. LOCATION — Live — Unofficial)' });
-  assert.ok(long.length <= 'CCTV · '.length + CCTV_MAP_LABEL_MAX, long);
-  assert.match(long, /^CCTV · Traffic Light Pace - Pace Utara…$/);
-  assert.equal(cctvMapLabel({ id: 'cam-7', name: '' }), 'CCTV · cam-7');
+  assert.ok(long.length <= CCTV_MAP_LABEL_MAX, long);
+  assert.match(long, /^Traffic Light Pace - Pace Utara…$/);
+  assert.equal(cctvMapLabel({ id: 'cam-7', name: '' }), 'cam-7');
 });
 
 test('every Indonesia pack camera name reads clean after the catalog strips it', async () => {

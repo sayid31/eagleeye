@@ -26,7 +26,6 @@ export function normalizeLayerLoading(layer = {}) {
   const keyRequired = stats.keyRequired === true || stats.missingKey === true;
   const degraded = stats.degraded === true || Boolean(error);
   const accepted = Boolean(stats.lastUpdate) || count > 0;
-  const waitNote = loading && typeof stats.waitNote === 'string' ? stats.waitNote.trim() : '';
   return {
     id: String(layer.id || ''),
     // Same Indonesian label as the layer panel; the module's English name is only a fallback.
@@ -41,7 +40,6 @@ export function normalizeLayerLoading(layer = {}) {
     unavailable,
     keyRequired,
     degraded,
-    waitNote,
   };
 }
 
@@ -296,14 +294,13 @@ export function presentLoadingFeedback(state, summary, nowMs) {
     : summary.refresh ? 'MEMPERBARUI DATA LIVE' : 'MEMUAT DATA LIVE';
   const names = active.slice(0, 2).map((record) => record.label).join(' · ');
   const suffix = active.length > 2 ? ` +${active.length - 2}` : '';
-  // A layer that knows WHY it is slow (e.g. traffic queued at the OSM mirror)
-  // outranks the bare roster: "waiting, and for what" beats a silent timer.
-  const waitNote = active.find((record) => record.waitNote)?.waitNote;
+  // Layer names only: a layer that knows WHY it is slow says so on its own chip
+  // (traffic's OSM queue note), so the banner never prints the same sentence twice.
   return {
     state: elapsed >= LOADING_LONG_THRESHOLD_MS
       ? 'long'
       : summary.disabling ? 'disabling' : summary.refresh ? 'refresh' : 'loading',
     label,
-    detail: waitNote ? `${names}${suffix} · ${waitNote}` : `${names}${suffix}`,
+    detail: `${names}${suffix}`,
   };
 }
