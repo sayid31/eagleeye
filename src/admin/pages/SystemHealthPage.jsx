@@ -32,11 +32,11 @@ export function SystemHealthPage() {
   return (
     <div className="adm-page adm-page-wide">
       <header className="adm-page-header">
-        <h1>System Health</h1>
+        <h1>Kesehatan Sistem</h1>
         <p className="adm-muted">
-          {report ? <><span className={`adm-pill adm-pill-${HEALTH_TONES[report.status]}`}>{HEALTH_LABELS[report.status]}</span> {describeOverall(report)} · checked {formatLogTime(report.generatedAt)}</> : 'Checking…'}
+          {report ? <><span className={`adm-pill adm-pill-${HEALTH_TONES[report.status]}`}>{HEALTH_LABELS[report.status]}</span> {describeOverall(report)} · dicek {formatLogTime(report.generatedAt)}</> : 'Memeriksa…'}
         </p>
-        <div className="adm-actions"><button type="button" className="adm-btn" disabled={busy} onClick={load}>Refresh</button></div>
+        <div className="adm-actions"><button type="button" className="adm-btn" disabled={busy} onClick={load}>Muat ulang</button></div>
       </header>
       {error ? <p className="adm-error" role="alert">{error}</p> : null}
       {report?.sections.map((section) => (

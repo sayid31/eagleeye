@@ -60,44 +60,44 @@ export function ServerLogPage() {
       <header className="adm-page-header">
         <h1>Server Log</h1>
         <p className="adm-muted">
-          Errors, warnings and session events from the server and every browser using the map. Kept 30 days; repeats are merged.
-          {data ? ` ${data.counts.error} errors · ${data.counts.warn} warnings · ${data.counts.info} info.` : ''}
+          Error, peringatan, dan event sesi dari server dan setiap browser yang memakai peta. Disimpan 30 hari; yang berulang digabung.
+          {data ? ` ${data.counts.error} error · ${data.counts.warn} peringatan · ${data.counts.info} info.` : ''}
         </p>
       </header>
 
       <div className="adm-card adm-log-filters">
         <select className="adm-input" aria-label="Level" value={filter.level} onChange={(e) => set({ level: e.target.value })}>
-          <option value="">All levels</option>
+          <option value="">Semua level</option>
           {(data?.levels ?? ['error', 'warn', 'info']).map((lvl) => <option key={lvl} value={lvl}>{lvl}</option>)}
         </select>
-        <select className="adm-input" aria-label="Source" value={filter.source} onChange={(e) => set({ source: e.target.value })}>
-          <option value="">All sources</option>
+        <select className="adm-input" aria-label="Sumber" value={filter.source} onChange={(e) => set({ source: e.target.value })}>
+          <option value="">Semua sumber</option>
           {(data?.sources ?? []).map((src) => <option key={src} value={src}>{SOURCE_LABELS[src] ?? src}</option>)}
         </select>
-        <input className="adm-input" type="search" placeholder="Search code or message" value={filter.q} onChange={(e) => set({ q: e.target.value })} />
-        <button type="button" className="adm-btn" disabled={busy} onClick={() => load(filter)}>Refresh</button>
+        <input className="adm-input" type="search" placeholder="Cari kode atau pesan" value={filter.q} onChange={(e) => set({ q: e.target.value })} />
+        <button type="button" className="adm-btn" disabled={busy} onClick={() => load(filter)}>Muat ulang</button>
         {confirmClear ? (
           <>
-            <span className="adm-error">Delete every entry?</span>
-            <button type="button" className="adm-btn adm-btn-danger" onClick={clear}>Yes, clear</button>
-            <button type="button" className="adm-btn" onClick={() => setConfirmClear(false)}>Cancel</button>
+            <span className="adm-error">Hapus semua entri?</span>
+            <button type="button" className="adm-btn adm-btn-danger" onClick={clear}>Ya, kosongkan</button>
+            <button type="button" className="adm-btn" onClick={() => setConfirmClear(false)}>Batal</button>
           </>
-        ) : <button type="button" className="adm-btn" onClick={() => setConfirmClear(true)}>Clear log</button>}
+        ) : <button type="button" className="adm-btn" onClick={() => setConfirmClear(true)}>Kosongkan log</button>}
       </div>
 
       {error ? <p className="adm-error" role="alert">{error}</p> : null}
-      {data && data.entries.length === 0 ? <section className="adm-card"><p>No entries match.</p></section> : null}
+      {data && data.entries.length === 0 ? <section className="adm-card"><p>Tidak ada entri yang cocok.</p></section> : null}
       {data && data.entries.length ? (
         <div className="adm-table-wrap adm-log-table">
           <table className="adm-table">
-            <thead><tr><th>Last seen</th><th>Level</th><th>Source</th><th>Event</th></tr></thead>
+            <thead><tr><th>Terakhir terlihat</th><th>Level</th><th>Sumber</th><th>Event</th></tr></thead>
             <tbody>{data.entries.map((entry) => <LogRow key={entry.id} entry={entry} />)}</tbody>
           </table>
         </div>
       ) : null}
       {data?.nextOffset ? (
         <button type="button" className="adm-btn" disabled={busy} onClick={() => load(filter, data.nextOffset)}>
-          Load more ({data.total - data.entries.length} left)
+          Muat lagi (sisa {data.total - data.entries.length})
         </button>
       ) : null}
     </div>

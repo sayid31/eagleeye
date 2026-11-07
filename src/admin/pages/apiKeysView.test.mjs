@@ -1,29 +1,41 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AI_PROVIDER_KEY_IDS, partitionKeys, buildKeyRemoval, buildKeyUpdate, describeTestResult, isEditable, keyStatusBadge, storeLabel } from './apiKeysView.js';
+import { AI_PROVIDER_KEY_IDS, partitionKeys, buildKeyRemoval, buildKeyUpdate, describeTestResult, isEditable, keyStatusBadge, secretPlaceholder, storeLabel } from './apiKeysView.js';
 
 const openai = { title: 'OPENAI', envVars: ['OPENAI_API_KEY'] };
 const opensky = { title: 'OPENSKY', envVars: ['OPENSKY_CLIENT_ID', 'OPENSKY_CLIENT_SECRET'] };
 
 test('status badge and editability follow presence and source', () => {
-  assert.deepEqual(keyStatusBadge({ set: false }), { label: 'Missing', tone: 'muted' });
-  assert.equal(keyStatusBadge({ set: true, managed: 'file' }).label, 'Configured');
-  assert.match(keyStatusBadge({ set: true, managed: 'external' }).label, /read-only/);
+  assert.deepEqual(keyStatusBadge({ set: false }), { label: 'Kosong', tone: 'muted' });
+  assert.equal(keyStatusBadge({ set: true, managed: 'file' }).label, 'Terisi');
+  assert.match(keyStatusBadge({ set: true, managed: 'external' }).label, /hanya baca/);
+  // A key the provider just refused reads as rejected, whatever its source; an empty one stays empty.
+  assert.deepEqual(keyStatusBadge({ set: true, managed: 'file' }, 'rejected'), { label: 'Ditolak', tone: 'error' });
+  assert.equal(keyStatusBadge({ set: true, managed: 'external' }, 'rejected').label, 'Ditolak');
+  assert.equal(keyStatusBadge({ set: false }, 'rejected').label, 'Kosong');
+  assert.equal(keyStatusBadge({ set: true, managed: 'file' }, 'ok').label, 'Terisi');
   assert.equal(isEditable({ set: false }), true);
   assert.equal(isEditable({ set: true, managed: 'file' }), true);
   assert.equal(isEditable({ set: true, managed: 'external' }), false);
 });
 
+test('secretPlaceholder says whether a key is saved without any of its characters', () => {
+  assert.equal(secretPlaceholder({ set: false }), 'Belum diisi');
+  const saved = secretPlaceholder({ set: true, managed: 'file' });
+  assert.match(saved, /tersimpan$/);
+  assert.match(saved.replace('tersimpan', '').trim(), /^•+$/, 'only dots besides the word: no key characters');
+});
+
 test('storeLabel names the file in owner terms', () => {
-  assert.equal(storeLabel('env-file'), 'the project .env file');
-  assert.equal(storeLabel('pinokio-environment'), 'the Pinokio ENVIRONMENT file');
+  assert.equal(storeLabel('env-file'), 'file .env proyek');
+  assert.equal(storeLabel('pinokio-environment'), 'file ENVIRONMENT Pinokio');
 });
 
 test('buildKeyUpdate trims, requires every variable and rejects spaces', () => {
   assert.deepEqual(buildKeyUpdate(openai, { OPENAI_API_KEY: '  abc123  ' }), { ok: true, updates: { OPENAI_API_KEY: 'abc123' } });
-  assert.match(buildKeyUpdate(openai, {}).error, /Paste the OPENAI key first/);
-  assert.match(buildKeyUpdate(opensky, { OPENSKY_CLIENT_ID: 'id' }).error, /Fill in every field for OPENSKY/);
-  assert.match(buildKeyUpdate(openai, { OPENAI_API_KEY: 'a b' }).error, /must not contain spaces/);
+  assert.match(buildKeyUpdate(openai, {}).error, /Tempel key OPENAI dulu/);
+  assert.match(buildKeyUpdate(opensky, { OPENSKY_CLIENT_ID: 'id' }).error, /Isi semua kolom untuk OPENSKY/);
+  assert.match(buildKeyUpdate(openai, { OPENAI_API_KEY: 'a b' }).error, /tidak boleh berisi spasi/);
 });
 
 test('buildKeyRemoval nulls every variable of the provider', () => {
@@ -32,10 +44,10 @@ test('buildKeyRemoval nulls every variable of the provider', () => {
 
 test('describeTestResult maps result codes to tones and adds the HTTP status', () => {
   assert.deepEqual(describeTestResult({ result: 'ok', httpStatus: 200, message: 'The provider accepted the key.' }),
-    { text: 'The provider accepted the key. (HTTP 200)', tone: 'ok', label: 'OK' });
+    { text: 'The provider accepted the key. (HTTP 200)', tone: 'ok', label: 'OK', result: 'ok' });
   assert.equal(describeTestResult({ result: 'ok', message: 'The live vessel feed on this server is receiving data with this key.' }).label, 'OK');
-  assert.equal(describeTestResult({ result: 'unreachable', message: 'x' }).label, 'Not checked');
-  assert.equal(describeTestResult({ result: 'weird', message: 'x' }).label, 'Unknown');
+  assert.equal(describeTestResult({ result: 'unreachable', message: 'x' }).label, 'Belum dicek');
+  assert.equal(describeTestResult({ result: 'weird', message: 'x' }).label, 'Tidak diketahui');
   assert.equal(describeTestResult({ result: 'rejected', message: 'x' }).tone, 'error');
   assert.equal(describeTestResult({ result: 'untestable', message: 'x' }).text, 'x');
 });

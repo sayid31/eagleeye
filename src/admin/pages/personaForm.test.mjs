@@ -8,7 +8,7 @@ test('core rules are grouped in display order with every rule shown once', () =>
   const grouped = groupCoreRules(CORE_RULE_GROUPS, VOICE_CORE_RULES);
   assert.deepEqual(grouped.map((g) => g.id), CORE_RULE_GROUPS.map((g) => g.id));
   assert.equal(grouped.reduce((n, g) => n + g.rules.length, 0), 37);
-  assert.equal(guardLabel('prompt+code'), 'Prompt + code');
+  assert.equal(guardLabel('prompt+code'), 'Prompt + kode');
   assert.equal(guardLabel('unknown'), 'Prompt');
 });
 
@@ -28,7 +28,7 @@ test('half-filled, too-long and too-many rules are refused with a message', () =
   const many = Array.from({ length: 21 }, (_, i) => ({ forbid: `f${i}`, instead: 'i' }));
   const r = settingsFromPersonaForm(base, many);
   assert.equal(r.ok, false);
-  assert.match(r.errors[0], /Up to 20/);
+  assert.match(r.errors[0], /Maksimal 20/);
 });
 
 test('summarizeCoreRules and describeRuleGroup count rules and code-backed ones', async () => {
@@ -37,7 +37,7 @@ test('summarizeCoreRules and describeRuleGroup count rules and code-backed ones'
     { id: 'topic', label: 'Topik', rules: [{ guard: 'prompt' }, { guard: 'prompt' }] },
     { id: 'actions', label: 'Tindakan', rules: [{ guard: 'prompt+code' }] },
   ];
-  assert.equal(summarizeCoreRules(groups), '3 rules in 2 groups · 1 also enforced by app code, the rest by the voice prompt only');
-  assert.equal(describeRuleGroup(groups[0]), '2 rules');
-  assert.equal(describeRuleGroup(groups[1]), '1 rule · 1 enforced by code');
+  assert.equal(summarizeCoreRules(groups), '3 aturan dalam 2 grup · 1 juga dijaga kode aplikasi, sisanya hanya oleh prompt suara');
+  assert.equal(describeRuleGroup(groups[0]), '2 aturan');
+  assert.equal(describeRuleGroup(groups[1]), '1 aturan · 1 dijaga kode');
 });

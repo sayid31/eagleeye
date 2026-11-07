@@ -13,7 +13,7 @@ export function ApiKeysPage() {
   const { data, loadError, status, busy, submit } = useProviderKeys();
 
   if (loadError) return <section className="adm-card"><h1>API Keys</h1><p className="adm-error" role="alert">{loadError}</p></section>;
-  if (!data) return <section className="adm-card"><h1>API Keys</h1><p>Loading…</p></section>;
+  if (!data) return <section className="adm-card"><h1>API Keys</h1><p>Memuat…</p></section>;
 
   const { data: keys } = partitionKeys(data.keys);
   return (
@@ -21,8 +21,8 @@ export function ApiKeysPage() {
       <header className="adm-page-header">
         <h1>API Keys</h1>
         <p className="adm-muted" role="status">
-          {keys.setCount} of {keys.total} configured · saved to {storeLabel(data.store)} on this computer. Key values are never shown.
-          {' '}The OpenAI key is under AI Configuration → AI Provider.
+          {keys.setCount} dari {keys.total} terisi · disimpan di {storeLabel(data.store)} di komputer ini. Isi key tidak pernah ditampilkan.
+          {' '}Key OpenAI ada di Konfigurasi AI → Penyedia AI.
         </p>
         <SaveStatus status={status} />
       </header>

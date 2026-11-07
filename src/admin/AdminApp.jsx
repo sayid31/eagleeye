@@ -43,7 +43,7 @@ export function AdminApp({ session }) {
         {adminLeaves().map((leaf) => (
           <Route key={leaf.path} path={leaf.path.slice(1)} element={pageFor(leaf)} />
         ))}
-        <Route path="*" element={<PlaceholderPage title="Page not found" notFound />} />
+        <Route path="*" element={<PlaceholderPage title="Halaman tidak ditemukan" notFound />} />
       </Route>
     </Routes>
   );

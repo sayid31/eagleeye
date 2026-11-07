@@ -25,11 +25,25 @@ export function partitionKeys(keys) {
   return { ai: pick(true), data: pick(false) };
 }
 
-/** Status pill for one registry entry from GET /api/admin/keys. */
-export function keyStatusBadge(key) {
-  if (!key.set) return { label: 'Missing', tone: 'muted' };
-  if (key.managed === 'external') return { label: 'Set outside this app (read-only)', tone: 'info' };
-  return { label: 'Configured', tone: 'ok' };
+/**
+ * Status badge for one registry entry from GET /api/admin/keys. A key the
+ * provider just refused on "Test connection" shows as rejected until reload.
+ * @param {{set: boolean, managed?: string|null}} key
+ * @param {string|null} [lastTestResult] `result` code of this visit's last test.
+ */
+export function keyStatusBadge(key, lastTestResult = null) {
+  if (!key.set) return { label: 'Kosong', tone: 'muted' };
+  if (lastTestResult === 'rejected') return { label: 'Ditolak', tone: 'error' };
+  if (key.managed === 'external') return { label: 'Terisi di luar aplikasi (hanya baca)', tone: 'info' };
+  return { label: 'Terisi', tone: 'ok' };
+}
+
+/**
+ * Placeholder of a key field: says whether a value is saved without carrying
+ * any of its characters (the server never sends one).
+ */
+export function secretPlaceholder(key) {
+  return key.set ? '•••••••••••• tersimpan' : 'Belum diisi';
 }
 
 /** Only keys this app's own store holds can be replaced or removed here. */
@@ -37,7 +51,7 @@ export const isEditable = (key) => !key.set || key.managed === 'file';
 
 /** Where saved keys go, in owner terms. */
 export function storeLabel(store) {
-  return store === 'pinokio-environment' ? 'the Pinokio ENVIRONMENT file' : 'the project .env file';
+  return store === 'pinokio-environment' ? 'file ENVIRONMENT Pinokio' : 'file .env proyek';
 }
 
 /**
@@ -52,9 +66,9 @@ export function buildKeyUpdate(key, values) {
   for (const name of key.envVars) {
     const value = String(values?.[name] ?? '').trim();
     if (!value) {
-      return { ok: false, error: key.envVars.length > 1 ? `Fill in every field for ${key.title} (${key.envVars.join(', ')}).` : `Paste the ${key.title} key first.` };
+      return { ok: false, error: key.envVars.length > 1 ? `Isi semua kolom untuk ${key.title} (${key.envVars.join(', ')}).` : `Tempel key ${key.title} dulu.` };
     }
-    if (/\s/.test(value)) return { ok: false, error: `${name} must not contain spaces.` };
+    if (/\s/.test(value)) return { ok: false, error: `${name} tidak boleh berisi spasi.` };
     updates[name] = value;
   }
   return { ok: true, updates };
@@ -68,15 +82,15 @@ export function buildKeyRemoval(key) {
 /** Result code → tone (colour) and a word that says the status without colour. */
 const TEST_RESULTS = Object.freeze({
   ok: { tone: 'ok', label: 'OK' },
-  rejected: { tone: 'error', label: 'Rejected' },
-  unreachable: { tone: 'warn', label: 'Not checked' },
-  untestable: { tone: 'muted', label: 'Not testable' },
-  not_set: { tone: 'muted', label: 'No key' },
+  rejected: { tone: 'error', label: 'Ditolak' },
+  unreachable: { tone: 'warn', label: 'Belum dicek' },
+  untestable: { tone: 'muted', label: 'Tidak bisa dites' },
+  not_set: { tone: 'muted', label: 'Tanpa key' },
 });
 
 /** Line shown under a provider after "Test connection". */
 export function describeTestResult(outcome) {
   const http = outcome.httpStatus ? ` (HTTP ${outcome.httpStatus})` : '';
-  const { tone, label } = TEST_RESULTS[outcome.result] ?? { tone: 'muted', label: 'Unknown' };
-  return { text: `${outcome.message}${http}`, tone, label };
+  const { tone, label } = TEST_RESULTS[outcome.result] ?? { tone: 'muted', label: 'Tidak diketahui' };
+  return { text: `${outcome.message}${http}`, tone, label, result: outcome.result ?? null };
 }

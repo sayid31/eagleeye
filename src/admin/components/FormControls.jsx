@@ -1,5 +1,27 @@
 // src/admin/components/FormControls.jsx
 /** Small form building blocks shared by the AI Configuration pages. */
+import { useState } from 'react';
+
+/**
+ * Password field with an eye button. The eye only reveals what is being typed
+ * here; a saved key is never sent to the browser, so there is nothing else to show.
+ */
+export function SecretInput({ id, value, placeholder, onChange, label, disabled = false }) {
+  const [visible, setVisible] = useState(false);
+  return (
+    <div className="adm-secret">
+      <input id={id} className="adm-input" type={visible ? 'text' : 'password'} autoComplete="off" spellCheck={false}
+        aria-label={label} placeholder={placeholder} value={value} disabled={disabled} onChange={(e) => onChange(e.target.value)} />
+      <button type="button" className="adm-secret-eye" aria-controls={id} aria-pressed={visible} disabled={disabled || !value}
+        aria-label={visible ? 'Sembunyikan key yang diketik' : 'Tampilkan key yang diketik'} onClick={() => setVisible((v) => !v)}>
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" /><circle cx="12" cy="12" r="3" />
+          {visible ? <path d="M3 3l18 18" /> : null}
+        </svg>
+      </button>
+    </div>
+  );
+}
 
 /** Labelled control with an optional hint line under it. */
 export function Field({ label, hint, children }) {

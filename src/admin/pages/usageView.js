@@ -32,9 +32,9 @@ export function formatDuration(seconds) {
   const h = Math.floor(s / 3600);
   const m = Math.floor((s % 3600) / 60);
   const rest = s % 60;
-  if (h) return `${h} h ${String(m).padStart(2, '0')} min`;
+  if (h) return `${h} j ${String(m).padStart(2, '0')} min`;
   if (!m && !rest) return '0 min';
-  return rest ? `${m} min ${String(rest).padStart(2, '0')} s` : `${m} min`;
+  return rest ? `${m} min ${String(rest).padStart(2, '0')} dtk` : `${m} min`;
 }
 
 /** Estimated money, always marked as an estimate ("~$0.42"). */
@@ -46,9 +46,9 @@ export const formatEstimate = formatCostUsd;
  */
 export function describeDailyCap(usage) {
   const used = formatDuration(usage.summary.today.seconds);
-  if (!usage.dailyMinutes) return `${used} used today · no daily limit`;
-  if (usage.remainingSeconds === 0) return `${used} of ${usage.dailyMinutes} min used today · limit reached, new sessions are refused until midnight`;
-  return `${used} of ${usage.dailyMinutes} min used today · ${formatDuration(usage.remainingSeconds)} left`;
+  if (!usage.dailyMinutes) return `${used} terpakai hari ini · tanpa batas harian`;
+  if (usage.remainingSeconds === 0) return `${used} dari ${usage.dailyMinutes} min terpakai hari ini · batas tercapai, sesi baru ditolak sampai tengah malam`;
+  return `${used} dari ${usage.dailyMinutes} min terpakai hari ini · sisa ${formatDuration(usage.remainingSeconds)}`;
 }
 
 /** @param {{warnUsd: any, capUsd: any}} costLimits Stored values. */
@@ -64,6 +64,6 @@ export function costFormFromSettings(costLimits = {}) {
 export function settingsFromCostForm(base, form) {
   const warn = textToLimit(form.warn);
   const cap = textToLimit(form.cap);
-  if (!warn.ok || !cap.ok) return { ok: false, error: 'Cost limits: enter a dollar amount, "off", or leave empty for the built-in default.' };
+  if (!warn.ok || !cap.ok) return { ok: false, error: 'Batas biaya: isi jumlah dolar, "off", atau kosongkan untuk default bawaan.' };
   return { ok: true, settings: { ...base, costLimits: { warnUsd: warn.value, capUsd: cap.value } } };
 }

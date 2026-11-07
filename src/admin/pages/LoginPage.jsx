@@ -12,17 +12,17 @@ export function LoginPage({ configured = true, missing = [] }) {
       <section className="adm-login-card">
         <img className="adm-login-logo" src="/logo.svg" alt="" width="56" height="56" />
         <h1>EagleEye <span>Admin</span></h1>
-        <p className="adm-login-lead">Sign in to manage logs, AI settings and API keys.</p>
+        <p className="adm-login-lead">Masuk untuk mengelola log, pengaturan AI, dan API key.</p>
         {error ? <p className="adm-error" role="alert">{error}</p> : null}
         {configured ? (
           <a className="adm-google-btn" href="/api/admin/auth/login">
             <GoogleLogo />
-            <span>Sign in with Google</span>
+            <span>Masuk dengan Google</span>
           </a>
         ) : (
-          <p className="adm-error" role="alert">Not configured. Missing: {missing.join(', ') || 'unknown'}.</p>
+          <p className="adm-error" role="alert">Belum dikonfigurasi. Yang kurang: {missing.join(', ') || 'tidak diketahui'}.</p>
         )}
-        <p className="adm-login-note">Only the administrator account can sign in.</p>
+        <p className="adm-login-note">Hanya akun administrator yang bisa masuk.</p>
       </section>
     </main>
   );

@@ -3,8 +3,8 @@ import assert from 'node:assert/strict';
 import { fetchSession, loginErrorMessage, logout } from './adminSessionApi.js';
 
 test('known error codes map to messages; unknown codes fall back; none gives null', () => {
-  assert.match(loginErrorMessage('not_admin'), /not the admin/);
-  assert.match(loginErrorMessage('something_new'), /failed/);
+  assert.match(loginErrorMessage('not_admin'), /bukan akun admin/);
+  assert.match(loginErrorMessage('something_new'), /Gagal masuk/);
   assert.equal(loginErrorMessage(null), null);
 });
 

@@ -19,7 +19,7 @@ export function AdminGate({ children }) {
     return () => { cancelled = true; };
   }, []);
 
-  if (state.status === 'loading') return <main className="adm-login"><p>Checking session…</p></main>;
+  if (state.status === 'loading') return <main className="adm-login"><p>Memeriksa sesi…</p></main>;
   if (state.status === 'error') return <main className="adm-login"><p className="adm-error" role="alert">{state.message}</p></main>;
   const { session } = state;
   if (!session.authenticated) return <LoginPage configured={session.configured} missing={session.missing} />;

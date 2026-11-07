@@ -5,6 +5,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- Tampilan **/admin** kini bergaya HUD seperti konsol peta, dengan logo EagleEye, lencana status berwarna
+  (Terisi / Kosong / Ditolak), dan mode terang yang tetap ada. Teks admin kini berbahasa Indonesia; istilah
+  teknis seperti Server Log, API Key, dan Persona tetap dalam bahasa Inggris.
+- Kolom key menampilkan `•••• tersimpan` atau `Belum diisi`, jadi terlihat apakah key sudah terisi tanpa
+  menampilkan isinya. Tombol mata hanya memperlihatkan key baru yang sedang diketik.
+
 ### Added
 
 - Halaman **/admin** (kerangka awal): menu Server Log, AI Configuration, dan API Keys, dengan mode gelap dan

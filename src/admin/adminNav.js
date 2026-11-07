@@ -20,18 +20,18 @@ export const ADMIN_NAV = [
     children: [
       { label: 'Server Log', path: '/server-log' },
       { label: 'Audit Log', path: '/server-log/audit' },
-      { label: 'System Health', path: '/server-log/health' },
+      { label: 'Kesehatan Sistem', path: '/server-log/health' },
     ],
   },
   {
     id: 'ai-config',
-    label: 'AI Configuration',
+    label: 'Konfigurasi AI',
     path: '/ai',
     children: [
-      { label: 'General', path: '/ai/general' },
-      { label: 'AI Provider', path: '/ai/provider' },
+      { label: 'Umum', path: '/ai/general' },
+      { label: 'Penyedia AI', path: '/ai/provider' },
       { label: 'Persona', path: '/ai/persona' },
-      { label: 'Usage & Cost', path: '/ai/usage' },
+      { label: 'Pemakaian & Biaya', path: '/ai/usage' },
     ],
   },
   { id: 'api-keys', label: 'API Keys', path: '/api-keys' },

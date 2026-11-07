@@ -22,7 +22,7 @@ function NavGroup({ group }) {
       {group.children.map((leaf) => (
         <NavLink key={leaf.path} className="adm-nav-link adm-nav-child" to={leaf.path} end>
           {leaf.label}
-          {leaf.soon ? <span className="adm-badge">Soon</span> : null}
+          {leaf.soon ? <span className="adm-badge">Segera</span> : null}
         </NavLink>
       ))}
     </div>
@@ -43,19 +43,19 @@ export function AdminLayout({ session }) {
 
   return (
     <div className="adm-shell">
-      <aside className="adm-sidebar" aria-label="Admin navigation">
-        <div className="adm-brand">EagleEye <span>Admin</span></div>
+      <aside className="adm-sidebar" aria-label="Navigasi admin">
+        <div className="adm-brand"><img src="/logo.svg" alt="" width="28" height="28" /><span><b>Eagle</b>Eye</span><span className="adm-brand-sub">Admin</span></div>
         <nav>{ADMIN_NAV.map((group) => <NavGroup key={group.id} group={group} />)}</nav>
       </aside>
       <div className="adm-main">
         <header className="adm-topbar">
-          <a className="adm-link" href="/">Back to map</a>
+          <a className="adm-link" href="/">← Kembali ke peta</a>
           <div className="adm-topbar-actions">
-            <span className="adm-muted">{session?.email}</span>
-            <button type="button" className="adm-btn" onClick={() => setTheme(nextTheme(theme))} aria-label={`Switch to ${nextTheme(theme)} mode`}>
-              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            <span className="adm-user">{session?.email}</span>
+            <button type="button" className="adm-btn" onClick={() => setTheme(nextTheme(theme))} aria-label={theme === 'dark' ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}>
+              {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
             </button>
-            <button type="button" className="adm-btn" onClick={signOut}>Sign out</button>
+            <button type="button" className="adm-btn" onClick={signOut}>Keluar</button>
           </div>
         </header>
         <main className="adm-content"><Outlet /></main>

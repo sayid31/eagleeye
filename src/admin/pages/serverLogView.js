@@ -6,8 +6,8 @@
 
 /** Owner-facing names for log sources. */
 export const SOURCE_LABELS = Object.freeze({
-  browser: 'Browser', voice: 'Voice', judge: 'Off-topic judge', map: 'Map', cctv: 'CCTV', radio: 'Radio',
-  proxy: 'External services', keys: 'API keys', admin: 'Admin access', audit: 'Changes (audit)', log: 'Log',
+  browser: 'Browser', voice: 'Suara', judge: 'Judge keluar topik', map: 'Peta', cctv: 'CCTV', radio: 'Radio',
+  proxy: 'Layanan eksternal', keys: 'API key', admin: 'Akses admin', audit: 'Perubahan (audit)', log: 'Log',
 });
 
 /** "06 Nov 14:05:09" in the viewer's local time. */
@@ -19,7 +19,7 @@ export function formatLogTime(ms, locale = undefined) {
 
 /** "×12 since 06 Nov 13:01:00" for merged rows; '' for a single occurrence. */
 export function describeRepeat(entry, locale = undefined) {
-  return entry.count > 1 ? `×${entry.count} since ${formatLogTime(entry.firstAt, locale)}` : '';
+  return entry.count > 1 ? `×${entry.count} sejak ${formatLogTime(entry.firstAt, locale)}` : '';
 }
 
 /** Detail + client info as one short line ("tool=fly_to_location · Chrome 141 · v0.1.1"). */

@@ -10,13 +10,13 @@ import { Field, SaveStatus, Section } from '../components/FormControls.jsx';
 import { costFormFromSettings, describeDailyCap, formatDuration, formatEstimate, settingsFromCostForm } from './usageView.js';
 
 const DEFAULT_DAYS = 30;
-const limitLabel = (value) => (value === null ? 'off' : formatEstimate(value));
+const limitLabel = (value) => (value === null ? 'mati' : formatEstimate(value));
 
 function UsageTable({ rows, total }) {
   return (
     <div className="adm-table-wrap">
       <table className="adm-table">
-        <thead><tr><th>Day</th><th>Sessions</th><th>Audio</th><th>Screen reads</th><th>Judge calls</th><th>Estimated cost</th></tr></thead>
+        <thead><tr><th>Hari</th><th>Sesi</th><th>Audio</th><th>Baca layar</th><th>Panggilan judge</th><th>Perkiraan biaya</th></tr></thead>
         <tbody>
           {rows.map((row) => (
             <tr key={row.day} className={row.sessions ? undefined : 'adm-row-empty'}>
@@ -54,8 +54,8 @@ export function UsagePage() {
 
   useEffect(() => { void load(days); }, [days, load]);
 
-  if (loadError) return <section className="adm-card"><h1>Usage &amp; Cost</h1><p className="adm-error" role="alert">{loadError}</p></section>;
-  if (!usage || !settings) return <section className="adm-card"><h1>Usage &amp; Cost</h1><p>Loading…</p></section>;
+  if (loadError) return <section className="adm-card"><h1>Pemakaian &amp; Biaya</h1><p className="adm-error" role="alert">{loadError}</p></section>;
+  if (!usage || !settings) return <section className="adm-card"><h1>Pemakaian &amp; Biaya</h1><p>Memuat…</p></section>;
 
   const saveCost = async () => {
     const next = settingsFromCostForm(settings, costForm);
@@ -65,7 +65,7 @@ export function UsagePage() {
     try {
       await saveVoiceSettings(next.settings);
       await load(days);
-      setStatus({ message: 'Saved. Applies from the next voice session.' });
+      setStatus({ message: 'Tersimpan. Berlaku mulai sesi suara berikutnya.' });
     } catch (error) {
       setStatus({ errors: [error.message] });
     } finally {
@@ -77,45 +77,45 @@ export function UsagePage() {
   return (
     <div className="adm-page">
       <header className="adm-page-header">
-        <h1>Usage &amp; Cost</h1>
-        <p className="adm-muted">Estimates from the mic&apos;s own meter, not an OpenAI invoice.</p>
+        <h1>Pemakaian &amp; Biaya</h1>
+        <p className="adm-muted">Perkiraan dari meter mic sendiri, bukan tagihan OpenAI.</p>
       </header>
 
-      <Section title="Today">
+      <Section title="Hari ini">
         <p className="adm-stat">{formatEstimate(summary.today.estimatedUsd)}</p>
         <p className="adm-muted" role="status">{describeDailyCap(usage)}</p>
       </Section>
 
-      <Section title="Daily usage">
-        <div className="adm-segmented" role="group" aria-label="Time window">
+      <Section title="Pemakaian harian">
+        <div className="adm-segmented" role="group" aria-label="Rentang waktu">
           {usage.dayOptions.map((option) => (
             <button key={option} type="button" className={`adm-btn${option === days ? ' adm-btn-primary' : ''}`}
-              aria-pressed={option === days} onClick={() => setDays(option)}>{option} days</button>
+              aria-pressed={option === days} onClick={() => setDays(option)}>{option} hari</button>
           ))}
         </div>
         <UsageTable rows={summary.rows} total={summary.total} />
       </Section>
 
-      <Section title="Per-session cost limits" description={`Empty = built-in default (warn ${formatEstimate(costLimits.defaults.warnUsd)}, end ${formatEstimate(costLimits.defaults.capUsd)}). "off" = no limit.`}>
-        <p className="adm-muted">In effect: warn at {limitLabel(costLimits.effective.warnUsd)}, end session at {limitLabel(costLimits.effective.capUsd)}.</p>
+      <Section title="Batas biaya per sesi" description={`Kosong = default bawaan (peringatan ${formatEstimate(costLimits.defaults.warnUsd)}, berhenti ${formatEstimate(costLimits.defaults.capUsd)}). "off" = tanpa batas.`}>
+        <p className="adm-muted">Berlaku: peringatan di {limitLabel(costLimits.effective.warnUsd)}, sesi berhenti di {limitLabel(costLimits.effective.capUsd)}.</p>
         <div className="adm-grid">
-          <Field label="Warning (USD)"><input className="adm-input" type="text" inputMode="decimal" value={costForm.warn} onChange={(e) => setCostForm((f) => ({ ...f, warn: e.target.value }))} /></Field>
-          <Field label="Hard cap (USD)"><input className="adm-input" type="text" inputMode="decimal" value={costForm.cap} onChange={(e) => setCostForm((f) => ({ ...f, cap: e.target.value }))} /></Field>
+          <Field label="Peringatan (USD)"><input className="adm-input" type="text" inputMode="decimal" value={costForm.warn} onChange={(e) => setCostForm((f) => ({ ...f, warn: e.target.value }))} /></Field>
+          <Field label="Batas keras (USD)"><input className="adm-input" type="text" inputMode="decimal" value={costForm.cap} onChange={(e) => setCostForm((f) => ({ ...f, cap: e.target.value }))} /></Field>
         </div>
         <div className="adm-actions">
-          <button type="button" className="adm-btn adm-btn-primary" onClick={saveCost} disabled={saving}>{saving ? 'Saving…' : 'Save limits'}</button>
+          <button type="button" className="adm-btn adm-btn-primary" onClick={saveCost} disabled={saving}>{saving ? 'Menyimpan…' : 'Simpan batas'}</button>
           <SaveStatus status={status} />
         </div>
       </Section>
 
-      <Section title="Pricing used for the estimate" description={`Rates checked on ${rates.verifiedOn}; verify against OpenAI pricing at release.`}>
+      <Section title="Harga yang dipakai untuk perkiraan" description={`Tarif dicek pada ${rates.verifiedOn}; cocokkan dengan harga OpenAI saat rilis.`}>
         <ul className="adm-list">
-          <li>Live audio ({rates.liveModel}): ${rates.livePerMin.toFixed(2)} per minute, billed per second.</li>
-          <li>Screen reader ({rates.readerModel}): ${rates.readerInPerMTok} / ${rates.readerOutPerMTok} per 1M input / output tokens.</li>
-          <li>Not included: the delegated backend model and its tool calls (billed separately by OpenAI).</li>
+          <li>Audio live ({rates.liveModel}): ${rates.livePerMin.toFixed(2)} per menit, ditagih per detik.</li>
+          <li>Pembaca layar ({rates.readerModel}): ${rates.readerInPerMTok} / ${rates.readerOutPerMTok} per 1M token input / output.</li>
+          <li>Tidak termasuk: backend model yang didelegasikan dan tool call-nya (ditagih terpisah oleh OpenAI).</li>
           <li>
-            Off-topic judge ({rates.judgeModel}): ${rates.judgeInPerMTok} / ${rates.judgeOutPerMTok} per 1M input / output tokens, about $0.0002 per judged answer;
-            {rates.judgeEnabled ? ' included in the table above (Judge calls).' : ' turned off (GEV_VOICE_JUDGE=off).'}
+            Judge keluar topik ({rates.judgeModel}): ${rates.judgeInPerMTok} / ${rates.judgeOutPerMTok} per 1M token input / output, sekitar $0.0002 per jawaban yang dinilai;
+            {rates.judgeEnabled ? ' termasuk di tabel atas (Panggilan judge).' : ' dimatikan (GEV_VOICE_JUDGE=off).'}
           </li>
         </ul>
       </Section>

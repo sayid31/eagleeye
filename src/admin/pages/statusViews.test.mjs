@@ -11,18 +11,18 @@ test('audit filter ids match the server types', () => {
 
 test('describeAuditEntry words each event the owner will see', () => {
   assert.deepEqual(describeAuditEntry({ event: 'keys.changed', saved: ['OPENAI_API_KEY'], removed: ['TOMTOM_API_KEY'] }),
-    { title: 'API key changed', detail: 'saved OPENAI_API_KEY · removed TOMTOM_API_KEY', tone: 'ok' });
+    { title: 'API key diubah', detail: 'disimpan OPENAI_API_KEY · dihapus TOMTOM_API_KEY', tone: 'ok' });
   assert.deepEqual(describeAuditEntry({ event: 'keys.tested', provider: 'openai', result: 'rejected', httpStatus: 401 }),
-    { title: 'Connection tested', detail: 'openai → rejected (HTTP 401)', tone: 'error' });
-  assert.equal(describeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'persona'] }).detail, 'Changed: limits, persona');
-  assert.equal(describeAuditEntry({ event: 'admin.login_denied', result: 'not_admin' }).detail, 'Reason: not_admin');
+    { title: 'Koneksi dites', detail: 'openai → rejected (HTTP 401)', tone: 'error' });
+  assert.equal(describeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'persona'] }).detail, 'Diubah: limits, persona');
+  assert.equal(describeAuditEntry({ event: 'admin.login_denied', result: 'not_admin' }).detail, 'Alasan: not_admin');
   assert.equal(describeAuditEntry({ event: 'something.new', provider: 'x' }).title, 'something.new');
 });
 
 test('describeOverall counts problems and warnings; every status has a label', () => {
   const report = (statuses) => ({ sections: [{ items: statuses.map((status) => ({ status })) }] });
-  assert.equal(describeOverall(report(['ok', 'off', 'unknown'])), 'All checks OK');
-  assert.equal(describeOverall(report(['error', 'error', 'warn'])), '2 problems · 1 warning');
+  assert.equal(describeOverall(report(['ok', 'off', 'unknown'])), 'Semua pengecekan OK');
+  assert.equal(describeOverall(report(['error', 'error', 'warn'])), '2 masalah · 1 peringatan');
   for (const status of ['ok', 'warn', 'error', 'off', 'unknown']) assert.ok(HEALTH_LABELS[status]);
 });
 

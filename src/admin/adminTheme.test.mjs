@@ -20,10 +20,10 @@ test('nextTheme toggles between dark and light', () => {
 });
 
 test('nav lists the agreed menus, with Server Log first and every page built (none marked soon)', () => {
-  assert.deepEqual(ADMIN_NAV.map((g) => g.label), ['Server Log', 'AI Configuration', 'API Keys']);
+  assert.deepEqual(ADMIN_NAV.map((g) => g.label), ['Server Log', 'Konfigurasi AI', 'API Keys']);
   assert.deepEqual(ADMIN_NAV[0].children.map((c) => [c.label, Boolean(c.soon)]),
-    [['Server Log', false], ['Audit Log', false], ['System Health', false]]);
-  assert.deepEqual(ADMIN_NAV[1].children.map((c) => c.label), ['General', 'AI Provider', 'Persona', 'Usage & Cost']);
+    [['Server Log', false], ['Audit Log', false], ['Kesehatan Sistem', false]]);
+  assert.deepEqual(ADMIN_NAV[1].children.map((c) => c.label), ['Umum', 'Penyedia AI', 'Persona', 'Pemakaian & Biaya']);
 });
 
 test('every leaf path is unique and the home page is the Server Log', () => {

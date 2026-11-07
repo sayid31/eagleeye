@@ -8,7 +8,7 @@
 import { useEffect, useState } from 'react';
 import { fetchKeyStatus, saveKeys } from '../api/adminKeysApi.js';
 
-export const RESTART_MESSAGE = 'Saved. The server is restarting so every feature picks up the change; this page reloads by itself.';
+export const RESTART_MESSAGE = 'Tersimpan. Server sedang restart agar semua fitur memakai perubahan ini; halaman ini memuat ulang sendiri.';
 
 /** @returns {{data: object|null, loadError: string, status: object|null, busy: boolean, submit: (updates: object) => Promise<void>}} */
 export function useProviderKeys() {

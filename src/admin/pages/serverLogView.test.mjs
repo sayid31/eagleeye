@@ -15,7 +15,7 @@ test('formatLogTime renders a stable 24h stamp and a dash for junk', () => {
 
 test('describeRepeat only speaks for merged rows', () => {
   assert.equal(describeRepeat({ count: 1, firstAt: 0 }), '');
-  assert.match(describeRepeat({ count: 12, firstAt: Date.UTC(2026, 10, 6) }, 'en-GB'), /^×12 since 06 Nov/);
+  assert.match(describeRepeat({ count: 12, firstAt: Date.UTC(2026, 10, 6) }, 'en-GB'), /^×12 sejak 06 Nov/);
 });
 
 test('describeContext joins detail fields and client info', () => {

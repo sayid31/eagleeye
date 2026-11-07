@@ -34,7 +34,7 @@ test('bad limits and an empty topic list block the save with every message', () 
   const r = settingsFromGeneralForm(base, { ...form, topicsEnabled: true, limits: { ...form.limits, sessionMinutes: '500', idleSeconds: '5' } }, RANGES);
   assert.equal(r.ok, false);
   assert.equal(r.errors.length, 3);
-  assert.match(r.errors[0], /Maximum session length: whole minutes 1–120/);
+  assert.match(r.errors[0], /Durasi sesi maksimal: bilangan bulat 1–120 menit/);
 });
 
 test('the save keeps fields this page does not own (cost limits) and maps tool switches', () => {
@@ -50,9 +50,9 @@ test('the save keeps fields this page does not own (cost limits) and maps tool s
 });
 
 test('describeEnforced summarizes the saved state', () => {
-  assert.equal(describeEnforced(defaultVoiceSettings()), 'Voice ON · core rules ON · topic list OFF · all tool groups on');
+  assert.equal(describeEnforced(defaultVoiceSettings()), 'Suara AKTIF · aturan inti AKTIF · daftar topik MATI · semua grup tools aktif');
   const s = { ...defaultVoiceSettings(), enabled: false, topics: { enabled: true, allowed: ['a', 'b'], refusal: '' }, toolGroups: { ...defaultVoiceSettings().toolGroups, media: false, annotate: false } };
-  assert.equal(describeEnforced(s), 'Voice OFF · core rules ON · topic list ON (2) · 2 tool groups off');
+  assert.equal(describeEnforced(s), 'Suara MATI · aturan inti AKTIF · daftar topik AKTIF (2) · 2 grup tools mati');
 });
 
 test('saving General keeps the Persona extra rules and the provider choice', () => {

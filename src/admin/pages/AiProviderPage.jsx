@@ -23,7 +23,7 @@ function ModelVoiceSection() {
     .catch((error) => setStatus({ errors: [error.message] }));
   useEffect(() => { load(); }, []);
 
-  if (!form) return <Section title="Model and voice"><SaveStatus status={status} />{status ? null : <p>Loading…</p>}</Section>;
+  if (!form) return <Section title="Model dan suara"><SaveStatus status={status} />{status ? null : <p>Memuat…</p>}</Section>;
   const { effective, voices, backendModels } = data.provider;
   const save = async () => {
     const next = settingsFromProviderForm(data.settings, form, data.provider);
@@ -32,7 +32,7 @@ function ModelVoiceSection() {
     try {
       await saveVoiceSettings(next.settings);
       await load();
-      setStatus({ message: 'Saved. New voice sessions use this voice and model.' });
+      setStatus({ message: 'Tersimpan. Sesi suara baru memakai suara dan model ini.' });
     } catch (error) {
       setStatus({ errors: [error.message] });
     } finally {
@@ -41,21 +41,21 @@ function ModelVoiceSection() {
   };
   const option = (value) => <option key={value} value={value}>{value}</option>;
   return (
-    <Section title="Model and voice" description={`Voice model: ${effective.model.value} (${describeSource(effective.model.source)}). The voice cannot change during a running session.`}>
+    <Section title="Model dan suara" description={`Model suara: ${effective.model.value} (${describeSource(effective.model.source)}). Suara tidak bisa berganti selama sesi berjalan.`}>
       <div className="adm-grid">
-        <Field label="Voice" hint={`In use: ${effective.voice.value} (${describeSource(effective.voice.source)})`}>
+        <Field label="Suara" hint={`Dipakai: ${effective.voice.value} (${describeSource(effective.voice.source)})`}>
           <select className="adm-input" value={form.voice} onChange={(e) => setForm({ ...form, voice: e.target.value })}>
-            <option value="">Default (.env or built-in)</option>{voices.map(option)}
+            <option value="">Default (.env atau bawaan)</option>{voices.map(option)}
           </select>
         </Field>
-        <Field label="Backend model (tools and reasoning)" hint={`In use: ${effective.backendModel.value} (${describeSource(effective.backendModel.source)}). Billed separately; not in the cost meter.`}>
+        <Field label="Backend model (tools dan penalaran)" hint={`Dipakai: ${effective.backendModel.value} (${describeSource(effective.backendModel.source)}). Ditagih terpisah; tidak masuk meter biaya.`}>
           <select className="adm-input" value={form.backendModel} onChange={(e) => setForm({ ...form, backendModel: e.target.value })}>
-            <option value="">Default (.env or built-in)</option>{backendModels.map(option)}
+            <option value="">Default (.env atau bawaan)</option>{backendModels.map(option)}
           </select>
         </Field>
       </div>
       <div className="adm-actions">
-        <button type="button" className="adm-btn adm-btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save model and voice'}</button>
+        <button type="button" className="adm-btn adm-btn-primary" onClick={save} disabled={saving}>{saving ? 'Menyimpan…' : 'Simpan model dan suara'}</button>
         <SaveStatus status={status} />
       </div>
     </Section>
@@ -65,15 +65,15 @@ function ModelVoiceSection() {
 export function AiProviderPage() {
   const { data, loadError, status, busy, submit } = useProviderKeys();
 
-  if (loadError) return <section className="adm-card"><h1>AI Provider</h1><p className="adm-error" role="alert">{loadError}</p></section>;
-  if (!data) return <section className="adm-card"><h1>AI Provider</h1><p>Loading…</p></section>;
+  if (loadError) return <section className="adm-card"><h1>Penyedia AI</h1><p className="adm-error" role="alert">{loadError}</p></section>;
+  if (!data) return <section className="adm-card"><h1>Penyedia AI</h1><p>Memuat…</p></section>;
 
   const { ai } = partitionKeys(data.keys);
   return (
     <div className="adm-page">
       <header className="adm-page-header">
-        <h1>AI Provider</h1>
-        <p className="adm-muted">OpenAI powers the voice assistant, the screen reader and the HUD summary. The key is saved to {storeLabel(data.store)} on this computer and never shown.</p>
+        <h1>Penyedia AI</h1>
+        <p className="adm-muted">OpenAI menjalankan asisten suara, pembaca layar, dan ringkasan HUD. Key disimpan di {storeLabel(data.store)} di komputer ini dan tidak pernah ditampilkan.</p>
         <SaveStatus status={status} />
       </header>
       {ai.keys.map((key) => (

@@ -5,10 +5,10 @@ import { costFormFromSettings, describeDailyCap, formatDuration, formatEstimate,
 
 test('formatDuration covers zero, seconds, minutes and hours', () => {
   assert.equal(formatDuration(0), '0 min');
-  assert.equal(formatDuration(5), '0 min 05 s');
-  assert.equal(formatDuration(245.9), '4 min 05 s');
+  assert.equal(formatDuration(5), '0 min 05 dtk');
+  assert.equal(formatDuration(245.9), '4 min 05 dtk');
   assert.equal(formatDuration(600), '10 min');
-  assert.equal(formatDuration(7380), '2 h 03 min');
+  assert.equal(formatDuration(7380), '2 j 03 min');
   assert.equal(formatDuration(-3), '0 min');
 });
 
@@ -18,9 +18,9 @@ test('formatEstimate marks money as an estimate', () => {
 
 test('describeDailyCap: no limit, some left, used up', () => {
   const at = (dailyMinutes, remainingSeconds) => describeDailyCap({ dailyMinutes, remainingSeconds, summary: { today: { seconds: 600 } } });
-  assert.equal(at(0, null), '10 min used today · no daily limit');
-  assert.equal(at(30, 1200), '10 min of 30 min used today · 20 min left');
-  assert.match(at(10, 0), /limit reached, new sessions are refused until midnight/);
+  assert.equal(at(0, null), '10 min terpakai hari ini · tanpa batas harian');
+  assert.equal(at(30, 1200), '10 min dari 30 min terpakai hari ini · sisa 20 min');
+  assert.match(at(10, 0), /batas tercapai, sesi baru ditolak sampai tengah malam/);
 });
 
 test('cost form: empty = built-in default, off = none, number = USD; base fields survive', () => {

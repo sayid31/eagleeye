@@ -6,11 +6,11 @@
 
 /** Messages for the `?error=` codes the callback route redirects with. */
 export const LOGIN_ERRORS = Object.freeze({
-  not_admin: 'This Google account is not the admin account.',
-  cancelled: 'Sign-in was cancelled.',
-  invalid_request: 'The sign-in attempt was not valid. Please try again.',
-  google_unavailable: 'Google could not be reached. Please try again.',
-  not_configured: 'Admin login is not configured on the server yet.',
+  not_admin: 'Akun Google ini bukan akun admin.',
+  cancelled: 'Proses masuk dibatalkan.',
+  invalid_request: 'Percobaan masuk tidak valid. Silakan coba lagi.',
+  google_unavailable: 'Google tidak bisa dihubungi. Silakan coba lagi.',
+  not_configured: 'Login admin belum dikonfigurasi di server.',
 });
 
 /**
@@ -19,7 +19,7 @@ export const LOGIN_ERRORS = Object.freeze({
  */
 export function loginErrorMessage(code) {
   if (!code) return null;
-  return LOGIN_ERRORS[code] ?? 'Sign-in failed. Please try again.';
+  return LOGIN_ERRORS[code] ?? 'Gagal masuk. Silakan coba lagi.';
 }
 
 /**

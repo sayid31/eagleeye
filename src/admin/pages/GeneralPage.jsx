@@ -28,8 +28,8 @@ export function GeneralPage() {
     return () => { cancelled = true; };
   }, []);
 
-  if (loadError) return <section className="adm-card"><h1>General</h1><p className="adm-error" role="alert">{loadError}</p></section>;
-  if (!form) return <section className="adm-card"><h1>General</h1><p>Loading…</p></section>;
+  if (loadError) return <section className="adm-card"><h1>Umum</h1><p className="adm-error" role="alert">{loadError}</p></section>;
+  if (!form) return <section className="adm-card"><h1>Umum</h1><p>Memuat…</p></section>;
 
   const set = (patch) => setForm((prev) => ({ ...prev, ...patch }));
   const setGroup = (id, on) => setForm((prev) => ({ ...prev, toolGroups: { ...prev.toolGroups, [id]: on } }));
@@ -39,14 +39,14 @@ export function GeneralPage() {
     const next = settingsFromGeneralForm(data.settings, form, data.limitRanges);
     if (!next.ok) { setStatus({ errors: next.errors }); return; }
     if (data.settings.enabled !== false && !form.enabled
-      && !window.confirm('Turn voice off? The mic button will refuse to start new sessions.')) return;
+      && !window.confirm('Matikan suara? Tombol mic akan menolak memulai sesi baru.')) return;
     setSaving(true);
     setStatus(null);
     try {
       const saved = await saveVoiceSettings(next.settings);
       setData((prev) => ({ ...prev, settings: saved.settings, storedValid: true }));
       setForm(generalFormFromSettings(saved.settings));
-      setStatus({ message: 'Saved. New voice sessions use these settings; a session already running keeps its old ones.' });
+      setStatus({ message: 'Tersimpan. Sesi suara baru memakai pengaturan ini; sesi yang sedang berjalan tetap memakai yang lama.' });
     } catch (error) {
       setStatus({ errors: [error.message] });
     } finally {
@@ -57,44 +57,44 @@ export function GeneralPage() {
   return (
     <div className="adm-page">
       <header className="adm-page-header">
-        <h1>General</h1>
-        <p className="adm-muted" role="status">Currently enforced: {describeEnforced(data.settings)}</p>
-        {data.storedValid ? null : <p className="adm-error">The saved settings file was unreadable; defaults are in effect until you save.</p>}
+        <h1>Umum</h1>
+        <p className="adm-muted" role="status">Yang berlaku sekarang: {describeEnforced(data.settings)}</p>
+        {data.storedValid ? null : <p className="adm-error">File pengaturan tersimpan tidak bisa dibaca; default berlaku sampai Anda menyimpan.</p>}
       </header>
 
-      <Section title="Assistant">
-        <Toggle checked={form.enabled} onChange={(enabled) => set({ enabled })} title="Voice assistant enabled"
-          description="Off: the mic button refuses to start new sessions." />
-        <Field label="Assistant name" hint={`Optional, up to ${NAME_MAX} characters. Empty = built-in name.`}>
+      <Section title="Asisten">
+        <Toggle checked={form.enabled} onChange={(enabled) => set({ enabled })} title="Asisten suara aktif"
+          description="Mati: tombol mic menolak memulai sesi baru." />
+        <Field label="Nama asisten" hint={`Opsional, maksimal ${NAME_MAX} karakter. Kosong = nama bawaan.`}>
           <input className="adm-input" type="text" maxLength={NAME_MAX} value={form.name} onChange={(e) => set({ name: e.target.value })} />
         </Field>
-        <Field label="Personality notes" hint={`Tone and phrasing only, ${form.instructions.length}/${NOTES_MAX} characters. Always below the core rules; cannot change tools or rules.`}>
+        <Field label="Catatan kepribadian" hint={`Hanya nada dan gaya bahasa, ${form.instructions.length}/${NOTES_MAX} karakter. Selalu di bawah aturan inti; tidak bisa mengubah tools atau aturan.`}>
           <textarea className="adm-input" rows={4} maxLength={NOTES_MAX} value={form.instructions} onChange={(e) => set({ instructions: e.target.value })} />
         </Field>
       </Section>
 
-      <Section title="Topic restriction" description="The Persona core rules always keep the assistant on this console. This optional list narrows conversation further. Prompt-based best effort; app commands and “where is this” questions are never refused.">
-        <Toggle checked={form.topicsEnabled} onChange={(topicsEnabled) => set({ topicsEnabled })} title="Restrict to these topics only" />
-        <Field label="Allowed topics" hint="One per line, up to 20.">
+      <Section title="Batasan topik" description="Aturan inti Persona selalu menjaga asisten tetap di konsol ini. Daftar opsional ini mempersempit percakapan lagi. Berbasis prompt (best effort); perintah aplikasi dan pertanyaan “ini di mana” tidak pernah ditolak.">
+        <Toggle checked={form.topicsEnabled} onChange={(topicsEnabled) => set({ topicsEnabled })} title="Batasi hanya ke topik ini" />
+        <Field label="Topik yang diizinkan" hint="Satu per baris, maksimal 20.">
           <textarea className="adm-input" rows={4} value={form.topics} onChange={(e) => set({ topics: e.target.value })} />
         </Field>
-        <Field label="Refusal sentence" hint={`One sentence, up to ${REFUSAL_MAX} characters. Empty = built-in sentence.`}>
+        <Field label="Kalimat penolakan" hint={`Satu kalimat, maksimal ${REFUSAL_MAX} karakter. Kosong = kalimat bawaan.`}>
           <input className="adm-input" type="text" maxLength={REFUSAL_MAX} value={form.refusal} onChange={(e) => set({ refusal: e.target.value })} />
         </Field>
       </Section>
 
-      <Section title="Tool permissions" description="A switched-off group is not offered to the voice model at all, so it cannot call those tools.">
+      <Section title="Izin tools" description="Grup yang dimatikan sama sekali tidak ditawarkan ke model suara, jadi tools itu tidak bisa dipanggil.">
         {data.toolGroups.map((group) => (
           <Toggle key={group.id} checked={form.toolGroups[group.id] !== false} onChange={(on) => setGroup(group.id, on)}
             title={`${group.label} (${group.toolCount} tools)`} description={group.description} />
         ))}
       </Section>
 
-      <Section title="Session limits" description="Empty = no limit. The session closes automatically when a limit is reached.">
+      <Section title="Batas sesi" description="Kosong = tanpa batas. Sesi ditutup otomatis saat batas tercapai.">
         <div className="adm-grid">
           {LIMIT_FIELDS.map(({ key, label, unit }) => (
             <Field key={key} label={label} hint={`${data.limitRanges[key].min}–${data.limitRanges[key].max} ${unit}`}>
-              <input className="adm-input" type="text" inputMode="numeric" value={form.limits[key]} placeholder="No limit"
+              <input className="adm-input" type="text" inputMode="numeric" value={form.limits[key]} placeholder="Tanpa batas"
                 onChange={(e) => setLimit(key, e.target.value)} />
             </Field>
           ))}
@@ -102,7 +102,7 @@ export function GeneralPage() {
       </Section>
 
       <div className="adm-actions">
-        <button type="button" className="adm-btn adm-btn-primary" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</button>
+        <button type="button" className="adm-btn adm-btn-primary" onClick={save} disabled={saving}>{saving ? 'Menyimpan…' : 'Simpan perubahan'}</button>
         <SaveStatus status={status} />
       </div>
     </div>

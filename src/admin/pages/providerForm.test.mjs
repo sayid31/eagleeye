@@ -23,7 +23,7 @@ test('a choice replaces only provider; other sections survive', () => {
 
 test('values outside the server lists are refused; sources read as plain words', () => {
   assert.equal(settingsFromProviderForm(defaultVoiceSettings(), { voice: 'robot', backendModel: '' }, OPTIONS).ok, false);
-  assert.equal(describeSource('admin'), 'chosen here');
-  assert.equal(describeSource('env'), 'from .env');
-  assert.equal(describeSource(undefined), 'built-in default');
+  assert.equal(describeSource('admin'), 'dipilih di sini');
+  assert.equal(describeSource('env'), 'dari .env');
+  assert.equal(describeSource(undefined), 'default bawaan');
 });

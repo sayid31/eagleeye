@@ -15,9 +15,9 @@
 
 /** Limit fields on this page, in display order. */
 export const LIMIT_FIELDS = Object.freeze([
-  { key: 'dailyMinutes', label: 'Daily voice minutes', unit: 'minutes' },
-  { key: 'sessionMinutes', label: 'Maximum session length', unit: 'minutes' },
-  { key: 'idleSeconds', label: 'Close when idle after', unit: 'seconds' },
+  { key: 'dailyMinutes', label: 'Menit suara per hari', unit: 'menit' },
+  { key: 'sessionMinutes', label: 'Durasi sesi maksimal', unit: 'menit' },
+  { key: 'idleSeconds', label: 'Tutup saat diam setelah', unit: 'detik' },
 ]);
 
 const limitText = (n) => (n ? String(n) : '');
@@ -60,10 +60,10 @@ export function settingsFromGeneralForm(base, form, ranges) {
   for (const { key, label, unit } of LIMIT_FIELDS) {
     const parsed = parseLimit(form.limits[key], ranges[key]);
     if (parsed.ok) limits[key] = parsed.value;
-    else errors.push(`${label}: whole ${unit} ${ranges[key].min}–${ranges[key].max}, or empty for no limit`);
+    else errors.push(`${label}: bilangan bulat ${ranges[key].min}–${ranges[key].max} ${unit}, atau kosong untuk tanpa batas`);
   }
   const allowed = String(form.topics ?? '').split('\n').map((t) => t.trim()).filter(Boolean);
-  if (form.topicsEnabled && allowed.length === 0) errors.push('Topic restriction is on: add at least one allowed topic (one per line).');
+  if (form.topicsEnabled && allowed.length === 0) errors.push('Batasan topik aktif: tambahkan minimal satu topik yang diizinkan (satu per baris).');
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
@@ -82,10 +82,10 @@ export function settingsFromGeneralForm(base, form, ranges) {
 export function describeEnforced(settings) {
   const off = Object.entries(settings.toolGroups ?? {}).filter(([, on]) => on === false).length;
   const parts = [
-    settings.enabled === false ? 'Voice OFF' : 'Voice ON',
-    'core rules ON',
-    settings.topics?.enabled ? `topic list ON (${settings.topics.allowed.length})` : 'topic list OFF',
-    off ? `${off} tool group${off > 1 ? 's' : ''} off` : 'all tool groups on',
+    settings.enabled === false ? 'Suara MATI' : 'Suara AKTIF',
+    'aturan inti AKTIF',
+    settings.topics?.enabled ? `daftar topik AKTIF (${settings.topics.allowed.length})` : 'daftar topik MATI',
+    off ? `${off} grup tools mati` : 'semua grup tools aktif',
   ];
   return parts.join(' · ');
 }

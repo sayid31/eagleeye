@@ -34,21 +34,21 @@ export function AuditLogPage() {
     <div className="adm-page adm-page-wide">
       <header className="adm-page-header">
         <h1>Audit Log</h1>
-        <p className="adm-muted">Every change made from /admin: API keys, connection tests, voice settings, sign-ins and log clears. Key values and emails are never recorded.</p>
+        <p className="adm-muted">Setiap perubahan dari /admin: API key, tes koneksi, pengaturan suara, login, dan pengosongan log. Isi key dan email tidak pernah dicatat.</p>
       </header>
       <div className="adm-card adm-log-filters" role="group" aria-label="Filter">
         {AUDIT_FILTERS.map((filter) => (
           <button key={filter.id || 'all'} type="button" className={`adm-btn${filter.id === type ? ' adm-btn-primary' : ''}`}
             aria-pressed={filter.id === type} onClick={() => setType(filter.id)}>{filter.label}</button>
         ))}
-        <button type="button" className="adm-btn" disabled={busy} onClick={() => load(type)}>Refresh</button>
+        <button type="button" className="adm-btn" disabled={busy} onClick={() => load(type)}>Muat ulang</button>
       </div>
       {error ? <p className="adm-error" role="alert">{error}</p> : null}
-      {data && data.entries.length === 0 ? <section className="adm-card"><p>No entries yet.</p></section> : null}
+      {data && data.entries.length === 0 ? <section className="adm-card"><p>Belum ada entri.</p></section> : null}
       {data && data.entries.length ? (
         <div className="adm-table-wrap adm-log-table">
           <table className="adm-table">
-            <thead><tr><th>When</th><th>Change</th><th>Details</th></tr></thead>
+            <thead><tr><th>Waktu</th><th>Perubahan</th><th>Detail</th></tr></thead>
             <tbody>
               {data.entries.map((entry, index) => {
                 const view = describeAuditEntry(entry);
@@ -56,7 +56,7 @@ export function AuditLogPage() {
                   <tr key={`${entry.at}-${index}`}>
                     <td className="adm-log-time">{formatLogTime(Date.parse(entry.at))}</td>
                     <td><span className={`adm-pill adm-pill-${view.tone}`}>{view.title}</span></td>
-                    <td className="adm-log-msg">{view.detail}{entry.source ? <small className="adm-field-hint">via {entry.source}</small> : null}</td>
+                    <td className="adm-log-msg">{view.detail}{entry.source ? <small className="adm-field-hint">lewat {entry.source}</small> : null}</td>
                   </tr>
                 );
               })}
@@ -64,7 +64,7 @@ export function AuditLogPage() {
           </table>
         </div>
       ) : null}
-      {data?.nextOffset ? <button type="button" className="adm-btn" disabled={busy} onClick={() => load(type, data.nextOffset)}>Load more</button> : null}
+      {data?.nextOffset ? <button type="button" className="adm-btn" disabled={busy} onClick={() => load(type, data.nextOffset)}>Muat lagi</button> : null}
     </div>
   );
 }

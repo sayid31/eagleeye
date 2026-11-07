@@ -6,7 +6,8 @@
  */
 import { useState } from 'react';
 import { testKey } from '../api/adminKeysApi.js';
-import { buildKeyRemoval, buildKeyUpdate, describeTestResult, isEditable, keyStatusBadge } from '../pages/apiKeysView.js';
+import { buildKeyRemoval, buildKeyUpdate, describeTestResult, isEditable, keyStatusBadge, secretPlaceholder } from '../pages/apiKeysView.js';
+import { SecretInput } from './FormControls.jsx';
 
 export function KeyCard({ keyInfo, note, busy, onSave, onRemove }) {
   const [values, setValues] = useState({});
@@ -14,8 +15,9 @@ export function KeyCard({ keyInfo, note, busy, onSave, onRemove }) {
   const [confirmRemove, setConfirmRemove] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testLine, setTestLine] = useState(null);
-  const badge = keyStatusBadge(keyInfo);
+  const badge = keyStatusBadge(keyInfo, testLine?.result);
   const editable = isEditable(keyInfo);
+  const single = keyInfo.envVars.length === 1;
 
   const save = () => {
     const update = buildKeyUpdate(keyInfo, values);
@@ -28,7 +30,7 @@ export function KeyCard({ keyInfo, note, busy, onSave, onRemove }) {
     try {
       setTestLine(describeTestResult(await testKey(keyInfo.id)));
     } catch (failure) {
-      setTestLine({ text: failure.message, tone: 'error', label: 'Failed' });
+      setTestLine({ text: failure.message, tone: 'error', label: 'Gagal', result: null });
     } finally {
       setTesting(false);
     }
@@ -44,33 +46,39 @@ export function KeyCard({ keyInfo, note, busy, onSave, onRemove }) {
         <span className={`adm-pill adm-pill-${badge.tone}`}>{badge.label}</span>
       </header>
       <p className="adm-field-hint">
-        {keyInfo.envVars.join(' + ')} · {keyInfo.tier === 'metered' ? 'billing account' : 'free tier'}
-        {keyInfo.clientExposed ? ' · sent to the browser by design: restrict it at the provider' : ''}
-        {' · '}<a className="adm-link" href={keyInfo.getUrl} target="_blank" rel="noreferrer noopener">Get a key</a>
+        {keyInfo.envVars.join(' + ')} · {keyInfo.tier === 'metered' ? 'akun berbayar' : 'free tier'}
+        {keyInfo.clientExposed ? ' · sengaja dikirim ke browser: batasi key ini di penyedia' : ''}
+        {' · '}<a className="adm-link" href={keyInfo.getUrl} target="_blank" rel="noreferrer noopener">Dapatkan key</a>
       </p>
       {editable ? (
         <div className="adm-key-form">
-          {keyInfo.envVars.map((name) => (
-            <input key={name} className="adm-input" type="password" autoComplete="off" spellCheck={false}
-              aria-label={name} placeholder={keyInfo.set ? `New ${name} (replaces the current one)` : name}
-              value={values[name] ?? ''} onChange={(e) => setValues((v) => ({ ...v, [name]: e.target.value }))} />
-          ))}
+          {keyInfo.envVars.map((name) => {
+            const fieldId = `key-${keyInfo.id}-${name}`;
+            return (
+              <div key={name} className="adm-field">
+                <label className="adm-field-label" htmlFor={fieldId}>{single ? 'API Key' : name}</label>
+                {keyInfo.set ? <small className="adm-field-hint">Kosongkan untuk mempertahankan key tersimpan.</small> : null}
+                <SecretInput id={fieldId} label={single ? `API Key ${keyInfo.title}` : name} placeholder={secretPlaceholder(keyInfo)}
+                  value={values[name] ?? ''} onChange={(text) => setValues((v) => ({ ...v, [name]: text }))} />
+              </div>
+            );
+          })}
           <div className="adm-actions">
-            <button type="button" className="adm-btn adm-btn-primary" disabled={busy} onClick={save}>{keyInfo.set ? 'Replace' : 'Save'}</button>
-            {keyInfo.set && !confirmRemove ? <button type="button" className="adm-btn" disabled={busy} onClick={() => setConfirmRemove(true)}>Remove</button> : null}
+            <button type="button" className="adm-btn adm-btn-primary" disabled={busy} onClick={save}>{keyInfo.set ? 'Ganti' : 'Simpan'}</button>
+            {keyInfo.set && !confirmRemove ? <button type="button" className="adm-btn" disabled={busy} onClick={() => setConfirmRemove(true)}>Hapus</button> : null}
             {confirmRemove ? (
               <>
-                <span className="adm-error">Remove this key? Features that need it stop working.</span>
-                <button type="button" className="adm-btn adm-btn-danger" disabled={busy} onClick={() => { setConfirmRemove(false); onRemove(buildKeyRemoval(keyInfo)); }}>Yes, remove</button>
-                <button type="button" className="adm-btn" onClick={() => setConfirmRemove(false)}>Cancel</button>
+                <span className="adm-error">Hapus key ini? Fitur yang membutuhkannya akan berhenti.</span>
+                <button type="button" className="adm-btn adm-btn-danger" disabled={busy} onClick={() => { setConfirmRemove(false); onRemove(buildKeyRemoval(keyInfo)); }}>Ya, hapus</button>
+                <button type="button" className="adm-btn" onClick={() => setConfirmRemove(false)}>Batal</button>
               </>
             ) : null}
           </div>
           {error ? <p className="adm-error" role="alert">{error}</p> : null}
         </div>
-      ) : <p className="adm-muted">This key is set where the server was started (shell, Keychain or launcher), so it can only be changed there.</p>}
+      ) : <p className="adm-muted">Key ini diatur di tempat server dijalankan (shell, Keychain, atau launcher), jadi hanya bisa diubah di sana.</p>}
       <div className="adm-actions">
-        <button type="button" className="adm-btn" disabled={!keyInfo.set || testing} onClick={runTest}>{testing ? 'Testing…' : 'Test connection'}</button>
+        <button type="button" className="adm-btn" disabled={!keyInfo.set || testing} onClick={runTest}>{testing ? 'Mengetes…' : 'Tes koneksi'}</button>
         <small className="adm-field-hint">{note}</small>
       </div>
       {testLine ? (

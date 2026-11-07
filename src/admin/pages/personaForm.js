@@ -15,7 +15,7 @@
 export const EXTRA_RULES_MAX = 20;
 export const EXTRA_RULE_TEXT_MAX = 200;
 
-const GUARD_LABELS = { prompt: 'Prompt', 'prompt+code': 'Prompt + code' };
+const GUARD_LABELS = { prompt: 'Prompt', 'prompt+code': 'Prompt + kode' };
 
 /** Badge text for what enforces a core rule. */
 export function guardLabel(guard) {
@@ -40,14 +40,14 @@ export function groupCoreRules(groups, rules) {
 export function summarizeCoreRules(groups) {
   const rules = groups.flatMap((group) => group.rules);
   const backed = rules.filter((rule) => rule.guard === 'prompt+code').length;
-  return `${rules.length} rules in ${groups.length} groups · ${backed} also enforced by app code, the rest by the voice prompt only`;
+  return `${rules.length} aturan dalam ${groups.length} grup · ${backed} juga dijaga kode aplikasi, sisanya hanya oleh prompt suara`;
 }
 
 /** "7 rules" / "6 rules · 1 enforced by code" for a collapsed group header. */
 export function describeRuleGroup(group) {
   const backed = group.rules.filter((rule) => rule.guard === 'prompt+code').length;
-  const count = `${group.rules.length} rule${group.rules.length === 1 ? '' : 's'}`;
-  return backed ? `${count} · ${backed} enforced by code` : count;
+  const count = `${group.rules.length} aturan`;
+  return backed ? `${count} · ${backed} dijaga kode` : count;
 }
 
 /** @param {object} settings Server settings snapshot. */
@@ -68,12 +68,12 @@ export function settingsFromPersonaForm(base, rows) {
     const forbid = String(row.forbid ?? '').trim();
     const instead = String(row.instead ?? '').trim();
     if (!forbid && !instead) return;
-    if (!forbid || !instead) errors.push(`Extra rule ${index + 1}: fill in both Forbidden and Instead.`);
+    if (!forbid || !instead) errors.push(`Aturan tambahan ${index + 1}: isi kolom Dilarang dan Gantinya.`);
     else if (forbid.length > EXTRA_RULE_TEXT_MAX || instead.length > EXTRA_RULE_TEXT_MAX) {
-      errors.push(`Extra rule ${index + 1}: up to ${EXTRA_RULE_TEXT_MAX} characters per field.`);
+      errors.push(`Aturan tambahan ${index + 1}: maksimal ${EXTRA_RULE_TEXT_MAX} karakter per kolom.`);
     } else extraRules.push({ forbid, instead });
   });
-  if (extraRules.length > EXTRA_RULES_MAX) errors.push(`Up to ${EXTRA_RULES_MAX} extra rules.`);
+  if (extraRules.length > EXTRA_RULES_MAX) errors.push(`Maksimal ${EXTRA_RULES_MAX} aturan tambahan.`);
   if (errors.length) return { ok: false, errors };
   return { ok: true, settings: { ...base, persona: { ...base.persona, extraRules } } };
 }
