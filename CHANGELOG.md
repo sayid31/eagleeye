@@ -5,12 +5,6 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
-### Added
-
-- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
-  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
-  24 ms dari data yang sudah ada.
-
 ### Fixed
 
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
@@ -60,6 +54,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- Permintaan data jalan untuk area kecil kini bisa dijawab langsung dari data area lebih besar yang sudah
+  tersimpan (dipotong sesuai area), tanpa menunggu server OSM. Contoh: area kecil di Yogyakarta terjawab dalam
+  24 ms dari data yang sudah ada.
 - Halaman **/admin** (kerangka awal): menu Server Log, AI Configuration, dan API Keys, dengan mode gelap dan
   terang. Peta tidak berubah.
 - Login **/admin** memakai akun Google. Hanya email di `ADMIN_EMAIL` yang bisa masuk; sesi berlaku 24 jam dan
