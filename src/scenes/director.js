@@ -214,7 +214,7 @@ export class SceneDirector {
       this.downloadLastRunMetadata();
     });
 
-    this._updateStatus('Ready');
+    this._updateStatus('Siap');
     this._setProgress(0);
     this._setButtons(false);
   }

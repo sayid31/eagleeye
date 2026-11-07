@@ -64,7 +64,7 @@ export function _contextSubjectMetadata(icao24) {
       callsign: described.callsign || '',
       registration: described.registration || '',
       type: described.typeName || described.typeCode || '',
-      altitude: described.onGround ? 'on ground' : `${altFt.toLocaleString('en-US')} ft`,
+      altitude: described.onGround ? 'di darat' : `${altFt.toLocaleString('en-US')} ft`,
       speed: Number.isFinite(described.velocityMps)
         ? `${Math.round(described.velocityMps * 1.944)} kt`
         : '',

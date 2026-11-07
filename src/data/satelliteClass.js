@@ -31,7 +31,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // leak into another domain. Slightly warm so it also separates from the
     // pure white the civilian air fleet draws in.
     color: '#fff6e5',
-    blurb: 'Crewed stations and their visiting vehicles',
+    blurb: 'Stasiun berawak dan wahana yang berkunjung',
   }),
   nav: Object.freeze({
     label: 'NAV',
@@ -39,7 +39,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // ("how many GPS satellites are up?"). Takes over the slot the catch-all
     // VISUAL group used to occupy, so this adds no new hue to the app.
     color: '#4fd8ff',
-    blurb: 'GNSS navigation — GPS, GLONASS, Galileo',
+    blurb: 'Navigasi GNSS — GPS, GLONASS, Galileo',
   }),
   geo: Object.freeze({
     label: 'GEO',
@@ -47,7 +47,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // overlay paints the SAT tier #bda4ff), and the geostationary belt draws
     // as one clean equatorial ring at globe scale.
     color: '#c89bff',
-    blurb: 'Geostationary belt — comms and weather, fixed over the equator',
+    blurb: 'Sabuk geostasioner — komunikasi dan cuaca, diam di atas khatulistiwa',
   }),
   visual: Object.freeze({
     label: 'VISUAL',
@@ -55,7 +55,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // cyan it used to hold and recedes behind the three classes that mean
     // something. Still well clear of the dense shell by luminance.
     color: '#9fb3c4',
-    blurb: 'Brightest naked-eye objects — CelesTrak visual group',
+    blurb: 'Objek paling terang dilihat mata telanjang — grup visual CelesTrak',
   }),
   comms: Object.freeze({
     label: 'COMMS',
@@ -64,7 +64,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // ~0.40 against VISUAL's ~0.69 keeps the two separable even when the
     // NVG/FLIR shaders collapse the scene to a single channel.
     color: '#54697f',
-    blurb: 'Broadband constellation shell — shown only in DENSE mode',
+    blurb: 'Cangkang konstelasi pita lebar — hanya tampil di mode DENSE',
   }),
 });
 

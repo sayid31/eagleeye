@@ -477,7 +477,7 @@ async function loadInstallations() {
         }
       } catch (error) {
         if (error?.name === 'AbortError') return;
-        placesError = 'Google Places search unavailable; showing mapped sites';
+        placesError = 'Pencarian Google Places tidak tersedia; menampilkan situs terpetakan';
       }
     }
     await resolveGroundFloorCellsBounded(records.map((record) => ({

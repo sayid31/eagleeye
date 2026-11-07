@@ -199,11 +199,11 @@ export function composeRouteLabel(baseLabel, distM, durS, mode, fallback) {
   const dist = formatDistance(distM);
   if (!dist) return baseLabel;
   const min = Number.isFinite(durS) ? Math.max(1, Math.round(durS / 60)) : null;
-  const word = mode === 'car' ? 'drive' : mode === 'bike' ? 'ride' : 'walk';
+  const word = mode === 'car' ? 'berkendara' : mode === 'bike' ? 'bersepeda' : 'jalan kaki';
   // Fallback = routing was unavailable, so we drew a straight line: label it as a
   // direct line with no travel time (never claim an "X min walk" we didn't compute).
   let metrics;
-  if (fallback) metrics = `${dist} · direct line (no route)`;
+  if (fallback) metrics = `${dist} · garis lurus (tanpa rute)`;
   else metrics = min != null ? `${dist} · ${min} min ${word}` : dist;
   return baseLabel ? `${baseLabel} — ${metrics}` : metrics;
 }

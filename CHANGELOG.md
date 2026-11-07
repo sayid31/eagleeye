@@ -12,6 +12,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   teknis seperti Server Log, API Key, dan Persona tetap dalam bahasa Inggris.
 - Kolom key menampilkan `•••• tersimpan` atau `Belum diisi`, jadi terlihat apakah key sudah terisi tanpa
   menampilkan isinya. Tombol mata hanya memperlihatkan key baru yang sedang diketik.
+- Sisa teks berbahasa Inggris di konsol peta kini berbahasa Indonesia: status peluncuran pertama, pemilih
+  dan impor skenario, chip grid CCTV, ringkasan kamera CCTV, keterangan kelas satelit, label rute (mis.
+  "15 min berkendara", "garis lurus (tanpa rute)"), status "di darat" di kokpit, dan pesan Google Places
+  di Instalasi.
 
 ### Added
 

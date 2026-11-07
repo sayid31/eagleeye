@@ -2,7 +2,7 @@
  * Split-flap (departure-board) text animation for the status chips.
  *
  * When a chip's label changes — "LOADING LIVE DATA" → "LOAD COMPLETE",
- * "loading frames" → "camera grid ready" — the characters flip over
+ * "memuat frame" → "grid kamera siap" — the characters flip over
  * mechanically, left to right, like a Solari board at a ferry terminal.
  *
  * FOUR INVARIANTS HOLD THIS TOGETHER — do not "fix" any of them:

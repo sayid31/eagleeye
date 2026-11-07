@@ -90,12 +90,12 @@ export const FIRST_RUN_MISSIONS = Object.freeze({
   contacts: Object.freeze({
     kind: 'context',
     contextMode: 'contacts',
-    busyText: 'Starting live contacts…',
+    busyText: 'Memulai kontak live…',
   }),
   'space-missions': Object.freeze({
     kind: 'context',
     contextMode: 'space-missions',
-    busyText: 'Opening space missions…',
+    busyText: 'Membuka misi antariksa…',
   }),
   environmental: Object.freeze({
     kind: 'globe',
@@ -113,7 +113,7 @@ export const FIRST_RUN_MISSIONS = Object.freeze({
     // before a launch. LEDGERED post-launch. Until it lands, keyless visitors
     // are judged on the layer row, which tells them the truth.
     layerIds: Object.freeze(['earthquakes', 'local-firms']),
-    busyText: 'Scanning active events…',
+    busyText: 'Memindai peristiwa aktif…',
   }),
   explore: Object.freeze({ kind: 'none' }),
 });

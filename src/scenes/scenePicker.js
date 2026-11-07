@@ -14,7 +14,7 @@ const POPUP_MAX_HEIGHT_PX = 150;
 const POPUP_MIN_HEIGHT_PX = 120;
 const POPUP_EDGE_GAP_PX = 8;
 const POPUP_VIEWPORT_MARGIN_PX = 8;
-const EMPTY_LABEL = 'No scenes';
+const EMPTY_LABEL = 'Belum ada skenario';
 
 /**
  * Popup placement under (or, if cramped, above) the trigger.

@@ -61,7 +61,7 @@ export function _contextSubjectMetadata(icao24) {
       // Converted contacts report their class as TR-3B — the same override
       // the readout and Contacts card show.
       type: tr3bTypeLabel(icao24, _toCleanText(info?.type) || ''),
-      altitude: described.onGround ? 'on ground' : _formatAltitude(info?.altitudeFt),
+      altitude: described.onGround ? 'di darat' : _formatAltitude(info?.altitudeFt),
       speed: Number.isFinite(described.velocityMps)
         ? `${Math.round(described.velocityMps * 1.944)} kt`
         : '',
