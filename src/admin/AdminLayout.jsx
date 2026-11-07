@@ -1,8 +1,8 @@
 // src/admin/AdminLayout.jsx
-/** Sidebar + topbar frame shared by every admin page, including the theme toggle. */
+/** Sidebar frame shared by every admin page: brand, menu, and the account/theme controls at its foot. */
 import { useEffect, useState } from 'react';
-import { NavLink, Outlet } from 'react-router';
-import { ADMIN_NAV } from './adminNav.js';
+import { NavLink, Outlet, useLocation } from 'react-router';
+import { ADMIN_NAV, breadcrumbFor } from './adminNav.js';
 import { logout } from './adminSessionApi.js';
 import { ADMIN_THEME_KEY, nextTheme, resolveTheme } from './adminTheme.js';
 
@@ -31,6 +31,7 @@ function NavGroup({ group }) {
 
 export function AdminLayout({ session }) {
   const [theme, setTheme] = useState(readInitialTheme);
+  const crumbs = breadcrumbFor(useLocation().pathname);
 
   useEffect(() => {
     document.documentElement.dataset.adminTheme = theme;
@@ -45,20 +46,26 @@ export function AdminLayout({ session }) {
     <div className="adm-shell">
       <aside className="adm-sidebar" aria-label="Navigasi admin">
         <div className="adm-brand"><img src="/logo.svg" alt="" width="28" height="28" /><span><b>Eagle</b>Eye</span><span className="adm-brand-sub">Admin</span></div>
-        <nav>{ADMIN_NAV.map((group) => <NavGroup key={group.id} group={group} />)}</nav>
-      </aside>
-      <div className="adm-main">
-        <header className="adm-topbar">
-          <a className="adm-link" href="/">← Kembali ke peta</a>
-          <div className="adm-topbar-actions">
-            <span className="adm-user">{session?.email}</span>
+        <nav className="adm-nav">{ADMIN_NAV.map((group) => <NavGroup key={group.id} group={group} />)}</nav>
+        <div className="adm-sidebar-foot">
+          <a className="adm-nav-link adm-back" href="/">← Kembali ke peta</a>
+          <div className="adm-account">
+            <span className="adm-account-label">Masuk sebagai</span>
+            <span className="adm-user" title={session?.email}>{session?.email}</span>
+          </div>
+          <div className="adm-sidebar-actions">
             <button type="button" className="adm-btn" onClick={() => setTheme(nextTheme(theme))} aria-label={theme === 'dark' ? 'Ganti ke mode terang' : 'Ganti ke mode gelap'}>
-              {theme === 'dark' ? 'Mode terang' : 'Mode gelap'}
+              {theme === 'dark' ? 'Terang' : 'Gelap'}
             </button>
             <button type="button" className="adm-btn" onClick={signOut}>Keluar</button>
           </div>
-        </header>
-        <main className="adm-content"><Outlet /></main>
+        </div>
+      </aside>
+      <div className="adm-main">
+        <main className="adm-content">
+          {crumbs.length ? <p className="adm-crumbs" aria-label="Lokasi">{crumbs.join(' / ')}</p> : null}
+          <Outlet />
+        </main>
       </div>
     </div>
   );

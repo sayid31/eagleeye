@@ -14,6 +14,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   teknis seperti Server Log, API Key, dan Persona tetap dalam bahasa Inggris.
 - Kolom key menampilkan `•••• tersimpan` atau `Belum diisi`, jadi terlihat apakah key sudah terisi tanpa
   menampilkan isinya. Tombol mata hanya memperlihatkan key baru yang sedang diketik.
+- Admin tanpa header atas: tombol kembali ke peta, akun, mode terang/gelap, dan Keluar pindah ke sidebar.
+  Latar kini bergrid ala peta, kartu tersusun dua kolom di layar lebar, dan nama izin tools berbahasa Indonesia.
+- Batasan topik pindah dari halaman Umum ke halaman Persona.
 
 ### Added
 
