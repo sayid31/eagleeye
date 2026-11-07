@@ -127,14 +127,16 @@ export function deriveFetchCenter({ nadirLat, nadirLon, hitLat, hitLon, maxPullK
  * @returns {{south:number, west:number, north:number, east:number}} Clamped bounds.
  */
 export function clampBoundsAroundCenter(bounds, center, maxSpanDeg = 0.05) {
-  const latSpan = Math.min(bounds.north - bounds.south, maxSpanDeg);
-  const lonSpan = Math.min(bounds.east - bounds.west, maxSpanDeg);
+  const latSpan = quantizeFetchSpan(Math.min(bounds.north - bounds.south, maxSpanDeg), maxSpanDeg);
+  const lonSpan = quantizeFetchSpan(Math.min(bounds.east - bounds.west, maxSpanDeg), maxSpanDeg);
   const snapped = snapFetchCenter(center);
+  // Edges rounded like the center: float noise in `center ± span/2` would
+  // otherwise reach the query text, and the query text is the cache key.
   return {
-    south: snapped.lat - latSpan / 2,
-    north: snapped.lat + latSpan / 2,
-    west: snapped.lon - lonSpan / 2,
-    east: snapped.lon + lonSpan / 2,
+    south: round6(snapped.lat - latSpan / 2),
+    north: round6(snapped.lat + latSpan / 2),
+    west: round6(snapped.lon - lonSpan / 2),
+    east: round6(snapped.lon + lonSpan / 2),
   };
 }
 
@@ -185,4 +187,34 @@ export function snapFetchCenter(center, pitchDeg = FETCH_GRID_PITCH_DEG) {
   // string and defeat the whole point.
   const quantize = (value) => Number((Math.round(value / pitchDeg) * pitchDeg).toFixed(6));
   return { lat: quantize(lat), lon: quantize(lon) };
+}
+
+const round6 = (value) => Number(value.toFixed(6));
+
+/**
+ * @const {number} Step (degrees) the fetch-box span is rounded to — half the
+ * grid pitch, 0.00625° ≈ 700 m.
+ *
+ * Snapping the center alone did not make keys reusable below ~0.05° spans:
+ * the span is `computeViewRectangle()`'s, which varies continuously with
+ * altitude and pitch, so every low-altitude pose still built a unique bbox and
+ * a unique Overpass key (measured 2026-11-07 over Yogyakarta at 900 m: two
+ * requests on the same grid center differed in the 7th decimal and both
+ * missed). Rounding to the NEAREST step changes the box by at most half a step
+ * per axis (~350 m), so it is not the "grow the box" option rejected on
+ * 2026-10-22 — dot density in view is unaffected in practice.
+ */
+export const FETCH_SPAN_STEP_DEG = FETCH_GRID_PITCH_DEG / 2;
+
+/**
+ * Round a fetch-box span to the nearest FETCH_SPAN_STEP_DEG multiple, at least
+ * one step and at most `maxSpanDeg`.
+ * @param {number} spanDeg - Raw span (degrees).
+ * @param {number} [maxSpanDeg=0.05] - Upper bound.
+ * @returns {number}
+ */
+export function quantizeFetchSpan(spanDeg, maxSpanDeg = 0.05) {
+  if (!Number.isFinite(spanDeg) || spanDeg <= 0) return maxSpanDeg;
+  const steps = Math.max(1, Math.round(spanDeg / FETCH_SPAN_STEP_DEG));
+  return Math.min(maxSpanDeg, round6(steps * FETCH_SPAN_STEP_DEG));
 }

@@ -6,6 +6,8 @@ import {
   greatCircleKm,
   deriveFetchCenter,
   clampBoundsAroundCenter,
+  quantizeFetchSpan,
+  FETCH_SPAN_STEP_DEG,
   snapFetchCenter,
 } from './trafficBounds.js';
 
@@ -99,17 +101,18 @@ test('span clamp: oversized bounds shrink to maxSpan centered on the snapped cen
   assert.ok(center.lon > clamped.west && center.lon < clamped.east);
 });
 
-test('span clamp: small bounds keep their span, recentered', () => {
+test('span clamp: small bounds keep their span rounded to the nearest span step, recentered', () => {
   const bounds = { south: 30.0, north: 30.02, west: -98.0, east: -97.97 };
   // Deliberately already on the fetch grid, so this case isolates span
   // handling from the snap (both are exact multiples of the pitch).
   const center = { lat: 30.30, lon: -97.70 };
   assert.deepEqual(snapFetchCenter(center), center, 'fixture must stay grid-aligned');
   const clamped = clampBoundsAroundCenter(bounds, center, 0.05);
-  assert.ok(Math.abs((clamped.north - clamped.south) - 0.02) < 1e-12);
-  assert.ok(Math.abs((clamped.east - clamped.west) - 0.03) < 1e-12);
-  assert.ok(Math.abs((clamped.north + clamped.south) / 2 - 30.30) < 1e-12);
-  assert.ok(Math.abs((clamped.east + clamped.west) / 2 + 97.70) < 1e-12);
+  // 0.02 → 3 steps of 0.00625 = 0.01875; 0.03 → 5 steps = 0.03125 (≤ half a step off).
+  assert.ok(Math.abs((clamped.north - clamped.south) - 0.01875) < 1e-9);
+  assert.ok(Math.abs((clamped.east - clamped.west) - 0.03125) < 1e-9);
+  assert.ok(Math.abs((clamped.north + clamped.south) / 2 - 30.30) < 1e-9);
+  assert.ok(Math.abs((clamped.east + clamped.west) / 2 + 97.70) < 1e-9);
 });
 
 test('span clamp is idempotent on already-clamped bounds (loadRoadsForBounds re-clamp)', () => {
@@ -225,4 +228,35 @@ test('the grid is global and seam-free across the equator and antimeridian', () 
     assert.ok(Math.abs(snapped.lat - center.lat) <= FETCH_GRID_PITCH_DEG / 2 + 1e-9);
     assert.ok(Math.abs(snapped.lon - center.lon) <= FETCH_GRID_PITCH_DEG / 2 + 1e-9);
   }
+});
+
+test('span quantizer: nearest step, at least one step, never above the cap', () => {
+  assert.equal(quantizeFetchSpan(0.0243), 0.025);
+  assert.equal(quantizeFetchSpan(0.0241), 0.025);
+  assert.equal(quantizeFetchSpan(0.001), FETCH_SPAN_STEP_DEG);
+  assert.equal(quantizeFetchSpan(0.049), 0.05);
+  assert.equal(quantizeFetchSpan(0.2), 0.05);
+  assert.equal(quantizeFetchSpan(Number.NaN), 0.05);
+  for (let s = 0.004; s < 0.05; s += 0.0007) {
+    assert.ok(Math.abs(quantizeFetchSpan(s) - s) <= FETCH_SPAN_STEP_DEG / 2 + 1e-9, `span ${s} moved more than half a step`);
+  }
+});
+
+test('a low-altitude view (span under the cap, jittering with pitch) still reuses one key per cell', () => {
+  // The case the 0.1°-span fixtures above never hit: at ~900 m the view span is
+  // ~0.024° and drifts with every pose. Measured 2026-11-07: same grid center,
+  // different 7th decimal, two cache misses.
+  const keys = new Set();
+  for (let i = 0; i < 12; i++) {
+    const span = 0.0241 + (i % 5) * 0.0001;
+    const view = { south: -7.84 - span / 2, north: -7.84 + span / 2, west: 110.375 - span / 2, east: 110.375 + span / 2 };
+    const center = { lat: -7.8436 + i * 0.0003, lon: 110.375 + i * 0.0003 };
+    keys.add(bboxKey(clampBoundsAroundCenter(view, center)));
+  }
+  assert.equal(keys.size, 1);
+});
+
+test('clamped edges carry at most 6 decimals (no float noise in the query text)', () => {
+  const box = clampBoundsAroundCenter({ south: 0, north: 0.0243, west: 0, east: 0.0243 }, { lat: -7.8436, lon: 110.375 });
+  for (const value of Object.values(box)) assert.ok(/^-?\d+(\.\d{1,6})?$/.test(String(value)), String(value));
 });
