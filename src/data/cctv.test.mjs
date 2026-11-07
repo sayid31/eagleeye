@@ -1925,6 +1925,9 @@ test('buildCatalogFromSources: an unofficial-hls-id row carries sourceKind/feedT
   assert.equal(camera.feedType, 'hls');
   assert.equal(camera.feedConfigured, true, 'a populated url must mark the feed as configured');
   assert.equal(camera.provider, 'UNOFFICIAL — Jakarta Smart City (Internal Demo Only)');
+  // Name cleaned and map callout precomputed once (detection reads it every frame).
+  assert.equal(camera.name, 'JPO Jl. Gatot Subroto');
+  assert.equal(camera.mapLabel, 'JPO Jl. Gatot Subroto');
 });
 
 test('buildCatalogFromSources: feedConfigured is false when no url is set', () => {
