@@ -7,6 +7,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Batas sesi suara kini aktif secara bawaan: 60 menit suara per hari, sesi maksimal 30 menit, dan sesi
+  ditutup setelah diam 300 detik. Batas yang sengaja dikosongkan lalu disimpan tetap mati.
 - Tampilan **/admin** kini bergaya HUD seperti konsol peta, dengan logo EagleEye, lencana status berwarna
   (Terisi / Kosong / Ditolak), dan mode terang yang tetap ada. Teks admin kini berbahasa Indonesia; istilah
   teknis seperti Server Log, API Key, dan Persona tetap dalam bahasa Inggris.
@@ -24,8 +26,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - **/admin → AI Configuration → General**: saklar suara, nama asisten, catatan kepribadian, pembatasan
   topik, lima kelompok izin tool (baca-saja, kamera, tampilan/layer, media CCTV/radio, menggambar di peta),
   serta batas menit suara harian, durasi maksimum sesi, dan tutup otomatis saat diam. Kelompok yang
-  dimatikan tidak bisa dipakai asisten sama sekali. Semua batas bawaan mati; tanpa diubah, suara
-  berperilaku seperti sebelumnya.
+  dimatikan tidak bisa dipakai asisten sama sekali.
 - **/admin → Server Log**: satu log untuk server dan semua browser. Isinya error JavaScript, sesi dan tool suara
   yang gagal, kamera CCTV/radio/basemap yang gagal, layanan luar yang gagal beruntun, kuota hampir habis, akses
   admin yang ditolak, login admin, dan perubahan pengaturan. Bisa difilter per level/sumber, entri berulang

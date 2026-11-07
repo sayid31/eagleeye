@@ -1543,7 +1543,7 @@ A separate page for owner administration. The shell (layout, menu, light/dark th
 
 #### AI Configuration → General and Usage & Cost
 
-Both pages edit the voice-settings store above (`.gev-cache/voice-settings.json`). Defaults change nothing: every tool group on, every limit off.
+Both pages edit the voice-settings store above (`.gev-cache/voice-settings.json`). Defaults: every tool group on; session limits ON at 60 voice minutes a day, 30-minute sessions and close after 300 s idle (a stored file without a `limits` section reads as these defaults; a limit saved as 0 stays off). Rationale: `docs/DECISIONS.md` 2026-11-07 "Session limits on by default".
 
 - **Routes** (`src/admin/api/adminVoiceRoutes.mjs`, installed from `openAiVoiceProxy.mjs`, all behind `requireAdminSession`): `GET/PUT /api/admin/voice/settings` (full settings + tool-group catalog + limit ranges; PUT replaces, same validator (`validateVoiceSettings`); a save prints `[admin] voice_settings.saved` and writes the same code to the audit trail) and `GET /api/admin/voice/usage?days=7|30|90` (daily rows priced at the current rates, today's remaining minutes, stored/effective/default cost limits, rates).
 - **General.** Voice on/off, assistant name (≤40), personality notes (≤1000, tone only, below the core rules), topic restriction (unchanged behavior, still default OFF), five tool permission groups, three session limits. The header shows what the server currently enforces, from the saved settings, never from unsaved form state.

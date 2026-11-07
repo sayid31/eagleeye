@@ -4,9 +4,10 @@
  * (AI Configuration → General): tool permission groups and session limits.
  * Split from voiceSettingsCore.mjs to keep that file within its size budget.
  *
- * Every limit uses 0 = off, and the default is all-off, so an install that
- * never saved these sections behaves exactly as before. Ranges follow the
- * `jenna-admin` limits card (planbatasanai.md, G4).
+ * Every limit uses 0 = off. The defaults are on (owner ruling 2026-11-07, see
+ * docs/DECISIONS.md) so a fresh install does not run unbounded voice spend;
+ * a limit saved as 0 stays off. Ranges follow the `jenna-admin` limits card
+ * (planbatasanai.md, G4).
  *
  * Pure — no fs, no network, no DOM. Error strings never echo input values.
  *
@@ -21,9 +22,12 @@ export const SESSION_MINUTES_MAX = 120;
 export const IDLE_SECONDS_MIN = 10;
 export const IDLE_SECONDS_MAX = 3600;
 
-/** All limits off: no daily cap, no session length cap, no idle close. */
+/** Built-in limits: 60 voice minutes a day, 30-minute sessions, close after 300 s idle. */
+export const DEFAULT_SESSION_LIMITS = Object.freeze({ dailyMinutes: 60, sessionMinutes: 30, idleSeconds: 300 });
+
+/** Fresh copy of the built-in limits. */
 export function defaultSessionLimits() {
-  return { dailyMinutes: 0, sessionMinutes: 0, idleSeconds: 0 };
+  return { ...DEFAULT_SESSION_LIMITS };
 }
 
 export const SECTION_KEYS = Object.freeze({
@@ -46,8 +50,10 @@ export function readToolGroups(section, errors) {
   return groups;
 }
 
-function readWhole(value, field, { min, max }, errors) {
-  if (value === undefined || value === null || value === 0) return 0;
+function readWhole(value, field, { min, max, fallback }, errors) {
+  // Absent = built-in default; an explicit null/0 is the owner switching the limit off.
+  if (value === undefined) return fallback;
+  if (value === null || value === 0) return 0;
   if (!Number.isInteger(value) || value < min || value > max) {
     errors.push(`${field}: bilangan bulat ${min}–${max}, atau 0 untuk mati`);
     return 0;
@@ -62,9 +68,9 @@ function readWhole(value, field, { min, max }, errors) {
  */
 export function readSessionLimits(section, errors) {
   return {
-    dailyMinutes: readWhole(section.dailyMinutes, 'limits.dailyMinutes', { min: 1, max: DAILY_MINUTES_MAX }, errors),
-    sessionMinutes: readWhole(section.sessionMinutes, 'limits.sessionMinutes', { min: SESSION_MINUTES_MIN, max: SESSION_MINUTES_MAX }, errors),
-    idleSeconds: readWhole(section.idleSeconds, 'limits.idleSeconds', { min: IDLE_SECONDS_MIN, max: IDLE_SECONDS_MAX }, errors),
+    dailyMinutes: readWhole(section.dailyMinutes, 'limits.dailyMinutes', { min: 1, max: DAILY_MINUTES_MAX, fallback: DEFAULT_SESSION_LIMITS.dailyMinutes }, errors),
+    sessionMinutes: readWhole(section.sessionMinutes, 'limits.sessionMinutes', { min: SESSION_MINUTES_MIN, max: SESSION_MINUTES_MAX, fallback: DEFAULT_SESSION_LIMITS.sessionMinutes }, errors),
+    idleSeconds: readWhole(section.idleSeconds, 'limits.idleSeconds', { min: IDLE_SECONDS_MIN, max: IDLE_SECONDS_MAX, fallback: DEFAULT_SESSION_LIMITS.idleSeconds }, errors),
   };
 }
 

@@ -3342,3 +3342,13 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - **The audit → Server Log mirror is removed**: it was the stop-gap until this page existed, and it duplicated sign-in rows.
 
 **Limits.** Quota and service items are per server process and reset on restart; they read "No data" until the first matching request.
+
+## 2026-11-07 — Session limits on by default (owner decision)
+
+**Context.** The admin General page showed the three session limits as empty boxes ("Tanpa batas"), because the built-in default was all-off so an unsaved install behaved as before limits existed. The owner asked for the fields to start filled with numbers.
+
+**Decision.** Built-in limits are now 60 voice minutes a day, 30-minute sessions, and close after 300 s idle (`DEFAULT_SESSION_LIMITS` in `src/voice/voiceSettingsSections.mjs`). An absent field takes its default; an explicit `0`/`null` is the owner switching that limit off and stays off.
+
+**Why these numbers.** Proposed as round starting values and accepted by the owner; not derived from measured usage. All three stay inside the existing ranges and can be changed on the General page.
+
+**Consequence.** Installs whose settings file has no `limits` section (the owner's file at the time of the change included) now enforce these limits without anyone saving. To restore the old behavior, clear the three fields on /admin → Konfigurasi AI → Umum and save.
