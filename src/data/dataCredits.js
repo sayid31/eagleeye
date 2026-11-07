@@ -128,11 +128,10 @@ export const DATA_CREDITS = [
       'Contains OS data © Crown copyright and database rights.',
   },
   {
-    key: 'indonesia-unofficial-cctv',
-    html:
-      '⚠ CCTV cameras (Jakarta, Bandung, Denpasar): unofficial, reverse-engineered ' +
-      'endpoints — internal demo only, no formal agreement with the city operators, ' +
-      'not for public/commercial use (see DATA_SOURCES.md)',
+    // Plain attribution, no "unofficial" warning (owner ruling 2026-11-07,
+    // docs/DECISIONS.md); provenance stays in DATA_SOURCES.md.
+    key: 'indonesia-cctv',
+    html: 'CCTV cameras &amp; frames (Indonesia): public CCTV portals of city governments and toll operators',
   },
   {
     key: 'gbfs',

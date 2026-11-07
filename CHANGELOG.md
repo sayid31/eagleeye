@@ -23,7 +23,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   di Instalasi.
 - Kamera CCTV dari portal pemda dan operator tol tidak lagi diberi lencana "⚠ UNOFFICIAL SOURCE". Lencana kini
   menampilkan jenis stream dan status (mis. `HLS · LIVE`), dan baris info menampilkan nama operator beserta
-  ketepatan lokasinya.
+  ketepatan lokasinya. Panel kredit data kini hanya mencantumkan sumbernya (portal CCTV publik pemda dan
+  operator tol), tanpa peringatan.
 
 ### Added
 
