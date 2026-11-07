@@ -38,6 +38,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Peta digambar jauh lebih cepat: anti-aliasing kini memakai FXAA alih-alih MSAA 4×. Di layar ±1920×1000
   dengan lalu lintas dan CCTV menyala, kecepatan render naik dari ±28 ke ±39 frame per detik tanpa beda
   tampilan yang terlihat.
+- Label deteksi di gaya Normal tidak lagi memakai efek cahaya (glow) layar penuh yang berat; kecepatan render
+  naik lagi ke ±43 frame per detik. Gaya CRT/NVG/FLIR tetap bercahaya.
 - Konsol lebih ringan saat CCTV menyala: panel tidak lagi menghitung ulang tata letak setiap kali teksnya
   berubah, dan status ribuan kamera tidak lagi dibangun ulang penuh setiap beberapa ratus milidetik.
 - Chip status pemuatan kini berbentuk pil rapi dengan titik status dan teks biasa (bukan huruf kapital

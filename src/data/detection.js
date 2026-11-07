@@ -588,8 +588,12 @@ export function setDetectionStyle(styleName) {
 function _applySurfaceTheme() {
   if (!_hostSurface) return;
   _hostSurface.style.mixBlendMode = _theme.blend;
-  // This exact CSS chain is one compositor pass over the finished layer.
-  _hostSurface.style.filter = `${_theme.filter} drop-shadow(0 0 ${GLOW_PX}px ${_theme.glow})`;
+  // This exact CSS chain is one compositor pass over the finished layer. The
+  // drop-shadow is the expensive part (re-blurred every frame), so a theme can
+  // opt out with `surfaceGlow: false`.
+  _hostSurface.style.filter = _theme.surfaceGlow === false
+    ? _theme.filter
+    : `${_theme.filter} drop-shadow(0 0 ${GLOW_PX}px ${_theme.glow})`;
 }
 
 function _syncSurfaceVisibility() {

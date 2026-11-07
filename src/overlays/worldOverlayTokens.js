@@ -183,6 +183,11 @@ export const DETECTION_THEME_MAP = Object.freeze({
     cardBorder: 'rgba(255, 255, 255, 0.12)',
     blend: 'screen',
     filter: 'contrast(1.05) saturate(1.05)',
+    // No full-screen drop-shadow glow in the default style: the compositor
+    // re-blurs the whole surface every rendered frame, which cost ~7 renders/s
+    // at 1920x1000 (34 → 41, DECISIONS 2026-11-07). CRT/NVG/FLIR keep it as
+    // part of their look. `glow` stays the colour for the focus ring and HUD.
+    surfaceGlow: false,
     scanline: 0.05,
     tiers: {
       civil: '#22e0ff', military: '#ffb347', sea: '#3fe0c8', space: '#bda4ff', vehicle: '#8fa6b4',

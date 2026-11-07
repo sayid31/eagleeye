@@ -439,7 +439,8 @@ test('detection lifecycle re-hosts unchanged painters behind the sole host liste
     assert.equal(surface.style.mixBlendMode, 'screen');
     assert.equal(
       surface.style.filter,
-      'contrast(1.05) saturate(1.05) drop-shadow(0 0 3px rgba(0, 244, 255, 0.4))',
+      // Default style: no full-screen glow (perf, DECISIONS 2026-11-07).
+      'contrast(1.05) saturate(1.05)',
     );
     assert.equal(surface.style.display, 'none');
 
@@ -533,7 +534,8 @@ test('detection lifecycle re-hosts unchanged painters behind the sole host liste
     assert.equal(surface.style.mixBlendMode, 'screen');
     assert.equal(
       surface.style.filter,
-      'contrast(1.05) saturate(1.05) drop-shadow(0 0 3px rgba(0, 244, 255, 0.4))',
+      // Default style: no full-screen glow (perf, DECISIONS 2026-11-07).
+      'contrast(1.05) saturate(1.05)',
     );
     env.postRender.raise();
     assert.equal(getMode(), 'OFF');
@@ -752,7 +754,7 @@ test('detection cannot resurrect a private canvas, listener, matrix, resize, cle
   assert.doesNotMatch(source, /CALLOUT_OCCLUSION_SELECTORS/);
   assert.doesNotMatch(source, /_ctx\.(?:filter|globalCompositeOperation)\s*=/);
   assert.match(source, /_hostSurface\.style\.mixBlendMode = _theme\.blend;/);
-  assert.match(source, /_hostSurface\.style\.filter = `\$\{_theme\.filter\} drop-shadow\(0 0 \$\{GLOW_PX\}px \$\{_theme\.glow\}\)`;/);
+  assert.match(source, /_theme\.surfaceGlow === false\s*\? _theme\.filter\s*: `\$\{_theme\.filter\} drop-shadow\(0 0 \$\{GLOW_PX\}px \$\{_theme\.glow\}\)`;/);
   assert.match(source, /const LABEL_SOLVE_INTERVAL_MS = 125;/);
   assert.match(source, /const _labelArbiter = new LabelArbiter\(\);/);
   assert.match(source, /const clipW = vp3 \* px \+ vp7 \* py \+ vp11 \* pz \+ vp15;/);

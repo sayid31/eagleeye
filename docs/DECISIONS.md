@@ -3371,4 +3371,6 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 
 **Not chosen.** MSAA 2× (half the gain). Building CCTV only for cameras in view: measured as not the bottleneck (hiding all 3,106 icons, coverage or the projection plane each moved renders/s by <1).
 
-**Still open.** The detection overlay costs ~10 renders/s on its own (43 → 53 on the empty scene with it off). `preserveDrawingBuffer: true` (kept for canvas snapshots) was not measured.
+**Follow-up, same day: detection glow.** A/B on the detection surface (1920×1000, traffic + CCTV) split its cost: the CSS `drop-shadow` glow, re-blurred by the compositor over the whole surface every frame, cost ~7 renders/s (34.1 → 41.3); `contrast/saturate` ~1; the `screen` blend nothing; the JS paint ~2.5 ms/frame. The default style now sets `surfaceGlow: false` (`src/overlays/worldOverlayTokens.js`); CRT/NVG/FLIR keep the glow as part of their look. As shipped: 1920×1000 42.9 renders/s, 1440×900 53.3 (from 27.9 / 36.8 before both changes).
+
+**Still open.** `preserveDrawingBuffer: true` (kept for canvas snapshots) was not measured.
