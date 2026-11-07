@@ -23,9 +23,10 @@ test('third-party camera text is written with textContent, never innerHTML', () 
   assert.doesNotMatch(controller, /innerHTML/);
 });
 
-test('the legacy UNOFFICIAL SOURCE badge text is still produced by the panel mixin', () => {
+test('the panel no longer badges government-portal cameras as an unofficial source (owner ruling)', () => {
   const mixin = readFileSync(new URL('../cctvPanelMixin.js', import.meta.url), 'utf8');
-  assert.match(mixin, /⚠ UNOFFICIAL SOURCE/);
+  assert.doesNotMatch(mixin, /UNOFFICIAL SOURCE/);
+  assert.doesNotMatch(mixin, /frameState = 'unofficial'/);
 });
 
 test('the camera search sits in the inspector and picks cameras through selectCamera', () => {

@@ -1,5 +1,6 @@
 import { runCctvLayerEnableTransition } from './cctvFocusPolicy.js';
 import { playbackBadge } from './data/cctvPlaybackStatus.js';
+import { cctvProviderDisplay } from './data/cctvProviderLabel.js';
 import { isSourceOffline } from './data/cctvSourceHealth.mjs';
 import {
   shouldRebuildCctvCameraListbox,
@@ -646,16 +647,12 @@ export const cctvPanelMixin = {
       return;
     }
     const status = String(activeCamera.sourceStatus || 'unknown').toUpperCase();
-    // Unofficial/demo-only sources (reverse-engineered government camera
-    // endpoints — see DATA_SOURCES.md) always get a distinct, explicit badge
-    // rather than folding into the generic KIND · STATUS format, so this
-    // disclosure can't be missed in the UI regardless of live status.
-    if (String(activeCamera.sourceKind || '').startsWith('unofficial')) {
-      this._cctvSourceBadge.textContent = `⚠ UNOFFICIAL SOURCE · ${status}`;
-      this._cctvSourceBadge.dataset.frameState = 'unofficial';
-      return;
-    }
-    const kind = String(activeCamera.sourceKind || activeCamera.feedType || 'unknown').toUpperCase();
+    // Government-portal packs (`unofficial-<operator>`) show their transport like
+    // any other camera: the owner dropped the "unofficial source" badge on
+    // 2026-11-07 (docs/DECISIONS.md). The disclosure stays in DATA_SOURCES.md.
+    const sourceKind = String(activeCamera.sourceKind || '');
+    const kind = String((sourceKind.startsWith('unofficial') ? activeCamera.feedType || 'cctv' : sourceKind)
+      || activeCamera.feedType || 'unknown').toUpperCase();
     this._cctvSourceBadge.textContent = `${kind} · ${status}`;
     this._cctvSourceBadge.dataset.frameState = 'ready';
   },
@@ -911,7 +908,7 @@ export const cctvPanelMixin = {
 
     if (this._cctvMeta) {
       if (activeCamera) {
-        const provider = activeCamera.sourceLabel || activeCamera.provider || 'Sumber Terkonfigurasi';
+        const provider = cctvProviderDisplay(activeCamera.sourceLabel || activeCamera.provider) || 'Sumber Terkonfigurasi';
         const statusMsg = activeCamera.sourceMessage ? ` · ${activeCamera.sourceMessage}` : '';
         const calBadge = activeCamera.calBadge ? this._calBadgeLabel(activeCamera.calBadge) : '';
         const projLabel = state?.showProjection !== false ? 'MONITOR' : 'OFF';

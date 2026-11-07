@@ -3352,3 +3352,11 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Why these numbers.** Proposed as round starting values and accepted by the owner; not derived from measured usage. All three stay inside the existing ranges and can be changed on the General page.
 
 **Consequence.** Installs whose settings file has no `limits` section (the owner's file at the time of the change included) now enforce these limits without anyone saving. To restore the old behavior, clear the three fields on /admin → Konfigurasi AI → Umum and save.
+
+## 2026-11-07 — No "unofficial source" badge on government-portal CCTV (owner decision)
+
+**Context.** Cameras in the Indonesia pack (`config/cctv_sources.indonesia_unofficial.json`) showed `⚠ UNOFFICIAL SOURCE · <STATUS>` in amber, and their provider line read `UNOFFICIAL — <operator> (Internal Demo Only, …)`. The streams come from public city/toll-operator CCTV portals; the URLs were found by browser network inspection, with no data-sharing agreement (see `DATA_SOURCES.md`).
+
+**Decision.** The owner ruled the UI badge unnecessary: these portals publish the feeds for public viewing. The badge and its amber style are removed; the badge shows `<FEEDTYPE> · <STATUS>` and the meta line shows the operator plus the location-precision note (`src/data/cctvProviderLabel.js`).
+
+**Unchanged on purpose.** The config `provider`/`license` strings, the revocation levers (`CCTV_INDONESIA_UNOFFICIAL_ENABLED=0`), the dropdown ordering, the credits panel line and the `DATA_SOURCES.md` disclosure are untouched, so the provenance is still recorded where the data is defined.

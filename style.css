@@ -6533,16 +6533,6 @@ body.cockpit-mode #intel-hud .hud-right-edge { right: 22px; }
   font-weight: 600;
 }
 
-/* Reverse-engineered/unofficial government camera endpoints (internal demo
-   only — see DATA_SOURCES.md). Amber, distinct from the error state, so the
-   disclosure reads as "handle with care" rather than "broken". */
-#cctv-source-badge[data-frame-state='unofficial'] {
-  color: #ffcf5c;
-  border-color: rgba(255, 176, 32, 0.55);
-  background: rgba(255, 176, 32, 0.13);
-  font-weight: 600;
-}
-
 .cctv-summary-label {
   font-family: var(--font-mono);
   font-size: 8px;

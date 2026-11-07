@@ -1281,10 +1281,13 @@ silently demoting every later lookup for the session.
   instance exists to recover. Rationale: `docs/DECISIONS.md`.
   `destroyProjectionRuntime()` tears down the `Hls` instance before clearing
   `video.src`.
-- UI: the CCTV panel source badge reads `⚠ UNOFFICIAL SOURCE · <STATUS>`
-  (amber, `[data-frame-state='unofficial']` in `style.css`) for every camera
-  in this pack, and the meta line shows the config's short `provider`
-  disclaimer string automatically (`src/cctvPanelMixin.js`).
+- UI: cameras in this pack get no "unofficial source" badge (owner ruling
+  2026-11-07, `docs/DECISIONS.md`). The source badge reads `<FEEDTYPE> · <STATUS>`
+  (e.g. `HLS · LIVE`) like any camera, and the meta line shows the operator from
+  the config `provider` with the `UNOFFICIAL — … (Internal Demo Only, …)` marking
+  stripped and the location note in Indonesian (`cctvProviderDisplay` in
+  `src/data/cctvProviderLabel.js`). The config text and `DATA_SOURCES.md` keep the
+  full disclosure.
 - Source health (`/api/cctv/health`, classifiers in
   `src/data/cctvSourceHealth.mjs`): a video camera is `ok` when the playlist
   answers with a video/mpegURL type (compared case-insensitively; a missing
@@ -1700,7 +1703,7 @@ One log for the server and every browser using the map. Model and limits: `src/a
   result runs `styleManager.selectCctvCameraAndFly` (the manual picker's path: enable the layer, select,
   fly to the camera, persist); Enter selects nothing. The legacy controls (previous/next, picker,
   calibration) are always shown below the search; there is no "Cari manual" toggle. There is no detail
-  block: operator, direction, format and nearby cameras are not shown. `#cctv-source-badge` (⚠ UNOFFICIAL SOURCE) stays visible.
+  block: operator, direction, format and nearby cameras are not shown. `#cctv-source-badge` stays visible.
 - `close.css`: the collapse buttons of the five side panels render an "×" (Material Symbols `close`) via
   `::before` with the text glyph at `font-size: 0`; the button, its id and `aria-label` are unchanged.
 - The wordmark colour is `--ee-brand` (#00d4ff, the colour in `public/logo.svg`) on every basemap; only

@@ -21,6 +21,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   dan impor skenario, chip grid CCTV, ringkasan kamera CCTV, keterangan kelas satelit, label rute (mis.
   "15 min berkendara", "garis lurus (tanpa rute)"), status "di darat" di kokpit, dan pesan Google Places
   di Instalasi.
+- Kamera CCTV dari portal pemda dan operator tol tidak lagi diberi lencana "⚠ UNOFFICIAL SOURCE". Lencana kini
+  menampilkan jenis stream dan status (mis. `HLS · LIVE`), dan baris info menampilkan nama operator beserta
+  ketepatan lokasinya.
 
 ### Added
 
