@@ -208,8 +208,9 @@ export function mediaUrlFor(camera) {
 
 /**
  * Paints a placeholder frame onto the projection canvas when no live feed
- * image or video is available. Shows camera name, city, and status text
- * over a dark gradient with tactical border lines.
+ * image or video is available: one centered status line over a dark gradient,
+ * sized for the small map card the canvas is shown in (the card already
+ * carries the camera name as its title, so the canvas does not repeat it).
  * @param {CanvasRenderingContext2D} ctx - 2D context for the projection canvas.
  * @param {Object} camera - Camera object for label info.
  * @param {Object|null} [health=null] - Health state for status message.
@@ -225,23 +226,50 @@ export function paintProjectionPlaceholder(ctx, camera, health = null) {
   ctx.fillStyle = g;
   ctx.fillRect(0, 0, w, h);
 
-  const label = String(camera?.name || 'CCTV');
-  const city = String(camera?.city || 'GLOBAL');
-  const status = String(health?.message || health?.status || camera?.feedType || 'TANPA FEED').toUpperCase();
+  const status = placeholderStatusText(camera, health);
+  const city = String(camera?.city || '').toUpperCase();
 
-  ctx.strokeStyle = 'rgba(0, 220, 255, 0.24)';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(18, 18, w - 36, h - 36);
-  ctx.strokeRect(36, 36, w - 72, h - 72);
+  ctx.strokeStyle = 'rgba(108, 180, 250, 0.28)';
+  ctx.lineWidth = 4;
+  ctx.strokeRect(24, 24, w - 48, h - 48);
 
-  ctx.fillStyle = 'rgba(170, 242, 255, 0.95)';
-  ctx.font = '600 32px "JetBrains Mono", monospace';
-  ctx.fillText(label.slice(0, 42), 46, 74);
-  ctx.fillStyle = 'rgba(127, 216, 231, 0.8)';
-  ctx.font = '500 24px "JetBrains Mono", monospace';
-  ctx.fillText(city.toUpperCase(), 46, 112);
-  ctx.font = '500 21px "JetBrains Mono", monospace';
-  ctx.fillText(status.slice(0, 58), 46, h - 42);
+  // Camera glyph: a ring with a dot, drawn rather than fonted so it never falls back.
+  const cx = w / 2;
+  const cy = h / 2 - 70;
+  ctx.strokeStyle = 'rgba(108, 180, 250, 0.7)';
+  ctx.lineWidth = 8;
+  ctx.beginPath();
+  ctx.arc(cx, cy, 64, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(108, 180, 250, 0.9)';
+  ctx.beginPath();
+  ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(207, 238, 255, 0.95)';
+  ctx.font = '600 72px "JetBrains Mono", monospace';
+  ctx.fillText(status.slice(0, 28), cx, cy + 170);
+  if (city) {
+    ctx.fillStyle = 'rgba(232, 234, 237, 0.55)';
+    ctx.font = '500 48px "Inter", sans-serif';
+    ctx.fillText(city.slice(0, 40), cx, cy + 250);
+  }
+  ctx.textAlign = 'start';
+}
+
+/**
+ * The one status line of the placeholder: the health message when the source
+ * reports one, otherwise "MEMUAT VIDEO" for a camera that has a feed and
+ * "TANPA FEED" for one that has none.
+ * @param {Object} camera
+ * @param {Object|null} [health]
+ * @returns {string}
+ */
+export function placeholderStatusText(camera, health = null) {
+  const reported = String(health?.message || '').trim();
+  if (reported) return reported.toUpperCase();
+  return camera?.feedConfigured === false ? 'TANPA FEED' : 'MEMUAT VIDEO';
 }
 
 /**

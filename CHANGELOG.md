@@ -25,9 +25,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   menampilkan jenis stream dan status (mis. `HLS · LIVE`), dan baris info menampilkan nama operator beserta
   ketepatan lokasinya. Panel kredit data kini hanya mencantumkan sumbernya (portal CCTV publik pemda dan
   operator tol), tanpa peringatan.
-- Label kamera CCTV kini bersih: nama tanpa akhiran "(… — Live — Unofficial)", dan label di peta berbunyi
-  `CCTV · <nama>` alih-alih ID mentah. Chip pemuatan data memakai nama layer berbahasa Indonesia
-  (mis. "Pesawat sipil · Kapal (AIS)") alih-alih nama Inggris.
+- Label kamera CCTV kini bersih: nama tanpa akhiran "(… — Live — Unofficial)", label di peta hanya nama
+  kamera alih-alih ID mentah, dan kartu yang videonya belum muncul menampilkan satu baris "MEMUAT VIDEO" yang
+  terbaca, bukan teks kecil di pojok.
+- Chip status pemuatan kini berbentuk pil rapi dengan titik status dan teks biasa (bukan huruf kapital
+  renggang), memakai nama layer berbahasa Indonesia, dan pesan antre server OSM hanya tampil sekali.
 
 ### Added
 

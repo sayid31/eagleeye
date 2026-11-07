@@ -705,6 +705,10 @@ function makeFake2dCtx() {
     fillRect() {},
     strokeRect() {},
     fillText() {},
+    beginPath() {},
+    arc() {},
+    fill() {},
+    stroke() {},
     createLinearGradient() {
       return { addColorStop() {} };
     },
@@ -712,6 +716,7 @@ function makeFake2dCtx() {
     strokeStyle: null,
     lineWidth: null,
     font: null,
+    textAlign: 'start',
   };
 }
 

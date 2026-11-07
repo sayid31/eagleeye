@@ -25,18 +25,18 @@ test('no wait copy while no fetch is in flight or the wait is still short', () =
 test('a queued fetch names the OSM queue and counts elapsed seconds', () => {
   assert.equal(
     osmWaitLabel(0, OSM_WAIT_REVEAL_MS),
-    'menunggu server peta OSM (antre, bisa ~45 dtk) · 4 dtk',
+    'antre di server peta OSM · 4 dtk (biasanya ±45)',
   );
   assert.equal(
     osmWaitLabel(5000, 5000 + 12_900),
-    'menunggu server peta OSM (antre, bisa ~45 dtk) · 12 dtk',
+    'antre di server peta OSM · 12 dtk (biasanya ±45)',
   );
 });
 
 test('past the typical queue the copy stops promising a 45 s ceiling', () => {
   const label = osmWaitLabel(0, OSM_WAIT_TYPICAL_MS + 3000);
   assert.equal(label, 'server peta OSM masih antre · 48 dtk');
-  assert.ok(!label.includes('bisa ~'));
+  assert.ok(!label.includes('biasanya'));
 });
 
 test('a clock that runs backwards never yields a negative counter', () => {
@@ -74,16 +74,10 @@ test('a keyed layer shows the queue note while fetching, and the outage copy sti
   assert.equal(down.loadingLabel, 'SIMULASI — Kuota harian TomTom habis');
 });
 
-test('the global banner carries the layer wait note only while that layer is loading', () => {
-  const note = 'menunggu server peta OSM (antre, bisa ~45 dtk) · 9 dtk';
-  const loading = { id: 'traffic', name: 'Traffic', enabled: true, stats: { loading: true, waitNote: note } };
-  assert.equal(normalizeLayerLoading(loading).waitNote, note);
-  const stale = { ...loading, stats: { loading: false, waitNote: note } };
-  assert.equal(normalizeLayerLoading(stale).waitNote, '');
-
+test('the global banner names the loading layer only; the OSM queue note stays on the traffic chip', () => {
+  // Both chips used to print the same queue sentence, one above the other.
+  const loading = { id: 'traffic', name: 'Traffic', enabled: true, stats: { loading: true, loadingLabel: osmWaitLabel(0, 9000) } };
+  assert.ok(!('waitNote' in normalizeLayerLoading(loading)));
   const state = { ...createLoadingFeedbackState(), visible: true, phase: 'loading', startedAt: 0 };
-  const shown = presentLoadingFeedback(state, aggregateLayerLoading([loading]), 9000);
-  assert.equal(shown.detail, `Lalu lintas · ${note}`);
-  const plain = { ...loading, stats: { loading: true } };
-  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([plain]), 9000).detail, 'Lalu lintas');
+  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([loading]), 9000).detail, 'Lalu lintas');
 });

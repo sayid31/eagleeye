@@ -47,13 +47,14 @@ export function cctvCameraName(name) {
 }
 
 /**
- * Short map callout for a camera (detection overlay): `CCTV · <name>`, cut to
- * CCTV_MAP_LABEL_MAX characters so it reads like the other layers' callsigns.
+ * Short map callout for a camera (detection overlay): the plain name, cut to
+ * CCTV_MAP_LABEL_MAX characters. No "CCTV" prefix: the camera icon and the
+ * callout's tier colour already say what it is.
  * @param {{name?: string, id?: string}} camera
  * @returns {string}
  */
 export function cctvMapLabel(camera) {
   const name = cctvCameraName(camera?.name) || String(camera?.id ?? '');
   const short = name.length > CCTV_MAP_LABEL_MAX ? `${name.slice(0, CCTV_MAP_LABEL_MAX - 1).trimEnd()}…` : name;
-  return `CCTV · ${short}`;
+  return short;
 }

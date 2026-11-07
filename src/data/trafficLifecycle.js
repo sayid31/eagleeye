@@ -185,8 +185,5 @@ export function getTrafficStats() {
       // SIMULATED mode is surfaced, and it must never imply a live feed the
       // layer does not have.
       loadingLabel: feed.loadingLabel,
-      // Read by the global loading banner so it can say WHY it is waiting
-      // instead of the generic "updating live data". Null when nothing to say.
-      waitNote: waitLabel,
     };
   }
