@@ -3242,3 +3242,11 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 1. **Admin login.** Replace the body of `requireAdmin` (session/OIDC/basic-auth behind HTTPS). Routes and the POWER UP UI call only that function, so they do not change. Loopback-only is then no longer the gate; keep Origin/CSRF checks.
 2. **Public voice route that uses the API key.** Visitors must not hold or see a key. Add a public session route that mints GPT-Live sessions with the server key, with its own authentication or invite token, per-IP/per-user rate limits and abuse protection. It reads `GET /api/voice/config` semantics server-side (enabled flag, persona, topic scope) — those already apply per session on the server.
 3. **Cost limits move to the server.** The warn/cap is client-enforced today, which is fine for the owner and meaningless for the public. Deploy needs server-side session accounting (per-visitor and global daily budget, session timeouts) and metering of the delegation model (see Limits above). Until then do not expose the public route.
+
+## 2026-11-06 — stg goes up with voice on, without server-side cost guards or login (owner decision)
+
+**Decision.** `sayid31/main` is deployed to stg with GPT-Live voice enabled and `OPENAI_API_KEY` set. Login, server-side cost limits, and the `GEV_RATELIMIT_*` throttles are deliberately deferred by the owner; nothing in this change set adds or alters them. Runbook: `docs/STAGING.md`.
+
+**Known exposure accepted for now.** Anyone who can reach stg can open `/api/live/session`, `/api/live/vision` and `/api/openai/hud-summary` on the owner's OpenAI key; the voice cost cap is enforced only in the browser. The AISStream, TomTom, FIRMS and OpenSky proxies are equally reachable, and `GOOGLE_MAPS_API_KEY` / `CESIUM_ION_TOKEN` are in the client bundle by design. The provider-side budget (OpenAI usage limit) is the only hard backstop.
+
+**Revisit when** stg is shared beyond the owner: follow the 2026-11-04 "Voice settings: deploy plan" (admin login via `requireAdmin`, server-side session accounting) — the server-side session/daily-minute limits on `feature/admin-dashboard` are not part of this deploy.
