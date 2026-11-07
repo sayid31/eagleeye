@@ -37,6 +37,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - Label kamera CCTV kini bersih: nama tanpa akhiran "(… — Live — Unofficial)", label di peta hanya nama
   kamera alih-alih ID mentah, dan kartu yang videonya belum muncul menampilkan satu baris "MEMUAT VIDEO" yang
   terbaca, bukan teks kecil di pojok.
+- Judul pilihan "ENVIRONMENTAL" di layar peluncuran pertama kini "LINGKUNGAN".
 - Daftar pilihan kamera CCTV tidak lagi memberi tanda "⚠" pada kamera portal pemda.
 - Peta digambar jauh lebih cepat: anti-aliasing kini memakai FXAA alih-alih MSAA 4×. Di layar ±1920×1000
   dengan lalu lintas dan CCTV menyala, kecepatan render naik dari ±28 ke ±39 frame per detik tanpa beda

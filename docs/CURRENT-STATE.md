@@ -239,7 +239,7 @@ Historical planning documents may not match runtime behavior.
   and no optional API call happens until a tile is clicked. The right-hand
   DISPLAY rail (`pp-toggles`) starts collapsed on a first run rather than
   expanded — a stored collapse state still wins.
-- The ENVIRONMENTAL tile is quakes AND fires — live USGS earthquakes plus
+- The ENVIRONMENTAL tile (shown as "LINGKUNGAN"; `ENVIRONMENTAL_LABEL_CHOICE` picks the title) is quakes AND fires — live USGS earthquakes plus
   NASA FIRMS active fires (`layerIds: ['earthquakes', 'local-firms']`). The
   launcher optimizes for the fully configured experience and does not trim
   what it offers down to the lowest-configured install; the mission does not
