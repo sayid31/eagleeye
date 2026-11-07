@@ -1894,7 +1894,7 @@ test("isVideoFeedType: 'image' does not require a <video> element", () => {
 
 // buildCatalogFromSources — unofficial-hls-id source rows (Indonesia live
 // streaming pack). Confirms sourceKind/feedType/feedConfigured land on the
-// built camera object exactly as the UNOFFICIAL badge (cctvPanelMixin.js
+// built camera object exactly as the source badge (cctvFrameMixin.js
 // _syncCctvSourceBadge) and hls.js wiring (createProjectionRuntime) depend on.
 test('buildCatalogFromSources: an unofficial-hls-id row carries sourceKind/feedType/feedConfigured through', () => {
   const rawSources = [
@@ -1936,7 +1936,7 @@ test('buildCatalogFromSources: feedConfigured is false when no url is set', () =
 // Street View/synthetic fallback for them), and that fallback unconditionally
 // overwrites the shared per-camera health status back to 'degraded' — even
 // while /api/cctv/media/:id has the live stream healthy (status 'ok'). The
-// panel's still-image preview (_cctvFrame in cctvPanelMixin.js) polls
+// panel's still-image preview (_cctvFrame in cctvFrameMixin.js) polls
 // activeCamera.frameUrl on every UI refresh, so as long as a video camera
 // exposes a frameUrl, its badge status keeps flapping back to DEGRADED. The
 // fix: getPublicCameraState omits frameUrl entirely for video-type cameras.

@@ -100,7 +100,7 @@ export function syncCctvCameraListboxState({ trigger, listbox } = {}, { cameras 
 /**
  * Pure key-to-action mapping for the open popup — no DOM, no side effects,
  * so it's testable without simulating real keyboard events. The caller
- * (`cctvPanelMixin.js`'s disclosure wiring) is responsible for actually
+ * (`cctvListboxMixin.js`'s disclosure wiring) is responsible for actually
  * moving `aria-activedescendant`, scrolling the highlighted item into view,
  * committing a selection, or closing the popup based on the returned action.
  *

@@ -24,7 +24,7 @@ test('third-party camera text is written with textContent, never innerHTML', () 
 });
 
 test('the panel no longer badges government-portal cameras as an unofficial source (owner ruling)', () => {
-  const mixin = readFileSync(new URL('../cctvPanelMixin.js', import.meta.url), 'utf8');
+  const mixin = readFileSync(new URL('../cctvFrameMixin.js', import.meta.url), 'utf8');
   assert.doesNotMatch(mixin, /UNOFFICIAL SOURCE/);
   assert.doesNotMatch(mixin, /frameState = 'unofficial'/);
 });
@@ -39,7 +39,7 @@ test('the camera search sits in the inspector and picks cameras through selectCa
 test('picking a search result flies to the camera through the panel select-and-fly path', () => {
   assert.match(controller, /styleManager\.selectCctvCameraAndFly\(id\)/);
   assert.doesNotMatch(controller, /callLayerMethod\('cctv', 'selectCamera'/, 'a bare selectCamera does not fly');
-  const mixin = readFileSync(new URL('../cctvPanelMixin.js', import.meta.url), 'utf8');
+  const mixin = readFileSync(new URL('../cctvListboxMixin.js', import.meta.url), 'utf8');
   const method = mixin.slice(mixin.indexOf('async _selectCctvCameraFromListbox'));
   assert.match(method.slice(0, method.indexOf('\n  },')), /focusCamera\('cctv'/);
   assert.match(mixin, /selectCctvCameraAndFly\(cameraId\) \{\s*return this\._selectCctvCameraFromListbox\(cameraId\)/);

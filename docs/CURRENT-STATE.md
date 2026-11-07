@@ -27,7 +27,8 @@ Historical planning documents may not match runtime behavior.
   `StyleManager` class has its Adaptive Panel Layout, CCTV panel, Radio
   panel, Global Context mode (Contacts / Space Missions), and Navigation
   Authority + Location Bar method groups composed in via prototype mixins —
-  `src/panelAdaptiveLayoutMixin.js`, `src/cctvPanelMixin.js`,
+  `src/panelAdaptiveLayoutMixin.js`, `src/cctvPanelMixin.js` (which spreads in
+  `cctvListboxMixin.js`, `cctvFrameMixin.js`, `cctvCalibrationMixin.js`),
   `src/radioPanelMixin.js`, `src/contextModeMixin.js`,
   `src/navigationLocationMixin.js` (each
   `Object.assign(StyleManager.prototype, ...)` right after the class body) —
@@ -1383,7 +1384,7 @@ silently demoting every later lookup for the session.
   already. This is deliberate: a second concurrent player per camera would
   double the load against sources that already can't reliably serve one. Wiring lives in
   `_syncCctvVideoMirror()`/`_clearCctvVideoMirror()`
-  (`src/cctvPanelMixin.js`); `_clearCctvFrame()` (the still-image cleanup)
+  (`src/cctvFrameMixin.js`); `_clearCctvFrame()` (the still-image cleanup)
   no longer touches the mirror element, since both run every render pass
   and the mirror must survive a render where the `<img>` path is
   simultaneously idle. Image-feed cameras are unaffected — the mirror is a
@@ -1472,7 +1473,7 @@ render/sync/keyboard logic (`cctvCameraOptionLabel`,
 `src/cctvCameraListbox.js`, mirroring `src/mapStackChips.js`'s
 render-only-on-set-change / sync-every-tick split; camera ordering itself
 stays owned by `orderCctvCameraOptions()` in `src/cctvPanelMixin.js`
-(unmoved). Open/close/keyboard wiring lives in `cctvPanelMixin.js`
+(unmoved). Open/close/keyboard wiring lives in `cctvListboxMixin.js`
 (`_initCctvCameraListbox`, mirroring `radioPanelMixin.js`'s disclosure
 pattern: one `AbortController`, click-outside via `pointerdown`,
 Escape-to-close via a capturing `keydown` listener that returns focus to

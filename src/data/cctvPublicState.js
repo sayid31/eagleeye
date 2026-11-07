@@ -114,11 +114,11 @@ function getPublicCameraState(record, activeId = null) {
     // unconditionally overwrites the shared per-camera health status to
     // 'degraded' even while the live stream (mediaUrl) is healthy. Omitting
     // frameUrl here stops the panel's still-image preview (_cctvFrame in
-    // cctvPanelMixin.js) from polling /frame/:id for these cameras at all —
+    // cctvFrameMixin.js) from polling /frame/:id for these cameras at all —
     // their live view is the mediaUrl-driven monitor plane instead.
     frameUrl: isVideo ? null : frameUrlFor(camera, refreshMs),
     mediaUrl: mediaUrlFor(camera),
-    // Lets the panel (cctvPanelMixin.js) pick the <video>-mirror path over
+    // Lets the panel (cctvFrameMixin.js) pick the <video>-mirror path over
     // the frameUrl/<img> path without re-deriving feed-type logic itself.
     isVideo,
   };
