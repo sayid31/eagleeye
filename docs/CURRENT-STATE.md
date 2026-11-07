@@ -1614,6 +1614,7 @@ One log for the server and every browser using the map. Model and limits: `src/a
 - An empty string is not "unset" on either side of the launcher, and both sides are handled. `scripts/read-dotenv-value.mjs` hides the requested key from `process.env` for the duration of the read (Vite's `loadEnv` otherwise lets an inherited empty export win over the parsed files) and restores it after. A key the launcher resolves to nothing is then removed from the dev server's environment outright (`env -u`), not merely omitted — the child inherits this shell's environment. `CCTV_CALTRANS_DISTRICTS` is the deliberate exception: empty is its documented Caltrans kill switch and is passed through as-is
 - The dev server applies the same rule itself, so a bare `npm run dev` is not weaker than the launcher. `loadCheckoutEnv` (`src/config/dotenvPrecedence.mjs`) reads the dotenv files, prunes every key that came back empty from `process.env`, then re-reads — because `loadEnv` defers to a matching `process.env` entry, an empty export makes `loadEnv` itself return `''` and the configured value never reaches the config at all. A *real* shell/Keychain value still wins; whitespace counts as empty; a key genuinely blank in `.env` stays absent so the consuming proxy's own `if (!apiKey)` 503 remains truthful. See `docs/DECISIONS.md` 2026-10-26
 - `.env` supported via `.env.example` template
+- stg server: `docs/STAGING.md` (pm2 + `ecosystem.config.cjs`); cost guards and login there are deferred — see `docs/DECISIONS.md` 2026-11-06
 
 ### Proxy/Security Baseline
 
@@ -1672,7 +1673,7 @@ One log for the server and every browser using the map. Model and limits: `src/a
   action icons, which have no plate). `initShell` sets `body[data-map-tone]` from the active map stack
   (`src/shell/mapTone.js`: `light` only for OSM) and updates it on `gev:map-stack-changed`.
 - The dock (`dock.css`) is about 48 px tall (`min-height: 0 !important` overrides the legacy 3.75rem; 6 px padding), its pills are a fixed 28 px and not stretched, and the mic glyph fills its 18 px orbit so it is centred. It is a compact style menu (palette icon, active style, accent border when open) and a 34 px round
-  gradient mic. The location pill is clipped, not removed (location code reads it). Tray titles, the
+  gradient mic. Mic hover is paint-only (the halo ring widens from 3 to 4 px; no transform). The style pill's click target is its tray header made an invisible `position:absolute; inset:0` layer with `min-width: 0`, so it is exactly the pill's size and never covers the mic. The location pill is clipped, not removed (location code reads it). Tray titles, the
   AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
 - In the CCTV panel a slim header row (title clipped, close icon) comes first, then the camera screen
   (`#cctv-frame-wrap`), then the "Cari kamera CCTV" search, all by CSS `order`. `searchCameras`

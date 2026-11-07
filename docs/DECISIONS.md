@@ -3322,3 +3322,11 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Not chosen.** *Editable core rules:* the plan locks them. *A frontend model picker:* `gpt-live-1` is the only Live model listed. *Runtime enforcement of rule 33 (N tool calls in a row):* no mechanism yet; it stays prompt-only.
 
 **Limits.** Every rule marked `Prompt` can slip (audio is spoken before any check); the Server Log judge only records. Prompt length grows by ~6 KB; not yet measured against latency on a spoken session.
+
+## 2026-11-06 — stg goes up with voice on, without server-side cost guards or login (owner decision)
+
+**Decision.** `sayid31/main` is deployed to stg with GPT-Live voice enabled and `OPENAI_API_KEY` set. Login, server-side cost limits, and the `GEV_RATELIMIT_*` throttles are deliberately deferred by the owner; nothing in this change set adds or alters them. Runbook: `docs/STAGING.md`.
+
+**Known exposure accepted for now.** Anyone who can reach stg can open `/api/live/session`, `/api/live/vision` and `/api/openai/hud-summary` on the owner's OpenAI key; the voice cost cap is enforced only in the browser. The AISStream, TomTom, FIRMS and OpenSky proxies are equally reachable, and `GOOGLE_MAPS_API_KEY` / `CESIUM_ION_TOKEN` are in the client bundle by design. The provider-side budget (OpenAI usage limit) is the only hard backstop.
+
+**Revisit when** stg is shared beyond the owner: follow the 2026-11-04 "Voice settings: deploy plan" (admin login via `requireAdmin`, server-side session accounting) — the server-side session/daily-minute limits on `feature/admin-dashboard` are not part of this deploy.
