@@ -14,7 +14,7 @@
  * this proxy uses to survive a full day of continuous polling).
  */
 import { coalesceProxyRequest, readResponseJsonCapped } from '../server/proxyInfra.mjs';
-import { logServerEvent } from '../admin/log/serverLogStore.mjs';
+import { OPENSKY_CACHE_MS, recordOpenSkyCredits } from './openSkyCredits.mjs';
 import { normalizeAdsbLolPointResponse } from './adsbLolFallback.js';
 import { requiredFiniteQueryNumber } from './regionalProxyHandlers.mjs';
 
@@ -37,25 +37,14 @@ let _openskyCacheTime = 0;
 let _openskyCacheMeta = null;
 /** @type {number|null} Source snapshot epoch from the cached OpenSky body. */
 let _openskyCacheSourceEpochMs = null;
-/** TTL for the OpenSky response cache (ms). */
-const OPENSKY_CACHE_MS = 9000;
 // --- OpenSky credit governor (field-test fix 2026-07-06) -------------------
-/** Remaining daily credits at which the Server Log gets a quota warning. */
-export const OPENSKY_QUOTA_WARN_REMAINING = 400;
-/** Last `x-rate-limit-remaining` OpenSky reported, for /admin → System Health. */
-let _openskyCredits = null;
-
-/** @returns {{remaining: number, at: number} | null} null until the first OpenSky answer. */
-export function openSkyCreditStatus() {
-  return _openskyCredits ? { ..._openskyCredits } : null;
-}
 // The global /states/all this proxy fetches costs 4 CREDITS per call against
 // OpenSky's ~4000/day authenticated budget — a day with the app open burned
 // the whole quota in ~8h and the layer then hard-died until the daily reset
 // ("rate limited for 48h" owner report; auth itself was fine). Three levers:
-//  1. Adaptive TTL: OpenSky returns X-Rate-Limit-Remaining on success; as the
-//     budget thins, the proxy stretches its cache TTL so a full day of
-//     continuous use never exhausts it.
+//  1. Adaptive TTL (openSkyCredits.mjs): OpenSky returns X-Rate-Limit-Remaining
+//     on success; as the budget thins, the proxy stretches its cache TTL so a
+//     full day of continuous use never exhausts it.
 //  2. 429 cooldown: honor X-Rate-Limit-Retry-After-Seconds — no upstream
 //     attempts until it passes (bounded 30 s … 30 min).
 //  3. Serve-stale: while rate-limited/cooling, serve the last-good body (200 +
@@ -64,21 +53,6 @@ export function openSkyCreditStatus() {
 let _openskyTtlMs = OPENSKY_CACHE_MS;
 /** @type {number} Epoch-ms before which no upstream fetch is attempted. */
 let _openskyCooldownUntil = 0;
-/**
- * Picks the cache TTL from the remaining daily credit budget.
- * Client polls every 30 s, so tiers ≤30 s cost the same 480 credits/h; the
- * later tiers stretch the day: >2400 → ~3 h of full freshness, then 30 s
- * (~2.5 h), 90 s (~5 h), 300 s (~8 h) ≈ 18+ h of continuous use per day.
- * @param {number} remaining - X-Rate-Limit-Remaining header value.
- * @returns {number} TTL in ms.
- */
-function openskyAdaptiveTtlMs(remaining) {
-  if (!Number.isFinite(remaining)) return OPENSKY_CACHE_MS;
-  if (remaining > 2400) return OPENSKY_CACHE_MS;
-  if (remaining > 1200) return 30_000;
-  if (remaining > 400) return 90_000;
-  return 300_000;
-}
 /** @type {boolean} Guards duplicate auth-failure warnings in logs. */
 let _openskyAuthWarned = false;
 /** @type {boolean} Guards duplicate invalid-auth-mode warnings. */
@@ -568,11 +542,7 @@ export function openSkyProxy() {
             // budget so a continuously-open app stretches its polls instead of
             // exhausting the quota mid-day. Success also clears any cooldown.
             const remaining = Number(upstream.headers.get('x-rate-limit-remaining'));
-            _openskyTtlMs = openskyAdaptiveTtlMs(remaining);
-            if (Number.isFinite(remaining)) _openskyCredits = { remaining, at: Date.now() };
-            if (Number.isFinite(remaining) && remaining <= OPENSKY_QUOTA_WARN_REMAINING) {
-              logServerEvent({ level: 'warn', source: 'proxy', code: 'proxy.quota_low', message: 'OpenSky daily credits are nearly used up', detail: { provider: 'opensky', remaining } });
-            }
+            _openskyTtlMs = recordOpenSkyCredits(remaining);
             _openskyCooldownUntil = 0;
           }
 

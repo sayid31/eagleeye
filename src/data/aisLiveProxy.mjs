@@ -18,6 +18,9 @@ import { createHash } from 'node:crypto';
 import { createRequire } from 'node:module';
 import { createAisStreamAdapter, isRecognizedAisEnvelope } from './aisStreamAdapter.js';
 import { parseSilenceTimeoutEnv } from './aisWatchdog.js';
+import {
+  clampInt, normalizeAisTimestamp, normalizedHeading, numberValue, parseCsvOrJsonEnv, parseJsonEnv, stringValue,
+} from './aisValueParsing.mjs';
 
 // ---------------------------------------------------------------------------
 // AISStream live vessel cache state
@@ -586,56 +589,3 @@ function pruneAisStreamCache() {
 function newestAisPositionAt(rows) {
   return rows[0]?.last_position_UTC || null;
 }
-
-function parseJsonEnv(key, fallback) {
-  const value = process.env[key];
-  if (!value) return fallback;
-  try {
-    return JSON.parse(value);
-  } catch {
-    console.warn(`[AISStream] Invalid ${key}; using default.`);
-    return fallback;
-  }
-}
-
-function parseCsvOrJsonEnv(key, fallback) {
-  const value = process.env[key];
-  if (!value) return fallback;
-  try {
-    const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed : fallback;
-  } catch {
-    return value.split(',').map((entry) => entry.trim()).filter(Boolean);
-  }
-}
-
-function clampInt(value, min, max, fallback) {
-  const number = Number.parseInt(value, 10);
-  if (!Number.isFinite(number)) return fallback;
-  return Math.max(min, Math.min(max, number));
-}
-
-function stringValue(value) {
-  if (value === undefined || value === null) return '';
-  return String(value).trim();
-}
-
-function numberValue(value) {
-  if (value === null || value === undefined || value === '') return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? number : null;
-}
-
-function normalizedHeading(value) {
-  const heading = numberValue(value);
-  return heading !== null && heading >= 0 && heading <= 360 ? heading : null;
-}
-
-function normalizeAisTimestamp(value) {
-  const text = stringValue(value);
-  if (!text) return new Date().toISOString();
-  const normalized = text.replace(' +0000 UTC', 'Z').replace(' UTC', 'Z');
-  const date = new Date(normalized);
-  return Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
-}
-

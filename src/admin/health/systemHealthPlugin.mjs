@@ -9,8 +9,8 @@
 
 import { getProxyFailureTracker } from '../log/proxyFailureWatch.mjs';
 import { getServerLog } from '../log/serverLogStore.mjs';
-import { OPENSKY_QUOTA_WARN_REMAINING, openSkyCreditStatus } from '../../data/openSkyProxy.mjs';
-import { tomtomBudgetStatus } from '../../data/tomtomProxy.mjs';
+import { OPENSKY_QUOTA_WARN_REMAINING, openSkyCreditStatus } from '../../data/openSkyCredits.mjs';
+import { tomtomBudgetStatus } from '../../data/tomtomBudgetStatus.mjs';
 import { createVoiceSettingsStore } from '../../voice/voiceSettingsStore.mjs';
 import { createVoiceUsageStore } from '../../voice/voiceUsageStore.mjs';
 import { judgeDailyMax } from '../../voice/answerJudgeRoute.mjs';

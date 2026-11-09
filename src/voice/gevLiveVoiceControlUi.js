@@ -11,6 +11,17 @@
  * @param {{reset?: boolean}} [options] `reset` removes any existing tray first.
  * @returns {object} refs: root, button, buttonLabel, status, detail, helpDetail, errorDetail, costValue
  */
+/** Mic status line text per controller status (the dock shows these words). */
+export const STATUS_LABELS = Object.freeze({
+  idle: 'MATI',
+  connecting: 'MENGHUBUNGKAN',
+  listening: 'MENDENGARKAN',
+  executing: 'MENJALANKAN',
+  error: 'GALAT',
+});
+/** `data-status` values that differ from the controller status name. */
+export const DATASET_STATUS = Object.freeze({ executing: 'executing' });
+
 export function createVoiceControl({ reset = false } = {}) {
   let root = document.getElementById('gev-voice-control');
   if (root && reset) {

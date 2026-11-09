@@ -25,41 +25,11 @@ import { createLiveChannelHandler } from './gevLiveEvents.js';
 import { createLiveCostMeter } from './liveCost.js';
 import { createMicLevelMeter } from './gevLiveMicLevel.js';
 import { createSessionLimitGuard } from './liveSessionLimits.js';
+import { MIC_CONSTRAINTS, postSdpOffer, readAnswerSdp, stopStream, waitForIceComplete } from './gevLiveRtc.js';
+import { DATASET_STATUS, STATUS_LABELS } from './gevLiveVoiceControlUi.js';
 
 export const LIVE_SESSION_URL = '/api/live/session';
 
-const STATUS_LABELS = {
-  idle: 'MATI',
-  connecting: 'MENGHUBUNGKAN',
-  listening: 'MENDENGARKAN',
-  executing: 'MENJALANKAN',
-  error: 'GALAT',
-};
-const DATASET_STATUS = { executing: 'executing' };
-
-// A full-duplex open mic hearing its own assistant output is exactly the
-// self-trigger loop echoCancellation guards against.
-const MIC_CONSTRAINTS = { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 };
-
-function stopStream(stream) {
-  stream?.getTracks?.().forEach((track) => { try { track.stop(); } catch { /* already stopped */ } });
-}
-
-function waitForIceComplete(pc) {
-  return new Promise((resolve) => {
-    if (pc.iceGatheringState === 'complete') return resolve();
-    const onChange = () => {
-      if (pc.iceGatheringState === 'complete') {
-        pc.removeEventListener('icegatheringstatechange', onChange);
-        resolve();
-      }
-    };
-    pc.addEventListener('icegatheringstatechange', onChange);
-    // The one-shot SDP POST cannot trickle later candidates; cap the wait so a
-    // host that never reports 'complete' still connects with what it has.
-    setTimeout(resolve, 2000);
-  });
-}
 
 export class GevLiveController {
   constructor({ runner, ui = null, radio = null, limits, onSessionEnd, observer = null, fetchImpl, mediaDevices, rtcPeerConnection, documentRef, nowFn, setIntervalFn, clearIntervalFn } = {}) {
@@ -286,23 +256,9 @@ export class GevLiveController {
       await waitForIceComplete(localPc);
       if (abandoned()) { stopStream(localStream); try { localPc.close(); } catch { /* noop */ } return; }
 
-      const response = await this._fetch(LIVE_SESSION_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/sdp' },
-        body: localPc.localDescription.sdp,
-      });
+      const response = await postSdpOffer(this._fetch, LIVE_SESSION_URL, localPc.localDescription.sdp);
       if (abandoned()) { stopStream(localStream); try { localPc.close(); } catch { /* noop */ } return; }
-      if (!response.ok) {
-        const body = await response.text().catch(() => '');
-        throw new Error(`GPT-Live SDP failed: HTTP ${response.status}${body ? ` - ${body.slice(0, 200)}` : ''}`);
-      }
-      const body = await response.text();
-      let answerSdp = body;
-      try {
-        const parsed = JSON.parse(body);
-        answerSdp = parsed.sdp || parsed.answer?.sdp || parsed.transport?.sdp || body;
-      } catch { /* raw SDP passthrough */ }
-      await localPc.setRemoteDescription({ type: 'answer', sdp: answerSdp });
+      await localPc.setRemoteDescription({ type: 'answer', sdp: await readAnswerSdp(response) });
       if (abandoned()) { this.stop(); return; }
     } catch (error) {
       if (abandoned()) {
