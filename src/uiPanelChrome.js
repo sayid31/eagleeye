@@ -356,6 +356,11 @@ _setCommandDockPanelPinState(panelId, pin, {
     panelEl.addEventListener('focusin', () => clearClose());
     panelEl.addEventListener('focusout', (event) => {
       if (panelEl.contains(event.relatedTarget)) return;
+      // Collapsing the tray hides the control that held focus, and the browser
+      // blurs it a frame later. That blur is not the operator leaving: a close
+      // scheduled from it outlived a reopen by voice, share link or code within
+      // the close delay and shut the tray again.
+      if (panelEl.classList.contains('collapsed')) return;
       scheduleClose();
     });
     panelEl.addEventListener('keydown', (event) => {
