@@ -43,6 +43,10 @@ page.on('console', (message) => {
 });
 page.on('pageerror', (error) => consoleErrors.push(error.message));
 
+// The share-restore failure notice as src/uiShareState.js words it for a
+// `flight` label (the UI is Indonesian).
+const SHARE_FAILURE_NOTICE = 'flight yang dibagikan tidak dapat dipulihkan — feed tidak tersedia';
+
 const check = (name, passed, detail = '') => {
   console.log(`  [${passed ? 'PASS' : 'FAIL'}] ${name}${detail ? ` — ${detail}` : ''}`);
   if (!passed) failures.push(name);
@@ -194,7 +198,7 @@ try {
       && esriTileFailureFallback.before.hasLayer
       && esriTileFailureFallback.afterOne === 'esri-imagery'
       && esriTileFailureFallback.afterTwo.activeId === 'osm'
-      && /tile requests failed; using OSM/i.test(esriTileFailureFallback.afterTwo.lastError)
+      && /tile .+ gagal; memakai OSM/i.test(esriTileFailureFallback.afterTwo.lastError)
       && esriTileFailureFallback.afterTwo.creditVisible === false
       && esriTileFailureFallback.afterTwo.globeShown
       && esriTileFailureFallback.afterTwo.hasLayer
@@ -425,17 +429,17 @@ try {
     'ACQUIRING DOM notice persists, ignores stale terminals, and clears on ownership completion',
     acquiringLifecycle.pending.hidden === false
       && acquiringLifecycle.pending.state === 'acquiring'
-      && acquiringLifecycle.pending.label === 'ACQUIRING'
-      && acquiringLifecycle.pending.detail === 'SHARED FLIGHT'
+      && acquiringLifecycle.pending.label === 'MEMPEROLEH'
+      && acquiringLifecycle.pending.detail === 'DIBAGIKAN FLIGHT'
       && acquiringLifecycle.followed.hidden === true
       && acquiringLifecycle.staleTerminal.hidden === false
       && acquiringLifecycle.staleTerminal.state === 'acquiring'
-      && acquiringLifecycle.staleTerminal.detail === 'SHARED MILITARY FLIGHT'
+      && acquiringLifecycle.staleTerminal.detail === 'DIBAGIKAN MILITARY FLIGHT'
       && acquiringLifecycle.cancelled.hidden === true,
     JSON.stringify(acquiringLifecycle),
   );
 
-  const acquiringFailureArbitration = await page.evaluate(async () => {
+  const acquiringFailureArbitration = await page.evaluate(async (shareFailureNotice) => {
     const styleManager = window.__godsEyeView.styleManager;
     const dataManager = styleManager._dataManager;
     const status = document.getElementById('global-loading-status');
@@ -489,9 +493,7 @@ try {
         targetId: 'qa-failure-flight',
         label: 'flight',
       });
-      const queuedNoticeReady = await waitForQueuedNotice(
-        'Shared flight could not be restored — feed unavailable',
-      );
+      const queuedNoticeReady = await waitForQueuedNotice(shareFailureNotice);
       const shareFailureQueued = snapshot();
       styleManager._updateGlobalLoadingFeedback(baseNow + 5299);
       const failureEnd = snapshot();
@@ -519,20 +521,20 @@ try {
         label: 'flight',
       });
     }
-  });
+  }, SHARE_FAILURE_NOTICE);
   check(
     'manager failure then queued share failure each receives its full visible dwell',
     acquiringFailureArbitration.failureStart.hidden === false
       && acquiringFailureArbitration.failureStart.state === 'error'
-      && acquiringFailureArbitration.failureStart.label === 'LOAD FAILED'
+      && acquiringFailureArbitration.failureStart.label === 'MUAT GAGAL'
       && acquiringFailureArbitration.queuedNoticeReady === true
       && acquiringFailureArbitration.shareFailureQueued.state === 'error'
-      && acquiringFailureArbitration.shareFailureQueued.label === 'LOAD FAILED'
+      && acquiringFailureArbitration.shareFailureQueued.label === 'MUAT GAGAL'
       && acquiringFailureArbitration.failureEnd.state === 'error'
-      && acquiringFailureArbitration.failureEnd.label === 'LOAD FAILED'
+      && acquiringFailureArbitration.failureEnd.label === 'MUAT GAGAL'
       && acquiringFailureArbitration.shareFailureStart.state === 'error'
-      && acquiringFailureArbitration.shareFailureStart.label === 'Shared flight could not be restored — feed unavailable'
-      && acquiringFailureArbitration.shareFailureEnd.label === 'Shared flight could not be restored — feed unavailable'
+      && acquiringFailureArbitration.shareFailureStart.label === SHARE_FAILURE_NOTICE
+      && acquiringFailureArbitration.shareFailureEnd.label === SHARE_FAILURE_NOTICE
       && acquiringFailureArbitration.settled.hidden === true,
     JSON.stringify(acquiringFailureArbitration),
   );
@@ -710,6 +712,12 @@ try {
         styleManager.shareLinkManager.completeInitialRestore();
       }, legacyId);
     } else {
+      // A goto that differs from the current URL only in its hash is a
+      // same-document navigation: the app is not reloaded and keeps the stack
+      // the steps above left active (photoreal on a keyed machine). Leave the
+      // document first so every link is opened by a fresh boot, as a recipient
+      // opens it.
+      await page.goto('about:blank');
       await page.goto(`${appUrl}/?welcome=0#v=2&lat=30.27&lon=-97.74&map=${legacyId}`, {
         waitUntil: 'domcontentloaded',
         timeout: 60_000,
