@@ -369,6 +369,9 @@ export const radioPanelMixin = {
         this._radioFilter.value = this._dataManager?.getLayerUIState('radio')?.filter;
         return;
       }
+      // A tag pick moves the station into that tag; playback follows only if
+      // audio was already on.
+      this._dataManager?.callLayerMethod('radio', 'selectStationForFilter', { origin: 'user' });
       this._radioTunerBandPinnedForNavigation = false;
       this._radioTunerPool = [];
       refreshTunerBand({ force: true });

@@ -174,6 +174,51 @@ export function selectRequestedRadioStation(criteria = {}, { autoplay = true, or
   return ranked[0];
 }
 
+/** Audio states in which a station change should carry playback with it. */
+const RADIO_ACTIVE_AUDIO_STATES = Object.freeze(['loading', 'buffering', 'playing']);
+
+/**
+ * Pick the station a user's tag change should move to: the best-ranked one
+ * that is not already selected (the current station can match several tags,
+ * and re-picking it made the tag change look like it did nothing). Playback
+ * follows only when audio was already active.
+ * @param {Array<{id: string}>} ranked Stations in the new tag, best first.
+ * @param {string|null} selectedId Currently selected station id.
+ * @param {string} audioState Current Radio audio state.
+ * @returns {{station: object, fallbackId: string|null, autoplay: boolean}|null}
+ */
+export function planRadioFilterRetune(ranked, selectedId, audioState) {
+  const candidates = Array.isArray(ranked) ? ranked : [];
+  const station = candidates.find((candidate) => candidate.id !== selectedId) || candidates[0];
+  if (!station) return null;
+  return {
+    station,
+    fallbackId: candidates.find((candidate) => candidate.id !== station.id)?.id || null,
+    autoplay: RADIO_ACTIVE_AUDIO_STATES.includes(audioState),
+  };
+}
+
+/**
+ * After a user changes the station tag, move the selection into that tag
+ * (nearest the current view first). Without this the tag only filtered the
+ * markers and tuner band, and the station that was on kept playing.
+ * @param {{origin?: string}} [options]
+ * @returns {object|null} The newly selected station, or null when the tag is empty.
+ */
+export function selectRadioStationForFilter({ origin = 'programmatic' } = {}) {
+  if (!radioPresentationAllowed()) return null;
+  const ranked = rankRadioStationsForRequest(S._stations, {
+    categoryId: S._filter,
+    anchor: viewportRadioAnchor(),
+  });
+  const plan = planRadioFilterRetune(ranked, S._selectedId, S._audioState);
+  if (!plan) return null;
+  S._playFallbackId = plan.fallbackId;
+  S._playFallbackFocus = false;
+  selectRadioStation(plan.station.id, { autoplay: plan.autoplay, focus: false, origin });
+  return plan.station;
+}
+
 /** Change marker/list category without interrupting an active station. */
 export function setRadioFilter(categoryId) {
   if (!radioPresentationAllowed()) return false;
