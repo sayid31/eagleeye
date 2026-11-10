@@ -6,11 +6,6 @@
  * @module voice/gevLiveVoiceControlUi
  */
 
-/**
- * Create (or reuse) the voice-control tray and return its element refs.
- * @param {{reset?: boolean}} [options] `reset` removes any existing tray first.
- * @returns {object} refs: root, button, buttonLabel, status, detail, helpDetail, errorDetail, costValue
- */
 /** Mic status line text per controller status (the dock shows these words). */
 export const STATUS_LABELS = Object.freeze({
   idle: 'MATI',
@@ -22,6 +17,19 @@ export const STATUS_LABELS = Object.freeze({
 /** `data-status` values that differ from the controller status name. */
 export const DATASET_STATUS = Object.freeze({ executing: 'executing' });
 
+/** Bars per side of the mic; their heights are shaped in theme/voiceWave.css. */
+export const VOICE_WAVE_BARS = 12;
+
+/** One decorative waveform half; the right half is mirrored by CSS. */
+function voiceWaveMarkup(side) {
+  return `<span class="gev-voice-wave" data-side="${side}" aria-hidden="true">${'<i></i>'.repeat(VOICE_WAVE_BARS)}</span>`;
+}
+
+/**
+ * Create (or reuse) the voice-control tray and return its element refs.
+ * @param {{reset?: boolean}} [options] `reset` removes any existing tray first.
+ * @returns {object} refs: root, button, buttonLabel, status, detail, helpDetail, errorDetail, costValue
+ */
 export function createVoiceControl({ reset = false } = {}) {
   let root = document.getElementById('gev-voice-control');
   if (root && reset) {
@@ -41,11 +49,13 @@ export function createVoiceControl({ reset = false } = {}) {
           <span id="gev-voice-cost-value" class="gev-voice-cost-value" data-level="ok" title="Perkiraan biaya sesi">~$0.00</span>
         </div>
       </div>
+      ${voiceWaveMarkup('left')}
       <button id="gev-voice-button" type="button" aria-label="Kontrol suara — klik untuk menyalakan atau mematikan suara" aria-describedby="gev-voice-help">
-        <span class="gev-mic-orbit"><img src="/mic.svg" alt="" /></span>
-        <span class="gev-mic-wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span>
+        <span class="gev-mic-arc" aria-hidden="true"></span>
+        <span class="gev-mic-orbit"><img src="/voice-mic.svg" alt="" /></span>
         <span class="gev-mic-label">HIDUP/MATI</span>
       </button>
+      ${voiceWaveMarkup('right')}
       <div class="gev-voice-readout">
         <div id="gev-voice-detail">SUARA SIAGA</div>
       </div>

@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import test from 'node:test';
+import { VOICE_WAVE_BARS } from './voice/gevLiveVoiceControlUi.js';
 
 const read = (rel) => readFileSync(new URL(rel, import.meta.url), 'utf8');
 const chromeSrc = read('./uiPanelChrome.js');
@@ -23,23 +24,45 @@ test('turning CCTV on for the first time never auto-expands its panel', () => {
   assert.doesNotMatch(block[0], /\|\| isFirstActivation/);
 });
 
-test('voiceWave.css is imported by the theme and hides the bars until a session is live', () => {
+test('voiceWave.css is imported by the theme and opens the side waves only while a session is live', () => {
   assert.match(themeCss, /@import '\.\/voiceWave\.css'/);
   assert.ok(themeCss.indexOf("'./dock.css'") < themeCss.indexOf("'./voiceWave.css'"));
-  assert.match(waveCss, /\.gev-mic-wave \{\s*display: none;/);
-  assert.match(waveCss, /\[data-status='listening'\], \[data-status='executing'\]\) #gev-voice-button \.gev-mic-wave \{\s*display: flex;/);
+  const closed = waveCss.match(/#gev-voice-control \.gev-voice-wave \{([^}]*)\}/);
+  assert.ok(closed, 'base wave rule exists');
+  assert.match(closed[1], /max-width:\s*0/);
+  assert.match(closed[1], /opacity:\s*0/);
+  const open = waveCss.match(/\[data-status='executing'\]\s*\) \.gev-voice-wave \{([^}]*)\}/);
+  assert.ok(open, 'live-session wave rule exists');
+  assert.match(open[1], /max-width:\s*110px/);
+  assert.match(open[1], /opacity:\s*1/);
+  assert.doesNotMatch(waveCss, /\[data-status='connecting'\][^{]*\.gev-voice-wave/, 'connecting turns the arc, not the waves');
 });
 
-test('the waveform follows the live --mic-level and falls back to a CSS shimmer', () => {
-  assert.match(waveCss, /\[data-meter='live'\] \.gev-mic-wave i:nth-child\(3\) \{ transform: scaleY\(calc\(0\.2 \+ var\(--mic-level, 0\)/);
-  assert.match(waveCss, /:not\(\[data-meter='live'\]\) \.gev-mic-wave i \{\s*animation: gev-mic-wave/);
-  assert.match(waveCss, /@keyframes gev-mic-wave/);
+test('the waveform follows the live --voice-level and falls back to a fixed shimmer level', () => {
+  assert.match(waveCss, /--voice-wave-level: var\(--voice-level, 0\)/);
+  assert.match(waveCss, /\[data-meter='css'\] \{\s*--voice-wave-level: 0\.35;/);
+  assert.match(waveCss, /transform: scaleY\(calc\(0\.1 \+ var\(--voice-wave-level\) \* var\(--k, 0\.5\)\)\)/);
+  assert.match(waveCss, /@keyframes gev-voice-shimmer/);
+  assert.match(waveCss, /@keyframes gev-mic-arc-spin/);
   assert.match(waveCss, /prefers-reduced-motion: reduce[\s\S]*animation: none !important/);
+  assert.doesNotMatch(waveCss, /filter:\s*(blur|drop-shadow)/, 'no per-frame blur filters');
 });
 
-test('the voice button markup carries five decorative wave bars', () => {
-  const wave = voiceUi.match(/<span class="gev-mic-wave" aria-hidden="true">((?:<i><\/i>){5})<\/span>/);
-  assert.ok(wave, 'five-bar aria-hidden waveform is missing from the mic button');
+test('every bar has a height share, and the right half mirrors the left', () => {
+  for (let n = 1; n <= VOICE_WAVE_BARS; n += 1) {
+    assert.match(waveCss, new RegExp(`\\.gev-voice-wave i:nth-child\\(${n}\\) \\{ --k: [\\d.]+; --d: \\d+ms; \\}`), `bar ${n}`);
+  }
+  assert.match(waveCss, /\.gev-voice-wave\[data-side='right'\] \{\s*flex-direction: row-reverse;/);
+});
+
+test('the voice control carries a wave on each side of a ringed mic with a turning arc', () => {
+  assert.match(voiceUi, /\$\{voiceWaveMarkup\('left'\)\}\s*<button id="gev-voice-button"/);
+  assert.match(voiceUi, /<\/button>\s*\$\{voiceWaveMarkup\('right'\)\}/);
+  assert.match(voiceUi, /<span class="gev-mic-arc" aria-hidden="true"><\/span>/);
+  assert.match(voiceUi, /<img src="\/voice-mic\.svg" alt="" \/>/);
+  assert.match(voiceUi, /class="gev-voice-wave" data-side="\$\{side\}" aria-hidden="true"/);
+  assert.equal(VOICE_WAVE_BARS, 12);
+  assert.ok(existsSync(new URL('../public/voice-mic.svg', import.meta.url)), 'the mic glyph asset ships');
 });
 
 test('dock/CSS glyphs are CSS escapes, not raw non-ASCII, so a wrong charset guess cannot mojibake them', () => {

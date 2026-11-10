@@ -28,6 +28,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Tombol suara kini bergaya neon: mik di dalam cincin biru bercahaya. Saat menghubungkan, busur terang
+  berputar di sekeliling cincin; saat sesi suara aktif, gelombang muncul di kiri dan kanan mik dan ikut
+  bergerak ketika Anda atau asisten AI berbicara.
 - Pemilih gaya visual (Normal, CRT, NVG, FLIR, dan lainnya, beserta Sumber Peta) pindah dari dock bawah ke
   bilah ikon kiri sebagai tombol palet; panelnya terbuka di samping bilah. Dock bawah kini hanya berisi
   tombol suara.

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computeMicLevel, smoothLevel, createMicLevelMeter } from './gevLiveMicLevel.js';
+import { computeMicLevel, smoothLevel, createMicLevelMeter, createVoiceLevelMeter } from './gevLiveMicLevel.js';
 
 test('silence (all 128) reads as level 0', () => {
   assert.equal(computeMicLevel(new Uint8Array(64).fill(128)), 0);
@@ -60,4 +60,48 @@ test('no audio tracks or no AudioContext degrades to a no-op instead of throwing
   const { FakeContext } = fakeAudio({ samplesFrame: (n) => new Uint8Array(n).fill(128) });
   const empty = createMicLevelMeter({ onLevel() {}, AudioContextCtor: FakeContext, requestFrame: () => 1 });
   assert.equal(empty.start({ getAudioTracks: () => [] }), false);
+});
+
+/** Fake meters the voice mixer drives; `emit` stands in for an analyser frame. */
+function fakeMeterFactory() {
+  const meters = [];
+  const createMeter = ({ onLevel }) => {
+    const meter = {
+      onLevel,
+      started: null,
+      stopped: 0,
+      start(stream) { this.started = stream; return true; },
+      stop() { this.stopped += 1; },
+    };
+    meters.push(meter);
+    return meter;
+  };
+  return { meters, createMeter };
+}
+
+test('the voice level is the louder of the mic and the assistant reply', () => {
+  const { meters, createMeter } = fakeMeterFactory();
+  const levels = [];
+  const inputs = [];
+  createVoiceLevelMeter({ onLevel: (l) => levels.push(l), onInputLevel: (l) => inputs.push(l), createMeter });
+  const [mic, reply] = meters;
+  mic.onLevel(0.2);
+  reply.onLevel(0.7);
+  mic.onLevel(0.4);
+  reply.onLevel(0);
+  assert.deepEqual(levels, [0.2, 0.7, 0.7, 0.4]);
+  assert.deepEqual(inputs, [0.2, 0.4], 'the mic-only level never includes the reply');
+});
+
+test('start taps the mic, startOutput the reply, and stop releases both', () => {
+  const { meters, createMeter } = fakeMeterFactory();
+  const voice = createVoiceLevelMeter({ onLevel() {}, createMeter });
+  const micStream = { id: 'mic' };
+  const replyStream = { id: 'reply' };
+  assert.equal(voice.start(micStream), true);
+  assert.equal(voice.startOutput(replyStream), true);
+  assert.equal(meters[0].started, micStream);
+  assert.equal(meters[1].started, replyStream);
+  voice.stop();
+  assert.deepEqual(meters.map((m) => m.stopped), [1, 1]);
 });

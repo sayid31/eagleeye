@@ -18,20 +18,17 @@ test('no dock hover rule changes geometry or adds a transform', () => {
   }
 });
 
-test('the mic hover widens the halo instead of scaling the button', () => {
+test('the mic hover brightens the glow instead of scaling the button', () => {
   const [hover] = bodyOf('body.ee-shell #command-dock #gev-voice-button:hover');
   assert.ok(hover, 'mic hover rule exists');
-  assert.match(hover, /box-shadow:\s*0 0 0 \d+px var\(--ee-accent-soft\)/);
+  assert.match(hover, /box-shadow:\s*0 0 \d+px rgba\(40, 202, 255, 0\.\d+\)/);
   const [rest] = bodyOf('body.ee-shell #command-dock #gev-voice-button');
   assert.doesNotMatch(rest, /transition:[^;]*transform/, 'no transform transition to animate on hover');
 });
 
-test('the hovered mic halo stays inside the dock gap', () => {
-  const [hover] = bodyOf('body.ee-shell #command-dock #gev-voice-button:hover');
-  const [dockBody] = bodyOf('body.ee-shell #command-dock');
-  const spread = Number(hover.match(/box-shadow:\s*0 0 0 (\d+)px/)[1]);
-  const gap = Number(dockBody.match(/gap:\s*(\d+)px/)[1]);
-  assert.ok(spread < gap, `halo ${spread}px must be smaller than the ${gap}px dock gap`);
+test('an error turns the ring red', () => {
+  const [error] = bodyOf("body.ee-shell #command-dock #gev-voice-control[data-status='error'] #gev-voice-button");
+  assert.match(error, /linear-gradient\(var\(--ee-bad\), var\(--ee-bad\)\) border-box/);
 });
 
 test('the visual-style menu is no longer laid out in the dock', () => {

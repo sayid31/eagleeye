@@ -117,10 +117,16 @@ body.ee-shell #command-dock .dock-popover-content {
   -webkit-backdrop-filter: none;
 }
 
-/* Round blue mic; status, tier and cost text stay in the DOM, clipped. */
+/* Voice control: [wave] [neon-ringed mic] [wave], from the owner's reference
+   (voice_ui_svg_assets). The waves and the turning arc live in voiceWave.css.
+   Status, tier and cost text stay in the DOM, clipped. */
 body.ee-shell #command-dock#command-dock > #gev-voice-control {
+  --gev-mic-fill: #071631;
+  --gev-mic-glow: rgba(40, 202, 255, 0.45);
   display: flex !important;
   flex: 0 0 auto !important;
+  align-items: center;
+  gap: 0 !important;
   width: auto !important;
   height: auto !important;
   margin: 0 !important;
@@ -130,48 +136,51 @@ body.ee-shell #command-dock#command-dock > #gev-voice-control {
   box-shadow: none;
 }
 
+/* A dark disc inside a gradient ring: the fill paints the padding box, so the
+   gradient shows only through the transparent 2px border. */
 body.ee-shell #command-dock #gev-voice-button {
-  width: 34px;
-  height: 34px;
+  position: relative;
+  width: 40px;
+  height: 40px;
   display: grid;
   place-items: center;
   padding: 0;
-  background: linear-gradient(180deg, var(--ee-accent), #4a97e0);
-  border: 0;
+  background:
+    linear-gradient(var(--gev-mic-fill), var(--gev-mic-fill)) padding-box,
+    linear-gradient(135deg, #c9f8ff, #28caff 45%, #176bff) border-box;
+  border: 2px solid transparent;
   border-radius: 50%;
-  /* Solid rings only: an outer halo and an inner top highlight, no blur glow. */
-  box-shadow: 0 0 0 3px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 10px var(--gev-mic-glow);
   transition: box-shadow 0.15s ease;
 }
 
-/* Hover is paint-only: the halo ring widens, nothing scales, so the mic never
-   grows past the dock's 8px gap. */
+/* Hover is paint-only: the glow brightens, nothing scales or moves. */
 body.ee-shell #command-dock #gev-voice-button:hover {
-  box-shadow: 0 0 0 4px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 16px rgba(40, 202, 255, 0.7);
 }
 
 body.ee-shell #command-dock #gev-voice-button:focus-visible {
   outline: 2px solid var(--ee-text);
-  outline-offset: 3px;
+  outline-offset: 6px;
 }
 
 body.ee-shell #command-dock #gev-voice-button .gev-mic-orbit {
   flex: none;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   background: transparent;
   border: 0;
   box-shadow: none;
 }
 
-/* style.css sizes the icon at 1.55rem inside this 18px orbit, which pushed it
-   down and right; fit it to the orbit so it is centred in the round button. */
+/* style.css sizes the icon at 1.55rem and greys it out at rest; the glyph is
+   already white-to-ice-blue (public/voice-mic.svg), so it is shown as drawn. */
 body.ee-shell #command-dock #gev-voice-button .gev-mic-orbit img {
   display: block;
   width: 100%;
   height: 100%;
-  filter: brightness(0) !important;
-  opacity: 0.85 !important;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 body.ee-shell #command-dock #gev-voice-control:is(
@@ -180,11 +189,14 @@ body.ee-shell #command-dock #gev-voice-control:is(
   [data-status='speaking'],
   [data-status='executing']
 ) #gev-voice-button {
-  box-shadow: 0 0 0 4px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+  box-shadow: 0 0 16px rgba(40, 202, 255, 0.7);
 }
 
 body.ee-shell #command-dock #gev-voice-control[data-status='error'] #gev-voice-button {
-  box-shadow: 0 0 0 3px var(--ee-bad);
+  background:
+    linear-gradient(var(--gev-mic-fill), var(--gev-mic-fill)) padding-box,
+    linear-gradient(var(--ee-bad), var(--ee-bad)) border-box;
+  box-shadow: 0 0 10px color-mix(in srgb, var(--ee-bad) 55%, transparent);
 }
 
 body.ee-shell #command-dock #gev-voice-control #gev-voice-status,
