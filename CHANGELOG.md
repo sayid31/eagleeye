@@ -7,6 +7,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Panel Gaya Visual (dan Lokasi) yang dibuka lewat perintah suara atau tautan bagikan tidak lagi menutup
+  sendiri sesaat kemudian bila panel itu baru saja ditutup dengan fokus masih di dalamnya.
 - Titik lalu lintas di peta Esri/OSM kini menempel di jalannya, termasuk di jalan permukiman yang sempit.
   Sebelumnya tinggi titik diperkirakan per petak ±111 m dan sering ikut tinggi atap atau pohon, sehingga
   saat kamera miring titiknya tampak jatuh di atas rumah di samping jalan.
