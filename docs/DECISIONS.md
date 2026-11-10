@@ -3416,3 +3416,13 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Why 1 m, and why the cell estimate keeps 3 m.** A surface reading is the height the user sees, so the only reason left to float is depth-test clearance beyond 2 km. A cell estimate can be metres below the real surface and keeps its 3 m so far dots are not buried.
 
 **Limits.** Photoreal stacks hide the globe and keep the mesh-cell floor; switching to one hands cached roads back to it. Heights come from the terrain detail loaded at render time: zooming in further without a new road render keeps the earlier reading (fine-level changes on this terrain are small). Some residential alleys are covered by roofs or trees in the imagery, so their dots stand on a real road that cannot be seen.
+
+## 2026-11-10 — Neon voice button with a two-sided, two-voice waveform (owner request)
+
+**Context.** The owner supplied a reference and SVG assets (`voice_ui_svg_assets/`): idle is a ringed mic only, a click brings out waves, and the waves move while someone talks.
+
+**Decisions.**
+- **Glow on the mic only.** The 2026-11-03 dock polish kept the dock free of blur glow (solid rings only). The reference is explicitly neon, so the mic button, and only it, now carries a soft `box-shadow` glow; the test that bans glow still covers the rest of the dock and chrome. Bars use a small static `box-shadow`, never a `filter: drop-shadow`, which costs a per-frame re-blur (see the 2026-11-07 detection-glow note).
+- **"Someone speaking" means either side.** The waves follow the louder of the operator's mic and the assistant's reply (a second `AnalyserNode` on the WebRTC reply stream). `--mic-level` stays mic-only because the Server Log reads it as the operator's input level.
+- **Waves outside the button.** Each half is a sibling of `#gev-voice-button`, so the click target stays the 40 px mic; the dock widens while a session is live instead of the waves hanging over the map.
+- **Connecting shows the arc, not the waves.** Waves promise a live session; the turning arc alone says "working on it".
