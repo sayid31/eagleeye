@@ -8,6 +8,7 @@ import { HEAT_JAM_BASE_ALPHA, HEAT_JAM_COLOR, HEAT_LINE_CAP, HEAT_LINE_JAM_WIDTH
 import { allocateRoadDotBudgets, clearDots, spawnDotsForRoad } from './trafficDots.js';
 import { S } from './trafficState.js';
 import { heatlineOn } from './trafficStyle.js';
+import { scheduleSurfaceRefine } from './trafficSurfaceHeights.js';
 import { scheduleTrafficTimingPostRender, trafficTimingMark, trafficTimingMeasure, trafficTimingRenderState } from './trafficTiming.js';
 
 /**
@@ -201,6 +202,10 @@ export function renderRoadsForAltitude(roads, altitude, label, trace = null) {
       heatLineCount: S._heatLineCount,
     });
   }
+
+  // Move the visible roads' waypoints from their cell estimate onto the
+  // rendered surface (globe stacks only; time-sliced over the next frames).
+  scheduleSurfaceRefine(filteredRoads);
 
   S._count = S._dots.length;
   S._lastUpdate = Date.now();
