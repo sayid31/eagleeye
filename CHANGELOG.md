@@ -7,6 +7,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Panel Konteks tidak lagi lompat ke atas setiap kali tombol Radio diklik (Putar/Jeda, Berikutnya,
+  Sebelumnya, Berhenti, Volume). Posisi gulir panel kini tetap di tempatnya.
+- Memilih **Tag Stasiun** di panel Radio kini benar-benar mengganti stasiun: dipilih stasiun terdekat di
+  tag itu (bukan yang sedang aktif bila tag punya pilihan lain). Kalau radio sedang memutar, stasiun baru
+  langsung diputar; kalau sedang berhenti atau dijeda, hanya pilihannya yang berganti.
 - Data jalan yang sudah tersimpan di disk kini benar-benar disimpan 60 hari seperti seharusnya. Sebelumnya
   aturan itu tidak pernah berlaku sehingga data jalan kedaluwarsa setelah 7 hari dan harus diambil ulang dari
   server OSM.

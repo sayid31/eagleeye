@@ -19,7 +19,7 @@ import { disableRadioLayer, getRadioStats, initRadioLayer, setRadioLifecyclePres
 import { syncRadioLifecyclePresentation } from './radioOverlay.js';
 import { getRadioParams, pauseRadioPlayback, playPreparedRadioForVoice, playSelectedRadio, setRadioParams, setRadioVoiceDucking, setRadioVolume, stopRadioPlayback, toggleRadioPlayback } from './radioPlayback.js';
 import { getRadioAcceptedCatalogSnapshot } from './radioPolicy.js';
-import { cycleRadioStation, selectRadioStation, selectRequestedRadioStation, setRadioFilter } from './radioSelection.js';
+import { cycleRadioStation, selectRadioStation, selectRadioStationForFilter, selectRequestedRadioStation, setRadioFilter } from './radioSelection.js';
 import { emitState, getRadioUIState, resetRadioClusterOverlayIdentities, subscribeToRadio, subscribeToRadioPlaybackControls } from './radioSelectors.js';
 import { S, _listeners, _playbackControlListeners } from './radioState.js';
 import { beginRadioTuning, cancelRadioTuning, commitRadioTuningStation, endRadioTuning, getRadioTunerStations, previewRadioTuningStation, setRadioTuningStatic } from './radioTuning.js';
@@ -30,7 +30,7 @@ export { DEFAULT_RADIO_FILTER, GLOBAL_RADIO_ALTITUDE_M, RADIO_CATEGORY_COLORS, R
 export { retainRadioClusterIdentitiesForStations } from './radioOverlay.js';
 export { confirmRadioPlayback, getRadioParams, pauseRadioPlayback, playPreparedRadioForVoice, playSelectedRadio, setRadioParams, setRadioVoiceDucking, setRadioVolume, stopRadioPlayback, toggleRadioPlayback } from './radioPlayback.js';
 export { getRadioAcceptedCatalogSnapshot } from './radioPolicy.js';
-export { cycleRadioStation, selectRadioStation, selectRequestedRadioStation, setRadioFilter } from './radioSelection.js';
+export { cycleRadioStation, planRadioFilterRetune, selectRadioStation, selectRadioStationForFilter, selectRequestedRadioStation, setRadioFilter } from './radioSelection.js';
 export { getRadioUIState, subscribeToRadio, subscribeToRadioPlaybackControls } from './radioSelectors.js';
 export { beginRadioTuning, cancelRadioTuning, commitRadioTuningStation, endRadioTuning, getRadioTunerStations, previewRadioTuningStation, setRadioTuningStatic } from './radioTuning.js';
 
@@ -172,6 +172,7 @@ export const radioLayer = {
   setFilter: setRadioFilter,
   selectStation: selectRadioStation,
   selectRequestedStation: selectRequestedRadioStation,
+  selectStationForFilter: selectRadioStationForFilter,
   cycleStation: cycleRadioStation,
   togglePlayback: toggleRadioPlayback,
   play: playSelectedRadio,
