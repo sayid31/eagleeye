@@ -8,6 +8,7 @@ import { shouldHideCollapsedRightPanels } from './rightRailPolicy.js';
 import { resolveHudRailLayout } from './cockpitMath.js';
 import { PANEL_POSITION_STORAGE_VERSION, PANEL_Z_BASE, PANEL_Z_MAX } from './panelPositionConstants.js';
 import { createObstacleSizeGate, isLayoutRelevantMutation, isLayoutRelevantResize } from './panelLayoutTriggers.js';
+import { retainPanelScroll } from './panelScrollRetention.js';
 
 /** Versioned localStorage namespace prefix to invalidate stale panel layouts. */
 const PANEL_LAYOUT_STORAGE_VERSION = 'v6';
@@ -357,7 +358,11 @@ export const panelAdaptiveLayoutMixin = {
     // Measure intrinsic content, not the allocation written by the previous
     // layout pass. Display is the exception: its own scrollHeight already
     // exposes every control, and removing its live allocation can reset the
-    // user's scroll position while HUD or preset content is settling.
+    // user's scroll position while HUD or preset content is settling. The
+    // other panels get their scroll offsets put back after the pass.
+    const restoreScroll = retainPanelScroll(visiblePanels.filter((panel) => (
+      !panel.classList.contains('collapsed') && panel !== this._ppToggles
+    )));
     for (const panel of visiblePanels) {
       if (!panel.classList.contains('collapsed') && panel !== this._ppToggles) {
         panel.style.removeProperty('--right-panel-allocated-height');
@@ -382,7 +387,10 @@ export const panelAdaptiveLayoutMixin = {
       gap: safeGap,
       align: 'start',
     });
-    if (!layout) return;
+    if (!layout) {
+      restoreScroll();
+      return;
+    }
     const { safeTop, safeBottom, maxHeight: availableHeight } = layout;
     const stabilityBand = viewportHeight * 0.01;
     const wasFocused = stack.classList.contains('layout-focus');
@@ -431,6 +439,7 @@ export const panelAdaptiveLayoutMixin = {
         panel.classList.add('collapsed', 'layout-auto-collapsed');
         this._syncPanelCollapseButton(panel);
       }
+      restoreScroll();
       this._scheduleRightPanelLayout();
       return;
     }
@@ -460,6 +469,7 @@ export const panelAdaptiveLayoutMixin = {
     stack.dataset.availableHeight = availableHeight.toFixed(1);
     stack.dataset.requiredHeight = naturalHeight.toFixed(1);
     stack.dataset.expandedCount = String(expandedPanels.length);
+    restoreScroll();
 
     if (this._ppToggles && expandedPanels.includes(this._ppToggles)) {
       const maxScrollTop = Math.max(0, this._ppToggles.scrollHeight - this._ppToggles.clientHeight);
