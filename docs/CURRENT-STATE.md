@@ -1704,13 +1704,18 @@ One log for the server and every browser using the map. Model and limits: `src/a
   in the bottom-right corner, still rendered. The legacy top-left HUD readout (mission id, mode, summary)
   and the decorative REC/ORB readout (top-right) are hidden outside cockpit mode. DISPLAY and CONTEXT open beside the rail (not on the right), and the rail
   collapses the other side panels first (`railPlan.js`); CAMERA opens on the right edge under the globe buttons.
-- The rail has no globe-reset entry (`#top-center-actions` has it). `.hud-left-edge` (COLL/ONA) is hidden
+- The rail has no globe-reset or share entry (`#top-center-actions` has both: `#reset-globe-view` and the
+  🔗 `#share-btn`). Its bottom slot holds the visual-style picker: `mountStylePicker`
+  (`src/shell/stylePickerMount.js`) moves `#control-panel` there from the dock at shell mount (the element
+  is moved, not rebuilt, so open/close, pin and share-link state keep working). Closed it is a 40 px palette
+  rail button; open, its tray (presets in a 4-column grid, Sumber Peta chips, pin) flies out to the right of
+  the rail, bottom-aligned, above the left accordion (`railStyle.css`). `.hud-left-edge` (COLL/ONA) is hidden
   outside cockpit mode. DISPLAY and CONTEXT open at `min(330px, 100vw - rail - 16px)`.
 - `adaptive.css` colours the chrome that sits directly on the map (status text, attribution, globe
   action icons, which have no plate). `initShell` sets `body[data-map-tone]` from the active map stack
   (`src/shell/mapTone.js`: `light` only for OSM) and updates it on `gev:map-stack-changed`.
-- The dock (`dock.css`) is about 48 px tall (`min-height: 0 !important` overrides the legacy 3.75rem; 6 px padding), its pills are a fixed 28 px and not stretched, and the mic glyph fills its 18 px orbit so it is centred. It is a compact style menu (palette icon, active style, accent border when open) and a 34 px round
-  gradient mic. Mic hover is paint-only (the halo ring widens from 3 to 4 px; no transform). The style pill's click target is its tray header made an invisible `position:absolute; inset:0` layer with `min-width: 0`, so it is exactly the pill's size and never covers the mic. The location pill is clipped, not removed (location code reads it). Tray titles, the
+- The dock (`dock.css`) is about 48 px tall (`min-height: 0 !important` overrides the legacy 3.75rem; 6 px padding) and the mic glyph fills its 18 px orbit so it is centred. It holds only the 34 px round
+  gradient mic; the style menu lives in the rail (above). Mic hover is paint-only (the halo ring widens from 3 to 4 px; no transform). The location pill is clipped, not removed (location code reads it). Tray titles, the
   AI AGENT kicker, status, cost and "VOICE STANDBY" text are clipped visually, not removed.
 - In the CCTV panel a slim header row (title clipped, close icon) comes first, then the camera screen
   (`#cctv-frame-wrap`), then the "Cari kamera CCTV" search, all by CSS `order`. `searchCameras`
