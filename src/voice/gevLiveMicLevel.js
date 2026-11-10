@@ -98,3 +98,36 @@ export function createMicLevelMeter({
 
   return { start, stop };
 }
+
+/**
+ * Voice level for the dock waveform: the louder of the operator's mic and the
+ * assistant's reply, so the bars move whenever anyone in the conversation is
+ * speaking. Same surface as one meter (`start`/`stop`) plus `startOutput`.
+ *
+ * @param {object} params
+ * @param {(level: number) => void} params.onLevel Called with the louder level, 0..1.
+ * @param {(level: number) => void} [params.onInputLevel] Called with the mic alone, 0..1.
+ * @param {typeof createMicLevelMeter} [params.createMeter] Meter factory (test seam).
+ * @returns {{ start: (stream: MediaStream) => boolean, startOutput: (stream: MediaStream) => boolean, stop: () => void }}
+ */
+export function createVoiceLevelMeter({ onLevel, onInputLevel, createMeter = createMicLevelMeter } = {}) {
+  let input = 0;
+  let output = 0;
+  const emit = () => onLevel?.(Math.max(input, output));
+  const inputMeter = createMeter({
+    onLevel: (level) => {
+      input = level;
+      onInputLevel?.(level);
+      emit();
+    },
+  });
+  const outputMeter = createMeter({ onLevel: (level) => { output = level; emit(); } });
+  return {
+    start: (stream) => inputMeter.start(stream),
+    startOutput: (stream) => outputMeter.start(stream),
+    stop() {
+      inputMeter.stop();
+      outputMeter.stop();
+    },
+  };
+}

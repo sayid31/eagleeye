@@ -57,15 +57,21 @@ test('the dock is clear of the status bar and the mic is a round accent button',
   assert.match(dockBody, /bottom:\s*calc\(var\(--ee-statusbar-h\) \+ 12px\)/);
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
   assert.match(mic, /border-radius:\s*50%/);
-  assert.match(mic, /background:[^;]*var\(--ee-accent\)/);
+  assert.match(mic, /linear-gradient\(135deg, #c9f8ff, #28caff 45%, #176bff\) border-box/);
 });
 
 test('dock voice text is clipped, never display:none', () => {
   assert.doesNotMatch(dock, /display:\s*none/);
 });
 
-test('no glow and every --ee-* token used is defined', () => {
-  assert.doesNotMatch(dock + chrome, /text-shadow:\s*0 0|box-shadow:\s*0 0 [1-9]\d*px/);
+/** Dock rules minus the mic's own, the one element allowed a glow (owner's neon reference). */
+const dockOutsideMic = [...dock.matchAll(/([^{}]+)\{([^}]*)\}/g)]
+  .filter(([, sel]) => !sel.includes('#gev-voice-button'))
+  .map(([, , body]) => body)
+  .join('\n');
+
+test('no glow outside the mic, and every --ee-* token used is defined', () => {
+  assert.doesNotMatch(dockOutsideMic + chrome, /text-shadow:\s*0 0|box-shadow:\s*0 0 [1-9]\d*px/);
   for (const name of new Set([...(dock + chrome).matchAll(/var\((--ee-[\w-]+)/g)].map((m) => m[1]))) {
     assert.match(tokens, new RegExp(`${name}:`), name);
   }
@@ -105,16 +111,17 @@ test('the dock location pill is clipped (search lives in the top bar), not remov
   assert.ok(bodies.every((body) => !/display:\s*none/.test(body)));
 });
 
-test('the mic is a ringed gradient with solid rings only', () => {
+test('the mic is a dark disc in a gradient ring with a soft neon glow', () => {
   // The style menu and its palette icon moved to the rail (railStyleCss.test.mjs).
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
-  assert.match(mic, /linear-gradient/);
-  assert.match(mic, /box-shadow:\s*0 0 0 3px var\(--ee-accent-soft\)/);
+  assert.match(mic, /linear-gradient\(var\(--gev-mic-fill\), var\(--gev-mic-fill\)\) padding-box/);
+  assert.match(mic, /border:\s*2px solid transparent/);
+  assert.match(mic, /box-shadow:\s*0 0 10px var\(--gev-mic-glow\)/);
 });
 
 test('the dock is compact: small mic and pills', () => {
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
-  assert.match(mic, /width:\s*34px/);
+  assert.match(mic, /width:\s*40px/);
   assert.match(dock, /height:\s*28px\s*!important/);
 });
 

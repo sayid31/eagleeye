@@ -217,6 +217,19 @@ test('a live mic meter flags data-meter="live" and releases it on stop', async (
   assert.equal('meter' in ui.root.dataset, false, 'the meter flag is cleared when the session ends');
 });
 
+test("the assistant's reply stream feeds the voice wave alongside the mic", async () => {
+  const ui = { status: {}, detail: {}, root: { dataset: {}, style: { setProperty() {} } }, costValue: { dataset: {} } };
+  const { ctrl, getPc } = makeController({ ui });
+  const outputs = [];
+  ctrl.micMeter = { start: () => true, startOutput: (stream) => { outputs.push(stream); return true; }, stop() {} };
+  await ctrl.start();
+  const replyStream = makeStream([makeTrack('audio')]);
+  getPc().ontrack({ streams: [replyStream] });
+  assert.deepEqual(outputs, [replyStream]);
+  getPc().ontrack({ streams: [] });
+  assert.equal(outputs.length, 1, 'a track without a stream starts nothing');
+});
+
 test('without Web Audio the root falls back to data-meter="css"', async () => {
   const ui = { status: {}, detail: {}, root: { dataset: {} }, costValue: { dataset: {} } };
   const { ctrl } = makeController({ ui });

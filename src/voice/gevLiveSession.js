@@ -23,7 +23,7 @@
 
 import { createLiveChannelHandler } from './gevLiveEvents.js';
 import { createLiveCostMeter } from './liveCost.js';
-import { createMicLevelMeter } from './gevLiveMicLevel.js';
+import { createVoiceLevelMeter } from './gevLiveMicLevel.js';
 import { createSessionLimitGuard } from './liveSessionLimits.js';
 import { MIC_CONSTRAINTS, postSdpOffer, readAnswerSdp, stopStream, waitForIceComplete } from './gevLiveRtc.js';
 import { DATASET_STATUS, STATUS_LABELS } from './gevLiveVoiceControlUi.js';
@@ -53,11 +53,11 @@ export class GevLiveController {
     // Read-only turn/status observer for the Server Log (liveVoiceLog.js).
     this.observer = observer;
 
-    // Drives the dock mic's waveform from the real input level (--mic-level).
-    // `data-meter` tells the CSS whether a reactive level exists or it must fall
-    // back to its own idle shimmer.
-    this.micMeter = createMicLevelMeter({
-      onLevel: (level) => this.ui?.root?.style?.setProperty?.('--mic-level', level.toFixed(3)),
+    // --voice-level (louder of mic and reply) drives the dock wave, --mic-level
+    // (mic only) the Server Log; `data-meter` says live meter vs CSS shimmer.
+    this.micMeter = createVoiceLevelMeter({
+      onLevel: (level) => this.ui?.root?.style?.setProperty?.('--voice-level', level.toFixed(3)),
+      onInputLevel: (level) => this.ui?.root?.style?.setProperty?.('--mic-level', level.toFixed(3)),
     });
 
     this.status = 'idle';
@@ -203,7 +203,10 @@ export class GevLiveController {
 
       localPc = new this._RTCPeerConnection();
       this.pc = localPc;
-      localPc.ontrack = (event) => { if (this.audioEl) this.audioEl.srcObject = event.streams?.[0] || null; };
+      localPc.ontrack = (event) => {
+        if (this.audioEl) this.audioEl.srcObject = event.streams?.[0] || null;
+        if (event.streams?.[0]) this.micMeter.startOutput?.(event.streams[0]);
+      };
       localPc.oniceconnectionstatechange = () => {
         if (this.pc === localPc && localPc.iceConnectionState === 'failed') this._fatal('ICE connection failed');
       };
