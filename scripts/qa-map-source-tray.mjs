@@ -47,6 +47,17 @@ page.on('pageerror', (error) => consoleErrors.push(error.message));
 // `flight` label (the UI is Indonesian).
 const SHARE_FAILURE_NOTICE = 'flight yang dibagikan tidak dapat dipulihkan — feed tidak tersedia';
 
+// Keyboard disclosure hands focus to a tile from a 240 ms timer
+// (scheduleMapSourceFocus in src/uiPanelChrome.js). With Cesium busy on the
+// main thread it lands up to ~150 ms late, past the fixed 300 ms sleep these
+// checks used, so they wait for the focus instead. A timeout is not swallowed:
+// the check that follows reads the same state and reports the failure.
+const TILE_FOCUS_TIMEOUT_MS = 2000;
+const waitForTileFocus = () => page.waitForFunction(
+  () => Boolean(document.activeElement?.dataset?.stackId),
+  { timeout: TILE_FOCUS_TIMEOUT_MS },
+).catch(() => null);
+
 const check = (name, passed, detail = '') => {
   console.log(`  [${passed ? 'PASS' : 'FAIL'}] ${name}${detail ? ` — ${detail}` : ''}`);
   if (!passed) failures.push(name);
@@ -208,7 +219,7 @@ try {
 
   await page.focus('#control-panel-toggle');
   await page.keyboard.press('Enter');
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  await waitForTileFocus();
   const keyboardOpen = await page.evaluate(() => ({
     expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
     activeStack: document.activeElement?.dataset?.stackId || null,
@@ -232,7 +243,7 @@ try {
   );
 
   await page.keyboard.press('Space');
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  await waitForTileFocus();
   const spaceOpen = await page.evaluate(() => ({
     expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
     activeStack: document.activeElement?.dataset?.stackId || null,
@@ -249,7 +260,7 @@ try {
   await page.keyboard.up('Enter');
   await page.keyboard.press('Escape');
   await page.keyboard.press('Enter');
-  await new Promise((resolve) => setTimeout(resolve, 300));
+  await waitForTileFocus();
   const longHoldRecovery = await page.evaluate(() => ({
     expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
     activeStack: document.activeElement?.dataset?.stackId || null,
@@ -588,7 +599,7 @@ try {
   await new Promise((resolve) => setTimeout(resolve, 200));
   await page.focus('#control-panel-toggle');
   await page.keyboard.press('Enter'); // opens and hands focus to the active tile
-  await new Promise((resolve) => setTimeout(resolve, 400));
+  await waitForTileFocus();
   await page.keyboard.press('Tab'); // tab ONTO a tile, keyboard modality
   await page.keyboard.press('Enter'); // activate it from the keyboard
   await new Promise((resolve) => setTimeout(resolve, 200));
