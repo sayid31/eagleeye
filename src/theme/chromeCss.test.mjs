@@ -105,8 +105,8 @@ test('the dock location pill is clipped (search lives in the top bar), not remov
   assert.ok(bodies.every((body) => !/display:\s*none/.test(body)));
 });
 
-test('style menu has an icon and the mic is a ringed gradient with solid rings only', () => {
-  assert.match(dock, /#control-panel \.panel-mini-status::before/);
+test('the mic is a ringed gradient with solid rings only', () => {
+  // The style menu and its palette icon moved to the rail (railStyleCss.test.mjs).
   const [mic] = bodyOf(dock, 'body.ee-shell #command-dock #gev-voice-button {');
   assert.match(mic, /linear-gradient/);
   assert.match(mic, /box-shadow:\s*0 0 0 3px var\(--ee-accent-soft\)/);
@@ -121,7 +121,7 @@ test('the dock is compact: small mic and pills', () => {
 test('the dock matches the mockup size: no 60px legacy min-height, pills not stretched', () => {
   const [bar] = bodyOf(dock, 'body.ee-shell #command-dock {');
   assert.match(bar, /min-height:\s*0\s*!important/);
-  const pills = bodyOf(dock, 'body.ee-shell #command-dock > #control-panel');
+  const pills = bodyOf(dock, 'body.ee-shell #command-dock > #location-bar');
   assert.ok(pills.some((b) => /align-self:\s*center\s*!important/.test(b) && /height:\s*28px\s*!important/.test(b)));
 });
 
@@ -132,7 +132,7 @@ test('the mic glyph fits its orbit so it is centred', () => {
 });
 
 test('pill content is one row at pill height, overriding the legacy 3.75rem collapsed rule', () => {
-  const bodies = bodyOf(dock, 'body.ee-shell #command-dock #control-panel.collapsed .panel-inner');
+  const bodies = bodyOf(dock, 'body.ee-shell #command-dock #location-bar.collapsed .location-inner');
   assert.ok(bodies.some((b) => /min-height:\s*0\s*!important/.test(b)
     && /height:\s*28px\s*!important/.test(b)
     && /flex-direction:\s*row\s*!important/.test(b)

@@ -8,8 +8,10 @@ export const RAIL_ITEMS = Object.freeze([
   { id: 'scenes', label: 'Skenario', icon: 'movie', target: '.panel-collapse-btn[data-collapse-target="scene-panel"]' },
   { id: 'display', label: 'Tampilan', icon: 'tune', target: '.panel-collapse-btn[data-collapse-target="pp-toggles"]' },
   { id: 'context', label: 'Konteks', icon: 'monitoring', target: '.panel-collapse-btn[data-collapse-target="global-context-panel"]' },
-  { id: 'share', label: 'Bagikan tampilan', icon: 'share', target: '#share-btn', bottom: true },
 ]);
+
+/** Rail slot the controller moves the visual-style picker (#control-panel) into. */
+export const RAIL_STYLE_SLOT_ID = 'shell-rail-style-slot';
 
 /** @returns {string} Top bar: search, source-health chips, UTC clock. */
 export function topBarMarkup() {
@@ -35,12 +37,10 @@ export function railMarkup() {
       <button type="button" class="shell-rail-btn" data-rail-id="${item.id}" aria-label="${item.label}" title="${item.label}">
         <span class="material-symbols-outlined" aria-hidden="true">${item.icon}</span>
       </button>`;
-  const top = RAIL_ITEMS.filter((item) => !item.bottom).map(button).join('');
-  const bottom = RAIL_ITEMS.filter((item) => item.bottom).map(button).join('');
   return `
   <nav id="shell-rail" aria-label="Navigasi utama">
-    <div class="shell-rail-group">${top}</div>
-    <div class="shell-rail-group">${bottom}</div>
+    <div class="shell-rail-group">${RAIL_ITEMS.map(button).join('')}</div>
+    <div class="shell-rail-group" id="${RAIL_STYLE_SLOT_ID}"></div>
   </nav>`;
 }
 

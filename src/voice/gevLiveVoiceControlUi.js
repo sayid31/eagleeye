@@ -68,7 +68,10 @@ export function createVoiceControl({ reset = false } = {}) {
       const controlPanel = document.getElementById('control-panel');
       commandDock.appendChild(root);
       if (locationBar) commandDock.insertBefore(locationBar, root);
-      if (controlPanel) commandDock.appendChild(controlPanel);
+      // The shell moves the style picker into the icon rail before voice
+      // mounts (shell/stylePickerMount.js); only re-order it while it is
+      // still a dock child.
+      if (controlPanel?.parentNode === commandDock) commandDock.appendChild(controlPanel);
     } else {
       document.body.appendChild(root);
     }
