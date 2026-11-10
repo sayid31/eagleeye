@@ -9,6 +9,7 @@ import { CREEP_BURST, CREEP_MOVE_MS, CREEP_STOP_MS, DENSITY_MULT, HEAT_JAM_BASE_
 import { estimateRoadLengthDeg } from './trafficParse.js';
 import { removeHeatLines } from './trafficRender.js';
 import { S, _scratchLerp } from './trafficState.js';
+import { cancelSurfaceRefine } from './trafficSurfaceHeights.js';
 import { activeSizeDelta, baseDotSize, jamDensityOn } from './trafficStyle.js';
 
 // ─── Dot Spawning ──────────────────────────────────────────
@@ -399,6 +400,7 @@ function maybeStopLight(dot, now) {
 
 /** Remove all point primitives and reset dot/road arrays and counters. */
 export function clearDots() {
+  cancelSurfaceRefine();
   if (S._pointCollection) S._pointCollection.removeAll();
   removeHeatLines();
   S._dots = [];

@@ -67,6 +67,9 @@ export function materializeWaypoints(coords, floorAt, roadHeight, batchHeight, o
 export function reheightRoad(road, floorAt, offset) {
   let moved = 0;
   road.coords.forEach(([lng, lat], i) => {
+    // A height read on the rendered surface at this exact spot beats any
+    // ~111 m cell value that lands later.
+    if (road.surfaceRefined?.[i]) return;
     const floor = floorAt(lat, lng);
     if (floor == null) return;
     const before = Cesium.Cartographic.fromCartesian(road.waypoints[i]).height;
@@ -105,7 +108,7 @@ export function repositionDotsOnRoads(roads) {
 }
 
 /** Meters between consecutive waypoints (speed → parametric t conversion). */
-function segmentDistances(waypoints) {
+export function segmentDistances(waypoints) {
   const dist = [];
   for (let i = 0; i < waypoints.length - 1; i++) dist.push(Cesium.Cartesian3.distance(waypoints[i], waypoints[i + 1]));
   return dist;
