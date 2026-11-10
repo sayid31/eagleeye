@@ -54,3 +54,14 @@ test('the rail button matches its neighbours: a palette glyph on a 40px rail-but
   assert.match(button, /width:\s*40px/);
   assert.match(button, /height:\s*40px/);
 });
+
+test('map-source chips get two columns in the narrow tray so labels cannot overlap', () => {
+  // style.css's six-column row fits the wide dock tray, not this 300px one.
+  assert.match(styleCss, /\.map-stack-chip-row \{[^}]*repeat\(6, minmax\(0, 1fr\)\)/);
+  assert.match(bodyOf('body.ee-shell #shell-rail #control-panel .map-stack-chip-row'), /repeat\(2, minmax\(0, 1fr\)\)/);
+  const tray = bodyOf('body.ee-shell #shell-rail #control-panel:not(.collapsed) .dock-popover-content');
+  assert.match(tray, /width:\s*300px/);
+  const label = bodyOf('body.ee-shell #shell-rail #control-panel .map-stack-chip-label');
+  assert.match(label, /text-overflow:\s*ellipsis/);
+  assert.match(label, /overflow:\s*hidden/);
+});

@@ -135,6 +135,25 @@ body.ee-shell #shell-rail #control-panel .style-btn:hover {
   transform: none;
 }
 
+/* style.css lays the six map-source chips out in six columns for the wide dock
+   tray. In this 300px tray that is ~42px a column, and the no-wrap labels
+   ("ESRI DARK GRAY") painted over their neighbours. Two columns fit the
+   longest label; the ellipsis only guards an unexpectedly long one. */
+body.ee-shell #shell-rail #control-panel .map-stack-chip-row {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+body.ee-shell #shell-rail #control-panel .map-stack-chip {
+  min-width: 0;
+  overflow: hidden;
+}
+
+body.ee-shell #shell-rail #control-panel .map-stack-chip-label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 body.ee-shell #shell-rail #control-panel .dock-pin-btn {
   position: absolute;
   top: 8px;
