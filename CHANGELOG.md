@@ -7,6 +7,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Titik lalu lintas di peta Esri/OSM kini menempel di jalannya, termasuk di jalan permukiman yang sempit.
+  Sebelumnya tinggi titik diperkirakan per petak ±111 m dan sering ikut tinggi atap atau pohon, sehingga
+  saat kamera miring titiknya tampak jatuh di atas rumah di samping jalan.
+
 - Panel Konteks tidak lagi lompat ke atas setiap kali tombol Radio diklik (Putar/Jeda, Berikutnya,
   Sebelumnya, Berhenti, Volume). Posisi gulir panel kini tetap di tempatnya.
 - Memilih **Tag Stasiun** di panel Radio kini benar-benar mengganti stasiun: dipilih stasiun terdekat di

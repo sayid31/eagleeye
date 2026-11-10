@@ -3402,3 +3402,17 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Why crop rather than return the whole tile.** `allocateRoadDotBudgets` spreads `MAX_DOTS` over every returned road with no viewport cull, so handing back the bigger tile would thin dots in view (the 2026-10-22 objection to growing the box).
 
 **Limits.** Road queries only (they carry `out geom`). The index learns tiles as they are written or hit: the disk records store no query text, so older files join only once their exact key is requested again. Adjacent tiles that only partially overlap a request are not stitched together.
+
+## 2026-11-10 — Traffic dots read the rendered globe height at each waypoint
+
+**Symptom.** On the Esri stack in Jakarta, some traffic dots sat on the roofs beside narrow streets instead of on the street.
+
+**Ruled out (measured on cached Overpass tiles around -6.21, 106.85).** Corner cutting from the 80-waypoint cap: 2 of 4,058 ways exceed it, at most 4.9 m off. The photoreal mesh-cell floor: the mesh sampler only runs with a visible Google tileset, so it does not apply on Esri.
+
+**Root cause.** Each waypoint took the ground-floor height of the ~111 m cell it falls in, read at the cell centre, plus 3 m. The Re:Earth terrain is a surface model: adjacent cells there differ by a median 1.2 m, p90 3.8 m, up to 18.7 m, so a street often inherits a rooftop or canopy height. Within 2 km the dots draw through the terrain, and a dot h metres too high shows h / tan(pitch) metres further from the camera (~2 m per metre at 25°). Residential streets, 61% of the ways in that area and 3–6 m wide, lose their dots onto the houses beside them.
+
+**Decision.** After each road render, a time-sliced pass (4 ms per frame, nearest roads first, after `globe.tilesLoaded` or at most 3 s) re-heights the visible roads' waypoints from `globe.getHeight` at the exact coordinate, at 1 m above that surface (`trafficSurfaceHeights.js`). `globe.getHeight` answers from the terrain mesh on screen; Cesium 1.138 picks it through a per-tile octree, so ~23k waypoints in a dense fetch take a few seconds spread over frames rather than one long stall. A late cell floor (`reheightRoad`) skips waypoints that already have a surface reading.
+
+**Why 1 m, and why the cell estimate keeps 3 m.** A surface reading is the height the user sees, so the only reason left to float is depth-test clearance beyond 2 km. A cell estimate can be metres below the real surface and keeps its 3 m so far dots are not buried.
+
+**Limits.** Photoreal stacks hide the globe and keep the mesh-cell floor; switching to one hands cached roads back to it. Heights come from the terrain detail loaded at render time: zooming in further without a new road render keeps the earlier reading (fine-level changes on this terrain are small). Some residential alleys are covered by roofs or trees in the imagery, so their dots stand on a real road that cannot be seen.

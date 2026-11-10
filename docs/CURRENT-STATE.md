@@ -2035,6 +2035,17 @@ detection off by hand — would not have.
   terrain within their depth-test punch distance they slid off their roads as
   the camera moved. Pinned in `src/data/traffic.roadHeight.test.mjs` and
   `src/data/trafficHeights.test.mjs`.
+- **On globe stacks (Esri / OSM), visible traffic waypoints are re-heighted
+  onto the rendered terrain at their exact coordinate.** After every road
+  render, `scheduleSurfaceRefine` (`src/data/trafficSurfaceHeights.js`) waits
+  for `globe.tilesLoaded` (at most 3 s), then reads `globe.getHeight` per
+  waypoint, nearest roads first, 4 ms per frame, and places it 1 m above that
+  surface (`SURFACE_DOT_HEIGHT_OFFSET`); stopped dots are repositioned. The
+  cell estimate (3 m above the ~111 m cell floor) stays only where no reading
+  exists, and a late cell floor never overwrites a reading. Photoreal stacks
+  hide the globe and keep the mesh-cell floor; cached roads are handed back to
+  it on such a switch. Clearing the dots cancels the pass. Why: see
+  `docs/DECISIONS.md` 2026-11-10.
 - Development captures opened with `?trafficDebug=1` mint an interaction anchor
   from the exact `camera.changed` event that arms each debounced load, then emit
   scheduling-correlated User Timing entries for production `response.json`, road
