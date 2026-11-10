@@ -12,6 +12,7 @@ import {
 import { mapTone } from './mapTone.js';
 import { panelsToCollapse } from './railPlan.js';
 import { RAIL_ITEMS, railMarkup, statusBarMarkup, topBarMarkup } from './shellMarkup.js';
+import { mountStylePicker } from './stylePickerMount.js';
 
 const REFRESH_MS = 1500;
 const CLOCK_MS = 1000;
@@ -79,6 +80,7 @@ export function initShell({ viewer, dataManager, mapStackController }) {
     syncRail();
   };
   $('shell-rail').addEventListener('click', onRailClick);
+  cleanups.push(mountStylePicker());
 
   function syncRail() {
     for (const [railId, panelId] of Object.entries(RAIL_PANELS)) {

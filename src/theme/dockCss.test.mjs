@@ -12,7 +12,7 @@ const GEOMETRY = /(^|[;{\s])(width|height|min-width|max-width|min-height|max-hei
 
 test('no dock hover rule changes geometry or adds a transform', () => {
   const hovers = rules.filter(({ sel }) => sel.includes(':hover'));
-  assert.ok(hovers.length >= 2, 'mic and style-pill hover rules are present');
+  assert.ok(hovers.length >= 1, 'the mic hover rule is present');
   for (const { sel, body } of hovers) {
     assert.doesNotMatch(body, GEOMETRY, sel);
   }
@@ -26,7 +26,7 @@ test('the mic hover widens the halo instead of scaling the button', () => {
   assert.doesNotMatch(rest, /transition:[^;]*transform/, 'no transform transition to animate on hover');
 });
 
-test('the hovered mic halo stays inside the gap to the style pill', () => {
+test('the hovered mic halo stays inside the dock gap', () => {
   const [hover] = bodyOf('body.ee-shell #command-dock #gev-voice-button:hover');
   const [dockBody] = bodyOf('body.ee-shell #command-dock');
   const spread = Number(hover.match(/box-shadow:\s*0 0 0 (\d+)px/)[1]);
@@ -34,15 +34,7 @@ test('the hovered mic halo stays inside the gap to the style pill', () => {
   assert.ok(spread < gap, `halo ${spread}px must be smaller than the ${gap}px dock gap`);
 });
 
-test('the style pill click layer resets the inherited min-width so it cannot overhang the mic', () => {
-  // style.css gives the tray header a 144px min-width from the old wide dock;
-  // the 110px pill's absolute click layer must drop it or it covers the mic.
-  const [layer] = bodyOf('body.ee-shell #command-dock #control-panel .dock-tray-toggle');
-  assert.ok(layer, 'click layer rule exists');
-  assert.match(layer, /position:\s*absolute/);
-  assert.match(layer, /inset:\s*0/);
-  assert.match(layer, /min-width:\s*0\s*;/);
-  const styleCss = readFileSync(new URL('../../style.css', import.meta.url), 'utf8');
-  assert.match(styleCss, /\.panel-header[^{]*\{[^}]*min-width:\s*calc\(var\(--dock-side-compact\)/,
-    'if style.css drops this min-width, this guard can be relaxed');
+test('the visual-style menu is no longer laid out in the dock', () => {
+  // shellController.js moves #control-panel into the icon rail (railStyle.css).
+  assert.doesNotMatch(dock, /#control-panel/);
 });

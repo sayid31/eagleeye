@@ -28,6 +28,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Pemilih gaya visual (Normal, CRT, NVG, FLIR, dan lainnya, beserta Sumber Peta) pindah dari dock bawah ke
+  bilah ikon kiri sebagai tombol palet; panelnya terbuka di samping bilah. Dock bawah kini hanya berisi
+  tombol suara.
+- Tombol Bagikan di bilah ikon kiri dihapus; tautan bagikan tetap ada lewat tombol 🔗 di kanan atas.
 - Batas sesi suara kini aktif secara bawaan: 60 menit suara per hari, sesi maksimal 30 menit, dan sesi
   ditutup setelah diam 300 detik. Batas yang sengaja dikosongkan lalu disimpan tetap mati.
 - Tampilan **/admin** kini bergaya HUD seperti konsol peta, dengan logo EagleEye, lencana status berwarna

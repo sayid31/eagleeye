@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { RAIL_ITEMS, railMarkup, statusBarMarkup, topBarMarkup } from './shellMarkup.js';
+import { RAIL_ITEMS, RAIL_STYLE_SLOT_ID, railMarkup, statusBarMarkup, topBarMarkup } from './shellMarkup.js';
 
 const html = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
 const main = readFileSync(new URL('../main.js', import.meta.url), 'utf8');
@@ -48,4 +48,13 @@ test('the shell is mounted from main.js after the layer panel is built', () => {
 test('the rail has no globe-reset entry; the top-right button already does that', () => {
   assert.ok(!RAIL_ITEMS.some((item) => item.id === 'reset'));
   assert.match(html, /id="reset-globe-view"/);
+});
+
+test('the rail has no share entry; the top-right link button already shares the view', () => {
+  assert.ok(!RAIL_ITEMS.some((item) => item.id === 'share' || item.target === '#share-btn'));
+  assert.match(html, /id="top-center-actions"[\s\S]*?id="share-btn"/);
+});
+
+test('the rail bottom holds the slot the visual-style picker moves into', () => {
+  assert.match(railMarkup(), new RegExp(`<div class="shell-rail-group" id="${RAIL_STYLE_SLOT_ID}"></div>\\s*</nav>`));
 });

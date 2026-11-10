@@ -1,4 +1,5 @@
-/* Bottom dock: [style menu] [round mic]; the location pill is clipped (see below).
+/* Bottom dock: [round mic]; the location pill is clipped (see below), and the
+   visual-style menu lives in the icon rail (railStyle.css).
    style.css styles the dock with ids, :has() and media-query variants, so the
    layout-critical properties here use !important. Markup is untouched: titles,
    status text and cost readouts are clipped visually and stay for assistive tech. */
@@ -23,8 +24,7 @@ body.ee-shell #command-dock {
   -webkit-backdrop-filter: blur(12px);
 }
 
-body.ee-shell #command-dock > #location-bar,
-body.ee-shell #command-dock > #control-panel {
+body.ee-shell #command-dock > #location-bar {
   flex: 0 0 auto !important;
   /* style.css stretches the pill to the dock height; keep it at the mockup's 28px. */
   align-self: center !important;
@@ -41,15 +41,12 @@ body.ee-shell #command-dock > #control-panel {
 }
 
 body.ee-shell #command-dock > #location-bar { order: 1; }
-body.ee-shell #command-dock > #control-panel { order: 2; }
-body.ee-shell #command-dock > #gev-voice-control { order: 3; }
+body.ee-shell #command-dock > #gev-voice-control { order: 2; }
 
 /* style.css sets min-height 3.75rem + column layout on these with ids and
    .collapsed (higher specificity), which left the 28px pill's content 60px tall and
    centred, so it sat on the pill's bottom edge. Force a one-row, pill-height box. */
 body.ee-shell #command-dock .location-inner,
-body.ee-shell #command-dock .panel-inner,
-body.ee-shell #command-dock #control-panel.collapsed .panel-inner,
 body.ee-shell #command-dock #location-bar.collapsed .location-inner {
   display: flex !important;
   flex-direction: row !important;
@@ -62,8 +59,6 @@ body.ee-shell #command-dock #location-bar.collapsed .location-inner {
 
 /* Tray titles are clipped, not removed. */
 body.ee-shell #command-dock .location-toolbar,
-body.ee-shell #command-dock #control-panel .panel-title,
-body.ee-shell #command-dock #control-panel .panel-mini-label,
 body.ee-shell #command-dock .location-mini-poi,
 body.ee-shell #command-dock .gev-voice-heading,
 body.ee-shell #command-dock .gev-voice-kicker,
@@ -112,88 +107,6 @@ body.ee-shell #command-dock .location-mini-city::after {
   color: var(--ee-text-muted);
 }
 
-/* Style menu: palette icon, the active style in accent, a chevron. The full-size
-   toggle covers it as the click target. */
-body.ee-shell #command-dock > #control-panel {
-  background: linear-gradient(180deg, var(--ee-surface-2), var(--ee-surface));
-  border-radius: 10px;
-  transition: border-color 0.15s ease, background 0.15s ease;
-}
-
-body.ee-shell #command-dock > #control-panel:hover,
-body.ee-shell #command-dock > #control-panel:not(.collapsed) {
-  border-color: var(--ee-accent) !important;
-}
-
-body.ee-shell #command-dock #control-panel .panel-mini-status {
-  align-items: center;
-  gap: 8px;
-}
-
-body.ee-shell #command-dock #control-panel .panel-mini-status::before {
-  content: 'palette';
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  background: var(--ee-accent-soft);
-  color: var(--ee-accent);
-  font-family: 'Material Symbols Outlined';
-  font-size: 15px;
-  font-feature-settings: 'liga';
-  line-height: 1;
-  letter-spacing: normal;
-  text-transform: none;
-}
-
-body.ee-shell #command-dock #control-panel:not(.collapsed) #style-mini-value::after {
-  content: '\25B4';
-  color: var(--ee-accent);
-}
-body.ee-shell #command-dock #control-panel .panel-mini-status {
-  display: flex !important;
-  padding: 0;
-}
-
-body.ee-shell #command-dock #control-panel #style-mini-value {
-  color: var(--ee-text);
-  font: 600 13px var(--ee-font-sans);
-  letter-spacing: 0;
-  text-transform: lowercase;
-}
-
-body.ee-shell #command-dock #control-panel #style-mini-value::first-letter {
-  text-transform: uppercase;
-}
-
-body.ee-shell #command-dock #control-panel #style-mini-value::after {
-  content: '\25BE';
-  margin-left: 8px;
-  color: var(--ee-text-muted);
-}
-
-/* The tray header becomes an invisible click layer exactly the pill's size.
-   style.css gives the header `min-width: calc(var(--dock-side-compact) - 1.5rem)`
-   (144px, from the older wide dock); without the reset the layer overhung the
-   110px pill by 34px onto the mic, so hovering the mic lit the pill and clicking
-   the mic opened the style menu. */
-body.ee-shell #command-dock #control-panel .dock-tray-toggle {
-  position: absolute;
-  inset: 0;
-  z-index: 1;
-  width: 100%;
-  min-width: 0;
-  margin: 0;
-  opacity: 0;
-}
-
-body.ee-shell #command-dock #control-panel:has(.dock-tray-toggle:focus-visible) {
-  outline: 2px solid var(--ee-accent);
-  outline-offset: 2px;
-  border-radius: 10px;
-}
-
 /* Trays open as calm surfaces, not glass with glow. */
 body.ee-shell #command-dock .dock-popover-content {
   background: var(--ee-surface);
@@ -232,7 +145,7 @@ body.ee-shell #command-dock #gev-voice-button {
 }
 
 /* Hover is paint-only: the halo ring widens, nothing scales, so the mic never
-   grows into the 8px gap toward the style pill. */
+   grows past the dock's 8px gap. */
 body.ee-shell #command-dock #gev-voice-button:hover {
   box-shadow: 0 0 0 4px var(--ee-accent-soft), inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
