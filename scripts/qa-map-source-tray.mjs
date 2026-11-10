@@ -83,6 +83,18 @@ const trayMetrics = () => page.evaluate(() => {
   };
 });
 
+// The tray opens from the icon rail (src/theme/railStyle.css): its 300 px
+// popover lays the six chips out two to a row at every viewport width.
+const RAIL_TRAY_COLUMNS = 2;
+const railTrayFits = (metrics) => (
+  metrics.columns.split(' ').length === RAIL_TRAY_COLUMNS
+    && metrics.rows === Math.ceil(metrics.chips.length / RAIL_TRAY_COLUMNS)
+    && metrics.popover.left >= 0
+    && metrics.popover.right <= metrics.viewport.width
+    && metrics.popover.top >= 0
+    && metrics.popover.bottom <= metrics.viewport.height
+);
+
 try {
   await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });
   await page.setRequestInterception(true);
@@ -557,7 +569,7 @@ try {
     await page.click(`[data-stack-id="${stackId}"]`);
     await new Promise((resolve) => setTimeout(resolve, 120));
     const afterClick = await readTrayState();
-    await page.mouse.move(20, 20); // leave the dock entirely → pointerleave
+    await page.mouse.move(20, 20); // leave the rail tray entirely → pointerleave
     // Past the 420 ms unpinned close delay with room for a slow frame.
     await new Promise((resolve) => setTimeout(resolve, 1000));
     return { afterClick, afterLeave: await readTrayState() };
@@ -630,10 +642,8 @@ try {
   await page.click('.dock-pin-btn[data-pin-target="control-panel"]');
   const desktop = await trayMetrics();
   check(
-    'desktop tray is one row and fully inside the viewport',
-    desktop.rows === 1
-      && desktop.popover.left >= 0
-      && desktop.popover.right <= desktop.viewport.width,
+    'desktop tray is two chip columns and fully inside the viewport',
+    railTrayFits(desktop),
     JSON.stringify(desktop),
   );
 
@@ -641,12 +651,10 @@ try {
   await new Promise((resolve) => setTimeout(resolve, 180));
   const at620 = await trayMetrics();
   check(
-    '620 px tray uses two rows without clipping',
+    '620 px tray keeps two chip columns without clipping',
     at620.expanded === 'true'
       && at620.pinned
-      && at620.rows === 2
-      && at620.popover.left >= 0
-      && at620.popover.right <= at620.viewport.width,
+      && railTrayFits(at620),
     JSON.stringify(at620),
   );
 
@@ -661,9 +669,7 @@ try {
     '480 px live resize keeps the open tray and every tile in bounds',
     at480.expanded === 'true'
       && at480.pinned
-      && at480.rows === 2
-      && at480.popover.left >= 0
-      && at480.popover.right <= at480.viewport.width
+      && railTrayFits(at480)
       && allRectsInside,
     JSON.stringify(at480),
   );
