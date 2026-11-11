@@ -3482,3 +3482,15 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Decision.** `cacheDecision` (`src/server/staleWhileRevalidate.mjs`): a past-TTL copy is sent immediately and refreshed once in the background; only a cold cache waits. A failed refresh starts a backoff (CelesTrak 15 min — it asks clients not to hammer GP data; LL2 5 min — free tier 15 calls/hour) during which a stale copy is served without another attempt and a cold cache fails fast. A TLE or launch list minutes past its TTL is still correct for this view; a 20 s blank wait is not.
 
 **Not changed.** The client still awaits the satellites enable (six small groups, now cache answers) and the Context isolation still disables other layers before entering the mode; neither was the measured cost.
+
+## 2026-11-11 — Space Missions no longer borrows the Satellite layer (owner decision)
+
+**Symptom.** Enabling Space Missions turned the Satellite toggle ON ("Live · 826") while no satellite was drawn; switching Satellites off ended the mission; switching Satellites on alone did not start it.
+
+**Why it was like that.** The mission enabled Satellites as a hidden dependency (dense catalog, points and rings off) for orbit matching, and the Context policy listed it as a mode dependency, so turning it off requested an exit.
+
+**Owner choice.** Of three options (keep borrowing but show the row OFF; lock the row as "borrowed"; show the points), the owner chose: the Satellite row reads OFF and the mission works without it.
+
+**Decision.** Rather than presenting an enabled layer as off, the dependency is removed. Mission orbit matching already had a TLE-text path (`findSatelliteOrbitTrackInTle`) over CelesTrak's `active` group — every active satellite, a superset of the core groups and Starlink — with the same name score and launch-year filter as the catalog path. That feed is the mission's own; the Satellite catalog is still consulted first when the user has the layer on. The first mission build waits up to 2 s for the feed (served from cache in ~0.2 s since the stale-while-revalidate change) so matches land without the 1.5 s post-TLE rebuild. Context policy now separates a mode's dependencies (switching one off exits) from optional layers it permits (Satellites beside Space Missions), and a user-enabled optional layer counts as a user addition that survives exit.
+
+**Trade-off.** With Satellites off and a cold `active` cache, orbit matches appear after the feed arrives (post-TLE rebuild) instead of from an already-loaded catalog.

@@ -17,6 +17,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
     sumber cadangan, gagal diaktifkan) dilaporkan dengan nama layer dan alasannya, begitu pula saat
     pulih kembali. Sumber baru di filter: **Layer data** dan **Server (console)**.
 
+### Changed
+
+- **Misi Antariksa** tidak lagi menyalakan layer **Satelit**. Tombol Satelit kini tetap sesuai pilihan Anda
+  (sebelumnya ikut ON tapi titiknya tidak tampil). Mematikan Satelit tidak lagi mengakhiri Misi Antariksa,
+  dan Satelit yang Anda nyalakan sendiri selama misi tetap menyala setelah misi selesai. Orbit misi tetap
+  dicocokkan dari data orbit CelesTrak yang diambil misi itu sendiri.
+
 ### Fixed
 
 - **Misi Antariksa** dan **Satelit** kini aktif tanpa menunggu server CelesTrak / Launch Library. Data yang
