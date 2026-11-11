@@ -190,8 +190,19 @@ test('voice dependency OFF exits Space Missions like the equivalent UI action', 
   assert.equal(shouldExitContextForLayerChange({
     contextMode: 'space-missions',
     globalContextEnabled: false,
-    change: { type: 'visibility', layerId: 'satellites', enabled: false, origin: 'voice' },
+    change: { type: 'visibility', layerId: 'rocket-launches', enabled: false, origin: 'voice' },
   }), true);
+});
+
+test('Satellites is optional beside Space Missions: switching it off never ends the mission', () => {
+  for (const origin of ['user', 'voice']) {
+    assert.equal(shouldExitContextForLayerChange({
+      contextMode: 'space-missions',
+      globalContextEnabled: false,
+      change: { type: 'visibility', layerId: 'satellites', enabled: false, origin },
+    }), false, origin);
+  }
+  assert.equal(contextAllowedLayerIds('space-missions').has('satellites'), true, 'the user may still keep or add it');
 });
 
 test('only a newer explicit mission request is deferred during Clear All', () => {
@@ -275,7 +286,7 @@ test('manually disabling a mode dependency exits that Context bundle', () => {
   assert.equal(shouldExitContextForLayerChange({
     contextMode: 'space-missions',
     globalContextEnabled: false,
-    change: { ...userEnable('satellites'), enabled: false },
+    change: { ...userEnable('rocket-launches'), enabled: false },
   }), true);
 });
 
@@ -538,10 +549,17 @@ test('mid-session user additions are recorded, removed on disable, and judged ag
   // A dependency of the mode being ENTERED is not a user addition.
   recordContextSessionUserChange({
     snapshot,
+    change: { type: 'visibility', layerId: 'military', enabled: true, origin: 'user' },
+    effectiveContextMode: 'flights',
+  });
+  assert.equal(snapshot.userAdded.has('military'), false);
+  // An optional layer the user switches on beside a mode is theirs and survives exit.
+  recordContextSessionUserChange({
+    snapshot,
     change: { type: 'visibility', layerId: 'satellites', enabled: true, origin: 'user' },
     effectiveContextMode: 'space-missions',
   });
-  assert.equal(snapshot.userAdded.has('satellites'), false);
+  assert.equal(snapshot.userAdded.has('satellites'), true);
   // Disabling a recorded addition removes it before any exit restore reads it.
   recordContextSessionUserChange({
     snapshot,

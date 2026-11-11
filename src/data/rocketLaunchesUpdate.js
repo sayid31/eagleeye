@@ -1,14 +1,27 @@
 // Moved out of rocketLaunches.js (rocketLaunchesUpdate).
 
 import { stopMissionReplay } from './rocketLaunches.js';
-import { API_URL, POST_TLE_RETRY_DELAY_MS } from './rocketLaunchesConstants.js';
+import { ACTIVE_TLE_FIRST_BUILD_WAIT_MS, API_URL, POST_TLE_RETRY_DELAY_MS } from './rocketLaunchesConstants.js';
 import { addLaunchEntity } from './rocketLaunchesEntity.js';
 import { focusMission, setSelectedMission } from './rocketLaunchesFocus.js';
 import { normalizeRocketLaunches } from './rocketLaunchesNormalize.js';
 import { removeMissionOrbitPrimitives } from './rocketLaunchesOrbit.js';
 import { renderMissionPanel, renderMissionRoster } from './rocketLaunchesPanel.js';
-import { satelliteParamsAfterSpaceMissions, satelliteParamsForSpaceMissions, shouldRetryAfterActiveTle } from './rocketLaunchesPolicy.js';
+import { shouldRetryAfterActiveTle } from './rocketLaunchesPolicy.js';
 import { S, _missionOverlayRecords, _replayTracks, _satelliteTelemetry } from './rocketLaunchesState.js';
+
+/**
+ * Wait for `promise` to settle, but no longer than `ms`. Never rejects.
+ * @param {Promise<unknown>} promise
+ * @param {number} ms
+ * @returns {Promise<boolean>} true when it settled in time.
+ */
+export function settleWithin(promise, ms) {
+  let timer = null;
+  const timeout = new Promise((resolve) => { timer = setTimeout(() => resolve(false), ms); });
+  const settled = Promise.resolve(promise).then(() => true, () => true);
+  return Promise.race([settled, timeout]).finally(() => clearTimeout(timer));
+}
 
 export function clearPostTleRetry() {
   if (S._retryTimer) clearTimeout(S._retryTimer);
@@ -61,67 +74,16 @@ function ensureActiveTleLookup(token) {
   return request;
 }
 
-export async function captureSatelliteDependency() {
-  if (!S._dataManager || S._satelliteStateBeforeMission) return;
-  S._satelliteStateBeforeMission = {
-    // Effective visibility: a user enable still mid-activation is intent ON —
-    // capturing settled false would restore the user's enable away on exit.
-    enabled: S._dataManager.isEffectivelyEnabled?.('satellites')
-      ?? S._dataManager.isEnabled('satellites'),
-    params: satelliteParamsAfterSpaceMissions(
-      S._dataManager.getLayerParams('satellites'),
-    ),
-  };
-  S._dataManager.setLayerParams(
-    'satellites',
-    satelliteParamsForSpaceMissions(S._satelliteStateBeforeMission.params),
-  );
-  const token = S._lifecycleToken;
-  const activation = Promise.resolve(S._dataManager.setEnabled('satellites', true));
-  S._satelliteActivationPromise = activation;
-  try {
-    const activated = await activation;
-    // Space Missions without its satellite dependency is a broken replay
-    // surface; fail the mission enable so the manager's fail-closed path and
-    // the Context rollback see an honest failure instead of a silent success.
-    if (
-      token === S._lifecycleToken
-      && S._enabled
-      && (activated === false || !S._dataManager.isEnabled('satellites'))
-    ) {
-      throw new Error('Space Missions requires the satellites layer, which failed to start');
-    }
-  } finally {
-    if (token === S._lifecycleToken && S._satelliteActivationPromise === activation) {
-      S._satelliteActivationPromise = null;
-    }
-  }
-}
-
-export async function restoreSatelliteDependency() {
-  const snapshot = S._satelliteStateBeforeMission;
-  if (!snapshot || !S._dataManager) return;
-  S._satelliteStateBeforeMission = null;
-  S._satelliteActivationPromise = null;
-  S._dataManager.setLayerParams(
-    'satellites',
-    satelliteParamsAfterSpaceMissions(snapshot.params),
-  );
-  const restored = await S._dataManager.setEnabled('satellites', snapshot.enabled);
-  if (
-    restored === false
-    || S._dataManager.isEnabled('satellites') !== snapshot.enabled
-  ) {
-    throw new Error('Space Missions could not restore the satellites layer');
-  }
-}
-
 async function performMissionUpdate(token) {
   try {
-    ensureActiveTleLookup(token);
+    const activeLookup = ensureActiveTleLookup(token);
     const response = await fetch(API_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
     const launches = normalizeRocketLaunches(await response.json());
+    // Orbit matches come from the active TLE feed (the Satellite layer's
+    // catalog only when the user has it on), so give a cached feed a moment
+    // to land in this build; a slower one is picked up by the post-TLE retry.
+    if (!S._activeTleText) await settleWithin(activeLookup, ACTIVE_TLE_FIRST_BUILD_WAIT_MS);
     if (!S._enabled || token !== S._lifecycleToken || !S._dataSource) return;
     const activeTleText = S._activeTleText;
     if (S._replayCameraLaunchId) stopMissionReplay();

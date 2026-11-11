@@ -11,12 +11,12 @@ import { syncMissionOverlayEntries } from './rocketLaunchesOverlay.js';
 import { releaseAircraftTracking } from './rocketLaunchesPolicy.js';
 import { stopMissionZoomAnchor, syncReplayButton, syncReplayCountdownButton } from './rocketLaunchesReplayControls.js';
 import { S, _animationStarts, _replayTracks } from './rocketLaunchesState.js';
-import { captureSatelliteDependency, updateRocketLaunchesLayer } from './rocketLaunchesUpdate.js';
+import { updateRocketLaunchesLayer } from './rocketLaunchesUpdate.js';
 
 export { LAUNCH_PAD_ZONE_RADIUS_M, ROCKET_MISSION_AMBIENT_OVERLAY_COHORT_LIMIT, ROCKET_MISSION_AMBIENT_OVERLAY_COLLISION_CAPACITY, ROCKET_MISSION_AMBIENT_OVERLAY_SOURCE_ID, ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_ID, ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_OPTIONS } from './rocketLaunchesConstants.js';
 export { compactLaunchSiteName, formatMissionEventTime, missionDataCompleteness, missionHoverPreviewRange, missionRosterEntries, normalizeRocketLaunches, parseMissionDurationSeconds } from './rocketLaunchesNormalize.js';
 export { createRocketMissionElementOverlayEntry, createRocketMissionMarkerOverlayEntry, missionMarkerColor, selectRocketMissionMarkerOverlayCohort } from './rocketLaunchesOverlay.js';
-export { launchStatusAllowsOrbit, missionPathPresentation, releaseAircraftTracking, satelliteParamsAfterSpaceMissions, satelliteParamsForSpaceMissions, shouldRetryAfterActiveTle } from './rocketLaunchesPolicy.js';
+export { launchStatusAllowsOrbit, missionPathPresentation, releaseAircraftTracking, shouldRetryAfterActiveTle } from './rocketLaunchesPolicy.js';
 export { replayOverlayMode, replayVehicleScreenRotation, smoothReplayWindowPosition } from './rocketLaunchesReplayVehicle.js';
 export { _setRocketMissionOverlayHostForTest, _setSelectedRocketMissionForTest, _startMissionReplayForTest, _stopMissionReplayForTest } from './rocketLaunchesTestHooks.js';
 export { launchPadZoneVisible, missionAnchorHorizonVisible, missionAnchorVisible } from './rocketLaunchesVisibility.js';
@@ -247,9 +247,8 @@ const rocketLaunchesLayer = {
     try {
       await this._enableBody();
     } catch (error) {
-      // Enable is a transaction: a failed dependency must not leave mission
-      // UI/datasource visible or the satellite snapshot retained (a retained
-      // snapshot makes the next enable skip dependency capture entirely).
+      // Enable is a transaction: a failure must not leave mission UI or the
+      // datasource visible.
       try {
         await this.disable();
       } catch (cleanupError) {
@@ -266,7 +265,6 @@ const rocketLaunchesLayer = {
     document.getElementById('cockpit-context')?.setAttribute('hidden', '');
     if (S._selectedLaunchId) setSelectedMission(S._selectedLaunchId, S._explicitSelection);
     else setSelectedMission(null, false);
-    await captureSatelliteDependency();
   },
   disable: disableRocketLaunchesLayer,
 

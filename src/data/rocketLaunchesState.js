@@ -60,8 +60,6 @@ export const S = {
   _activeTlePromiseToken: 0,
   _renderedTleText: null,
   _focusAfterActiveLookup: false,
-  _satelliteStateBeforeMission: null,
-  _satelliteActivationPromise: null,
   _replayCameraRemover: null,
   _replayCameraLaunchId: null,
   _replayCameraToken: 0,

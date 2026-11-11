@@ -48,8 +48,6 @@ import rocketLaunchesLayer, {
   ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_ID,
   ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_OPTIONS,
   samplePath,
-  satelliteParamsAfterSpaceMissions,
-  satelliteParamsForSpaceMissions,
   shouldRetryAfterActiveTle,
   selectRocketMissionMarkerOverlayCohort,
   smoothReplayCameraHeading,
@@ -297,27 +295,6 @@ test('shifts replay start time so pause duration does not advance the mission', 
   assert.equal(replayStartAfterPause(1000, 4000, 9500), 6500);
   assert.equal(replayStartAfterPause(1000, 9500, 4000), 1000);
   assert.equal(replayStartAfterPause(1000, Number.NaN, 9500), 1000);
-});
-
-test('restores the complete standalone Satellite style after mission mode', () => {
-  const standalone = {
-    catalog: 'core',
-    showPoints: true,
-    showOrbits: true,
-    labelDensity: 'operator',
-  };
-  assert.deepEqual(satelliteParamsForSpaceMissions(standalone), {
-    ...standalone,
-    catalog: 'dense',
-    showPoints: false,
-    showOrbits: false,
-  });
-  assert.deepEqual(satelliteParamsAfterSpaceMissions(standalone), standalone);
-  assert.deepEqual(satelliteParamsAfterSpaceMissions(null), {
-    catalog: 'core',
-    showPoints: true,
-    showOrbits: true,
-  });
 });
 
 test('suppresses every orbital representation for failed launches', () => {
@@ -1172,22 +1149,16 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
   }
 });
 
-test('enable is transactional: a failed satellites dependency rolls the module back and a retry recaptures', async (t) => {
+test('Space Missions never switches Satellites on or rewrites its parameters', async (t) => {
+  // Owner decision 2026-11-11: the mission matches orbits from its own active
+  // TLE feed, so the Satellite row stays exactly as the user left it.
   const calls = [];
-  let satellitesEnabled = false;
-  let failNextActivation = true;
   const fakeManager = {
-    isEnabled: (id) => (id === 'satellites' ? satellitesEnabled : false),
-    getLayerParams: () => ({}),
-    setLayerParams: () => {},
-    setEnabled: (id, enabled) => {
-      calls.push(['setEnabled', id, enabled]);
-      if (id === 'satellites' && enabled && failNextActivation) {
-        return Promise.resolve(false); // activation refused/failed
-      }
-      if (id === 'satellites') satellitesEnabled = enabled;
-      return Promise.resolve(true);
-    },
+    isEnabled: () => false,
+    isEffectivelyEnabled: () => false,
+    getLayerParams: (id) => { calls.push(['getLayerParams', id]); return {}; },
+    setLayerParams: (id) => { calls.push(['setLayerParams', id]); },
+    setEnabled: (id, enabled) => { calls.push(['setEnabled', id, enabled]); return Promise.resolve(true); },
   };
   const priorDocument = globalThis.document;
   globalThis.document = {
@@ -1201,55 +1172,7 @@ test('enable is transactional: a failed satellites dependency rolls the module b
     rocketLaunchesLayer.attachDataManager(null);
   });
 
-  // First enable: dependency activation fails -> enable() must reject and the
-  // module must roll itself back (satellite snapshot restored AND cleared).
-  await assert.rejects(() => rocketLaunchesLayer.enable(), /satellites layer/);
-  const restoreCall = calls.filter(([, id, enabled]) => id === 'satellites' && enabled === false);
-  assert.ok(restoreCall.length >= 1, 'rollback restored the pre-mission satellites state');
-
-  // Retry with a healthy dependency: capture must run AGAIN (a retained
-  // snapshot would skip it) and enable must succeed.
-  calls.length = 0;
-  failNextActivation = false;
   await rocketLaunchesLayer.enable();
-  assert.deepEqual(
-    calls.filter(([, id, enabled]) => id === 'satellites' && enabled === true).length >= 1,
-    true,
-    'retry recaptured the satellites dependency',
-  );
   await rocketLaunchesLayer.disable();
-});
-
-test('disable reports a semantic failure while restoring the satellites dependency', async (t) => {
-  let satellitesEnabled = false;
-  let failRestore = false;
-  const fakeManager = {
-    isEnabled: (id) => (id === 'satellites' ? satellitesEnabled : false),
-    isEffectivelyEnabled: (id) => (id === 'satellites' ? satellitesEnabled : false),
-    getLayerParams: () => ({}),
-    setLayerParams: () => {},
-    setEnabled: (id, enabled) => {
-      if (id === 'satellites' && !enabled && failRestore) return Promise.resolve(false);
-      if (id === 'satellites') satellitesEnabled = enabled;
-      return Promise.resolve(true);
-    },
-  };
-  const priorDocument = globalThis.document;
-  globalThis.document = {
-    getElementById: () => null,
-    querySelector: () => null,
-    querySelectorAll: () => [],
-  };
-  rocketLaunchesLayer.attachDataManager(fakeManager);
-  t.after(() => {
-    globalThis.document = priorDocument;
-    rocketLaunchesLayer.attachDataManager(null);
-  });
-
-  await rocketLaunchesLayer.enable();
-  failRestore = true;
-  await assert.rejects(
-    () => rocketLaunchesLayer.disable(),
-    /could not restore the satellites layer/,
-  );
+  assert.deepEqual(calls.filter(([, id]) => id === 'satellites'), []);
 });
