@@ -7,7 +7,8 @@
 /** Owner-facing names for log sources. */
 export const SOURCE_LABELS = Object.freeze({
   browser: 'Browser', voice: 'Suara', judge: 'Judge keluar topik', map: 'Peta', cctv: 'CCTV', radio: 'Radio',
-  proxy: 'Layanan eksternal', keys: 'API key', admin: 'Akses admin', audit: 'Perubahan (audit)', log: 'Log',
+  layer: 'Layer data', proxy: 'Layanan eksternal', server: 'Server (console)', keys: 'API key', admin: 'Akses admin',
+  audit: 'Perubahan (audit)', log: 'Log',
 });
 
 /** "06 Nov 14:05:09" in the viewer's local time. */

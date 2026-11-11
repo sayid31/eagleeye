@@ -28,6 +28,7 @@ import { runStorageKeyMigrations } from './storageKeyMigration.js';
 import { waitForFirstFrame, composeSplashReadiness } from './splashGate.js';
 import { BOOT_MARKS, finalizeBootTiming, markBoot } from './bootTiming.js';
 import { installClientLog } from './log/clientLog.js';
+import { installLayerHealthLog } from './log/layerHealthLog.js';
 
 // First statement of the entry chunk's module scope. ES imports evaluate
 // BEFORE the module body, so this mark lands at the END of eager parse+eval —
@@ -310,6 +311,8 @@ async function init() {
       };
     }
     dataManager.buildTogglePanel(document.getElementById('data-toggles'));
+    // Layer faults (timeouts, unavailable sources) reach the owner's Server Log, not just the console.
+    installLayerHealthLog(dataManager);
     styleManager.attachDataManager(dataManager);
     initShell({ viewer, dataManager, mapStackController });
     initCameraInspector({ dataManager, styleManager });

@@ -3448,3 +3448,13 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Decision.** One predicate, `isGuidanceStatus` (`zoom-in`/`empty`/`idle`) in `managerFeedState.js`, is used by all three consumers. The layer keeps its prompt in `error`, so the chip text is unchanged and no other layer's stats contract moves. A `managerRefreshError` still counts as a failure regardless of status.
 
 **Deliberately unchanged.** A load that succeeds with a note (stale cache served, too many sites to list, Places supplement unavailable) still ends the banner as `MUAT GAGAL`: a layer with data plus an error is an intended failure announcement elsewhere (traffic's late flow failure test), so relaxing it for "has data" would be a cross-layer behaviour change that needs an owner decision.
+
+## 2026-11-11 — Server Log coverage comes from a console bridge and layer feed state, not per-module calls
+
+**Context.** The owner asked that any error anywhere be visible in /admin Server Log with where and why. Only seven server modules called `logServerEvent`; about 55 failure paths across ~25 server modules (CelesTrak, Overpass, FIRMS, TomTom, CCTV sources, …) reported only on the console, which nobody reads on the pm2 host, and browser-only failures (an AIS fetch timeout, an unavailable layer) never reached the server at all.
+
+**Decisions.**
+- **Bridge the server console** (`consoleBridge.mjs`) instead of adding a log call to each module: one change covers every existing and future `console.warn`/`console.error`, and the `[tag]` prefix those modules already use becomes the component. The calling file:line is taken from the stack; Vite bundles the config and its proxies into one temp file, so that line only names a real module with `--enable-source-maps` (set in `ecosystem.config.cjs`; an unmapped bundle line is omitted rather than shown misleadingly). Redaction stays in the store, so bridged text gets the same secret scrubbing as every producer. `GEV_SERVER_LOG_CONSOLE=0` is the escape hatch if the console turns out noisy.
+- **Every 5xx and 429 is one event**, keyed by route + status so repeats merge into a counted row. The streak-based `proxy.failing` stays for System Health. The response alone cannot say why; the proxy's own console report, now bridged, does.
+- **Browser layer faults come from `layerFeedState`**, the same state the layer rows show, reported on transitions (state or reason change, then recovery). Polling `getAll()` every 5 s rather than hooking each layer keeps it independent of how each layer updates its stats.
+- **Not bridged:** the browser console (Cesium/WebGL warnings would drown the signal; the owner chose A+B+C over it).

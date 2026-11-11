@@ -5,6 +5,18 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Added
+
+- **Server Log** di /admin kini menampilkan error dari seluruh sistem, lengkap dengan lokasi dan
+  penyebabnya:
+  - Setiap peringatan/error dari server (misalnya data satelit, kebakaran, lalu lintas, CCTV, atau Overpass
+    gagal diambil) tercatat dengan nama komponen dan file:baris asalnya.
+  - Setiap jawaban gagal (5xx) atau kena batas (429) dari layanan `/api/*` langsung tercatat per route,
+    tidak lagi menunggu tiga kali gagal berturut-turut.
+  - Layer data yang berubah menjadi "Terganggu" di browser pengguna (sumber tidak tersedia, data usang,
+    sumber cadangan, gagal diaktifkan) dilaporkan dengan nama layer dan alasannya, begitu pula saat
+    pulih kembali. Sumber baru di filter: **Layer data** dan **Server (console)**.
+
 ### Fixed
 
 - Mengaktifkan **Instalasi Militer** saat globe masih terlihat jauh tidak lagi langsung memunculkan
