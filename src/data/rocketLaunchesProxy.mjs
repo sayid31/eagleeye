@@ -7,7 +7,9 @@
  * key required, but an optional LL2_API_TOKEN raises the rate limit and is
  * kept server-side only (never sent to the browser). Cache: memory + disk
  * (.gev-cache/launch-library-2-v2.3.json), TTL 15 min, single-flight
- * refresh, serve-stale-on-failure — the celestrakProxy pattern.
+ * refresh. A past-TTL copy is answered at once (`X-GEV-Cache: STALE`) while
+ * the refresh runs in the background; only a cold cache waits for LL2, and a
+ * failed refresh is not retried for 5 min (staleWhileRevalidate.mjs).
  *
  * GET /api/launches → raw upstream JSON body (results for the trailing 30
  * days, capped at 100).
@@ -16,9 +18,12 @@
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import { coalesceProxyRequest, readResponseTextCapped } from '../server/proxyInfra.mjs';
+import { cacheDecision } from '../server/staleWhileRevalidate.mjs';
 
 /** Cache TTL for the Launch Library 2 recent-launch feed (15 min). */
 export const LL2_CACHE_TTL_MS = 15 * 60_000;
+/** After a failed refresh, wait this long before asking LL2 again (free tier: 15 calls/hour). */
+export const LL2_FAILURE_BACKOFF_MS = 5 * 60_000;
 
 /** Build LL2 request headers without exposing its optional token client-side. */
 export function launchLibraryRequestHeaders(token = process.env.LL2_API_TOKEN) {
@@ -33,15 +38,19 @@ export function launchLibraryRequestHeaders(token = process.env.LL2_API_TOKEN) {
  * Vite plugin: proxy the public Launch Library 2 recent-launch feed
  * server-side.
  *
+ * @param {{cachePath?: string, now?: () => number}} [options]
  * @returns {import('vite').Plugin}
  */
-export function rocketLaunchesProxy() {
+export function rocketLaunchesProxy({
+  cachePath = path.join(process.cwd(), '.gev-cache', 'launch-library-2-v2.3.json'),
+  now: clock = () => Date.now(),
+} = {}) {
   const ttlMs = LL2_CACHE_TTL_MS;
   const maxResponseBytes = 12 * 1024 * 1024;
   const maxDiskCacheBytes = 24 * 1024 * 1024;
-  const cachePath = path.join(process.cwd(), '.gev-cache', 'launch-library-2-v2.3.json');
   let cache = null;
   let diskLoaded = false;
+  let lastFailureAt = null;
   const inFlight = new Map();
 
   async function loadDiskCache() {
@@ -77,7 +86,7 @@ export function rocketLaunchesProxy() {
   }
 
   async function refreshUpstream() {
-    const end = new Date();
+    const end = new Date(clock());
     const start = new Date(end.getTime() - 30 * 86400000);
     const url = new URL('https://ll.thespacedevs.com/2.3.0/launches/');
     url.searchParams.set('net__gte', start.toISOString());
@@ -97,10 +106,23 @@ export function rocketLaunchesProxy() {
     }
     const parsed = JSON.parse(body);
     if (!Array.isArray(parsed?.results)) throw new Error('malformed upstream response');
-    const fresh = { at: Date.now(), body };
+    const fresh = { at: clock(), body };
     cache = fresh;
+    lastFailureAt = null;
     void saveDiskCache(fresh);
     return fresh;
+  }
+
+  /** Coalesced refresh; a failure is logged once and starts the backoff. */
+  function refresh() {
+    const request = coalesceProxyRequest(inFlight, 'recent-launches', refreshUpstream);
+    if (!request.shared) {
+      request.promise.catch((error) => {
+        lastFailureAt = clock();
+        console.warn(`[launch-library-proxy] refresh failed (${error?.message || error}) — next try in ${LL2_FAILURE_BACKOFF_MS / 60_000} min`);
+      });
+    }
+    return request;
   }
 
   function install(middlewares) {
@@ -110,22 +132,27 @@ export function rocketLaunchesProxy() {
         return;
       }
       await loadDiskCache();
-      const now = Date.now();
-      if (cache && now - cache.at < ttlMs) {
+      const decision = cacheDecision({
+        entry: cache, now: clock(), ttlMs, lastFailureAt, failureBackoffMs: LL2_FAILURE_BACKOFF_MS,
+      });
+      if (decision.serve === 'fresh') {
         send(res, 200, cache.body, 'HIT');
         return;
       }
-      const stale = cache;
-      const request = coalesceProxyRequest(inFlight, 'recent-launches', refreshUpstream);
+      if (decision.serve === 'stale') {
+        if (decision.refresh) refresh().promise.catch(() => {}); // failure already logged by refresh()
+        send(res, 200, cache.body, decision.refresh || inFlight.size ? 'STALE' : 'STALE-BACKOFF');
+        return;
+      }
+      if (decision.serve === 'unavailable') {
+        send(res, 502, JSON.stringify({ error: 'Launch Library 2 unavailable (recent refresh failed)' }), 'BACKOFF');
+        return;
+      }
+      const request = refresh();
       try {
         const fresh = await request.promise;
         send(res, 200, fresh.body, request.shared ? 'INFLIGHT' : 'MISS');
       } catch (error) {
-        if (stale) {
-          if (!request.shared) console.warn(`[launch-library-proxy] refresh failed (${error?.message || error}) — serving stale cache`);
-          send(res, 200, stale.body, 'STALE-ERROR');
-          return;
-        }
         send(
           res,
           Number.isInteger(error?.upstreamStatus) ? error.upstreamStatus : 502,
