@@ -1,8 +1,10 @@
 // Moved out of aisLiveVessels.js (aisLiveVesselsSession).
 
 import { geoidHeight } from './geoid.js';
-import { AIS_HEALTHY_STATUSES, classifyAisFeedSnapshot, deriveAisFeedError } from './aisFeedClassify.js';
-import { AIS_FIRST_CONNECT_GRACE_MS, AIS_FIRST_CONNECT_LABEL, DEFAULT_API_URL, state } from './aisLiveVesselsConstants.js';
+import { AIS_HEALTHY_STATUSES, aisFetchFailureReason, classifyAisFeedSnapshot, deriveAisFeedError } from './aisFeedClassify.js';
+import {
+  AIS_FIRST_CONNECT_GRACE_MS, AIS_FIRST_CONNECT_LABEL, AIS_LIVE_FETCH_TIMEOUT_MS, DEFAULT_API_URL, state,
+} from './aisLiveVesselsConstants.js';
 import { reconcileVessels, renderRowLimit } from './aisLiveVesselsRecords.js';
 import { S } from './aisLiveVesselsState.js';
 
@@ -112,7 +114,7 @@ export async function loadLivePositions(viewer) {
     // Combine the layer's teardown-abort with a hard timeout so a hung upstream
     // can't wedge the poll indefinitely (parity with the track fetch + flights).
     const signal = typeof AbortSignal.any === 'function'
-      ? AbortSignal.any([requestController.signal, AbortSignal.timeout(10000)])
+      ? AbortSignal.any([requestController.signal, AbortSignal.timeout(AIS_LIVE_FETCH_TIMEOUT_MS)])
       : requestController.signal;
     const response = await fetch(url, {
       signal,
@@ -137,7 +139,7 @@ export async function loadLivePositions(viewer) {
     applyAisFeedSnapshot(viewer, payload);
   } catch (error) {
     if (ownsAisRequest(requestController, requestSessionId) && error?.name !== 'AbortError') {
-      markAisUnavailable(error?.message || 'Pemuatan AIS live gagal');
+      markAisUnavailable(aisFetchFailureReason(error, AIS_LIVE_FETCH_TIMEOUT_MS));
       console.warn('[Data:ais-live-vessels]', state.error, error);
     }
   } finally {

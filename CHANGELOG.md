@@ -7,6 +7,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Layer Kapal (AIS) kini memuat kapal di server yang diakses lewat domain publik. Sebelumnya data kapal
+  (±2,8 MB) dikirim tanpa kompresi dan butuh lebih dari 10 detik, sehingga layer selalu tampil
+  "Terganggu · sumber tidak tersedia" meskipun Test Koneksi berhasil. Data kini dikompres dan batas
+  waktunya 20 detik; bila tetap habis waktu, alasannya tertulis jelas ("waktu habis memuat AIS live").
 - Panel Gaya Visual (dan Lokasi) yang dibuka lewat perintah suara atau tautan bagikan tidak lagi menutup
   sendiri sesaat kemudian bila panel itu baru saja ditutup dengan fokus masih di dalamnya.
 - Titik lalu lintas di peta Esri/OSM kini menempel di jalannya, termasuk di jalan permukiman yang sempit.
