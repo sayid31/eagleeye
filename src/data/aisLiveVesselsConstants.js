@@ -13,6 +13,13 @@ export const DEFAULT_ACTIVE_LABELS = 900;
 
 export const REFRESH_MS = 60000;
 
+/**
+ * Whole-request budget for one /api/ais-live poll, body download included. At
+ * the default row cap the snapshot is ~0.5 MB gzipped, so this is sized for a
+ * slow reverse-proxied link rather than localhost; still well inside REFRESH_MS.
+ */
+export const AIS_LIVE_FETCH_TIMEOUT_MS = 20000;
+
 /** Bounded wait for the first accepted vessel position in one enabled session. */
 export const AIS_FIRST_CONNECT_GRACE_MS = 30000;
 

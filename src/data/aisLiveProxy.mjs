@@ -21,6 +21,7 @@ import { parseSilenceTimeoutEnv } from './aisWatchdog.js';
 import {
   clampInt, normalizeAisTimestamp, normalizedHeading, numberValue, parseCsvOrJsonEnv, parseJsonEnv, stringValue,
 } from './aisValueParsing.mjs';
+import { sendJson } from '../server/jsonCompression.mjs';
 
 // ---------------------------------------------------------------------------
 // AISStream live vessel cache state
@@ -125,10 +126,9 @@ export function aisLiveProxy() {
 
         const feed = aisStreamStatusSnapshot();
 
-        res.statusCode = process.env.AISSTREAM_API_KEY ? 200 : 503;
-        res.setHeader('Content-Type', 'application/json; charset=utf-8');
-        res.setHeader('Cache-Control', 'no-store');
-        res.end(JSON.stringify({
+        // Gzipped: at the 12k-row default this snapshot is multi-MB, which
+        // outran the client's fetch timeout behind a reverse proxy.
+        await sendJson(req, res, process.env.AISSTREAM_API_KEY ? 200 : 503, {
           rows,
           source: 'AISStream',
           status: feed.status,
@@ -143,7 +143,7 @@ export function aisLiveProxy() {
           nextAttemptAt: feed.nextAttemptAt,
           staleAfterMs: feed.staleAfterMs,
           watchdog: feed.watchdog,
-        }));
+        }, { 'Cache-Control': 'no-store' });
       } catch (error) {
         res.statusCode = 502;
         res.setHeader('Content-Type', 'application/json; charset=utf-8');

@@ -3426,3 +3426,15 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - **"Someone speaking" means either side.** The waves follow the louder of the operator's mic and the assistant's reply (a second `AnalyserNode` on the WebRTC reply stream). `--mic-level` stays mic-only because the Server Log reads it as the operator's input level.
 - **Waves outside the button.** Each half is a sibling of `#gev-voice-button`, so the click target stays the 40 px mic; the dock widens while a session is live instead of the waves hanging over the map.
 - **Connecting shows the arc, not the waves.** Waves promise a live session; the turning arc alone says "working on it".
+
+## 2026-11-11 — AIS live snapshot is gzipped and its poll budget is 20 s
+
+**Symptom.** On the pm2-hosted server behind the reverse proxy, the Kapal (AIS) layer always read "Terganggu · sumber tidak tersedia" while localhost worked, the server log was clean, and the admin Test connection reported the feed live.
+
+**Root cause (measured from the public hostname).** `/api/ais-live?maxRows=12000` answered 200 with 2.85 MB of uncompressed JSON in 17.2 s (TTFB 1.8 s), past the client's 10 s `AbortSignal.timeout`, which also covers the body download. Vite's dev middleware — what pm2 runs in production — has no compression, so the whole body crossed the origin's uplink raw. The resulting `TimeoutError` is not an `AbortError`, so every poll marked the layer unavailable, and it was only ever logged in the browser console. Test connection reads the watchdog inside the server process and never exercises the browser → server path, so it stayed green.
+
+**Decision.**
+- The rows snapshot goes through `sendJson` (`src/server/jsonCompression.mjs`), which gzips bodies of 1 KiB or more when `Accept-Encoding` allows it and sets `Vary: Accept-Encoding`. The real worldwide snapshot compresses to roughly a sixth. Only gzip is offered: brotli's default quality is too slow for a multi-MB body on every poll, and every browser accepts gzip. A gzip failure falls back to the plain body (logged) rather than failing a request whose data is fine.
+- The poll budget is a named constant, `AIS_LIVE_FETCH_TIMEOUT_MS = 20000`: still bounded and well inside the 60 s refresh, but with headroom for a slow link even after compression. A timeout now has its own chip reason (`aisFetchFailureReason`), so a slow link is no longer indistinguishable from a missing source.
+
+**Not done here.** Sending only the rows inside the viewport would shrink the payload further but changes which vessels the layer holds between camera moves; that is a separate behaviour decision. `VITE_AIS_LIVE_MAX_ROWS` remains the operator knob for very slow links.

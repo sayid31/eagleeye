@@ -86,6 +86,21 @@ export function deriveAisFeedError(payload, acceptedRowCount) {
   return detail && !AIS_STATUS_REASON[status] ? `${reason} (${detail})` : reason;
 }
 
+/**
+ * Chip reason for a failed /api/ais-live fetch. A timeout is named as such:
+ * it is only ever logged in the browser, so a generic "signal timed out"
+ * made a slow link read as a missing source with a clean server log.
+ * @param {unknown} error - The rejection from fetch/json.
+ * @param {number} timeoutMs - The poll's timeout budget.
+ * @returns {string}
+ */
+export function aisFetchFailureReason(error, timeoutMs) {
+  if (error?.name === 'TimeoutError') {
+    return `waktu habis memuat AIS live (>${Math.round(timeoutMs / 1000)} dtk)`;
+  }
+  return error?.message || 'Pemuatan AIS live gagal';
+}
+
 /** True when a raw AIS row can enter the production vessel normalizer. */
 function hasUsableVesselCoordinates(row) {
   return Number.isFinite(Number(row?.lat)) && Number.isFinite(Number(row?.lon));

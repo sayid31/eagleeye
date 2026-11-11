@@ -909,7 +909,12 @@ silently demoting every later lookup for the session.
 ### Live AIS Vessels (June 2026)
 
 - Server-side `ws` websocket to `wss://stream.aisstream.io/v0/stream` maintained by Vite middleware; `AISSTREAM_API_KEY` never reaches the browser (AISStream has no browser CORS). The `ws` package is used rather than Node's built-in WebSocket specifically because only it can hard-abort a wedged socket (see the watchdog note in the delta block at the top).
-- Browser polls same-origin `/api/ais-live` cache every 60s.
+- Browser polls same-origin `/api/ais-live` cache every 60s. The rows
+  snapshot is gzip-compressed for clients that accept it
+  (`src/server/jsonCompression.mjs`; bodies under 1 KiB go plain). Each poll
+  has a 20 s budget covering headers and body; a timeout reports
+  `UNAVAILABLE` with the reason `waktu habis memuat AIS live (>20 dtk)` rather
+  than a generic failure. Why: see `docs/DECISIONS.md` 2026-11-11.
 - The first enable in a session starts one 30-second client grace timer. Until
   an accepted vessel position arrives, `live`/`open`/`connecting` transport reports
   `LOADING`; the timer is not restarted by the 60-second poll. Expiry or a
