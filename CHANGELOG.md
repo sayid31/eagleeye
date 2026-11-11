@@ -19,6 +19,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **Instalasi Militer** (dan data jalan lalu lintas) tidak lagi gagal seketika dengan "sumber tidak tersedia"
+  saat peta digeser. Server Overpass hanya melayani 2 permintaan bersamaan per server; aplikasi dulu mengirim
+  lebih banyak sehingga sisanya langsung ditolak. Kini permintaan antre, permintaan untuk area yang sudah
+  ditinggalkan dibatalkan, dan bila Overpass tetap gagal, Server Log mencatat alasannya per mirror
+  (mis. "overpass-api.de: HTTP 502; lz4.overpass-api.de: tidak menjawab dalam 34 dtk").
 - Mengaktifkan **Instalasi Militer** saat globe masih terlihat jauh tidak lagi langsung memunculkan
   "MUAT GAGAL". Saat tampilan terlalu lebar, layer memang hanya meminta Anda memperbesar peta; petunjuk itu
   kini tertulis di baris layer ("Data statis · Perbesar untuk memuat…") tanpa dianggap kegagalan. Kegagalan sungguhan (server tidak tersedia) tetap

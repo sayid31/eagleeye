@@ -3458,3 +3458,17 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - **Every 5xx and 429 is one event**, keyed by route + status so repeats merge into a counted row. The streak-based `proxy.failing` stays for System Health. The response alone cannot say why; the proxy's own console report, now bridged, does.
 - **Browser layer faults come from `layerFeedState`**, the same state the layer rows show, reported on transitions (state or reason change, then recovery). Polling `getAll()` every 5 s rather than hooking each layer keeps it independent of how each layer updates its stats.
 - **Not bridged:** the browser console (Cesium/WebGL warnings would drown the signal; the owner chose A+B+C over it).
+
+## 2026-11-11 — Overpass queries share a 2-slot gate; the queue does not eat the attempt
+
+**Symptom.** Mapped Installations answered 503 "temporarily unavailable" in 0.2 s while the same query against overpass-api.de succeeded, and the Server Log said only "HTTP 503".
+
+**Root cause (measured).** overpass-api.de grants one IP 2 query slots (`/api/status`: "Rate limit: 2"); three concurrent copies of the installation query got 200, 200 and a 429 in 0.6 s. Each query takes ~20–40 s (the status endpoint alone took ~30 s that day), every camera move issues a new snapped-box query, a browser abort did not stop the server-side fetch, and the traffic proxy's own limit was 6. So the process routinely put a third query on the wire; both overpass-api.de hosts refused it, the proxy turned that into a 503, and no reason was written anywhere.
+
+**Decision.**
+- One FIFO gate for every Overpass query in the process (`overpassSlots.mjs`), sized to the per-IP grant (`GEV_OVERPASS_UPSTREAM_SLOTS`, default 2). Queueing beats an instant refusal because the refusal is self-inflicted.
+- The first slot wait is its own budget (45 s) and the 75 s sweep budget starts once a slot is held: measured on four concurrent uncached views, charging the wait to the sweep left the queued queries 36 s for a ~38 s answer and both failed. A 90 s total ceiling keeps the answer inside Cloudflare's 100 s origin timeout on the public host.
+- A coalesced installation query is aborted when its last client disconnects (`sharedAbort.mjs`), freeing the slot for the viewport the user moved to. An abort is not a host fault and never parks a mirror.
+- Each sweep returns/throws a per-mirror `attempts` summary, logged by both proxies, so the Server Log names the host and outcome.
+
+**Limits.** The gate is per process: two servers on one IP (e.g. a dev server beside the pm2 one) still share the 2 slots. When the public instance is overloaded, queries still time out or 502; those now arrive as explained log entries, and the 30-day disk cache serves the view next time.
