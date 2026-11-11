@@ -18,7 +18,8 @@ import {
   recordOverpassEndpointSuccess,
   resetOverpassBreaker,
 } from './overpassBreaker.mjs';
-import { fetchOverpassPayload, OVERPASS_UPSTREAMS } from './overpassCore.mjs';
+import { OVERPASS_UPSTREAMS } from './overpassCore.mjs';
+import { fetchOverpassPayload } from './overpassFetch.mjs';
 
 const A = 'https://a.example/api/interpreter';
 const B = 'https://b.example/api/interpreter';

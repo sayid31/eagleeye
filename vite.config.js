@@ -73,8 +73,8 @@ import {
   _overpassInFlight,
   sanitizeOverpassBody,
   resolveOverpassPreflight,
-  fetchOverpassPayload,
 } from './src/data/overpassCore.mjs';
+import { fetchOverpassPayload } from './src/data/overpassFetch.mjs';
 import {
   readOverpassDisk,
   writeOverpassDisk,
@@ -494,6 +494,7 @@ function overpassProxy() {
           // memory or disk at ANY age before surfacing the failure.
           if (payload.rateLimited || payload.runtimeError || payload.status >= 500) {
             const stale = _overpassCache.get(cacheKey) || await readOverpassDisk(cacheKey, Infinity);
+            console.warn(`[Overpass Proxy] degraded upstream (${payload.attempts.join('; ')})${stale ? '; serving stale roads' : ''}`);
             if (stale) {
               sendOverpassResponse(res, stale, 'STALE');
               return;
