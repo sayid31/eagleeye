@@ -1,6 +1,6 @@
 // Shell presentation of data layers: honest status, grouping and Indonesian labels.
 // Pure functions over `layerFeedState` (managerFeedState.js) — no new feed logic lives here.
-import { layerFeedState } from '../data/managerFeedState.js';
+import { isGuidanceStatus, layerFeedState } from '../data/managerFeedState.js';
 
 /** Layers backed by bundled/static datasets: "Live" would overstate them. */
 export const STATIC_LAYER_IDS = Object.freeze([
@@ -120,10 +120,14 @@ export function layerShellStatus(layer, now = Date.now()) {
       return { key: 'degraded', label: 'Terganggu', detail: 'sumber tidak tersedia' };
     case 'degraded':
       return { key: 'degraded', label: 'Terganggu', detail: 'sebagian data bermasalah' };
-    default:
+    default: {
+      // A guidance prompt ("Perbesar untuk memuat…") is the only explanation
+      // for an enabled layer that draws nothing, so it rides in the detail.
+      const detail = isGuidanceStatus(stats.status) && stats.error ? String(stats.error) : '';
       return STATIC_LAYER_IDS.includes(layer?.id)
-        ? { key: 'static', label: 'Data statis', detail: '' }
-        : { key: 'live', label: 'Live', detail: '' };
+        ? { key: 'static', label: 'Data statis', detail }
+        : { key: 'live', label: 'Live', detail };
+    }
   }
 }
 
