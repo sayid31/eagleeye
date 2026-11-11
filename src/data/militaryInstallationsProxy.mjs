@@ -17,7 +17,8 @@
 import { promises as fsp } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
-import { fetchOverpassPayload } from './overpassCore.mjs';
+import { fetchOverpassPayload } from './overpassFetch.mjs';
+import { createSharedAbortRegistry } from '../server/sharedAbort.mjs';
 import { requiredFiniteQueryNumber } from './regionalProxyHandlers.mjs';
 import { makeRateLimiter, clientKey, coalesceProxyRequest } from '../server/proxyInfra.mjs';
 
@@ -240,17 +241,26 @@ function trimMilitaryInstallationCache() {
 }
 
 export function militaryInstallationsProxy() {
-  async function refresh(box, key) {
+  // Lets a query whose every client moved on (new viewport) give up its Overpass slot.
+  const abandonable = createSharedAbortRegistry();
+
+  async function refresh(box, key, signal) {
     const bbox = `${box.south},${box.west},${box.north},${box.east}`;
     const ql = `[out:json][timeout:20];(nwr["military"~"^(airfield|naval_base|range|barracks|base)$"](${bbox});nwr["landuse"="military"](${bbox}););out center tags geom ${MILITARY_INSTALLATION_ELEMENT_CAP};`;
     const upstream = await fetchOverpassPayload(
       `data=${encodeURIComponent(ql)}`,
       MILITARY_INSTALLATION_MAX_RESPONSE_BYTES,
+      { signal },
     );
     if (upstream.status >= 400 || upstream.rateLimited || upstream.runtimeError) {
-      throw new Error('Mapped installation upstream unavailable');
+      throw new Error(`Overpass unusable answer — ${upstream.attempts.join('; ') || `HTTP ${upstream.status}`}`);
     }
-    const parsed = JSON.parse(upstream.body);
+    let parsed;
+    try {
+      parsed = JSON.parse(upstream.body);
+    } catch (error) {
+      throw new Error(`Overpass answered non-JSON from ${new URL(upstream.endpoint).host}: ${error.message}`);
+    }
     const elements = Array.isArray(parsed?.elements)
       ? parsed.elements.slice(0, MILITARY_INSTALLATION_ELEMENT_CAP)
       : [];
@@ -319,10 +329,12 @@ export function militaryInstallationsProxy() {
         res.end(JSON.stringify({ ...preflight.entry.payload, status: 'cached' }));
         return;
       }
+      const subscription = abandonable.join(key, () => _militaryInstallationInFlight.delete(key));
+      res.on('close', () => { if (!res.writableFinished) subscription.leave(); });
       const request = coalesceProxyRequest(
         _militaryInstallationInFlight,
         key,
-        () => refresh(box, key),
+        () => refresh(box, key, subscription.signal),
       );
       try {
         const payload = await request.promise;
@@ -333,7 +345,10 @@ export function militaryInstallationsProxy() {
         });
         res.end(JSON.stringify(payload));
       } catch (error) {
+        if (subscription.left) return;
+        const why = `[military-installations] ${key} upstream failed (${error?.message || error})`;
         if (cached && now - cached.cachedAt <= MILITARY_INSTALLATION_STALE_MS) {
+          console.warn(`${why}; serving the memory cache`);
           res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Military-Installations': 'STALE' });
           res.end(JSON.stringify({ ...cached.payload, status: 'stale' }));
           return;
@@ -342,12 +357,16 @@ export function militaryInstallationsProxy() {
         // layer (the same serve-stale rule the Overpass proxy applies).
         const stale = await readMilitaryInstallationDisk(key, Infinity);
         if (stale) {
+          console.warn(`${why}; serving the disk cache`);
           res.writeHead(200, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store', 'X-Military-Installations': 'STALE-DISK' });
           res.end(JSON.stringify({ ...stale.payload, status: 'stale' }));
           return;
         }
+        console.error(`${why}; no cache, answering 503`);
         res.writeHead(503, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });
         res.end(JSON.stringify({ error: 'Mapped installation context is temporarily unavailable' }));
+      } finally {
+        subscription.done();
       }
     });
   }
