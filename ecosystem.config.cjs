@@ -32,6 +32,10 @@ module.exports = {
         HOST: '0.0.0.0',
         PORT: '4005',
         NODE_ENV: 'production',
+        // Vite bundles vite.config.js and its proxies into one temp file; with
+        // source maps on, /admin Server Log entries bridged from the console
+        // name the real module and line (e.g. celestrakProxy.mjs:104).
+        NODE_OPTIONS: '--enable-source-maps',
       },
       // Keys (OPENAI_API_KEY, AISSTREAM_API_KEY, TOMTOM_API_KEY, FIRMS_MAP_KEY,
       // OPENSKY_*, CESIUM_ION_TOKEN, GOOGLE_MAPS_API_KEY, ...) are read from

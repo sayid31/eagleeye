@@ -14,9 +14,9 @@
  */
 
 export const LOG_LEVELS = Object.freeze(['error', 'warn', 'info']);
-export const LOG_SOURCES = Object.freeze(['browser', 'voice', 'judge', 'map', 'cctv', 'radio', 'proxy', 'keys', 'admin', 'audit', 'log']);
+export const LOG_SOURCES = Object.freeze(['browser', 'voice', 'judge', 'map', 'cctv', 'radio', 'layer', 'proxy', 'server', 'keys', 'admin', 'audit', 'log']);
 /** Sources a browser may report through POST /api/log (server-only ones excluded). */
-export const BROWSER_LOG_SOURCES = Object.freeze(['browser', 'voice', 'map', 'cctv', 'radio']);
+export const BROWSER_LOG_SOURCES = Object.freeze(['browser', 'voice', 'map', 'cctv', 'radio', 'layer']);
 export const RETENTION_DAYS = 30;
 /** Identical entries within this window become one row with a count. */
 export const MERGE_WINDOW_MS = 60 * 60 * 1000;
