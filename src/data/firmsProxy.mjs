@@ -25,15 +25,17 @@
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import { filterTrailing24h, parseFirmsCsv } from './firmsCsv.js';
+import { firmsRefreshUsable, firmsSourceSummary } from './firmsSourceHealth.js';
 
 /**
+ * @param {{cacheDir?: string}} [options]
  * @returns {import('vite').Plugin}
  */
-export function firmsProxy() {
+export function firmsProxy({ cacheDir = path.join(process.cwd(), '.gev-cache') } = {}) {
   const TTL_MS = 30 * 60_000;
   const STATUS_TTL_MS = 5 * 60_000;
   const SOURCES = ['VIIRS_NOAA20_NRT', 'VIIRS_NOAA21_NRT', 'VIIRS_SNPP_NRT'];
-  const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
+  const CACHE_DIR = cacheDir;
   const CACHE_PATH = path.join(CACHE_DIR, 'firms.json');
 
   /** @type {?{at: number, sources: Array<object>, fires: Array<object>}} */
@@ -101,11 +103,17 @@ export function firmsProxy() {
         // ~131k records — RangeError, and the whole source is silently dropped.
         for (const record of records) fires.push(record);
       } catch (err) {
-        console.warn(`[firms-proxy] ${source} fetch failed:`, err?.message || err);
-        sources.push({ source, count: 0, ok: false });
+        // Never the URL: it embeds the MAP_KEY.
+        const reason = err?.name === 'TimeoutError' ? 'timeout 60 s' : (err?.message || String(err));
+        console.warn(`[firms-proxy] ${source} fetch failed: ${reason}`);
+        sources.push({ source, count: 0, ok: false, error: reason });
       }
     }
-    if (!sources.some((s) => s.ok)) throw new Error('all FIRMS sources failed');
+    // A source answering with zero rows is not data (SNPP did all of
+    // 2026-11-11); caching that would replace good fires with an empty world.
+    if (!firmsRefreshUsable(sources)) {
+      throw new Error(`no FIRMS source returned detections (${firmsSourceSummary(sources)})`);
+    }
     return { at: now, sources, fires };
   }
 
@@ -192,7 +200,9 @@ export function firmsProxy() {
           }
 
           const entry = mem;
-          if (entry && Date.now() - entry.at < TTL_MS) {
+          // An entry without detections (written before the usable-data rule)
+          // is never fresh: refresh it instead of serving an empty world.
+          if (entry && Date.now() - entry.at < TTL_MS && firmsRefreshUsable(entry.sources)) {
             sendJson(200, buildPayload(entry, false));
             return;
           }
@@ -216,7 +226,7 @@ export function firmsProxy() {
           const fresh = await pending;
           if (fresh) {
             sendJson(200, buildPayload(fresh, false));
-          } else if (entry) {
+          } else if (entry && firmsRefreshUsable(entry.sources)) {
             sendJson(200, buildPayload(entry, true)); // upstream down — stale beats empty
           } else {
             sendJson(502, { error: 'firms fetch failed and no cache available' });
