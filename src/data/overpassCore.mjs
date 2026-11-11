@@ -2,9 +2,9 @@
  * overpassCore.mjs — shared Overpass API machinery used by BOTH
  * overpassProxy.mjs (/api/overpass) and militaryInstallationsProxy() (still
  * in vite.config.js, moves to its own module in a later phase): the
- * query-body sanitizer, upstream-mirror fetch with rate-limit/runtime-error
- * detection, the geometry-simplifying decimator, and the disk + memory
- * cache primitives. The two proxies use separate rate limiters and
+ * query-body sanitizer, the mirror list and sweep budget, and the disk +
+ * memory cache primitives. The upstream fetch itself lives in
+ * overpassFetch.mjs. The two proxies use separate rate limiters and
  * concurrency counters (those stay local to each proxy — not shared), but
  * both need this same fetch/sanitize/cache core, which is why it lives in
  * its own module rather than one proxy importing from the other (mirrors
@@ -16,9 +16,6 @@
  * @module data/overpassCore
  */
 
-import { readResponseTextCapped } from '../server/proxyInfra.mjs';
-import { noteOverpassEndpointOutcome, planOverpassAttempts } from './overpassBreaker.mjs';
-import { simplifyOverpassPayloadBody } from './overpassSimplify.mjs';
 
 // ---------------------------------------------------------------------------
 // Overpass API proxy constants and cache state
@@ -121,7 +118,7 @@ export async function resolveOverpassPreflight({
     ? { source: 'UPSTREAM', payload: null }
     : { source: 'RATE_LIMITED', payload: null };
 }
-const OVERPASS_MAX_RESPONSE_BYTES = 32 * 1024 * 1024; // 32 MB
+export const OVERPASS_MAX_RESPONSE_BYTES = 32 * 1024 * 1024; // 32 MB
 /** Server-side timeout ceiling (seconds) we allow inside an Overpass QL query. */
 const OVERPASS_MAX_QL_TIMEOUT = 30;
 /** Max `around:` radius (m) — every app caller uses <= 1800 m. */
@@ -288,35 +285,6 @@ export function sanitizeOverpassBody(rawBody) {
   return { ok: true, body: `data=${encodeURIComponent(clamped)}` };
 }
 /**
- * Detect whether an Overpass API response body indicates rate-limiting.
- *
- * Checks for known rate-limit phrases in the body text regardless of
- * HTTP status code, since some mirrors return 200 with an error payload.
- *
- * @param {string} bodyText - Upstream response body.
- * @returns {boolean} True if the body looks rate-limited.
- */
-function overpassLooksRateLimited(bodyText) {
-  const text = String(bodyText || '').toLowerCase();
-  return text.includes('rate_limited')
-    || text.includes('quota of your ip address')
-    || text.includes('dispatcher_client::request_read_and_idx::rate_limited')
-    || text.includes('too many requests');
-}
-
-/**
- * Detect an Overpass HTTP-200 body that is actually a runtime FAILURE (server-side
- * timeout / out-of-memory) via its `remark`. These are transient upstream failures,
- * not authoritative empty results, so they must not be returned or cached.
- */
-function overpassLooksRuntimeError(bodyText) {
-  const text = String(bodyText || '').toLowerCase();
-  return text.includes('runtime error')
-    || text.includes('timed out')
-    || text.includes('out of memory');
-}
-
-/**
  * How long the NEXT mirror attempt may run, given what the sweep already spent.
  *
  * Returns 0 when the sweep is out of budget, which the caller reads as "stop
@@ -338,94 +306,4 @@ export function overpassAttemptTimeoutMs(
   const remaining = sweepBudgetMs - spent;
   if (remaining <= 0) return 0;
   return Math.min(perMirrorMs, remaining);
-}
-
-/**
- * Try each Overpass upstream in order until one succeeds.
- *
- * Skips rate-limited or 5xx responses and falls through to the next
- * mirror. If all mirrors fail, returns the last rate-limited payload
- * (if any) or throws the last error.
- *
- * Only mirrors outside their breaker cooldown are tried (overpassBreaker.mjs),
- * and the sweep as a whole is bounded by OVERPASS_SWEEP_BUDGET_MS — a mirror
- * reached after the budget is gone is left untried rather than parked, since
- * running out of clock says nothing about that host's health.
- *
- * @param {string} body - URL-encoded Overpass QL query body.
- * @param {number} [maxResponseBytes] Endpoint-specific response cap.
- * @returns {Promise<{status:number,body:string,contentType:string,endpoint:string,rateLimited:boolean}>}
- */
-export async function fetchOverpassPayload(body, maxResponseBytes = OVERPASS_MAX_RESPONSE_BYTES) {
-  let lastError = null;
-  let lastRateLimitPayload = null;
-  const sweepStart = Date.now();
-
-  for (const endpoint of planOverpassAttempts(OVERPASS_UPSTREAMS)) {
-    const attemptMs = overpassAttemptTimeoutMs(Date.now() - sweepStart);
-    if (attemptMs === 0) {
-      lastError = lastError || new Error('Overpass sweep budget exhausted');
-      break;
-    }
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), attemptMs);
-
-    try {
-      const upstream = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'User-Agent': 'eagleeye-view-overpass-proxy/1.0',
-        },
-        body,
-        signal: controller.signal,
-      });
-
-      const responseBody = await readResponseTextCapped(upstream, maxResponseBytes);
-      const contentType = upstream.headers.get('content-type') || 'application/json';
-      const status = upstream.status;
-      const rateLimited = status === 429 || overpassLooksRateLimited(responseBody);
-      const runtimeError = overpassLooksRuntimeError(responseBody);
-      const payload = {
-        status,
-        body: responseBody,
-        contentType,
-        endpoint,
-        rateLimited,
-        runtimeError,
-      };
-
-      if (rateLimited) {
-        noteOverpassEndpointOutcome(endpoint, 'rate-limited');
-        lastRateLimitPayload = payload;
-        continue;
-      }
-      // A 200 body carrying a runtime error / timeout is a transient upstream
-      // failure — skip to the next mirror rather than returning or caching it.
-      if (runtimeError) {
-        noteOverpassEndpointOutcome(endpoint, 'runtime-error');
-        lastError = new Error(`Overpass runtime error (${endpoint})`);
-        continue;
-      }
-      if (status >= 500) {
-        noteOverpassEndpointOutcome(endpoint, 'server-error');
-        lastError = new Error(`Overpass upstream returned ${status} (${endpoint})`);
-        continue;
-      }
-
-      // Success: decimate giant boundary geometry before it reaches the cache,
-      // the disk, or the client (what makes the 32 MB read cap safe to hold).
-      noteOverpassEndpointOutcome(endpoint, 'ok');
-      payload.body = simplifyOverpassPayloadBody(payload.body);
-      return payload;
-    } catch (error) {
-      noteOverpassEndpointOutcome(endpoint, error);
-      lastError = error;
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  if (lastRateLimitPayload) return lastRateLimitPayload;
-  throw lastError || new Error('All Overpass upstreams failed');
 }
