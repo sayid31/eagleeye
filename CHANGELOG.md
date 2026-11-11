@@ -19,6 +19,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **Misi Antariksa** dan **Satelit** kini aktif tanpa menunggu server CelesTrak / Launch Library. Data yang
+  sudah tersimpan langsung dipakai dan diperbarui di latar belakang; sebelumnya setiap 15 menit (data
+  peluncuran) dan 6 jam (data orbit) aktivasi tertahan 6–20 detik menunggu server tersebut.
 - **Instalasi Militer** (dan data jalan lalu lintas) tidak lagi gagal seketika dengan "sumber tidak tersedia"
   saat peta digeser. Server Overpass hanya melayani 2 permintaan bersamaan per server; aplikasi dulu mengirim
   lebih banyak sehingga sisanya langsung ditolak. Kini permintaan antre, permintaan untuk area yang sudah
