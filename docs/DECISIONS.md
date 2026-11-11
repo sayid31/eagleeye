@@ -3472,3 +3472,13 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - Each sweep returns/throws a per-mirror `attempts` summary, logged by both proxies, so the Server Log names the host and outcome.
 
 **Limits.** The gate is per process: two servers on one IP (e.g. a dev server beside the pm2 one) still share the 2 slots. When the public instance is overloaded, queries still time out or 502; those now arrive as explained log entries, and the 30-day disk cache serves the view next time.
+
+## 2026-11-11 — CelesTrak and Launch Library proxies serve stale while revalidating
+
+**Symptom.** Enabling Space Missions (Antariksa) took many seconds.
+
+**Root cause (measured on a dev server with past-TTL caches).** Both proxies held a request past the cache TTL until the upstream answered, even with a usable copy on disk: `/api/launches` 6.1 s (778 KB, TTL only 15 min, so frequent), `/api/celestrak/active` 14 s (2.6 MB), `starlink` 9.8 s, and up to the 20 s timeout per request when the upstream failed — local caches for `active`/`starlink` were weeks past their TTL, so refreshes had been failing. The enable path awaits the satellites first update and the launch feed, so that wait landed on the user.
+
+**Decision.** `cacheDecision` (`src/server/staleWhileRevalidate.mjs`): a past-TTL copy is sent immediately and refreshed once in the background; only a cold cache waits. A failed refresh starts a backoff (CelesTrak 15 min — it asks clients not to hammer GP data; LL2 5 min — free tier 15 calls/hour) during which a stale copy is served without another attempt and a cold cache fails fast. A TLE or launch list minutes past its TTL is still correct for this view; a 20 s blank wait is not.
+
+**Not changed.** The client still awaits the satellites enable (six small groups, now cache answers) and the Context isolation still disables other layers before entering the mode; neither was the measured cost.
