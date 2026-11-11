@@ -1,7 +1,20 @@
+/** Layers a Context mode owns: switching one off by hand ends the mode. */
 const CONTEXT_DEPENDENCIES = Object.freeze({
   flights: new Set(['military-awareness', 'flights', 'military', 'ais-live-vessels', 'military-installations']),
-  'space-missions': new Set(['rocket-launches', 'satellites']),
+  'space-missions': new Set(['rocket-launches']),
 });
+/**
+ * Layers a mode does not own but lets the user keep or add beside it. Space
+ * Missions matches orbits from its own active TLE feed, so Satellites stays a
+ * plain user layer: never switched on for the mission, never ending it.
+ */
+const CONTEXT_OPTIONAL_LAYERS = Object.freeze({
+  'space-missions': new Set(['satellites']),
+});
+
+function contextDependencies(contextMode) {
+  return CONTEXT_DEPENDENCIES[contextMode] || new Set(['military-awareness']);
+}
 const CONTEXT_COMPANIONS = new Set(['radio']);
 /** Return whether an origin represents a direct user choice on this route. */
 export function isExplicitUserIntentOrigin(origin, layerId = null) {
@@ -154,7 +167,7 @@ export function shouldExitContextForLayerChange({ contextMode, globalContextEnab
   const active = Boolean(globalContextEnabled || contextMode);
   if (!active) return false;
 
-  const dependencies = CONTEXT_DEPENDENCIES[contextMode] || new Set(['military-awareness']);
+  const dependencies = contextDependencies(contextMode);
   if (change.enabled) return false;
   return Boolean(contextMode && dependencies.has(change.layerId));
 }
@@ -166,7 +179,8 @@ export function shouldExitContextForLayerChange({ contextMode, globalContextEnab
  */
 export function contextAllowedLayerIds(contextMode) {
   return new Set([
-    ...(CONTEXT_DEPENDENCIES[contextMode] || ['military-awareness']),
+    ...contextDependencies(contextMode),
+    ...(CONTEXT_OPTIONAL_LAYERS[contextMode] || []),
     ...CONTEXT_COMPANIONS,
   ]);
 }
@@ -233,7 +247,9 @@ export function recordContextSessionUserChange({ snapshot, change, effectiveCont
       snapshot.userAdded.add(change.layerId);
       return true;
     }
-    if (contextAllowedLayerIds(effectiveContextMode).has(change.layerId) && !isCompanion) return false;
+    // Only a layer the mode owns is not the user's own addition; an optional
+    // layer the user switched on (Satellites beside Space Missions) survives exit.
+    if (contextDependencies(effectiveContextMode).has(change.layerId) && !isCompanion) return false;
     snapshot.userAdded.add(change.layerId);
     if (isCompanion) snapshot.userRemoved?.delete(change.layerId);
     return true;

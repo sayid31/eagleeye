@@ -45,15 +45,15 @@ export const MAX_POST_TLE_RETRIES = 1;
 
 export const POST_TLE_RETRY_DELAY_MS = 1500;
 
+/**
+ * Longest the first mission build waits for the active TLE feed, so a cached
+ * feed's orbit matches land in that build instead of 1.5 s later.
+ */
+export const ACTIVE_TLE_FIRST_BUILD_WAIT_MS = 2000;
+
 export const STAGE_REENTRY_ALTITUDE_M = 100000;
 
 export const MISSION_FOCUS_RANGE_M = 12000;
-
-export const SATELLITE_STANDALONE_DEFAULTS = {
-  catalog: 'core',
-  showPoints: true,
-  showOrbits: true,
-};
 
 export const MISSION_ORBIT_PATTERN_GROUPS = 4;
 

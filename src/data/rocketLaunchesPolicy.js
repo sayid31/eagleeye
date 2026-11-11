@@ -1,33 +1,6 @@
 // Moved out of rocketLaunches.js (rocketLaunchesPolicy).
 
-import { MAX_POST_TLE_RETRIES, SATELLITE_STANDALONE_DEFAULTS } from './rocketLaunchesConstants.js';
-
-/**
- * Derive the temporary Satellite display mode required by Space Missions.
- * @param {object|null} currentParams Complete pre-mission Satellite parameters.
- * @returns {object} Temporary mission-specific Satellite parameters.
- */
-export function satelliteParamsForSpaceMissions(currentParams) {
-  return {
-    ...SATELLITE_STANDALONE_DEFAULTS,
-    ...(currentParams || {}),
-    catalog: 'dense',
-    showPoints: false,
-    showOrbits: false,
-  };
-}
-
-/**
- * Resolve the complete Satellite parameter set restored after mission mode.
- * @param {object|null} snapshot Complete pre-mission Satellite parameters.
- * @returns {object} Standalone Satellite parameters.
- */
-export function satelliteParamsAfterSpaceMissions(snapshot) {
-  return {
-    ...SATELLITE_STANDALONE_DEFAULTS,
-    ...(snapshot || {}),
-  };
-}
+import { MAX_POST_TLE_RETRIES } from './rocketLaunchesConstants.js';
 
 /**
  * Failed launch records may retain a planned orbit in Launch Library, but

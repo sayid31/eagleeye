@@ -11,7 +11,7 @@ import { clearMissionRosterHover, createMissionPanel, renderMissionPanel } from 
 import { stopMissionZoomAnchor } from './rocketLaunchesReplayControls.js';
 import { createReplayVehicleOverlay, destroyReplayVehicleOverlay, hideReplayVehicleOverlay } from './rocketLaunchesReplayVehicle.js';
 import { S, _animationStarts, _missionOverlayRecords, _replayTracks, _satelliteTelemetry } from './rocketLaunchesState.js';
-import { clearPostTleRetry, restoreSatelliteDependency } from './rocketLaunchesUpdate.js';
+import { clearPostTleRetry } from './rocketLaunchesUpdate.js';
 import { updateMissionFrame } from './rocketLaunchesVisibility.js';
 
 export function initRocketLaunchesLayer(viewer) {
@@ -69,7 +69,6 @@ export async function disableRocketLaunchesLayer() {
     hideReplayVehicleOverlay();
     S._selectedLaunchId = null;
     clearMissionOverlaySources();
-    await restoreSatelliteDependency();
     renderMissionPanel();
   }
 
@@ -84,7 +83,6 @@ export async function destroyRocketLaunchesLayer(viewer) {
     S._enabled = false;
     S._lifecycleToken++;
     S._updateDirty = false;
-    await restoreSatelliteDependency();
     clearMissionRosterHover();
     stopMissionReplay();
     stopMissionZoomAnchor();
@@ -125,8 +123,6 @@ export async function destroyRocketLaunchesLayer(viewer) {
     S._activeTlePromiseToken = 0;
     S._renderedTleText = null;
     S._postTleRetryCount = 0;
-    S._satelliteStateBeforeMission = null;
-    S._satelliteActivationPromise = null;
     S._dataManager = null;
   }
 
