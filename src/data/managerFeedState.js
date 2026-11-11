@@ -85,7 +85,23 @@ export function cancelPendingRestoreIntent(entry, origin, reason) {
   }
 }
 
+/**
+ * Guidance states ask the user to act (zoom in, run a search). Layers put the
+ * prompt in `error` so the chip can show it, but it is never a feed fault.
+ */
+const GUIDANCE_STATUSES = new Set(['zoom-in', 'empty', 'idle']);
+
+/**
+ * Whether a layer status is a guidance prompt rather than a failure.
+ * @param {unknown} status Layer getStats().status.
+ * @returns {boolean}
+ */
+export function isGuidanceStatus(status) {
+  return typeof status === 'string' && GUIDANCE_STATUSES.has(status.toLowerCase());
+}
+
 export function refreshFailureFromStats(stats, label) {
+  if (isGuidanceStatus(stats?.status)) return null;
   const specific = stats?.error || stats?.lastError;
   if (specific) return specific instanceof Error ? specific : new Error(String(specific));
   if (stats?.unavailable === true || stats?.available === false) {
@@ -110,7 +126,7 @@ export function layerFeedState(stats = {}) {
   if (
     (presentedError || state.unavailable === true || state.available === false)
     && !hasPriorData
-    && !['zoom-in', 'empty', 'idle'].includes(status)
+    && !isGuidanceStatus(status)
   ) {
     return 'unavailable';
   }
@@ -119,7 +135,7 @@ export function layerFeedState(stats = {}) {
   // operation, not feed faults. One honesty carve-out: layers keep their
   // rendered records through the guidance state, so a genuinely stale cache
   // still reads STALE; a guidance prompt alone never reads DEGRADED.
-  if (['zoom-in', 'empty', 'idle'].includes(status)) {
+  if (isGuidanceStatus(status)) {
     return state.stale ? 'stale' : 'nominal';
   }
   if (

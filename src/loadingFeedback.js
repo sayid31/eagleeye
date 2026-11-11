@@ -1,3 +1,4 @@
+import { isGuidanceStatus } from './data/managerFeedState.js';
 import { layerLabel } from './shell/layerStatus.js';
 
 export const LOADING_REVEAL_DELAY_MS = 160;
@@ -19,7 +20,11 @@ export function normalizeLayerLoading(layer = {}) {
   const disabling = lifecycleState === 'disabling';
   const loading = lifecycleState === 'enabling' || disabling || stats.loading === true || stats.refreshing === true;
   const count = finiteCount(stats.count);
-  const error = stats.error || stats.lastError || stats.managerRefreshError || null;
+  // A guidance prompt ("zoom in to load") rides in `error` for the chip; read
+  // as a failure it announced LOAD FAILED the instant such a layer was enabled.
+  // A manager refresh failure stays a failure whatever the layer's status.
+  const error = (isGuidanceStatus(status) ? null : stats.error || stats.lastError)
+    || stats.managerRefreshError || null;
   const unavailable = stats.unavailable === true
     || stats.available === false
     || ['unavailable', 'offline', 'down', 'error'].includes(status);

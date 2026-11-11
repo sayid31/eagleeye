@@ -3438,3 +3438,13 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - The poll budget is a named constant, `AIS_LIVE_FETCH_TIMEOUT_MS = 20000`: still bounded and well inside the 60 s refresh, but with headroom for a slow link even after compression. A timeout now has its own chip reason (`aisFetchFailureReason`), so a slow link is no longer indistinguishable from a missing source.
 
 **Not done here.** Sending only the rows inside the viewport would shrink the payload further but changes which vessels the layer holds between camera moves; that is a separate behaviour decision. `VITE_AIS_LIVE_MAX_ROWS` remains the operator knob for very slow links.
+
+## 2026-11-11 — Guidance states are filtered at the consumers, not moved out of `error`
+
+**Symptom.** Enabling Mapped Installations at the default globe view announced `MUAT GAGAL` at once, with no request made.
+
+**Root cause.** Wider than the 10° request cap, the layer reports `status: 'zoom-in'` and puts the prompt "Perbesar untuk memuat…" in `error`, because the control chip renders `error` as its reason text. `layerFeedState` already exempted guidance statuses, but the loading banner (`normalizeLayerLoading`) and the manager's refresh check (`refreshFailureFromStats`) read any `error` as a failure.
+
+**Decision.** One predicate, `isGuidanceStatus` (`zoom-in`/`empty`/`idle`) in `managerFeedState.js`, is used by all three consumers. The layer keeps its prompt in `error`, so the chip text is unchanged and no other layer's stats contract moves. A `managerRefreshError` still counts as a failure regardless of status.
+
+**Deliberately unchanged.** A load that succeeds with a note (stale cache served, too many sites to list, Places supplement unavailable) still ends the banner as `MUAT GAGAL`: a layer with data plus an error is an intended failure announcement elsewhere (traffic's late flow failure test), so relaxing it for "has data" would be a cross-layer behaviour change that needs an owner decision.
