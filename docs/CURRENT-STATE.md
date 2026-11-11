@@ -335,7 +335,7 @@ its criteria cannot be silently ignored.
 | Traffic | OSM Overpass (+ optional TomTom live flow) | `src/data/traffic.js` | `/api/overpass` + `/api/tomtom` | viewport-driven |
 | CCTV | Austin + Caltrans (CA) + TfL London Open Data + Street View fallback + 5-camera **unofficial** Indonesia HLS pack (see below) | `src/data/cctv.js` | `/api/cctv` | 10s (active) |
 | Radio | Radio Browser (public-domain station directory) | `src/data/radio.js` | `/api/radio/stations`, `/api/radio/click/:uuid` | 45 min directory refresh |
-| Bikeshare 🚲 | GBFS (Lyft + BCycle) | `src/data/bikeshare.js` | `/api/gbfs` | 60s |
+| Bikeshare 🚲 | GBFS: 27 US systems (Lyft, BCycle, …) + Montréal, Ciudad de México, Oslo, Bergen, Berlin, Wien, Lyon, Tokyo (`src/data/bikeshareCities.js`) | `src/data/bikeshare.js` | `/api/gbfs` | 60s; stations load below ~48 km within reach of a registered system. With nothing to draw the layer reports a guidance status (`bikeshareGuidance.js`): `zoom-in` "Perbesar peta (di bawah ±48 km) …" or `empty` "Tidak ada sistem sepeda bersama di area ini — terdekat: <city>, ±N km" on the layer row, never a failure |
 | Datacenters ▣ | OSM extract (bundled) | `src/data/localLayers.js` | — | static |
 | Dams ▰ | OpenInfraMap/OSM extract (bundled) | `src/data/localLayers.js` | — | static |
 | Submarine Cables ◠ | TeleGeography public map (bundled) | `src/data/telegeographySubmarineCables.js` | — | static |
