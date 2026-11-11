@@ -50,6 +50,25 @@ function bcycleEntry({ id, city, centerLat, centerLon, systemId, loadRadiusKm = 
 }
 
 /**
+ * Registry entry for a system whose two feeds share one GBFS base URL.
+ * @param {{id: string, city: string, centerLat: number, centerLon: number,
+ *   base: string, provider: string, loadRadiusKm?: number}} opts
+ * @returns {Object} Raw registry entry suitable for RAW_GBFS_CITY_REGISTRY.
+ */
+function gbfsEntry({ id, city, centerLat, centerLon, base, provider, loadRadiusKm = CITY_RANGE_BASE_KM }) {
+  return {
+    id,
+    city,
+    centerLat,
+    centerLon,
+    loadRadiusKm,
+    provider,
+    stationInformationUrl: `${base}station_information.json`,
+    stationStatusUrl: `${base}station_status.json`,
+  };
+}
+
+/**
  * Raw registry of supported GBFS bikeshare cities.
  * Each entry specifies the city center, load radius, GBFS feed URLs, and provider name.
  * Entries using BCycle hosting are constructed via bcycleEntry() for brevity.
@@ -156,16 +175,7 @@ const RAW_GBFS_CITY_REGISTRY = [
     stationStatusUrl: 'https://hon.publicbikesystem.net/customer/gbfs/v2/en/station_status.json',
     provider: 'Biki',
   },
-  {
-    id: 'columbus-cogo',
-    city: 'Columbus, OH',
-    centerLat: 39.9612,
-    centerLon: -82.9988,
-    loadRadiusKm: 90,
-    stationInformationUrl: 'https://gbfs.cogobikeshare.com/gbfs/2.3/en/station_information.json',
-    stationStatusUrl: 'https://gbfs.cogobikeshare.com/gbfs/2.3/en/station_status.json',
-    provider: 'CoGo',
-  },
+
   {
     id: 'chattanooga-bikechatt',
     city: 'Chattanooga, TN',
@@ -244,14 +254,6 @@ const RAW_GBFS_CITY_REGISTRY = [
     provider: 'Pacers Bikeshare',
   }),
   bcycleEntry({
-    id: 'fort-lauderdale-broward',
-    city: 'Fort Lauderdale, FL',
-    centerLat: 26.1224,
-    centerLon: -80.1373,
-    systemId: 'bcycle_broward',
-    provider: 'Broward B-cycle',
-  }),
-  bcycleEntry({
     id: 'memphis-bcycle',
     city: 'Memphis, TN',
     centerLat: 35.1495,
@@ -264,22 +266,6 @@ const RAW_GBFS_CITY_REGISTRY = [
     centerLat: 41.5868,
     centerLon: -93.6250,
     systemId: 'bcycle_desmoines',
-  }),
-  bcycleEntry({
-    id: 'tucson-tugo',
-    city: 'Tucson, AZ',
-    centerLat: 32.2226,
-    centerLon: -110.9747,
-    systemId: 'bcycle_tugo',
-    provider: 'Tugo',
-  }),
-  bcycleEntry({
-    id: 'fort-worth-trinity',
-    city: 'Fort Worth, TX',
-    centerLat: 32.7555,
-    centerLon: -97.3308,
-    systemId: 'bcycle_fortworth',
-    provider: 'Trinity Metro',
   }),
   bcycleEntry({
     id: 'omaha-heartland',
@@ -305,14 +291,6 @@ const RAW_GBFS_CITY_REGISTRY = [
     systemId: 'bcycle_greenville',
   }),
   bcycleEntry({
-    id: 'buffalo-reddy',
-    city: 'Buffalo, NY',
-    centerLat: 42.8864,
-    centerLon: -78.8784,
-    systemId: 'bcycle_reddy',
-    provider: 'Reddy Bikeshare',
-  }),
-  bcycleEntry({
     id: 'las-vegas-rtc-bike-share',
     city: 'Las Vegas, NV',
     centerLat: 36.1699,
@@ -327,6 +305,16 @@ const RAW_GBFS_CITY_REGISTRY = [
     centerLon: -119.6982,
     systemId: 'bcycle_santabarbara',
   }),
+  // Outside the US (verified 2026-11-11: both feeds 200, centres = median
+  // station position; licenses in DATA_SOURCES.md).
+  gbfsEntry({ id: 'montreal-bixi', city: 'Montréal', centerLat: 45.5229, centerLon: -73.5818, base: 'https://gbfs.velobixi.com/gbfs/en/', provider: 'BIXI Montréal' }),
+  gbfsEntry({ id: 'mexico-city-ecobici', city: 'Ciudad de México', centerLat: 19.4128, centerLon: -99.1673, base: 'https://gbfs.mex.lyftbikes.com/gbfs/en/', provider: 'Ecobici' }),
+  gbfsEntry({ id: 'oslo-bysykkel', city: 'Oslo', centerLat: 59.9206, centerLon: 10.747, base: 'https://gbfs.urbansharing.com/oslobysykkel.no/', provider: 'Oslo Bysykkel' }),
+  gbfsEntry({ id: 'bergen-bysykkel', city: 'Bergen', centerLat: 60.389, centerLon: 5.3257, base: 'https://gbfs.urbansharing.com/bergenbysykkel.no/', provider: 'Bergen Bysykkel' }),
+  gbfsEntry({ id: 'berlin-nextbike', city: 'Berlin', centerLat: 52.5079, centerLon: 13.392, base: 'https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_bn/en/', provider: 'nextbike Berlin' }),
+  gbfsEntry({ id: 'vienna-wienmobil', city: 'Wien', centerLat: 48.2078, centerLon: 16.3666, base: 'https://gbfs.nextbike.net/maps/gbfs/v2/nextbike_wr/en/', provider: 'WienMobil Rad' }),
+  gbfsEntry({ id: 'lyon-velov', city: 'Lyon', centerLat: 45.7596, centerLon: 4.8503, base: 'https://download.data.grandlyon.com/files/rdata/jcd_jcdecaux.jcdvelov/', provider: "Vélo'v" }),
+  gbfsEntry({ id: 'tokyo-docomo', city: 'Tokyo', centerLat: 35.6698, centerLon: 139.7365, base: 'https://api-public.odpt.org/api/v4/gbfs/docomo-cycle-tokyo/', provider: 'docomo bike share' }),
 ];
 
 /**

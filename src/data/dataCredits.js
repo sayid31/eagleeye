@@ -135,7 +135,7 @@ export const DATA_CREDITS = [
   },
   {
     key: 'gbfs',
-    html: 'Bikeshare availability: GBFS operator feeds (e.g. Austin BCycle)',
+    html: 'Bikeshare availability: GBFS operator feeds (US Lyft/BCycle systems, BIXI Montréal, Ecobici, Oslo &amp; Bergen Bysykkel (NLOD 2.0), nextbike Berlin &amp; WienMobil Rad (CC0), Vélo&#39;v / JCDecaux (Licence Ouverte), docomo bike share via ODPT (CC BY 4.0))',
   },
   {
     key: 'radio-browser',

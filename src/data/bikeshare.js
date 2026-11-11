@@ -28,6 +28,7 @@ import {
   CITY_RANGE_BASE_KM,
   GBFS_CITY_REGISTRY,
 } from './bikeshareCities.js';
+import { bikeshareGuidance } from './bikeshareGuidance.js';
 import { LAYER_METADATA } from './layerMetadata.js';
 
 export { MONITORED_CITIES_NO_FEED } from './bikeshareCities.js';
@@ -136,6 +137,8 @@ let _loading = false;
 let _loadingOps = 0;
 /** Most recent error message string, or null. */
 let _error = null;
+/** Why nothing is drawn (zoom in / no system nearby), from the last proximity check. */
+let _guidance = null;
 /** Whether the MAX_TOTAL_POINTS cap warning has already been logged. */
 let _limitWarned = false;
 
@@ -1019,6 +1022,7 @@ async function runProximityCheck() {
   const altitude = getCameraAltitude(_viewer);
   // Altitude gate: disable all cities when camera is too high
   if (!shouldActivateAtAltitude(altitude)) {
+    _guidance = bikeshareGuidance({ altitudeOk: false });
     deactivateAllCities();
     return;
   }
@@ -1028,6 +1032,7 @@ async function runProximityCheck() {
 
   // Diff active set against newly computed in-range set
   const nextActive = computeInRangeCities(center);
+  _guidance = bikeshareGuidance({ altitudeOk: true, center, inRangeCount: nextActive.size, registry: GBFS_CITY_REGISTRY });
   for (const cityId of _activeCityIds) {
     if (!nextActive.has(cityId)) {
       deactivateCity(cityId);
@@ -1129,6 +1134,7 @@ const bikeshareLayer = {
   enable(viewer) {
     _enabled = true;
     _error = null;
+    _guidance = null;
     _pointCollection.show = true;
     _overlayHost.setVisible(BIKESHARE_SELECTED_OVERLAY_SOURCE_ID, true);
     _installClickHandler(viewer);
@@ -1176,6 +1182,7 @@ const bikeshareLayer = {
     _cityRuntime.clear();
     _pointCollection.show = false;
     _count = 0;
+    _guidance = null;
     _loading = false;
     _loadingOps = 0;
   },
@@ -1232,6 +1239,11 @@ const bikeshareLayer = {
         : 'memindai sistem terdekat...';
     }
     if (_error) stats.error = _error;
+    else if (_guidance && !_loading && _count === 0) {
+      // The prompt rides in `error` like every guidance state, so the row shows it.
+      stats.status = _guidance.status;
+      stats.error = _guidance.message;
+    }
     return stats;
   },
 

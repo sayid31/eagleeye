@@ -3494,3 +3494,15 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Decision.** Rather than presenting an enabled layer as off, the dependency is removed. Mission orbit matching already had a TLE-text path (`findSatelliteOrbitTrackInTle`) over CelesTrak's `active` group — every active satellite, a superset of the core groups and Starlink — with the same name score and launch-year filter as the catalog path. That feed is the mission's own; the Satellite catalog is still consulted first when the user has the layer on. The first mission build waits up to 2 s for the feed (served from cache in ~0.2 s since the stale-while-revalidate change) so matches land without the 1.5 s post-TLE rebuild. Context policy now separates a mode's dependencies (switching one off exits) from optional layers it permits (Satellites beside Space Missions), and a user-enabled optional layer counts as a user addition that survives exit.
 
 **Trade-off.** With Satellites off and a cold `active` cache, orbit matches appear after the feed arrives (post-TLE rebuild) instead of from an already-loaded catalog.
+
+## 2026-11-11 — Bikeshare: verified international feeds, dead feeds dropped, empty state explained
+
+**Symptom.** "Sepeda Bersama shows nothing anywhere" — not only in Indonesia.
+
+**Root cause.** The registry held 32 systems, all in the US, and stations load only below ~48 km within ~100–140 km of one of them; anywhere else the layer read "Live" with zero stations and no reason. Five US feeds were also dead (4 BCycle 404s, Columbus host unresolvable; Columbus on Lyft returns zero stations).
+
+**Decision.**
+- Add only feeds verified on 2026-11-11 with both `station_information.json` and `station_status.json` answering 200 with stations, no key or extra header required, and a `.json` path the proxy's path rule already accepts: Montréal, Ciudad de México, Oslo, Bergen, Berlin, Wien, Lyon, Tokyo. Centres are the median station position (a mean is pulled off-centre by outlying stations). Rejected: Paris Vélib' (403), Warsaw (404), Helsinki (no answer), São Paulo (its `system_information` names the system "kitchen" — provenance unclear), Toronto/Barcelona (endpoints without `.json`; widening the proxy path rule was not worth it here). Licenses are recorded per feed in DATA_SOURCES.md.
+- An enabled layer with nothing to draw reports a guidance status (`zoom-in`/`empty`) with the nearest registered system, so the row explains itself and the loading banner and Server Log do not treat it as a failure.
+
+**Not done.** A registry generated from MobilityData's `systems.csv` would cover far more cities, but that list has no coordinates (each system's stations would have to be fetched to place it) — a separate piece of work. Indonesia still has no public GBFS feed (MONITORED_CITIES_NO_FEED).

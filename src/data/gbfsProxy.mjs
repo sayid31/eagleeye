@@ -17,7 +17,12 @@ const GBFS_ALLOWED_HOSTS = new Set([
   'gbfs.bluebikes.com',
   'gbfs.bcycle.com',
   'gbfs.biketownpdx.com',
-  'gbfs.cogobikeshare.com',
+  'gbfs.velobixi.com',
+  'gbfs.mex.lyftbikes.com',
+  'gbfs.urbansharing.com',
+  'gbfs.nextbike.net',
+  'download.data.grandlyon.com',
+  'api-public.odpt.org',
   'austin.publicbikesystem.net',
   'hon.publicbikesystem.net',
   'chat.publicbikesystem.net',
@@ -31,7 +36,7 @@ const GBFS_ALLOWED_HOSTS = new Set([
  * @param {string} hostname
  * @returns {boolean}
  */
-function isAllowedGbfsHost(hostname) {
+export function isAllowedGbfsHost(hostname) {
   const host = String(hostname || '').trim().toLowerCase();
   if (!host) return false;
   if (GBFS_ALLOWED_HOSTS.has(host)) return true;

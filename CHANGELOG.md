@@ -19,6 +19,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Sepeda Bersama** kini juga mencakup Montréal, Ciudad de México, Oslo, Bergen, Berlin, Wina, Lyon, dan
+  Tokyo (sebelumnya hanya kota di AS). Lima feed AS yang sudah mati (Fort Lauderdale, Tucson, Fort Worth,
+  Buffalo, Columbus) dihapus. Bila tidak ada stasiun yang tampil, baris layer kini menjelaskan sebabnya:
+  "Perbesar peta (di bawah ±48 km)…" atau "Tidak ada sistem sepeda bersama di area ini — terdekat: Tokyo,
+  ±5.800 km".
 - **Misi Antariksa** tidak lagi menyalakan layer **Satelit**. Tombol Satelit kini tetap sesuai pilihan Anda
   (sebelumnya ikut ON tapi titiknya tidak tampil). Mematikan Satelit tidak lagi mengakhiri Misi Antariksa,
   dan Satelit yang Anda nyalakan sendiri selama misi tetap menyala setelah misi selesai. Orbit misi tetap
