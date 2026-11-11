@@ -54,6 +54,25 @@ export function createFailureTracker(threshold = FAILURE_STREAK) {
   };
 }
 
+/**
+ * One event per failed answer, so the first 5xx is visible without waiting for
+ * a streak, and a 429 (our limiter or the upstream's) is visible at all. The
+ * message names route + status only, so repeats merge into one counted row;
+ * the WHY comes from the proxy's own console report (consoleBridge.mjs).
+ * @param {string} group Route group from `routeGroup`.
+ * @param {number} status HTTP status sent.
+ * @returns {object|null}
+ */
+export function responseFailureEvent(group, status) {
+  if (status === 429) {
+    return { level: 'warn', source: 'proxy', code: 'proxy.rate_limited', message: `${group} answered HTTP 429 (rate limited)`, detail: { route: group, status } };
+  }
+  if (status >= 500) {
+    return { level: 'error', source: 'proxy', code: 'proxy.http_error', message: `${group} answered HTTP ${status}`, detail: { route: group, status } };
+  }
+  return null;
+}
+
 /** The process-wide tracker (survives a Vite in-process restart), read by System Health. */
 export function getProxyFailureTracker() {
   globalThis.__GEV_PROXY_TRACKER__ ??= createFailureTracker();
@@ -70,6 +89,8 @@ export function proxyFailureMiddleware(record, tracker = createFailureTracker())
     const group = routeGroup(req.originalUrl ?? req.url);
     if (group) {
       res.on('finish', () => {
+        const failure = responseFailureEvent(group, res.statusCode);
+        if (failure) record(failure);
         const event = tracker.observe(group, res.statusCode);
         if (event) record(event);
       });
