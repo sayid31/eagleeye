@@ -83,3 +83,16 @@ test('agoLabel is Indonesian and tolerant of bad input', () => {
   assert.equal(agoLabel(NOW - 90_000, NOW), '1 menit lalu');
   assert.equal(agoLabel(undefined, NOW), null);
 });
+
+test('an enabled layer waiting for zoom shows its prompt instead of a bare label', () => {
+  const status = layerShellStatus(row({
+    id: 'military-installations',
+    stats: { count: 0, lastUpdate: null, status: 'zoom-in', error: 'Perbesar untuk memuat konteks instalasi terpetakan' },
+  }), NOW);
+  assert.deepEqual(status, { key: 'static', label: 'Data statis', detail: 'Perbesar untuk memuat konteks instalasi terpetakan' });
+});
+
+test('a non-guidance status never leaks its error text into a nominal detail', () => {
+  const status = layerShellStatus(row({ id: 'military-installations', stats: { count: 4, lastUpdate: NOW, status: 'ready' } }), NOW);
+  assert.equal(status.detail, '');
+});

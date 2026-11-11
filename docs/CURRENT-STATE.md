@@ -1697,7 +1697,9 @@ One log for the server and every browser using the map. Model and limits: `src/a
 - `src/shell/` mounts a top bar, icon rail and status bar. The rail and search proxy to existing
   controls. The shell never writes layer state.
 - Layer rows show a status from `layerShellStatus` (`src/shell/layerStatus.js`): Live, Terganggu, Mati,
-  Memuat, or Data statis for bundled datasets. `.data-name` text is unchanged because voice focus reads it.
+  Memuat, or Data statis for bundled datasets. A layer in a guidance state (`zoom-in`/`empty`/`idle`) appends
+  its prompt, e.g. `Data statis · Perbesar untuk memuat konteks instalasi terpetakan`. `.data-name` text is
+  unchanged because voice focus reads it.
 - `#cesium-credits` is moved to the status bar's right end (`chrome.css`, `!important` to beat the legacy
   bottom-left rules) and is never hidden. The status bar and the dock no longer overlap.
 - The top bar has no background; the search is for locations only (Ctrl K focuses it). The left rail is a

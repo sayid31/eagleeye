@@ -9,7 +9,7 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 - Mengaktifkan **Instalasi Militer** saat globe masih terlihat jauh tidak lagi langsung memunculkan
   "MUAT GAGAL". Saat tampilan terlalu lebar, layer memang hanya meminta Anda memperbesar peta; petunjuk itu
-  kini tampil di chip layer tanpa dianggap kegagalan. Kegagalan sungguhan (server tidak tersedia) tetap
+  kini tertulis di baris layer ("Data statis · Perbesar untuk memuat…") tanpa dianggap kegagalan. Kegagalan sungguhan (server tidak tersedia) tetap
   diberitahukan.
 - Layer Kapal (AIS) kini memuat kapal di server yang diakses lewat domain publik. Sebelumnya data kapal
   (±2,8 MB) dikirim tanpa kompresi dan butuh lebih dari 10 detik, sehingga layer selalu tampil
