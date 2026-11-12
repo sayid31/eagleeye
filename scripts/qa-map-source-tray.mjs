@@ -270,7 +270,8 @@ try {
       'key-required sources stay focusable, explained, and inert when no ion token is configured',
       ionSource.ariaDisabled === 'true'
         && ionSource.focused
-        && /token required/i.test(ionSource.ariaLabel)
+        // The UI is Indonesian: _unavailableReason in src/mapStackController.js.
+        && /Token Cesium ion diperlukan/i.test(ionSource.ariaLabel)
         && ionSource.activeId === activeBeforeIonAttempt
         && JSON.stringify(ionSource.active) === JSON.stringify([activeBeforeIonAttempt]),
       JSON.stringify(ionSource),

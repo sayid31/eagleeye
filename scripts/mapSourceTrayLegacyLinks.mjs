@@ -28,6 +28,10 @@ export async function checkLegacyLinksLandOnBootStack({ page, appUrl, shotsDir, 
       // controller instead.
       await page.evaluate(async (id) => {
         const styleManager = window.__godsEyeView.styleManager;
+        // Without a reload nothing re-runs boot, so set the keyless boot stack
+        // here with a clean lastError: a restore that tried to honor `map=`
+        // (Google 3D is unavailable keyless) would then show up as an error.
+        await styleManager._setMapStack('esri-imagery', { syncShare: false });
         history.replaceState(null, '', `?welcome=0#v=2&lat=30.27&lon=-97.74&map=${id}`);
         const state = styleManager.shareLinkManager.parseInitialHash();
         await styleManager.shareLinkManager.applyState(state, { applyCamera: false });
