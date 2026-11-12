@@ -3534,3 +3534,11 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Root cause.** The traffic proxy admits 6 upstream-bound requests but the shared gate runs 2; the other 4 waited up to 45 s while still counted against the 6, so a seventh got an instant 503. Each pan issues a new box (major + full); the layer aborts its superseded fetch, but the server kept those queries queued or running, so the viewport the user was looking at waited behind ones they had left.
 
 **Decision.** The same rule as mapped installations: every client of a cache key (dedupe joiners included, since they wait inside `resolveOverpassPreflight`) joins a shared abort; when the last one disconnects the query is aborted, frees its slot and its 6-cap count, and the in-flight entry is dropped so a later identical request starts fresh. An abort never parks a mirror. The in-flight cleanup now removes only its own entry. Upstream 502s are unaffected — that is Overpass itself; warmed regions avoid it entirely.
+
+## 2026-11-12 — The 2D/3D pill shows the settled camera, the stored mode stays the preference (owner request)
+
+**Symptom.** After a location search the camera sat straight down while the pill stayed lit on 3D; reaching the oblique view took a click on 2D, then 3D.
+
+**Why.** The pill only reflected the stored mode. Whole-city search flies to a rectangle with no orientation (deliberately mode-free, 2026-10-28), so it lands nadir in either mode — the pill was simply not describing the camera.
+
+**Decision.** On `camera.moveEnd` the pill lights the mode whose pitch at this altitude is nearer the live pitch, using the same nadir/oblique pair the tilt flies to (so at globe altitude, where oblique is −80°, the split is −85°, not a fixed angle). The stored mode is not rewritten by a camera move: it keeps governing the next pitch-bearing flight, share links and voice, and only a click (or voice/restore) changes it. Rewriting the mode on every nadir landing was rejected — it would silently turn later landmark flights top-down.
