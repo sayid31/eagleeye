@@ -45,8 +45,24 @@ export function negotiateJsonEncoding(acceptEncoding) {
  * @param {Record<string,string>} [headers] Extra headers (e.g. Cache-Control).
  * @returns {Promise<void>}
  */
-export async function sendJson(req, res, statusCode, payload, headers = {}) {
-  const body = Buffer.from(JSON.stringify(payload), 'utf8');
+export function sendJson(req, res, statusCode, payload, headers = {}) {
+  return sendBody(req, res, statusCode, JSON.stringify(payload), {
+    'Content-Type': 'application/json; charset=utf-8', ...headers,
+  });
+}
+
+/**
+ * Send an already-serialized body (e.g. a cached Overpass JSON string) with
+ * the same gzip negotiation as `sendJson`. `headers` must carry Content-Type.
+ * @param {import('node:http').IncomingMessage} req
+ * @param {import('node:http').ServerResponse} res
+ * @param {number} statusCode
+ * @param {string|Buffer} text
+ * @param {Record<string,string>} headers
+ * @returns {Promise<void>}
+ */
+export async function sendBody(req, res, statusCode, text, headers) {
+  const body = Buffer.isBuffer(text) ? text : Buffer.from(String(text ?? ''), 'utf8');
   let encoded = body;
   let encoding = 'identity';
   if (body.length >= MIN_COMPRESS_BYTES && negotiateJsonEncoding(req.headers?.['accept-encoding']) === 'gzip') {
@@ -58,7 +74,6 @@ export async function sendJson(req, res, statusCode, payload, headers = {}) {
     }
   }
   res.statusCode = statusCode;
-  res.setHeader('Content-Type', 'application/json; charset=utf-8');
   for (const [name, value] of Object.entries(headers)) res.setHeader(name, value);
   res.setHeader('Vary', 'Accept-Encoding');
   if (encoding === 'gzip') res.setHeader('Content-Encoding', 'gzip');

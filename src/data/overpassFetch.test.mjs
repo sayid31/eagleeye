@@ -158,3 +158,12 @@ test('the request ceiling stays under the 100 s Cloudflare origin timeout', asyn
   assert.ok(OVERPASS_TOTAL_BUDGET_MS < 100_000);
   assert.ok(OVERPASS_SLOT_WAIT_MS < OVERPASS_TOTAL_BUDGET_MS);
 });
+
+test('only a 2xx answer with real data may be cached', async () => {
+  const { isCacheableOverpassPayload } = await import('./overpassFetch.mjs');
+  assert.equal(isCacheableOverpassPayload({ status: 200 }), true);
+  for (const payload of [
+    { status: 406 }, { status: 403 }, { status: 400 }, { status: 502 },
+    { status: 200, rateLimited: true }, { status: 200, runtimeError: true }, null,
+  ]) assert.equal(isCacheableOverpassPayload(payload), false, JSON.stringify(payload));
+});

@@ -66,3 +66,14 @@ test('sendJson leaves bodies under the threshold uncompressed', async () => {
   assert.equal(res.headers['content-encoding'], undefined);
   assert.deepEqual(JSON.parse(res.body.toString('utf8')), { rows: [], status: 'live' });
 });
+
+test('sendBody gzips a pre-serialized body and keeps the caller headers', async () => {
+  const { sendBody } = await import('./jsonCompression.mjs');
+  const text = JSON.stringify(largePayload());
+  const res = fakeResponse();
+  await sendBody({ headers: { 'accept-encoding': 'gzip' } }, res, 200, text, { 'Content-Type': 'application/json', 'X-Overpass-Cache': 'DISK' });
+  assert.equal(res.headers['content-encoding'], 'gzip');
+  assert.equal(res.headers['x-overpass-cache'], 'DISK');
+  assert.equal(res.headers['content-type'], 'application/json');
+  assert.equal(gunzipSync(res.body).toString('utf8'), text);
+});

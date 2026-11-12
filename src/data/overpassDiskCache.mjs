@@ -90,7 +90,7 @@ export function overpassDiskTtlMs(cacheKey) {
 }
 
 /** Normalized Overpass query -> stable disk-cache file path. */
-function overpassDiskPath(cacheKey, dir = OVERPASS_DISK_DIR) {
+export function overpassDiskPath(cacheKey, dir = OVERPASS_DISK_DIR) {
   return path.join(dir, `${createHash('sha1').update(cacheKey).digest('hex')}.json`);
 }
 
@@ -107,6 +107,14 @@ export async function readOverpassDisk(cacheKey, maxAgeMs, opts = {}) {
     const raw = await fsp.readFile(overpassDiskPath(cacheKey, opts.dir), 'utf8');
     const payload = JSON.parse(raw);
     if (!payload || typeof payload.body !== 'string' || !Number.isFinite(payload.cachedAt)) return null;
+    if (Number.isFinite(payload.status) && (payload.status < 200 || payload.status >= 300)) {
+      // An upstream refusal cached before only 2xx qualified (e.g. 314 HTML
+      // 406s from Sep 2026): it is not a road tile, so drop it for good.
+      fsp.unlink(overpassDiskPath(cacheKey, opts.dir)).catch((error) => {
+        console.warn(`[overpass-disk] could not remove cached HTTP ${payload.status} entry: ${error?.message || error}`);
+      });
+      return null;
+    }
     if (Date.now() - payload.cachedAt > maxAgeMs) return null;
     return payload;
   } catch {

@@ -74,7 +74,8 @@ import {
   sanitizeOverpassBody,
   resolveOverpassPreflight,
 } from './src/data/overpassCore.mjs';
-import { fetchOverpassPayload } from './src/data/overpassFetch.mjs';
+import { fetchOverpassPayload, isCacheableOverpassPayload } from './src/data/overpassFetch.mjs';
+import { sendBody } from './src/server/jsonCompression.mjs';
 import {
   readOverpassDisk,
   writeOverpassDisk,
@@ -354,18 +355,23 @@ function trimOverpassCache() {
 /**
  * Write a completed Overpass payload to the HTTP response.
  *
+ * Gzipped when the client accepts it: a residential road tile is ~1–3 MB of
+ * JSON, which took seconds to cross the staging host's uplink even when
+ * served from cache.
+ *
+ * @param {import('http').IncomingMessage} req - Node HTTP request (Accept-Encoding).
  * @param {import('http').ServerResponse} res - Node HTTP response.
  * @param {{status:number,body:string,contentType:string,endpoint:string}} payload
  * @param {string} [cacheStatus='MISS'] - 'HIT', 'MISS', or 'INFLIGHT'.
+ * @returns {Promise<void>}
  */
-function sendOverpassResponse(res, payload, cacheStatus = 'MISS') {
-  res.writeHead(payload.status, {
+function sendOverpassResponse(req, res, payload, cacheStatus = 'MISS') {
+  return sendBody(req, res, payload.status, payload.body || '', {
     'Content-Type': payload.contentType || 'application/json',
     'Cache-Control': 'public, max-age=15',
     'X-Overpass-Cache': cacheStatus,
     'X-Overpass-Upstream': payload.endpoint || 'unknown',
   });
-  res.end(payload.body || '');
 }
 
 /**
@@ -444,7 +450,7 @@ function overpassProxy() {
               // and the disk keeps one copy per real upstream answer.
               _overpassCache.set(cacheKey, covered);
               trimOverpassCache();
-              sendOverpassResponse(res, covered, 'COVER');
+              await sendOverpassResponse(req, res, covered, 'COVER');
               return;
             }
           }
@@ -459,7 +465,7 @@ function overpassProxy() {
               trimOverpassCache();
               coverIndex.record(cacheKey, preflight.payload.cachedAt);
             }
-            sendOverpassResponse(res, preflight.payload, preflight.source);
+            await sendOverpassResponse(req, res, preflight.payload, preflight.source);
             return;
           }
 
@@ -473,7 +479,7 @@ function overpassProxy() {
           _overpassConcurrent += 1;
           const requestPromise = fetchOverpassPayload(safeBody)
             .then((payload) => {
-              if (payload.status < 500 && !payload.rateLimited && !payload.runtimeError) {
+              if (isCacheableOverpassPayload(payload)) {
                 const entry = { ...payload, cachedAt: Date.now() };
                 _overpassCache.set(cacheKey, entry);
                 trimOverpassCache();
@@ -496,18 +502,18 @@ function overpassProxy() {
             const stale = _overpassCache.get(cacheKey) || await readOverpassDisk(cacheKey, Infinity);
             console.warn(`[Overpass Proxy] degraded upstream (${payload.attempts.join('; ')})${stale ? '; serving stale roads' : ''}`);
             if (stale) {
-              sendOverpassResponse(res, stale, 'STALE');
+              await sendOverpassResponse(req, res, stale, 'STALE');
               return;
             }
           }
-          sendOverpassResponse(res, payload, 'MISS');
+          await sendOverpassResponse(req, res, payload, 'MISS');
         } catch (e) {
           // Every mirror threw (network-level). Same serve-stale rule.
           const stale = cacheKey
             ? (_overpassCache.get(cacheKey) || await readOverpassDisk(cacheKey, Infinity).catch(() => null))
             : null;
           if (stale) {
-            sendOverpassResponse(res, stale, 'STALE');
+            await sendOverpassResponse(req, res, stale, 'STALE');
             return;
           }
           console.error('[Overpass Proxy]', e.message);
