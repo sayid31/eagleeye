@@ -168,3 +168,17 @@ test('the global band matches viewScaleForAltitude so there is one threshold, no
     'the tilt band boundary must be exactly where the view scale turns global',
   );
 });
+
+test('the shown button follows the pitch the camera actually settled at', async () => {
+  const { cameraAngleShownForCamera } = await import('./cameraAngleTilt.js');
+  // City altitude: straight down vs the -35 oblique, split at the midpoint.
+  assert.equal(cameraAngleShownForCamera(-90, 20_000), 'atas');
+  assert.equal(cameraAngleShownForCamera(-65, 20_000), 'atas');
+  assert.equal(cameraAngleShownForCamera(-60, 20_000), 'samping');
+  assert.equal(cameraAngleShownForCamera(-35, 20_000), 'samping');
+  assert.equal(cameraAngleShownForCamera(-12, 800), 'samping', 'a curated facade pitch is oblique');
+  // Globe altitude: the oblique there is -80, so -82 already reads 3D.
+  assert.equal(cameraAngleShownForCamera(-90, 152_880), 'atas');
+  assert.equal(cameraAngleShownForCamera(-82, 152_880), 'samping');
+  assert.equal(cameraAngleShownForCamera(Number.NaN, 20_000), null);
+});
