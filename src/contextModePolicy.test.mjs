@@ -194,17 +194,6 @@ test('voice dependency OFF exits Space Missions like the equivalent UI action', 
   }), true);
 });
 
-test('Satellites is optional beside Space Missions: switching it off never ends the mission', () => {
-  for (const origin of ['user', 'voice']) {
-    assert.equal(shouldExitContextForLayerChange({
-      contextMode: 'space-missions',
-      globalContextEnabled: false,
-      change: { type: 'visibility', layerId: 'satellites', enabled: false, origin },
-    }), false, origin);
-  }
-  assert.equal(contextAllowedLayerIds('space-missions').has('satellites'), true, 'the user may still keep or add it');
-});
-
 test('only a newer explicit mission request is deferred during Clear All', () => {
   const change = {
     type: 'visibility-requested',

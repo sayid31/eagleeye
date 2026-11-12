@@ -7,7 +7,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
 import { Readable } from 'node:stream';
-import { overpassProxy } from '../../vite.config.js';
+import { overpassProxy } from './overpassProxy.mjs';
 import { buildOverpassQuery } from './trafficOverpassQuery.js';
 import { createSlotGate } from './overpassSlots.mjs';
 

@@ -4,6 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import puppeteer from 'puppeteer';
+import { checkLegacyLinksLandOnBootStack } from './mapSourceTrayLegacyLinks.mjs';
+import { probeAcquiringFailureArbitration, probeAcquiringLifecycle, probeEsriTileFailureFallback, probeSwitching, probeTrayMetrics } from './mapSourceTrayProbes.mjs';
 
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const shotsDir = path.join(repoRoot, 'qa-shots', 'map-source-tray');
@@ -63,40 +65,7 @@ const check = (name, passed, detail = '') => {
   if (!passed) failures.push(name);
 };
 
-const trayMetrics = () => page.evaluate(() => {
-  const panel = document.getElementById('control-panel');
-  const popover = document.getElementById('control-panel-popover');
-  const row = document.getElementById('map-stack-chips');
-  const popoverRect = popover.getBoundingClientRect();
-  const chips = [...row.children].map((chip) => {
-    const rect = chip.getBoundingClientRect();
-    return {
-      id: chip.dataset.stackId,
-      left: rect.left,
-      right: rect.right,
-      top: rect.top,
-      bottom: rect.bottom,
-      pressed: chip.getAttribute('aria-pressed'),
-      ariaDisabled: chip.getAttribute('aria-disabled'),
-      ariaLabel: chip.getAttribute('aria-label'),
-    };
-  });
-  return {
-    viewport: { width: innerWidth, height: innerHeight },
-    expanded: document.getElementById('control-panel-toggle').getAttribute('aria-expanded'),
-    pinned: panel.classList.contains('dock-pinned'),
-    popover: {
-      left: popoverRect.left,
-      right: popoverRect.right,
-      top: popoverRect.top,
-      bottom: popoverRect.bottom,
-      width: popoverRect.width,
-    },
-    columns: getComputedStyle(row).gridTemplateColumns,
-    rows: new Set(chips.map((chip) => chip.top)).size,
-    chips,
-  };
-});
+const trayMetrics = () => page.evaluate(probeTrayMetrics);
 
 // The tray opens from the icon rail (src/theme/railStyle.css): its 300 px
 // popover lays the six chips out two to a row at every viewport width.
@@ -165,42 +134,7 @@ try {
     JSON.stringify(presentation),
   );
 
-  const esriTileFailureFallback = await page.evaluate(async () => {
-    const styleManager = window.__godsEyeView.styleManager;
-    const controller = styleManager.mapStackController;
-    await styleManager._setMapStack('esri-imagery', { syncShare: false });
-    const provider = controller._activeImageryProvider;
-    const before = {
-      activeId: controller.getActiveId(),
-      creditVisible: document.body.innerText.includes('Powered by Esri'),
-      globeShown: styleManager.viewer.scene.globe.show,
-      hasLayer: Boolean(controller._imageryLayer),
-    };
-    provider?.errorEvent?.raiseEvent?.({ timesRetried: 0 });
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    const afterOne = controller.getActiveId();
-    provider?.errorEvent?.raiseEvent?.({ timesRetried: 1 });
-    const deadline = performance.now() + 5000;
-    while (controller.getActiveId() !== 'osm' && performance.now() < deadline) {
-      await new Promise((resolve) => setTimeout(resolve, 25));
-    }
-    // The controller commits `activeId` before its fallback promise callback
-    // emits the terminal error state that re-syncs the chips. Give that
-    // callback one turn so the DOM assertion observes the completed contract.
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    const afterTwo = {
-      activeId: controller.getActiveId(),
-      lastError: controller.getState().lastError,
-      creditVisible: document.body.innerText.includes('Powered by Esri'),
-      globeShown: styleManager.viewer.scene.globe.show,
-      hasLayer: Boolean(controller._imageryLayer),
-      active: [...document.querySelectorAll('.map-stack-chip')]
-        .filter((chip) => chip.getAttribute('aria-pressed') === 'true')
-        .map((chip) => chip.dataset.stackId),
-    };
-    await styleManager._setMapStack('esri-imagery', { syncShare: false });
-    return { before, afterOne, afterTwo };
-  });
+  const esriTileFailureFallback = await page.evaluate(probeEsriTileFailureFallback);
   check(
     'two active Esri tile failures fall back to a rendered, truthful OSM stack',
     esriTileFailureFallback.before.activeId === 'esri-imagery'
@@ -336,7 +270,8 @@ try {
       'key-required sources stay focusable, explained, and inert when no ion token is configured',
       ionSource.ariaDisabled === 'true'
         && ionSource.focused
-        && /token required/i.test(ionSource.ariaLabel)
+        // The UI is Indonesian: _unavailableReason in src/mapStackController.js.
+        && /Token Cesium ion diperlukan/i.test(ionSource.ariaLabel)
         && ionSource.activeId === activeBeforeIonAttempt
         && JSON.stringify(ionSource.active) === JSON.stringify([activeBeforeIonAttempt]),
       JSON.stringify(ionSource),
@@ -351,36 +286,7 @@ try {
       JSON.stringify(ionSource),
     );
   }
-  const switching = await page.evaluate(async () => {
-    const styleManager = window.__godsEyeView.styleManager;
-    const controller = styleManager.mapStackController;
-    const originalSetStack = controller.setStack.bind(controller);
-    const before = controller.getActiveId();
-    let release;
-    const gate = new Promise((resolve) => { release = resolve; });
-    controller.setStack = async (stackId) => {
-      await gate;
-      return originalSetStack(stackId);
-    };
-    const switchPromise = styleManager._setMapStack('osm', { syncShare: false });
-    const during = {
-      status: document.getElementById('map-stack-status').textContent,
-      active: [...document.querySelectorAll('.map-stack-chip')]
-        .filter((chip) => chip.getAttribute('aria-pressed') === 'true')
-        .map((chip) => chip.dataset.stackId),
-    };
-    release();
-    await switchPromise;
-    const after = {
-      status: document.getElementById('map-stack-status').textContent,
-      active: [...document.querySelectorAll('.map-stack-chip')]
-        .filter((chip) => chip.getAttribute('aria-pressed') === 'true')
-        .map((chip) => chip.dataset.stackId),
-    };
-    controller.setStack = originalSetStack;
-    await styleManager._setMapStack(before, { syncShare: false });
-    return { before, during, after };
-  });
+  const switching = await page.evaluate(probeSwitching);
   check(
     'switching feedback is truthful and active state moves only after commit',
     switching.during.status === '...'
@@ -389,53 +295,7 @@ try {
     JSON.stringify(switching),
   );
 
-  const acquiringLifecycle = await page.evaluate(async () => {
-    const styleManager = window.__godsEyeView.styleManager;
-    const status = document.getElementById('global-loading-status');
-    const snapshot = () => ({
-      hidden: status.hidden,
-      state: status.dataset.state || null,
-      label: document.getElementById('global-loading-label').textContent.trim(),
-      detail: document.getElementById('global-loading-detail').textContent.trim(),
-    });
-    styleManager._handleShareTrackingRestoreStatus({
-      classification: 'pending',
-      layerId: 'flights',
-      targetId: 'qa-flight',
-      label: 'flight',
-    });
-    await new Promise((resolve) => setTimeout(resolve, 40));
-    const pending = snapshot();
-    styleManager._handleShareTrackingRestoreStatus({
-      classification: 'followed',
-      layerId: 'flights',
-      targetId: 'qa-flight',
-      label: 'flight',
-    });
-    const followed = snapshot();
-    styleManager._handleShareTrackingRestoreStatus({
-      classification: 'pending',
-      layerId: 'military',
-      targetId: 'qa-military',
-      label: 'military flight',
-    });
-    styleManager._handleShareTrackingRestoreStatus({
-      classification: 'source-unavailable',
-      layerId: 'flights',
-      targetId: 'qa-flight',
-      label: 'flight',
-    });
-    await new Promise((resolve) => setTimeout(resolve, 40));
-    const staleTerminal = snapshot();
-    styleManager._handleShareTrackingRestoreStatus({
-      classification: 'cancelled',
-      layerId: 'military',
-      targetId: 'qa-military',
-      label: 'military flight',
-    });
-    const cancelled = snapshot();
-    return { pending, followed, staleTerminal, cancelled };
-  });
+  const acquiringLifecycle = await page.evaluate(probeAcquiringLifecycle);
   check(
     'ACQUIRING DOM notice persists, ignores stale terminals, and clears on ownership completion',
     acquiringLifecycle.pending.hidden === false
@@ -450,89 +310,7 @@ try {
     JSON.stringify(acquiringLifecycle),
   );
 
-  const acquiringFailureArbitration = await page.evaluate(async (shareFailureNotice) => {
-    const styleManager = window.__godsEyeView.styleManager;
-    const dataManager = styleManager._dataManager;
-    const status = document.getElementById('global-loading-status');
-    const originalGetAll = dataManager.getAll;
-    const snapshot = () => ({
-      hidden: status.hidden,
-      state: status.dataset.state || null,
-      label: document.getElementById('global-loading-label').textContent.trim(),
-      detail: document.getElementById('global-loading-detail').textContent.trim(),
-    });
-    const waitForQueuedNotice = async (label, timeoutMs = 1000) => {
-      const deadline = performance.now() + timeoutMs;
-      while (styleManager._globalStatusNotice?.label !== label
-          && performance.now() < deadline) {
-        await new Promise((resolve) => setTimeout(resolve, 16));
-      }
-      return styleManager._globalStatusNotice?.label === label;
-    };
-    const baseNow = performance.now();
-    try {
-      styleManager._loadingFeedbackState = {
-        phase: 'idle', visible: false, startedAt: 0, showAt: 0, hideAt: 0,
-        activeIds: [], batchOutcome: null, terminal: null, operation: null,
-      };
-      styleManager._handleShareTrackingRestoreStatus({
-        classification: 'pending',
-        layerId: 'flights',
-        targetId: 'qa-failure-flight',
-        label: 'flight',
-      });
-      dataManager.getAll = () => [{
-        id: 'qa-unrelated-layer',
-        name: 'QA unrelated layer',
-        lifecycleState: 'enabling',
-        enabled: false,
-        stats: {},
-      }];
-      styleManager._updateGlobalLoadingFeedback(baseNow);
-      styleManager._updateGlobalLoadingFeedback(baseNow + 200);
-      dataManager.getAll = () => [];
-      styleManager._loadingFeedbackEvent = {
-        type: 'visibility-failed',
-        layerId: 'qa-unrelated-layer',
-        error: new Error('QA offline'),
-      };
-      styleManager._updateGlobalLoadingFeedback(baseNow + 300);
-      const failureStart = snapshot();
-      styleManager._handleShareTrackingRestoreStatus({
-        classification: 'source-unavailable',
-        layerId: 'flights',
-        targetId: 'qa-failure-flight',
-        label: 'flight',
-      });
-      const queuedNoticeReady = await waitForQueuedNotice(shareFailureNotice);
-      const shareFailureQueued = snapshot();
-      styleManager._updateGlobalLoadingFeedback(baseNow + 5299);
-      const failureEnd = snapshot();
-      styleManager._updateGlobalLoadingFeedback(baseNow + 5300);
-      const shareFailureStart = snapshot();
-      styleManager._updateGlobalLoadingFeedback(baseNow + 10299);
-      const shareFailureEnd = snapshot();
-      styleManager._updateGlobalLoadingFeedback(baseNow + 10300);
-      const settled = snapshot();
-      return {
-        failureStart,
-        queuedNoticeReady,
-        shareFailureQueued,
-        failureEnd,
-        shareFailureStart,
-        shareFailureEnd,
-        settled,
-      };
-    } finally {
-      dataManager.getAll = originalGetAll;
-      styleManager._handleShareTrackingRestoreStatus({
-        classification: 'cancelled',
-        layerId: 'flights',
-        targetId: 'qa-failure-flight',
-        label: 'flight',
-      });
-    }
-  }, SHARE_FAILURE_NOTICE);
+  const acquiringFailureArbitration = await page.evaluate(probeAcquiringFailureArbitration, SHARE_FAILURE_NOTICE);
   check(
     'manager failure then queued share failure each receives its full visible dwell',
     acquiringFailureArbitration.failureStart.hidden === false
@@ -702,65 +480,7 @@ try {
   check('coarse-pointer tap opens the compact wing', touchOpen === 'true', `aria-expanded=${touchOpen}`);
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
 
-  // The share hash neither carries nor restores a basemap: every load lands on
-  // the boot stack — Bing Labels when the server has an ion token, keyless Esri
-  // otherwise (activateBootStack). Old links with `map=photoreal` (which used to
-  // load Google 3D behind the boot activation), retired ids like `bing-road`,
-  // and garbage all take the SAME path and must end on the boot stack with its
-  // tile lit. Google 3D remains a manual in-session pick.
-  await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });
-  const expectedLegacyActive = ionAvailable && !forceKeyless ? 'bing-labels' : 'esri-imagery';
-  for (const legacyId of ['photoreal', 'bing-road', 'garbage']) {
-    if (forceKeyless) {
-      // Keep the forced-keyless seam alive. A full reload would rebuild the
-      // controller from the keyed server before this in-page override exists,
-      // so drive the same parse/apply startup contract on the current keyless
-      // controller instead.
-      await page.evaluate(async (id) => {
-        const styleManager = window.__godsEyeView.styleManager;
-        history.replaceState(null, '', `?welcome=0#v=2&lat=30.27&lon=-97.74&map=${id}`);
-        const state = styleManager.shareLinkManager.parseInitialHash();
-        await styleManager.shareLinkManager.applyState(state, { applyCamera: false });
-        styleManager.shareLinkManager.completeInitialRestore();
-      }, legacyId);
-    } else {
-      // A goto that differs from the current URL only in its hash is a
-      // same-document navigation: the app is not reloaded and keeps the stack
-      // the steps above left active (photoreal on a keyed machine). Leave the
-      // document first so every link is opened by a fresh boot, as a recipient
-      // opens it.
-      await page.goto('about:blank');
-      await page.goto(`${appUrl}/?welcome=0#v=2&lat=30.27&lon=-97.74&map=${legacyId}`, {
-        waitUntil: 'domcontentloaded',
-        timeout: 60_000,
-      });
-      await page.waitForFunction(() => window.__godsEyeView?.styleManager, { timeout: 60_000 });
-      await page.waitForFunction(
-        () => document.getElementById('loading-screen')?.classList.contains('hidden'),
-        { timeout: 60_000 },
-      );
-    }
-    await page.waitForFunction(
-      () => window.__godsEyeView.styleManager.mapStackController.getState()?.status !== 'switching',
-      { timeout: 20_000 },
-    ).catch(() => {});
-    const restored = await page.evaluate(() => ({
-      activeId: window.__godsEyeView.styleManager.mapStackController.getActiveId(),
-      lastError: window.__godsEyeView.styleManager.mapStackController.getState()?.lastError || null,
-      status: document.getElementById('map-stack-status').textContent.trim(),
-      pressed: [...document.querySelectorAll('.map-stack-chip')]
-        .filter((chip) => chip.getAttribute('aria-pressed') === 'true')
-        .map((chip) => chip.dataset.stackId),
-    }));
-    check(
-      `a map=${legacyId} link lands on the boot stack (${expectedLegacyActive}) with its tile lit`,
-      restored.activeId === expectedLegacyActive
-        && restored.lastError === null
-        && JSON.stringify(restored.pressed) === JSON.stringify([expectedLegacyActive]),
-      JSON.stringify(restored),
-    );
-    await page.screenshot({ path: path.join(shotsDir, `legacy-${legacyId}.png`) });
-  }
+  await checkLegacyLinksLandOnBootStack({ page, appUrl, shotsDir, check, forceKeyless, ionAvailable });
 
   check('no new page or console errors', consoleErrors.length === 0, consoleErrors.join(' | '));
 } finally {
