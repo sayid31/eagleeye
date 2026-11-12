@@ -3514,3 +3514,15 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Root cause (measured).** Staging's `/api/firms` reported NOAA-20 and NOAA-21 `ok:false` and SNPP `ok:true` with 0 rows; locally SNPP also had 0 rows that day while the NOAA sources delivered. The proxy's "all sources failed" guard counted SNPP's empty success, so a refresh with no data was cached as fresh for 30 min, replacing good fires and reporting healthy. Why the NOAA sources fail on staging is not yet known — the reason was only on the pm2 console (one source is 6.8 MB / 12 s from a dev machine, against a 60 s timeout).
 
 **Decision.** `firmsRefreshUsable`: a refresh is cacheable only if a source answered *with detections* (a worldwide day without VIIRS detections means a broken feed, not a fireless planet). Otherwise the last usable entry is served stale, or 502 with none, and the per-source outcome is logged (now also in the Server Log via the console bridge). An entry without detections already on disk is never fresh. Partial failure keeps the data but marks the layer degraded, naming the failed sources.
+
+## 2026-11-12 — Traffic preload for the demo regions: 0.1° warm tiles on a 0.05° grid, gzip, 2xx-only cache
+
+**Context.** Flying to Denpasar in a demo, traffic took very long to appear (planpreload.md). The cost is the road geometry: an uncached Overpass answer takes 20–55 s; TomTom flow tiles are small, fetched in parallel, and showed no slowness in the logs. Staging's cache starts empty, and road JSON (up to ~3 MB) crossed its uplink uncompressed.
+
+**Decisions.**
+- **Region warm-up shape.** COVER only serves a request fully inside one cached box of the same template. The app box is ≤0.05° with its centre on a 0.0125° grid, so 0.05° warm tiles laid edge to edge almost never contain it (measured: 336 of 360 Denpasar–Badung boxes uncovered). A 0.1° tile on a 0.05° grid always contains it (a centre is ≤0.025° from the nearest tile centre). That costs ~4× the bytes per tile but no extra tiles, and it covers every altitude the layer runs at.
+- **Polite by construction.** Serial, 2 s pause after each upstream round trip, behind the proxy's 2-slot gate, and stop after 3 consecutive failures — during an Overpass outage the run is postponed, not retried in a loop. Must run on the server it warms.
+- **gzip `/api/overpass`** through the shared `sendBody`: 1.78 MB → 323 KB for a residential tile, which matters most on staging.
+- **Cache 2xx only.** "Any status < 500" let 314 HTML 406 refusals sit under road keys; they are now refused on write and deleted on read.
+
+**Not done yet (planpreload.md order).** Prefetch when the camera starts flying to a destination (roads + TomTom tiles for the destination only) and idle prefetch — to be decided after measuring the demo route with the warm cache.

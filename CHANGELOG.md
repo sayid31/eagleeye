@@ -19,6 +19,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Lalu lintas** di Denpasar–Badung, Kupang, dan Labuan Bajo bisa disiapkan lebih dulu di server dengan
+  `node scripts/warm-overpass-cache.mjs --regions denpasar-badung,kupang,labuan-bajo`, sehingga saat peta
+  dibuka di sana data jalan langsung tampil dari cache, tanpa menunggu server OSM. Data jalan kini juga
+  dikirim terkompresi (±5× lebih kecil), dan jawaban error dari server OSM tidak lagi tersimpan sebagai
+  data jalan.
 - **Sepeda Bersama** kini juga mencakup Montréal, Ciudad de México, Oslo, Bergen, Berlin, Wina, Lyon, dan
   Tokyo (sebelumnya hanya kota di AS). Lima feed AS yang sudah mati (Fort Lauderdale, Tucson, Fort Worth,
   Buffalo, Columbus) dihapus. Bila tidak ada stasiun yang tampil, baris layer kini menjelaskan sebabnya:
