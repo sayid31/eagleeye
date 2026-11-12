@@ -339,7 +339,7 @@ its criteria cannot be silently ignored.
 | Datacenters ▣ | OSM extract (bundled) | `src/data/localLayers.js` | — | static |
 | Dams ▰ | OpenInfraMap/OSM extract (bundled) | `src/data/localLayers.js` | — | static |
 | Submarine Cables ◠ | TeleGeography public map (bundled) | `src/data/telegeographySubmarineCables.js` | — | static |
-| FIRMS Active Fires ▲ | NASA FIRMS live (VIIRS ×3 NRT, trailing 24h) | `src/data/firmsHeatmap.js` | `/api/firms` (`FIRMS_MAP_KEY`) | 10 min (proxy TTL 30 min) |
+| FIRMS Active Fires ▲ | NASA FIRMS live (VIIRS ×3 NRT, trailing 24h) | `src/data/firmsHeatmap.js` | `/api/firms` (`FIRMS_MAP_KEY`) | 10 min (proxy TTL 30 min). A refresh is cached only when at least one source answered with detections (`firmsRefreshUsable`, `src/data/firmsSourceHealth.js`); otherwise the last usable entry is served `stale`, or 502 when there is none, and `[firms-proxy] refresh failed (no FIRMS source returned detections (NOAA-20: …; NOAA-21: …; SNPP: 0 rows))` is logged. A cached entry without detections is never served as fresh. Each failed source carries its `error` (`timeout 60 s`, `HTTP 429`, …, never the URL); when some failed, the layer reports `degraded` with `sumber FIRMS gagal: NOAA-21` instead of Live. |
 | Tsunami Shelters & Sirens (Sumbar) ◭ | Two shared Google My Maps documents (58 shelter buildings, 86 sirens), unofficial | `src/data/localLayers.js` (`local-sumbar-tsunami`), parser `src/data/myMapsKml.mjs` | `/api/mymaps/sumbar-tsunami` (allowlisted map ids, 6 h cache, stale-on-failure) | loaded on enable |
 
 `src/data/militaryAwareness.js` remains registered internally as the Contacts

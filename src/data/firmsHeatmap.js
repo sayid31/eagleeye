@@ -18,6 +18,7 @@ import {
   unregisterPickOwner,
 } from './pickRegistry.js';
 import { adaptFirmsRecords } from './firmsAdapt.js';
+import { firmsPartialFailureReason } from './firmsSourceHealth.js';
 import { warmFireAnchorFloors } from './fireAnchors.js';
 import { horizonOccluder } from './iconOrientation.js';
 import {
@@ -150,6 +151,8 @@ export function createFirmsHeatmapLayer({
   let _stale = false;
   /** Surfaced error string when the live fetch failed outright. */
   let _error = null;
+  /** Some FIRMS sources failed while others delivered (chip reads degraded, not Live). */
+  let _partialReason = null;
   let _fires = [];
   let _firesByFrp = [];
   let _count = 0;
@@ -283,6 +286,7 @@ export function createFirmsHeatmapLayer({
       _keyRequired = false;
       _stale = false;
       _error = null;
+      _partialReason = null;
       _currentLodId = null;
       overlayHost.clearSource(FIRMS_OVERLAY_SOURCE_ID);
       overlayHost.setVisible(FIRMS_OVERLAY_SOURCE_ID, false);
@@ -316,6 +320,8 @@ export function createFirmsHeatmapLayer({
         loadingLabel = staleText;
       } else if (_error) {
         loadingLabel = _error;
+      } else if (_partialReason) {
+        loadingLabel = _partialReason;
       } else if (_lastUpdate) {
         loadingLabel = `LIVE · diperbarui ${formatAgoMinutes(now - _lastUpdate)}`;
       }
@@ -325,7 +331,8 @@ export function createFirmsHeatmapLayer({
         lastUpdate: _lastUpdate,
         loading: _loading,
         stale: _stale,
-        error: _keyRequired ? 'KUNCI DIPERLUKAN' : (_stale ? staleText : _error),
+        degraded: Boolean(_partialReason),
+        error: _keyRequired ? 'KUNCI DIPERLUKAN' : (_stale ? staleText : (_error || _partialReason)),
         loadingLabel,
       };
     },
@@ -445,6 +452,7 @@ export function createFirmsHeatmapLayer({
       _keyRequired = false;
       _error = null;
       _stale = Boolean(payload?.stale);
+      _partialReason = firmsPartialFailureReason(payload?.sources);
       const previousSelection = _selectedFire;
       _selectedFire = null;
       _fires = adaptFirmsRecords(payload?.fires);

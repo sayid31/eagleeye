@@ -3506,3 +3506,11 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - An enabled layer with nothing to draw reports a guidance status (`zoom-in`/`empty`) with the nearest registered system, so the row explains itself and the loading banner and Server Log do not treat it as a failure.
 
 **Not done.** A registry generated from MobilityData's `systems.csv` would cover far more cities, but that list has no coordinates (each system's stations would have to be fetched to place it) — a separate piece of work. Indonesia still has no public GBFS feed (MONITORED_CITIES_NO_FEED).
+
+## 2026-11-11 — A FIRMS refresh counts only if some source delivered detections
+
+**Symptom.** On staging the FIRMS layer read Live with no fires; locally 115k fires.
+
+**Root cause (measured).** Staging's `/api/firms` reported NOAA-20 and NOAA-21 `ok:false` and SNPP `ok:true` with 0 rows; locally SNPP also had 0 rows that day while the NOAA sources delivered. The proxy's "all sources failed" guard counted SNPP's empty success, so a refresh with no data was cached as fresh for 30 min, replacing good fires and reporting healthy. Why the NOAA sources fail on staging is not yet known — the reason was only on the pm2 console (one source is 6.8 MB / 12 s from a dev machine, against a 60 s timeout).
+
+**Decision.** `firmsRefreshUsable`: a refresh is cacheable only if a source answered *with detections* (a worldwide day without VIIRS detections means a broken feed, not a fireless planet). Otherwise the last usable entry is served stale, or 502 with none, and the per-source outcome is logged (now also in the Server Log via the console bridge). An entry without detections already on disk is never fresh. Partial failure keeps the data but marks the layer degraded, naming the failed sources.

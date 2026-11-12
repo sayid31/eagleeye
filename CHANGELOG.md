@@ -31,6 +31,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **Titik Api (NASA FIRMS)** tidak lagi tampil "Live" dengan peta kosong saat pengambilan data dari NASA
+  gagal. Sebelumnya, bila dua satelit utama gagal dan satelit ketiga sedang tanpa data, hasil kosong
+  disimpan sebagai data baru selama 30 menit. Kini titik api terakhir tetap ditampilkan (ditandai usang),
+  layer berstatus "Terganggu" bila sebagian sumber gagal, dan alasan tiap sumber tercatat di Server Log.
 - **Misi Antariksa** dan **Satelit** kini aktif tanpa menunggu server CelesTrak / Launch Library. Data yang
   sudah tersimpan langsung dipakai dan diperbarui di latar belakang; sebelumnya setiap 15 menit (data
   peluncuran) dan 6 jam (data orbit) aktivasi tertahan 6–20 detik menunggu server tersebut.
