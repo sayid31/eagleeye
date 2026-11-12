@@ -3526,3 +3526,11 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 - **Cache 2xx only.** "Any status < 500" let 314 HTML 406 refusals sit under road keys; they are now refused on write and deleted on read.
 
 **Not done yet (planpreload.md order).** Prefetch when the camera starts flying to a destination (roads + TomTom tiles for the destination only) and idle prefetch — to be decided after measuring the demo route with the warm cache.
+
+## 2026-11-12 — /api/overpass drops queries whose viewport was left
+
+**Symptom (local log, 14:23–14:25).** While Overpass answered 502/429, panning gave `/api/overpass answered HTTP 503` ×9 ("proxy busy") and `no Overpass slot free within 45 s (2 in use)`.
+
+**Root cause.** The traffic proxy admits 6 upstream-bound requests but the shared gate runs 2; the other 4 waited up to 45 s while still counted against the 6, so a seventh got an instant 503. Each pan issues a new box (major + full); the layer aborts its superseded fetch, but the server kept those queries queued or running, so the viewport the user was looking at waited behind ones they had left.
+
+**Decision.** The same rule as mapped installations: every client of a cache key (dedupe joiners included, since they wait inside `resolveOverpassPreflight`) joins a shared abort; when the last one disconnects the query is aborted, frees its slot and its 6-cap count, and the in-flight entry is dropped so a later identical request starts fresh. An abort never parks a mirror. The in-flight cleanup now removes only its own entry. Upstream 502s are unaffected — that is Overpass itself; warmed regions avoid it entirely.
