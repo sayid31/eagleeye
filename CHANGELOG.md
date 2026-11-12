@@ -36,6 +36,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **Lalu lintas**: saat peta digeser sementara server OSM lambat, permintaan untuk area yang sudah
+  ditinggalkan kini dibatalkan, sehingga area yang sedang dilihat tidak lagi menunggu di belakangnya
+  dan jauh lebih jarang mendapat "Overpass proxy busy" (HTTP 503).
 - **Titik Api (NASA FIRMS)** tidak lagi tampil "Live" dengan peta kosong saat pengambilan data dari NASA
   gagal. Sebelumnya, bila dua satelit utama gagal dan satelit ketiga sedang tanpa data, hasil kosong
   disimpan sebagai data baru selama 30 menit. Kini titik api terakhir tetap ditampilkan (ditandai usang),
