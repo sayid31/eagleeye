@@ -36,6 +36,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Tombol **2D / 3D** kini mengikuti posisi kamera. Setelah pindah lokasi yang membuat kamera menghadap
+  lurus ke bawah, tombol menunjukkan 2D, dan satu klik 3D langsung memiringkan kamera (sebelumnya tetap
+  menyala 3D sehingga harus klik 2D lalu 3D).
 - **Lalu lintas**: saat peta digeser sementara server OSM lambat, permintaan untuk area yang sudah
   ditinggalkan kini dibatalkan, sehingga area yang sedang dilihat tidak lagi menunggu di belakangnya
   dan jauh lebih jarang mendapat "Overpass proxy busy" (HTTP 503).

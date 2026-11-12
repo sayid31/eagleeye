@@ -312,3 +312,34 @@ test('the selected segment is reported to sighted operators and to assistive tec
     _resetCameraAngleModeForTest();
   }
 });
+
+test('a flight that lands straight down shows 2D, and one click on 3D tilts it', () => {
+  _resetCameraAngleModeForTest();
+  const target = host({ altitudeM: 20_000, pitchDeg: -90 });
+  const moveEnd = new Cesium.Event();
+  target.viewer.camera.moveEnd = moveEnd;
+  try {
+    target._initCameraAngleControl();
+    const [atas, samping] = target._cameraAngleBtns;
+    assert.equal(samping.classList.contains('active'), true, 'first run shows the standing 3D mode');
+
+    // Whole-city search landed nadir (flyToViewportBounds ignores the mode).
+    moveEnd.raiseEvent();
+    assert.equal(atas.classList.contains('active'), true, 'the buttons show what the camera is doing');
+    assert.equal(atas.getAttribute('aria-checked'), 'true');
+    assert.equal(samping.classList.contains('active'), false);
+    assert.equal(getCameraAngleMode(), CAMERA_ANGLE_MODES.SAMPING, 'the standing mode is not rewritten');
+    assert.equal(target.shareSyncs, 0, 'nothing is pushed to the share link by a camera move');
+
+    samping.click();
+    assert.equal(target.flights.length, 1, 'one click on 3D tilts — no 2D-then-3D detour');
+    assert.equal(tiltPitchDeg(target), -35);
+
+    target.viewer.camera.pitch = Cesium.Math.toRadians(-35);
+    moveEnd.raiseEvent();
+    assert.equal(samping.classList.contains('active'), true);
+  } finally {
+    target.restoreDocument();
+    _resetCameraAngleModeForTest();
+  }
+});

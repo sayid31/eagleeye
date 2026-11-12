@@ -18,7 +18,7 @@ import {
   isCameraAngleMode,
   setCameraAngleMode,
 } from './cameraAngleMode.js';
-import { planTiltInPlace } from './cameraAngleTilt.js';
+import { cameraAngleShownForCamera, planTiltInPlace } from './cameraAngleTilt.js';
 
 export const cameraAngleMixin = {
   _initCameraAngleControl() {
@@ -29,6 +29,22 @@ export const cameraAngleMixin = {
       });
     }
     this._syncCameraAngleButtonState();
+    // The buttons show what the camera IS doing once it settles, so a flight
+    // that lands straight down (whole-city search) reads 2D and one click on
+    // 3D tilts it. The standing mode is untouched: it still governs the next
+    // pitch-bearing flight, share links and voice.
+    this.viewer?.camera?.moveEnd?.addEventListener(() => {
+      this._syncCameraAngleButtonState(this._cameraAngleShownByCamera());
+    });
+  },
+
+  /** The mode the live camera matches, or the standing mode when it cannot be read. */
+  _cameraAngleShownByCamera() {
+    const camera = this.viewer?.camera;
+    const shown = camera
+      ? cameraAngleShownForCamera(Cesium.Math.toDegrees(camera.pitch), camera.positionCartographic?.height)
+      : null;
+    return shown || getCameraAngleMode();
   },
 
   /**
@@ -134,8 +150,8 @@ export const cameraAngleMixin = {
     return { tilt: true, reason: plan.reason };
   },
 
-  _syncCameraAngleButtonState() {
-    const active = getCameraAngleMode();
+  /** @param {string} [active] - Mode to show; defaults to the standing mode. */
+  _syncCameraAngleButtonState(active = getCameraAngleMode()) {
     for (const button of this._cameraAngleBtns || []) {
       if (!button) continue;
       const isActive = button.dataset.cameraAngle === active;

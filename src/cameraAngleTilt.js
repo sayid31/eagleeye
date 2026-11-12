@@ -132,3 +132,22 @@ export function planTiltInPlace(state = {}) {
     durationS: TILT_DURATION_S,
   };
 }
+
+/**
+ * Which button the live camera matches: the mode whose pitch at this altitude
+ * is nearer to the camera's (the same pair `resolveTiltPitchDeg` flies to).
+ * A whole-city search lands straight down in either mode, and the control
+ * used to keep showing 3D there, so reaching the oblique view took 2D then 3D.
+ *
+ * @param {number} pitchDeg - Live camera pitch, negative = looking down.
+ * @param {number} altitudeM - Live camera height.
+ * @returns {'atas'|'samping'|null} Null when the pitch is unknown.
+ */
+export function cameraAngleShownForCamera(pitchDeg, altitudeM) {
+  if (!Number.isFinite(pitchDeg)) return null;
+  const nadir = resolveTiltPitchDeg(CAMERA_ANGLE_MODES.ATAS, altitudeM);
+  const oblique = resolveTiltPitchDeg(CAMERA_ANGLE_MODES.SAMPING, altitudeM);
+  return Math.abs(pitchDeg - nadir) <= Math.abs(pitchDeg - oblique)
+    ? CAMERA_ANGLE_MODES.ATAS
+    : CAMERA_ANGLE_MODES.SAMPING;
+}
