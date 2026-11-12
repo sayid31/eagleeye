@@ -169,6 +169,13 @@ try {
     const styleManager = window.__godsEyeView.styleManager;
     const controller = styleManager.mapStackController;
     await styleManager._setMapStack('esri-imagery', { syncShare: false });
+    // Cesium writes a newly added static credit into the DOM on its next
+    // rendered frame. Boot used to start on Esri, so the credit was already
+    // there; since the boot basemap can be Bing it may be added only now.
+    const creditDeadline = performance.now() + 2000;
+    while (!document.body.innerText.includes('Powered by Esri') && performance.now() < creditDeadline) {
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
     const provider = controller._activeImageryProvider;
     const before = {
       activeId: controller.getActiveId(),
