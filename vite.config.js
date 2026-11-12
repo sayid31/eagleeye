@@ -76,6 +76,7 @@ import {
 } from './src/data/overpassCore.mjs';
 import { fetchOverpassPayload, isCacheableOverpassPayload } from './src/data/overpassFetch.mjs';
 import { sendBody } from './src/server/jsonCompression.mjs';
+import { createSharedAbortRegistry } from './src/server/sharedAbort.mjs';
 import {
   readOverpassDisk,
   writeOverpassDisk,
@@ -383,12 +384,18 @@ function sendOverpassResponse(req, res, payload, cacheStatus = 'MISS') {
  * OVERPASS_CACHE_MS. Concurrent identical queries share a single upstream
  * request via the in-flight map.
  *
+ * A request whose every waiting client disconnected (the traffic layer aborts
+ * its fetch when the camera moves on) is aborted too, so a viewport the user
+ * already left gives its Overpass slot to the current one.
+ *
  * @returns {import('vite').Plugin}
  */
-function overpassProxy() {
+export function overpassProxy() {
   // Remembers cached road tiles so a miss inside one is answered by cropping it
   // (src/data/overpassCoverIndex.mjs) instead of waiting on the public mirrors.
   const coverIndex = createOverpassCoverStore();
+  // Clients waiting per cache key, including dedupe joiners (resolveOverpassPreflight).
+  const abandonable = createSharedAbortRegistry();
   const readCover = (key) => _overpassCache.get(key) || readOverpassDisk(key, overpassDiskTtlMs(key));
   return {
     name: 'overpass-proxy',
@@ -397,6 +404,8 @@ function overpassProxy() {
         // Hoisted out of the try so the catch's serve-stale lookup can see it
         // (a body-read failure would otherwise hit an out-of-scope reference).
         let cacheKey = null;
+        /** @type {ReturnType<ReturnType<typeof createSharedAbortRegistry>['join']>|null} */
+        let subscription = null;
         try {
           if (req.method !== 'POST') {
             res.writeHead(405, { 'Content-Type': 'application/json' });
@@ -434,6 +443,12 @@ function overpassProxy() {
 
           // Normalize whitespace so semantically identical Overpass QL queries share cache entries
           cacheKey = safeBody.replace(/\s+/g, ' ').trim();
+          const key = cacheKey;
+          subscription = abandonable.join(key, () => {
+            // Next request for this key starts fresh instead of awaiting the aborted one.
+            _overpassInFlight.delete(key);
+          });
+          res.on('close', () => { if (!res.writableFinished) subscription.leave(); });
           const preflight = await resolveOverpassPreflight({
             cacheKey,
             memoryCache: _overpassCache,
@@ -477,7 +492,7 @@ function overpassProxy() {
             return;
           }
           _overpassConcurrent += 1;
-          const requestPromise = fetchOverpassPayload(safeBody)
+          const requestPromise = fetchOverpassPayload(safeBody, undefined, { signal: subscription.signal })
             .then((payload) => {
               if (isCacheableOverpassPayload(payload)) {
                 const entry = { ...payload, cachedAt: Date.now() };
@@ -490,7 +505,8 @@ function overpassProxy() {
             })
             .finally(() => {
               _overpassConcurrent -= 1;
-              _overpassInFlight.delete(cacheKey);
+              // Only our own entry: an abandoned request may settle after a newer one took the key.
+              if (_overpassInFlight.get(key) === requestPromise) _overpassInFlight.delete(key);
             });
 
           _overpassInFlight.set(cacheKey, requestPromise);
@@ -508,6 +524,8 @@ function overpassProxy() {
           }
           await sendOverpassResponse(req, res, payload, 'MISS');
         } catch (e) {
+          // Every waiting client left: nobody to answer, and not a mirror fault.
+          if (subscription?.left) return;
           // Every mirror threw (network-level). Same serve-stale rule.
           const stale = cacheKey
             ? (_overpassCache.get(cacheKey) || await readOverpassDisk(cacheKey, Infinity).catch(() => null))
@@ -519,6 +537,8 @@ function overpassProxy() {
           console.error('[Overpass Proxy]', e.message);
           res.writeHead(502, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Overpass proxy error' }));
+        } finally {
+          subscription?.done();
         }
       });
     },
