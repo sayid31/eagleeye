@@ -55,6 +55,17 @@ export const OVERPASS_SLOT_WAIT_MS = 45_000;
  */
 export const OVERPASS_TOTAL_BUDGET_MS = 90_000;
 
+/**
+ * Whether an upstream answer may enter the memory/disk cache: a 2xx with real
+ * data only. Any status < 500 used to qualify, so 314 HTML 406 refusals from a
+ * September User-Agent block sat on disk under road keys as if they were roads.
+ * @param {{status:number, rateLimited?:boolean, runtimeError?:boolean}} payload
+ * @returns {boolean}
+ */
+export function isCacheableOverpassPayload(payload) {
+  return payload?.status >= 200 && payload.status < 300 && !payload.rateLimited && !payload.runtimeError;
+}
+
 /** `https://lz4.overpass-api.de/api/interpreter` → `lz4.overpass-api.de`. */
 function overpassHost(endpoint) {
   try { return new URL(endpoint).host; } catch { return String(endpoint); }
