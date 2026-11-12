@@ -3542,3 +3542,9 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Why.** The pill only reflected the stored mode. Whole-city search flies to a rectangle with no orientation (deliberately mode-free, 2026-10-28), so it lands nadir in either mode — the pill was simply not describing the camera.
 
 **Decision.** On `camera.moveEnd` the pill lights the mode whose pitch at this altitude is nearer the live pitch, using the same nadir/oblique pair the tilt flies to (so at globe altitude, where oblique is −80°, the split is −85°, not a fixed angle). The stored mode is not rewritten by a camera move: it keeps governing the next pitch-bearing flight, share links and voice, and only a click (or voice/restore) changes it. Rewriting the mode on every nadir landing was rejected — it would silently turn later landmark flights top-down.
+
+## 2026-11-12 — Boot basemap is Bing Aerial with Labels when an ion token exists (owner choice)
+
+**Decision.** A fresh load shows `bing-labels` (Cesium ion world imagery, AERIAL_WITH_LABELS) — satellite imagery with place names — instead of Esri Satellite. The keyless guarantee is kept: without `CESIUM_ION_TOKEN`, or if ion/Bing fails to load, boot lands on keyless Esri (`DEFAULT_BOOT_STACK`, with its existing OSM sub-fallback). `activateBootStack` performs that fallback explicitly because `setStack`'s own failure path lands on Google 3D when the tileset exists, and Google 3D stays opt-in. The basemap is still not carried in share links; every load lands on the boot basemap.
+
+**Cost note.** Bing imagery through ion counts against the ion account's imagery quota on every session, where Esri cost nothing; watch the ion usage page after deploy.

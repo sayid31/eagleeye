@@ -557,7 +557,7 @@ export class StyleManager {
           setScopeTerminusOverride(pinned == null ? null : pinned / 100);
         }
         // The basemap is deliberately NOT restored from the link or the reloaded
-        // hash: boot already activated Esri (DEFAULT_BOOT_STACK), and re-applying
+        // hash: boot already activated its basemap (activateBootStack), and re-applying
         // a persisted `map=photoreal` would load Google 3D right behind it.
         // Google 3D (and every other stack) stays a manual in-session choice.
         if (panelState) this._restorePanelState(panelState);

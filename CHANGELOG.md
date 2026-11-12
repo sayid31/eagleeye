@@ -19,6 +19,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Peta default saat aplikasi dibuka kini **Bing (Aerial with Labels)** — citra satelit dengan nama tempat —
+  bila `CESIUM_ION_TOKEN` terpasang. Tanpa token, atau bila Bing gagal dimuat, peta tetap Esri Satellite
+  seperti sebelumnya, jadi aplikasi tetap bisa dibuka tanpa key.
 - **Lalu lintas** di Denpasar–Badung, Kupang, dan Labuan Bajo bisa disiapkan lebih dulu di server dengan
   `node scripts/warm-overpass-cache.mjs --regions denpasar-badung,kupang,labuan-bajo`, sehingga saat peta
   dibuka di sana data jalan langsung tampil dari cache, tanpa menunggu server OSM. Data jalan kini juga

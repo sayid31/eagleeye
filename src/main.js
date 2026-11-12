@@ -213,7 +213,8 @@ async function init() {
       onError: (message) => console.warn('[MapStack]', message),
     });
     markBoot(BOOT_MARKS.MAPSTACK_START);
-    await mapStackController.setStack(DEFAULT_BOOT_STACK, { silent: true });
+    // Bing with labels when the ion token is configured, keyless Esri otherwise.
+    await mapStackController.activateBootStack();
     markBoot(BOOT_MARKS.MAPSTACK_END);
 
     // Initialize the style manager (post-processing, HUD, locations, share links)

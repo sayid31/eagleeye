@@ -703,12 +703,13 @@ try {
   await cdp.send('Emulation.setTouchEmulationEnabled', { enabled: false });
 
   // The share hash neither carries nor restores a basemap: every load lands on
-  // keyless Esri (the boot stack). Old links with `map=photoreal` (which used to
-  // load Google 3D behind the Esri boot activation), retired ids like
-  // `bing-road`, and garbage all take the SAME path and must end on Esri with
-  // its tile lit. Google 3D remains a manual in-session pick.
+  // the boot stack — Bing Labels when the server has an ion token, keyless Esri
+  // otherwise (activateBootStack). Old links with `map=photoreal` (which used to
+  // load Google 3D behind the boot activation), retired ids like `bing-road`,
+  // and garbage all take the SAME path and must end on the boot stack with its
+  // tile lit. Google 3D remains a manual in-session pick.
   await page.setViewport({ width: 1000, height: 900, deviceScaleFactor: 1 });
-  const expectedLegacyActive = 'esri-imagery';
+  const expectedLegacyActive = ionAvailable && !forceKeyless ? 'bing-labels' : 'esri-imagery';
   for (const legacyId of ['photoreal', 'bing-road', 'garbage']) {
     if (forceKeyless) {
       // Keep the forced-keyless seam alive. A full reload would rebuild the
@@ -752,7 +753,7 @@ try {
         .map((chip) => chip.dataset.stackId),
     }));
     check(
-      `a map=${legacyId} link lands on Esri with its tile lit`,
+      `a map=${legacyId} link lands on the boot stack (${expectedLegacyActive}) with its tile lit`,
       restored.activeId === expectedLegacyActive
         && restored.lastError === null
         && JSON.stringify(restored.pressed) === JSON.stringify([expectedLegacyActive]),
