@@ -32,8 +32,9 @@
  *     keyless place context.
  *   - src/voice/openAiVoiceProxy.mjs — GPT-Live voice session, screenshot
  *     reader and HUD-summary proxies.
- *   - src/data/terrainHeightsProxy.js — Re:Earth ellipsoidal point-height
- *     lookups.
+ *   - src/data/terrainHeightsPlugin.mjs (`/api/terrain/heights`) +
+ *     terrainHeightsProxy.js (pure helpers) — Re:Earth ellipsoidal
+ *     point-height lookups.
  *
  *   - src/admin/keys/ — the provider-key store behind /admin → API Keys. Its boot-time provenance snapshots stay in this file because
  *     they must be captured when THIS module first loads.
@@ -50,51 +51,56 @@
  */
 
 import fs from 'node:fs';
-import { promises as fsp } from 'node:fs';
+
 import path from 'node:path';
 import { loadCheckoutEnv } from './src/config/dotenvPrecedence.mjs';
+
+import { overpassProxy } from './src/data/overpassProxy.mjs';
 import { celestrakProxy } from './src/data/celestrakProxy.mjs';
+
 import { tomtomProxy } from './src/data/tomtomProxy.mjs';
+
 import { firmsProxy } from './src/data/firmsProxy.mjs';
+
 import { myMapsProxy } from './src/data/myMapsProxy.mjs';
+
 import { adsbdbProxy } from './src/data/adsbdbProxy.mjs';
+
 import { gbfsProxy } from './src/data/gbfsProxy.mjs';
+
 import { rocketLaunchesProxy, LL2_CACHE_TTL_MS, launchLibraryRequestHeaders } from './src/data/rocketLaunchesProxy.mjs';
+
 import { googlePlacesContextProxy, keylessGooglePlacesResponse } from './src/data/googlePlacesContextProxy.mjs';
+
 import { cctvProxy } from './src/data/cctvProxy.mjs';
+
 import { osrmRouteProxy } from './src/data/osrmRouteProxy.mjs';
+
 import { openSkyProxy, adsbLolFallbackAnchor } from './src/data/openSkyProxy.mjs';
+
 import { adsbLolProxy } from './src/data/adsbLolProxy.mjs';
+
 import { trackBackfillProxies } from './src/data/trackBackfillProxies.mjs';
+
 import { aisLiveProxy, aisStreamKeyEvidence } from './src/data/aisLiveProxy.mjs';
-import {
-  OVERPASS_CACHE_MAX_ENTRIES,
-  _overpassCache,
-  _overpassInFlight,
-  sanitizeOverpassBody,
-  resolveOverpassPreflight,
-} from './src/data/overpassCore.mjs';
-import { fetchOverpassPayload, isCacheableOverpassPayload } from './src/data/overpassFetch.mjs';
-import { sendBody } from './src/server/jsonCompression.mjs';
-import { createSharedAbortRegistry } from './src/server/sharedAbort.mjs';
-import {
-  readOverpassDisk,
-  writeOverpassDisk,
-  overpassDiskTtlMs,
-} from './src/data/overpassDiskCache.mjs';
-import { serveFromCover } from './src/data/overpassCoverIndex.mjs';
-import { createOverpassCoverStore } from './src/data/overpassCoverStore.mjs';
+
 import {
   militaryInstallationsProxy,
   validMilitaryInstallationBox,
 } from './src/data/militaryInstallationsProxy.mjs';
+
 import { fileURLToPath } from 'node:url';
+
 import { defineConfig, loadEnv } from 'vite';
+
 import cesium from 'vite-plugin-cesium';
 import react from '@vitejs/plugin-react';
 import { adminRoute, skipOnAdminPage } from './src/admin/adminRoute.mjs';
+
 import { adminAuthPlugin } from './src/admin/auth/adminAuthPlugin.mjs';
+
 import { radioBrowserProxy } from './src/data/radioBrowserProxy.mjs';
+
 import {
   regionalBriefProxy,
   weatherEffectsProxy,
@@ -105,30 +111,32 @@ import {
   fetchRegionalJson,
   NOMINATIM_HEADERS,
 } from './src/data/regionalProxyHandlers.mjs';
+
 import { knownKeySetupEnvVars } from './src/keySetupCore.mjs';
+
 import { createProviderKeyStore } from './src/admin/keys/providerKeyStore.mjs';
+
 import { adminKeysPlugin } from './src/admin/keys/adminKeysRoutes.mjs';
+
 import { createAdminAuditLog } from './src/admin/audit/adminAuditLog.mjs';
+
 import { serverLogPlugin } from './src/admin/log/serverLogPlugin.mjs';
+
 import { systemHealthPlugin } from './src/admin/health/systemHealthPlugin.mjs';
+
 import {
   makeRateLimiter,
   nominatimSearchRateLimiter,
   enforceOptInRateLimit,
   clientKey,
-  readRequestBodyCapped,
   readResponseTextCapped,
   readResponseJsonCapped,
   coalesceProxyRequest,
 } from './src/server/proxyInfra.mjs';
-import {
-  fetchTerrainChunkWithRetry,
-  parseTerrainPoints,
-  resolveTerrainHeightRequest,
-  terrainPointKey,
-  validTerrainResult,
-} from './src/data/terrainHeightsProxy.js';
+import { terrainHeightsProxy } from './src/data/terrainHeightsPlugin.mjs';
+
 import { openAiVoiceProxy } from './src/voice/openAiVoiceProxy.mjs';
+
 
 /** Resolve __dirname for ESM context. */
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -184,366 +192,6 @@ const providerKeyStore = createProviderKeyStore({
   devFreshExternalAtBoot: DEV_FRESH_EXTERNAL_KEYS_AT_BOOT,
 });
 
-// --- Abuse guards for the Overpass proxy ------------------------------------
-/** Max accepted POST body for the Overpass proxy (Overpass QL queries are tiny). */
-const OVERPASS_MAX_BODY_BYTES = 24 * 1024; // 24 KB
-/** Max concurrent in-flight upstream Overpass fetches across all distinct queries. */
-const OVERPASS_MAX_CONCURRENT = 6;
-let _overpassConcurrent = 0;
-
-const _overpassRateLimiter = makeRateLimiter({ windowMs: 60_000, max: 90, globalMax: 300 });
-
-/**
- * Re:Earth terrain point-height proxy: batched lon/lat → ellipsoidal height
- * lookups, keyless. Upstream: https://terrain.reearth.land/heights.json
- * (≤256 points per call). Terrain doesn't move, so results are cached to
- * disk with a long TTL (30 days) — mirrors celestrakProxy's memory+disk
- * cache and serve-stale shape. Cache entries and stale fallback are keyed per
- * 5dp point, so reordered and partially overlapping batches reuse prior work.
- * Only missing/stale points go upstream; the response is rebuilt in exact
- * request order. Oversized requests (>256 points) are chunked sequentially.
- */
-function terrainHeightsProxy() {
-  const TTL_MS = 30 * 24 * 3600_000;
-  const CACHE_DIR = path.join(process.cwd(), '.gev-cache');
-  const CACHE_PATH = path.join(CACHE_DIR, 'terrain-heights.json');
-  const UPSTREAM_CHUNK = 256;
-  const MAX_POINTS = 2000;
-
-  /** @type {Map<string, {at:number, result:object}>} keyed by canonical 5dp lon/lat. */
-  const mem = new Map();
-  /** @type {Map<string, Promise<Array<object>>>} single-flight per missing-point subset. */
-  const inflight = new Map();
-  let diskLoaded = false;
-  let diskDirty = false;
-
-  /** Load the on-disk cache into memory once, lazily (first request only). */
-  async function loadDiskOnce() {
-    if (diskLoaded) return;
-    diskLoaded = true;
-    try {
-      const parsed = JSON.parse(await fsp.readFile(CACHE_PATH, 'utf8'));
-      const pointEntries = parsed?.version === 2 && parsed.points && typeof parsed.points === 'object'
-        ? parsed.points
-        : null;
-      if (pointEntries) {
-        for (const [key, entry] of Object.entries(pointEntries)) {
-          if (entry && Number.isFinite(entry.at) && validTerrainResult(entry.result)) {
-            mem.set(key, entry);
-          }
-        }
-      } else if (parsed && typeof parsed === 'object') {
-        // One-time migration from the former raw-batch cache. Zip only real,
-        // positionally present results; an absent value never becomes height 0.
-        for (const [rawPoints, entry] of Object.entries(parsed)) {
-          const points = parseTerrainPoints(rawPoints);
-          if (!points || !entry || !Number.isFinite(entry.at) || !Array.isArray(entry.results)) continue;
-          for (let i = 0; i < points.length; i += 1) {
-            const result = entry.results[i];
-            if (!validTerrainResult(result)) continue;
-            const key = terrainPointKey(points[i]);
-            const existing = mem.get(key);
-            if (!existing || entry.at > existing.at) mem.set(key, { at: entry.at, result });
-          }
-        }
-        diskDirty = mem.size > 0;
-      }
-    } catch { /* no disk cache yet */ }
-    // Periodic flush, same shape as adsbdbProxy: coalesce writes instead of
-    // hitting disk on every request.
-    setInterval(async () => {
-      if (!diskDirty) return;
-      diskDirty = false;
-      try {
-        await fsp.mkdir(CACHE_DIR, { recursive: true });
-        const obj = { version: 2, points: Object.fromEntries(mem.entries()) };
-        await fsp.writeFile(CACHE_PATH, JSON.stringify(obj), 'utf8');
-      } catch (err) {
-        diskDirty = true; // retry next tick
-        console.warn('[terrain-heights-proxy] cache write failed:', err?.message || err);
-      }
-    }, 15_000).unref?.();
-  }
-
-  /**
-   * Fetch all missing chunks sequentially (upstream caps each call at 256).
-   *
-   * The first try keeps its empirically required 30s timeout; network errors,
-   * 429, and 5xx receive up to three jittered retries sharing a 10s added-time
-   * budget, with Retry-After honored within that bound.
-   * @param {Array<[number, number]>} points
-   * @returns {Promise<Array<object>>}
-   */
-  async function fetchUpstreamAll(points) {
-    const results = [];
-    for (let i = 0; i < points.length; i += UPSTREAM_CHUNK) {
-      const chunk = points.slice(i, i + UPSTREAM_CHUNK);
-      const chunkResults = await fetchTerrainChunkWithRetry(chunk);
-      // Keep later chunks aligned even if a malformed upstream response omits
-      // trailing positions. The resolver will reject each null individually.
-      for (let j = 0; j < chunk.length; j += 1) results.push(chunkResults[j] ?? null);
-    }
-    return results;
-  }
-
-  /** Coalesce concurrent requests for the same canonical missing-point list. */
-  function fetchMissingSingleFlight(points) {
-    const key = points.map(terrainPointKey).join(';');
-    if (!inflight.has(key)) {
-      const request = fetchUpstreamAll(points)
-        .finally(() => {
-          if (inflight.get(key) === request) inflight.delete(key);
-        });
-      inflight.set(key, request);
-    }
-    return inflight.get(key);
-  }
-
-  return {
-    name: 'terrain-heights-proxy',
-    configureServer(server) {
-      server.middlewares.use('/api/terrain/heights', async (req, res) => {
-        const send = (status, bodyObj) => {
-          if (res.headersSent) return;
-          res.writeHead(status, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify(bodyObj));
-        };
-        try {
-          await loadDiskOnce();
-          const parsedUrl = new URL(req.url || '', 'http://internal');
-          const rawPoints = parsedUrl.searchParams.get('points');
-          const points = parseTerrainPoints(rawPoints);
-          if (!points) {
-            send(400, { error: 'invalid points parameter — expected "lon,lat;lon,lat;…" with finite numbers' });
-            return;
-          }
-          if (points.length > MAX_POINTS) {
-            send(500, { error: `too many points (${points.length}); max ${MAX_POINTS} per request` });
-            return;
-          }
-
-          const outcome = await resolveTerrainHeightRequest({
-            points,
-            cache: mem,
-            fetchMissing: fetchMissingSingleFlight,
-            ttlMs: TTL_MS,
-          });
-          if (outcome.cacheChanged) diskDirty = true;
-          if (outcome.upstreamError) {
-            console.warn(
-              `[terrain-heights-proxy] refresh incomplete (${outcome.upstreamError?.message || outcome.upstreamError})`
-              + ' — serving stale points when available'
-            );
-          }
-          send(outcome.status, outcome.body);
-        } catch (err) {
-          send(500, { error: `terrain heights proxy error: ${err?.message || err}` });
-        }
-      });
-    },
-  };
-}
-
-/** Evict oldest Overpass cache entries until size is within the cap. */
-function trimOverpassCache() {
-  while (_overpassCache.size > OVERPASS_CACHE_MAX_ENTRIES) {
-    const oldestKey = _overpassCache.keys().next().value;
-    if (!oldestKey) break;
-    _overpassCache.delete(oldestKey);
-  }
-}
-
-/**
- * Write a completed Overpass payload to the HTTP response.
- *
- * Gzipped when the client accepts it: a residential road tile is ~1–3 MB of
- * JSON, which took seconds to cross the staging host's uplink even when
- * served from cache.
- *
- * @param {import('http').IncomingMessage} req - Node HTTP request (Accept-Encoding).
- * @param {import('http').ServerResponse} res - Node HTTP response.
- * @param {{status:number,body:string,contentType:string,endpoint:string}} payload
- * @param {string} [cacheStatus='MISS'] - 'HIT', 'MISS', or 'INFLIGHT'.
- * @returns {Promise<void>}
- */
-function sendOverpassResponse(req, res, payload, cacheStatus = 'MISS') {
-  return sendBody(req, res, payload.status, payload.body || '', {
-    'Content-Type': payload.contentType || 'application/json',
-    'Cache-Control': 'public, max-age=15',
-    'X-Overpass-Cache': cacheStatus,
-    'X-Overpass-Upstream': payload.endpoint || 'unknown',
-  });
-}
-
-/**
- * Vite plugin: Overpass API proxy with response caching and request coalescing.
- *
- * Accepts POST requests at /api/overpass, normalizes the query body for
- * cache keying, and fans out to multiple Overpass mirrors with per-upstream
- * timeout and rate-limit detection. Successful responses are cached for
- * OVERPASS_CACHE_MS. Concurrent identical queries share a single upstream
- * request via the in-flight map.
- *
- * A request whose every waiting client disconnected (the traffic layer aborts
- * its fetch when the camera moves on) is aborted too, so a viewport the user
- * already left gives its Overpass slot to the current one.
- *
- * @returns {import('vite').Plugin}
- */
-export function overpassProxy() {
-  // Remembers cached road tiles so a miss inside one is answered by cropping it
-  // (src/data/overpassCoverIndex.mjs) instead of waiting on the public mirrors.
-  const coverIndex = createOverpassCoverStore();
-  // Clients waiting per cache key, including dedupe joiners (resolveOverpassPreflight).
-  const abandonable = createSharedAbortRegistry();
-  const readCover = (key) => _overpassCache.get(key) || readOverpassDisk(key, overpassDiskTtlMs(key));
-  return {
-    name: 'overpass-proxy',
-    configureServer(server) {
-      server.middlewares.use('/api/overpass', async (req, res) => {
-        // Hoisted out of the try so the catch's serve-stale lookup can see it
-        // (a body-read failure would otherwise hit an out-of-scope reference).
-        let cacheKey = null;
-        /** @type {ReturnType<ReturnType<typeof createSharedAbortRegistry>['join']>|null} */
-        let subscription = null;
-        try {
-          if (req.method !== 'POST') {
-            res.writeHead(405, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Method Not Allowed' }));
-            return;
-          }
-
-          // Collect POST body with a hard byte cap (Overpass QL queries are small)
-          let body;
-          try {
-            body = (await readRequestBodyCapped(req, OVERPASS_MAX_BODY_BYTES)).toString();
-          } catch (err) {
-            if (err?.code === 'BODY_TOO_LARGE') {
-              res.writeHead(413, { 'Content-Type': 'application/json' });
-              res.end(JSON.stringify({ error: 'Overpass query too large' }));
-              return;
-            }
-            throw err;
-          }
-          if (!body) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Missing Overpass query body' }));
-            return;
-          }
-
-          // Validate + clamp the QL: reject unbounded/global queries and cap the
-          // server-side timeout so a tiny body can't request planet-scale work.
-          const sanitized = sanitizeOverpassBody(body);
-          if (!sanitized.ok) {
-            res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: sanitized.error }));
-            return;
-          }
-          const safeBody = sanitized.body;
-
-          // Normalize whitespace so semantically identical Overpass QL queries share cache entries
-          cacheKey = safeBody.replace(/\s+/g, ' ').trim();
-          const key = cacheKey;
-          subscription = abandonable.join(key, () => {
-            // Next request for this key starts fresh instead of awaiting the aborted one.
-            _overpassInFlight.delete(key);
-          });
-          res.on('close', () => { if (!res.writableFinished) subscription.leave(); });
-          const preflight = await resolveOverpassPreflight({
-            cacheKey,
-            memoryCache: _overpassCache,
-            inFlight: _overpassInFlight,
-            // Fresh-enough disk entries survive restarts and skip the public
-            // mirrors; boundary-class queries keep their month-long TTL.
-            readDisk: () => readOverpassDisk(cacheKey, overpassDiskTtlMs(cacheKey)),
-            allowUpstream: () => _overpassRateLimiter(clientKey(req)),
-          });
-          if (preflight.source === 'RATE_LIMITED' || preflight.source === 'UPSTREAM') {
-            const covered = await serveFromCover(coverIndex, cacheKey, readCover);
-            if (covered) {
-              // Memory only (not disk, not the index): repeats skip the crop,
-              // and the disk keeps one copy per real upstream answer.
-              _overpassCache.set(cacheKey, covered);
-              trimOverpassCache();
-              await sendOverpassResponse(req, res, covered, 'COVER');
-              return;
-            }
-          }
-          if (preflight.source === 'RATE_LIMITED') {
-            res.writeHead(429, { 'Content-Type': 'application/json', 'Retry-After': '5' });
-            res.end(JSON.stringify({ error: 'Rate limit exceeded' }));
-            return;
-          }
-          if (preflight.source !== 'UPSTREAM') {
-            if (preflight.source === 'DISK') {
-              _overpassCache.set(cacheKey, preflight.payload);
-              trimOverpassCache();
-              coverIndex.record(cacheKey, preflight.payload.cachedAt);
-            }
-            await sendOverpassResponse(req, res, preflight.payload, preflight.source);
-            return;
-          }
-
-          // From here onward the request is genuinely upstream-bound and has
-          // consumed one local limiter slot. Cache and dedupe hits above do not.
-          if (_overpassConcurrent >= OVERPASS_MAX_CONCURRENT) {
-            res.writeHead(503, { 'Content-Type': 'application/json', 'Retry-After': '2' });
-            res.end(JSON.stringify({ error: 'Overpass proxy busy — try again shortly' }));
-            return;
-          }
-          _overpassConcurrent += 1;
-          const requestPromise = fetchOverpassPayload(safeBody, undefined, { signal: subscription.signal })
-            .then((payload) => {
-              if (isCacheableOverpassPayload(payload)) {
-                const entry = { ...payload, cachedAt: Date.now() };
-                _overpassCache.set(cacheKey, entry);
-                trimOverpassCache();
-                writeOverpassDisk(cacheKey, entry);
-                coverIndex.record(cacheKey, entry.cachedAt);
-              }
-              return payload;
-            })
-            .finally(() => {
-              _overpassConcurrent -= 1;
-              // Only our own entry: an abandoned request may settle after a newer one took the key.
-              if (_overpassInFlight.get(key) === requestPromise) _overpassInFlight.delete(key);
-            });
-
-          _overpassInFlight.set(cacheKey, requestPromise);
-          const payload = await requestPromise;
-          // Degraded upstream (rate-limited on every mirror / 5xx / runtime
-          // error): last-good roads beat an empty layer — serve stale from
-          // memory or disk at ANY age before surfacing the failure.
-          if (payload.rateLimited || payload.runtimeError || payload.status >= 500) {
-            const stale = _overpassCache.get(cacheKey) || await readOverpassDisk(cacheKey, Infinity);
-            console.warn(`[Overpass Proxy] degraded upstream (${payload.attempts.join('; ')})${stale ? '; serving stale roads' : ''}`);
-            if (stale) {
-              await sendOverpassResponse(req, res, stale, 'STALE');
-              return;
-            }
-          }
-          await sendOverpassResponse(req, res, payload, 'MISS');
-        } catch (e) {
-          // Every waiting client left: nobody to answer, and not a mirror fault.
-          if (subscription?.left) return;
-          // Every mirror threw (network-level). Same serve-stale rule.
-          const stale = cacheKey
-            ? (_overpassCache.get(cacheKey) || await readOverpassDisk(cacheKey, Infinity).catch(() => null))
-            : null;
-          if (stale) {
-            await sendOverpassResponse(req, res, stale, 'STALE');
-            return;
-          }
-          console.error('[Overpass Proxy]', e.message);
-          res.writeHead(502, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({ error: 'Overpass proxy error' }));
-        } finally {
-          subscription?.done();
-        }
-      });
-    },
-  };
-}
 
 // ---------------------------------------------------------------------------
 // Regional cockpit briefing proxy + weather effects proxy
