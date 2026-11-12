@@ -118,10 +118,19 @@ const COVERAGE_BLANK_VARIANCE_MAX = 12;
  * imagery stacks.
  */
 /**
- * Basemap a fresh boot lands on. Keyless Esri Satellite, even when the Google
- * 3D tileset loaded: Google 3D (a hidden tileset does not stream) is opt-in.
+ * Keyless basemap a fresh boot falls back to: Esri Satellite, even when the
+ * Google 3D tileset loaded — Google 3D (a hidden tileset does not stream) is
+ * opt-in. Used when the preferred stack below cannot be shown.
  */
 export const DEFAULT_BOOT_STACK = 'esri-imagery';
+
+/**
+ * Basemap a fresh boot shows when it can (owner choice 2026-11-12): Bing
+ * aerial with place labels via Cesium ion. Needs CESIUM_ION_TOKEN; without
+ * one, or if ion/Bing fails to load, boot lands on DEFAULT_BOOT_STACK so the
+ * app still starts keyless.
+ */
+export const PREFERRED_BOOT_STACK = 'bing-labels';
 
 export class MapStackController {
   constructor(viewer, {
@@ -210,6 +219,31 @@ export class MapStackController {
 
   getStack(id) {
     return MAP_STACKS.find((stack) => stack.id === id) || null;
+  }
+
+  /**
+   * Cesium ion world imagery (Bing) for a style. A method so tests can stand
+   * in for the network: a module export cannot be reassigned.
+   * @param {Cesium.IonWorldImageryStyle} style
+   * @returns {Promise<Cesium.ImageryProvider>}
+   */
+  _createIonImagery(style) {
+    return Cesium.createWorldImageryAsync({ style });
+  }
+
+  /**
+   * Activate the boot basemap: PREFERRED_BOOT_STACK when its key is
+   * configured and it loads, otherwise the keyless DEFAULT_BOOT_STACK. The
+   * fallback is explicit because setStack's own failure path lands on Google
+   * 3D when that tileset exists, which boot must never open on its own.
+   * @returns {Promise<object>} Final controller state.
+   */
+  async activateBootStack() {
+    if (this.isStackAvailable(PREFERRED_BOOT_STACK)) {
+      const state = await this.setStack(PREFERRED_BOOT_STACK, { silent: true });
+      if (state?.activeId === PREFERRED_BOOT_STACK) return state;
+    }
+    return this.setStack(DEFAULT_BOOT_STACK, { silent: true });
   }
 
   getActiveId() {
@@ -386,7 +420,7 @@ export class MapStackController {
     let effectiveStackId = stack.id;
     let fallbackMessage = null;
     if (stack.kind === 'ion') {
-      provider = await Cesium.createWorldImageryAsync({ style: stack.style });
+      provider = await this._createIonImagery(stack.style);
     } else if (stack.kind === 'esri-imagery') {
       try {
         provider = await Cesium.ArcGisMapServerImageryProvider.fromUrl(ESRI_WORLD_IMAGERY_URL, {
