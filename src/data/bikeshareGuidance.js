@@ -66,3 +66,16 @@ export function bikeshareGuidance({ altitudeOk, center, inRangeCount, registry }
     message: `Tidak ada sistem sepeda bersama di area ini${nearestText(nearestBikeshareCity(center, registry))}`,
   };
 }
+
+/**
+ * Layer stats with the guidance prompt applied, when the layer is idle with
+ * nothing drawn and no real error. The prompt rides in `error` like every
+ * guidance state, so the layer row shows it.
+ * @param {{count: number, loading: boolean, error?: string}} stats
+ * @param {{status: string, message: string}|null} guidance
+ * @returns {object} `stats`, or a copy carrying the guidance.
+ */
+export function withBikeshareGuidance(stats, guidance) {
+  if (!guidance || stats.error || stats.loading || stats.count !== 0) return stats;
+  return { ...stats, status: guidance.status, error: guidance.message };
+}
