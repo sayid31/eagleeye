@@ -61,3 +61,17 @@ test('every registered feed host passes the GBFS proxy allowlist', () => {
   assert.equal(isAllowedGbfsHost('gbfs.cogobikeshare.com'), false, 'a dead host leaves the allowlist');
   assert.equal(isAllowedGbfsHost('evil.example'), false);
 });
+
+test('guidance reaches the stats only when idle, empty and error-free', async () => {
+  const { withBikeshareGuidance } = await import('./bikeshareGuidance.js');
+  const guidance = { status: 'zoom-in', message: 'Perbesar peta (di bawah ±48 km) untuk memuat stasiun sepeda' };
+  const idle = { count: 0, lastUpdate: null, loading: false };
+  assert.deepEqual(withBikeshareGuidance(idle, guidance), { ...idle, status: 'zoom-in', error: guidance.message });
+  assert.equal(withBikeshareGuidance(idle, null), idle);
+  const failing = { ...idle, error: 'Galat pengambilan GBFS' };
+  assert.equal(withBikeshareGuidance(failing, guidance), failing, 'a real error is never masked');
+  const loading = { ...idle, loading: true };
+  assert.equal(withBikeshareGuidance(loading, guidance), loading);
+  const drawing = { ...idle, count: 12 };
+  assert.equal(withBikeshareGuidance(drawing, guidance), drawing);
+});

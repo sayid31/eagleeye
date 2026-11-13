@@ -28,7 +28,7 @@ import {
   CITY_RANGE_BASE_KM,
   GBFS_CITY_REGISTRY,
 } from './bikeshareCities.js';
-import { bikeshareGuidance } from './bikeshareGuidance.js';
+import { bikeshareGuidance, withBikeshareGuidance } from './bikeshareGuidance.js';
 import { LAYER_METADATA } from './layerMetadata.js';
 
 export { MONITORED_CITIES_NO_FEED } from './bikeshareCities.js';
@@ -1239,12 +1239,7 @@ const bikeshareLayer = {
         : 'memindai sistem terdekat...';
     }
     if (_error) stats.error = _error;
-    else if (_guidance && !_loading && _count === 0) {
-      // The prompt rides in `error` like every guidance state, so the row shows it.
-      stats.status = _guidance.status;
-      stats.error = _guidance.message;
-    }
-    return stats;
+    return withBikeshareGuidance(stats, _guidance);
   },
 
   /** Permanently release primitives, handlers, and the selected host source. */
