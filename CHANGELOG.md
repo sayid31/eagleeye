@@ -39,6 +39,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Tombol layer di panel **Layer Data** kini langsung ON begitu diklik, walau layer masih "Memuat"
+  (sebelumnya tetap OFF dan tidak bisa diklik sampai selesai memuat). Klik lagi selama memuat
+  membatalkan layer tersebut. Berlaku untuk semua layer.
 - Tombol **2D / 3D** kini mengikuti posisi kamera. Setelah pindah lokasi yang membuat kamera menghadap
   lurus ke bawah, tombol menunjukkan 2D, dan satu klik 3D langsung memiringkan kamera (sebelumnya tetap
   menyala 3D sehingga harus klik 2D lalu 3D).

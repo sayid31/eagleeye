@@ -63,16 +63,7 @@ export const managerTogglePanelMixin = {
       const toggle = document.createElement('button');
       toggle.className = `data-toggle-btn${layer.enabled ? ' active' : ''}`;
       this._syncToggleButton(toggle, layer);
-      toggle.addEventListener('click', async () => {
-        toggle.disabled = true;
-        try {
-          await this.setEnabled(layer.id, !this.isEnabled(layer.id), { origin: 'user' });
-        } catch (error) {
-          console.warn(`[Data] ${layer.id} toggle error:`, error);
-        } finally {
-          toggle.disabled = false;
-        }
-      });
+      toggle.addEventListener('click', () => this._onPanelToggleClick(layer.id));
 
       right.appendChild(count);
       right.appendChild(toggle);
@@ -116,6 +107,26 @@ export const managerTogglePanelMixin = {
       }
 
       this._toggleContainer.appendChild(row);
+    }
+  },
+
+  /**
+   * Flip a layer from its panel switch. Inverts the latest intent rather than
+   * settled state, so a click on a layer that is still loading cancels it; the
+   * manager's newest-intent-wins epochs abort the superseded transaction. The
+   * switch is therefore never disabled mid-transition.
+   * @param {string} layerId Registered layer id.
+   * @returns {Promise<void>} Settles when the requested transition does.
+   */
+  async _onPanelToggleClick(layerId) {
+    const pending = this.setEnabled(layerId, !this.isEffectivelyEnabled(layerId), { origin: 'user' });
+    // Repaint now: the new intent is effective immediately, but the manager
+    // only repaints once the superseded transaction's cleanup runs.
+    this._refreshTogglePanel();
+    try {
+      await pending;
+    } catch (error) {
+      console.warn(`[Data] ${layerId} toggle error:`, error);
     }
   },
 
@@ -278,20 +289,25 @@ export const managerTogglePanelMixin = {
     const feedState = layer.enabled ? layerFeedState(layer.stats) : 'off';
     const transitioning = layer.lifecycleState === 'enabling' || layer.lifecycleState === 'disabling';
     const uncertain = Boolean(layer.lifecycleUncertain);
-    button.classList.toggle('active', layer.enabled);
+    // The switch shows the latest intent, so a layer still loading reads ON
+    // and the click that follows means "cancel". The transition label follows
+    // the same intent: a revoked enable whose cleanup has not yet run is
+    // already heading OFF.
+    const intendedOn = layer.effectiveEnabled ?? layer.enabled;
+    const phase = transitioning ? (intendedOn ? 'enabling' : 'disabling') : null;
+    button.classList.toggle('active', intendedOn);
     button.classList.toggle('transitioning', transitioning);
-    button.classList.toggle('enabling', layer.lifecycleState === 'enabling');
-    button.classList.toggle('disabling', layer.lifecycleState === 'disabling');
+    button.classList.toggle('enabling', phase === 'enabling');
+    button.classList.toggle('disabling', phase === 'disabling');
     button.classList.toggle('lifecycle-uncertain', uncertain);
     for (const state of Object.keys(FEED_STATE_LABELS)) {
       button.classList.toggle(`feed-${state}`, layer.enabled && !uncertain && feedState === state);
     }
-    button.dataset.feedState = transitioning
-      ? layer.lifecycleState
-      : (uncertain ? 'uncertain' : feedState);
-    button.disabled = transitioning;
-    button.textContent = transitioning
-      ? LIFECYCLE_LABELS[layer.lifecycleState]
+    button.dataset.feedState = phase || (uncertain ? 'uncertain' : feedState);
+    button.disabled = false;
+    button.setAttribute('aria-pressed', String(intendedOn));
+    button.textContent = phase
+      ? LIFECYCLE_LABELS[phase]
       : (uncertain ? 'TIDAK PASTI' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'MATI'));
     button.setAttribute('aria-label', `${layer.name}: ${button.textContent}`);
   },
