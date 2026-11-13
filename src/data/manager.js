@@ -1114,8 +1114,9 @@ export class DataLayerManager {
 
   // Toggle-panel DOM rendering (buildTogglePanel/_renderToggles/
   // _rowControlsFor/_syncRowControls/_refreshTogglePanel/_buildMetaText/
-  // _syncToggleButton/_formatCount/_timeAgo) lives in managerTogglePanel.js
-  // as of the split-program merge — see managerTogglePanelMixin below.
+  // _syncToggleButton) lives in managerTogglePanel.js as of the
+  // split-program merge — see managerTogglePanelMixin below; its pure
+  // meta-line/switch/count formatting lives in managerTogglePresentation.js.
   // feat/lazy-layers-splash-crash-fix's staticMeta.hasRowControls gating
   // (avoids force-resolving a not-yet-loaded lazy layer just to size a row)
   // was ported into that file's _renderToggles rather than reintroduced
