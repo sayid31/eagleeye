@@ -19,6 +19,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- Menu di rail kiri kini satu-satu: membuka Layer data, Kamera, Skenario, Tampilan, atau Konteks menutup
+  menu lain yang sedang terbuka, jadi panel tidak lagi menumpuk di atas peta.
+- Panel **Kamera** (CCTV) kini hanya terbuka saat ikon kamera di rail kiri diklik. Memilih atau
+  berganti kamera CCTV di peta tidak lagi membuka panel itu dengan sendirinya.
 - Peta default saat aplikasi dibuka kini **Bing (Aerial with Labels)** — citra satelit dengan nama tempat —
   bila `CESIUM_ION_TOKEN` terpasang. Tanpa token, atau bila Bing gagal dimuat, peta tetap Esri Satellite
   seperti sebelumnya, jadi aplikasi tetap bisa dibuka tanpa key.

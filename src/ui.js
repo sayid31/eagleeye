@@ -147,9 +147,6 @@ export class StyleManager {
     this._cctvState = null;
     this._cctvSummaryTypingTimer = null;
     this._lastCctvSummaryText = '';
-    // Auto-expand guard: last active camera id seen while the layer was
-    // enabled; routine state notifications with the same id never re-expand.
-    this._lastSeenCctvActiveId = null;
     this._cctvChipHideTimer = null;
     this._cctvChipWasBusy = false;
     this._leftStackLayoutFrame = null;
