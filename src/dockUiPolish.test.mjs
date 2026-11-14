@@ -17,11 +17,9 @@ test('the visual-preset pill opens on click only; the location wing keeps hover'
   assert.match(chromeSrc, /if \(hoverOpen && panelEl\.classList\.contains\('collapsed'\)\) \{\s*scheduleOpen\(\);/);
 });
 
-test('turning CCTV on for the first time never auto-expands its panel', () => {
-  const block = cctvSrc.match(/const effectiveActiveId = enabled[\s\S]*?this\._lastSeenCctvActiveId = effectiveActiveId;/);
-  assert.ok(block, 'auto-expand block is missing');
-  assert.match(block[0], /&& !isFirstActivation\s*&& !state\?\.autoHop/);
-  assert.doesNotMatch(block[0], /\|\| isFirstActivation/);
+test('the CCTV panel opens only from the rail: no CCTV code path expands it', () => {
+  assert.doesNotMatch(cctvSrc, /setPanelCollapsed\('cctv-panel',\s*false/);
+  assert.doesNotMatch(cctvSrc, /_lastSeenCctvActiveId/, 'the old auto-expand guard is gone');
 });
 
 test('voiceWave.css is imported by the theme and opens the side waves only while a session is live', () => {
