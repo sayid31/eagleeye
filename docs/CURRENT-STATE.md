@@ -1722,8 +1722,10 @@ One log for the server and every browser using the map. Model and limits: `src/a
 - The top bar shows only the location search (health chip and UTC clock stay in the DOM, not displayed).
   The brand is larger at the top-left. The status bar has no background. The attribution is small and dim
   in the bottom-right corner, still rendered. The legacy top-left HUD readout (mission id, mode, summary)
-  and the decorative REC/ORB readout (top-right) are hidden outside cockpit mode. DISPLAY and CONTEXT open beside the rail (not on the right), and the rail
-  collapses the other side panels first (`railPlan.js`); CAMERA opens on the right edge under the globe buttons.
+  and the decorative REC/ORB readout (top-right) are hidden outside cockpit mode. DISPLAY and CONTEXT open beside the rail (not on the right); CAMERA opens on the right edge under the globe buttons.
+  The rail keeps one panel open at a time: opening Layer data, Kamera, Skenario, Tampilan or Konteks from the
+  rail collapses every other one of those first (`railPlan.js`). A panel opened another way (voice `open_panel`,
+  a share link) does not close the others; the right-rail layout rules below still apply to it.
 - The rail has no globe-reset or share entry (`#top-center-actions` has both: `#reset-globe-view` and the
   🔗 `#share-btn`). Its bottom slot holds the visual-style picker: `mountStylePicker`
   (`src/shell/stylePickerMount.js`) moves `#control-panel` there from the dock at shell mount (the element
