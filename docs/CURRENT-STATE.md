@@ -1982,6 +1982,15 @@ detection off by hand — would not have.
   per frame, it holds NO continuous-render hold — the governor stays idle with
   earthquakes on, and the manager's `layer-tick` / `layer-visibility` requests
   carry new data to the screen. Pinned in `src/data/earthquakes.test.mjs`.
+- **A view-biased geocode is cross-checked against the unbiased one.** Nominatim
+  search sends the camera's view as a `viewbox` ranking bias. When that biased
+  top hit is not itself a city/region (`place_rank` > 16 or not `boundary`/`place`),
+  a second, unbiased lookup runs, and its top hit wins if it is a city/region at
+  least 3x as important (`src/geocodeCandidatePick.js`). "kupang" from Jakarta or
+  Lampung lands on Kota Kupang (NTT), while on-screen streets and landmarks keep
+  the biased hit. The cross-check costs one more throttled Nominatim request
+  (~1.1 s) for non-city searches; if it fails, the biased hit stands. Rationale:
+  `docs/DECISIONS.md` 2026-11-14.
 - **Geocode framing has an off-centre sanity gate.** A viewport that is both
   bigger than any city (>300 km diagonal) and not centred on its own geocoded
   location (anchor >15% of the diagonal from the centroid) is replaced by a

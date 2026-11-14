@@ -122,6 +122,59 @@ test('forwardGeocode: viewportBias becomes a Nominatim viewbox=lon,lat,lon,lat p
   assert.equal(params.get('viewbox'), '-97.95,30.5,-97.55,30.1');
 });
 
+const NOMINATIM_BIAS = { south: -6.4, west: 106.6, north: -6.0, east: 107.0 };
+const nominatimHit = (lat, lon, category, rank, importance, name) => ({
+  lat: String(lat), lon: String(lon), category, type: 'x', place_rank: rank, importance, display_name: name,
+});
+const street = nominatimHit(-6.3, 106.84, 'highway', 26, 0.05, 'TLK Kupang, Jakarta');
+const kotaKupang = nominatimHit(-10.16, 123.6, 'boundary', 16, 0.52, 'Kupang, Nusa Tenggara Timur');
+
+/** Answer biased requests (those carrying a viewbox) and unbiased ones separately. */
+const biasAwareFetch = (biased, unbiased, calls = []) => async (url) => {
+  const hasBias = new URL(String(url), 'http://localhost').searchParams.has('viewbox');
+  calls.push(hasBias ? 'biased' : 'unbiased');
+  const body = hasBias ? biased : unbiased;
+  if (body instanceof Error) throw body;
+  return { ok: true, json: async () => [body] };
+};
+
+test('forwardGeocode: a clearly more important unbiased city beats a biased namesake street', async () => {
+  const calls = [];
+  const result = await withStub(
+    {},
+    biasAwareFetch(street, kotaKupang, calls),
+    () => forwardGeocode('kupang', { viewportBias: NOMINATIM_BIAS }),
+  );
+  assert.deepEqual(calls, ['biased', 'unbiased']);
+  assert.equal(result.label, 'Kupang, Nusa Tenggara Timur');
+});
+
+test('forwardGeocode: a biased city needs no second lookup', async () => {
+  const calls = [];
+  const result = await withStub(
+    {},
+    biasAwareFetch(kotaKupang, street, calls),
+    () => forwardGeocode('kupang', { viewportBias: NOMINATIM_BIAS }),
+  );
+  assert.deepEqual(calls, ['biased']);
+  assert.equal(result.label, 'Kupang, Nusa Tenggara Timur');
+});
+
+test('forwardGeocode: without a viewport there is nothing to cross-check', async () => {
+  const calls = [];
+  await withStub({}, biasAwareFetch(street, kotaKupang, calls), () => forwardGeocode('kupang'));
+  assert.deepEqual(calls, ['unbiased']);
+});
+
+test('forwardGeocode: a failed cross-check keeps the biased hit instead of failing the search', async () => {
+  const result = await withStub(
+    {},
+    biasAwareFetch(street, new Error('network down')),
+    () => forwardGeocode('kupang', { viewportBias: NOMINATIM_BIAS }),
+  );
+  assert.equal(result.label, 'TLK Kupang, Jakarta');
+});
+
 test('forwardGeocode: window.__GEOCODE_PROVIDER__="google" reverts to Google Geocoding', async () => {
   const requestedUrls = [];
   const result = await withStub(
