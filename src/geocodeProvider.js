@@ -17,6 +17,7 @@
 // Google call sites this module replaces.
 
 import * as Cesium from 'cesium';
+import { needsUnbiasedCheck, pickGeocodeCandidate } from './geocodeCandidatePick.js';
 
 /**
  * Which provider answers forwardGeocode(). Defaults to Nominatim (no key
@@ -141,6 +142,20 @@ export function nominatimBoundingBoxToViewport(boundingbox) {
   };
 }
 
+/** Unbiased top Nominatim hit for a query, or null if the lookup fails. A failure
+ *  only loses the cross-check, so the biased hit still stands. */
+async function fetchUnbiasedTopHit(query, signal) {
+  try {
+    const response = await fetch(`/api/nominatim/search?${new URLSearchParams({ q: query })}`, { signal });
+    if (!response.ok) return null;
+    const results = await response.json();
+    return Array.isArray(results) ? results[0] || null : null;
+  } catch (error) {
+    if (signal?.aborted) throw error;
+    return null;
+  }
+}
+
 /**
  * Geocode a place name via the server-side Nominatim proxy (/api/nominatim/
  * search — see vite.config.js's nominatimSearchProxy(), which owns the
@@ -160,8 +175,14 @@ async function geocodeWithNominatim(query, { viewportBias, signal } = {}) {
   const response = await fetch(`/api/nominatim/search?${params}`, { signal });
   if (!response.ok) return null;
   const results = await response.json();
-  const hit = Array.isArray(results) ? results[0] : null;
+  let hit = Array.isArray(results) ? results[0] : null;
   if (!hit) return null;
+  if (viewportBias && needsUnbiasedCheck(hit)) {
+    // The bias can crown a tiny namesake over the city anyone means ("kupang"
+    // from Jakarta → a street). Compare with the unbiased top hit.
+    const unbiased = await fetchUnbiasedTopHit(query, signal);
+    hit = pickGeocodeCandidate([hit, unbiased]) || hit;
+  }
   const lat = Number(hit.lat);
   const lng = Number(hit.lon);
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;

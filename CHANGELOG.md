@@ -39,6 +39,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Pencarian nama kota kini menuju kota yang dimaksud, bukan tempat kecil bernama sama di dekat tampilan. Contoh:
+  "kupang" dari tampilan Jakarta atau Lampung kini menuju Kota Kupang (NTT), bukan jalan TLK Kupang atau
+  kelurahan Kupang Kota. Nama jalan dan landmark tetap memilih yang ada di layar. Pencarian jalan/landmark
+  bisa ±1 detik lebih lama karena ada pengecekan tambahan.
 - Kotak **Cari lokasi** di bilah atas kini kosong kembali begitu kamera sampai di lokasi yang dicari
   (sebelumnya teks pencarian tetap tertinggal). Bila lokasi tidak ditemukan, teksnya tetap ada supaya
   bisa diperbaiki.

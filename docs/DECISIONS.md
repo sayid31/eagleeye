@@ -3548,3 +3548,14 @@ Today everything assumes one trusted owner on loopback. Before the console is re
 **Decision.** A fresh load shows `bing-labels` (Cesium ion world imagery, AERIAL_WITH_LABELS) — satellite imagery with place names — instead of Esri Satellite. The keyless guarantee is kept: without `CESIUM_ION_TOKEN`, or if ion/Bing fails to load, boot lands on keyless Esri (`DEFAULT_BOOT_STACK`, with its existing OSM sub-fallback). `activateBootStack` performs that fallback explicitly because `setStack`'s own failure path lands on Google 3D when the tileset exists, and Google 3D stays opt-in. The basemap is still not carried in share links; every load lands on the boot basemap.
 
 **Cost note.** Bing imagery through ion counts against the ion account's imagery quota on every session, where Esri cost nothing; watch the ion usage page after deploy.
+
+## 2026-11-14 — A view-biased geocode yields to a clearly more important unbiased city (owner report)
+
+**Symptom.** Searching "kupang" from Jakarta flew to the street TLK Kupang (Pasar Minggu); from a Jakarta–Lampung view it flew to the village Kupang Kota (Bandar Lampung). Kota Kupang in NTT was never reached.
+
+**Why.** The search sends the camera's view as a Nominatim `viewbox` bias and takes only the top hit, so any namesake near the view beats the city. Asking for five biased candidates was tried and measured: from those views all five were local namesakes, and NTT was not among them.
+
+**Decision.** Keep the bias (it is what makes "Sixth Street" mean the one on screen), and when the biased top hit is not a city/region, run one unbiased lookup and take its top hit if it is a city/region with importance ≥3x. The ratio separates the measured cases: Kota Kupang 0.52 vs village 0.17 (3.1x) and street 0.05 (10x). Same-type namesakes (two streets, two buildings) never override, and a biased hit that is already a city skips the second request.
+
+**Cost.** Non-city searches with a view bias make two throttled Nominatim requests instead of one (~1.1 s more). The Google provider path is unchanged.
+
