@@ -594,7 +594,13 @@ presentation transitional and hidden, and only the latest request may adopt or
 reconcile that state and publish settled visibility. The epoch is rechecked
 after synchronous lifecycle-presentation callbacks, so a re-entrant newer
 request prevents the older transaction from arming a timer or publishing a
-settled visibility event. Superseding an uncertain same-target retry also keeps
+settled visibility event. The Data Layers row switch presents that latest
+intent (`effectiveEnabled` on `getAll()` rows), not settled state: a layer
+still `enabling` reads ON with the `MENYALAKAN` label, the switch is never
+disabled mid-transition, and a click inverts the latest intent — so clicking a
+still-loading layer cancels the pending enable (module `enable` never runs and
+no poll loop is armed) and the switch reads OFF/`MEMATIKAN` at once.
+Superseding an uncertain same-target retry also keeps
 the last authoritative enabled boolean until cleanup confirms the real module
 state. Direct OFF also freezes
 prepared or already-started playback handoff

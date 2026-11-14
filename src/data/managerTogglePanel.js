@@ -1,14 +1,13 @@
-import { layerFeedState, FEED_STATE_LABELS } from './managerFeedState.js';
-
-/** Lifecycle transition → user-visible (Indonesian) label; the state keys stay English. */
-const LIFECYCLE_LABELS = Object.freeze({
-  enabling: 'MENYALAKAN',
-  disabling: 'MEMATIKAN',
-});
+import { FEED_STATE_LABELS } from './managerFeedState.js';
+import {
+  buildLayerMetaText, formatLayerCount, toggleButtonPresentation,
+} from './managerTogglePresentation.js';
 
 /**
  * Prototype mixin for `DataLayerManager` (see `manager.js`): the toggle-panel
- * DOM rendering block (build/refresh/row-controls/button-state/formatting).
+ * DOM rendering block (build/refresh/row-controls/button-state). What a row
+ * shows — meta line, switch state, count/age formatting — is decided by the
+ * pure functions in `managerTogglePresentation.js`; this mixin only applies it.
  * First use of the `Object.assign(Class.prototype, mixinObject)` pattern in
  * `manager.js` — the pattern itself is already proven 6× elsewhere in this
  * codebase (`StyleManager` in `ui.js` ×5, `cockpitControlMixin.js`).
@@ -58,21 +57,12 @@ export const managerTogglePanelMixin = {
 
       const count = document.createElement('span');
       count.className = 'data-count';
-      count.textContent = layer.stats.count ? this._formatCount(layer.stats.count) : '—';
+      count.textContent = layer.stats.count ? formatLayerCount(layer.stats.count) : '—';
 
       const toggle = document.createElement('button');
       toggle.className = `data-toggle-btn${layer.enabled ? ' active' : ''}`;
       this._syncToggleButton(toggle, layer);
-      toggle.addEventListener('click', async () => {
-        toggle.disabled = true;
-        try {
-          await this.setEnabled(layer.id, !this.isEnabled(layer.id), { origin: 'user' });
-        } catch (error) {
-          console.warn(`[Data] ${layer.id} toggle error:`, error);
-        } finally {
-          toggle.disabled = false;
-        }
-      });
+      toggle.addEventListener('click', () => this._onPanelToggleClick(layer.id));
 
       right.appendChild(count);
       right.appendChild(toggle);
@@ -116,6 +106,26 @@ export const managerTogglePanelMixin = {
       }
 
       this._toggleContainer.appendChild(row);
+    }
+  },
+
+  /**
+   * Flip a layer from its panel switch. Inverts the latest intent rather than
+   * settled state, so a click on a layer that is still loading cancels it; the
+   * manager's newest-intent-wins epochs abort the superseded transaction. The
+   * switch is therefore never disabled mid-transition.
+   * @param {string} layerId Registered layer id.
+   * @returns {Promise<void>} Settles when the requested transition does.
+   */
+  async _onPanelToggleClick(layerId) {
+    const pending = this.setEnabled(layerId, !this.isEffectivelyEnabled(layerId), { origin: 'user' });
+    // Repaint now: the new intent is effective immediately, but the manager
+    // only repaints once the superseded transaction's cleanup runs.
+    this._refreshTogglePanel();
+    try {
+      await pending;
+    } catch (error) {
+      console.warn(`[Data] ${layerId} toggle error:`, error);
     }
   },
 
@@ -193,7 +203,7 @@ export const managerTogglePanelMixin = {
       swatch.className = 'data-toggle-legend-swatch';
       swatch.style.background = item.color;
       const text = document.createElement('span');
-      text.textContent = `${item.label} ${this._formatCount(item.count)}`;
+      text.textContent = `${item.label} ${formatLayerCount(item.count)}`;
       entry.append(swatch, text);
       container.appendChild(entry);
     }
@@ -218,7 +228,7 @@ export const managerTogglePanelMixin = {
 
       const count = row.querySelector('.data-count');
       if (count) {
-        count.textContent = layer.stats.count ? this._formatCount(layer.stats.count) : '—';
+        count.textContent = layer.stats.count ? formatLayerCount(layer.stats.count) : '—';
       }
 
       const meta = row.querySelector('.data-toggle-meta');
@@ -230,82 +240,26 @@ export const managerTogglePanelMixin = {
     }
   },
 
+  /** Row meta line; see `buildLayerMetaText` (managerTogglePresentation.js). */
   _buildMetaText(layer) {
-    const stats = layer.stats || {};
-    const feedState = layerFeedState(stats);
-    const stateLabel = FEED_STATE_LABELS[feedState];
-    const source = stats.source || layer.source;
-    const lifecycleState = layer.lifecycleState || (layer.enabled ? 'enabled' : 'disabled');
-    if (lifecycleState === 'enabling' || lifecycleState === 'disabling') {
-      return `${LIFECYCLE_LABELS[lifecycleState]} · ${source}`;
-    }
-    if (layer.lifecycleUncertain) {
-      return `TIDAK PASTI · ${source} · status siklus perlu direkonsiliasi`;
-    }
-    const presentedError = stats.error || stats.lastError || stats.managerRefreshError;
-    if (presentedError) {
-      if (typeof stats.retryInSec === 'number' && stats.retryInSec > 0) {
-        return `${stateLabel} · ${source} · ${presentedError} · coba lagi ${stats.retryInSec}d`;
-      }
-      return `${stateLabel} · ${source} · ${presentedError}`;
-    }
-    const ago = stats.lastUpdate ? this._timeAgo(stats.lastUpdate) : 'belum pernah';
-    if (stats.loading) {
-      const loadingLabel = typeof stats.loadingLabel === 'string' && stats.loadingLabel.trim()
-        ? stats.loadingLabel.trim()
-        : 'memuat...';
-      return `${source} · ${loadingLabel}`;
-    }
-    if (feedState === 'fallback') {
-      const detail = typeof stats.loadingLabel === 'string' && stats.loadingLabel.trim()
-        ? stats.loadingLabel.trim()
-        : (stats.coverage || ago);
-      return `${stateLabel} · ${source} · ${detail}`;
-    }
-    if (feedState === 'stale') {
-      const retry = typeof stats.retryInSec === 'number' && stats.retryInSec > 0
-        ? ` · mencoba lagi dalam ${stats.retryInSec}d`
-        : '';
-      return `${stateLabel} · ${source} · ${ago}${retry}`;
-    }
-    if (typeof stats.loadingLabel === 'string' && stats.loadingLabel.trim()) {
-      return `${source} · ${stats.loadingLabel.trim()}`;
-    }
-    return `${source} · ${ago}`;
+    return buildLayerMetaText(layer);
   },
 
+  /** Apply `toggleButtonPresentation` to a row's switch. */
   _syncToggleButton(button, layer) {
-    const feedState = layer.enabled ? layerFeedState(layer.stats) : 'off';
-    const transitioning = layer.lifecycleState === 'enabling' || layer.lifecycleState === 'disabling';
-    const uncertain = Boolean(layer.lifecycleUncertain);
-    button.classList.toggle('active', layer.enabled);
-    button.classList.toggle('transitioning', transitioning);
-    button.classList.toggle('enabling', layer.lifecycleState === 'enabling');
-    button.classList.toggle('disabling', layer.lifecycleState === 'disabling');
-    button.classList.toggle('lifecycle-uncertain', uncertain);
+    const view = toggleButtonPresentation(layer);
+    button.classList.toggle('active', view.on);
+    button.classList.toggle('transitioning', view.transitioning);
+    button.classList.toggle('enabling', view.phase === 'enabling');
+    button.classList.toggle('disabling', view.phase === 'disabling');
+    button.classList.toggle('lifecycle-uncertain', view.uncertain);
     for (const state of Object.keys(FEED_STATE_LABELS)) {
-      button.classList.toggle(`feed-${state}`, layer.enabled && !uncertain && feedState === state);
+      button.classList.toggle(`feed-${state}`, view.feedClass === state);
     }
-    button.dataset.feedState = transitioning
-      ? layer.lifecycleState
-      : (uncertain ? 'uncertain' : feedState);
-    button.disabled = transitioning;
-    button.textContent = transitioning
-      ? LIFECYCLE_LABELS[layer.lifecycleState]
-      : (uncertain ? 'TIDAK PASTI' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'MATI'));
-    button.setAttribute('aria-label', `${layer.name}: ${button.textContent}`);
-  },
-
-  _formatCount(n) {
-    if (n >= 1000) return `${(n / 1000).toFixed(1)}K`;
-    return String(n);
-  },
-
-  _timeAgo(timestamp) {
-    const diff = Math.floor((Date.now() - timestamp) / 1000);
-    if (diff < 5) return 'baru saja';
-    if (diff < 60) return `${diff}d lalu`;
-    if (diff < 3600) return `${Math.floor(diff / 60)}m lalu`;
-    return `${Math.floor(diff / 3600)}j lalu`;
+    button.dataset.feedState = view.state;
+    button.disabled = false;
+    button.setAttribute('aria-pressed', String(view.on));
+    button.textContent = view.text;
+    button.setAttribute('aria-label', view.ariaLabel);
   },
 };

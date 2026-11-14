@@ -116,6 +116,9 @@ getAll() {
         source: meta.source,
         showInTogglePanel: meta.showInTogglePanel,
         enabled: entry.enabled,
+        // Latest requested visibility (an in-flight enable counts as ON), so a
+        // control can show — and let the user revoke — an intent still loading.
+        effectiveEnabled: this._effectiveEnabled(entry),
         lifecycleState: entry.lifecycleState,
         lifecycleUncertain: entry.lifecycleUncertain,
         stats: this._normalizedStats(entry),
