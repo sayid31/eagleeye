@@ -294,6 +294,8 @@ export const navigationLocationMixin = {
         try {
           const destination = await searchAndFlyTo(this.viewer, query, {
             beforeFly: () => this._reassertNavigationHandoff(generation),
+            // The shell search box keeps its query until the camera lands.
+            onComplete: () => window.dispatchEvent(new CustomEvent('gev:location-search-arrived')),
           });
           if (this._disposed || generation !== this._navigationGeneration) return;
           if (destination?.cancelled) {

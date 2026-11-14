@@ -12,6 +12,7 @@ import {
 import { mapTone } from './mapTone.js';
 import { panelsToCollapse } from './railPlan.js';
 import { RAIL_ITEMS, railMarkup, statusBarMarkup, topBarMarkup } from './shellMarkup.js';
+import { mountShellSearch } from './shellSearch.js';
 import { mountStylePicker } from './stylePickerMount.js';
 
 const REFRESH_MS = 1500;
@@ -35,17 +36,8 @@ export function initShell({ viewer, dataManager, mapStackController }) {
   const $ = (id) => document.getElementById(id);
   const cleanups = [];
 
-  // Search proxies to the existing location search so its flight/hand-off
-  // rules (navigation generations, deferred restore) stay in one place.
   const input = $('shell-search-input');
-  const legacy = document.getElementById('location-search');
-  const onSearchKey = (event) => {
-    if (event.key !== 'Enter' || !legacy || !input.value.trim()) return;
-    legacy.value = input.value.trim();
-    legacy.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
-    input.blur();
-  };
-  input.addEventListener('keydown', onSearchKey);
+  cleanups.push(mountShellSearch({ input, legacy: $('location-search') }));
   const onGlobalKey = (event) => {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();

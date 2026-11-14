@@ -39,6 +39,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Kotak **Cari lokasi** di bilah atas kini kosong kembali begitu kamera sampai di lokasi yang dicari
+  (sebelumnya teks pencarian tetap tertinggal). Bila lokasi tidak ditemukan, teksnya tetap ada supaya
+  bisa diperbaiki.
 - Tombol layer di panel **Layer Data** kini langsung ON begitu diklik, walau layer masih "Memuat"
   (sebelumnya tetap OFF dan tidak bisa diklik sampai selesai memuat). Klik lagi selama memuat
   membatalkan layer tersebut. Berlaku untuk semua layer.

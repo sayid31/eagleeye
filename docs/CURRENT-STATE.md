@@ -1712,7 +1712,10 @@ One log for the server and every browser using the map. Model and limits: `src/a
   unchanged because voice focus reads it.
 - `#cesium-credits` is moved to the status bar's right end (`chrome.css`, `!important` to beat the legacy
   bottom-left rules) and is never hidden. The status bar and the dock no longer overlap.
-- The top bar has no background; the search is for locations only (Ctrl K focuses it). The left rail is a
+- The top bar has no background; the search is for locations only (Ctrl K focuses it). The query stays in
+  the box while the camera flies and is cleared when the flight lands (`gev:location-search-arrived`,
+  `src/shell/shellSearch.js`); a not-found, failed or interrupted search keeps the text, and so does text
+  typed during the flight. The left rail is a
   translucent floating bar centred vertically; it has entries for Layer data, Kamera, Skenario, Tampilan
   (DISPLAY) and Konteks (CONTEXT). Collapsed panel launcher cards are removed from the layout
   (`chrome.css`) and opened from the rail; their DOM stays for aria labels and panel code.
