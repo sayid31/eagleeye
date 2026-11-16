@@ -30,6 +30,10 @@
  *   - src/data/radioBrowserProxy.mjs, rocketLaunchesProxy.mjs,
  *     googlePlacesContextProxy.mjs — station directory, launch metadata,
  *     keyless place context.
+ *   - src/data/googleTilesProxy.mjs (`/api/google/3dtiles/*`, path allowlist
+ *     in googleTilesUpstream.mjs) + googleGeocodeProxy.mjs
+ *     (`/api/google/geocode`) — Google Photorealistic 3D Tiles and Geocoding
+ *     with GOOGLE_MAPS_API_KEY added server-side.
  *   - src/voice/openAiVoiceProxy.mjs — GPT-Live voice session, screenshot
  *     reader and HUD-summary proxies.
  *   - src/data/terrainHeightsPlugin.mjs (`/api/terrain/heights`) +
@@ -71,6 +75,10 @@ import { gbfsProxy } from './src/data/gbfsProxy.mjs';
 import { rocketLaunchesProxy, LL2_CACHE_TTL_MS, launchLibraryRequestHeaders } from './src/data/rocketLaunchesProxy.mjs';
 
 import { googlePlacesContextProxy, keylessGooglePlacesResponse } from './src/data/googlePlacesContextProxy.mjs';
+
+import { googleTilesProxy } from './src/data/googleTilesProxy.mjs';
+
+import { googleGeocodeProxy } from './src/data/googleGeocodeProxy.mjs';
 
 import { cctvProxy } from './src/data/cctvProxy.mjs';
 
@@ -353,6 +361,8 @@ export default defineConfig(({ mode }) => {
       trackBackfillProxies(),
       openAiVoiceProxy({ audit: adminAudit }),
       googlePlacesContextProxy(),
+      googleTilesProxy(),
+      googleGeocodeProxy(),
       nominatimSearchProxy(),
       // Provider keys are managed only from /admin → API Keys (dev server only).
       adminKeysPlugin({ store: providerKeyStore, audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
