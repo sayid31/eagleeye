@@ -393,13 +393,13 @@ test('outline upgrade updates the rendered element in place without remove/add',
   globalThis.requestAnimationFrame = () => 1;
   globalThis.cancelAnimationFrame = () => {};
   globalThis.window = {
-    __GOOGLE_MAPS_API_KEY__: 'unit-test-key',
+    __GOOGLE_MAPS_PROXY_AVAILABLE__: true,
     setTimeout: globalThis.setTimeout,
     clearTimeout: globalThis.clearTimeout,
   };
   let overpassCall = 0;
   globalThis.fetch = async (url) => {
-    if (String(url).startsWith('https://maps.googleapis.com/')) {
+    if (String(url).startsWith('/api/google/geocode?')) {
       return { json: async () => ({
         status: 'OK',
         results: [{

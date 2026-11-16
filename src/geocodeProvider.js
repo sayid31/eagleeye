@@ -5,25 +5,24 @@
 // single switch point between them: `forwardGeocode()` is the only export
 // consumed by callers (src/locations.js's searchAndFlyTo, src/voice/
 // gevActions.js's resolveRadioLocation) — set GEOCODE_PROVIDER=google (with
-// GOOGLE_MAPS_API_KEY configured) to flip back; every downstream consumer
-// keeps working unmodified because both providers are normalized to the same
+// GOOGLE_MAPS_API_KEY configured on the server) to flip back; every
+// downstream consumer keeps working unmodified because both providers are normalized to the same
 // { lat, lng, label, types, viewport } shape, with `types` translated into
 // the Google vocabulary that src/locations.js's geocodeNavigationMode()/
 // placeFramingViewport()/regionFramingPlan() already understand.
 //
 // NOTE ON `import.meta.env`: under the actual test runtime (plain Node, via
 // scripts/run-unit-tests.mjs) `import.meta.env` is `undefined` — every read
-// below short-circuits on `window.__X__ ||` first, exactly like the existing
-// Google call sites this module replaces.
+// below short-circuits on `window.__X__ ||` first (or guards with `typeof`).
 
 import * as Cesium from 'cesium';
 import { needsUnbiasedCheck, pickGeocodeCandidate } from './geocodeCandidatePick.js';
+import { googleForwardGeocodeUrl, googleMapsProxyAvailable } from './googleGeocodeClient.js';
 
 /**
  * Which provider answers forwardGeocode(). Defaults to Nominatim (no key
- * required). Unlike the GOOGLE_MAPS_API_KEY reads elsewhere, this default is
- * the common case (tests rarely override it), so the `import.meta.env` read
- * needs an explicit `typeof` guard rather than relying on a stubbed
+ * required). This default is the common case (tests rarely override it), so
+ * the `import.meta.env` read needs an explicit `typeof` guard rather than relying on a stubbed
  * `window.__X__` short-circuit: under the plain-Node test runtime,
  * `import.meta.env` itself is `undefined`, and `undefined.GEOCODE_PROVIDER`
  * throws rather than evaluating to `undefined`.
@@ -69,20 +68,19 @@ export function viewerRectDegrees(viewer) {
 }
 
 /**
- * Geocode a place name with Google's Geocoding API — the pre-existing
- * behavior, unchanged, kept as the `GEOCODE_PROVIDER=google` reversion path.
+ * Geocode a place name with Google's Geocoding API — kept as the
+ * `GEOCODE_PROVIDER=google` reversion path. Goes through the same-origin
+ * `/api/google/geocode` proxy, which adds the key server-side.
  */
 async function geocodeWithGoogle(query, { viewportBias, signal } = {}) {
-  const envKey = typeof import.meta.env !== 'undefined' ? import.meta.env.GOOGLE_MAPS_API_KEY : undefined;
-  const apiKey = window.__GOOGLE_MAPS_API_KEY__ || envKey;
-  if (!apiKey) throw new Error('No Google Maps API key available for geocoding');
+  if (!googleMapsProxyAvailable()) throw new Error('No Google Maps API key configured on the server for geocoding');
 
-  let url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
+  let bounds = null;
   if (viewportBias) {
     const { south, west, north, east } = viewportBias;
-    url += `&bounds=${south.toFixed(4)},${west.toFixed(4)}|${north.toFixed(4)},${east.toFixed(4)}`;
+    bounds = `${south.toFixed(4)},${west.toFixed(4)}|${north.toFixed(4)},${east.toFixed(4)}`;
   }
-  const response = await fetch(url, { signal });
+  const response = await fetch(googleForwardGeocodeUrl(query, bounds), { signal });
   const data = await response.json();
   const result = (data.status === 'OK' && data.results?.length) ? data.results[0] : null;
   if (!result) return null;

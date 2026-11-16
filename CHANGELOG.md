@@ -19,6 +19,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Key Google Maps kini tidak lagi dikirim ke browser.** Tile 3D Google (Photorealistic 3D) diambil lewat
+  server aplikasi (`/api/google/3dtiles`), dan pencarian alamat Google (mode `GEOCODE_PROVIDER=google`,
+  penanda peta lewat suara, konteks lokasi suara) lewat `/api/google/geocode`; server yang menambahkan key.
+  Key tidak lagi terlihat di devtools atau di hasil `npm run build`. Atribusi Google kini selalu tampil di
+  layar saat Google 3D aktif. Jika key Anda dibatasi dengan **HTTP referrer**, ganti pembatasannya ke
+  pembatasan API (dan IP server bila di-hosting), karena permintaan kini datang dari server.
+- Tile Google 3D lewat jalur langsung kini benar-benar memakai pengaturan detail yang lebih hemat GPU
+  (`maximumScreenSpaceError` 24) yang sebelumnya tidak terpakai.
 - Menu di rail kiri kini satu-satu: membuka Layer data, Kamera, Skenario, Tampilan, atau Konteks menutup
   menu lain yang sedang terbuka, jadi panel tidak lagi menumpuk di atas peta.
 - Panel **Kamera** (CCTV) kini hanya terbuka saat ikon kamera di rail kiri diklik. Memilih atau

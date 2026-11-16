@@ -63,7 +63,7 @@ async function runSearch(viewer, options, { result = AUSTIN_RESULT, query = 'aus
   const hadWindow = Object.hasOwn(globalThis, 'window');
   const priorWindow = globalThis.window;
   const priorFetch = globalThis.fetch;
-  globalThis.window = { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_API_KEY__: 'test-key' };
+  globalThis.window = { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_PROXY_AVAILABLE__: true };
   globalThis.fetch = async () => ({
     json: async () => ({ status: 'OK', results: [result] }),
   });

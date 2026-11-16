@@ -1,5 +1,6 @@
 import * as Cesium from 'cesium';
 import { CITY_POIS } from '../locations.js';
+import { googleMapsProxyAvailable, googleReverseGeocodeUrl } from '../googleGeocodeClient.js';
 import { isPickedWorldPosition } from '../data/scenePick.js';
 import {
   getViewTargetCartographic,
@@ -303,16 +304,15 @@ function inferCountry(latitude, longitude) {
 }
 
 async function reverseGeocode(latitude, longitude) {
-  const apiKey = window.__GOOGLE_MAPS_API_KEY__;
-  if (!apiKey || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+  if (!googleMapsProxyAvailable() || !Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
   const key = reverseGeocodeKey(latitude, longitude);
   if (reverseGeocodeCache.has(key)) return reverseGeocodeCache.get(key);
   if (reverseGeocodeInFlight.has(key)) return reverseGeocodeInFlight.get(key);
 
   const request = (async () => {
     try {
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${encodeURIComponent(`${latitude},${longitude}`)}&key=${apiKey}`;
-      const response = await fetchWithTimeout(url, {}, 5000);
+      // Same-origin proxy: the server adds the Google key (src/data/googleGeocodeProxy.mjs).
+      const response = await fetchWithTimeout(googleReverseGeocodeUrl(latitude, longitude), {}, 5000);
       const data = await response.json();
       if (data.status !== 'OK' || !data.results?.length) {
         reverseGeocodeCache.set(key, null);

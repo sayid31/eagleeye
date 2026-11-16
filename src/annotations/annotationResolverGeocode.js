@@ -1,5 +1,6 @@
 // Moved out of annotationResolver.js (annotationResolverGeocode).
 
+import { googleForwardGeocodeUrl, googleMapsProxyAvailable } from '../googleGeocodeClient.js';
 import { approximateDistanceM } from './annotationRingGeometry.js';
 import { cacheRead, cacheWrite, negCache } from './annotationResolverCache.js';
 import { MIN_DRIFT_FLOOR_KM, PLACES_MAX_DISTANCE_M, geocodeCache, placesCache } from './annotationResolverConstants.js';
@@ -8,21 +9,19 @@ import { pickWorldFromScreen, shortLabel } from './annotationResolverWorld.js';
 
 /**
  * Forward-geocode a place name via Google Geocoding, biased to the current
- * viewport so "the marina" resolves near where the user is looking.
+ * viewport so "the marina" resolves near where the user is looking. Goes
+ * through the same-origin `/api/google/geocode` proxy (key stays server-side);
+ * skipped entirely when the server has no Google key.
  */
 export async function geocodePlace(query, biasRect, signal) {
-  const apiKey = window.__GOOGLE_MAPS_API_KEY__ || import.meta.env.GOOGLE_MAPS_API_KEY;
-  if (!apiKey) return null;
+  if (!googleMapsProxyAvailable()) return null;
 
   const cacheKey = `${query.toLowerCase()}|${biasRect || ''}`;
   const cached = cacheRead(geocodeCache, cacheKey);
   if (cached !== undefined) return cached;
 
-  let url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(query)}&key=${apiKey}`;
-  if (biasRect) url += `&bounds=${biasRect}`;
-
   try {
-    const response = await fetch(url, { signal });
+    const response = await fetch(googleForwardGeocodeUrl(query, biasRect), { signal });
     const data = await response.json();
     if (data.status !== 'OK' || !data.results?.length) {
       // ZERO_RESULTS is a definitive not-found (cacheable); OVER_QUERY_LIMIT /

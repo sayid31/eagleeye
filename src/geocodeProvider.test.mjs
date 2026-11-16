@@ -175,10 +175,10 @@ test('forwardGeocode: a failed cross-check keeps the biased hit instead of faili
   assert.equal(result.label, 'TLK Kupang, Jakarta');
 });
 
-test('forwardGeocode: window.__GEOCODE_PROVIDER__="google" reverts to Google Geocoding', async () => {
+test('forwardGeocode: window.__GEOCODE_PROVIDER__="google" reverts to Google Geocoding via the server proxy', async () => {
   const requestedUrls = [];
   const result = await withStub(
-    { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_API_KEY__: 'test-key' },
+    { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_PROXY_AVAILABLE__: true },
     async (url) => {
       requestedUrls.push(String(url));
       return {
@@ -192,9 +192,13 @@ test('forwardGeocode: window.__GEOCODE_PROVIDER__="google" reverts to Google Geo
         }),
       };
     },
-    () => forwardGeocode('austin'),
+    () => forwardGeocode('austin', { viewportBias: { south: 30.1, west: -97.9, north: 30.4, east: -97.6 } }),
   );
-  assert.ok(requestedUrls[0].startsWith('https://maps.googleapis.com/'), 'google mode must call Google directly');
+  const requested = new URL(requestedUrls[0], 'http://localhost');
+  assert.equal(requested.pathname, '/api/google/geocode', 'google mode must go through the same-origin proxy');
+  assert.equal(requested.searchParams.get('address'), 'austin');
+  assert.equal(requested.searchParams.get('bounds'), '30.1000,-97.9000|30.4000,-97.6000');
+  assert.equal(requested.searchParams.has('key'), false, 'the browser never sends a Google key');
   assert.equal(result.label, 'Austin, TX, USA');
   assert.deepEqual(result.types, ['locality', 'political']);
 });
@@ -206,7 +210,7 @@ test('forwardGeocode: google mode without a configured key throws (unchanged rev
     async () => {
       await assert.rejects(
         () => forwardGeocode('austin'),
-        /No Google Maps API key available for geocoding/,
+        /No Google Maps API key configured on the server for geocoding/,
       );
     },
   );
