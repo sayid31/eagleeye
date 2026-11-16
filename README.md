@@ -333,7 +333,7 @@ Some of the engineering that makes it feel real rather than like a tech demo:
 - **Honest satellites.** SGP4 propagation with orbit rings that stay locked to their satellites via GMST realignment — no drift, no per-second flicker.
 - **Sits on the real ground.** Entity heights run through a real vertical datum — geoid-aware, sampled against the *rendered* terrain mesh — so aircraft park on aprons and cameras stand on street corners instead of floating.
 - **Spends your quota like it's its own.** The paid feeds run behind cached, budget-governed proxies — an OpenSky credit governor, a TomTom daily tile budget, disk-cached TLEs — so an afternoon of exploring doesn't torch an API allowance.
-- **Secure by design.** Every API that touches a private key (OpenAI, AISStream, OpenSky OAuth, camera frames) is brokered through a hardened server-side proxy with SSRF protection, response caps, and sanitized errors. The only keys the browser sees are Google Maps and Cesium ion (restrict both at the provider).
+- **Secure by design.** Every API that touches a private key (OpenAI, AISStream, OpenSky OAuth, Google Maps, camera frames) is brokered through a hardened server-side proxy with SSRF protection, response caps, and sanitized errors. The only key the browser sees is the Cesium ion token (restrict it at the provider).
 - **No framework.** Vanilla JavaScript, **CesiumJS**, and **Vite** — plus **Google Photorealistic 3D Tiles** for the planet and **OpenAI GPT-Live** for voice. Fast to read, fast to hack on.
 
 ```
@@ -371,7 +371,7 @@ Six keys. Four have a free tier, and the two 🔴 ones are metered:
 | | Key | Why | Get it |
 |---|-----|-----|--------|
 | 🟡 | **Cesium ion** | 🗺️ Google Photorealistic 3D, world terrain, and additional ion-hosted imagery stacks. The free Community plan is for eligible individual, personal/non-commercial use and has quotas | [cesium.com/ion](https://cesium.com/ion) — use a public `assets:read` token and check current [pricing/eligibility](https://cesium.com/platform/cesium-ion/pricing/) |
-| 🔴 | **Google Maps** | Direct Google Photorealistic 3D ([Map Tiles API](https://developers.google.com/maps/documentation/tile)). Place search is keyless by default (OSM Nominatim); this key only also switches search to Google if you set `GEOCODE_PROVIDER=google` | [Google Cloud Console](https://console.cloud.google.com/) — URL-restrict it |
+| 🔴 | **Google Maps** | Direct Google Photorealistic 3D ([Map Tiles API](https://developers.google.com/maps/documentation/tile)), fetched through the app's own server (`/api/google/3dtiles`) — the key never reaches the browser. Place search is keyless by default (OSM Nominatim); this key only also switches search to Google if you set `GEOCODE_PROVIDER=google` | [Google Cloud Console](https://console.cloud.google.com/) — restrict it by API (and by server IP when self-hosting), not by HTTP referrer |
 | 🔴 | **OpenAI** | 🎙️ The voice experience + AI HUD summary. The mini model works; the standard model is noticeably smarter. Want Gemini or another provider behind the mic? PRs welcome | [platform.openai.com](https://platform.openai.com) — metered, see costs below |
 | 🟡 | **AISStream** | 🚢 Live global ships | [aisstream.io](https://aisstream.io) — free, seriously, it's a two-minute signup |
 | 🟡 | **NASA FIRMS** | 🔥 Live active fires | [firms.modaps.eosdis.nasa.gov](https://firms.modaps.eosdis.nasa.gov/api/map_key/) — free |

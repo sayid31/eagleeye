@@ -20,15 +20,17 @@ The golden rule: **secret-bearing API keys stay on the server side.** The dev/pr
 | `OPENAI_API_KEY` | Server only | Browser fetches a SDP offer to `/api/live/session` (and screenshots to `/api/live/vision`); the server attaches the key, which never ships |
 | `AISSTREAM_API_KEY` | Server only | Server holds the AISStream websocket; browser polls the same-origin `/api/ais-live` cache |
 | OpenSky OAuth (`OPENSKY_CLIENT_ID/SECRET`) | Server only | Server mints + refreshes the token behind `/api/opensky` |
+| `GOOGLE_MAPS_API_KEY` | Server only | Browser requests Photorealistic 3D Tiles from `/api/google/3dtiles/*`, geocoding from `/api/google/geocode`, and places from `/api/google/nearby-places` / `/api/google/text-search`; the server adds the key. The browser receives only a "Google configured" boolean |
 
-### Two deliberately client-side keys — restrict them
+**Restrict the Google Maps key by API** (Map Tiles, Geocoding, Places) in the Google Cloud Console, and by server IP address when self-hosting. Do **not** use an HTTP-referrer restriction: the requests come from the server, which sends no browser referrer, so a referrer-restricted key is refused. The proxies are still a spend surface — anyone who can reach the server can stream tiles on your quota (see LAN exposure below).
 
-These are designed to be used directly in the browser (like a Mapbox public token). They are injected into the client bundle via Vite's `define`, so they **will** be visible in browser devtools. Scope and restrict them rather than trying to hide them:
+### One deliberately client-side token — restrict it
 
-1. **Google Maps API key** — loads Photorealistic 3D Tiles directly and powers GEV place search. **Restrict it** (HTTP referrer + API restriction to the required Google APIs) in the Google Cloud Console. An unrestricted key in a public deployment can be abused and billed to you.
-2. **Cesium ion token** (`CESIUM_ION_TOKEN`, optional — for ion-hosted Google Photorealistic 3D Tiles, Bing world imagery, and world terrain) — used as `Cesium.Ion.defaultAccessToken` client-side. Use a public **`assets:read`** token with **URL restrictions** for any hosted deployment. The Community plan has eligibility and usage limits; a public token is not a secret, but it can still consume the account's quota.
+This is designed to be used directly in the browser (like a Mapbox public token). It is injected into the client bundle via Vite's `define`, so it **will** be visible in browser devtools. Scope and restrict it rather than trying to hide it:
 
-> The Vite `define` block in `vite.config.js` controls exactly what reaches the client: only these two keys plus two non-secret CCTV feature flags. Everything else stays server-side.
+1. **Cesium ion token** (`CESIUM_ION_TOKEN`, optional — for ion-hosted Google Photorealistic 3D Tiles, Bing world imagery, and world terrain) — used as `Cesium.Ion.defaultAccessToken` client-side. Use a public **`assets:read`** token with **URL restrictions** for any hosted deployment. The Community plan has eligibility and usage limits; a public token is not a secret, but it can still consume the account's quota.
+
+> The Vite `define` block in `vite.config.js` controls exactly what reaches the client: only this token plus non-secret flags (the app version and the `GOOGLE_MAPS_PROXY_AVAILABLE` boolean). Everything else stays server-side.
 
 Never commit real keys. `.env` is gitignored; only `.env.example` (placeholder names) is tracked. On macOS `dev-fresh.sh` can read keys from the Keychain; plain Vite uses env vars or a local `.env`, and Pinokio uses its ignored app `ENVIRONMENT` file.
 

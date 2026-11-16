@@ -121,13 +121,19 @@ response shaping/caching: OpenSky, CelesTrak, Overpass (OSM), GBFS, CCTV
 frame/media fetches, adsb.lol, AISStream (websocket-backed), Re:Earth terrain
 heights, TomTom traffic tiles, NASA FIRMS, military-installation context,
 regional briefing (place/weather/news), Open-Meteo weather, Launch Library 2,
-and Radio Browser. It also defines which env vars get exposed to the client
-bundle via `import.meta.env.*` — only `GOOGLE_MAPS_API_KEY` and
-`CESIUM_ION_TOKEN` are ever browser-exposed by design; every other key
-(`OPENAI_API_KEY`, `AISSTREAM_API_KEY`, `TOMTOM_API_KEY`, `FIRMS_MAP_KEY`,
+Radio Browser, and Google (Photorealistic 3D Tiles at `/api/google/3dtiles/*`
+in `src/data/googleTilesProxy.mjs`, Geocoding at `/api/google/geocode` in
+`src/data/googleGeocodeProxy.mjs`, Places at `/api/google/nearby-places` and
+`/api/google/text-search`). It also defines which env vars get exposed to the
+client bundle via `import.meta.env.*` — only `CESIUM_ION_TOKEN` is ever
+browser-exposed by design; every other key (`GOOGLE_MAPS_API_KEY`,
+`OPENAI_API_KEY`, `AISSTREAM_API_KEY`, `TOMTOM_API_KEY`, `FIRMS_MAP_KEY`,
 OpenSky credentials) is server-side only, and the browser receives only
 same-origin proxy routes (e.g. `/api/live/session` for the GPT-Live SDP exchange) or
-same-origin cached responses.
+same-origin cached responses. For Google the browser gets just the boolean
+`import.meta.env.GOOGLE_MAPS_PROXY_AVAILABLE`. The Google tile proxy is the
+one deliberate exception to "cache it": Google's Map Tiles policy forbids
+storing tiles outside HTTP caching, so it streams with no server-side cache.
 
 When adding any new external data source: add the proxy route here, add the
 source allowlist server-side (never trust a client-supplied upstream URL —
