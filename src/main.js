@@ -87,11 +87,13 @@ async function init() {
   try {
     loaderStatus.textContent = 'Mengonfigurasi viewer...';
 
-    // A direct Google key provides Google 3D plus GEV place search. Cesium ion
-    // can host the same 3D tiles and also powers Bing/world-terrain stacks.
+    // A server-side Google key provides Google 3D plus Google geocoding through
+    // same-origin proxies (/api/google/*); the browser only learns that the key
+    // exists, never its value. Cesium ion can host the same 3D tiles and also
+    // powers Bing/world-terrain stacks.
     const cesiumToken = import.meta.env.CESIUM_ION_TOKEN;
-    const googleApiKey = import.meta.env.GOOGLE_MAPS_API_KEY;
-    if (googleApiKey) window.__GOOGLE_MAPS_API_KEY__ = googleApiKey;
+    const googleProxyAvailable = import.meta.env.GOOGLE_MAPS_PROXY_AVAILABLE === true;
+    window.__GOOGLE_MAPS_PROXY_AVAILABLE__ = googleProxyAvailable;
 
     // Create the Cesium viewer with minimal chrome
     const viewer = new Cesium.Viewer('cesiumContainer', {
@@ -167,12 +169,12 @@ async function init() {
     viewer.scene.skyAtmosphere.saturationShift = -0.12;
     viewer.scene.skyAtmosphere.brightnessShift = -0.08;
 
-    loaderStatus.textContent = googleApiKey || cesiumToken
+    loaderStatus.textContent = googleProxyAvailable || cesiumToken
       ? 'Memuat Google 3D Tiles...'
       : 'Memuat globe tanpa kunci...';
     markBoot(BOOT_MARKS.PHOTOREAL_START);
     const photoreal = await loadPhotorealisticTileset(Cesium, {
-      googleApiKey,
+      googleProxyAvailable,
       cesiumToken,
     });
     markBoot(BOOT_MARKS.PHOTOREAL_END);

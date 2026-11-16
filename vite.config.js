@@ -2,8 +2,9 @@
  * Vite configuration for EagleEye View — a cinematic geospatial app.
  *
  * Assembles the dev/preview-server proxy plugins that bypass CORS and add
- * caching/auth for upstream APIs, plus the `import.meta.env.*` defines for
- * the Cesium and Google 3D Tiles API keys the client bundle needs. Each
+ * caching/auth for upstream APIs, plus the `import.meta.env.*` defines the
+ * client bundle needs (the Cesium ion token, and only a BOOLEAN for whether a
+ * server-side Google key exists — the Google key itself never ships). Each
  * proxy is a self-contained Vite plugin factory imported from its own
  * module (see the `plugins:` array in `defineConfig()` below for the
  * exact registration order) rather than defined inline here:
@@ -320,8 +321,8 @@ export function nominatimSearchProxy() {
  * Main Vite configuration factory.
  *
  * Loads .env files via Vite's loadEnv, registers Cesium + local proxy
- * plugins, configures the dev server host/port, and exposes selected
- * API keys to the client as import.meta.env defines.
+ * plugins, configures the dev server host/port, and exposes the Cesium ion
+ * token plus non-secret flags to the client as import.meta.env defines.
  */
 export default defineConfig(({ mode }) => {
   // Load only this checkout's dotenv files. A real shell/Keychain value still
@@ -391,9 +392,11 @@ export default defineConfig(({ mode }) => {
         'Content-Security-Policy': "frame-ancestors 'none'",
       },
     },
-    // Expose selected API keys to the browser via import.meta.env.*
+    // Browser-visible values via import.meta.env.*. GOOGLE_MAPS_API_KEY is
+    // deliberately absent: Google 3D Tiles and Geocoding go through the
+    // /api/google/* proxies, so the browser only learns that a key exists.
     define: {
-      'import.meta.env.GOOGLE_MAPS_API_KEY': JSON.stringify(env.GOOGLE_MAPS_API_KEY),
+      'import.meta.env.GOOGLE_MAPS_PROXY_AVAILABLE': JSON.stringify(Boolean(String(env.GOOGLE_MAPS_API_KEY ?? '').trim())),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(env.CESIUM_ION_TOKEN),
       // App version stamped on browser Server Log entries (to reproduce a bug).
       'import.meta.env.GEV_APP_VERSION': JSON.stringify(APP_VERSION),

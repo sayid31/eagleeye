@@ -129,12 +129,12 @@ export function resolveCredential(spec, {
 export function buildCapabilitySummary(credentials) {
   const configured = (name) => credentials[name]?.configured === true;
   const route = selectMapStartupRoute({
-    googleApiKey: configured('GOOGLE_MAPS_API_KEY') ? 'configured' : '',
+    googleProxyAvailable: configured('GOOGLE_MAPS_API_KEY'),
     cesiumToken: configured('CESIUM_ION_TOKEN') ? 'configured' : '',
   });
   return {
     map: route === 'google-direct'
-      ? 'Google Photorealistic 3D Tiles (direct)'
+      ? 'Google Photorealistic 3D Tiles (direct, through the server-side /api/google/3dtiles proxy)'
       : route === 'google-ion'
         ? 'Google Photorealistic 3D Tiles through Cesium ion; Bing and world-terrain stacks available'
         : 'Esri World Imagery (keyless satellite basemap) with keyless terrain',

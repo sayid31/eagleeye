@@ -17,7 +17,8 @@
  *                   first message. AISStream refuses concurrent connections per
  *                   key (HTTP 429 at the handshake), so a socket that never opens
  *                   is "unreachable", never "rejected".
- *   google-maps     —    not testable from the server (browser key, usually referrer-restricted)
+ *   google-maps     —    not tested (server-side key behind /api/google/*; every
+ *                   Map Tiles/Geocoding check would be a billed request)
  *
  * Results never contain the key, a response body or an upstream error text —
  * only a code, the HTTP status and a fixed sentence.
@@ -140,7 +141,7 @@ export const KEY_TEST_NOTES = Object.freeze({
   opensky: 'Requests one OAuth token.',
   'launch-library': 'Reads the request allowance.',
   aisstream: 'Uses the live vessel feed when it is running; otherwise opens a short stream connection.',
-  'google-maps': 'Not testable from the server: this key is used by the browser. Check that the 3D globe loads.',
+  'google-maps': 'Not testable from the server without a billed Google request. Check that the Google 3D globe loads.',
 });
 
 /**

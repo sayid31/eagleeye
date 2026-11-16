@@ -2171,7 +2171,7 @@ test('interrupting delayed Radio geocoding causes no enable or selection side ef
   const calls = [];
   let announceFetchStarted;
   const fetchStarted = new Promise((resolve) => { announceFetchStarted = resolve; });
-  globalThis.window = { __GOOGLE_MAPS_API_KEY__: 'test-key' };
+  globalThis.window = { __GOOGLE_MAPS_PROXY_AVAILABLE__: true };
   globalThis.fetch = async (_url, options) => new Promise((_resolve, reject) => {
     announceFetchStarted();
     options.signal.addEventListener('abort', () => {
@@ -2321,7 +2321,7 @@ test('voice Radio resolves an unlisted place through the explicit Google provide
   const hadWindow = Object.hasOwn(globalThis, 'window');
   const priorWindow = globalThis.window;
   const priorFetch = globalThis.fetch;
-  globalThis.window = { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_API_KEY__: 'test-key' };
+  globalThis.window = { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_PROXY_AVAILABLE__: true };
   const requestedUrls = [];
   globalThis.fetch = async (url) => {
     requestedUrls.push(String(url));
@@ -2361,7 +2361,7 @@ test('voice Radio resolves an unlisted place through the explicit Google provide
     assert.equal(result.ok, true);
     assert.equal(result.requestedLocation, 'Paris, France');
     assert.ok(Math.abs(calls[0].anchor.lat - 48.8566) < 0.001);
-    assert.ok(requestedUrls[0].startsWith('https://maps.googleapis.com/'), 'must hit Google when explicitly selected');
+    assert.ok(requestedUrls[0].startsWith('/api/google/geocode?'), 'must hit the Google geocode proxy when explicitly selected');
   } finally {
     globalThis.fetch = priorFetch;
     if (hadWindow) globalThis.window = priorWindow;

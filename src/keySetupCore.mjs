@@ -28,8 +28,9 @@ export const KEY_SETUP_APPEND_HEADER = '# Keys added by the in-app POWER UP pane
  * Every key the panel offers, in the order it offers them — most magic per
  * minute first. `tier` mirrors the README's color legend: 'metered' (🔴) is a
  * billing-enabled account, 'free' (🟡) is a register-and-paste key.
- * `clientExposed` marks the two keys that are injected into the browser
- * bundle by design (restrict them at the provider, per SECURITY.md).
+ * `clientExposed` marks the key that is injected into the browser bundle by
+ * design (the Cesium ion token — restrict it at the provider, per
+ * SECURITY.md). The Google Maps key stays server-side behind /api/google/*.
  */
 export const KEY_SETUP_KEYS = Object.freeze([
   Object.freeze({
@@ -39,7 +40,6 @@ export const KEY_SETUP_KEYS = Object.freeze([
     getUrl: 'https://developers.google.com/maps/documentation/tile/get-api-key',
     envVars: Object.freeze(['GOOGLE_MAPS_API_KEY']),
     tier: 'metered',
-    clientExposed: true,
   }),
   Object.freeze({
     id: 'openai',
