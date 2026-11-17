@@ -44,7 +44,7 @@ test('admin acting on an admin or super_admin is refused; on itself too', async 
   assert.equal((await accounts.deactivate(admin, other.user.id)).code, 'TARGET_FORBIDDEN');
   assert.equal((await accounts.setPassword(admin, other.user.id, { generate: true })).code, 'TARGET_FORBIDDEN');
   assert.equal((await accounts.deleteUser(admin, owner.user.id, { confirmEmail: 'owner@example.test' })).code, 'TARGET_IS_SUPER_ADMIN');
-  assert.equal((await accounts.deactivate(admin, admin.user.id)).code, 'CANNOT_ACT_ON_SELF');
+  assert.deepEqual(await accounts.deactivate(admin, admin.user.id), { ok: false, status: 400, code: 'CANNOT_ACT_ON_SELF' });
   assert.equal((await accounts.revokeSessions(admin, admin.user.id)).ok, true, 'signing yourself out everywhere is allowed');
   assert.equal((await accounts.getUser(admin, other.user.id)).code, 'TARGET_FORBIDDEN');
   assert.equal((await accounts.deactivate(owner, 'no-such-id')).code, 'NOT_FOUND');
