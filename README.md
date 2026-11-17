@@ -116,7 +116,7 @@ npm run doctor
 npm run dev
 ```
 
-Open **`http://localhost:4173`**. Cold start settles in under two seconds on a
+Open **`http://localhost:4173/app`** (sign in first; `/` is the landing page). Cold start settles in under two seconds on a
 recent laptop (median 1.86 s in a point-in-time M5/Chrome capture —
 [docs/PERFORMANCE.md](docs/PERFORMANCE.md); a comparison baseline, not a hardware
 requirement). A first-run card offers to stage a mission for you — **Live
@@ -126,35 +126,44 @@ manually.
 **macOS shortcut:** `./scripts/dev-fresh.sh` clears the Vite cache and pulls any
 configured keys straight from the Keychain. It starts keyless too.
 
-### Sign in with Google (required)
+### Sign in (required)
 
-The map (`/`) and the owner dashboard (`/admin`) share one Google login, also
-on localhost. Until it is configured every page shows **`/login`** with
-"Login belum dikonfigurasi" and the names of the missing settings. One-time
-setup in `.env` (template in `.env.example`):
+Every page except the public landing (`/`) and `/login` — the map at **`/app`**,
+**`/admin`**, **`/dev`** — and every `/api/*` route needs a signed-in account,
+also on localhost. Accounts sign in with **email + password**; there is no
+self sign-up. One-time setup in `.env` (template in `.env.example`):
 
 | Variable | What |
 |---|---|
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | An OAuth client (type *Web application*) from [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Add the redirect URI `http://localhost:4173/api/auth/callback/google` (use your real port/host if different). |
-| `BETTER_AUTH_SECRET` | 32+ random characters, e.g. `openssl rand -base64 32`. Signs the session cookie. |
-| `SUPER_ADMIN_EMAILS` | Comma-separated Google emails that are super-admins (full `/admin`, API keys). |
+| `BETTER_AUTH_SECRET` | Required. 32+ random characters, e.g. `openssl rand -base64 32`. Signs the session cookie. |
+| `SUPER_ADMIN_EMAILS` | Required. Comma-separated emails of the developer accounts (role `super_admin`, area `/dev`). The only source of super_admin. |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional. "Masuk dengan Google" for super_admins only (shown on `/login` when coming from `/dev`). Web-application OAuth client from [Google Cloud Console](https://console.cloud.google.com/apis/credentials), redirect URI `http://localhost:4173/api/auth/callback/google` (your real origin if different). |
 | `BETTER_AUTH_URL` | Optional; default `http://localhost:<PORT>`. Open the app on exactly this origin (`localhost`, not `127.0.0.1`). |
-| `AUTH_DATABASE_FILE` | Optional; default `data/auth.db` (SQLite, created owner-only, gitignored). |
+| `AUTH_TRUSTED_PROXIES` | Optional; reverse-proxy IPs/CIDRs whose `X-Forwarded-For` is trusted for the client IP. |
+| `AUTH_DATABASE_FILE` | Optional; default `.gev-data/auth.db` (SQLite, owner-only, gitignored; an old `data/auth.db` is moved there once). |
 
-`ADMIN_SESSION_SECRET` and `ADMIN_EMAIL` from the old single-admin login are
-still read as fallbacks. The tables are created at server start (or with
-`npm run auth:migrate`). A new Google account starts as **pending**: it sees
-the map on the keyless basemap, while data layers and voice stay off until an
-admin approves it (the approval screen comes in a later step; until then a
-super-admin is the only account that is active on its own).
+First sign-in as the developer (without Google, or when Google is down):
+
+```bash
+npm run auth:set-password -- --email you@example.com   # must be in SUPER_ADMIN_EMAILS; hidden prompt, 15+ characters
+```
+
+Then open `/login`, sign in, and create accounts in **`/admin` → Pengguna**
+(phase 2; the account service exists, its screens are being built). Roles:
+`user` → `/app` (with the toggles *Layer data*, *Voice & AI*, *Peta premium &
+search*), `admin` → `/admin` (manages users), `super_admin` → `/dev` (system,
+keys, AI configuration, and everything in `/admin`). Five wrong passwords make
+the account wait 1–15 minutes; `npm run auth:unlock -- --email …` clears it.
+The tables are created and upgraded at server start (or with
+`npm run auth:migrate`). `ADMIN_EMAIL` is no longer read.
 
 ### Then power it up — from the owner dashboard
 
-Keys are upgrades, not prerequisites. When you want one, open **`/admin`** →
-**API Keys** (the OpenAI key is under **AI Configuration → AI Provider**): every
+Keys are upgrades, not prerequisites. When you want one, open **`/dev`** →
+**API Keys** (the OpenAI key is under **Konfigurasi AI → Penyedia AI**): every
 supported key, what it switches on, where to get it, and a **Test connection**
 button. Paste, save, and the app restarts itself with the new capability on.
-API keys are managed by a super-admin only; you can also add keys to `.env`
+API keys are managed by a super_admin only; you can also add keys to `.env`
 directly.
 
 - **Where keys land:** Pinokio → the app's ignored `pinokio/ENVIRONMENT`; a
@@ -172,13 +181,13 @@ directly.
 > [!WARNING]
 > Do not enter credentials in Pinokio 8.0.40's native **Configure** panel: that
 > release does not save this nested app file correctly, and it logs submitted
-> values. Use `/admin` → API Keys instead. Both file stores are
+> values. Use `/dev` → API Keys instead. Both file stores are
 > local plaintext; on macOS the Keychain via `./scripts/dev-fresh.sh` remains
 > the stronger option.
 
 The server binds to **localhost** on both paths, every page and `/api/*` route
-needs a signed-in account, and the `/admin` key routes answer only a
-super-admin. Browser-side keys (Google Maps, Cesium ion)
+needs a signed-in account, and the key routes (`/dev` → API Keys) answer only a
+super_admin. Browser-side keys (Google Maps, Cesium ion)
 must be restricted at their providers — [SECURITY.md](SECURITY.md) shows how,
 and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
@@ -380,8 +389,8 @@ See [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md) for the authoritative runti
 
 Most of the globe is 🟢: flights (anonymous), military traffic, satellites, earthquakes, CCTV, radio, bikeshare, space missions, mapped installations, and every bundled dataset run with **zero keys**.
 
-**Once `/admin` is set up you never have to edit a file to add one.** Open
-`/admin` → API Keys, paste the key, save — the app writes it to its own local
+**Once `/dev` is set up you never have to edit a file to add one.** Open
+`/dev` → API Keys, paste the key, save — the app writes it to its own local
 store with owner-only permissions and restarts itself. Everything below is the map of what each key
 actually buys you.
 
@@ -462,12 +471,12 @@ Everything above is the deliberately cheap baseline — enough to get a real tas
 
 By default nobody else can reach your server — it binds to localhost. To share on your LAN, opt in explicitly (`npm run dev -- --host 0.0.0.0 --port 4173`, or `HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** Set the per-IP throttles (`GEV_RATELIMIT_OPENAI_PER_MIN`, `GEV_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) and, before anything else, **set provider-side budget caps** (Google Cloud budgets, OpenAI usage limits): the throttles are app-level guards, not billing caps. Full threat model in [SECURITY.md](SECURITY.md).
 
-Everything lives behind the shared Google sign-in: every page and `/api/*`
-route needs a session, a pending account gets `403` from every data proxy, and
-key routes need an active super-admin plus the exact Origin and a JSON body
-for writes (they exist only on the dev server). Static assets are not guarded,
-so the bundled Cesium ion token is still readable by anyone who can reach the
-server — restrict it at Cesium ion.
+Everything but the landing page lives behind the login: every `/api/*` route
+declares a gate (a user toggle, or admin/super_admin), every write needs the
+exact Origin, and key routes need a super_admin plus a JSON body (they exist
+only on the dev server). Only an allowlist of static files is served without a
+session, but the map's modules (`/src/`) still carry the bundled Cesium ion
+token — restrict it at Cesium ion.
 
 Pinokio LAN and Cloudflare sharing are currently unavailable for this launcher.
 The supported Pinokio release can activate sharing again when the Open-action

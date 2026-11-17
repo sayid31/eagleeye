@@ -145,47 +145,44 @@ governor, TomTom daily tile budget, disk-cached TLEs, etc.).
 
 ### Login, roles and the request guard (`src/auth/`)
 
-The map (`/`) and `/admin` share one Google login (Better Auth 1.7), required
-on every run, also on localhost. Full reference: `docs/CURRENT-STATE.md`
-§"Login (shared Google sign-in)"; rationale: `docs/DECISIONS.md` 2026-11-17.
+Email + password login (Better Auth 1.7.25, **no admin plugin**), required on
+every run, also on localhost; Google only for super_admin. Full reference:
+`docs/CURRENT-STATE.md` §"Login (email + password, three roles, route gates)";
+rationale: `docs/DECISIONS.md` 2026-11-17 "Auth v2"; plan: `plan/auth/`.
 
-- **Env:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BETTER_AUTH_SECRET`
-  (≥32 chars, fallback `ADMIN_SESSION_SECRET`), `SUPER_ADMIN_EMAILS` (fallback
-  `ADMIN_EMAIL`), optional `BETTER_AUTH_URL` (default
-  `http://localhost:<port>`) and `AUTH_DATABASE_FILE` (default `data/auth.db`).
-  Google redirect URI: `<BETTER_AUTH_URL>/api/auth/callback/google`. Missing
-  config → every page shows `/login` listing the missing names.
-- **Data:** SQLite via `authDatabase.mjs` (`bun:sqlite` on Bun, `node:sqlite`
-  on Node — the code must keep running on both). `data/` is gitignored and
-  owner-only. Schema = Better Auth's programmatic migration at server start or
-  `npm run auth:migrate`, plus the `login_log` plugin table.
-- **Roles/status:** `user`/`admin`/`super-admin` × `pending`/`active`/`banned`
-  (`authRoles.mjs`, pure). Super-admins come only from env and are reconciled
-  on every request. Data APIs = active; `/admin` = active admin; keys/`.env` =
-  active super-admin.
-- **Guard:** `authPlugin.mjs` is registered in `vite.config.js` right after
-  `serverLogWatchPlugin` and before every route/proxy, so a new proxy is
-  guarded automatically (`401 AUTH_REQUIRED`, `403 ACCOUNT_PENDING` /
-  `ACCOUNT_BANNED`, admin/super-admin checks, Origin + JSON on admin writes).
-  Decisions live in `authGuard.mjs` (pure). **A new `/api/admin/*` route must
-  be added to `ADMIN_API_PERMISSIONS`** — `authGuard.test.mjs` fails otherwise.
-  Route handlers read the actor from `req.gevActor` / `requireActor()`.
-  Static assets are not guarded (the bundle still carries `CESIUM_ION_TOKEN`).
-- **Pages:** `/login` = `login.html` → `src/login/` (React, `/admin` theme).
-  A pending account sees the map on the keyless basemap with layers and voice
-  locked (`accountAccessPlan.js` / `accountChrome.js`, wired in `src/main.js`).
-- **Logging:** user ids only, never emails, in any server log line.
+- **Routes:** `/` landing (public), `/login`, `/app` (map, `index.html`),
+  `/admin/*` (admin+), `/dev/*` (super_admin; same `admin.html` bundle),
+  `/account*` (`login.html` bundle). One pure table: `pageRoutes.mjs`; unknown
+  paths and non-allowlisted files (`assetAllowlist.mjs`) are 404.
+- **Roles:** `user` | `admin` | `super_admin` (`authRoles.mjs`; `homeFor`).
+  super_admin = email in `SUPER_ADMIN_EMAILS` AND (Google OR a password set by
+  `npm run auth:set-password`). `ADMIN_EMAIL` is gone. User toggles
+  `layers`/`ai`/`premium` (`authCapabilities.mjs`); admins hold all.
+- **Every `/api/*` route is mounted with `registerApiRoute(server, prefix, gate,
+  handler)`** (`apiRouteRegistry.mjs`), gate `layers|ai|premium|open|admin|super`.
+  Never `middlewares.use('/api/…')` directly — `apiRoutes.discovery.test.mjs`
+  fails, and the guard 404s unregistered paths. New `/api/admin/*` prefixes go
+  in `ADMIN_API_PERMISSIONS` (`apiGates.mjs`; unmapped → `super` only). Add a
+  new route to the discovery test's gate table.
+- **Account management** only through `accountService.mjs` (every method calls
+  `authorizeUserAction`, `authHierarchy.mjs`); never call Better Auth's
+  `internalAdapter` from a route. Handlers read `req.gevActor` / `requireActor(req, 'admin'|'super')`.
+- **`/api/auth/*`** is an exact allowlist (`authEndpointPolicy.mjs`); hooks
+  (`authHooks.mjs`) enforce Google-only-for-super_admin, password policy,
+  throttle. **Data:** SQLite `.gev-data/auth.db` (`bun:sqlite`/`node:sqlite` —
+  keep both working), migrations in `authMigrations.mjs` (`PRAGMA user_version`).
+- **Logging:** user ids only (emails masked/hashed), never passwords or tokens.
 - **Harnesses:** `npm run test:track` mints a real session for
-  `track-harness@example.invalid` (`scripts/authCheckout.mjs`) and needs the
-  server started from the same checkout/env; there is no server-side bypass.
-  The other `scripts/qa-*.mjs` harnesses do not sign in yet.
+  `track-harness@example.invalid` (every toggle) via `scripts/authCheckout.mjs`,
+  which also points the harness at `/app`; start the server from the same
+  checkout/env. The other `scripts/qa-*.mjs` harnesses do not sign in yet.
 
 ### Keys and local dev config
 
 No provider key is required to start (the login settings above are) — the
 app boots on keyless Esri World Imagery + keyless terrain, with automatic OSM
-fallback. Provider keys are runtime upgrades, set by a super-admin in
-`/admin` → API Keys (writes to `.env`, or `pinokio/ENVIRONMENT` under the
+fallback. Provider keys are runtime upgrades, set by a super_admin in
+`/dev` → API Keys (writes to `.env`, or `pinokio/ENVIRONMENT` under the
 Pinokio launcher — both made owner-only before a secret is written), or via
 `.env` / shell env / macOS Keychain for headless/scripted setups. `npm run doctor` reports what's configured and where, without ever
 printing credential values. Full key map and proxy-route ownership: `README.md`

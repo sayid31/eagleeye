@@ -7,19 +7,27 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
-- **Satu login Google untuk peta dan /admin.** Peta (`/`) dan `/admin` kini memakai login yang sama,
-  juga saat dijalankan di komputer sendiri. Halaman masuk baru di `/login` (tombol "Masuk dengan Google")
-  memberi tahu bila sesi berakhir, akun diblokir, atau login belum dikonfigurasi (beserta nama pengaturan
-  yang kurang). Tombol **Keluar** ada di deretan tombol globe di atas peta; admin juga mendapat tombol ke
-  `/admin`.
-- **Akun baru menunggu persetujuan admin.** Akun Google yang baru masuk bisa melihat peta dasar (citra Esri
-  tanpa key) dengan banner "Akunmu menunggu persetujuan admin"; layer data dan voice baru aktif setelah
-  disetujui. Super admin (email di `SUPER_ADMIN_EMAILS`) langsung aktif.
-- Pengaturan baru di `.env`: `BETTER_AUTH_SECRET`, `SUPER_ADMIN_EMAILS`, opsional `BETTER_AUTH_URL` dan
-  `AUTH_DATABASE_FILE` (default `data/auth.db`). `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` yang lama dipakai
-  ulang; tambahkan redirect URI `http://localhost:4173/api/auth/callback/google` di Google Cloud Console.
-  Perintah `npm run auth:migrate` menyiapkan database login secara manual (server juga melakukannya saat
-  start).
+- **Login email + password untuk peta, /admin dan /dev.** Semua halaman kecuali beranda publik (`/`) dan
+  `/login`, serta semua layanan `/api/*`, butuh akun yang sudah masuk — juga di komputer sendiri. Tidak ada
+  pendaftaran mandiri: admin membuat akun, mengaktifkan/menonaktifkan, mengganti password, dan menghapus.
+  Akun yang dinonaktifkan langsung keluar dari semua perangkat. Sesi berlaku 3 hari dan diperpanjang saat
+  dipakai. "Lupa password?" → hubungi admin.
+- **Tiga role dengan area sendiri.** `user` → peta di `/app`; `admin` → `/admin` (kelola akun user);
+  `super_admin` → `/dev` (sistem: API key, konfigurasi AI, Server Log, kesehatan sistem) — satu konsol
+  dengan dua menu. Membuka area lain mengarahkan ke area sendiri. `super_admin` hanya dari
+  `SUPER_ADMIN_EMAILS` dan masuk lewat **Google** (tombol muncul bila datang dari `/dev`) atau password
+  darurat `npm run auth:set-password -- --email …`.
+- **Izin per user: Layer data, Voice & AI, Peta premium & search.** Layanan yang tidak diizinkan dijawab
+  "Fitur belum diaktifkan admin" oleh server. Akun baru: Layer data dan Voice & AI aktif, Peta premium
+  mati. Admin dan super admin selalu mendapat semuanya.
+- **Perlindungan login.** Setelah 5 password salah, akun (juga email yang tidak terdaftar) harus menunggu
+  1, 2, 4, 8 hingga maksimal 15 menit — hilang sendiri, atau `npm run auth:unlock -- --email …`. Pesan
+  gagal selalu "Email atau password salah". Setiap percobaan masuk dan setiap tindakan admin tercatat
+  (log login dan audit).
+- Pengaturan `.env`: `BETTER_AUTH_SECRET` dan `SUPER_ADMIN_EMAILS` wajib; opsional `GOOGLE_CLIENT_ID`/
+  `GOOGLE_CLIENT_SECRET` (khusus super admin), `BETTER_AUTH_URL`, `AUTH_TRUSTED_PROXIES`,
+  `AUTH_DATABASE_FILE` (default `.gev-data/auth.db`). `npm run auth:migrate` menyiapkan/memutakhirkan
+  database login secara manual (server juga melakukannya saat start).
 
 - **Server Log** di /admin kini menampilkan error dari seluruh sistem, lengkap dengan lokasi dan
   penyebabnya:

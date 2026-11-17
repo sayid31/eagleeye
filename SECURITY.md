@@ -36,8 +36,8 @@ Never commit real keys. `.env` is gitignored; only `.env.example` (placeholder n
 
 The official Pinokio launcher stores optional values in its ignored local
 `pinokio/ENVIRONMENT` file and Vite explicitly denies that filename. Add,
-replace, or remove those values through **`/admin` → API Keys** (Google
-sign-in as a super-admin from `SUPER_ADMIN_EMAILS`); the server restricts the file before writing and
+replace, or remove those values through **`/dev` → API Keys** (signed in as a
+super_admin from `SUPER_ADMIN_EMAILS`); the server restricts the file before writing and
 restarts the local app after a save. Do not submit credentials through Pinokio 8.0.40's
 native Configure form: that release targets the wrong file for this nested
 launcher layout and logs the submitted values. The ignored file is local
@@ -46,26 +46,37 @@ option when launching through `./scripts/dev-fresh.sh`.
 
 ## Login and access control
 
-Every page (the map and `/admin`) and every `/api/*` route requires a Google
-sign-in, also on localhost (Better Auth, `src/auth/`). One guard plugin in
-`vite.config.js`, registered before every proxy, enforces it server-side:
+Every page except the public landing (`/`) and `/login`, and every `/api/*`
+route, requires a signed-in account, also on localhost (Better Auth, email +
+password, `src/auth/`). One guard plugin in `vite.config.js`, registered before
+every proxy, enforces it server-side:
 
-- No session → pages redirect to `/login`, APIs answer `401 AUTH_REQUIRED`.
-- A new account is **pending** until an admin approves it: it can open the map
-  (keyless basemap only) but every data API answers `403 ACCOUNT_PENDING`;
-  a banned account gets `403 ACCOUNT_BANNED` and is sent to `/login`.
-- `/api/admin/*` needs an active admin; key and `.env` routes
-  (`/api/admin/keys*`) need an active **super-admin**. Super-admins come only
-  from `SUPER_ADMIN_EMAILS` and are re-checked on every request, so removing
-  an email demotes that account immediately.
+- No session → pages redirect to `/login?next=…`, APIs answer `401 AUTH_REQUIRED`.
+  There is no public sign-up or password reset; `/api/auth/*` is an exact
+  allowlist of eight endpoints (everything else, including encoded or
+  dot-segment variants, is 404).
+- Every `/api/*` route declares a gate when it is registered: a user toggle
+  (`layers`, `ai`, `premium` → `403 CAPABILITY_REQUIRED`), `open` (any account),
+  `admin`, or `super` (keys, voice settings, Server Log, System Health). A route
+  without a gate fails at boot. A deactivated account loses every session.
+- super_admin comes only from `SUPER_ADMIN_EMAILS` plus Google sign-in or a
+  CLI-set password (`npm run auth:set-password`); an admin-created account is
+  never promoted by adding its email to env. Removing an email demotes the
+  account and signs it out everywhere.
+- Brute force: five wrong passwords throttle the account (and unknown emails)
+  for 1–15 minutes, plus Better Auth's per-IP rate limit; the client IP comes
+  from `X-Forwarded-For` only when the peer is in `AUTH_TRUSTED_PROXIES`.
+- Only an allowlist of static files is served without a session; the auth
+  database lives in owner-only `.gev-data/` and is never served.
 - CSRF: state-changing auth calls need this app's exact Origin (Better Auth
-  alone checks it only when cookies are present), admin writes need the exact
-  Origin plus a JSON body, and the session cookie is HttpOnly + SameSite=Lax
+  alone checks it only when cookies are present), every `/api/*` write needs the
+  exact Origin (admin writes also a JSON body), a cross-site or same-site
+  `Sec-Fetch-Site` is refused, and the session cookie is HttpOnly + SameSite=Lax
   (Secure on https). Sign-in and sign-out only work on the `BETTER_AUTH_URL`
   origin.
-- Accounts, sessions and the login log live in a local SQLite file
-  (`AUTH_DATABASE_FILE`, default `data/auth.db`, mode 0600 in a 0700
-  directory, gitignored). Server logs carry user ids, never emails.
+- Accounts, sessions, the login log and the audit log live in a local SQLite
+  file (`AUTH_DATABASE_FILE`, default `.gev-data/auth.db`, mode 0600 in a 0700
+  directory, gitignored, never served). Server logs carry user ids, never emails.
 - `BETTER_AUTH_SECRET` (32+ chars) signs sessions; rotating it signs everyone out.
 - **Not covered yet:** static assets (JS/CSS/Cesium files) are served without
   a session, so `CESIUM_ION_TOKEN` in the bundle remains readable by anyone who
