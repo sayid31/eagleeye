@@ -69,6 +69,10 @@ export function createAuthInstance({ database, config, writeLoginLog, warn }) {
       },
     },
     advanced: {
+      // Pinned: Better Auth otherwise turns its origin/callbackURL checks OFF
+      // whenever NODE_ENV=test or TEST is truthy (`bun test` sets NODE_ENV=test).
+      disableOriginCheck: false,
+      disableCSRFCheck: false,
       useSecureCookies: config.secureCookies,
       ipAddress: { ipAddressHeaders: [CLIENT_IP_HEADER] },
     },
