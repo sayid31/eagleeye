@@ -42,7 +42,9 @@
     "test:track": "node scripts/track-regression.mjs",
     "qa:map-source-tray": "node scripts/qa-map-source-tray.mjs",
     "qa:boot-timing": "node scripts/qa-boot-timing.mjs",
-    "auth:migrate": "node scripts/auth-migrate.mjs"
+    "auth:migrate": "node scripts/auth-migrate.mjs",
+    "auth:set-password": "node scripts/auth-set-password.mjs",
+    "auth:unlock": "node scripts/auth-unlock.mjs"
   },
   "dependencies": {
     "@mapbox/vector-tile": "^3.0.0",
