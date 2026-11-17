@@ -25,7 +25,8 @@ npm run dev            # start Vite dev server (http://localhost:4173)
 ./scripts/dev-fresh.sh # macOS: clears Vite cache, pulls keys from Keychain, starts keyless-capable
 npm run build          # production build — must stay green before any PR
 npm test               # full unit suite (see below)
-npm run test:track     # headless real-app tracking-invariant regression harness (needs dev server running)
+npm run test:track     # headless real-app tracking-invariant regression harness (needs dev server running, same .env)
+npm run auth:migrate   # create/upgrade the login tables in AUTH_DATABASE_FILE (server also does it at start)
 ```
 
 Before sending a PR, `npm run build`, `npm test`, and `npm run test:track`
@@ -142,14 +143,51 @@ way the existing proxies do — this app is designed to survive an afternoon of
 exploration without torching a free-tier API budget (OpenSky credit
 governor, TomTom daily tile budget, disk-cached TLEs, etc.).
 
+### Login, roles and the request guard (`src/auth/`)
+
+The map (`/`) and `/admin` share one Google login (Better Auth 1.7), required
+on every run, also on localhost. Full reference: `docs/CURRENT-STATE.md`
+§"Login (shared Google sign-in)"; rationale: `docs/DECISIONS.md` 2026-11-17.
+
+- **Env:** `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `BETTER_AUTH_SECRET`
+  (≥32 chars, fallback `ADMIN_SESSION_SECRET`), `SUPER_ADMIN_EMAILS` (fallback
+  `ADMIN_EMAIL`), optional `BETTER_AUTH_URL` (default
+  `http://localhost:<port>`) and `AUTH_DATABASE_FILE` (default `data/auth.db`).
+  Google redirect URI: `<BETTER_AUTH_URL>/api/auth/callback/google`. Missing
+  config → every page shows `/login` listing the missing names.
+- **Data:** SQLite via `authDatabase.mjs` (`bun:sqlite` on Bun, `node:sqlite`
+  on Node — the code must keep running on both). `data/` is gitignored and
+  owner-only. Schema = Better Auth's programmatic migration at server start or
+  `npm run auth:migrate`, plus the `login_log` plugin table.
+- **Roles/status:** `user`/`admin`/`super-admin` × `pending`/`active`/`banned`
+  (`authRoles.mjs`, pure). Super-admins come only from env and are reconciled
+  on every request. Data APIs = active; `/admin` = active admin; keys/`.env` =
+  active super-admin.
+- **Guard:** `authPlugin.mjs` is registered in `vite.config.js` right after
+  `serverLogWatchPlugin` and before every route/proxy, so a new proxy is
+  guarded automatically (`401 AUTH_REQUIRED`, `403 ACCOUNT_PENDING` /
+  `ACCOUNT_BANNED`, admin/super-admin checks, Origin + JSON on admin writes).
+  Decisions live in `authGuard.mjs` (pure). **A new `/api/admin/*` route must
+  be added to `ADMIN_API_PERMISSIONS`** — `authGuard.test.mjs` fails otherwise.
+  Route handlers read the actor from `req.gevActor` / `requireActor()`.
+  Static assets are not guarded (the bundle still carries `CESIUM_ION_TOKEN`).
+- **Pages:** `/login` = `login.html` → `src/login/` (React, `/admin` theme).
+  A pending account sees the map on the keyless basemap with layers and voice
+  locked (`accountAccessPlan.js` / `accountChrome.js`, wired in `src/main.js`).
+- **Logging:** user ids only, never emails, in any server log line.
+- **Harnesses:** `npm run test:track` mints a real session for
+  `track-harness@example.invalid` (`scripts/authCheckout.mjs`) and needs the
+  server started from the same checkout/env; there is no server-side bypass.
+  The other `scripts/qa-*.mjs` harnesses do not sign in yet.
+
 ### Keys and local dev config
 
-No key is required to start — the app boots on keyless Esri World Imagery +
-keyless terrain, with automatic OSM fallback. Keys are runtime upgrades, set
-via the in-app **POWER UP** panel (writes to `.env`, or `pinokio/ENVIRONMENT`
-under the Pinokio launcher — both made owner-only before a secret is
-written), or via `.env` / shell env / macOS Keychain for headless/scripted
-setups. `npm run doctor` reports what's configured and where, without ever
+No provider key is required to start (the login settings above are) — the
+app boots on keyless Esri World Imagery + keyless terrain, with automatic OSM
+fallback. Provider keys are runtime upgrades, set by a super-admin in
+`/admin` → API Keys (writes to `.env`, or `pinokio/ENVIRONMENT` under the
+Pinokio launcher — both made owner-only before a secret is written), or via
+`.env` / shell env / macOS Keychain for headless/scripted setups. `npm run doctor` reports what's configured and where, without ever
 printing credential values. Full key map and proxy-route ownership: `README.md`
 §API Keys, `docs/CURRENT-STATE.md` §Auth + Launch.
 

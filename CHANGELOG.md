@@ -7,6 +7,20 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- **Satu login Google untuk peta dan /admin.** Peta (`/`) dan `/admin` kini memakai login yang sama,
+  juga saat dijalankan di komputer sendiri. Halaman masuk baru di `/login` (tombol "Masuk dengan Google")
+  memberi tahu bila sesi berakhir, akun diblokir, atau login belum dikonfigurasi (beserta nama pengaturan
+  yang kurang). Tombol **Keluar** ada di deretan tombol globe di atas peta; admin juga mendapat tombol ke
+  `/admin`.
+- **Akun baru menunggu persetujuan admin.** Akun Google yang baru masuk bisa melihat peta dasar (citra Esri
+  tanpa key) dengan banner "Akunmu menunggu persetujuan admin"; layer data dan voice baru aktif setelah
+  disetujui. Super admin (email di `SUPER_ADMIN_EMAILS`) langsung aktif.
+- Pengaturan baru di `.env`: `BETTER_AUTH_SECRET`, `SUPER_ADMIN_EMAILS`, opsional `BETTER_AUTH_URL` dan
+  `AUTH_DATABASE_FILE` (default `data/auth.db`). `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` yang lama dipakai
+  ulang; tambahkan redirect URI `http://localhost:4173/api/auth/callback/google` di Google Cloud Console.
+  Perintah `npm run auth:migrate` menyiapkan database login secara manual (server juga melakukannya saat
+  start).
+
 - **Server Log** di /admin kini menampilkan error dari seluruh sistem, lengkap dengan lokasi dan
   penyebabnya:
   - Setiap peringatan/error dari server (misalnya data satelit, kebakaran, lalu lintas, CCTV, atau Overpass
@@ -19,6 +33,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Semua layanan data (`/api/*`) kini menolak permintaan tanpa login** (`401`), dari akun yang menunggu
+  persetujuan atau diblokir (`403`). Halaman `/admin` hanya untuk admin aktif; pengelolaan API key hanya
+  untuk super admin (admin tetap bisa memilih model dan suara di Penyedia AI). Audit Log mencatat id
+  pengguna yang melakukan perubahan.
+- Login admin lama (`/api/admin/auth/*`, cookie khusus admin) diganti login bersama. `ADMIN_EMAIL` dan
+  `ADMIN_SESSION_SECRET` masih dibaca sebagai cadangan; admin perlu masuk ulang sekali.
 - **Key Google Maps kini tidak lagi dikirim ke browser.** Tile 3D Google (Photorealistic 3D) diambil lewat
   server aplikasi (`/api/google/3dtiles`), dan pencarian alamat Google (mode `GEOCODE_PROVIDER=google`,
   penanda peta lewat suara, konteks lokasi suara) lewat `/api/google/geocode`; server yang menambahkan key.

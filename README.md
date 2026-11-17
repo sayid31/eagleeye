@@ -126,16 +126,36 @@ manually.
 **macOS shortcut:** `./scripts/dev-fresh.sh` clears the Vite cache and pulls any
 configured keys straight from the Keychain. It starts keyless too.
 
+### Sign in with Google (required)
+
+The map (`/`) and the owner dashboard (`/admin`) share one Google login, also
+on localhost. Until it is configured every page shows **`/login`** with
+"Login belum dikonfigurasi" and the names of the missing settings. One-time
+setup in `.env` (template in `.env.example`):
+
+| Variable | What |
+|---|---|
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | An OAuth client (type *Web application*) from [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Add the redirect URI `http://localhost:4173/api/auth/callback/google` (use your real port/host if different). |
+| `BETTER_AUTH_SECRET` | 32+ random characters, e.g. `openssl rand -base64 32`. Signs the session cookie. |
+| `SUPER_ADMIN_EMAILS` | Comma-separated Google emails that are super-admins (full `/admin`, API keys). |
+| `BETTER_AUTH_URL` | Optional; default `http://localhost:<PORT>`. Open the app on exactly this origin (`localhost`, not `127.0.0.1`). |
+| `AUTH_DATABASE_FILE` | Optional; default `data/auth.db` (SQLite, created owner-only, gitignored). |
+
+`ADMIN_SESSION_SECRET` and `ADMIN_EMAIL` from the old single-admin login are
+still read as fallbacks. The tables are created at server start (or with
+`npm run auth:migrate`). A new Google account starts as **pending**: it sees
+the map on the keyless basemap, while data layers and voice stay off until an
+admin approves it (the approval screen comes in a later step; until then a
+super-admin is the only account that is active on its own).
+
 ### Then power it up — from the owner dashboard
 
 Keys are upgrades, not prerequisites. When you want one, open **`/admin`** →
 **API Keys** (the OpenAI key is under **AI Configuration → AI Provider**): every
 supported key, what it switches on, where to get it, and a **Test connection**
 button. Paste, save, and the app restarts itself with the new capability on.
-`/admin` needs a one-time Google sign-in setup in `.env` — `GOOGLE_CLIENT_ID`,
-`GOOGLE_CLIENT_SECRET`, `ADMIN_EMAIL`, `ADMIN_SESSION_SECRET` (details in
-[docs/CURRENT-STATE.md](docs/CURRENT-STATE.md), "Admin login"); until then, add
-keys to `.env` directly.
+API keys are managed by a super-admin only; you can also add keys to `.env`
+directly.
 
 - **Where keys land:** Pinokio → the app's ignored `pinokio/ENVIRONMENT`; a
   terminal clone → the repo-root `.env`. Either file is made owner-only
@@ -156,8 +176,9 @@ keys to `.env` directly.
 > local plaintext; on macOS the Keychain via `./scripts/dev-fresh.sh` remains
 > the stronger option.
 
-The server binds to **localhost** on both paths, and the `/admin` key routes
-answer only a signed-in admin session. Browser-side keys (Google Maps, Cesium ion)
+The server binds to **localhost** on both paths, every page and `/api/*` route
+needs a signed-in account, and the `/admin` key routes answer only a
+super-admin. Browser-side keys (Google Maps, Cesium ion)
 must be restricted at their providers — [SECURITY.md](SECURITY.md) shows how,
 and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
@@ -441,10 +462,12 @@ Everything above is the deliberately cheap baseline — enough to get a real tas
 
 By default nobody else can reach your server — it binds to localhost. To share on your LAN, opt in explicitly (`npm run dev -- --host 0.0.0.0 --port 4173`, or `HOST=0.0.0.0 ./scripts/dev-fresh.sh` on macOS/Linux) — but know that ⚠️ **a LAN-visible server brokers your configured API keys to anyone who can reach it.** Set the per-IP throttles (`GEV_RATELIMIT_OPENAI_PER_MIN`, `GEV_RATELIMIT_GOOGLE_PER_MIN` — see `.env.example`) and, before anything else, **set provider-side budget caps** (Google Cloud budgets, OpenAI usage limits): the throttles are app-level guards, not billing caps. Full threat model in [SECURITY.md](SECURITY.md).
 
-Key management lives behind the `/admin` Google sign-in: every key route needs
-the signed admin session cookie, plus the exact Origin and a JSON body for
-writes, and the routes exist only on the dev server. Nobody on your LAN gets a
-key-entry form without signing in as `ADMIN_EMAIL`.
+Everything lives behind the shared Google sign-in: every page and `/api/*`
+route needs a session, a pending account gets `403` from every data proxy, and
+key routes need an active super-admin plus the exact Origin and a JSON body
+for writes (they exist only on the dev server). Static assets are not guarded,
+so the bundled Cesium ion token is still readable by anyone who can reach the
+server — restrict it at Cesium ion.
 
 Pinokio LAN and Cloudflare sharing are currently unavailable for this launcher.
 The supported Pinokio release can activate sharing again when the Open-action

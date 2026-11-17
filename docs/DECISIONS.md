@@ -6,6 +6,27 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-11-17 — One Google login for the map and /admin: Better Auth on runtime-neutral SQLite, always on, pending until approved
+
+**Decision.** The map (`/`) and `/admin` share one Google login (Better Auth 1.7, `src/auth/`), required on every run including localhost. Accounts carry a role (`user` / `admin` / `super-admin`) and a status (`pending` / `active` / `banned`); super-admins come from `SUPER_ADMIN_EMAILS` only. A new account is a pending `user`: it may see the map on the keyless basemap, but every data `/api/*` route answers `403 ACCOUNT_PENDING`. The single-admin OAuth of `src/admin/auth/` (HMAC cookie, `ADMIN_EMAIL`) is removed. Owner decisions 2026-11-16/17 (plan `2026-11-16-single-login-roles.md`): ~10 users, local for now, Google only, Bun + React Router is the office standard, SQLite now and Postgres later, "UI utama selalu wajib login".
+
+**Why Better Auth instead of extending the hand-written OAuth.** The old code was correct for one email and a stateless cookie, but users, sessions that can be revoked, bans, roles and a login log need a database and session store — what Better Auth already is, and what the office template (makuro) uses. Its Kysely SQLite dialect accepts both `bun:sqlite` and `node:sqlite` handles as they are, so `authDatabase.mjs` is the only runtime-specific code and the same files run on today's Node launcher (Pinokio stays on Node) and on Bun (the spike of 2026-11-16 and this change ran the auth tests and a dev server on both). Drizzle was not added: 0.45 has no `node:sqlite` driver. The schema comes from Better Auth's programmatic migration at server start (idempotent); `login_log` is declared as a plugin schema so the same migration creates it and a later Postgres adapter inherits it.
+
+**Why always-login, also locally.** The owner chose it. Before, a page login would have protected nothing while ~36 `/api/*` proxies brokered paid keys to anyone who could reach the server. The consequence is accepted: the first run needs Google OAuth configured, and until then every page shows the login page listing the missing env names.
+
+**Why `pending` is a status, not a role.** Approval and authority are independent: an admin can approve an account as `user` or `admin`, and a ban must not forget the role. The env super-admin is forced `active` and re-derived on every request (`reconcileAccount`), so removing an email from env demotes that account at once and nobody can lock the owner out through the database.
+
+**Guard design.** One Vite plugin (`authPlugin.mjs`) registered before every route and proxy plugin and before any body parser, instead of a check in each of the ~36 proxies: a proxy added later is guarded without touching it, and `authGuard.test.mjs` fails if the plugin order changes or an `/api/admin/*` route has no explicit permission (unmapped admin routes need the strictest one). Decisions are pure functions in `authGuard.mjs`; the plugin only applies them. Details that came from evidence, not taste:
+- Better Auth is mounted with a no-path `use` plus a prefix check — `use('/api/auth', h)` answers 404 because Connect strips the prefix (spike).
+- Better Auth validates `Origin` only when the request already carries cookies, so a cookie-less cross-origin `POST /api/auth/sign-in/social` was accepted (spike). The plugin therefore requires this app's Origin (or Referer) on every state-changing auth call, and `trustedOrigins` is just the `BETTER_AUTH_URL` origin.
+- Better Auth turns its origin/callbackURL checks off when `NODE_ENV=test` or `TEST` is truthy (`bun test` sets the former); `disableOriginCheck: false` / `disableCSRFCheck: false` are pinned so behaviour never depends on those variables.
+- Classification is case-insensitive because Connect routes `/API/opensky` to the `/api/opensky` proxy too.
+- A resolved actor is cached 2 s per cookie: the map sends many requests per second (tiles, polls). A ban or role change therefore lands within 2 s.
+- The client IP comes from the socket via an internal header the plugin overwrites (`x-gev-client-ip`), never from `X-Forwarded-For`.
+- Static assets stay unguarded in this step, so the bundled `CESIUM_ION_TOKEN` is still readable without login; moving it behind a session is a separate change.
+
+**test:track.** The harness signs in by minting a real session for a dedicated active account in the checkout's auth database (it needs the same secret and database file as the server), instead of a server-side bypass flag: no code path in the server lets a request in without a session.
+
 ## 2026-11-16 — The Google Maps key leaves the browser: 3D Tiles and Geocoding go through server proxies
 
 **Decision.** `GOOGLE_MAPS_API_KEY` is no longer in the Vite `define` and no longer copied to `window`. Google Photorealistic 3D Tiles load through `/api/google/3dtiles/*` (`src/data/googleTilesProxy.mjs`) and Google Geocoding through `/api/google/geocode` (`src/data/googleGeocodeProxy.mjs`); both add the key from the server environment. The browser gets only the boolean `GOOGLE_MAPS_PROXY_AVAILABLE`. Owner decision: "pakai proxy tile google". `CESIUM_ION_TOKEN` stays browser-exposed (out of scope).
