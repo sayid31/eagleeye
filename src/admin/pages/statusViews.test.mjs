@@ -29,6 +29,6 @@ test('describeOverall counts problems and warnings; every status has a label', (
 test('fetchAudit builds the query and surfaces server errors', async () => {
   let url;
   await fetchAudit({ type: 'keys', offset: 100 }, async (u) => { url = u; return { ok: true, json: async () => ({}) }; });
-  assert.equal(url, '/api/admin/audit?type=keys&offset=100');
+  assert.equal(url, '/api/admin/audit?source=system&type=keys&offset=100');
   await assert.rejects(fetchAudit({}, async () => ({ ok: false, status: 401, json: async () => ({ error: 'Login diperlukan' }) })), /Loading the audit log failed — Login diperlukan/);
 });

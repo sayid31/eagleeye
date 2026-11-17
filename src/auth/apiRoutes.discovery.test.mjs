@@ -17,6 +17,7 @@ const EXPECTED_GATES = {
   '/api/openai/hud-summary': 'ai', '/api/route': 'ai',
   '/api/google/3dtiles': 'premium', '/api/google/geocode': 'premium', '/api/google/nearby-places': 'premium', '/api/google/text-search': 'premium',
   '/api/log': 'open', '/api/terrain/heights': 'open', '/api/nominatim/search': 'open', '/api/weather-effects': 'open', '/api/voice/config': 'open',
+  '/api/admin/users': 'admin', '/api/admin/login-log': 'admin',
   '/api/admin/audit': 'admin', '/api/admin/keys': 'super', '/api/admin/voice': 'super', '/api/admin/log': 'super', '/api/admin/health': 'super',
 };
 

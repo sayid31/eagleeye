@@ -37,6 +37,13 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   setelah berhasil langsung diarahkan ke area masing-masing. Akun Google tidak punya bagian password.
 - **Super admin yang dibuat lewat CLI bisa menambahkan Google** cukup dengan masuk lewat Google sekali.
   Akun lain dengan email yang sama (password dari admin) tetap ditolak.
+- **Kelola akun di /admin dan /dev.** Halaman Pengguna (cari, filter, halaman) untuk membuat akun,
+  mengubah nama/email/izin fitur, menonaktifkan, reset password, mengeluarkan dari semua perangkat dan
+  menghapus (ketik email untuk konfirmasi). Password sementara tampil sekali dengan tombol "Salin pesan"
+  berisi alamat login, email dan password untuk dikirim ke pemilik akun. Di `/dev` super admin juga
+  bisa menjadikan pengguna admin atau sebaliknya (konfirmasi dengan password sendiri). Ringkasan
+  menampilkan jumlah akun aktif/nonaktif/ter-throttle dan login 24 jam; Log Login dan Audit bisa
+  difilter per akun. Admin hanya melihat akun pengguna, bukan admin lain.
 - Pengaturan `.env`: `BETTER_AUTH_SECRET` dan `SUPER_ADMIN_EMAILS` wajib; opsional `GOOGLE_CLIENT_ID`/
   `GOOGLE_CLIENT_SECRET` (khusus super admin), `BETTER_AUTH_URL`, `AUTH_TRUSTED_PROXIES`,
   `AUTH_DATABASE_FILE` (default `.gev-data/auth.db`). `npm run auth:migrate` menyiapkan/memutakhirkan

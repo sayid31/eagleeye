@@ -15,23 +15,23 @@ test('basename follows the browser path: /dev and below → /dev, everything els
   assert.equal(pathIsUnder('/devx', '/dev'), false);
 });
 
-test('/admin lists the people pages, all placeholders for now', () => {
-  assert.deepEqual(navForArea('admin').map((g) => [g.label, g.path]),
-    [['Ringkasan', '/'], ['Pengguna', '/users'], ['Log Login', '/login-log'], ['Audit', '/audit']]);
-  assert.ok(areaLeaves('admin').every((leaf) => !leaf.page));
+test('/admin lists the people pages, each wired to its built page', () => {
+  assert.deepEqual(navForArea('admin').map((g) => [g.label, g.path, g.page]), [
+    ['Ringkasan', '/', 'users-overview'], ['Pengguna', '/users', 'users'], ['Log Login', '/login-log', 'login-log'], ['Audit', '/audit', 'account-audit'],
+  ]);
 });
 
 test('/dev lists the system pages with the built ones wired to their page ids', () => {
   assert.deepEqual(navForArea('dev').map((g) => g.label),
-    ['Ringkasan sistem', 'Pengguna & Admin', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Server Log', 'Audit']);
+    ['Ringkasan sistem', 'Pengguna & Admin', 'Log Login', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Server Log', 'Audit']);
   const built = areaLeaves('dev').filter((leaf) => leaf.page).map((leaf) => [leaf.path, leaf.page]);
   assert.deepEqual(built, [
-    ['/api-keys', 'api-keys'], ['/ai/general', 'ai-general'], ['/ai/provider', 'ai-provider'], ['/ai/persona', 'ai-persona'],
+    ['/users', 'users'], ['/login-log', 'login-log'], ['/api-keys', 'api-keys'], ['/ai/general', 'ai-general'], ['/ai/provider', 'ai-provider'], ['/ai/persona', 'ai-persona'],
     ['/ai/usage', 'ai-usage'], ['/server-log', 'server-log'], ['/server-log/audit', 'server-log-audit'],
-    ['/server-log/health', 'server-log-health'],
+    ['/server-log/health', 'server-log-health'], ['/audit', 'account-audit'],
   ]);
   const placeholders = areaLeaves('dev').filter((leaf) => !leaf.page).map((leaf) => leaf.path);
-  assert.deepEqual(placeholders, ['/', '/users', '/kill-switches', '/usage', '/audit']);
+  assert.deepEqual(placeholders, ['/', '/kill-switches', '/usage']);
 });
 
 test('an unknown area is refused', () => {
@@ -62,7 +62,7 @@ test('every route path is unique within an area, across group redirects and page
 });
 
 test('groupLanding is the first child, or the group itself without children', () => {
-  const [, , , , apiKeys, ai, serverLog] = navForArea('dev');
+  const [, , , , , apiKeys, ai, serverLog] = navForArea('dev');
   assert.equal(groupLanding(ai), '/ai/general');
   assert.equal(groupLanding(serverLog), '/server-log');
   assert.equal(groupLanding(apiKeys), '/api-keys');

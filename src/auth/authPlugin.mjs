@@ -114,6 +114,20 @@ export function createAuthMiddleware(getState, { routes = [], mode = 'dev', allo
   };
 }
 
+const bootStates = new WeakMap();
+
+/**
+ * Boot state (what `bootAuth` resolved to) of the login guard installed on a
+ * server, for `/api/admin/*` plugins registered after `authPlugin`.
+ * @param {any} server Vite dev/preview server, or its Connect `middlewares`.
+ * @returns {Promise<object>} Rejects when boot failed.
+ */
+export function authStateFor(server) {
+  const ready = bootStates.get(server?.middlewares ?? server);
+  if (!ready) throw new Error('authStateFor: authPlugin is not installed on this server (register it first)');
+  return ready;
+}
+
 /**
  * @param {{env?: () => object, rootDir?: string, isKilled?: (gate: string) => boolean}} [options]
  * @returns {import('vite').Plugin}
@@ -124,6 +138,7 @@ export function authPlugin({ env = () => process.env, rootDir = process.cwd(), i
     const ready = new Promise((resolve) => { resolveState = resolve; });
     // Reported once here; each request refused meanwhile logs its own line.
     ready.catch((error) => console.error(`[auth] boot failed; every page and /api request answers 503: ${error?.message || error}`));
+    bootStates.set(server.middlewares, ready);
     const boot = (port) => resolveState(bootAuth({ env: env(), port, rootDir }));
     const httpServer = server.httpServer;
     if (httpServer) httpServer.once('listening', () => boot(httpServer.address()?.port ?? configuredPort));

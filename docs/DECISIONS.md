@@ -17,6 +17,15 @@ Runtime: CURRENT-STATE "Login" → Better Auth config and Hooks.
 - **Rejected: a CLI `auth:link-google` command.** It would need the Google `sub` up front (only known after an OAuth round trip) and a second secret-handling path; the hook needs nothing extra from the owner.
 - `requireLocalEmailVerified: false` because the CLI stores `emailVerified: false`; Better Auth marks it verified after the link. `/link-social` stays off the endpoint allowlist, so linking only happens through a full Google sign-in.
 
+## 2026-11-17 — Account audit and login log: visibility in SQL, one audit path with two sources
+
+- **`/api/admin/audit` keeps one path with a `source` parameter** instead of a second route: `account` (default) reads the `audit_log` table for admin and super_admin; `system` falls through to the legacy key/AI JSONL handler, still super_admin only. The JSONL trail holds system data an admin must not see, and moving it into the table is planned (plan/auth/06), after which `system` disappears without a route change. The account handler is therefore registered before `serverLogPlugin`'s.
+- **Visibility is a `WHERE` clause, not a post-filter**: an admin's login log is joined to `user.role = 'user'`, its audit to `user.*` actions on `user` targets. Filtering after `LIMIT` would make `total` and pages lie.
+- **An admin sees another actor only by role** (plan/auth/08: admins do not see other admins); its own actions keep its name.
+- **`CANNOT_ACT_ON_SELF` is 400**, not 403: the UI never offers it, so it is a malformed request rather than a permission question. Role changes answer an admin `403 SUPER_ADMIN_REQUIRED` before any target lookup.
+- **`/admin` lists `user` accounts only even for a super_admin**; role management lives in `/dev` (plan/auth/04: `/admin` = people, `/dev` = system + roles).
+- See `docs/CURRENT-STATE.md` → Login → Account management.
+
 ## 2026-11-17 — Auth v2: email + password, three roles, gates declared at route registration (owner request; plan/auth v3)
 
 Supersedes the Google-only/pending-approval entry below. Runtime: CURRENT-STATE "Login (email + password, three roles, route gates)".

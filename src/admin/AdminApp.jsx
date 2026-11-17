@@ -12,6 +12,10 @@ import { PersonaPage } from './pages/PersonaPage.jsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx';
 import { ServerLogPage } from './pages/ServerLogPage.jsx';
 import { UsagePage } from './pages/UsagePage.jsx';
+import { AccountAuditPage } from './users/AccountAuditPage.jsx';
+import { LoginLogPage } from './users/LoginLogPage.jsx';
+import { UsersOverviewPage } from './users/UsersOverviewPage.jsx';
+import { UsersPage } from './users/UsersPage.jsx';
 
 /** Built pages by the `page` id a nav leaf names; a leaf without one renders the placeholder. */
 const PAGES = {
@@ -23,16 +27,20 @@ const PAGES = {
   'ai-persona': PersonaPage,
   'ai-usage': UsagePage,
   'api-keys': ApiKeysPage,
+  users: UsersPage,
+  'users-overview': UsersOverviewPage,
+  'login-log': LoginLogPage,
+  'account-audit': AccountAuditPage,
 };
 
-function pageFor(leaf, session) {
+function pageFor(leaf, session, area) {
   const Page = leaf.page ? PAGES[leaf.page] : null;
-  return Page ? <Page session={session} /> : <PlaceholderPage title={leaf.label} />;
+  return Page ? <Page session={session} area={area} /> : <PlaceholderPage title={leaf.label} />;
 }
 
-function leafRoute(leaf, session) {
-  if (leaf.path === '/') return <Route key={leaf.path} index element={pageFor(leaf, session)} />;
-  return <Route key={leaf.path} path={leaf.path.slice(1)} element={pageFor(leaf, session)} />;
+function leafRoute(leaf, session, area) {
+  if (leaf.path === '/') return <Route key={leaf.path} index element={pageFor(leaf, session, area)} />;
+  return <Route key={leaf.path} path={leaf.path.slice(1)} element={pageFor(leaf, session, area)} />;
 }
 
 /** Routes of `area` inside the shared layout. */
@@ -48,7 +56,7 @@ export function AdminApp({ area, session }) {
         {groupRedirects(area).map((group) => (
           <Route key={group.id} path={group.path.slice(1)} element={<Navigate to={groupLanding(group)} replace />} />
         ))}
-        {leaves.map((leaf) => leafRoute(leaf, session))}
+        {leaves.map((leaf) => leafRoute(leaf, session, area))}
         <Route path="*" element={<PlaceholderPage title="Halaman tidak ditemukan" notFound />} />
       </Route>
     </Routes>

@@ -18,7 +18,8 @@ async function getJson(url, action, fetchFn) {
  * @param {typeof fetch} [fetchFn]
  */
 export function fetchAudit({ type = '', offset = 0 } = {}, fetchFn = fetch) {
-  const params = new URLSearchParams();
+  // `system` = the key/AI JSONL trail; the account audit is the default source (src/admin/users/adminLogRoutes.mjs).
+  const params = new URLSearchParams({ source: 'system' });
   if (type) params.set('type', type);
   if (offset) params.set('offset', String(offset));
   const query = params.toString();
