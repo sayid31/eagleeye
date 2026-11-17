@@ -3,11 +3,11 @@
  * AI Configuration → AI Provider: the OpenAI key that powers the voice
  * assistant (status, replace, remove, test), plus the GPT-Live voice and
  * delegation backend model. The provider stays OpenAI (plan decision 6).
- * The key card is for an active super-admin only; an admin sees the model and
- * voice section (the server refuses /api/admin/keys to admins as well).
+ * The key card is for a super_admin only; anyone else sees the model and
+ * voice section (the server refuses /api/admin/keys to non-super_admins as well).
  */
 import { useEffect, useState } from 'react';
-import { canManageKeys } from '../../auth/authRoles.mjs';
+import { isSuperAdminRole } from '../../auth/authRoles.mjs';
 import { fetchVoiceSettings, saveVoiceSettings } from '../api/adminVoiceApi.js';
 import { KeyCard } from '../components/KeyCard.jsx';
 import { Field, SaveStatus, Section } from '../components/FormControls.jsx';
@@ -88,7 +88,7 @@ function ProviderKeyPage() {
 }
 
 export function AiProviderPage({ session }) {
-  if (canManageKeys(session)) return <ProviderKeyPage />;
+  if (isSuperAdminRole(session?.user?.role)) return <ProviderKeyPage />;
   return (
     <div className="adm-page">
       <header className="adm-page-header">

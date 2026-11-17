@@ -1,13 +1,10 @@
 // src/admin/pages/PlaceholderPage.jsx
-/** Stand-in for pages built in later stages (T2–T7); replaced one by one. */
-export function PlaceholderPage({ title, soon = false, notFound = false }) {
-  let note = 'Halaman ini dibuat di tahap berikutnya.';
-  if (soon) note = 'Direncanakan setelah Server Log. Belum tersedia.';
-  if (notFound) note = 'Halaman admin ini tidak ada.';
+/** Stand-in for a menu page that is not built yet, and the not-found page. No data. */
+export function PlaceholderPage({ title, notFound = false }) {
   return (
     <section className="adm-card">
       <h1>{title}</h1>
-      <p>{note}</p>
+      <p>{notFound ? 'Halaman ini tidak ada.' : 'Halaman ini sedang disiapkan.'}</p>
     </section>
   );
 }
