@@ -130,7 +130,11 @@ export function createAuthHooks({ config, recordLogin, throttle, getContext }) {
     if (!ctx) return undefined; // Internal creation (account service, CLI) sets its own fields.
     if (!isGooglePath(ctx)) throw refuse('FORBIDDEN', 'SIGN_UP_DISABLED', 'Accounts are created by an admin');
     if (!reserved(user.email) || user.emailVerified !== true) {
-      await recordLogin({ emailHash: hashEmail(user.email, config.secret), success: false, reason: 'google_denied', method: 'google', ...requestMeta(ctx) });
+      // NOT awaited: this hook runs inside Better Auth's user+account transaction, which holds the single
+      // SQLite connection; recordLogin writes through the plain adapter and would wait on it forever
+      // (deadlocking every auth request). It runs once the refusal has rolled the transaction back.
+      // recordLogin never rejects (createLoginRecorder catches and warns).
+      void recordLogin({ emailHash: hashEmail(user.email, config.secret), success: false, reason: 'google_denied', method: 'google', ...requestMeta(ctx) });
       throw refuse('FORBIDDEN', 'GOOGLE_NOT_ALLOWED', 'Google sign-in is for the developer accounts only');
     }
     return { data: { ...user, role: ROLE_SUPER_ADMIN, banned: false, mustChangePassword: false } };
