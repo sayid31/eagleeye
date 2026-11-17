@@ -24,7 +24,7 @@ export function skipOnReactPages(plugin) {
   return {
     ...plugin,
     transformIndexHtml(html, ctx) {
-      if (/(^|[\\/])(admin|login)\.html$/.test(ctx?.filename ?? ctx?.path ?? '')) return undefined;
+      if (/(^|[\\/])(admin|login|landing)\.html$/.test(ctx?.filename ?? ctx?.path ?? '')) return undefined;
       return original.call(this, html, ctx);
     },
   };
