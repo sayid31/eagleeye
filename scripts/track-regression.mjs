@@ -84,6 +84,14 @@
  *
  * Exits non-zero if ANY invariant fails. DOES NOT COMMIT anything.
  *
+ * LOGIN: the app only serves signed-in accounts (src/auth/). The harness
+ * mints a real 2-hour session for the dedicated active account
+ * `track-harness@example.invalid` straight in this checkout's auth database
+ * (scripts/authCheckout.mjs — same .env, AUTH_DATABASE_FILE and
+ * BETTER_AUTH_SECRET as the dev server under test) and deletes it at the end.
+ * There is no server-side bypass. Run it against a server started from this
+ * checkout with the same env.
+ *
  * Flags:
  *   --url <url>        App URL (default http://localhost:4173)
  *   --headful          Show the browser (debugging)
@@ -92,6 +100,7 @@
 
 import fs from 'node:fs';
 import puppeteer from 'puppeteer';
+import { mintHarnessSession } from './authCheckout.mjs';
 import { classifyAircraft, CLASS_SCALE_3D, CLASS_MODEL_REAL } from '../src/data/aircraftClass.js';
 import { ensureGeoidReady, geoidHeight } from '../src/data/geoid.js';
 
@@ -209,6 +218,15 @@ async function main() {
     process.exit(2);
   }
 
+  let harnessSession;
+  try {
+    harnessSession = await mintHarnessSession({ port: Number(new URL(APP_URL).port) || undefined });
+  } catch (e) {
+    console.error(`\x1b[31mCannot sign the harness in (${e.message}).\x1b[0m`);
+    console.error('Configure the login in .env for this checkout (see README → Login) and start the server with the same env.');
+    process.exit(2);
+  }
+
   const chromeExecutable = findChromeExecutable();
   if (chromeExecutable) {
     console.log(`  Browser : ${chromeExecutable}\n`);
@@ -249,6 +267,7 @@ async function main() {
 
   try {
     const page = await browser.newPage();
+    await page.setCookie({ name: harnessSession.cookieName, value: harnessSession.cookieValue, url: APP_URL, httpOnly: true, sameSite: 'Lax' });
     await page.setViewport({ width: 1280, height: 800 });
     await page.setRequestInterception(true);
     page.on('request', (request) => {
@@ -3981,6 +4000,7 @@ async function main() {
 
     finishAndExit();
   } finally {
+    await harnessSession.revoke().catch((e) => console.warn(`  (harness session not revoked: ${e.message}; it expires in 2 h)`));
     if (!KEEP_OPEN) {
       await browser.close();
     } else {
