@@ -4,17 +4,21 @@
  * incremented ATOMICALLY in SQL (`failedLoginCount = failedLoginCount + 1`
  * via the adapter's `incrementOne`), so ten concurrent wrong passwords count
  * ten. Unknown emails are counted too, by keyed hash in `login_throttle`, so a
- * throttled answer does not reveal whether an account exists.
+ * throttled answer does not reveal whether an account exists. Each write to
+ * `login_throttle` first deletes rows untouched for longer than the longest
+ * delay (their delay is over), so the table stays bounded by recent traffic.
  *
  * @module auth/loginThrottle
  */
 
-import { isThrottled, throttleDelayMs } from './accountPolicy.mjs';
+import { LOGIN_THROTTLE_MAX_MS, isThrottled, throttleDelayMs } from './accountPolicy.mjs';
 import { LOGIN_THROTTLE_MODEL } from './authSchema.mjs';
 import { hashEmail } from './loginLog.mjs';
 import { normalizeEmail } from './authRoles.mjs';
 
 const byId = (id) => [{ field: 'id', value: id }];
+/** Rows idle this long hold no running delay (each delay is ≤ LOGIN_THROTTLE_MAX_MS from its last write). */
+export const LOGIN_THROTTLE_ROW_TTL_MS = LOGIN_THROTTLE_MAX_MS;
 
 /**
  * @param {object} deps
@@ -31,6 +35,12 @@ export function createLoginThrottle({ getContext, secret, now = () => Date.now()
 
   async function throttleRow(ctx, emailHash) {
     return ctx.adapter.findOne({ model: LOGIN_THROTTLE_MODEL, where: [{ field: 'emailHash', value: emailHash }] });
+  }
+
+  /** Delete unknown-email counters idle past the longest delay (one DELETE on a table holding only recent unknown emails). */
+  async function pruneIdleRows(ctx) {
+    const cutoff = new Date(now() - LOGIN_THROTTLE_ROW_TTL_MS);
+    await ctx.adapter.deleteMany({ model: LOGIN_THROTTLE_MODEL, where: [{ field: 'updatedAt', operator: 'lt', value: cutoff }] });
   }
 
   /**
@@ -58,6 +68,7 @@ export function createLoginThrottle({ getContext, secret, now = () => Date.now()
       where = { model: 'user', where: [...byId(user.id), { field: 'failedLoginCount', value: failures }] };
     } else {
       const keyed = [{ field: 'emailHash', value: emailHash }];
+      await pruneIdleRows(ctx);
       if (!await throttleRow(ctx, emailHash)) {
         try {
           await ctx.adapter.create({ model: LOGIN_THROTTLE_MODEL, data: { emailHash, failedCount: 0, updatedAt: new Date(now()) } });
