@@ -14,6 +14,7 @@ import { CLIENT_IP_HEADER, createAuthHooks } from './authHooks.mjs';
 import { LOGIN_LOG_MODEL, USER_FIELDS, gevSchemaPlugin } from './authSchema.mjs';
 import { createLoginRecorder } from './loginLog.mjs';
 import { createLoginThrottle } from './loginThrottle.mjs';
+import { GOOGLE_ACCOUNT_LINKING } from './googleLinkPolicy.mjs';
 import { PASSWORD_MAX, PASSWORD_MIN_USER } from './passwordPolicy.mjs';
 
 export { AUTH_BASE_PATH, CLIENT_IP_HEADER, LOGIN_LOG_MODEL };
@@ -74,9 +75,10 @@ export function createAuthInstance({ database, config, writeLoginLog, warn }) {
     socialProviders: config.google ? {
       google: { clientId: config.google.clientId, clientSecret: config.google.clientSecret, prompt: 'select_account' },
     } : {},
-    // Google never attaches to an existing account with the same email (that
-    // could be an admin-created password account whose password an admin knows).
-    account: { accountLinking: { enabled: false } },
+    // Google attaches to an existing same-email account ONLY for a CLI-bootstrapped
+    // super_admin; the account.create.before hook refuses every other link (an
+    // admin-created password account's password may be known to an admin).
+    account: { accountLinking: GOOGLE_ACCOUNT_LINKING },
     user: { additionalFields: USER_FIELDS },
     session: { expiresIn: SESSION_EXPIRES_IN_S, updateAge: SESSION_UPDATE_AGE_S, cookieCache: { enabled: false } },
     // Per-IP limits in every environment (Better Auth enables them only in production by default).
