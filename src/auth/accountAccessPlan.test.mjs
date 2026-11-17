@@ -24,3 +24,12 @@ test('signed out → login with next=/app; forced password change → /account/p
   const unknown = planAccountAccess(null);
   assert.deepEqual([unknown.mode, unknown.layers, unknown.voice, unknown.keyedBasemaps, unknown.banner], ['unknown', false, false, false, UNKNOWN_BANNER]);
 });
+
+test('admins and super_admins get every toggle even when the payload says otherwise', () => {
+  const none = { layers: false, ai: false, premium: false };
+  for (const role of ['admin', 'super_admin']) {
+    const plan = planAccountAccess(me(role, none));
+    assert.deepEqual([plan.mode, plan.layers, plan.voice, plan.keyedBasemaps, plan.banner], ['full', true, true, true, null]);
+  }
+  assert.deepEqual(planAccountAccess(me('user', { layers: 'yes', ai: 1 })).layers, false, 'only literal true counts');
+});
