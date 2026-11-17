@@ -112,6 +112,7 @@ import react from '@vitejs/plugin-react';
 import { skipOnReactPages } from './src/admin/adminRoute.mjs';
 
 import { authPlugin } from './src/auth/authPlugin.mjs';
+import { adminUsersPlugin } from './src/admin/users/adminUsersPlugin.mjs';
 
 import { radioBrowserProxy } from './src/data/radioBrowserProxy.mjs';
 
@@ -349,6 +350,7 @@ export default defineConfig(({ mode }) => {
       serverLogWatchPlugin(),
       // Login guard: before every page rewrite, route and proxy below.
       authPlugin({ rootDir: __dirname }),
+      adminUsersPlugin(), // /api/admin/users, login-log, audit (account) — before serverLogPlugin's legacy audit
       serverLogPlugin({ audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
       openSkyProxy(),
       celestrakProxy(),
