@@ -66,6 +66,8 @@ async function handleUsers(req, res, getState) {
   if (!admitted.ok) return sendError(res, admitted.status, admitted.status === 401 ? 'AUTH_REQUIRED' : 'ADMIN_REQUIRED');
   const parsed = parseUsersRoute(req.method, req.url);
   if (parsed.error) return sendError(res, parsed.error.status, parsed.error.code);
+  // Role changes are /dev business: say so plainly instead of a per-target refusal.
+  if (parsed.route === 'role' && !requireActor(req, 'super').ok) return sendError(res, 403, 'SUPER_ADMIN_REQUIRED');
   const state = await bootedState(getState);
   const { accounts } = state.services;
   const actor = req.gevActor;
