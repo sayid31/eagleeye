@@ -118,6 +118,8 @@ export class MapStackController {
    * @returns {string}
    */
   _unavailableReason(stack) {
+    // `premiumLockReason`: set by src/app-access/accessEffects.js when the account lacks `premium`.
+    if (this.premiumLockReason && (stack?.requiresIon || stack?.kind === 'photoreal')) return this.premiumLockReason;
     return stack?.requiresIon
       ? 'Token Cesium ion diperlukan untuk susunan Bing'
       : `${stack?.label || 'Susunan peta ini'} tidak tersedia`;

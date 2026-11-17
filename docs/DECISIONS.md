@@ -37,6 +37,15 @@ Runtime: CURRENT-STATE "`/dev` system pages" and "`/api/*` gates".
 - **Per gate, not per provider.** The guard's hook only receives the gate (`isKilled(gate)`); per-provider switches (e.g. voice vs HUD) would need path-aware matching in the guard. Deferred until a real need appears.
 - **Not covered:** a voice (WebRTC) session already running keeps its OpenAI connection; only new requests are refused (session duration limit is a separate open item).
 
+## 2026-11-17 — Capability locks in the map: one fetch guard, UI-only browser-direct sources, 30-minute voice cap (plan/auth/01)
+
+Runtime: CURRENT-STATE "Login (email + password, three roles, route gates)" → Map.
+
+- **One wrapper on `window.fetch` instead of a check in every caller.** The toggle-gated routes are called from ~40 modules (layers, HUD, cockpit brief, voice, annotations); a per-caller check would touch several over-limit files and miss the next new caller. The guard sits on the only path they share, answers locked gates locally (no 403 per poll in the console, no wasted request) and turns the first real `CAPABILITY_REQUIRED`/`FEATURE_DISABLED` into one lock + toast. The HUD summary gets the existing "not configured" shape rather than a 403 so `hud.js` (over limit) needs no change. Its route table is client-side, so `capabilityRoutes.test.mjs` scans the server's `registerApiRoute` calls and fails on any drift.
+- **Browser-direct sources are locked in the UI only.** USGS earthquakes, Esri/OSM tiles, Re:Earth terrain and the bundled Cesium ion token never pass the server guard, so without `layers`/`premium` they are simply not offered (layer guard, stack picker, no ion token at boot). Moving them behind proxies is separate work (ion: plan/2026-11-17-cesium-ion-token-proxy.md).
+- **Bundled datasets follow `layers` too.** They cost nothing upstream, but the toggle is labelled "Layer data" for the user and the admin; splitting the list into usable and locked rows would make that label lie.
+- **Voice: hard cap 30 minutes per session.** Revoking `ai` only refuses new requests; an open WebRTC session talks to OpenAI directly. The cap bounds that window regardless of the owner's session limit (1–120 min, or off); renewal is a new `/api/live/session` request, which the server refuses and the fetch guard turns into the locked mic + banner. Consequence: owner session limits above 30 min end at 30.
+
 ## 2026-11-17 — Auth v2: email + password, three roles, gates declared at route registration (owner request; plan/auth v3)
 
 Supersedes the Google-only/pending-approval entry below. Runtime: CURRENT-STATE "Login (email + password, three roles, route gates)".

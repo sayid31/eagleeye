@@ -18,6 +18,7 @@
 import * as Cesium from 'cesium';
 import { needsUnbiasedCheck, pickGeocodeCandidate } from './geocodeCandidatePick.js';
 import { googleForwardGeocodeUrl, googleMapsProxyAvailable } from './googleGeocodeClient.js';
+import { selectGeocodeProvider } from './geocodeProviderSelect.js';
 
 /**
  * Which provider answers forwardGeocode(). Defaults to Nominatim (no key
@@ -29,9 +30,7 @@ import { googleForwardGeocodeUrl, googleMapsProxyAvailable } from './googleGeoco
  */
 function activeProvider() {
   const envValue = typeof import.meta.env !== 'undefined' ? import.meta.env.GEOCODE_PROVIDER : undefined;
-  const raw = window.__GEOCODE_PROVIDER__ || envValue || 'nominatim';
-  const normalized = String(raw).trim().toLowerCase();
-  return normalized === 'google' ? 'google' : 'nominatim';
+  return selectGeocodeProvider({ requested: window.__GEOCODE_PROVIDER__ || envValue, googleAvailable: googleMapsProxyAvailable() });
 }
 
 /**
@@ -70,11 +69,10 @@ export function viewerRectDegrees(viewer) {
 /**
  * Geocode a place name with Google's Geocoding API — kept as the
  * `GEOCODE_PROVIDER=google` reversion path. Goes through the same-origin
- * `/api/google/geocode` proxy, which adds the key server-side.
+ * `/api/google/geocode` proxy, which adds the key server-side. Only selected
+ * while that proxy can answer for this account (`selectGeocodeProvider`).
  */
 async function geocodeWithGoogle(query, { viewportBias, signal } = {}) {
-  if (!googleMapsProxyAvailable()) throw new Error('No Google Maps API key configured on the server for geocoding');
-
   let bounds = null;
   if (viewportBias) {
     const { south, west, north, east } = viewportBias;

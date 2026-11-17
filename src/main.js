@@ -29,7 +29,7 @@ import { waitForFirstFrame, composeSplashReadiness } from './splashGate.js';
 import { BOOT_MARKS, finalizeBootTiming, markBoot } from './bootTiming.js';
 import { installClientLog } from './log/clientLog.js';
 import { installLayerHealthLog } from './log/layerHealthLog.js';
-import { lockDataLayers, mountAccountChrome, resolveAccountAccess } from './auth/accountChrome.js';
+import { applyAccountLocks, mountAccountChrome, resolveAccountAccess } from './auth/accountChrome.js';
 import './auth/accountChrome.css';
 
 // First statement of the entry chunk's module scope. ES imports evaluate
@@ -87,9 +87,9 @@ async function init() {
   const loaderStatus = loadingScreen.querySelector('.loader-status');
 
   try {
-    // The server only serves this page to a signed-in account; a pending one
-    // (awaiting admin approval) gets the keyless basemap, no data layers and no
-    // voice — see src/auth/accountAccessPlan.js. Active accounts are unchanged.
+    // The server only serves this page to a signed-in account; toggles it lacks
+    // (layers / ai / premium) are locked in the UI and on the fetch path — see
+    // src/auth/accountChrome.js and src/app-access/. Admins hold every toggle.
     loaderStatus.textContent = 'Memeriksa akun...';
     const account = await resolveAccountAccess();
     if (account.redirect) {
@@ -255,7 +255,7 @@ async function init() {
       allowQaRegistration: import.meta.env.DEV,
     });
     // Before any registration/restore, so no saved or shared layer turns on.
-    if (!account.layers) lockDataLayers(dataManager, document.getElementById('data-toggles'));
+    applyAccountLocks(account, { dataManager, mapStackController, toggleList: document.getElementById('data-toggles') });
     // All 13 data layers are lazy-registered: nothing but the layers a user
     // actually enables (or has saved as enabled) is downloaded/parsed.
     // `_ensureModuleResolved` in manager.js calls each module's own

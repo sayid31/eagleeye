@@ -354,3 +354,13 @@ test('a fresh controller boots on Esri Satellite even when the Google tileset lo
   // Google 3D stays selectable: the tileset exists, so the stack is available.
   assert.equal(controller.isStackAvailable('photoreal'), true);
 });
+
+test('premiumLockReason names the admin lock on Google 3D and ion stacks only', () => {
+  const viewer = { scene: { globe: { show: true } }, imageryLayers: {}, camera: {} };
+  const controller = new MapStackController(viewer, {});
+  controller.premiumLockReason = 'Peta premium belum diizinkan admin';
+  const reasons = Object.fromEntries(controller.getStacks().map((stack) => [stack.id, stack.unavailableReason]));
+  assert.equal(reasons.photoreal, 'Peta premium belum diizinkan admin');
+  assert.equal(reasons['bing-labels'], 'Peta premium belum diizinkan admin');
+  assert.equal(reasons['esri-imagery'], null, 'keyless stacks stay available');
+});

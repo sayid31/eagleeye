@@ -8,17 +8,20 @@
  *  - `voice`   ← capability `ai` (Voice & AI)
  *  - `keyedBasemaps` ← capability `premium` (Google 3D / Cesium ion basemaps, Google search)
  *
+ * Admins and super_admins hold every toggle (`effectiveCapabilities`), whatever
+ * the payload says. What a locked toggle does to the map lives in
+ * src/app-access/ (accessController.js).
+ *
  * @module auth/accountAccessPlan
  */
 
+import { effectiveCapabilities } from './authCapabilities.mjs';
 import { homeFor, isAdminRole } from './authRoles.mjs';
 import { loginUrlFor } from './nextPath.mjs';
 import { PASSWORD_CHANGE_PATH } from './pageRoutes.mjs';
 
 export const UNKNOWN_BANNER = 'Status akun tidak bisa diperiksa. Peta dasar tetap bisa dilihat; muat ulang halaman untuk mencoba lagi.';
-export const LIMITED_BANNER = 'Sebagian fitur belum diaktifkan admin.';
-/** Reason the data-layer manager reports when an account without `layers` tries to enable a layer. */
-export const LAYER_LOCK_REASON = 'Fitur belum diaktifkan admin.';
+export const LIMITED_BANNER = 'Beberapa fitur belum diaktifkan admin';
 
 /**
  * @typedef {{mode: 'full' | 'limited' | 'unknown' | 'leave', redirect: string | null,
@@ -39,7 +42,7 @@ export function planAccountAccess(me) {
   if (!me || typeof me !== 'object') return restricted('unknown', UNKNOWN_BANNER);
   if (!me.signedIn || !me.user) return restricted('leave', null, loginUrlFor('/app', '', 'session'));
   if (me.user.mustChangePassword) return restricted('leave', null, PASSWORD_CHANGE_PATH);
-  const caps = me.user.capabilities ?? {};
+  const caps = effectiveCapabilities({ role: me.user.role, capabilities: me.user.capabilities ?? {} });
   const layers = caps.layers === true;
   const voice = caps.ai === true;
   const keyedBasemaps = caps.premium === true;

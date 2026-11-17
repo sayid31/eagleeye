@@ -1,4 +1,4 @@
-/* Account chrome on the map (src/auth/accountChrome.js). */
+/* Account chrome on the map (src/auth/accountChrome.js, src/app-access/). */
 #account-banner {
   position: fixed;
   top: 64px;
@@ -6,19 +6,94 @@
   transform: translateX(-50%);
   z-index: 60;
   box-sizing: border-box;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
   max-width: min(640px, calc(100vw - 32px));
-  padding: 8px 14px;
+  padding: 8px 10px 8px 14px;
   border: 1px solid rgba(242, 193, 78, 0.6);
   border-radius: 4px;
   background: rgba(20, 16, 4, 0.88);
   color: #f2c14e;
   font: 500 12px/1.4 'Inter', system-ui, sans-serif;
-  text-align: center;
+}
+
+#account-banner ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+#account-banner li::before {
+  content: '·';
+  margin-right: 4px;
+}
+
+#account-banner .account-banner-close {
+  margin-left: auto;
+  padding: 2px 8px;
+  border: 1px solid rgba(242, 193, 78, 0.5);
+  border-radius: 3px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+#account-banner .account-banner-close:hover,
+#account-banner .account-banner-close:focus-visible {
+  background: rgba(242, 193, 78, 0.16);
+}
+
+/* Layer data locked: switches greyed with a lock; hovering the list shows its title. */
+#data-toggles.account-locked .data-toggle-row {
+  opacity: 0.55;
+}
+
+#data-toggles.account-locked .data-toggle-btn,
+#data-toggles.account-locked .data-toggle-controls {
   pointer-events: none;
 }
 
-#data-toggles.account-locked {
-  opacity: 0.45;
-  pointer-events: none;
-  filter: grayscale(0.6);
+#data-toggles.account-locked .data-toggle-btn {
+  position: relative;
+  filter: grayscale(1);
+}
+
+#data-toggles.account-locked .data-toggle-right::after {
+  content: 'lock';
+  font-family: 'Material Symbols Outlined';
+  font-size: 14px;
+  line-height: 1;
+  color: #f2c14e;
+}
+
+#data-toggles.account-locked .data-toggle-right {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Voice & AI locked: the dock mic stays visible, greyed, with a lock badge. */
+#gev-voice-control[data-locked='true'] #gev-voice-button {
+  position: relative;
+  cursor: not-allowed;
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+#gev-voice-control[data-locked='true'] .gev-voice-wave {
+  visibility: hidden;
+}
+
+#gev-voice-control .account-lock-badge {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  font-size: 16px;
+  color: #f2c14e;
 }
