@@ -217,5 +217,10 @@ export function createAccountService({ auth, superAdminEmails, audit, throttle, 
       const auditState = await record(actor, 'role.set', user, `${user.role} → ${role}`);
       return { ok: true, user: publicUser(updated, now()), audit: auditState };
     },
+
+    /** Re-auth for a sensitive system change (kill switch): null when confirmed, else a REAUTH_* failure. */
+    async confirmIdentity(rawActor, currentPassword) {
+      return reauthenticate(actorOf(rawActor), currentPassword);
+    },
   };
 }

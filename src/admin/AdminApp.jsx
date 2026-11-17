@@ -16,6 +16,7 @@ import { AccountAuditPage } from './users/AccountAuditPage.jsx';
 import { LoginLogPage } from './users/LoginLogPage.jsx';
 import { UsersOverviewPage } from './users/UsersOverviewPage.jsx';
 import { UsersPage } from './users/UsersPage.jsx';
+import { DEV_PAGES } from './dev/devPages.js';
 
 /** Built pages by the `page` id a nav leaf names; a leaf without one renders the placeholder. */
 const PAGES = {
@@ -31,6 +32,7 @@ const PAGES = {
   'users-overview': UsersOverviewPage,
   'login-log': LoginLogPage,
   'account-audit': AccountAuditPage,
+  ...DEV_PAGES,
 };
 
 function pageFor(leaf, session, area) {

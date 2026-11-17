@@ -26,12 +26,14 @@ test('/dev lists the system pages with the built ones wired to their page ids', 
     ['Ringkasan sistem', 'Pengguna & Admin', 'Log Login', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Server Log', 'Audit']);
   const built = areaLeaves('dev').filter((leaf) => leaf.page).map((leaf) => [leaf.path, leaf.page]);
   assert.deepEqual(built, [
-    ['/users', 'users'], ['/login-log', 'login-log'], ['/api-keys', 'api-keys'], ['/ai/general', 'ai-general'], ['/ai/provider', 'ai-provider'], ['/ai/persona', 'ai-persona'],
+    ['/', 'dev-overview'], ['/users', 'users'], ['/login-log', 'login-log'],
+    ['/kill-switches', 'dev-kill-switches'], ['/usage', 'dev-usage'],
+    ['/api-keys', 'api-keys'], ['/ai/general', 'ai-general'], ['/ai/provider', 'ai-provider'], ['/ai/persona', 'ai-persona'],
     ['/ai/usage', 'ai-usage'], ['/server-log', 'server-log'], ['/server-log/audit', 'server-log-audit'],
     ['/server-log/health', 'server-log-health'], ['/audit', 'account-audit'],
   ]);
   const placeholders = areaLeaves('dev').filter((leaf) => !leaf.page).map((leaf) => leaf.path);
-  assert.deepEqual(placeholders, ['/', '/kill-switches', '/usage']);
+  assert.deepEqual(placeholders, []);
 });
 
 test('an unknown area is refused', () => {

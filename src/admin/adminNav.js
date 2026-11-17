@@ -32,11 +32,11 @@ export const AREA_NAV = Object.freeze({
     { id: 'audit', label: 'Audit', path: '/audit', page: 'account-audit' },
   ],
   dev: [
-    { id: 'overview', label: 'Ringkasan sistem', path: '/' },
+    { id: 'overview', label: 'Ringkasan sistem', path: '/', page: 'dev-overview' },
     { id: 'users', label: 'Pengguna & Admin', path: '/users', page: 'users' },
     { id: 'login-log', label: 'Log Login', path: '/login-log', page: 'login-log' },
-    { id: 'kill-switches', label: 'Kill switch', path: '/kill-switches' },
-    { id: 'usage', label: 'Pemakaian', path: '/usage' },
+    { id: 'kill-switches', label: 'Kill switch', path: '/kill-switches', page: 'dev-kill-switches' },
+    { id: 'usage', label: 'Pemakaian', path: '/usage', page: 'dev-usage' },
     { id: 'api-keys', label: 'API Keys', path: '/api-keys', page: 'api-keys' },
     {
       id: 'ai-config',

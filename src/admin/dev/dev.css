@@ -1,0 +1,20 @@
+/* /dev system pages (Ringkasan sistem, Kill switch, Pemakaian). Tokens from adminTheme.css. */
+.adm-page > .dev-wide { grid-column: 1 / -1; }
+.dev-facts { margin: 0; display: grid; gap: 8px; }
+.dev-fact { display: grid; grid-template-columns: minmax(120px, 38%) 1fr; gap: 12px; align-items: baseline; }
+.dev-fact dt { font: 500 11px var(--adm-font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--adm-muted); }
+.dev-fact dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.adm-card .adm-section-body p, .adm-section > p { margin: 0 0 8px; }
+.dev-keys { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px 16px; }
+.dev-keys li { display: flex; align-items: center; gap: 8px; font: 500 12px var(--adm-font-mono); letter-spacing: .06em; }
+.dev-empty { font-style: italic; }
+.dev-subhead { margin: 14px 0 8px; font: 600 11px var(--adm-font-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--adm-muted); }
+.dev-meta { font-size: 13px; }
+.dev-gate-off { border-color: color-mix(in srgb, var(--adm-err) 55%, transparent); }
+.dev-gate-off::before, .dev-gate-off::after { border-color: var(--adm-err); }
+.dev-dialog { width: min(520px, calc(100vw - 32px)); padding: 0; color: var(--adm-text); background: var(--adm-surface-solid); border: 1px solid var(--adm-border-strong); border-radius: 4px; box-shadow: var(--adm-shadow); }
+.dev-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+.dev-dialog-body { display: flex; flex-direction: column; gap: 14px; padding: 20px 22px; }
+.dev-dialog-body h2 { margin: 0; font: 600 15px var(--adm-font-mono); letter-spacing: .06em; text-transform: uppercase; }
+.dev-dialog-body p { margin: 0; }
+@media (max-width: 640px) { .dev-fact { grid-template-columns: 1fr; gap: 2px; } }

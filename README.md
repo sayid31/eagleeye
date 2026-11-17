@@ -420,8 +420,11 @@ Six keys. Four have a free tier, and the two 🔴 ones are metered:
 
 All of them are worth getting. None of them are required to start.
 
-`npm run doctor` reports Node/npm readiness, the primary provider routes, and
-where each configured provider was found without printing credential values.
+`npm run doctor` reports Node/npm readiness, the primary provider routes,
+where each configured provider was found, and login readiness (secret,
+`SUPER_ADMIN_EMAILS`, which super_admin emails can actually sign in, a warning
+when the server is public while admins use a password only) — all without
+printing credential values.
 On macOS its Keychain-aware result previews `./scripts/dev-fresh.sh`; plain
 `npm run dev` reads only explicit environment and Vite dotenv values. The
 OpenSky summary reports only OAuth client-pair presence, not the resolved

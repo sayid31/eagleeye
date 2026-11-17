@@ -17,6 +17,7 @@ import { migrateAuthDatabase } from './authMigrations.mjs';
 import { createAuthServices } from './authServices.mjs';
 import { resolveClientIp } from './clientIp.mjs';
 import { createLoginRecorder } from './loginLog.mjs';
+import { createKillSwitchStore } from './killSwitchStore.mjs';
 
 /**
  * Overwrite the client-IP header Better Auth reads with the socket peer (or the
@@ -32,7 +33,7 @@ export function withClientIp(req, config) {
 /**
  * @param {{env: object, port: number, rootDir: string}} input
  * @returns {Promise<{config: object, auth?: object, handler?: Function, resolver?: object, services?: object,
- *   recordLogin?: Function, db?: object}>}
+ *   recordLogin?: Function, db?: object, killSwitches?: ReturnType<typeof createKillSwitchStore>}>}
  */
 export async function bootAuth({ env, port, rootDir }) {
   const config = readAuthEnv(env, { port, rootDir });
@@ -54,6 +55,7 @@ export async function bootAuth({ env, port, rootDir }) {
     db,
     services,
     recordLogin,
+    killSwitches: createKillSwitchStore({ db }),
     handler: toNodeHandler(auth),
     resolver: createActorResolver({ auth, superAdminEmails: config.superAdminEmails, audit: services.audit }),
   };

@@ -99,7 +99,8 @@ export function createAuthMiddleware(getState, { routes = [], mode = 'dev', allo
 
     if (isApi) {
       const gates = gatesForPath(pathname, routes);
-      const decision = apiDecision({ method: req.method, pathname, gates, actor, headers: req.headers, trustedOrigin: config.origin, isKilled });
+      // An injected check (tests) wins; otherwise the persistent per-gate switches of /dev → Kill switch.
+      const decision = apiDecision({ method: req.method, pathname, gates, actor, headers: req.headers, trustedOrigin: config.origin, isKilled: isKilled ?? state.killSwitches?.isKilled });
       if (decision.action === 'deny') return sendJson(res, decision.status, { error: decision.code, message: decision.error, ...(decision.gate ? { gate: decision.gate } : {}) });
       req.gevActor = actor;
       return next();

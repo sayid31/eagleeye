@@ -59,6 +59,19 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
     sumber cadangan, gagal diaktifkan) dilaporkan dengan nama layer dan alasannya, begitu pula saat
     pulih kembali. Sumber baru di filter: **Layer data** dan **Server (console)**.
 
+- **Kill switch di /dev.** Super admin bisa mematikan *Layer data*, *Voice & AI*, atau *Peta premium & search*
+  untuk SEMUA akun sekaligus — termasuk super admin sendiri — misalnya saat biaya melonjak. Berlaku dalam
+  ≤2 detik dan tetap mati setelah server restart. Perlu alasan dan konfirmasi password; tiap perubahan
+  tercatat di audit. Sesi voice yang sedang berjalan tidak diputus.
+- **Ringkasan sistem di /dev**: versi, runtime, uptime, status login dan Google sign-in, ada/tidaknya API
+  key per provider (tanpa nilai), status kill switch, jumlah error Server Log 24 jam, dan peringatan doctor.
+- **Pemakaian & budget di /dev**: kredit OpenSky (dan TTL cache governor), budget tile TomTom harian, serta
+  menit dan estimasi biaya voice OpenAI hari ini dan 7 hari — dalam satu halaman, dengan keterangan bila
+  key belum diisi.
+- **`npm run doctor` memeriksa kesiapan login** tanpa menampilkan nilai rahasia: secret, `SUPER_ADMIN_EMAILS`,
+  email super admin mana yang benar-benar bisa masuk, entri `role.reconcile.blocked`, dan peringatan bila
+  server terbuka ke publik (`HOST=0.0.0.0` / `BETTER_AUTH_URL` publik) sementara admin hanya memakai password.
+
 ### Changed
 
 - **Semua layanan data (`/api/*`) kini menolak permintaan tanpa login** (`401`), dari akun yang menunggu
