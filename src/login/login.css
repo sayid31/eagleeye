@@ -1,10 +1,65 @@
-/* /login additions on top of src/admin/adminTheme.css (same tokens). */
+/* /login, /account, /account/password — additions on top of src/admin/adminTheme.css (same tokens). */
+.login-card { text-align: left; }
+.login-card > h1, .login-card > .adm-login-lead, .login-card > .adm-muted { text-align: center; }
+.adm-login-card code { font-family: var(--adm-font-mono); }
+
 button.adm-google-btn { width: 100%; font: inherit; font-weight: 500; cursor: pointer; }
 button.adm-google-btn:disabled { cursor: progress; opacity: .75; }
-.login-notice { color: var(--adm-warn); margin: 0 0 16px; }
-.adm-login-card .adm-error { text-align: left; }
-.adm-login-card .adm-error p { margin: 0 0 6px; color: inherit; }
-.adm-login-card code { font-family: var(--adm-font-mono); }
-.login-form { display: grid; gap: 12px; margin: 0 0 16px; text-align: left; }
-.login-form label { display: grid; gap: 4px; font-size: 13px; color: var(--adm-muted); }
-.login-form input { font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--adm-border); background: var(--adm-surface); color: var(--adm-text); }
+
+.login-form { display: grid; gap: 14px; margin: 0 0 16px; }
+.login-field { display: grid; gap: 6px; font-size: 13px; color: var(--adm-muted); }
+.login-field input { font: inherit; color: var(--adm-text); width: 100%; box-sizing: border-box; min-height: 40px; padding: 8px 10px;
+  border-radius: 4px; border: 1px solid var(--adm-border-strong); background: var(--adm-sunken); transition: border-color var(--adm-fast); }
+.login-field input:focus { outline: none; border-color: var(--adm-accent); box-shadow: 0 0 0 3px var(--adm-accent-dim); }
+.login-field input:disabled { opacity: .7; cursor: progress; }
+.login-hint { display: block; font-size: 12px; line-height: 1.45; color: var(--adm-muted); margin: 0; }
+
+.login-password { position: relative; display: block; }
+.login-password input { padding-right: 44px; }
+.login-reveal { position: absolute; top: 50%; right: 4px; transform: translateY(-50%); width: 34px; height: 34px; display: grid; place-items: center;
+  border: 0; border-radius: 4px; background: transparent; color: var(--adm-muted); cursor: pointer; }
+.login-reveal:hover { color: var(--adm-text); background: var(--adm-accent-dim); }
+.login-reveal[aria-pressed='true'] { color: var(--adm-accent); }
+
+.login-submit { width: 100%; min-height: 42px; margin-top: 4px; }
+.adm-btn:disabled { cursor: progress; opacity: .7; }
+
+.login-alert { margin: 0 0 14px; padding: 10px 12px; border-radius: 4px; border: 1px solid currentColor; font-size: 13px; line-height: 1.45; text-align: left; }
+.login-form .login-alert { margin: 0; }
+.login-alert p { margin: 6px 0 0; color: var(--adm-text); }
+.login-alert-error { color: var(--adm-err); background: color-mix(in srgb, var(--adm-err) 8%, transparent); }
+.login-alert-warn { color: var(--adm-warn); background: color-mix(in srgb, var(--adm-warn) 8%, transparent); }
+
+.login-divider { display: flex; align-items: center; gap: 10px; margin: 4px 0 14px; color: var(--adm-muted); font: 500 11px var(--adm-font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.login-divider::before, .login-divider::after { content: ''; flex: 1; height: 1px; background: var(--adm-border); }
+
+.adm-login-note { text-align: center; }
+.login-linkish { font: inherit; color: var(--adm-accent); background: none; border: 0; padding: 4px; cursor: pointer; }
+.login-linkish:hover { text-decoration: underline; }
+.login-forgot { margin: 6px 0 0; color: var(--adm-text); }
+
+.login-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-top: 8px; }
+.login-brand-foot { margin: 0; font: 600 11px var(--adm-font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--adm-muted); }
+.login-brand-foot span { color: var(--adm-accent); }
+
+.login-toast { position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10; max-width: calc(100vw - 32px); box-sizing: border-box;
+  padding: 10px 16px; border-radius: 4px; border: 1px solid currentColor; background: var(--adm-surface-solid); box-shadow: var(--adm-shadow); font-size: 13px; }
+.login-toast-ok { color: var(--adm-ok); }
+.login-toast-error { color: var(--adm-err); }
+
+/* /account */
+.account-page { justify-content: flex-start; padding: 40px 0; }
+.adm-login-card.account-card { width: min(520px, calc(100vw - 32px)); padding: 28px 28px 24px; }
+.account-head { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+.account-head h1 { flex: 1; margin: 0; font: 600 18px var(--adm-font-mono); letter-spacing: .12em; text-transform: uppercase; }
+.account-section { padding: 18px 0 4px; border-top: 1px solid var(--adm-border); margin-top: 14px; }
+.account-section h2 { margin: 0 0 10px; font: 600 12px var(--adm-font-mono); letter-spacing: .14em; text-transform: uppercase; color: var(--adm-accent); }
+.account-section > .login-hint { margin-bottom: 12px; }
+.account-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; margin: 0 0 8px; font-size: 13px; }
+.account-facts dt { color: var(--adm-muted); }
+.account-facts dd { margin: 0; overflow-wrap: anywhere; }
+.account-section .login-form > .adm-btn { justify-self: start; }
+
+@media (max-width: 420px) {
+  .adm-login-card.login-card { padding: 28px 18px 22px; }
+}

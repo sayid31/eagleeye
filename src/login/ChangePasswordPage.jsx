@@ -1,49 +1,52 @@
 // src/login/ChangePasswordPage.jsx
 /**
- * Minimal `/account` + `/account/password` (phase 1): change the password —
- * required after an admin set or reset it. Phase 2 (W-B) replaces this with
- * the full account page (name, sign out other devices, toast).
+ * `/account/password`: change the password — required (the server pins every
+ * page here) after an admin set or reset it. On success: a toast, then the
+ * role's home.
  */
-import { useState } from 'react';
-import { changePassword, fetchMe, signOutAndLeave } from '../auth/authClientApi.js';
-import { CHANGE_PASSWORD_ERRORS, changePasswordProblem } from './changePasswordView.js';
+import { useEffect, useState } from 'react';
+import { signOutAndLeave } from '../auth/authClientApi.js';
+import { BRAND, LOGIN_COPY, PASSWORD_COPY } from './loginCopy.js';
+import { PasswordChangeForm } from './PasswordChangeForm.jsx';
+import { Toast, useMe } from './accountHooks.js';
+
+/** How long the success toast stays before leaving for the home page. */
+export const SUCCESS_REDIRECT_MS = 1400;
 
 export function ChangePasswordPage() {
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState(null);
+  const me = useMe();
+  const [done, setDone] = useState(false);
 
-  const submit = async (event) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const input = { currentPassword: String(form.get('current') ?? ''), newPassword: String(form.get('next') ?? ''), confirm: String(form.get('confirm') ?? '') };
-    const problem = changePasswordProblem(input);
-    if (problem) { setError(problem); return; }
-    setBusy(true);
-    setError(null);
-    try {
-      const result = await changePassword(input);
-      if (!result.ok) { setError(CHANGE_PASSWORD_ERRORS[result.code] ?? 'Password tidak bisa diganti. Coba lagi.'); setBusy(false); return; }
-      window.location.replace((await fetchMe()).home);
-    } catch (failure) {
-      setError(`Password tidak bisa diganti: ${failure.message}`);
-      setBusy(false);
-    }
-  };
+  useEffect(() => {
+    if (!done || !me.data) return undefined;
+    const timer = window.setTimeout(() => window.location.replace(me.data.home || '/app'), SUCCESS_REDIRECT_MS);
+    return () => window.clearTimeout(timer);
+  }, [done, me.data]);
 
+  const user = me.data?.user;
+  const forced = Boolean(user?.mustChangePassword);
   return (
     <main className="adm-login">
-      <section className="adm-login-card">
-        <h1>Ganti password</h1>
-        <p className="adm-login-lead">Pilih password baru sebelum melanjutkan. Perangkat lain akan dikeluarkan.</p>
-        <form className="login-form" onSubmit={submit}>
-          <label>Password saat ini<input name="current" type="password" autoComplete="current-password" required disabled={busy} /></label>
-          <label>Password baru<input name="next" type="password" autoComplete="new-password" required disabled={busy} /></label>
-          <label>Ulangi password baru<input name="confirm" type="password" autoComplete="new-password" required disabled={busy} /></label>
-          <button type="submit" className="adm-btn adm-btn-primary" disabled={busy}>{busy ? 'Menyimpan…' : 'Simpan password'}</button>
-        </form>
-        {error ? <p className="adm-error" role="alert">{error}</p> : null}
-        <button type="button" className="adm-btn" onClick={() => { void signOutAndLeave(); }}>Keluar</button>
+      <section className="adm-login-card login-card">
+        <img className="adm-login-logo" src="/logo.svg" alt="" width="48" height="48" />
+        <h1>{PASSWORD_COPY.forcedTitle}</h1>
+        {me.status === 'loading' ? <p className="adm-muted">{LOGIN_COPY.checking}</p> : null}
+        {me.status === 'error' ? <p className="login-alert login-alert-error" role="alert">{LOGIN_COPY.sessionCheckFailed}</p> : null}
+        {user ? (
+          <>
+            <p className="adm-login-lead">{forced ? PASSWORD_COPY.forcedLead : PASSWORD_COPY.voluntaryLead} {PASSWORD_COPY.otherDevices}</p>
+            {done
+              ? <p className="adm-muted">{PASSWORD_COPY.redirecting}</p>
+              : <PasswordChangeForm identity={user} onChanged={() => setDone(true)} autoFocus />}
+            <div className="login-actions">
+              {forced ? null : <a className="adm-link" href="/account">{PASSWORD_COPY.backToAccount}</a>}
+              <button type="button" className="adm-btn" onClick={() => { void signOutAndLeave(); }} disabled={done}>{PASSWORD_COPY.signOut}</button>
+            </div>
+          </>
+        ) : null}
       </section>
+      <p className="login-brand-foot">{BRAND.name} <span>{BRAND.accent}</span></p>
+      {done ? <Toast text={PASSWORD_COPY.success} /> : null}
     </main>
   );
 }
