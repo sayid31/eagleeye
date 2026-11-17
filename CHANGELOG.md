@@ -7,6 +7,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- **Beranda publik di `/`.** Halaman perkenalan EagleEye View dalam Bahasa Indonesia: data yang bisa dilihat,
+  kendali suara, gaya visual dan scene, sumber data beserta lisensinya, serta batasan produk (bukan pelacakan
+  orang, pencarian nama, atau pengenalan wajah). Tombolnya mengikuti sesi: **Masuk** bila belum login, atau
+  langsung ke Konsol, Panel Admin, Developer Console, atau Ganti Password sesuai akun, plus **Keluar**. Link
+  share lama (`/#lat=…&lon=…`) dan `/?welcome=` / `/?trafficDebug=` otomatis diteruskan ke peta di `/app`.
 - **Login email + password untuk peta, /admin dan /dev.** Semua halaman kecuali beranda publik (`/`) dan
   `/login`, serta semua layanan `/api/*`, butuh akun yang sudah masuk — juga di komputer sendiri. Tidak ada
   pendaftaran mandiri: admin membuat akun, mengaktifkan/menonaktifkan, mengganti password, dan menghapus.

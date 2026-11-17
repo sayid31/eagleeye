@@ -72,12 +72,10 @@ const split = (url) => {
  * @param {boolean} [input.hadSessionCookie] A cookie was sent but resolved to no session.
  * @param {'dev' | 'preview'} [input.mode]
  * @param {boolean} [input.allowFsPrefix]
- * @param {boolean} [input.landingAvailable] false until landing.html exists (phase 2, W-D): `/` then
- *   redirects (signed in → home, anonymous → /login) instead of letting Vite's fallback serve the map.
  * @returns {{action: 'serve', url: string} | {action: 'redirect', location: string}
  *   | {action: 'asset'} | {action: 'not-found'}}
  */
-export function pageRouteDecision({ method, url, actor, hadSessionCookie = false, mode = 'dev', allowFsPrefix = false, landingAvailable = true }) {
+export function pageRouteDecision({ method, url, actor, hadSessionCookie = false, mode = 'dev', allowFsPrefix = false }) {
   const [pathname, search] = split(url);
   const area = pageAreaFor(pathname);
   if (method !== 'GET' && method !== 'HEAD') return { action: 'not-found' };
@@ -86,10 +84,8 @@ export function pageRouteDecision({ method, url, actor, hadSessionCookie = false
     return isPublicAsset(pathname, { mode, allowFsPrefix }) ? { action: 'asset' } : { action: 'not-found' };
   }
   const serve = { action: 'serve', url: `${AREA_FILE[area]}${search}` };
-  if (area === 'landing') {
-    if (landingAvailable) return serve;
-    return { action: 'redirect', location: actor ? homeFor(actor.role) : LOGIN_PATH };
-  }
+  // The landing is public for everyone, mustChangePassword included; its CTA routes onward.
+  if (area === 'landing') return serve;
   if (area === 'login') {
     if (!actor) return serve;
     return { action: 'redirect', location: actor.mustChangePassword ? PASSWORD_CHANGE_PATH : homeFor(actor.role) };

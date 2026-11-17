@@ -13,8 +13,6 @@
  * @module auth/authPlugin
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
 import { gatesForPath, routeMatches } from './apiGates.mjs';
 import { registeredApiRoutes } from './apiRouteRegistry.mjs';
 import { PASSWORD_CHANGE_ALLOWED, authEndpointDecision, authEndpointOriginAllowed } from './authEndpointPolicy.mjs';
@@ -55,12 +53,12 @@ async function handleAuthEndpoint(req, res, state) {
  * The guard middleware. `getState` resolves to what `bootAuth` returned, or rejects when boot failed.
  * @param {() => Promise<object>} getState
  * @param {{routes?: {prefix: string, gate: string}[], mode?: 'dev' | 'preview', allowFsPrefix?: boolean,
- *   isKilled?: (gate: string) => boolean, landingAvailable?: () => boolean}} [options]
+ *   isKilled?: (gate: string) => boolean}} [options]
  * @returns {(req: any, res: any, next: Function) => Promise<void>}
  */
-export function createAuthMiddleware(getState, { routes = [], mode = 'dev', allowFsPrefix = false, isKilled, landingAvailable = () => true } = {}) {
+export function createAuthMiddleware(getState, { routes = [], mode = 'dev', allowFsPrefix = false, isKilled } = {}) {
   return async function authMiddleware(req, res, next) {
-    const route = (actor, hadSessionCookie = false) => pageRouteDecision({ method: req.method, url: req.url, actor, hadSessionCookie, mode, allowFsPrefix, landingAvailable: landingAvailable() });
+    const route = (actor, hadSessionCookie = false) => pageRouteDecision({ method: req.method, url: req.url, actor, hadSessionCookie, mode, allowFsPrefix });
     const pathname = pathOf(req.url);
     const isApi = routeMatches(pathname, '/api');
     if (!isApi && !pageAreaFor(pathname) && !pathname.startsWith('/__')) {
@@ -132,11 +130,7 @@ export function authPlugin({ env = () => process.env, rootDir = process.cwd(), i
     else boot(configuredPort);
     // Vite loaded from the canonical root (Pinokio launcher) may serve the app's modules under /@fs/.
     const allowFsPrefix = mode === 'dev' && (process.env.GEV_LAUNCHER === 'pinokio' || server.config?.root !== process.cwd());
-    // PHASE-1 INTERIM: landing.html arrives with the landing worker (W-D); until then `/` redirects.
-    // Remove `landingAvailable` once landing.html is part of the build input.
-    const landingFile = path.join(server.config?.root ?? rootDir, 'landing.html');
-    const landingAvailable = () => fs.existsSync(landingFile);
-    server.middlewares.use(createAuthMiddleware(() => ready, { routes: registeredApiRoutes(server), mode, allowFsPrefix, isKilled, landingAvailable }));
+    server.middlewares.use(createAuthMiddleware(() => ready, { routes: registeredApiRoutes(server), mode, allowFsPrefix, isKilled }));
   }
   return {
     name: 'gev-auth',
