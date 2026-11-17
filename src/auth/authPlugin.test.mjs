@@ -1,184 +1,151 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import fs from 'node:fs';
-import http from 'node:http';
-import os from 'node:os';
-import path from 'node:path';
-import { randomBytes } from 'node:crypto';
-import { bootAuth, createAuthMiddleware } from './authPlugin.mjs';
-import { mintSessionCookie } from './authSessionMint.mjs';
+import { OWNER_EMAIL, actorFor, signInOwner, startAuthTestServer } from './__fixtures__/authTestServer.mjs';
 
-// test-only fixtures, not real credentials
-const fixtureEnv = (dir, port) => ({
-  BETTER_AUTH_SECRET: randomBytes(32).toString('hex'),
-  BETTER_AUTH_URL: `http://localhost:${port}`,
-  SUPER_ADMIN_EMAILS: 'owner@example.test',
-  GOOGLE_CLIENT_ID: 'fixture-client.apps.googleusercontent.com',
-  GOOGLE_CLIENT_SECRET: 'fixture-secret',
-  AUTH_DATABASE_FILE: path.join(dir, 'auth.db'),
-});
-
-/** Minimal Connect stand-in: the guard, then a sentinel for whatever the next plugin would serve. */
-function startServer(getState) {
-  const guard = createAuthMiddleware(getState);
-  const server = http.createServer((req, res) => {
-    guard(req, res, () => {
-      res.statusCode = 299;
-      res.setHeader('Content-Type', 'application/json');
-      res.end(JSON.stringify({ reached: req.url, actorRole: req.gevActor?.role ?? null }));
-    });
-  });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
-}
-
-let server;
-let base;
-let origin;
-let state;
+let t;
 const cookies = {};
+const PASSWORD = 'user-test-password-1'; // test-only
 
 before(async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gev-auth-plugin-'));
-  let resolveState;
-  const ready = new Promise((resolve) => { resolveState = resolve; });
-  server = await startServer(() => ready);
-  const { port } = server.address();
-  base = `http://127.0.0.1:${port}`;
-  origin = `http://localhost:${port}`;
-  state = await bootAuth({ env: fixtureEnv(dir, port), port, rootDir: dir });
-  resolveState(state);
-  const { auth } = state;
-  cookies.pending = (await mintSessionCookie(auth, { email: 'new@example.test' })).cookie;
-  cookies.active = (await mintSessionCookie(auth, { email: 'user@example.test', status: 'active' })).cookie;
-  cookies.banned = (await mintSessionCookie(auth, { email: 'gone@example.test', status: 'banned' })).cookie;
-  cookies.admin = (await mintSessionCookie(auth, { email: 'admin@example.test', role: 'admin', status: 'active' })).cookie;
-  cookies.owner = (await mintSessionCookie(auth, { email: 'owner@example.test' })).cookie;
+  t = await startAuthTestServer();
+  cookies.owner = await signInOwner(t);
+  const owner = await actorFor(t, cookies.owner);
+  const { accounts } = t.state.services;
+  const make = async (email, role, capabilities) => {
+    const created = await accounts.createUser(owner, { email, name: `Fixture ${role}`, role, capabilities, password: `${PASSWORD}-${role}-long` });
+    assert.equal(created.ok, true, `${email}: ${created.code}`);
+    // Forced change is covered elsewhere; clear it so the fixture can browse.
+    await (await t.state.auth.$context).internalAdapter.updateUser(created.user.id, { mustChangePassword: false });
+    return (await t.signIn(email, `${PASSWORD}-${role}-long`)).cookie;
+  };
+  cookies.admin = await make('admin@example.test', 'admin');
+  cookies.user = await make('user@example.test', 'user', { layers: true, ai: false, premium: false });
 });
 
-after(() => new Promise((resolve) => server.close(resolve)));
+after(() => t.close());
 
-const get = (url, cookie, init = {}) => fetch(`${base}${url}`, {
-  redirect: 'manual', ...init, headers: { ...(cookie ? { cookie } : {}), ...(init.headers ?? {}) },
-});
+const status = async (res) => [res.status, res.headers.get('location')];
 
-test('Better Auth is reachable under /api/auth/* (no-path mount keeps the prefix)', async () => {
-  const res = await get('/api/auth/ok');
-  assert.equal(res.status, 200);
-  assert.deepEqual(await res.json(), { ok: true });
-});
-
-test('sign-in/social: same-origin POST gets a Google URL; a cross-origin or Origin-less POST is refused', async () => {
-  const body = JSON.stringify({ provider: 'google', callbackURL: '/' });
-  const same = await get('/api/auth/sign-in/social', null, { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body });
-  assert.equal(same.status, 200);
-  const { url } = await same.json();
-  assert.equal(new URL(url).origin, 'https://accounts.google.com');
-  assert.equal(new URL(url).searchParams.get('redirect_uri'), `${origin}/api/auth/callback/google`);
-  const evil = await get('/api/auth/sign-in/social', null, { method: 'POST', headers: { origin: 'http://evil.example', 'content-type': 'application/json' }, body });
-  assert.equal(evil.status, 403);
-  assert.equal((await evil.json()).code, 'ORIGIN_NOT_ALLOWED');
-  const bare = await get('/api/auth/sign-in/social', null, { method: 'POST', headers: { 'content-type': 'application/json' }, body });
-  assert.equal(bare.status, 403);
-  const offsite = await get('/api/auth/sign-in/social', null, { method: 'POST', headers: { origin, 'content-type': 'application/json' }, body: JSON.stringify({ provider: 'google', callbackURL: 'http://evil.example/' }) });
-  assert.equal(offsite.status, 403, 'an off-site callbackURL is refused by trustedOrigins');
-});
-
-test('page guard: anonymous / expired / banned go to /login, pending and active see the map, only admins see /admin', async () => {
-  const location = async (url, cookie) => { const res = await get(url, cookie); return [res.status, res.headers.get('location')]; };
-  assert.deepEqual(await location('/'), [302, '/login']);
-  assert.deepEqual(await location('/index.html'), [302, '/login']);
-  assert.deepEqual(await location('/admin'), [302, '/login']);
-  assert.deepEqual(await location('/', 'better-auth.session_token=stale.value'), [302, '/login?notice=session']);
-  assert.deepEqual(await location('/', cookies.banned), [302, '/login?notice=banned']);
-  assert.deepEqual(await location('/', cookies.pending), [299, null]);
-  assert.deepEqual(await location('/', cookies.active), [299, null]);
-  assert.deepEqual(await location('/admin/server-log', cookies.active), [302, '/']);
-  assert.deepEqual(await location('/admin.html', cookies.pending), [302, '/']);
-  assert.deepEqual(await location('/admin/server-log', cookies.admin), [299, null]);
-  assert.deepEqual(await location('/admin', cookies.owner), [299, null]);
-  assert.deepEqual(await location('/logo.svg'), [299, null], 'static assets stay unguarded');
-});
-
-test('/login serves the login page, and sends a signed-in visitor to the map', async () => {
-  const anonymous = await get('/login?notice=session');
-  assert.equal(anonymous.status, 299);
-  assert.equal((await anonymous.json()).reached, '/login.html?notice=session');
-  assert.equal((await get('/login', cookies.banned)).status, 299);
-  const signedIn = await get('/login', cookies.pending);
-  assert.deepEqual([signedIn.status, signedIn.headers.get('location')], [302, '/']);
-});
-
-test('/api/* guard on real proxy routes: 401, 403 pending, 403 banned, pass-through when active', async () => {
-  for (const route of ['/api/opensky/states/all', '/api/tomtom/flow/10/1/1.png', '/api/google/3dtiles/root.json', '/API/google/3dtiles/root.json', '/api/live/session', '/api/log']) {
-    const anonymous = await get(route);
-    assert.equal(anonymous.status, 401, route);
-    assert.deepEqual(await anonymous.json(), { error: 'Login diperlukan', code: 'AUTH_REQUIRED' });
-    assert.equal((await (await get(route, cookies.pending)).json()).code, 'ACCOUNT_PENDING', route);
-    assert.equal((await (await get(route, cookies.banned)).json()).code, 'ACCOUNT_BANNED', route);
-    const active = await get(route, cookies.active);
-    assert.equal(active.status, 299, route);
-    assert.equal((await active.json()).actorRole, 'user');
+test('/api/auth/*: only the allowlist reaches Better Auth; smuggled paths and other endpoints are 404', async () => {
+  assert.equal((await t.request('/api/auth/get-session', { cookie: cookies.user })).status, 200);
+  for (const [method, url] of [
+    ['POST', '/api/auth/sign-up/email'], ['POST', '/api/auth/admin/set-role'], ['POST', '/api/auth/sign-in/%2e%2e/admin/x'],
+    ['POST', '/api/auth/verify-password'], ['POST', '/api/auth//sign-in/email'], ['GET', '/api/auth/ok'], ['POST', '/api/auth/request-password-reset'],
+  ]) {
+    const res = await t.request(url, { method, headers: { origin: t.origin, 'content-type': 'application/json' }, body: method === 'POST' ? '{}' : undefined });
+    assert.equal(res.status, 404, `${method} ${url}`);
+    assert.equal((await res.json()).error, 'NOT_FOUND');
   }
 });
 
-test('/api/admin/*: admin pages for admins, key routes for the super-admin only, CSRF on writes', async () => {
-  assert.equal((await get('/api/admin/log', cookies.active)).status, 403);
-  assert.equal((await get('/api/admin/log', cookies.admin)).status, 299);
-  const adminKeys = await get('/api/admin/keys', cookies.admin);
-  assert.equal(adminKeys.status, 403);
-  assert.equal((await adminKeys.json()).code, 'SUPER_ADMIN_REQUIRED');
-  assert.equal((await get('/api/admin/keys', cookies.owner)).status, 299);
-  const put = (headers) => get('/api/admin/keys', cookies.owner, { method: 'PUT', headers, body: '{}' });
-  assert.equal((await put({ 'content-type': 'application/json' })).status, 403);
-  assert.equal((await put({ origin, 'content-type': 'text/plain' })).status, 415);
-  assert.equal((await put({ origin, 'content-type': 'application/json' })).status, 299);
+test('sign-in/social: Google only, extra fields refused, off-site callbackURL refused', async () => {
+  const offsite = await t.post('/api/auth/sign-in/social', { provider: 'google', callbackURL: 'http://evil.example/' });
+  assert.equal(offsite.status, 403, 'Better Auth checks trustedOrigins on the client value first');
+  const google = await t.post('/api/auth/sign-in/social', { provider: 'google', callbackURL: '/app' });
+  // No GOOGLE_CLIENT_ID in this fixture: the provider is absent, but the forced body passed validation.
+  assert.equal(google.status, 404);
+  assert.equal((await google.json()).code, 'PROVIDER_NOT_FOUND');
+  const github = await t.post('/api/auth/sign-in/social', { provider: 'github' });
+  assert.equal(github.status, 400);
+  assert.equal((await github.json()).code, 'SOCIAL_SIGN_IN_REFUSED');
+  const idToken = await t.post('/api/auth/sign-in/social', { provider: 'google', idToken: { token: 'x' } });
+  assert.equal((await idToken.json()).code, 'SOCIAL_SIGN_IN_REFUSED');
+  const crossSite = await t.post('/api/auth/sign-in/social', { provider: 'google' }, { headers: { origin: 'http://evil.example' } });
+  assert.equal(crossSite.status, 403);
 });
 
-test('/api/me answers for anyone with the actor\'s role and status', async () => {
-  assert.deepEqual(await (await get('/api/me')).json(), { authenticated: false, configured: true });
-  assert.deepEqual(await (await get('/api/me', cookies.pending)).json(), { authenticated: true, configured: true, role: 'user', status: 'pending', email: 'new@example.test' });
-  const owner = await (await get('/api/me', cookies.owner)).json();
-  assert.deepEqual([owner.role, owner.status], ['super-admin', 'active']);
-  assert.equal((await get('/api/me', cookies.owner)).headers.get('cache-control'), 'no-store');
-});
-
-test('not configured: pages go to /login, /api/me lists missing NAMES, other APIs answer 503', async () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'gev-auth-plugin-off-'));
-  const warn = console.warn;
-  console.warn = () => {};
-  let offState;
+test('sign-in/social with Google configured: the stored OAuth state carries the forced /dev and error URL', async () => {
+  // test-only dummy client, never contacted
+  const g = await startAuthTestServer({ env: { GOOGLE_CLIENT_ID: 'fixture.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'fixture-secret' } });
   try {
-    offState = await bootAuth({ env: { GOOGLE_CLIENT_ID: 'fixture-client.apps.googleusercontent.com' }, port: 1, rootDir: dir });
-  } finally { console.warn = warn; }
-  const off = await startServer(async () => offState);
-  const offBase = `http://127.0.0.1:${off.address().port}`;
-  try {
-    const page = await fetch(`${offBase}/`, { redirect: 'manual' });
-    assert.deepEqual([page.status, page.headers.get('location')], [302, '/login']);
-    assert.equal((await (await fetch(`${offBase}/login`)).json()).reached, '/login.html');
-    const me = await (await fetch(`${offBase}/api/me`)).json();
-    assert.deepEqual(me, { authenticated: false, configured: false, missing: ['BETTER_AUTH_SECRET', 'SUPER_ADMIN_EMAILS', 'GOOGLE_CLIENT_SECRET'], invalid: [] });
-    const api = await fetch(`${offBase}/api/opensky/states/all`);
-    assert.equal(api.status, 503);
-    assert.equal((await api.json()).code, 'AUTH_NOT_CONFIGURED');
-    assert.equal((await fetch(`${offBase}/api/auth/ok`)).status, 503);
-    assert.ok(!fs.existsSync(path.join(dir, 'data')), 'no database is created while unconfigured');
+    const res = await g.post('/api/auth/sign-in/social', { provider: 'google', callbackURL: '/app', errorCallbackURL: '/app', newUserCallbackURL: '/app' });
+    assert.equal(res.status, 200);
+    const { url } = await res.json();
+    assert.equal(new URL(url).origin, 'https://accounts.google.com');
+    assert.equal(new URL(url).searchParams.get('redirect_uri'), `${g.origin}/api/auth/callback/google`);
+    const stored = g.rows('SELECT value FROM verification').map((row) => row.value).join('\n');
+    assert.match(stored, /"callbackURL":"\/dev"/);
+    assert.match(stored, /"errorURL":"\/login\?next=\/dev&notice=google"/);
+    assert.doesNotMatch(stored, /"\/app"/, 'no client-chosen URL survives');
+    assert.equal((await (await g.request('/api/me')).json()).googleSignIn, true);
   } finally {
-    await new Promise((resolve) => off.close(resolve));
+    await g.close();
   }
 });
 
-test('a failed boot fails closed with 503 for pages and APIs', async () => {
-  const error = console.error;
-  console.error = () => {};
-  const broken = await startServer(() => Promise.reject(new Error('disk unreadable')));
-  const brokenBase = `http://127.0.0.1:${broken.address().port}`;
+test('page guard over HTTP: landing public, map needs a session, areas by role, internals 404', async () => {
+  assert.deepEqual(await status(await t.request('/')), [299, null]);
+  assert.deepEqual(await status(await t.request('/app')), [302, '/login?next=%2Fapp']);
+  assert.deepEqual(await status(await t.request('/dev', { cookie: 'gev.session_token=stale.value' })), [302, '/login?next=%2Fdev&notice=session']);
+  assert.deepEqual(await status(await t.request('/app', { cookie: cookies.user })), [299, null]);
+  assert.equal((await (await t.request('/app?welcome=1', { cookie: cookies.user })).json()).reached, '/index.html?welcome=1');
+  assert.deepEqual(await status(await t.request('/admin', { cookie: cookies.user })), [302, '/app']);
+  assert.deepEqual(await status(await t.request('/dev', { cookie: cookies.admin })), [302, '/admin']);
+  assert.equal((await (await t.request('/dev/keys', { cookie: cookies.owner })).json()).reached, '/admin.html');
+  assert.deepEqual(await status(await t.request('/login', { cookie: cookies.owner })), [302, '/dev']);
+  for (const leak of ['/.gev-data/auth.db', '/.gev-cache/admin-audit.jsonl', '/__open-in-editor?file=x', '/data/auth.db', '/whatever']) {
+    assert.equal((await t.request(leak)).status, 404, leak);
+  }
+  assert.equal((await t.request('/__open-in-editor?file=x', { cookie: cookies.admin })).status, 404);
+  assert.equal((await t.request('/logo.svg')).status, 299, 'allowlisted asset passes without a session');
+});
+
+test('/api/* gates: 401 anonymous, 403 CAPABILITY_REQUIRED with the gate, admin/super by role, unknown → 404', async () => {
+  assert.equal((await t.request('/api/opensky/states/all')).status, 401);
+  assert.equal((await t.request('/api/opensky/states/all', { cookie: cookies.user })).status, 299);
+  const hud = await t.request('/api/openai/hud-summary', { cookie: cookies.user });
+  assert.equal(hud.status, 403);
+  assert.deepEqual(await hud.json(), { error: 'CAPABILITY_REQUIRED', message: 'Fitur belum diaktifkan admin', gate: 'ai' });
+  assert.equal((await (await t.request('/api/google/3dtiles/root.json', { cookie: cookies.user })).json()).gate, 'premium');
+  assert.equal((await t.request('/API/google/3dtiles/root.json', { cookie: cookies.admin })).status, 299, 'admins hold every toggle; Connect-style case-insensitive match');
+  assert.equal((await (await t.request('/api/admin/users', { cookie: cookies.user })).json()).error, 'ADMIN_REQUIRED');
+  assert.equal((await t.request('/api/admin/users', { cookie: cookies.admin })).status, 299);
+  assert.equal((await (await t.request('/api/admin/keys', { cookie: cookies.admin })).json()).error, 'SUPER_ADMIN_REQUIRED');
+  assert.equal((await t.request('/api/admin/keys', { cookie: cookies.owner })).status, 299);
+  assert.equal((await t.request('/api/not-registered', { cookie: cookies.owner })).status, 404);
+  assert.equal((await t.request('/api/log', { cookie: cookies.user, headers: { 'sec-fetch-site': 'same-site' } })).status, 403, 'another localhost port is refused');
+});
+
+test('/api/* writes need the exact Origin; admin writes also JSON', async () => {
+  const write = (url, headers) => t.request(url, { method: 'POST', cookie: cookies.owner, body: '{}', headers });
+  assert.equal((await write('/api/log', { origin: t.origin, 'content-type': 'application/json' })).status, 299);
+  assert.equal((await write('/api/log', { 'content-type': 'application/json' })).status, 403);
+  assert.equal((await write('/api/log', { origin: 'http://localhost:1', 'content-type': 'application/json' })).status, 403);
+  assert.equal((await write('/api/admin/keys', { origin: t.origin, 'content-type': 'text/plain' })).status, 415);
+});
+
+test('kill switch: a switched-off gate answers 503 FEATURE_DISABLED for everyone', async () => {
+  const killed = await startAuthTestServer({ isKilled: (gate) => gate === 'ai' });
   try {
-    assert.equal((await fetch(`${brokenBase}/`, { redirect: 'manual' })).status, 503);
-    assert.equal((await fetch(`${brokenBase}/api/opensky/states/all`)).status, 503);
-    assert.equal((await fetch(`${brokenBase}/logo.svg`)).status, 299);
+    const owner = await signInOwner(killed);
+    const res = await killed.request('/api/openai/hud-summary', { cookie: owner });
+    assert.equal(res.status, 503);
+    assert.deepEqual(await res.json(), { error: 'FEATURE_DISABLED', message: 'Fitur sedang dimatikan oleh developer', gate: 'ai' });
+    assert.equal((await killed.request('/api/admin/keys', { cookie: owner })).status, 299, 'role gates are never killed');
   } finally {
-    console.error = error;
-    await new Promise((resolve) => broken.close(resolve));
+    await killed.close();
+  }
+});
+
+test('/api/me v2: anonymous, user with toggles, admin with every toggle, super_admin home /dev', async () => {
+  assert.deepEqual(await (await t.request('/api/me')).json(), { configured: true, signedIn: false, home: '/login', googleSignIn: false });
+  const user = await (await t.request('/api/me', { cookie: cookies.user })).json();
+  assert.deepEqual(Object.keys(user.user).sort(), ['capabilities', 'email', 'id', 'mustChangePassword', 'name', 'role']);
+  assert.deepEqual([user.user.role, user.home, user.user.capabilities], ['user', '/app', { layers: true, ai: false, premium: false }]);
+  const admin = await (await t.request('/api/me', { cookie: cookies.admin })).json();
+  assert.deepEqual([admin.home, admin.user.capabilities], ['/admin', { layers: true, ai: true, premium: true }]);
+  const owner = await (await t.request('/api/me', { cookie: cookies.owner })).json();
+  assert.deepEqual([owner.user.email, owner.user.role, owner.home], [OWNER_EMAIL, 'super_admin', '/dev']);
+});
+
+test('/api/me without configuration says configured:false and names no env var', async () => {
+  const bare = await startAuthTestServer({ env: { SUPER_ADMIN_EMAILS: '' } });
+  try {
+    const body = await (await bare.request('/api/me')).json();
+    assert.deepEqual(body, { configured: false, signedIn: false, home: '/login', googleSignIn: false });
+    assert.equal((await bare.request('/app')).headers.get('location'), '/login');
+    assert.equal((await bare.request('/api/log')).status, 503);
+  } finally {
+    await bare.close();
   }
 });
