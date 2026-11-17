@@ -149,3 +149,14 @@ test('/api/me without configuration says configured:false and names no env var',
     await bare.close();
   }
 });
+
+test('authStateFor: the boot state of the guard installed on a server; throws before authPlugin is installed', async () => {
+  const { authPlugin, authStateFor } = await import('./authPlugin.mjs');
+  const middlewares = { use: () => {} };
+  const server = { middlewares, httpServer: null, config: { server: { port: 0 }, root: process.cwd() } };
+  assert.throws(() => authStateFor(server), /authPlugin is not installed/);
+  authPlugin({ env: () => ({ SUPER_ADMIN_EMAILS: '' }) }).configureServer(server);
+  const state = await authStateFor(server);
+  assert.equal(state.config.ok, false, 'unconfigured env still boots to a config-only state');
+  assert.equal(authStateFor(middlewares), authStateFor(server), 'same promise via the server or its middlewares');
+});
