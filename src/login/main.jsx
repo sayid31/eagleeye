@@ -1,8 +1,9 @@
 // src/login/main.jsx
-/** Entry of the `/login` page. Shares the /admin theme tokens and Google button. */
+/** Entry of `/login` and `/account*` (same bundle). Shares the /admin theme tokens and Google button. */
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter } from 'react-router';
+import { BrowserRouter, Route, Routes } from 'react-router';
 import { ADMIN_THEME_KEY, resolveTheme } from '../admin/adminTheme.js';
+import { ChangePasswordPage } from './ChangePasswordPage.jsx';
 import { LoginApp } from './LoginApp.jsx';
 import '../admin/adminTheme.css';
 import './login.css';
@@ -16,6 +17,9 @@ function applySavedTheme() {
 applySavedTheme();
 createRoot(document.getElementById('login-root')).render(
   <BrowserRouter>
-    <LoginApp />
+    <Routes>
+      <Route path="/account/*" element={<ChangePasswordPage />} />
+      <Route path="*" element={<LoginApp />} />
+    </Routes>
   </BrowserRouter>,
 );

@@ -5,3 +5,6 @@ button.adm-google-btn:disabled { cursor: progress; opacity: .75; }
 .adm-login-card .adm-error { text-align: left; }
 .adm-login-card .adm-error p { margin: 0 0 6px; color: inherit; }
 .adm-login-card code { font-family: var(--adm-font-mono); }
+.login-form { display: grid; gap: 12px; margin: 0 0 16px; text-align: left; }
+.login-form label { display: grid; gap: 4px; font-size: 13px; color: var(--adm-muted); }
+.login-form input { font: inherit; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--adm-border); background: var(--adm-surface); color: var(--adm-text); }

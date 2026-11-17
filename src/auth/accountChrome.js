@@ -1,8 +1,8 @@
 // src/auth/accountChrome.js
 /**
- * The map's account chrome, driven by `planAccountAccess`: the pending banner,
- * the Admin and Keluar buttons in the top globe-action bar, and the data-layer
- * lock for accounts that are not active yet.
+ * The map's account chrome, driven by `planAccountAccess`: the limited-access banner,
+ * the console (Admin/Dev) and Keluar buttons in the top globe-action bar, and the data-layer
+ * lock for accounts without the `layers` toggle.
  *
  * @module auth/accountChrome
  */
@@ -57,7 +57,7 @@ export function mountAccountChrome(plan, { doc = document, signOut = signOutAndL
   const nav = doc.getElementById('top-center-actions');
   if (!nav) return;
   if (plan.showAdmin && !doc.getElementById('account-admin-btn')) {
-    nav.append(actionButton(doc, { id: 'account-admin-btn', icon: 'admin_panel_settings', label: 'Buka konsol admin', onClick: () => navigate('/admin') }));
+    nav.append(actionButton(doc, { id: 'account-admin-btn', icon: 'admin_panel_settings', label: 'Buka konsol admin', onClick: () => navigate(plan.adminHref ?? '/admin') }));
   }
   if (!doc.getElementById('account-signout-btn')) {
     nav.append(actionButton(doc, { id: 'account-signout-btn', icon: 'logout', label: 'Keluar', onClick: () => { void signOut(); } }));

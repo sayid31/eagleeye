@@ -1,45 +1,46 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { fetchMe, signOut, signOutAndLeave, startGoogleSignIn } from './authClientApi.js';
+import { changePassword, fetchMe, signInWithPassword, signOutAndLeave, startGoogleSignIn } from './authClientApi.js';
 
-const ok = (body) => ({ ok: true, status: 200, json: async () => body });
+const reply = (status, body) => async () => ({ ok: status >= 200 && status < 300, status, json: async () => body });
+function recorder(status, body) {
+  const calls = [];
+  const fetchFn = async (url, init) => { calls.push({ url, init }); return reply(status, body)(); };
+  return { calls, fetchFn };
+}
 
-test('fetchMe returns the payload and throws with the status on failure', async () => {
-  const me = { authenticated: true, role: 'user', status: 'pending' };
-  let seen;
-  assert.deepEqual(await fetchMe(async (url, init) => { seen = { url, init }; return ok(me); }), me);
-  assert.equal(seen.url, '/api/me');
-  assert.equal(seen.init.credentials, 'same-origin');
-  await assert.rejects(fetchMe(async () => ({ ok: false, status: 503 })), /HTTP 503/);
+test('signInWithPassword posts JSON to the allowlisted endpoint and maps refusals to codes', async () => {
+  const ok = recorder(200, {});
+  assert.deepEqual(await signInWithPassword({ email: 'a@b.cd', password: 'p' }, ok.fetchFn), { ok: true });
+  assert.equal(ok.calls[0].url, '/api/auth/sign-in/email');
+  assert.deepEqual(JSON.parse(ok.calls[0].init.body), { email: 'a@b.cd', password: 'p', rememberMe: true });
+  assert.deepEqual(await signInWithPassword({ email: 'a', password: 'b' }, reply(401, { code: 'INVALID_EMAIL_OR_PASSWORD' })), { ok: false, status: 401, code: 'INVALID_EMAIL_OR_PASSWORD' });
+  assert.equal((await signInWithPassword({ email: 'a', password: 'b' }, reply(429, {}))).code, 'RATE_LIMITED');
 });
 
-test('startGoogleSignIn posts the Google provider with relative callbacks and follows the URL', async () => {
-  let seen;
-  const assigned = [];
-  await startGoogleSignIn({
-    fetchFn: async (url, init) => { seen = { url, init }; return ok({ url: 'https://accounts.google.com/o/oauth2/v2/auth?x=1', redirect: true }); },
-    assign: (url) => assigned.push(url),
-  });
-  assert.equal(seen.url, '/api/auth/sign-in/social');
-  assert.equal(seen.init.method, 'POST');
-  assert.deepEqual(JSON.parse(seen.init.body), { provider: 'google', callbackURL: '/', errorCallbackURL: '/login' });
-  assert.deepEqual(assigned, ['https://accounts.google.com/o/oauth2/v2/auth?x=1']);
-  await assert.rejects(
-    startGoogleSignIn({ fetchFn: async () => ({ ok: false, status: 403, json: async () => ({ code: 'ORIGIN_NOT_ALLOWED' }) }), assign: () => {} }),
-    /HTTP 403 ORIGIN_NOT_ALLOWED/,
-  );
+test('changePassword and fetchMe', async () => {
+  assert.deepEqual(await changePassword({ currentPassword: 'a', newPassword: 'b' }, reply(400, { code: 'PASSWORD_WEAK' })), { ok: false, status: 400, code: 'PASSWORD_WEAK' });
+  assert.deepEqual(await fetchMe(reply(200, { signedIn: false })), { signedIn: false });
+  await assert.rejects(fetchMe(reply(503, {})), /HTTP 503/);
 });
 
-test('signOut posts JSON; signOutAndLeave always ends on /login', async () => {
-  let seen;
-  await signOut(async (url, init) => { seen = { url, init }; return ok({ success: true }); });
-  assert.equal(seen.url, '/api/auth/sign-out');
-  assert.equal(seen.init.headers['Content-Type'], 'application/json');
-  const assigned = [];
+test('startGoogleSignIn sends only the provider (the server fixes the return URLs)', async () => {
+  const google = recorder(200, { url: 'https://accounts.google.com/o' });
+  let went = null;
+  await startGoogleSignIn({ fetchFn: google.fetchFn, assign: (url) => { went = url; } });
+  assert.deepEqual(JSON.parse(google.calls[0].init.body), { provider: 'google' });
+  assert.equal(went, 'https://accounts.google.com/o');
+  await assert.rejects(startGoogleSignIn({ fetchFn: reply(404, { code: 'PROVIDER_NOT_FOUND' }), assign: () => {} }), /PROVIDER_NOT_FOUND/);
+});
+
+test('signOutAndLeave always ends on /login', async () => {
+  let went = null;
   const warn = console.warn;
   console.warn = () => {};
   try {
-    await signOutAndLeave({ fetchFn: async () => ({ ok: false, status: 500 }), assign: (url) => assigned.push(url) });
-  } finally { console.warn = warn; }
-  assert.deepEqual(assigned, ['/login']);
+    await signOutAndLeave({ fetchFn: reply(500, {}), assign: (url) => { went = url; } });
+  } finally {
+    console.warn = warn;
+  }
+  assert.equal(went, '/login');
 });

@@ -1,9 +1,8 @@
-// src/auth/authClientApi.js
 /**
- * Browser-side calls for the shared login, used by `/login`, `/admin` and the
- * map: who am I (`/api/me`), start Google sign-in, sign out. Plain `fetch`
- * against Better Auth's HTTP endpoints, so no auth client library ships in the
- * bundles.
+ * Browser-side calls for the login, used by `/login`, `/account`, `/admin`,
+ * `/dev` and the map: who am I (`/api/me`), password sign-in, Google sign-in
+ * (super_admin), change password, sign out. Plain `fetch` against Better
+ * Auth's allowlisted endpoints, so no auth client library ships in the bundles.
  *
  * @module auth/authClientApi
  */
@@ -11,9 +10,17 @@
 export const LOGIN_PATH = '/login';
 
 /**
- * @typedef {{authenticated: boolean, configured: boolean, role?: string, status?: string,
- *   email?: string, missing?: string[], invalid?: string[]}} MePayload
+ * @typedef {{configured: boolean, signedIn: boolean, home: string, googleSignIn: boolean,
+ *   user?: {id: string, name: string, email: string, role: string, mustChangePassword: boolean,
+ *   capabilities: {layers: boolean, ai: boolean, premium: boolean}}}} MePayload
  */
+
+const postJson = (fetchFn, url, body) => fetchFn(url, {
+  method: 'POST',
+  credentials: 'same-origin',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify(body),
+});
 
 /**
  * @param {typeof fetch} [fetchFn]
@@ -26,18 +33,39 @@ export async function fetchMe(fetchFn = fetch) {
 }
 
 /**
- * Ask Better Auth for the Google authorization URL and go there. On a Google
- * error Better Auth returns to `/login?error=<code>`.
+ * Password sign-in. Never throws for a refused sign-in: the caller shows the code.
+ * @param {{email: string, password: string}} credentials
+ * @param {typeof fetch} [fetchFn]
+ * @returns {Promise<{ok: true} | {ok: false, status: number, code: string}>}
+ */
+export async function signInWithPassword({ email, password }, fetchFn = fetch) {
+  const response = await postJson(fetchFn, '/api/auth/sign-in/email', { email, password, rememberMe: true });
+  if (response.ok) return { ok: true };
+  const payload = await response.json().catch(() => ({}));
+  return { ok: false, status: response.status, code: response.status === 429 ? 'RATE_LIMITED' : String(payload.code ?? 'UNKNOWN') };
+}
+
+/**
+ * Change the signed-in account's password (the server also signs out every other device).
+ * @param {{currentPassword: string, newPassword: string}} input
+ * @param {typeof fetch} [fetchFn]
+ * @returns {Promise<{ok: true} | {ok: false, status: number, code: string}>}
+ */
+export async function changePassword({ currentPassword, newPassword }, fetchFn = fetch) {
+  const response = await postJson(fetchFn, '/api/auth/change-password', { currentPassword, newPassword });
+  if (response.ok) return { ok: true };
+  const payload = await response.json().catch(() => ({}));
+  return { ok: false, status: response.status, code: String(payload.code ?? payload.error ?? 'UNKNOWN') };
+}
+
+/**
+ * Ask for the Google authorization URL and go there. Where Google returns to
+ * (`/dev`, or `/login?next=/dev&notice=google&error=…`) is fixed by the server.
  * @param {{fetchFn?: typeof fetch, assign?: (url: string) => void}} [deps]
  * @returns {Promise<void>}
  */
 export async function startGoogleSignIn({ fetchFn = fetch, assign = (url) => window.location.assign(url) } = {}) {
-  const response = await fetchFn('/api/auth/sign-in/social', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ provider: 'google', callbackURL: '/', errorCallbackURL: LOGIN_PATH }),
-  });
+  const response = await postJson(fetchFn, '/api/auth/sign-in/social', { provider: 'google' });
   const payload = await response.json().catch(() => ({}));
   if (!response.ok || typeof payload.url !== 'string') {
     throw new Error(`Google sign-in could not start: HTTP ${response.status}${payload.code ? ` ${payload.code}` : ''}`);
@@ -51,12 +79,7 @@ export async function startGoogleSignIn({ fetchFn = fetch, assign = (url) => win
  * @returns {Promise<void>}
  */
 export async function signOut(fetchFn = fetch) {
-  const response = await fetchFn('/api/auth/sign-out', {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: '{}',
-  });
+  const response = await postJson(fetchFn, '/api/auth/sign-out', {});
   if (!response.ok) throw new Error(`Sign-out failed: HTTP ${response.status}`);
 }
 
