@@ -5,6 +5,9 @@ import path from 'node:path';
 import { parseEnv } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { selectMapStartupRoute } from '../src/mapStartup.js';
+import { DEFAULT_AUTH_DATABASE_FILE } from '../src/auth/authEnv.mjs';
+import { READINESS_MESSAGES_EN, authReadinessChecks } from '../src/auth/authReadiness.mjs';
+import { readinessFactsFromFile } from '../src/auth/authReadinessFacts.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -218,10 +221,37 @@ export function formatSetupReport(report, { readyMessage } = {}) {
   return lines.join('\n');
 }
 
+/** Env names the auth readiness checks read (values never leave the check functions). */
+export const AUTH_DOCTOR_ENV = Object.freeze(['BETTER_AUTH_SECRET', 'ADMIN_SESSION_SECRET', 'SUPER_ADMIN_EMAILS', 'BETTER_AUTH_URL', 'HOST', 'AUTH_DATABASE_FILE']);
+
+/** Auth env as the server would see it: a non-empty shell value wins over the dotenv ladder. */
+export function authDoctorEnv(environment = process.env, rootDir = ROOT) {
+  return Object.fromEntries(AUTH_DOCTOR_ENV.map((name) => [
+    name,
+    String(environment[name] ?? '').trim() ? environment[name] : readDoctorDotenvValue(name, rootDir),
+  ]));
+}
+
+/**
+ * Login readiness (plan/auth/06): secret, SUPER_ADMIN_EMAILS, which env emails can
+ * sign in, blocked promotions, public exposure — counts and names only.
+ */
+export async function inspectAuthReadiness({ environment = process.env, rootDir = ROOT, readFacts = readinessFactsFromFile } = {}) {
+  const env = authDoctorEnv(environment, rootDir);
+  const file = path.resolve(rootDir, String(env.AUTH_DATABASE_FILE || '').trim() || DEFAULT_AUTH_DATABASE_FILE);
+  return authReadinessChecks({ env, facts: await readFacts(file, env.SUPER_ADMIN_EMAILS) });
+}
+
+export function formatAuthReadiness(checks) {
+  return ['Login (auth) readiness:', ...checks.map((item) => `  [${symbol(item.level)}] ${READINESS_MESSAGES_EN[item.id](item.params)}`)].join('\n');
+}
+
 const invokedPath = process.argv[1] ? path.resolve(process.argv[1]) : '';
 if (invokedPath === fileURLToPath(import.meta.url)) {
   const report = inspectSetup();
+  // Reported, not gating: the app still boots (with the login notice) while auth is unconfigured.
+  report.auth = await inspectAuthReadiness();
   if (process.argv.includes('--json')) console.log(JSON.stringify(report, null, 2));
-  else console.log(formatSetupReport(report));
+  else console.log(`${formatSetupReport(report)}\n\n${formatAuthReadiness(report.auth)}`);
   if (!report.ready) process.exitCode = 1;
 }
