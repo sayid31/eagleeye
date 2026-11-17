@@ -19,6 +19,7 @@ import { warmFireAnchorFloors } from './fireAnchors.js';
 import { normalizeMilitaryInstallations } from './militaryInstallationData.js';
 import { registerPickOwner, unregisterPickOwner } from './pickRegistry.js';
 import { LAYER_METADATA } from './layerMetadata.js';
+import { googleMapsProxyAvailable } from '../googleGeocodeClient.js';
 
 const LAYER_ID = 'military-installations';
 const REQUEST_DEBOUNCE_MS = 500;
@@ -545,9 +546,9 @@ const militaryInstallationsLayer = {
     state.selectedId = null;
   },
   update() { return loadInstallations(); },
-  /** Request a one-shot Google Maps Places search around the current map view. */
+  /** Refresh the view; adds a one-shot Google Places search only while the Google proxy answers (`premium`). */
   searchNearby() {
-    state.googleSearchRequested = true;
+    state.googleSearchRequested = googleMapsProxyAvailable();
     return loadInstallations();
   },
   destroy(viewer) {

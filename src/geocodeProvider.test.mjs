@@ -203,15 +203,17 @@ test('forwardGeocode: window.__GEOCODE_PROVIDER__="google" reverts to Google Geo
   assert.deepEqual(result.types, ['locality', 'political']);
 });
 
-test('forwardGeocode: google mode without a configured key throws (unchanged reversion-path contract)', async () => {
-  await withStub(
-    { __GEOCODE_PROVIDER__: 'google' },
-    async () => { throw new Error('fetch must not be called without a key'); },
-    async () => {
-      await assert.rejects(
-        () => forwardGeocode('austin'),
-        /No Google Maps API key configured on the server for geocoding/,
-      );
+test('forwardGeocode: google requested but the Google proxy unavailable (no key, or no `premium`) → Nominatim', async () => {
+  const requestedUrls = [];
+  const result = await withStub(
+    { __GEOCODE_PROVIDER__: 'google', __GOOGLE_MAPS_PROXY_AVAILABLE__: false },
+    async (url) => {
+      requestedUrls.push(String(url));
+      return { ok: true, json: async () => [{ lat: '30.2672', lon: '-97.7431', display_name: 'Austin, Texas', place_rank: 16 }] };
     },
+    () => forwardGeocode('austin'),
   );
+  assert.deepEqual(requestedUrls.map((url) => new URL(url, 'http://localhost').pathname), ['/api/nominatim/search']);
+  assert.equal(result.label, 'Austin, Texas');
+  assert.equal(result.lat, 30.2672);
 });
