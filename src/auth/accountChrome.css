@@ -1,0 +1,24 @@
+/* Account chrome on the map (src/auth/accountChrome.js). */
+#account-banner {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 60;
+  box-sizing: border-box;
+  max-width: min(640px, calc(100vw - 32px));
+  padding: 8px 14px;
+  border: 1px solid rgba(242, 193, 78, 0.6);
+  border-radius: 4px;
+  background: rgba(20, 16, 4, 0.88);
+  color: #f2c14e;
+  font: 500 12px/1.4 'Inter', system-ui, sans-serif;
+  text-align: center;
+  pointer-events: none;
+}
+
+#data-toggles.account-locked {
+  opacity: 0.45;
+  pointer-events: none;
+  filter: grayscale(0.6);
+}

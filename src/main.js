@@ -29,6 +29,8 @@ import { waitForFirstFrame, composeSplashReadiness } from './splashGate.js';
 import { BOOT_MARKS, finalizeBootTiming, markBoot } from './bootTiming.js';
 import { installClientLog } from './log/clientLog.js';
 import { installLayerHealthLog } from './log/layerHealthLog.js';
+import { lockDataLayers, mountAccountChrome, resolveAccountAccess } from './auth/accountChrome.js';
+import './auth/accountChrome.css';
 
 // First statement of the entry chunk's module scope. ES imports evaluate
 // BEFORE the module body, so this mark lands at the END of eager parse+eval —
@@ -85,14 +87,25 @@ async function init() {
   const loaderStatus = loadingScreen.querySelector('.loader-status');
 
   try {
+    // The server only serves this page to a signed-in account; a pending one
+    // (awaiting admin approval) gets the keyless basemap, no data layers and no
+    // voice — see src/auth/accountAccessPlan.js. Active accounts are unchanged.
+    loaderStatus.textContent = 'Memeriksa akun...';
+    const account = await resolveAccountAccess();
+    if (account.redirect) {
+      window.location.replace(account.redirect);
+      return;
+    }
+    mountAccountChrome(account);
+
     loaderStatus.textContent = 'Mengonfigurasi viewer...';
 
     // A server-side Google key provides Google 3D plus Google geocoding through
     // same-origin proxies (/api/google/*); the browser only learns that the key
     // exists, never its value. Cesium ion can host the same 3D tiles and also
     // powers Bing/world-terrain stacks.
-    const cesiumToken = import.meta.env.CESIUM_ION_TOKEN;
-    const googleProxyAvailable = import.meta.env.GOOGLE_MAPS_PROXY_AVAILABLE === true;
+    const cesiumToken = account.keyedBasemaps ? import.meta.env.CESIUM_ION_TOKEN : undefined;
+    const googleProxyAvailable = account.keyedBasemaps && import.meta.env.GOOGLE_MAPS_PROXY_AVAILABLE === true;
     window.__GOOGLE_MAPS_PROXY_AVAILABLE__ = googleProxyAvailable;
 
     // Create the Cesium viewer with minimal chrome
@@ -241,6 +254,8 @@ async function init() {
     const dataManager = new DataLayerManager(viewer, {
       allowQaRegistration: import.meta.env.DEV,
     });
+    // Before any registration/restore, so no saved or shared layer turns on.
+    if (!account.layers) lockDataLayers(dataManager, document.getElementById('data-toggles'));
     // All 13 data layers are lazy-registered: nothing but the layers a user
     // actually enables (or has saved as enabled) is downloaded/parsed.
     // `_ensureModuleResolved` in manager.js calls each module's own
@@ -421,7 +436,9 @@ async function init() {
       getRenderGovernorDiagnostics,
       requestRender: governorRequestRender,
     };
-    window.__godsEyeView.voiceCommands = initGevLiveVoice({ viewer, styleManager, dataManager, sceneDirector, annotations });
+    if (account.voice) {
+      window.__godsEyeView.voiceCommands = initGevLiveVoice({ viewer, styleManager, dataManager, sceneDirector, annotations });
+    }
 
   } catch (error) {
     console.error("EagleEye View initialization failed:", error);
