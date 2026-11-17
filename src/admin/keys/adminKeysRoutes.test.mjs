@@ -35,7 +35,7 @@ function request(handler, { method = 'GET', url = '/', body, headers = {}, remot
   });
 }
 
-function adminSetup({ guard = () => ({ ok: true }), testKey } = {}) {
+function adminSetup({ guard = () => ({ ok: true, actorId: 'user-super-1' }), testKey } = {}) {
   const { store, env, envPath } = makeStore();
   const audit = { entries: [], record(e) { this.entries.push(e); return true; } };
   let restarts = 0;
@@ -74,7 +74,7 @@ test('admin keys: PUT saves, restarts once, audits names only, echoes no value',
   assert.ok(!r.raw.includes(FAKE));
   assert.match(fs.readFileSync(envPath, 'utf8'), /OPENAI_API_KEY=/);
   assert.equal(restarts(), 1);
-  assert.deepEqual(audit.entries, [{ event: 'keys.changed', source: 'admin', saved: ['OPENAI_API_KEY'], removed: [] }]);
+  assert.deepEqual(audit.entries, [{ event: 'keys.changed', source: 'admin', actor: 'user-super-1', saved: ['OPENAI_API_KEY'], removed: [] }]);
   assert.ok(!JSON.stringify(audit.entries).includes(FAKE));
 });
 
@@ -86,7 +86,7 @@ test('admin keys: invalid bodies are refused without a restart and audited as fa
   assert.equal((await call({ method: 'DELETE' })).status, 405);
   assert.equal((await call({ url: '/elsewhere' })).status, 404);
   assert.equal(restarts(), 0);
-  assert.deepEqual(audit.entries, [{ event: 'keys.change_failed', source: 'admin', httpStatus: 400 }]);
+  assert.deepEqual(audit.entries, [{ event: 'keys.change_failed', source: 'admin', actor: 'user-super-1', httpStatus: 400 }]);
 });
 
 test('admin keys: /test runs the provider check and audits the result code', async () => {
@@ -96,7 +96,7 @@ test('admin keys: /test runs the provider check and audits the result code', asy
   assert.equal(r.status, 200);
   assert.deepEqual(r.json, { id: 'openai', result: 'rejected', httpStatus: 401, message: 'The provider rejected the key.' });
   assert.deepEqual(seen, ['openai']);
-  assert.deepEqual(audit.entries, [{ event: 'keys.tested', provider: 'openai', result: 'rejected', httpStatus: 401 }]);
+  assert.deepEqual(audit.entries, [{ event: 'keys.tested', provider: 'openai', result: 'rejected', httpStatus: 401, actor: 'user-super-1' }]);
   assert.equal((await call({ method: 'POST', url: '/test', body: { id: 'nope' } })).status, 400);
   assert.equal((await call({ url: '/test' })).status, 405);
 });

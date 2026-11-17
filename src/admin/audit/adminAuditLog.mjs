@@ -1,12 +1,12 @@
 // src/admin/audit/adminAuditLog.mjs
 /**
  * Append-only owner audit trail (`.gev-cache/admin-audit.jsonl`): key changes,
- * connection tests and settings saves. It is the store the Audit Log page
- * (admin stage T7) will read; until then it is only written.
+ * connection tests, settings saves and log clears, read by /admin → Audit Log.
+ * `actor` is the Better Auth user id of whoever made the change.
  *
  * Privacy rule enforced here, not by callers: an entry keeps only an allowlist
- * of fields whose values are short codes or ENV VAR NAMES. No key value, no
- * email, no request body can be recorded, whatever a caller passes.
+ * of fields whose values are short codes, user ids or ENV VAR NAMES. No key
+ * value, no email, no request body can be recorded, whatever a caller passes.
  *
  * Writes never throw (an audit failure must not fail the change it records);
  * a failure is reported once per call on the console, without the entry.
@@ -30,6 +30,8 @@ const FIELDS = {
   source: (v) => (CODE.test(String(v)) ? String(v) : null),
   provider: (v) => (CODE.test(String(v)) ? String(v) : null),
   result: (v) => (CODE.test(String(v)) ? String(v) : null),
+  // User ids are opaque Better Auth ids; an email cannot pass (no '@').
+  actor: (v) => (typeof v === 'string' && CODE.test(v) ? v : null),
   httpStatus: (v) => (Number.isInteger(v) && v >= 100 && v < 600 ? v : null),
   saved: (v) => namesOnly(v),
   removed: (v) => namesOnly(v),

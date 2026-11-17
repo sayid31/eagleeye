@@ -10,13 +10,14 @@
  *    with the current GPT-Live rates, today's remaining daily minutes and the
  *    effective per-session cost limits.
  *
- * Every route goes through `requireAdminSession` (signed Google-login cookie;
- * Origin + JSON content type on writes). No response carries a key.
+ * Every route goes through `requireActor(req, 'admin')` after the shared-login
+ * guard (`src/auth/authPlugin.mjs`: session, active admin, exact Origin + JSON
+ * content type on writes). No response carries a key.
  *
  * @module admin/api/adminVoiceRoutes
  */
 
-import { requireAdminSession } from '../auth/requireAdminSession.mjs';
+import { requireActor } from '../../auth/requireActor.mjs';
 import { validateVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
 import {
   DAILY_MINUTES_MAX, IDLE_SECONDS_MAX, IDLE_SECONDS_MIN, SESSION_MINUTES_MAX, SESSION_MINUTES_MIN,
@@ -106,11 +107,11 @@ function usagePayload(settings, usageStore, days) {
  * @param {{read: Function, today: () => string}} deps.usageStore Daily usage ledger.
  * @param {(req: any, maxBytes?: number) => Promise<string>} deps.readRequestBody
  * @param {(req: any) => {ok: boolean, status?: number, error?: string}} [deps.guard]
- * @param {(event: string, detail?: {sections?: string[]}) => void} [deps.onEvent] Lifecycle event codes;
- *   `sections` names the top-level settings sections a save changed (no values, no PII).
+ * @param {(event: string, detail?: {sections?: string[], actor?: string}) => void} [deps.onEvent] Lifecycle event codes;
+ *   `sections` names the top-level settings sections a save changed, `actor` is the user id (no values, no PII).
  */
 export function installAdminVoiceRoutes(middlewares, {
-  store, usageStore, readRequestBody, guard = (req) => requireAdminSession(req),
+  store, usageStore, readRequestBody, guard = (req) => requireActor(req, 'admin'),
   onEvent = (event) => console.info(`[admin] ${event}`),
 }) {
   middlewares.use('/api/admin/voice', async (req, res) => {
@@ -146,10 +147,10 @@ export function installAdminVoiceRoutes(middlewares, {
     try {
       store.write(result.value);
     } catch (error) {
-      onEvent('voice_settings.save_failed');
+      onEvent('voice_settings.save_failed', { actor: admitted.actorId });
       return sendJson(res, 500, { error: error.message });
     }
-    onEvent('voice_settings.saved', { sections });
+    onEvent('voice_settings.saved', { sections, actor: admitted.actorId });
     return sendJson(res, 200, { settings: result.value, storedValid: true });
   });
 }

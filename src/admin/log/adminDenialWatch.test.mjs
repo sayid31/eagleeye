@@ -13,8 +13,8 @@ test('adminRouteGroup groups admin API paths and ignores everything else', () =>
 test('only 401 and 403 become access_denied entries', () => {
   assert.equal(adminDenialEvent('/api/admin/keys', 200), null);
   assert.equal(adminDenialEvent('/api/admin/keys', 405), null);
-  assert.match(adminDenialEvent('/api/admin/keys', 401).message, /no valid admin session/);
-  assert.match(adminDenialEvent('/api/admin/keys', 403).message, /origin not allowed/);
+  assert.match(adminDenialEvent('/api/admin/keys', 401).message, /not signed in/);
+  assert.match(adminDenialEvent('/api/admin/keys', 403).message, /role, account status or origin not allowed/);
 });
 
 test('the middleware records on finish and always calls next', () => {

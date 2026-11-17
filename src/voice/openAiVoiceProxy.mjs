@@ -65,7 +65,7 @@ export function openAiVoiceProxy({
       readRequestBody,
       onEvent: (event, detail = {}) => {
         console.info(`[admin] ${event}`);
-        audit?.record({ event, source: 'admin', sections: detail.sections });
+        audit?.record({ event, source: 'admin', sections: detail.sections, actor: detail.actor });
       },
     });
     // GPT-Live full-duplex session create: the server holds the key and

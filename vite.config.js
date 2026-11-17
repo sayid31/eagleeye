@@ -43,6 +43,9 @@
  *
  *   - src/admin/keys/ — the provider-key store behind /admin → API Keys. Its boot-time provenance snapshots stay in this file because
  *     they must be captured when THIS module first loads.
+ *   - src/auth/authPlugin.mjs — the shared Google login (Better Auth +
+ *     SQLite): `/api/auth/*`, `/api/me`, `/login`, and the guard in front of
+ *     every page and every `/api/*` proxy below (hence its early position).
  *
  * `nominatimSearchProxy()` (forward geocode) stays defined in this file —
  * see its own JSDoc for why it wasn't moved out with the rest.
@@ -104,9 +107,9 @@ import { defineConfig, loadEnv } from 'vite';
 
 import cesium from 'vite-plugin-cesium';
 import react from '@vitejs/plugin-react';
-import { adminRoute, skipOnAdminPage } from './src/admin/adminRoute.mjs';
+import { adminRoute, skipOnReactPages } from './src/admin/adminRoute.mjs';
 
-import { adminAuthPlugin } from './src/admin/auth/adminAuthPlugin.mjs';
+import { authPlugin } from './src/auth/authPlugin.mjs';
 
 import { radioBrowserProxy } from './src/data/radioBrowserProxy.mjs';
 
@@ -129,7 +132,7 @@ import { adminKeysPlugin } from './src/admin/keys/adminKeysRoutes.mjs';
 
 import { createAdminAuditLog } from './src/admin/audit/adminAuditLog.mjs';
 
-import { serverLogPlugin } from './src/admin/log/serverLogPlugin.mjs';
+import { serverLogPlugin, serverLogWatchPlugin } from './src/admin/log/serverLogPlugin.mjs';
 
 import { systemHealthPlugin } from './src/admin/health/systemHealthPlugin.mjs';
 
@@ -334,13 +337,16 @@ export default defineConfig(({ mode }) => {
   const localAllowedHosts = ['localhost', '127.0.0.1', '.local'];
   return {
     plugins: [
-      skipOnAdminPage(cesium()),
-      // React is for the /admin dashboard only; the map app stays plain JS.
-      react({ include: /src\/admin\/.*\.jsx$/ }),
+      skipOnReactPages(cesium()),
+      // React is for the /admin dashboard and /login only; the map app stays plain JS.
+      react({ include: /src\/(admin|login)\/.*\.jsx$/ }),
+      // First of the server plugins: its watches must see every /api response,
+      // including the login guard's 401/403.
+      serverLogWatchPlugin(),
+      // Login guard: before every page rewrite, route and proxy below.
+      authPlugin({ rootDir: __dirname }),
       adminRoute(),
-      // First of the server plugins: its failure watch must see every /api response.
       serverLogPlugin({ audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
-      adminAuthPlugin({ audit: adminAudit }),
       openSkyProxy(),
       celestrakProxy(),
       tomtomProxy(),
@@ -409,6 +415,7 @@ export default defineConfig(({ mode }) => {
         input: {
           main: path.resolve(__dirname, 'index.html'),
           admin: path.resolve(__dirname, 'admin.html'),
+          login: path.resolve(__dirname, 'login.html'),
         },
       },
     },

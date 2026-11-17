@@ -4,12 +4,16 @@
  * router and the tests all read one source of truth.
  *
  * `soon` marks entries that are planned but not built yet (none at present).
+ * `permission: 'keys'` marks entries only an active super-admin may open
+ * (they manage provider keys); the server enforces the same rule.
  *
  * @module admin/adminNav
  */
 
+import { canManageKeys } from '../auth/authRoles.mjs';
+
 /** @typedef {{label: string, path: string, soon?: boolean}} AdminLeaf */
-/** @typedef {{id: string, label: string, path: string, children?: AdminLeaf[]}} AdminGroup */
+/** @typedef {{id: string, label: string, path: string, permission?: 'keys', children?: AdminLeaf[]}} AdminGroup */
 
 /** @type {AdminGroup[]} */
 export const ADMIN_NAV = [
@@ -34,15 +38,26 @@ export const ADMIN_NAV = [
       { label: 'Pemakaian & Biaya', path: '/ai/usage' },
     ],
   },
-  { id: 'api-keys', label: 'API Keys', path: '/api-keys' },
+  { id: 'api-keys', label: 'API Keys', path: '/api-keys', permission: 'keys' },
 ];
 
 /**
- * Every page the router must serve, one entry per leaf.
+ * Menu groups this actor may see; without an actor, every group.
+ * @param {{role?: string, status?: string} | null} [actor]
+ * @returns {AdminGroup[]}
+ */
+export function navForActor(actor) {
+  if (!actor) return ADMIN_NAV;
+  return ADMIN_NAV.filter((group) => group.permission !== 'keys' || canManageKeys(actor));
+}
+
+/**
+ * Every page the router must serve, one entry per leaf (of the groups this actor may see).
+ * @param {{role?: string, status?: string} | null} [actor]
  * @returns {AdminLeaf[]}
  */
-export function adminLeaves() {
-  return ADMIN_NAV.flatMap((group) => group.children ?? [{ label: group.label, path: group.path }]);
+export function adminLeaves(actor) {
+  return navForActor(actor).flatMap((group) => group.children ?? [{ label: group.label, path: group.path }]);
 }
 
 /**

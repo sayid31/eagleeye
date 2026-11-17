@@ -3,8 +3,11 @@
  * AI Configuration → AI Provider: the OpenAI key that powers the voice
  * assistant (status, replace, remove, test), plus the GPT-Live voice and
  * delegation backend model. The provider stays OpenAI (plan decision 6).
+ * The key card is for an active super-admin only; an admin sees the model and
+ * voice section (the server refuses /api/admin/keys to admins as well).
  */
 import { useEffect, useState } from 'react';
+import { canManageKeys } from '../../auth/authRoles.mjs';
 import { fetchVoiceSettings, saveVoiceSettings } from '../api/adminVoiceApi.js';
 import { KeyCard } from '../components/KeyCard.jsx';
 import { Field, SaveStatus, Section } from '../components/FormControls.jsx';
@@ -62,7 +65,7 @@ function ModelVoiceSection() {
   );
 }
 
-export function AiProviderPage() {
+function ProviderKeyPage() {
   const { data, loadError, status, busy, submit } = useProviderKeys();
 
   if (loadError) return <section className="adm-card"><h1>Penyedia AI</h1><p className="adm-error" role="alert">{loadError}</p></section>;
@@ -79,6 +82,19 @@ export function AiProviderPage() {
       {ai.keys.map((key) => (
         <KeyCard key={key.id} keyInfo={key} note={data.testNotes?.[key.id] ?? ''} busy={busy} onSave={submit} onRemove={submit} />
       ))}
+      <ModelVoiceSection />
+    </div>
+  );
+}
+
+export function AiProviderPage({ session }) {
+  if (canManageKeys(session)) return <ProviderKeyPage />;
+  return (
+    <div className="adm-page">
+      <header className="adm-page-header">
+        <h1>Penyedia AI</h1>
+        <p className="adm-muted">OpenAI menjalankan asisten suara, pembaca layar, dan ringkasan HUD. API key hanya dikelola super admin.</p>
+      </header>
       <ModelVoiceSection />
     </div>
   );

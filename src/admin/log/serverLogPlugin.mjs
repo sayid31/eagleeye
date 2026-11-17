@@ -1,8 +1,10 @@
 // src/admin/log/serverLogPlugin.mjs
 /**
- * Vite plugin that turns the Server Log on for dev and preview servers:
- * the proxy-failure and refused-admin-access watches (installed first so they
- * see every /api response),
+ * Vite plugins that turn the Server Log on for dev and preview servers.
+ * `serverLogWatchPlugin` holds the proxy-failure and refused-admin-access
+ * watches and is registered FIRST, before the login guard
+ * (`src/auth/authPlugin.mjs`), so they also see the guard's 401/403 answers.
+ * `serverLogPlugin` comes after the guard and installs
  * the browser ingest + admin routes, a slow background check of the live
  * AISStream feed so a key AISStream refuses shows up without anyone testing it,
  * and the console bridge that mirrors every server `console.warn`/`error`
@@ -26,6 +28,19 @@ export function consoleBridgeEnabled(env = process.env) {
   return !/^(0|false|off|no)$/i.test(String(env.GEV_SERVER_LOG_CONSOLE ?? '').trim());
 }
 
+/** Response watches; register before every other server plugin. */
+export function serverLogWatchPlugin() {
+  const install = (middlewares) => {
+    middlewares.use(proxyFailureMiddleware(logServerEvent, getProxyFailureTracker()));
+    middlewares.use(adminDenialMiddleware(logServerEvent));
+  };
+  return {
+    name: 'gev-server-log-watch',
+    configureServer(server) { install(server.middlewares); },
+    configurePreviewServer(server) { install(server.middlewares); },
+  };
+}
+
 /**
  * @param {{audit?: {record: (entry: object) => boolean}, aisFeedEvidence?: () => {status: string}}} [deps]
  */
@@ -39,8 +54,6 @@ export function serverLogPlugin({ audit, aisFeedEvidence } = {}) {
   };
   const install = (middlewares) => {
     if (consoleBridgeEnabled()) installConsoleBridge(logServerEvent);
-    middlewares.use(proxyFailureMiddleware(logServerEvent, getProxyFailureTracker()));
-    middlewares.use(adminDenialMiddleware(logServerEvent));
     installServerLogRoutes(middlewares, { log: getServerLog(), readRequestBody: readRequestBodyCapped, audit: (entry) => audit?.record(entry) });
     if (audit) installAdminAuditRoutes(middlewares, { audit });
     if (aisFeedEvidence && !feedTimer) {

@@ -1,0 +1,7 @@
+/* /login additions on top of src/admin/adminTheme.css (same tokens). */
+button.adm-google-btn { width: 100%; font: inherit; font-weight: 500; cursor: pointer; }
+button.adm-google-btn:disabled { cursor: progress; opacity: .75; }
+.login-notice { color: var(--adm-warn); margin: 0 0 16px; }
+.adm-login-card .adm-error { text-align: left; }
+.adm-login-card .adm-error p { margin: 0 0 6px; color: inherit; }
+.adm-login-card code { font-family: var(--adm-font-mono); }

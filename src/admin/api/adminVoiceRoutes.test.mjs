@@ -7,11 +7,7 @@ import { installAdminVoiceRoutes, parseUsageDays } from './adminVoiceRoutes.mjs'
 import { createVoiceSettingsStore } from '../../voice/voiceSettingsStore.mjs';
 import { createVoiceUsageStore } from '../../voice/voiceUsageStore.mjs';
 import { defaultVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
-import { SESSION_COOKIE, createToken } from '../auth/adminSession.mjs';
 
-// test-only fixtures, not real credentials
-const SECRET = 's'.repeat(40);
-const ENV = { GOOGLE_CLIENT_ID: 'cid', GOOGLE_CLIENT_SECRET: 'csec', ADMIN_EMAIL: 'owner@example.com', ADMIN_SESSION_SECRET: SECRET };
 const ORIGIN = 'http://localhost:4173';
 
 function setup({ guard } = {}) {
@@ -19,41 +15,35 @@ function setup({ guard } = {}) {
   const store = createVoiceSettingsStore({ filePath: path.join(dir, 'v.json') });
   const usageStore = createVoiceUsageStore({ filePath: path.join(dir, 'u.json'), now: () => new Date(2026, 10, 6, 12) });
   const events = [];
+  const details = [];
   let handler;
   installAdminVoiceRoutes({ use: (_p, h) => { handler = h; } }, {
-    store, usageStore, readRequestBody: async (req) => req.body ?? '', onEvent: (e) => events.push(e),
+    store, usageStore, readRequestBody: async (req) => req.body ?? '', onEvent: (e, d) => { events.push(e); details.push(d); },
     ...(guard ? { guard } : {}),
   });
-  const call = (method, url, { body, headers = {} } = {}) => new Promise((resolve) => {
+  const call = (method, url, { body, headers = {}, actor } = {}) => new Promise((resolve) => {
     const out = { status: 0, headers: {}, json: null };
     const res = {
       set statusCode(v) { out.status = v; },
       setHeader: (k, v) => { out.headers[k.toLowerCase()] = v; },
       end: (text) => { out.json = JSON.parse(text); resolve(out); },
     };
-    handler({ method, url, headers, body: typeof body === 'string' ? body : JSON.stringify(body) }, res);
+    handler({ method, url, headers, gevActor: actor, body: typeof body === 'string' ? body : JSON.stringify(body) }, res);
   });
-  return { call, store, usageStore, events };
+  return { call, store, usageStore, events, details };
 }
 
-const allow = () => ({ ok: true, email: 'owner@example.com' });
+const allow = () => ({ ok: true, actorId: 'user-admin-1' });
+const actorOf = (role, status = 'active') => ({ user: { id: `user-${role}` }, role, status });
 
-test('every route is refused without an admin session', async () => {
-  const previous = { ...process.env };
-  Object.assign(process.env, ENV);
-  try {
-    const { call } = setup();
-    assert.equal((await call('GET', '/settings')).status, 401);
-    assert.equal((await call('GET', '/usage')).status, 401);
-    const cookie = `${SESSION_COOKIE}=${createToken({ email: 'owner@example.com' }, { kind: 'session', secret: SECRET, ttlMs: 60_000 })}`;
-    assert.equal((await call('GET', '/settings', { headers: { cookie } })).status, 200);
-    const noOrigin = await call('PUT', '/settings', { body: {}, headers: { cookie, 'content-type': 'application/json' } });
-    assert.equal(noOrigin.status, 403);
-  } finally {
-    for (const key of Object.keys(ENV)) {
-      if (key in previous) process.env[key] = previous[key]; else delete process.env[key];
-    }
-  }
+test('every route needs an active admin actor from the login guard', async () => {
+  const { call } = setup();
+  assert.equal((await call('GET', '/settings')).status, 401);
+  assert.equal((await call('GET', '/usage')).status, 401);
+  assert.equal((await call('GET', '/settings', { actor: actorOf('user') })).status, 403);
+  assert.equal((await call('GET', '/settings', { actor: actorOf('admin', 'pending') })).status, 403);
+  assert.equal((await call('GET', '/settings', { actor: actorOf('admin') })).status, 200);
+  assert.equal((await call('GET', '/usage', { actor: actorOf('super-admin') })).status, 200);
 });
 
 test('GET /settings returns defaults, the tool group catalog and limit ranges', async () => {
@@ -67,14 +57,15 @@ test('GET /settings returns defaults, the tool group catalog and limit ranges', 
   assert.equal(r.headers['cache-control'], 'no-store');
 });
 
-test('PUT /settings validates, stores and logs only a lifecycle event', async () => {
-  const { call, store, events } = setup({ guard: allow });
+test('PUT /settings validates, stores and logs only a lifecycle event with the actor id', async () => {
+  const { call, store, events, details } = setup({ guard: allow });
   const body = { ...defaultVoiceSettings(), toolGroups: { ...defaultVoiceSettings().toolGroups, media: false }, limits: { dailyMinutes: 30, sessionMinutes: 10, idleSeconds: 60 } };
   const r = await call('PUT', '/settings', { body });
   assert.equal(r.status, 200);
   assert.equal(store.read().settings.toolGroups.media, false);
   assert.deepEqual(store.read().settings.limits, { dailyMinutes: 30, sessionMinutes: 10, idleSeconds: 60 });
   assert.deepEqual(events, ['voice_settings.saved']);
+  assert.equal(details[0].actor, 'user-admin-1');
 });
 
 test('PUT /settings rejects invalid bodies without storing or echoing them', async () => {

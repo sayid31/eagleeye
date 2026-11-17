@@ -25,9 +25,9 @@ const PAGES = {
   '/api-keys': ApiKeysPage,
 };
 
-function pageFor(leaf) {
+function pageFor(leaf, session) {
   const Page = PAGES[leaf.path];
-  return Page ? <Page /> : <PlaceholderPage title={leaf.label} soon={leaf.soon} />;
+  return Page ? <Page session={session} /> : <PlaceholderPage title={leaf.label} soon={leaf.soon} />;
 }
 
 export function AdminApp({ session }) {
@@ -35,13 +35,13 @@ export function AdminApp({ session }) {
     <Routes>
       <Route element={<AdminLayout session={session} />}>
         <Route index element={<Navigate to={ADMIN_HOME_PATH} replace />} />
-        {/* Signed-in visitors who reopen the login URL land on the dashboard. */}
+        {/* Old /admin/login bookmarks land on the dashboard (login is /login now). */}
         <Route path="login" element={<Navigate to={ADMIN_HOME_PATH} replace />} />
         {groupRedirects().map((group) => (
           <Route key={group.id} path={group.path.slice(1)} element={<Navigate to={groupLanding(group)} replace />} />
         ))}
-        {adminLeaves().map((leaf) => (
-          <Route key={leaf.path} path={leaf.path.slice(1)} element={pageFor(leaf)} />
+        {adminLeaves(session).map((leaf) => (
+          <Route key={leaf.path} path={leaf.path.slice(1)} element={pageFor(leaf, session)} />
         ))}
         <Route path="*" element={<PlaceholderPage title="Halaman tidak ditemukan" notFound />} />
       </Route>

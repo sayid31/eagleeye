@@ -6,7 +6,7 @@ import { createServerLog } from './serverLogStore.mjs';
 const ORIGIN = 'http://localhost:4173';
 const JSON_HEADERS = { host: 'localhost:4173', origin: ORIGIN, 'content-type': 'application/json' };
 
-function setup({ guard = () => ({ ok: true }), budget } = {}) {
+function setup({ guard = () => ({ ok: true, actorId: 'user-admin-1' }), budget } = {}) {
   let t = Date.UTC(2026, 10, 6);
   const log = createServerLog({ filePath: '/unused', fileSystem: { readFileSync: () => { throw Object.assign(new Error('x'), { code: 'ENOENT' }); } }, now: () => (t += 1), env: {}, setTimer: () => {} });
   const audits = [];
@@ -79,7 +79,7 @@ test('admin log: guard first, then query with filters, then clear with a trace a
   const cleared = await call('/api/admin/log', { method: 'DELETE' });
   assert.deepEqual(cleared.json, { removed: 2 });
   assert.deepEqual(log.query().entries.map((e) => e.code), ['log.cleared']);
-  assert.deepEqual(audits, [{ event: 'log.cleared', source: 'admin' }]);
+  assert.deepEqual(audits, [{ event: 'log.cleared', source: 'admin', actor: 'user-admin-1' }]);
   assert.equal((await call('/api/admin/log', { method: 'PUT' })).status, 405);
 });
 

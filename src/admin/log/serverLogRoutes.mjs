@@ -8,12 +8,12 @@
  *  - GET    /api/admin/log?level=&source=&q=&offset=&limit= — newest first.
  *  - DELETE /api/admin/log — clear (leaves one `log.cleared` row).
  *
- * Admin routes are behind `requireAdminSession`.
+ * Admin routes are behind `requireActor(req, 'admin')`.
  *
  * @module admin/log/serverLogRoutes
  */
 
-import { requireAdminSession } from '../auth/requireAdminSession.mjs';
+import { requireActor } from '../../auth/requireActor.mjs';
 import { isSameOriginJson } from '../../server/sameOrigin.mjs';
 import { BROWSER_LOG_SOURCES, LOG_LEVELS, LOG_SOURCES } from './serverLogCore.mjs';
 
@@ -69,7 +69,7 @@ export function parseLogQuery(url) {
  * @param {(entry: object) => void} [deps.audit] Records the clear in the audit trail.
  */
 export function installServerLogRoutes(middlewares, {
-  log, readRequestBody, guard = (req) => requireAdminSession(req), budget = createEventBudget(), audit = () => {},
+  log, readRequestBody, guard = (req) => requireActor(req, 'admin'), budget = createEventBudget(), audit = () => {},
 }) {
   middlewares.use('/api/log', async (req, res) => {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
@@ -95,7 +95,7 @@ export function installServerLogRoutes(middlewares, {
     if (req.method === 'GET') return sendJson(res, 200, { ...log.query(parseLogQuery(req.url)), levels: LOG_LEVELS, sources: LOG_SOURCES });
     if (req.method === 'DELETE') {
       const removed = log.clear();
-      audit({ event: 'log.cleared', source: 'admin' });
+      audit({ event: 'log.cleared', source: 'admin', actor: admitted.actorId });
       return sendJson(res, 200, { removed });
     }
     return sendJson(res, 405, { error: 'Method not allowed' });

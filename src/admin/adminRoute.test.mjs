@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminPageRewrite, skipOnAdminPage } from './adminRoute.mjs';
+import { adminPageRewrite, skipOnReactPages } from './adminRoute.mjs';
 
 test('admin page navigations are rewritten to admin.html', () => {
   assert.equal(adminPageRewrite('/admin'), '/admin.html');
@@ -18,16 +18,18 @@ test('non-admin, asset and API requests are left alone', () => {
   assert.equal(adminPageRewrite(undefined), null);
 });
 
-test('skipOnAdminPage drops the wrapped html transform only for admin.html', () => {
+test('skipOnReactPages drops the wrapped html transform only for admin.html and login.html', () => {
   const tags = [{ tag: 'script' }];
-  const wrapped = skipOnAdminPage({ name: 'p', transformIndexHtml: () => tags });
+  const wrapped = skipOnReactPages({ name: 'p', transformIndexHtml: () => tags });
   assert.equal(wrapped.name, 'p');
   assert.equal(wrapped.transformIndexHtml('', { filename: '/repo/admin.html' }), undefined);
   assert.equal(wrapped.transformIndexHtml('', { path: '/admin.html' }), undefined);
+  assert.equal(wrapped.transformIndexHtml('', { filename: '/repo/login.html' }), undefined);
+  assert.equal(wrapped.transformIndexHtml('', { filename: '/repo/blogin.html' }), tags);
   assert.equal(wrapped.transformIndexHtml('', { filename: '/repo/index.html' }), tags);
 });
 
-test('skipOnAdminPage returns plugins without an html transform unchanged', () => {
+test('skipOnReactPages returns plugins without an html transform unchanged', () => {
   const plugin = { name: 'plain' };
-  assert.equal(skipOnAdminPage(plugin), plugin);
+  assert.equal(skipOnReactPages(plugin), plugin);
 });

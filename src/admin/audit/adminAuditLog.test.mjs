@@ -56,3 +56,9 @@ test('sections keep only short codes; list pages and filters by prefix', () => {
   assert.deepEqual(log.list({ limit: 1, offset: 1 }).map((e) => e.event), ['admin.login']);
   assert.equal(log.list(2).length, 2);
 });
+
+test('actor keeps a user id and drops anything email-shaped or non-string', () => {
+  assert.equal(sanitizeAuditEntry({ event: 'keys.changed', actor: 'm7C6rtngz4HYr5cReIL43jrtBBntanqo' }, AT).actor, 'm7C6rtngz4HYr5cReIL43jrtBBntanqo');
+  assert.equal(sanitizeAuditEntry({ event: 'keys.changed', actor: 'owner@example.com' }, AT).actor, undefined);
+  assert.equal(sanitizeAuditEntry({ event: 'keys.changed', actor: 42 }, AT).actor, undefined);
+});

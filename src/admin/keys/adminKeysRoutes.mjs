@@ -1,6 +1,6 @@
 // src/admin/keys/adminKeysRoutes.mjs
 /**
- * /admin → API Keys routes, all behind `requireAdminSession`:
+ * /admin → API Keys routes, all behind `requireActor(req, 'keys')` (active super-admin):
  *
  *  - GET  /api/admin/keys       → registry + presence + source ('file' editable,
  *    'external' read-only) + which store this launch writes + test notes.
@@ -17,7 +17,7 @@
  */
 
 import { KEY_SETUP_KEYS } from '../../keySetupCore.mjs';
-import { requireAdminSession } from '../auth/requireAdminSession.mjs';
+import { requireActor } from '../../auth/requireActor.mjs';
 import { readSmallBody, respondNoStore, summarize } from './keyHttp.mjs';
 import { KEY_TEST_NOTES, testProviderKey } from './keyConnectionTests.mjs';
 import { scheduleDevServerRestart } from './providerKeyStore.mjs';
@@ -63,7 +63,7 @@ const statusPayload = (store) => ({ ...store.status(), testNotes: KEY_TEST_NOTES
  * @param {(event: object) => void} [deps.log] Server Log producer.
  */
 export function installAdminKeysRoutes(middlewares, {
-  store, restart, audit, guard = (req) => requireAdminSession(req), testKey = (entry) => testProviderKey(entry), log = logServerEvent,
+  store, restart, audit, guard = (req) => requireActor(req, 'keys'), testKey = (entry) => testProviderKey(entry), log = logServerEvent,
 }) {
   middlewares.use('/api/admin/keys', async (req, res) => {
     const admitted = guard(req);
@@ -77,7 +77,7 @@ export function installAdminKeysRoutes(middlewares, {
       const entry = KEY_SETUP_KEYS.find((key) => key.id === body.value?.id);
       if (!entry) return respondNoStore(res, 400, { error: 'Unknown provider' });
       const outcome = await testKey(entry);
-      audit.record({ event: 'keys.tested', provider: entry.id, result: outcome.result, httpStatus: outcome.httpStatus });
+      audit.record({ event: 'keys.tested', provider: entry.id, result: outcome.result, httpStatus: outcome.httpStatus, actor: admitted.actorId });
       const logEvent = keyTestLogEvent(entry, outcome);
       if (logEvent) log(logEvent);
       return respondNoStore(res, 200, { id: entry.id, ...outcome });
@@ -90,7 +90,7 @@ export function installAdminKeysRoutes(middlewares, {
     const body = await readJsonBody(req);
     if (body.error) return respondNoStore(res, body.error[0], { error: body.error[1] });
     const result = store.applyUpdates(body.value);
-    audit.record({ event: result.ok ? 'keys.changed' : 'keys.change_failed', source: 'admin', ...summarize(result) });
+    audit.record({ event: result.ok ? 'keys.changed' : 'keys.change_failed', source: 'admin', actor: admitted.actorId, ...summarize(result) });
     if (!result.ok) return respondNoStore(res, result.httpStatus, { error: result.error });
     respondNoStore(res, 200, { ok: true, saved: result.saved, removed: result.removed, status: statusPayload(store), restarting: true });
     return restart();

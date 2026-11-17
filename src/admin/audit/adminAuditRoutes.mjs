@@ -2,12 +2,13 @@
 /**
  * GET /api/admin/audit?type=&offset=&limit= — the owner audit trail
  * (`adminAuditLog.mjs`), newest first, for /admin → Audit Log. Behind
- * `requireAdminSession`. Entries already hold only codes and env var names.
+ * `requireActor(req, 'admin')` (behind the shared-login guard). Entries hold only codes,
+ * env var names and user ids.
  *
  * @module admin/audit/adminAuditRoutes
  */
 
-import { requireAdminSession } from '../auth/requireAdminSession.mjs';
+import { requireActor } from '../../auth/requireActor.mjs';
 
 /** Filter chips on the page → event-code prefix. */
 export const AUDIT_TYPES = Object.freeze({
@@ -36,7 +37,7 @@ export function parseAuditQuery(url) {
  * @param {import('connect').Server} middlewares
  * @param {{audit: {list: Function}, guard?: (req: any) => {ok: boolean, status?: number, error?: string}}} deps
  */
-export function installAdminAuditRoutes(middlewares, { audit, guard = (req) => requireAdminSession(req) }) {
+export function installAdminAuditRoutes(middlewares, { audit, guard = (req) => requireActor(req, 'admin') }) {
   middlewares.use('/api/admin/audit', (req, res) => {
     const send = (status, payload) => {
       res.statusCode = status;

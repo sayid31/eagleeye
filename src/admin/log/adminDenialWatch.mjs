@@ -2,8 +2,8 @@
 /**
  * "Refused /admin access" (checklist 1F): any /api/admin/* response with 401
  * or 403 becomes one Server Log entry per route and status (repeats merge in
- * the log). Google accounts that are not the admin are logged separately by
- * the auth plugin with their reason code.
+ * the log). The shared-login guard (`src/auth/authPlugin.mjs`) answers most
+ * of these; this watch is registered before it so it sees them.
  *
  * @module admin/log/adminDenialWatch
  */
@@ -23,7 +23,7 @@ export function adminDenialEvent(group, status) {
     level: 'warn',
     source: 'admin',
     code: 'admin.access_denied',
-    message: `${group} refused a request (HTTP ${status}: ${status === 401 ? 'no valid admin session' : 'origin not allowed'})`,
+    message: `${group} refused a request (HTTP ${status}: ${status === 401 ? 'not signed in' : 'role, account status or origin not allowed'})`,
     detail: { route: group, status },
   };
 }
