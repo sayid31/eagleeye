@@ -6,6 +6,17 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-11-17 — /dev kill switch stops every role, super_admin included; stored in the auth DB (plan/auth/04)
+
+Runtime: CURRENT-STATE "`/dev` system pages" and "`/api/*` gates".
+
+- **Blocks super_admin too.** The switch exists to stop spend *now* (an AI bill climbing, a quota about to be torched). The owner is usually signed in as super_admin with the map open: if the switch exempted that session, its HUD summary every 15 s, voice, 3D tiles and layer polls would keep calling the paid upstream — exactly the traffic the owner meant to stop. A role exemption also makes "is it off?" impossible to verify from the owner's own browser. Only `layers|ai|premium` are killable (`KILLABLE_GATES`); `open`, `admin` and `super` routes — including `/api/admin/kill-switches` itself — never are, so the owner can always switch a gate back on.
+- **Storage: a `kill_switch` table in the auth database**, not a JSON file. `.gev-data/auth.db` is already owner-only (0600 in a 0700 dir), denied by the dev server, backed up with the accounts and written atomically; a JSON file would need its own permissions, deny rule and atomic write, and anything under a served path could be read or overwritten. The table is created with `CREATE TABLE IF NOT EXISTS` when the store is built (boot), outside Better Auth's schema: the guard reads it synchronously (`node:sqlite`/`bun:sqlite` are sync) and Better Auth's adapter is async.
+- **Cache ≤ 2 s** (`KILL_SWITCH_CACHE_MS`), the same bound as the actor cache, cleared by a write in the same process — the owner's own change applies on the next request; another process sharing the DB (CLI, second server) is seen within 2 s. A failing read keeps the last known state (a killed gate stays killed) and is logged.
+- **Re-auth like role changes** (current password, or a Google sign-in < 10 min old): turning a gate off is a site-wide outage, and an XSS on the map running in a super_admin session must not be able to flip it.
+- **Per gate, not per provider.** The guard's hook only receives the gate (`isKilled(gate)`); per-provider switches (e.g. voice vs HUD) would need path-aware matching in the guard. Deferred until a real need appears.
+- **Not covered:** a voice (WebRTC) session already running keeps its OpenAI connection; only new requests are refused (session duration limit is a separate open item).
+
 ## 2026-11-17 — Auth v2: email + password, three roles, gates declared at route registration (owner request; plan/auth v3)
 
 Supersedes the Google-only/pending-approval entry below. Runtime: CURRENT-STATE "Login (email + password, three roles, route gates)".
