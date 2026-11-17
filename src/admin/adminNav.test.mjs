@@ -26,12 +26,13 @@ test('/dev lists the system pages with the built ones wired to their page ids', 
     ['Ringkasan sistem', 'Pengguna & Admin', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Server Log', 'Audit']);
   const built = areaLeaves('dev').filter((leaf) => leaf.page).map((leaf) => [leaf.path, leaf.page]);
   assert.deepEqual(built, [
+    ['/', 'dev-overview'], ['/kill-switches', 'dev-kill-switches'], ['/usage', 'dev-usage'],
     ['/api-keys', 'api-keys'], ['/ai/general', 'ai-general'], ['/ai/provider', 'ai-provider'], ['/ai/persona', 'ai-persona'],
     ['/ai/usage', 'ai-usage'], ['/server-log', 'server-log'], ['/server-log/audit', 'server-log-audit'],
     ['/server-log/health', 'server-log-health'],
   ]);
   const placeholders = areaLeaves('dev').filter((leaf) => !leaf.page).map((leaf) => leaf.path);
-  assert.deepEqual(placeholders, ['/', '/users', '/kill-switches', '/usage', '/audit']);
+  assert.deepEqual(placeholders, ['/users', '/audit']);
 });
 
 test('an unknown area is refused', () => {

@@ -106,3 +106,18 @@ export const USAGE_TEXT = Object.freeze({
 
 /** Status word next to every colour (never colour alone). */
 export const STATUS_TEXT = Object.freeze({ ok: 'OK', warn: 'Peringatan', error: 'Masalah', off: 'Mati', unknown: 'Tanpa data' });
+
+/** Doctor check id → Indonesian line (same checks as `npm run doctor`; params are counts/flags only). */
+export const DOCTOR_TEXT = Object.freeze({
+  'auth.secret': ({ problem, legacy }) => (problem === 'missing' ? 'BETTER_AUTH_SECRET belum diisi.'
+    : problem ? 'BETTER_AUTH_SECRET kurang dari 32 karakter.'
+      : legacy ? 'Hanya ADMIN_SESSION_SECRET (nama lama) yang diisi; ganti namanya ke BETTER_AUTH_SECRET.' : 'BETTER_AUTH_SECRET ada.'),
+  'auth.superAdminEmails': ({ problem }) => (problem === 'missing' ? 'SUPER_ADMIN_EMAILS belum diisi.' : 'SUPER_ADMIN_EMAILS tidak berisi alamat yang valid.'),
+  'auth.url': () => 'BETTER_AUTH_URL bukan origin http(s) yang valid.',
+  'auth.database': ({ problem }) => (problem === 'missing' ? 'Database login belum dibuat.' : `Database login tidak terbaca (${problem}).`),
+  'auth.superAdminAccess': ({ envEmails, ready, noAccount, blocked }) => `${ready} dari ${envEmails} email super admin bisa masuk; `
+    + `${noAccount} belum punya akun (jalankan npm run auth:set-password), ${blocked} hanya punya password buatan admin (tidak dipromosikan).`,
+  'auth.reconcileBlocked': ({ count }) => `${count} entri audit role.reconcile.blocked — email di env ditolak jadi super admin (lihat Audit).`,
+  'auth.exposure': ({ via, passwordOnlyAdmins }) => `Server terjangkau dari luar mesin ini (${via === 'host' ? 'HOST' : 'BETTER_AUTH_URL'}) `
+    + `sementara ${passwordOnlyAdmins ?? 'sejumlah'} admin masuk hanya dengan password — batasi /admin, /dev, dan /api/admin/* di reverse proxy (IP allowlist/VPN).`,
+});

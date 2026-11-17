@@ -12,6 +12,7 @@ import { PersonaPage } from './pages/PersonaPage.jsx';
 import { PlaceholderPage } from './pages/PlaceholderPage.jsx';
 import { ServerLogPage } from './pages/ServerLogPage.jsx';
 import { UsagePage } from './pages/UsagePage.jsx';
+import { DEV_PAGES } from './dev/devPages.js';
 
 /** Built pages by the `page` id a nav leaf names; a leaf without one renders the placeholder. */
 const PAGES = {
@@ -23,6 +24,7 @@ const PAGES = {
   'ai-persona': PersonaPage,
   'ai-usage': UsagePage,
   'api-keys': ApiKeysPage,
+  ...DEV_PAGES,
 };
 
 function pageFor(leaf, session) {
