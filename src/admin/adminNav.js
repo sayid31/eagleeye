@@ -26,14 +26,15 @@ export const ADMIN_AREAS = Object.freeze(['admin', 'dev']);
 /** @type {Readonly<Record<AdminArea, AdminGroup[]>>} */
 export const AREA_NAV = Object.freeze({
   admin: [
-    { id: 'overview', label: 'Ringkasan', path: '/' },
-    { id: 'users', label: 'Pengguna', path: '/users' },
-    { id: 'login-log', label: 'Log Login', path: '/login-log' },
-    { id: 'audit', label: 'Audit', path: '/audit' },
+    { id: 'overview', label: 'Ringkasan', path: '/', page: 'users-overview' },
+    { id: 'users', label: 'Pengguna', path: '/users', page: 'users' },
+    { id: 'login-log', label: 'Log Login', path: '/login-log', page: 'login-log' },
+    { id: 'audit', label: 'Audit', path: '/audit', page: 'account-audit' },
   ],
   dev: [
     { id: 'overview', label: 'Ringkasan sistem', path: '/' },
-    { id: 'users', label: 'Pengguna & Admin', path: '/users' },
+    { id: 'users', label: 'Pengguna & Admin', path: '/users', page: 'users' },
+    { id: 'login-log', label: 'Log Login', path: '/login-log', page: 'login-log' },
     { id: 'kill-switches', label: 'Kill switch', path: '/kill-switches' },
     { id: 'usage', label: 'Pemakaian', path: '/usage' },
     { id: 'api-keys', label: 'API Keys', path: '/api-keys', page: 'api-keys' },
@@ -58,7 +59,7 @@ export const AREA_NAV = Object.freeze({
         { label: 'Kesehatan Sistem', path: '/server-log/health', page: 'server-log-health' },
       ],
     },
-    { id: 'audit', label: 'Audit', path: '/audit' },
+    { id: 'audit', label: 'Audit', path: '/audit', page: 'account-audit' },
   ],
 });
 
