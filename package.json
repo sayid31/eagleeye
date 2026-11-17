@@ -41,7 +41,8 @@
     "test": "node scripts/run-unit-tests.mjs",
     "test:track": "node scripts/track-regression.mjs",
     "qa:map-source-tray": "node scripts/qa-map-source-tray.mjs",
-    "qa:boot-timing": "node scripts/qa-boot-timing.mjs"
+    "qa:boot-timing": "node scripts/qa-boot-timing.mjs",
+    "auth:migrate": "node scripts/auth-migrate.mjs"
   },
   "dependencies": {
     "@mapbox/vector-tile": "^3.0.0",
