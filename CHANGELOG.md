@@ -20,6 +20,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 - **Izin per user: Layer data, Voice & AI, Peta premium & search.** Layanan yang tidak diizinkan dijawab
   "Fitur belum diaktifkan admin" oleh server. Akun baru: Layer data dan Voice & AI aktif, Peta premium
   mati. Admin dan super admin selalu mendapat semuanya.
+- **Peta mengikuti izin akun.** Fitur yang belum diizinkan tampil terkunci (ikon gembok, tooltip "Belum
+  diizinkan admin"), bukan tombol mati: tanpa Layer data semua layer tidak bisa dinyalakan (termasuk gempa
+  USGS dan data bawaan); tanpa Voice & AI mikrofon terkunci dan ringkasan AI di HUD tidak meminta ke server;
+  tanpa Peta premium hanya peta dasar tanpa kunci, pencarian memakai Nominatim, dan layer instalasi militer
+  tanpa kandidat Google Places. Satu banner "Beberapa fitur belum diaktifkan admin" menyebut fitur yang
+  mati dan bisa ditutup (sekali per sesi). Bila izin dicabut atau fitur dimatikan developer saat peta
+  terbuka, fitur itu langsung dikunci dengan satu pemberitahuan — tanpa permintaan berulang ke server.
+- **Sesi suara maksimal 30 menit** per sesi, juga bila batas durasi di AI Configuration lebih panjang atau mati.
 - **Perlindungan login.** Setelah 5 password salah, akun (juga email yang tidak terdaftar) harus menunggu
   1, 2, 4, 8 hingga maksimal 15 menit — hilang sendiri, atau `npm run auth:unlock -- --email …`. Pesan
   gagal selalu "Email atau password salah". Setiap percobaan masuk dan setiap tindakan admin tercatat
