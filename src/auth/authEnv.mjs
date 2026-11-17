@@ -8,12 +8,15 @@
  */
 
 import path from 'node:path';
+import { parseTrustedProxies } from './clientIp.mjs';
 
 /** Better Auth refuses shorter secrets in spirit (it warns); this app refuses them outright. */
 export const MIN_AUTH_SECRET_LENGTH = 32;
 const DEFAULT_PORT = 4173;
-/** Relative to the checkout root; `data/` is gitignored and created owner-only. */
-export const DEFAULT_AUTH_DATABASE_FILE = 'data/auth.db';
+/** Relative to the checkout root; `.gev-data/` is gitignored, denied to the static server and created owner-only. */
+export const DEFAULT_AUTH_DATABASE_FILE = '.gev-data/auth.db';
+/** Where phase 1a kept it; moved once to DEFAULT_AUTH_DATABASE_FILE (authDatabase.mjs). */
+export const LEGACY_AUTH_DATABASE_FILE = 'data/auth.db';
 
 const EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 // Google client ids are plain ASCII (`<digits>-<hash>.apps.googleusercontent.com`).
@@ -44,14 +47,34 @@ function resolveBaseUrl(raw, port) {
 }
 
 /**
+ * Google sign-in (super_admin only) is optional: both values or neither. A
+ * half or malformed pair disables it with a warning instead of blocking login.
+ * @returns {{clientId: string, clientSecret: string} | null}
+ */
+function readGoogle(env, warnings) {
+  const clientId = text(env.GOOGLE_CLIENT_ID);
+  const clientSecret = text(env.GOOGLE_CLIENT_SECRET);
+  if (!clientId && !clientSecret) return null;
+  const bad = [];
+  if (!clientId || !PRINTABLE_ASCII_NO_SPACE.test(clientId)) bad.push('GOOGLE_CLIENT_ID');
+  if (!clientSecret || !PRINTABLE_ASCII_NO_SPACE.test(clientSecret)) bad.push('GOOGLE_CLIENT_SECRET');
+  if (bad.length) {
+    warnings.push(`Google sign-in disabled: ${bad.join(', ')} missing or invalid.`);
+    return null;
+  }
+  return { clientId, clientSecret };
+}
+
+/**
  * @param {Record<string, string | undefined>} [env]
  * @param {{port?: number, rootDir?: string}} [options] `port` is the port the
  *   server really listens on (default for BETTER_AUTH_URL); `rootDir` anchors a
  *   relative AUTH_DATABASE_FILE.
  * @returns {{ok: true, secret: string, baseURL: string, origin: string, secureCookies: boolean,
- *   superAdminEmails: string[], googleClientId: string, googleClientSecret: string,
- *   databaseFile: string, missing: [], invalid: [], warnings: string[]}
- *   | {ok: false, missing: string[], invalid: string[], warnings: string[], databaseFile: string}}
+ *   superAdminEmails: string[], google: {clientId: string, clientSecret: string} | null,
+ *   trustedProxies: ReturnType<typeof parseTrustedProxies>, databaseFile: string,
+ *   legacyDatabaseFile: string | null, missing: [], invalid: [], warnings: string[]}
+ *   | {ok: false, missing: string[], invalid: string[], warnings: string[], databaseFile: string, legacyDatabaseFile: string | null}}
  */
 export function readAuthEnv(env = process.env, { port, rootDir = process.cwd() } = {}) {
   const missing = [];
@@ -69,25 +92,20 @@ export function readAuthEnv(env = process.env, { port, rootDir = process.cwd() }
   const base = resolveBaseUrl(env.BETTER_AUTH_URL, listenPort);
   if (!base) invalid.push('BETTER_AUTH_URL');
 
+  // No ADMIN_EMAIL fallback any more: super_admin is SUPER_ADMIN_EMAILS only.
   const ownList = text(env.SUPER_ADMIN_EMAILS);
-  const superAdminEmails = parseEmailList(ownList || env.ADMIN_EMAIL);
-  if (!superAdminEmails.length) {
-    if (ownList) invalid.push('SUPER_ADMIN_EMAILS');
-    else if (text(env.ADMIN_EMAIL)) invalid.push('ADMIN_EMAIL');
-    else missing.push('SUPER_ADMIN_EMAILS');
-  } else if (!ownList) {
-    warnings.push('SUPER_ADMIN_EMAILS is not set; using ADMIN_EMAIL for compatibility.');
-  }
+  const superAdminEmails = parseEmailList(ownList);
+  if (!superAdminEmails.length) (ownList ? invalid : missing).push('SUPER_ADMIN_EMAILS');
+  if (!ownList && text(env.ADMIN_EMAIL)) warnings.push('ADMIN_EMAIL is no longer read; move the address to SUPER_ADMIN_EMAILS.');
 
-  const googleClientId = text(env.GOOGLE_CLIENT_ID);
-  if (!googleClientId) missing.push('GOOGLE_CLIENT_ID');
-  else if (!PRINTABLE_ASCII_NO_SPACE.test(googleClientId)) invalid.push('GOOGLE_CLIENT_ID');
-  const googleClientSecret = text(env.GOOGLE_CLIENT_SECRET);
-  if (!googleClientSecret) missing.push('GOOGLE_CLIENT_SECRET');
-  else if (!PRINTABLE_ASCII_NO_SPACE.test(googleClientSecret)) invalid.push('GOOGLE_CLIENT_SECRET');
+  const google = readGoogle(env, warnings);
+  const trustedProxies = parseTrustedProxies(env.AUTH_TRUSTED_PROXIES);
+  if (trustedProxies.invalid.length) warnings.push(`AUTH_TRUSTED_PROXIES has ${trustedProxies.invalid.length} invalid entr${trustedProxies.invalid.length === 1 ? 'y' : 'ies'}; ignored.`);
 
+  const usesDefaultFile = !text(env.AUTH_DATABASE_FILE);
   const databaseFile = path.resolve(rootDir, text(env.AUTH_DATABASE_FILE) || DEFAULT_AUTH_DATABASE_FILE);
-  if (missing.length || invalid.length) return { ok: false, missing, invalid, warnings, databaseFile };
+  const legacyDatabaseFile = usesDefaultFile ? path.resolve(rootDir, LEGACY_AUTH_DATABASE_FILE) : null;
+  if (missing.length || invalid.length) return { ok: false, missing, invalid, warnings, databaseFile, legacyDatabaseFile };
 
   return {
     ok: true,
@@ -96,9 +114,10 @@ export function readAuthEnv(env = process.env, { port, rootDir = process.cwd() }
     origin: base.origin,
     secureCookies: base.protocol === 'https:',
     superAdminEmails,
-    googleClientId,
-    googleClientSecret,
+    google,
+    trustedProxies,
     databaseFile,
+    legacyDatabaseFile,
     missing: [],
     invalid: [],
     warnings,

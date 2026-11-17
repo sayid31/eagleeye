@@ -1,72 +1,67 @@
 // src/auth/loginLog.mjs
 /**
- * `login_log` table: one row per session Better Auth creates (= one Google
- * sign-in). Declared as a Better Auth plugin schema so the same programmatic
- * migration that creates `user`/`session` creates it too (and a later
- * Postgres adapter gets it for free). No UI reads it yet (step 1b).
+ * `login_log` v2: one row per sign-in attempt, successful or not (plan/auth/06
+ * §Login log). A known account is recorded by id; an unknown email only as a
+ * keyed hash (HMAC with the auth secret), so the table never holds an address
+ * someone merely typed. No API deletes rows.
  *
- * A failed insert never fails the sign-in: it is reported once on the console
- * with the user id and the error code only — no email, no IP, no user agent.
+ * A failed insert never fails the sign-in: it is reported on the console with
+ * the user id and the error code only — no email, no IP, no user agent.
  *
  * @module auth/loginLog
  */
 
-export const LOGIN_LOG_MODEL = 'loginLog';
-export const LOGIN_LOG_TABLE = 'login_log';
+import { createHmac } from 'node:crypto';
+import { normalizeEmail } from './authRoles.mjs';
+
+export const LOGIN_METHODS = Object.freeze(['password', 'google']);
+export const LOGIN_FAILURE_REASONS = Object.freeze(['bad_credentials', 'throttled', 'disabled', 'rate_limited', 'google_only', 'google_denied']);
 const MAX_USER_AGENT_LENGTH = 512;
 
 /**
- * Better Auth plugin that only contributes the table definition.
- * @returns {import('better-auth').BetterAuthPlugin}
+ * Keyed hash of a normalized email (same input → same hash, not reversible without the secret).
+ * @param {string} email
+ * @param {string} secret
+ * @returns {string} hex
  */
-export function loginLogSchemaPlugin() {
-  return {
-    id: 'gev-login-log',
-    schema: {
-      [LOGIN_LOG_MODEL]: {
-        modelName: LOGIN_LOG_TABLE,
-        fields: {
-          userId: { type: 'string', required: true, index: true },
-          createdAt: { type: 'date', required: true },
-          ip: { type: 'string', required: false },
-          userAgent: { type: 'string', required: false },
-          method: { type: 'string', required: true },
-        },
-      },
-    },
-  };
+export function hashEmail(email, secret) {
+  return createHmac('sha256', secret).update(`login-email:${normalizeEmail(email)}`).digest('hex');
 }
 
 /**
- * Better Auth session row → login_log row.
- * @param {{userId: string, ipAddress?: string | null, userAgent?: string | null, createdAt?: Date}} session
+ * @param {{userId?: string | null, emailHash?: string | null, success: boolean, reason?: string | null,
+ *   method: string, ip?: string | null, userAgent?: string | null}} attempt
  * @param {() => Date} [now]
- * @returns {{userId: string, createdAt: Date, ip: string | null, userAgent: string | null, method: 'google'}}
+ * @returns {object} A login_log row.
  */
-export function loginLogEntry(session, now = () => new Date()) {
+export function loginLogEntry(attempt, now = () => new Date()) {
+  if (!LOGIN_METHODS.includes(attempt.method)) throw new Error(`login_log: unknown method "${attempt.method}"`);
+  if (!attempt.success && !LOGIN_FAILURE_REASONS.includes(attempt.reason)) throw new Error(`login_log: unknown reason "${attempt.reason}"`);
   return {
-    userId: String(session.userId),
-    createdAt: session.createdAt instanceof Date ? session.createdAt : now(),
-    ip: session.ipAddress ? String(session.ipAddress) : null,
-    userAgent: session.userAgent ? String(session.userAgent).slice(0, MAX_USER_AGENT_LENGTH) : null,
-    // Google is the only sign-in method in this phase.
-    method: 'google',
+    userId: attempt.userId ? String(attempt.userId) : null,
+    emailHash: attempt.userId ? null : (attempt.emailHash ?? null),
+    success: Boolean(attempt.success),
+    reason: attempt.success ? null : attempt.reason,
+    createdAt: now(),
+    ip: attempt.ip ? String(attempt.ip) : null,
+    userAgent: attempt.userAgent ? String(attempt.userAgent).slice(0, MAX_USER_AGENT_LENGTH) : null,
+    method: attempt.method,
   };
 }
 
 /**
- * Wraps a writer so the `session.create.after` hook can never throw.
- * @param {(entry: object) => Promise<unknown>} write
+ * Wrap a row writer so callers on the sign-in path can never throw.
+ * @param {(row: object) => Promise<unknown>} write
  * @param {(message: string) => void} [warn]
- * @returns {(session: object) => Promise<boolean>} true when the row was written.
+ * @returns {(attempt: object) => Promise<boolean>} true when the row was written.
  */
 export function createLoginRecorder(write, warn = (message) => console.warn(message)) {
-  return async (session) => {
+  return async (attempt) => {
     try {
-      await write(loginLogEntry(session));
+      await write(loginLogEntry(attempt));
       return true;
     } catch (error) {
-      warn(`[auth] login_log insert failed for user ${String(session?.userId ?? '?')}: ${error?.code || error?.message || 'unknown error'}`);
+      warn(`[auth] login_log insert failed for user ${String(attempt?.userId ?? '-')}: ${error?.code || error?.message || 'unknown error'}`);
       return false;
     }
   };

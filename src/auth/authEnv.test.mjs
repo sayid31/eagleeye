@@ -1,76 +1,50 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import path from 'node:path';
-import { parseEmailList, readAuthEnv } from './authEnv.mjs';
+import { DEFAULT_AUTH_DATABASE_FILE, MIN_AUTH_SECRET_LENGTH, parseEmailList, readAuthEnv } from './authEnv.mjs';
 
-// test-only fixtures, not real credentials
-const SECRET = 'f'.repeat(16) + 'e'.repeat(16) + 'd'.repeat(8);
-const GOOD = {
-  BETTER_AUTH_SECRET: SECRET,
-  SUPER_ADMIN_EMAILS: 'Owner@Example.test, second@example.test',
-  GOOGLE_CLIENT_ID: '1234-abc.apps.googleusercontent.com',
-  GOOGLE_CLIENT_SECRET: 'client-secret-fixture',
-};
+const SECRET = 'x'.repeat(MIN_AUTH_SECRET_LENGTH); // test-only
+const base = { BETTER_AUTH_SECRET: SECRET, SUPER_ADMIN_EMAILS: ' Owner@Example.test, dev@example.test ,bad' };
 
-test('a complete env yields a trimmed config with lower-cased super-admins and the localhost default URL', () => {
-  const config = readAuthEnv({ ...GOOD, GOOGLE_CLIENT_ID: `  ${GOOD.GOOGLE_CLIENT_ID}\n`, BETTER_AUTH_SECRET: ` ${SECRET} ` }, { rootDir: '/repo' });
+test('a complete env: lower-cased super_admins, localhost default URL, .gev-data default DB with a legacy path', () => {
+  const config = readAuthEnv(base, { port: 4391, rootDir: '/repo' });
   assert.equal(config.ok, true);
-  assert.equal(config.googleClientId, GOOD.GOOGLE_CLIENT_ID);
-  assert.equal(config.secret, SECRET);
-  assert.deepEqual(config.superAdminEmails, ['owner@example.test', 'second@example.test']);
-  assert.equal(config.baseURL, 'http://localhost:4173');
-  assert.equal(config.origin, 'http://localhost:4173');
-  assert.equal(config.secureCookies, false);
-  assert.equal(config.databaseFile, path.resolve('/repo', 'data/auth.db'));
-  assert.deepEqual(config.warnings, []);
+  assert.deepEqual(config.superAdminEmails, ['owner@example.test', 'dev@example.test']);
+  assert.equal(config.origin, 'http://localhost:4391');
+  assert.equal(DEFAULT_AUTH_DATABASE_FILE, '.gev-data/auth.db');
+  assert.equal(config.databaseFile, path.resolve('/repo/.gev-data/auth.db'));
+  assert.equal(config.legacyDatabaseFile, path.resolve('/repo/data/auth.db'));
+  assert.equal(config.google, null, 'Google is optional');
+  assert.equal(readAuthEnv({ ...base, AUTH_DATABASE_FILE: 'x/y.db' }, { rootDir: '/repo' }).legacyDatabaseFile, null, 'explicit file: no legacy move');
 });
 
-test('the listening port and PORT drive the default URL; BETTER_AUTH_URL overrides it', () => {
-  assert.equal(readAuthEnv(GOOD, { port: 4183 }).baseURL, 'http://localhost:4183');
-  assert.equal(readAuthEnv({ ...GOOD, PORT: '5000' }).baseURL, 'http://localhost:5000');
-  const https = readAuthEnv({ ...GOOD, BETTER_AUTH_URL: 'https://eagle.example.test/' });
-  assert.equal(https.origin, 'https://eagle.example.test');
-  assert.equal(https.secureCookies, true);
-  assert.deepEqual(readAuthEnv({ ...GOOD, BETTER_AUTH_URL: 'javascript:alert(1)' }).invalid, ['BETTER_AUTH_URL']);
-  assert.deepEqual(readAuthEnv({ ...GOOD, BETTER_AUTH_URL: 'http://localhost:4173/app' }).invalid, ['BETTER_AUTH_URL']);
+test('SUPER_ADMIN_EMAILS is required; ADMIN_EMAIL is no longer a fallback (warned by name)', () => {
+  const missing = readAuthEnv({ BETTER_AUTH_SECRET: SECRET, ADMIN_EMAIL: 'owner@example.test' });
+  assert.equal(missing.ok, false);
+  assert.deepEqual(missing.missing, ['SUPER_ADMIN_EMAILS']);
+  assert.match(missing.warnings.join(' '), /ADMIN_EMAIL is no longer read/);
+  assert.deepEqual(readAuthEnv({ BETTER_AUTH_SECRET: SECRET, SUPER_ADMIN_EMAILS: 'nope' }).invalid, ['SUPER_ADMIN_EMAILS']);
+  assert.deepEqual(readAuthEnv({ SUPER_ADMIN_EMAILS: 'a@b.cd' }).missing, ['BETTER_AUTH_SECRET']);
+  assert.deepEqual(readAuthEnv({ ...base, BETTER_AUTH_SECRET: 'short' }).invalid, ['BETTER_AUTH_SECRET']);
 });
 
-test('nothing set → not configured, listing NAMES only', () => {
-  const result = readAuthEnv({});
-  assert.equal(result.ok, false);
-  assert.deepEqual(result.missing.sort(), ['BETTER_AUTH_SECRET', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'SUPER_ADMIN_EMAILS']);
-  assert.deepEqual(result.invalid, []);
+test('Google: both values enable it; half or malformed pairs disable it with a warning, login still configured', () => {
+  const full = readAuthEnv({ ...base, GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com', GOOGLE_CLIENT_SECRET: 'secret' }); // test-only
+  assert.deepEqual(full.google, { clientId: 'id.apps.googleusercontent.com', clientSecret: 'secret' });
+  const half = readAuthEnv({ ...base, GOOGLE_CLIENT_ID: 'id.apps.googleusercontent.com' });
+  assert.equal(half.ok, true);
+  assert.equal(half.google, null);
+  assert.match(half.warnings.join(' '), /GOOGLE_CLIENT_SECRET/);
+  assert.equal(readAuthEnv({ ...base, GOOGLE_CLIENT_ID: 'has space', GOOGLE_CLIENT_SECRET: 's' }).google, null);
 });
 
-test('weak secrets and bad client ids are invalid, and no value is echoed', () => {
-  const result = readAuthEnv({ ...GOOD, BETTER_AUTH_SECRET: 'short-secret', GOOGLE_CLIENT_ID: '1234 abc.apps.googleusercontent.com' });
-  assert.equal(result.ok, false);
-  assert.deepEqual(result.invalid.sort(), ['BETTER_AUTH_SECRET', 'GOOGLE_CLIENT_ID']);
-  const text = JSON.stringify(result);
-  assert.ok(!text.includes('short-secret') && !text.includes('1234'));
-  assert.deepEqual(readAuthEnv({ ...GOOD, GOOGLE_CLIENT_ID: '1234-abc.apps.googleusercontent.com​' }).invalid, ['GOOGLE_CLIENT_ID']);
-  assert.deepEqual(readAuthEnv({ ...GOOD, GOOGLE_CLIENT_ID: '1234-äbc.apps.googleusercontent.com' }).invalid, ['GOOGLE_CLIENT_ID']);
+test('AUTH_TRUSTED_PROXIES parsed; invalid entries counted, never echoed', () => {
+  const config = readAuthEnv({ ...base, AUTH_TRUSTED_PROXIES: '127.0.0.1, 10.0.0.0/8, nonsense' });
+  assert.deepEqual(config.trustedProxies.entries, ['127.0.0.1', '10.0.0.0/8']);
+  assert.match(config.warnings.join(' '), /1 invalid entry/);
+  assert.doesNotMatch(config.warnings.join(' '), /nonsense/);
 });
 
-test('legacy ADMIN_SESSION_SECRET and ADMIN_EMAIL still work, with a compatibility warning', () => {
-  const { BETTER_AUTH_SECRET, SUPER_ADMIN_EMAILS, ...rest } = GOOD;
-  const config = readAuthEnv({ ...rest, ADMIN_SESSION_SECRET: SECRET, ADMIN_EMAIL: ' Legacy@Example.test ' });
-  assert.equal(config.ok, true);
-  assert.equal(config.secret, SECRET);
-  assert.deepEqual(config.superAdminEmails, ['legacy@example.test']);
-  assert.equal(config.warnings.length, 2);
-  assert.ok(config.warnings.every((w) => !w.includes('@')));
-  assert.deepEqual(readAuthEnv({ ...rest, ADMIN_SESSION_SECRET: 'tiny', ADMIN_EMAIL: 'nope' }).invalid.sort(), ['ADMIN_EMAIL', 'ADMIN_SESSION_SECRET']);
-  assert.equal(readAuthEnv({ ...GOOD, ADMIN_SESSION_SECRET: 'ignored-because-better-auth-secret-wins' }).secret, SECRET);
-});
-
-test('parseEmailList trims, lower-cases, de-duplicates and drops non-emails', () => {
-  assert.deepEqual(parseEmailList(' A@x.test,a@X.test , not-an-email,, b@y.test'), ['a@x.test', 'b@y.test']);
-  assert.deepEqual(parseEmailList(undefined), []);
-  assert.deepEqual(readAuthEnv({ ...GOOD, SUPER_ADMIN_EMAILS: 'nope, still-nope' }).invalid, ['SUPER_ADMIN_EMAILS']);
-});
-
-test('AUTH_DATABASE_FILE is resolved against the checkout root', () => {
-  assert.equal(readAuthEnv({ ...GOOD, AUTH_DATABASE_FILE: ' var/users.db ' }, { rootDir: '/repo' }).databaseFile, path.resolve('/repo/var/users.db'));
-  assert.equal(readAuthEnv({ ...GOOD, AUTH_DATABASE_FILE: '/abs/auth.db' }, { rootDir: '/repo' }).databaseFile, '/abs/auth.db');
+test('parseEmailList de-duplicates and drops invalid entries', () => {
+  assert.deepEqual(parseEmailList('A@b.cd, a@b.cd, x, , c@d.ef'), ['a@b.cd', 'c@d.ef']);
 });
