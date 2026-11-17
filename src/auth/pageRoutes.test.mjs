@@ -80,8 +80,10 @@ test('pageAreaFor is exact and case-sensitive', () => {
   assert.equal(pageAreaFor('/dev/'), 'dev');
 });
 
-test('until landing.html exists, / redirects (anonymous → /login, signed in → home) instead of falling through to the map', () => {
-  assert.deepEqual(decide('/', null, { landingAvailable: false }), { action: 'redirect', location: '/login' });
-  assert.deepEqual(decide('/', who('admin'), { landingAvailable: false }), { action: 'redirect', location: '/admin' });
-  assert.deepEqual(decide('/', null), { action: 'serve', url: '/landing.html' });
+test('/ always rewrites to the public landing, keeping the query for its legacy-link redirect', () => {
+  assert.deepEqual(decide('/'), { action: 'serve', url: '/landing.html' });
+  assert.deepEqual(decide('/landing.html'), { action: 'serve', url: '/landing.html' });
+  assert.deepEqual(decide('/?welcome=0'), { action: 'serve', url: '/landing.html?welcome=0' });
+  assert.deepEqual(decide('/?trafficDebug=1', ROLES.admin), { action: 'serve', url: '/landing.html?trafficDebug=1' });
+  assert.equal(pageRouteDecision({ method: 'POST', url: '/', actor: null }).action, 'not-found');
 });

@@ -75,6 +75,8 @@ test('sign-in/social with Google configured: the stored OAuth state carries the 
 
 test('page guard over HTTP: landing public, map needs a session, areas by role, internals 404', async () => {
   assert.deepEqual(await status(await t.request('/')), [299, null]);
+  assert.equal((await (await t.request('/?welcome=0')).json()).reached, '/landing.html?welcome=0', '/ rewrites to the landing');
+  assert.equal((await t.request('/src/landing/main.js')).status, 299, 'landing modules load without a session');
   assert.deepEqual(await status(await t.request('/app')), [302, '/login?next=%2Fapp']);
   assert.deepEqual(await status(await t.request('/dev', { cookie: 'gev.session_token=stale.value' })), [302, '/login?next=%2Fdev&notice=session']);
   assert.deepEqual(await status(await t.request('/app', { cookie: cookies.user })), [299, null]);
