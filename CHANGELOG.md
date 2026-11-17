@@ -24,6 +24,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   1, 2, 4, 8 hingga maksimal 15 menit — hilang sendiri, atau `npm run auth:unlock -- --email …`. Pesan
   gagal selalu "Email atau password salah". Setiap percobaan masuk dan setiap tindakan admin tercatat
   (log login dan audit).
+- **Halaman login yang lebih jelas.** Tombol tampilkan/sembunyikan password, status memproses, dan pesan
+  Bahasa Indonesia untuk setiap hasil (password salah, akun dinonaktifkan, akun Google, sesi berakhir,
+  login belum dikonfigurasi). Link berbagi peta (`/app#…`) tetap utuh setelah harus login dulu.
+- **Halaman akun (`/account`).** Ubah nama tampilan, ganti password, "Keluar dari perangkat lain", dan
+  keluar. Password yang diatur admin wajib diganti di `/account/password` sebelum memakai aplikasi;
+  setelah berhasil langsung diarahkan ke area masing-masing. Akun Google tidak punya bagian password.
+- **Super admin yang dibuat lewat CLI bisa menambahkan Google** cukup dengan masuk lewat Google sekali.
+  Akun lain dengan email yang sama (password dari admin) tetap ditolak.
 - Pengaturan `.env`: `BETTER_AUTH_SECRET` dan `SUPER_ADMIN_EMAILS` wajib; opsional `GOOGLE_CLIENT_ID`/
   `GOOGLE_CLIENT_SECRET` (khusus super admin), `BETTER_AUTH_URL`, `AUTH_TRUSTED_PROXIES`,
   `AUTH_DATABASE_FILE` (default `.gev-data/auth.db`). `npm run auth:migrate` menyiapkan/memutakhirkan
@@ -79,6 +87,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Masuk lewat Google dengan email yang tidak terdaftar tidak lagi membuat server login macet untuk semua
+  orang (permintaan sebelumnya menggantung dan mengunci database login).
 - **Keamanan:** server aplikasi tidak lagi menyajikan file data internal ke siapa pun yang membuka URL-nya
   langsung. Audit trail admin, Server Log, pengaturan & pemakaian suara, transkrip percakapan suara
   (`.gev-cache/`, `.gev-logs/`), database login (`.gev-data/`, `data/auth.db`), log pm2 (`logs/`), serta file

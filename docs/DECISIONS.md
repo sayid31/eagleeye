@@ -6,6 +6,17 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-11-17 — Google may link only to a CLI-bootstrapped super_admin (auth v2, phase 2 login worker)
+
+Runtime: CURRENT-STATE "Login" → Better Auth config and Hooks.
+
+- **Problem.** With `accountLinking.enabled: false`, a super_admin first created by `npm run auth:set-password` (no Google client yet, or Pinokio) could never sign in with Google later: the callback found the email taken and answered `account_not_linked`.
+- **Chosen: linking on, gated in `account.create.before`** (`googleLinkDecision`). Better Auth 1.7.25 creates every account row through `createWithHooks`, so the hook sees both the implicit link (`handleOAuthUserInfo` → `linkAccount`) and a fresh Google sign-up, and a thrown `APIError` reaches the callback's `redirectOnError` (→ our forced error URL). It allows only an env email that is open and has no password or a `cli` password; the reason never goes into the URL.
+- **Rejected: `user.validateUserInfo`.** It would see the link (`action: 'link-account'`) but Better Auth also runs it from `internalAdapter.createUser` and fails closed without an endpoint context — it would break account creation by the admin service and the CLI.
+- **Rejected: `trustedProviders: ['google']`.** It skips Better Auth's own "provider verified this email" requirement; Google must still report `email_verified`.
+- **Rejected: a CLI `auth:link-google` command.** It would need the Google `sub` up front (only known after an OAuth round trip) and a second secret-handling path; the hook needs nothing extra from the owner.
+- `requireLocalEmailVerified: false` because the CLI stores `emailVerified: false`; Better Auth marks it verified after the link. `/link-social` stays off the endpoint allowlist, so linking only happens through a full Google sign-in.
+
 ## 2026-11-17 — Auth v2: email + password, three roles, gates declared at route registration (owner request; plan/auth v3)
 
 Supersedes the Google-only/pending-approval entry below. Runtime: CURRENT-STATE "Login (email + password, three roles, route gates)".
