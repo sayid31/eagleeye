@@ -85,10 +85,11 @@
  * Exits non-zero if ANY invariant fails. DOES NOT COMMIT anything.
  *
  * LOGIN: the app only serves signed-in accounts (src/auth/). The harness
- * mints a real 2-hour session for the dedicated active account
+ * mints a real session for the dedicated active account
  * `track-harness@example.invalid` straight in this checkout's auth database
  * (scripts/authCheckout.mjs — same .env, AUTH_DATABASE_FILE and
- * BETTER_AUTH_SECRET as the dev server under test) and deletes it at the end.
+ * BETTER_AUTH_SECRET as the dev server under test) and deletes it at the end
+ * (a crashed run's leftovers are deleted at the next start).
  * There is no server-side bypass. Run it against a server started from this
  * checkout with the same env.
  *
@@ -278,6 +279,16 @@ async function main() {
           contentType: 'application/json',
           body: JSON.stringify({ summary: 'QA globe ready' }),
         });
+        return;
+      }
+      // Browser Server Log batches are answered here: under this launch
+      // (--disable-web-security + request interception) Chromium sends the
+      // POST without an Origin header, so the server's same-origin check
+      // answers 403 whenever a deliberate fault (e.g. the failed CelesTrak
+      // group below) produces a layer-health event. It also keeps harness
+      // faults out of the owner's Server Log. /api/log has its own unit tests.
+      if (url.origin === APP_ORIGIN && url.pathname === '/api/log' && request.method() === 'POST') {
+        request.respond({ status: 200, contentType: 'application/json', body: '{"accepted":0,"dropped":0}' });
         return;
       }
       request.continue();
@@ -4000,7 +4011,7 @@ async function main() {
 
     finishAndExit();
   } finally {
-    await harnessSession.revoke().catch((e) => console.warn(`  (harness session not revoked: ${e.message}; it expires in 2 h)`));
+    await harnessSession.revoke().catch((e) => console.warn(`  (harness session not revoked: ${e.message}; the next run deletes it)`));
     if (!KEEP_OPEN) {
       await browser.close();
     } else {

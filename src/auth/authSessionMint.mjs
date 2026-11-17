@@ -27,11 +27,10 @@ export function signSessionToken(token, secret) {
  * Creation goes through Better Auth's hooks, so a new account starts as the
  * hook decides (pending user unless the email is an env super-admin).
  * @param {object} auth Better Auth instance.
- * @param {{email: string, name?: string, role?: string, status?: string, expiresInMs?: number}} account
- *   `expiresInMs` shortens the session (default: Better Auth's session lifetime).
+ * @param {{email: string, name?: string, role?: string, status?: string}} account
  * @returns {Promise<{cookie: string, cookieName: string, cookieValue: string, userId: string, token: string}>}
  */
-export async function mintSessionCookie(auth, { email, name = 'Test account', role, status, expiresInMs }) {
+export async function mintSessionCookie(auth, { email, name = 'Test account', role, status }) {
   const ctx = await auth.$context;
   const found = await ctx.internalAdapter.findUserByEmail(email);
   let user = found?.user ?? await ctx.internalAdapter.createUser({ email, name, emailVerified: true });
@@ -39,8 +38,7 @@ export async function mintSessionCookie(auth, { email, name = 'Test account', ro
   if (role && user.role !== role) patch.role = role;
   if (status && user.status !== status) patch.status = status;
   if (Object.keys(patch).length) user = await ctx.internalAdapter.updateUser(user.id, patch);
-  const override = expiresInMs > 0 ? { expiresAt: new Date(Date.now() + expiresInMs) } : undefined;
-  const session = await ctx.internalAdapter.createSession(user.id, false, override);
+  const session = await ctx.internalAdapter.createSession(user.id);
   const cookieName = ctx.authCookies.sessionToken.name;
   const cookieValue = signSessionToken(session.token, ctx.secret);
   return { cookie: `${cookieName}=${cookieValue}`, cookieName, cookieValue, userId: user.id, token: session.token };

@@ -17,7 +17,6 @@ import { mintSessionCookie } from '../src/auth/authSessionMint.mjs';
 
 /** Dedicated account the test:track harness signs in as (active `user`, never an admin). */
 export const HARNESS_EMAIL = 'track-harness@example.invalid';
-const HARNESS_SESSION_MS = 2 * 60 * 60 * 1000;
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -43,19 +42,20 @@ export function describeUnconfigured(config) {
 }
 
 /**
- * A real, short-lived session for the harness account, minted directly in the
- * auth database (needs this checkout's secret and database — the same power as
- * owning the server; the server itself has no bypass).
+ * A real session for the harness account, minted directly in the auth
+ * database (needs this checkout's secret and database — the same power as
+ * owning the server; the server itself has no bypass). Sessions left by an
+ * earlier run that crashed before `revoke` are deleted first.
  * @param {{port?: number}} [options]
  * @returns {Promise<{cookieName: string, cookieValue: string, userId: string, revoke: () => Promise<void>}>}
  */
 export async function mintHarnessSession({ port } = {}) {
   const { config, auth } = await openCheckoutAuth({ port });
   if (!auth) throw new Error(describeUnconfigured(config));
-  const minted = await mintSessionCookie(auth, {
-    email: HARNESS_EMAIL, name: 'test:track harness', role: 'user', status: 'active', expiresInMs: HARNESS_SESSION_MS,
-  });
   const ctx = await auth.$context;
+  const existing = await ctx.internalAdapter.findUserByEmail(HARNESS_EMAIL);
+  if (existing?.user) await ctx.internalAdapter.deleteUserSessions(existing.user.id);
+  const minted = await mintSessionCookie(auth, { email: HARNESS_EMAIL, name: 'test:track harness', role: 'user', status: 'active' });
   return {
     cookieName: minted.cookieName,
     cookieValue: minted.cookieValue,
