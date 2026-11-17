@@ -16,5 +16,5 @@ pinokio/ENVIRONMENT
 pinokio/.installed
 # Auth database (Better Auth SQLite: users, sessions, login/audit log) — owner-only, never commit.
 # .gev-data/ is the home since auth v2; data/ is the phase-1a location (moved once at boot).
-.gev-data/
-data/
+/.gev-data/
+/data/
