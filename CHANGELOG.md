@@ -79,6 +79,11 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- **Keamanan:** server aplikasi tidak lagi menyajikan file data internal ke siapa pun yang membuka URL-nya
+  langsung. Audit trail admin, Server Log, pengaturan & pemakaian suara, transkrip percakapan suara
+  (`.gev-cache/`, `.gev-logs/`), database login (`.gev-data/`, `data/auth.db`), log pm2 (`logs/`), serta file
+  `*.db`/`*.sqlite`/`*.jsonl`/`*.log` kini dijawab 403. Endpoint `/__open-in-editor` bawaan Vite juga dimatikan.
+  Bila instance Anda pernah terbuka ke internet, anggap isi file-file tersebut sudah bocor.
 - Pencarian nama kota kini menuju kota yang dimaksud, bukan tempat kecil bernama sama di dekat tampilan. Contoh:
   "kupang" dari tampilan Jakarta atau Lampung kini menuju Kota Kupang (NTT), bukan jalan TLK Kupang atau
   kelurahan Kupang Kota. Nama jalan dan landmark tetap memilih yang ada di layar. Pencarian jalan/landmark

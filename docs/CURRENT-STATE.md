@@ -1682,6 +1682,7 @@ One login for the landing, the map (`/app`), `/admin`, `/dev` and `/account`, re
 
 ### Proxy/Security Baseline
 
+- The dev server serves files under the project root (dotfiles included) unless `server.fs.deny` matches them. The list lives in `src/server/devServerExposure.mjs` (`devServerFsDeny`): `.env`, `.env.*`, `*.{crt,pem}`, `.git/`, `ENVIRONMENT`, plus runtime data at any depth — `.gev-cache/`, `.gev-data/`, `.gev-logs/`, `data/auth.db*`, `*.db`, `*.db-wal`, `*.db-shm`, `*.db-journal`, `*.sqlite`, `*.sqlite3`, `*.jsonl`, `*.log` — and the root-level `logs/` (pm2 output) and `.claude/` (agent state; root-anchored because worktrees live under it). A denied file answers 403, including via `?raw` and `/@fs/`. Bare `data/` or `log/` directories are deliberately not denied: that would block `src/data/*` and `src/admin/log/*`. Vite's `/__open-in-editor` answers 404 (`blockOpenInEditor`), so no client can launch an editor on the server host.
 - CCTV proxy rejects client-specified upstream URLs (server-side source allowlist only).
 - CCTV upstream still-image fetches use an explicit abort controller with an
   eight-second timeout; the timer is cleared on every success or failure path.

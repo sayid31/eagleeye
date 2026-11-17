@@ -92,6 +92,7 @@ The data proxies in `vite.config.js` are written so the browser cannot turn the 
 - **Sanitized errors** — internal error details are not echoed back to clients.
 - **Coalesced OAuth refresh** and cached successful responses only (OpenSky).
 - **Redacted debug logging.** The voice debug log (`.gev-logs/`, gitignored) strips API keys, bearer tokens, client secrets, and image data URLs before writing.
+- **Runtime data is not served.** The dev server serves files under the project root, so `server.fs.deny` (`src/server/devServerExposure.mjs`) refuses with 403 the credential files plus everything the app writes at runtime: `.gev-cache/` (admin audit trail, server log, voice settings/usage, caches), `.gev-logs/` (voice transcripts), `.gev-data/` and `data/auth.db*`, the root `logs/` (pm2 output) and `.claude/`, and any `*.db*`/`*.sqlite*`/`*.jsonl`/`*.log` file. Vite's `/__open-in-editor` is disabled (404). Other files under the root — docs, untracked notes — are still readable, so keep private material out of the checkout of any instance you expose.
 
 ## Network exposure — the operator threat model
 
