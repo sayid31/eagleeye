@@ -143,6 +143,28 @@ export function describeDevice(userAgent) {
   return os ? `${browser} · ${os}` : browser;
 }
 
+/**
+ * Short form of a stored IP for display: an expanded IPv6 address
+ * (`0000:0000:…:0001`) is compacted (`::1`); IPv4 and anything else as stored.
+ * @param {string | null | undefined} ip
+ * @returns {string}
+ */
+export function compactIp(ip) {
+  const text = String(ip ?? '');
+  if (!text) return '—';
+  if (!/^[0-9a-f]{1,4}(:[0-9a-f]{1,4}){7}$/i.test(text)) return text;
+  const groups = text.split(':').map((group) => group.replace(/^0+(?=.)/, '').toLowerCase());
+  let best = { start: -1, length: 0 };
+  for (let i = 0; i < groups.length;) {
+    let j = i;
+    while (j < groups.length && groups[j] === '0') j += 1;
+    if (j - i > best.length) best = { start: i, length: j - i };
+    i = j > i ? j : i + 1;
+  }
+  if (best.length < 2) return groups.join(':');
+  return `${groups.slice(0, best.start).join(':')}::${groups.slice(best.start + best.length).join(':')}`;
+}
+
 /** Result text of a login_log row. @param {{success: boolean, reason?: string | null}} entry */
 export function loginResultText(entry) {
   if (entry.success) return LOGIN_LOG_COPY.ok;
@@ -168,7 +190,25 @@ export function auditActorText(entry, me) {
   if (entry.actorId && entry.actorId === String(me?.id)) return USERS_COPY.self;
   if (entry.actorName) return entry.actorName;
   if (!entry.actorRole) return AUDIT_COPY.system;
-  return AUDIT_COPY.otherActor(roleText(entry.actorRole));
+  return AUDIT_COPY.otherActor(roleText(entry.actorRole), entry.actorRole === ROLE_SUPER_ADMIN);
+}
+
+/**
+ * Indonesian reading of an audit summary written by the account service
+ * (`role user`, `fields name,email`, `user → admin`); anything else as stored.
+ * @param {string | null | undefined} summary
+ * @returns {string}
+ */
+export function auditDetailText(summary) {
+  const text = String(summary ?? '');
+  const { detail } = AUDIT_COPY;
+  let match = /^role (\S+)$/.exec(text);
+  if (match) return `${detail.role}: ${roleText(match[1])}`;
+  match = /^fields (.+)$/.exec(text);
+  if (match) return `${detail.fields}: ${match[1].split(',').map((field) => detail.fieldNames[field] ?? field).join(', ')}`;
+  match = /^(\S+) → (\S+)$/.exec(text);
+  if (match) return `${roleText(match[1])} → ${roleText(match[2])}`;
+  return text;
 }
 
 /**

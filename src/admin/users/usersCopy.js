@@ -126,7 +126,9 @@ export const AUDIT_COPY = Object.freeze({
   columns: { time: 'Waktu', actor: 'Pelaku', action: 'Aksi', target: 'Akun', detail: 'Detail' },
   allActions: 'Semua aksi',
   system: 'Sistem',
-  otherActor: (role) => `${role} lain`,
+  // A super_admin is never "another" one for an admin; an admin is.
+  otherActor: (role, isSuper) => (isSuper ? role : `${role} lain`),
+  detail: { role: 'Role', fields: 'Diubah', fieldNames: { name: 'nama', email: 'email', capabilities: 'izin fitur' } },
   empty: 'Belum ada catatan audit.',
   filteredBy: 'Akun:',
   clearFilter: 'Hapus filter',

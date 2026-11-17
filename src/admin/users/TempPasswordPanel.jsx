@@ -31,7 +31,7 @@ export function TempPasswordPanel({ email, password, reset = false, onDone }) {
         <dt>{USERS_COPY.form.email}</dt><dd>{email}</dd>
         <dt>{copy.title}</dt><dd><code className="usr-temp-password" data-testid="temp-password">{password}</code></dd>
       </dl>
-      <textarea className="adm-input usr-temp-message" readOnly rows={7} value={message} aria-label="Pesan untuk pemilik akun"
+      <textarea className="adm-input usr-temp-message" readOnly rows={9} value={message} aria-label="Pesan untuk pemilik akun"
         onFocus={(event) => event.target.select()} />
       <div className="adm-actions">
         <button type="button" className="adm-btn adm-btn-primary" onClick={copyMessage}>{copy.copy}</button>

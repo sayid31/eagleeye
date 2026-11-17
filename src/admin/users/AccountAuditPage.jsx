@@ -10,7 +10,7 @@ import { AUDIT_ACTIONS } from '../../auth/auditLog.mjs';
 import { LoadState, Pager, usePageData } from './UsersWidgets.jsx';
 import { AUDIT_COPY } from './usersCopy.js';
 import { usersApi } from './usersApi.js';
-import { auditActionText, auditActorText, formatDateTime } from './usersView.js';
+import { auditActionText, auditActorText, auditDetailText, formatDateTime } from './usersView.js';
 import './users.css';
 
 const COPY = AUDIT_COPY;
@@ -58,7 +58,7 @@ export function AccountAuditPage({ session, area = 'admin' }) {
                   <td>{auditActorText(entry, session?.user)}</td>
                   <td><span className="adm-pill adm-pill-info">{auditActionText(entry.action)}</span></td>
                   <td>{entry.targetName ?? '—'}{entry.targetEmailMasked ? <small className="adm-field-hint usr-sub">{entry.targetEmailMasked}</small> : null}</td>
-                  <td className="adm-log-msg">{entry.summary ?? ''}</td>
+                  <td className="adm-log-msg">{auditDetailText(entry.summary)}</td>
                 </tr>
               ))}
             </tbody>

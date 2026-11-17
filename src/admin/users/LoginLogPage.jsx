@@ -8,7 +8,7 @@ import { useSearchParams } from 'react-router';
 import { LoadState, Pager, usePageData } from './UsersWidgets.jsx';
 import { LOGIN_LOG_COPY } from './usersCopy.js';
 import { usersApi } from './usersApi.js';
-import { describeDevice, formatDateTime, loginAccountText, loginResultText } from './usersView.js';
+import { compactIp, describeDevice, formatDateTime, loginAccountText, loginResultText } from './usersView.js';
 import './users.css';
 
 const COPY = LOGIN_LOG_COPY;
@@ -53,7 +53,7 @@ export function LoginLogPage({ area = 'admin' }) {
                   <td>{formatDateTime(entry.createdAt)}</td>
                   <td>{loginAccountText(entry)}{entry.userEmail && !entry.userDeleted ? <small className="adm-field-hint usr-sub">{entry.userEmail}</small> : null}</td>
                   <td><span className={`adm-pill adm-pill-${entry.success ? 'ok' : 'error'}`}>{loginResultText(entry)}</span></td>
-                  <td className="usr-mono">{entry.ip ?? '—'}</td>
+                  <td className="usr-mono">{compactIp(entry.ip)}</td>
                   <td title={entry.userAgent ?? ''}>{describeDevice(entry.userAgent)}</td>
                   <td>{COPY.methods[entry.method] ?? entry.method}</td>
                 </tr>

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  accountStatus, areaRoleScope, auditActorText, createFormDefaults, createPayload, describeDevice, formatDateTime, handoverMessage,
+  accountStatus, areaRoleScope, compactIp, auditActorText, auditDetailText, createFormDefaults, createPayload, describeDevice, formatDateTime, handoverMessage,
   loginAccountText, loginResultText, managesRoles, pageInfo, rowActions,
 } from './usersView.js';
 
@@ -104,8 +104,19 @@ test('log wording: device from user agent, result and account cells, audit actor
   assert.equal(loginAccountText({ userId: null }), 'Email tidak terdaftar');
   assert.equal(loginAccountText({ userId: 'U1', userName: 'Pengguna terhapus', userDeleted: true }), 'Pengguna terhapus (terhapus)');
   assert.equal(auditActorText({ actorId: 'A1', actorName: 'Admin', actorRole: 'admin' }, adminMe), 'Anda');
-  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'super_admin' }, adminMe), 'Super admin lain');
+  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'super_admin' }, adminMe), 'Super admin');
+  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'admin' }, adminMe), 'Admin lain');
+  assert.equal(auditDetailText('role user'), 'Role: Pengguna');
+  assert.equal(auditDetailText('fields name,capabilities'), 'Diubah: nama, izin fitur');
+  assert.equal(auditDetailText('user → admin'), 'Pengguna → Admin');
+  assert.equal(auditDetailText('cli'), 'cli');
+  assert.equal(auditDetailText(null), '');
   assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: null }, adminMe), 'Sistem');
   assert.equal(formatDateTime('nope'), '—');
+  assert.equal(compactIp('0000:0000:0000:0000:0000:0000:0000:0000'), '::');
+  assert.equal(compactIp('0000:0000:0000:0000:0000:0000:0000:0001'), '::1');
+  assert.equal(compactIp('2001:0db8:0000:0000:0001:0000:0000:0001'), '2001:db8::1:0:0:1');
+  assert.equal(compactIp('203.0.113.7'), '203.0.113.7');
+  assert.equal(compactIp(null), '—');
   assert.match(formatDateTime('2026-11-17T09:18:10.338Z'), /2026/);
 });

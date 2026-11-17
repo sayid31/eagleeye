@@ -6,12 +6,15 @@
 .usr-empty { display: grid; gap: 12px; justify-items: start; }
 .usr-empty h2 { margin: 0; font: 600 16px var(--adm-font-mono); letter-spacing: .06em; text-transform: uppercase; }
 
-/* Tables: left-aligned text (the shared table right-aligns numbers), taller viewport. */
-.usr-table-wrap { max-height: none; overflow: visible; }
-.usr-table th, .usr-table td { text-align: left; vertical-align: top; }
+/* Tables: left-aligned, wrapping text (the shared table right-aligns numbers and never wraps), no inner
+   scroll box so the row menu is not clipped. Doubled class: this file loads before adminForms.css. */
+.adm-table-wrap.usr-table-wrap { max-height: none; overflow: visible; }
+.adm-table.usr-table th, .adm-table.usr-table td { text-align: left; vertical-align: top; white-space: normal; overflow-wrap: break-word; }
+.adm-table.usr-table td:has(.adm-pill), .adm-table.usr-table td:has(.usr-menu) { white-space: nowrap; overflow-wrap: normal; }
 .usr-sub { display: block; }
 .usr-mono { font-family: var(--adm-font-mono); font-size: 12px; }
 .usr-self { margin-left: 8px; color: var(--adm-accent); }
+.adm-table.usr-table td.usr-toggle-cell { white-space: nowrap; overflow-wrap: normal; }
 .usr-toggle-cell .usr-chip + .usr-chip { margin-left: 4px; }
 .usr-chip { font: 500 10px var(--adm-font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border: 1px dashed var(--adm-border-strong); color: var(--adm-muted); text-decoration: line-through; }
 .usr-chip-on { border-style: solid; border-color: var(--adm-ok); color: var(--adm-ok); text-decoration: none; }
@@ -48,7 +51,7 @@
 .usr-temp-facts dt { color: var(--adm-muted); font: 500 11px var(--adm-font-mono); letter-spacing: .1em; text-transform: uppercase; align-self: center; }
 .usr-temp-facts dd { margin: 0; overflow-wrap: anywhere; }
 .usr-temp-password { font: 600 16px var(--adm-font-mono); letter-spacing: .06em; padding: 4px 8px; background: var(--adm-sunken); border: 1px solid var(--adm-accent); }
-.usr-temp-message { font-family: var(--adm-font-mono); font-size: 12px; min-height: 140px; }
+.usr-temp-message { font-family: var(--adm-font-mono); font-size: 12px; min-height: 190px; }
 
 /* Ringkasan cards. */
 .usr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
