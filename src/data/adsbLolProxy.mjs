@@ -7,6 +7,8 @@
  * structural move, no behavior change.
  */
 
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
+
 /**
  * Vite plugin: adsb.lol military aircraft proxy with 12 s response cache.
  *
@@ -25,7 +27,7 @@ export function adsbLolProxy() {
   return {
     name: 'adsblol-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/adsblol/mil', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/adsblol/mil', 'layers', async (req, res) => {
         try {
           const now = Date.now();
           if (_cache && now - _cacheAt < CACHE_MS) {

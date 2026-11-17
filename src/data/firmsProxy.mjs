@@ -26,6 +26,7 @@ import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import { filterTrailing24h, parseFirmsCsv } from './firmsCsv.js';
 import { firmsRefreshUsable, firmsSourceSummary } from './firmsSourceHealth.js';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /**
  * @param {{cacheDir?: string}} [options]
@@ -166,7 +167,7 @@ export function firmsProxy({ cacheDir = path.join(process.cwd(), '.gev-cache') }
   return {
     name: 'firms-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/firms', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/firms', 'layers', async (req, res) => {
         const sendJson = (status, obj) => {
           if (res.headersSent) return;
           res.writeHead(status, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });

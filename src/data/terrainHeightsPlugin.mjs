@@ -17,6 +17,7 @@ import {
   terrainPointKey,
   validTerrainResult,
 } from './terrainHeightsProxy.js';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /**
  * Re:Earth terrain point-height proxy: batched lon/lat → ellipsoidal height
@@ -127,7 +128,7 @@ export function terrainHeightsProxy() {
   return {
     name: 'terrain-heights-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/terrain/heights', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/terrain/heights', 'open', async (req, res) => {
         const send = (status, bodyObj) => {
           if (res.headersSent) return;
           res.writeHead(status, { 'Content-Type': 'application/json' });

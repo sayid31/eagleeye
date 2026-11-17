@@ -13,6 +13,7 @@
  * module (see trafficBounds.js's own greatCircleKm).
  */
 import { makeRateLimiter, clientKey, readResponseTextCapped } from '../server/proxyInfra.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /** OSM routing (FOSSGIS OSRM) cache: profile|coords -> { payload, cachedAt }. */
 const ROUTE_CACHE_MS = 600000;
@@ -57,7 +58,7 @@ export function osrmRouteProxy() {
     configureServer(server) {
       // Real OSM routing via the public FOSSGIS OSRM servers (foot/car/bike).
       // GET /api/route?profile=foot|car|bike&coords=lon,lat;lon,lat[;...]
-      server.middlewares.use('/api/route', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/route', 'ai', async (req, res) => {
         const fail = (msg) => {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ ok: false, error: msg }));

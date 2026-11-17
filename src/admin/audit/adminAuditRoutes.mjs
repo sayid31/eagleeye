@@ -2,13 +2,14 @@
 /**
  * GET /api/admin/audit?type=&offset=&limit= — the owner audit trail
  * (`adminAuditLog.mjs`), newest first, for /admin → Audit Log. Behind
- * `requireActor(req, 'admin')` (behind the shared-login guard). Entries hold only codes,
+ * `requireActor(req, 'super')` (behind the shared-login guard). Entries hold only codes,
  * env var names and user ids.
  *
  * @module admin/audit/adminAuditRoutes
  */
 
 import { requireActor } from '../../auth/requireActor.mjs';
+import { registerApiRoute } from '../../auth/apiRouteRegistry.mjs';
 
 /** Filter chips on the page → event-code prefix. */
 export const AUDIT_TYPES = Object.freeze({
@@ -37,8 +38,10 @@ export function parseAuditQuery(url) {
  * @param {import('connect').Server} middlewares
  * @param {{audit: {list: Function}, guard?: (req: any) => {ok: boolean, status?: number, error?: string}}} deps
  */
-export function installAdminAuditRoutes(middlewares, { audit, guard = (req) => requireActor(req, 'admin') }) {
-  middlewares.use('/api/admin/audit', (req, res) => {
+export function installAdminAuditRoutes(middlewares, { audit, guard = (req) => requireActor(req, 'super') }) {
+  // Gate `admin` (ADMIN_API_PERMISSIONS) but this key/AI trail is system data → super only;
+  // the account-action audit for admins is added on this prefix in phase 2 (W-C).
+  registerApiRoute(middlewares, '/api/admin/audit', 'admin', (req, res) => {
     const send = (status, payload) => {
       res.statusCode = status;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');

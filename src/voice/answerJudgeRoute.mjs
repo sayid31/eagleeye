@@ -16,6 +16,7 @@
 import { isSameOriginJson } from '../server/sameOrigin.mjs';
 import { judgeCallsOn } from './voiceUsageCore.mjs';
 import { JUDGE_MODEL_DEFAULT, judgeTurn, looksSecret, validateJudgeTurn, verdictLogEvent } from './answerJudge.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 export const JUDGE_DAILY_MAX_DEFAULT = 300;
 const MAX_BODY_BYTES = 8 * 1024;
@@ -78,7 +79,7 @@ export function installAnswerJudgeRoute(middlewares, {
     if (event) log(event);
   }
 
-  middlewares.use('/api/voice/judge', async (req, res) => {
+  registerApiRoute(middlewares, '/api/voice/judge', 'ai', async (req, res) => {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
     if (!isSameOriginJson(req)) return sendJson(res, 403, { error: 'Origin tidak diizinkan' });
     if (!enforceRateLimit(req, res)) return undefined;

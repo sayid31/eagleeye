@@ -19,6 +19,7 @@
 import { publicVoiceConfig } from './voiceSettingsCore.mjs';
 import { remainingDailySeconds, validateUsageReport } from './voiceUsageCore.mjs';
 import { isSameOriginJson } from '../server/sameOrigin.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 const MAX_USAGE_BODY_BYTES = 1024;
 
@@ -39,7 +40,7 @@ function sendJson(res, status, payload) {
  * @param {(req: any, maxBytes?: number) => Promise<string>} deps.readRequestBody
  */
 export function installVoiceSettingsRoutes(middlewares, { store, usageStore, readRequestBody }) {
-  middlewares.use('/api/voice/config', (req, res) => {
+  registerApiRoute(middlewares, '/api/voice/config', 'open', (req, res) => {
     if (req.method !== 'GET') return sendJson(res, 405, { error: 'Method not allowed' });
     const { settings } = store.read();
     const remainingSeconds = usageStore
@@ -49,7 +50,7 @@ export function installVoiceSettingsRoutes(middlewares, { store, usageStore, rea
   });
 
   if (usageStore) {
-    middlewares.use('/api/voice/usage', async (req, res) => {
+    registerApiRoute(middlewares, '/api/voice/usage', 'ai', async (req, res) => {
       if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
       if (!isSameOriginJson(req)) return sendJson(res, 403, { error: 'Origin tidak diizinkan' });
       let parsed;

@@ -33,6 +33,7 @@ import {
   isOverBudget as isTomTomOverBudget,
 } from './tomtomTiles.js';
 import { noteTomTomFetch } from './tomtomBudgetStatus.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /**
  * @returns {import('vite').Plugin}
@@ -138,7 +139,7 @@ export function tomtomProxy() {
   return {
     name: 'tomtom-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/tomtom', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/tomtom', 'layers', async (req, res) => {
         // Sanitized responses only (proxy/security baseline): no upstream
         // error details, and never echo the key or the upstream URL.
         const sendJson = (status, obj, extraHeaders = {}) => {

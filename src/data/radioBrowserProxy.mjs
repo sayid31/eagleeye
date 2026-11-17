@@ -30,6 +30,7 @@ import { randomUUID } from 'node:crypto';
 import { lookup as lookupDns } from 'node:dns/promises';
 import { normalizeRadioCountryInput } from './radioCountry.js';
 import { readResponseTextCapped } from '../server/proxyInfra.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 const RADIO_DIRECTORY_CACHE_MS = 45 * 60 * 1000;
 const RADIO_DIRECTORY_STALE_MS = 7 * 24 * 60 * 60 * 1000;
@@ -549,7 +550,7 @@ export function createRadioProxyMiddleware({ fetchImpl = null, lookupImpl = look
 export function radioBrowserProxy() {
   const middleware = createRadioProxyMiddleware();
   const install = (server) => {
-    server.middlewares.use('/api/radio', middleware);
+    registerApiRoute(server.middlewares, '/api/radio', 'layers', middleware);
   };
   return {
     name: 'radio-browser-proxy',

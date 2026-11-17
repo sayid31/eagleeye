@@ -18,6 +18,7 @@
  */
 
 import { READ_SCREEN_TOOL_NAME } from './gevLiveVision.js';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 export const RESPONSES_URL = 'https://api.openai.com/v1/responses';
 export const LIVE_VISION_URL = '/api/live/vision';
@@ -138,7 +139,7 @@ export function installLiveVisionRoute(middlewares, deps) {
     res.end(JSON.stringify(obj));
   };
 
-  middlewares.use(LIVE_VISION_URL, async (req, res) => {
+  registerApiRoute(middlewares, LIVE_VISION_URL, 'ai', async (req, res) => {
     if (req.method !== 'POST') return json(res, 405, { error: 'Method not allowed' });
     if (!enforceRateLimit(req, res)) return;
 

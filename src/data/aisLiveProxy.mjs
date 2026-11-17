@@ -22,6 +22,7 @@ import {
   clampInt, normalizeAisTimestamp, normalizedHeading, numberValue, parseCsvOrJsonEnv, parseJsonEnv, stringValue,
 } from './aisValueParsing.mjs';
 import { sendJson } from '../server/jsonCompression.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 // ---------------------------------------------------------------------------
 // AISStream live vessel cache state
@@ -95,7 +96,7 @@ const _aisStreamTrackPending = new Map();
  */
 export function aisLiveProxy() {
   function install(middlewares) {
-    middlewares.use('/api/ais-live', async (req, res) => {
+    registerApiRoute(middlewares, '/api/ais-live', 'layers', async (req, res) => {
       try {
         ensureAisStreamConnection();
         const incoming = new URL(req.url || '', 'http://localhost');

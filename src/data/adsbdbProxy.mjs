@@ -12,6 +12,7 @@
 
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /**
  * @returns {import('vite').Plugin}
@@ -101,7 +102,7 @@ export function adsbdbProxy() {
   return {
     name: 'adsbdb-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/adsbdb', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/adsbdb', 'layers', async (req, res) => {
         await loadOnce();
         const send = (status, obj) => {
           res.writeHead(status, { 'Content-Type': 'application/json' });

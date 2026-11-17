@@ -43,6 +43,7 @@ import { fetchStreetViewFrame } from './cctvStreetView.mjs';
 import { getCctvSources, DEFAULT_CCTV_MAX_SOURCES } from './cctvSourceCatalog.mjs';
 import { CCTV_PROXY_USER_AGENT, CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream } from './cctvFrameFetch.mjs';
 import { buildSyntheticCctvSvg } from './cctvSyntheticFrame.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 // Re-exported so existing importers (and cctvProxy.test.mjs) keep their entry point.
 export { CCTV_FRAME_FETCH_TIMEOUT_MS, fetchCctvImageFromUpstream };
@@ -79,7 +80,7 @@ export function cctvProxy() {
     configureServer(server) {
       // Close the upstream viewer sessions of on-demand cameras with the dev server.
       server.httpServer?.once('close', () => onDemandStreams.stopAll());
-      server.middlewares.use('/api/cctv', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/cctv', 'layers', async (req, res) => {
         try {
           const sources = await getCctvSources();
           const sourceById = new Map(sources.map((source) => [source.id, source]));

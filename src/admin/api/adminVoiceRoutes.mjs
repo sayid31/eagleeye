@@ -10,7 +10,7 @@
  *    with the current GPT-Live rates, today's remaining daily minutes and the
  *    effective per-session cost limits.
  *
- * Every route goes through `requireActor(req, 'admin')` after the shared-login
+ * Every route goes through `requireActor(req, 'super')` after the shared-login
  * guard (`src/auth/authPlugin.mjs`: session, active admin, exact Origin + JSON
  * content type on writes). No response carries a key.
  *
@@ -32,6 +32,7 @@ import { VOICE_COST_LIMITS, normalizeCostLimits } from '../../voice/voiceCost.js
 import { JUDGE_MODEL_DEFAULT, JUDGE_RATE_IN_PER_MTOK, JUDGE_RATE_OUT_PER_MTOK } from '../../voice/answerJudge.mjs';
 import { CORE_RULE_GROUPS, VOICE_CORE_RULES } from '../../voice/voiceCoreRules.js';
 import { BACKEND_MODEL_OPTIONS, VOICE_OPTIONS, resolveLiveProvider } from '../../voice/voiceProviderOptions.mjs';
+import { registerApiRoute } from '../../auth/apiRouteRegistry.mjs';
 
 const MAX_BODY_BYTES = 16 * 1024;
 const USAGE_DAY_OPTIONS = [7, 30, USAGE_RETENTION_DAYS];
@@ -111,10 +112,10 @@ function usagePayload(settings, usageStore, days) {
  *   `sections` names the top-level settings sections a save changed, `actor` is the user id (no values, no PII).
  */
 export function installAdminVoiceRoutes(middlewares, {
-  store, usageStore, readRequestBody, guard = (req) => requireActor(req, 'admin'),
+  store, usageStore, readRequestBody, guard = (req) => requireActor(req, 'super'),
   onEvent = (event) => console.info(`[admin] ${event}`),
 }) {
-  middlewares.use('/api/admin/voice', async (req, res) => {
+  registerApiRoute(middlewares, '/api/admin/voice', 'super', async (req, res) => {
     const admitted = guard(req);
     if (!admitted.ok) return sendJson(res, admitted.status, { error: admitted.error });
     const route = (req.url || '/').split('?')[0];

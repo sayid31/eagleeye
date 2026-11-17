@@ -9,6 +9,7 @@
  */
 import { getOpenSkyToken } from './openSkyProxy.mjs';
 import { readCappedResponseText } from '../server/proxyInfra.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /**
  * Vite plugin: aircraft track-history backfill proxies (PRD WS-F F1/F2).
@@ -65,7 +66,7 @@ export function trackBackfillProxies() {
   }
 
   function install(middlewares) {
-    middlewares.use('/api/opensky-track', async (req, res) => {
+    registerApiRoute(middlewares, '/api/opensky-track', 'layers', async (req, res) => {
       try {
         const incoming = new URL(req.url || '', 'http://localhost');
         const icao24 = String(incoming.searchParams.get('icao24') || '').trim().toLowerCase();
@@ -89,7 +90,7 @@ export function trackBackfillProxies() {
       }
     });
 
-    middlewares.use('/api/adsblol/trace', async (req, res) => {
+    registerApiRoute(middlewares, '/api/adsblol/trace', 'layers', async (req, res) => {
       try {
         const incoming = new URL(req.url || '', 'http://localhost');
         const hex = String(incoming.searchParams.get('hex') || '').trim().toLowerCase();

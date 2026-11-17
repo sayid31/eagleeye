@@ -23,6 +23,8 @@
  * @module voice/openAiLiveProxy
  */
 
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
+
 export const LIVE_SESSIONS_URL = 'https://api.openai.com/v1/live/sessions';
 
 // Frontend full-duplex model; the delegated backend reasoning model is billed
@@ -100,7 +102,7 @@ export function installLiveSessionRoute(middlewares, deps) {
   const {
     readRequestBody, enforceRateLimit, tools, instructions, isEnabled = () => true, admitSession = () => null, provider = () => ({}), fetchImpl = fetch,
   } = deps;
-  middlewares.use('/api/live/session', async (req, res) => {
+  registerApiRoute(middlewares, '/api/live/session', 'ai', async (req, res) => {
     if (req.method !== 'POST') {
       res.statusCode = 405;
       res.setHeader('Content-Type', 'application/json');

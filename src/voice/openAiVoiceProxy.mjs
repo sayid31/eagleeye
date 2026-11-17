@@ -29,6 +29,7 @@ import { filterToolsByGroups } from './voiceToolGroups.js';
 import { installAdminVoiceRoutes } from '../admin/api/adminVoiceRoutes.mjs';
 import { installAnswerJudgeRoute } from './answerJudgeRoute.mjs';
 import { logServerEvent } from '../admin/log/serverLogStore.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 const OPENAI_HUD_SUMMARY_MODEL_DEFAULT = 'gpt-5-nano';
 
@@ -100,7 +101,7 @@ export function openAiVoiceProxy({
       enforceRateLimit: (req, res) => enforceOptInRateLimit(openAiRateLimiter(), req, res),
     });
 
-    middlewares.use('/api/openai/hud-summary', async (req, res) => {
+    registerApiRoute(middlewares, '/api/openai/hud-summary', 'ai', async (req, res) => {
       if (req.method !== 'POST') {
         res.statusCode = 405;
         res.setHeader('Content-Type', 'application/json');

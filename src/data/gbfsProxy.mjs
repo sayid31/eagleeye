@@ -9,6 +9,8 @@
  * and caps response body at 5 MB.
  */
 
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
+
 /** Upstream fetch timeout for GBFS requests (ms). */
 const GBFS_PROXY_TIMEOUT_MS = 12000;
 /** Allowlisted GBFS hostnames; wildcard *.publicbikesystem.net also accepted. */
@@ -83,7 +85,7 @@ export function gbfsProxy() {
   return {
     name: 'gbfs-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/gbfs', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/gbfs', 'layers', async (req, res) => {
         try {
           if (req.method !== 'GET') {
             res.writeHead(405, { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' });

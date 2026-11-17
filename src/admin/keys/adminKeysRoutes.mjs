@@ -1,6 +1,6 @@
 // src/admin/keys/adminKeysRoutes.mjs
 /**
- * /admin → API Keys routes, all behind `requireActor(req, 'keys')` (active super-admin):
+ * /admin → API Keys routes, all behind `requireActor(req, 'super')` (super_admin):
  *
  *  - GET  /api/admin/keys       → registry + presence + source ('file' editable,
  *    'external' read-only) + which store this launch writes + test notes.
@@ -22,6 +22,7 @@ import { readSmallBody, respondNoStore, summarize } from './keyHttp.mjs';
 import { KEY_TEST_NOTES, testProviderKey } from './keyConnectionTests.mjs';
 import { scheduleDevServerRestart } from './providerKeyStore.mjs';
 import { logServerEvent } from '../log/serverLogStore.mjs';
+import { registerApiRoute } from '../../auth/apiRouteRegistry.mjs';
 
 /** A failed connection test → Server Log entry (checklist 1E); ok/untestable log nothing. */
 export function keyTestLogEvent(entry, outcome) {
@@ -63,9 +64,9 @@ const statusPayload = (store) => ({ ...store.status(), testNotes: KEY_TEST_NOTES
  * @param {(event: object) => void} [deps.log] Server Log producer.
  */
 export function installAdminKeysRoutes(middlewares, {
-  store, restart, audit, guard = (req) => requireActor(req, 'keys'), testKey = (entry) => testProviderKey(entry), log = logServerEvent,
+  store, restart, audit, guard = (req) => requireActor(req, 'super'), testKey = (entry) => testProviderKey(entry), log = logServerEvent,
 }) {
-  middlewares.use('/api/admin/keys', async (req, res) => {
+  registerApiRoute(middlewares, '/api/admin/keys', 'super', async (req, res) => {
     const admitted = guard(req);
     if (!admitted.ok) return respondNoStore(res, admitted.status, { error: admitted.error });
     const route = (req.url || '/').split('?')[0];

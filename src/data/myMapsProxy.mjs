@@ -13,6 +13,7 @@
 
 import { MYMAPS_DATASETS, myMapsKmlUrl } from './myMapsSources.mjs';
 import { featuresToJsonLines, parseMyMapsKml } from './myMapsKml.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 export const MYMAPS_TTL_MS = 6 * 3600_000;
 /** Upstream KML above this is refused (the two source documents are ~58 KB each). */
@@ -105,7 +106,7 @@ export function myMapsProxy() {
   };
   return {
     name: 'mymaps-proxy',
-    configureServer(server) { server.middlewares.use('/api/mymaps', handler); },
-    configurePreviewServer(server) { server.middlewares.use('/api/mymaps', handler); },
+    configureServer(server) { registerApiRoute(server.middlewares, '/api/mymaps', 'layers', handler); },
+    configurePreviewServer(server) { registerApiRoute(server.middlewares, '/api/mymaps', 'layers', handler); },
   };
 }

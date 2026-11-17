@@ -21,6 +21,7 @@ import { fetchOverpassPayload } from './overpassFetch.mjs';
 import { createSharedAbortRegistry } from '../server/sharedAbort.mjs';
 import { requiredFiniteQueryNumber } from './regionalProxyHandlers.mjs';
 import { makeRateLimiter, clientKey, coalesceProxyRequest } from '../server/proxyInfra.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 const _militaryInstallationsRateLimiter = makeRateLimiter({ windowMs: 60_000, max: 90, globalMax: 300 });
 
@@ -282,7 +283,7 @@ export function militaryInstallationsProxy() {
   }
 
   function install(middlewares) {
-    middlewares.use('/api/military-installations', async (req, res) => {
+    registerApiRoute(middlewares, '/api/military-installations', 'layers', async (req, res) => {
       if (req.method !== 'GET') {
         res.writeHead(405, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Method Not Allowed' }));

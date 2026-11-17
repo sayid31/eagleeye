@@ -40,6 +40,7 @@ import {
   normalizeRegionalPlace,
   normalizeRegionalWeather,
 } from './regionalBrief.js';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 const REGIONAL_BRIEF_CACHE_MS = 5 * 60_000;
 const REGIONAL_BRIEF_STALE_MS = 60 * 60_000;
@@ -292,7 +293,7 @@ export function regionalBriefProxy() {
   }
 
   function install(middlewares) {
-    middlewares.use('/api/regional-brief', async (req, res) => {
+    registerApiRoute(middlewares, '/api/regional-brief', 'layers', async (req, res) => {
       if (req.method !== 'GET') {
         res.writeHead(405, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Method Not Allowed' }));
@@ -366,7 +367,7 @@ export function weatherEffectsProxy() {
   }
 
   function install(middlewares) {
-    middlewares.use('/api/weather-effects', async (req, res) => {
+    registerApiRoute(middlewares, '/api/weather-effects', 'open', async (req, res) => {
       if (req.method !== 'GET') {
         res.writeHead(405, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ error: 'Method Not Allowed' }));

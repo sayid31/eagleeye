@@ -34,16 +34,17 @@ function setup({ guard } = {}) {
 }
 
 const allow = () => ({ ok: true, actorId: 'user-admin-1' });
-const actorOf = (role, status = 'active') => ({ user: { id: `user-${role}` }, role, status });
+const actorOf = (role) => ({ user: { id: `user-${role}` }, role });
 
-test('every route needs an active admin actor from the login guard', async () => {
+test('every route needs a super_admin actor from the login guard (AI configuration is /dev only)', async () => {
   const { call } = setup();
   assert.equal((await call('GET', '/settings')).status, 401);
   assert.equal((await call('GET', '/usage')).status, 401);
   assert.equal((await call('GET', '/settings', { actor: actorOf('user') })).status, 403);
-  assert.equal((await call('GET', '/settings', { actor: actorOf('admin', 'pending') })).status, 403);
-  assert.equal((await call('GET', '/settings', { actor: actorOf('admin') })).status, 200);
-  assert.equal((await call('GET', '/usage', { actor: actorOf('super-admin') })).status, 200);
+  assert.equal((await call('GET', '/settings', { actor: actorOf('admin') })).status, 403);
+  assert.equal((await call('GET', '/usage', { actor: actorOf('super-admin') })).status, 403, 'the 1a spelling is not a role');
+  assert.equal((await call('GET', '/settings', { actor: actorOf('super_admin') })).status, 200);
+  assert.equal((await call('GET', '/usage', { actor: actorOf('super_admin') })).status, 200);
 });
 
 test('GET /settings returns defaults, the tool group catalog and limit ranges', async () => {

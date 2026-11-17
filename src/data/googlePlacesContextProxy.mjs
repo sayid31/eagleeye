@@ -13,6 +13,7 @@
  */
 
 import { googleRateLimiter, clientKey } from '../server/proxyInfra.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /**
  * Optional Google place context is an empty capability when no key is present,
@@ -36,7 +37,7 @@ export function keylessGooglePlacesResponse(apiKey) {
  */
 export function googlePlacesContextProxy() {
   function install(middlewares) {
-    middlewares.use('/api/google/nearby-places', async (req, res) => {
+    registerApiRoute(middlewares, '/api/google/nearby-places', 'premium', async (req, res) => {
       if (req.method !== 'GET') {
         res.statusCode = 405;
         res.setHeader('Content-Type', 'application/json');
@@ -155,7 +156,7 @@ export function googlePlacesContextProxy() {
     // the view. Geocoding scatters obscure monument/POI names across the city;
     // a view-biased Text Search lands on the actual feature. Same key, field
     // mask, throttle, and `places: []` error contract as nearby-places above.
-    middlewares.use('/api/google/text-search', async (req, res) => {
+    registerApiRoute(middlewares, '/api/google/text-search', 'premium', async (req, res) => {
       if (req.method !== 'GET') {
         res.statusCode = 405;
         res.setHeader('Content-Type', 'application/json');

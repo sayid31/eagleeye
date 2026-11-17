@@ -43,9 +43,10 @@
  *
  *   - src/admin/keys/ — the provider-key store behind /admin → API Keys. Its boot-time provenance snapshots stay in this file because
  *     they must be captured when THIS module first loads.
- *   - src/auth/authPlugin.mjs — the shared Google login (Better Auth +
- *     SQLite): `/api/auth/*`, `/api/me`, `/login`, and the guard in front of
- *     every page and every `/api/*` proxy below (hence its early position).
+ *   - src/auth/authPlugin.mjs — the email+password login (Better Auth +
+ *     SQLite): `/api/auth/*`, `/api/me`, the page route table (src/auth/pageRoutes.mjs)
+ *     and the guard in front of every `/api/*` route, each registered with
+ *     its gate via registerApiRoute (hence its early position).
  *
  * `nominatimSearchProxy()` (forward geocode) stays defined in this file —
  * see its own JSDoc for why it wasn't moved out with the rest.
@@ -107,7 +108,7 @@ import { defineConfig, loadEnv } from 'vite';
 
 import cesium from 'vite-plugin-cesium';
 import react from '@vitejs/plugin-react';
-import { adminRoute, skipOnReactPages } from './src/admin/adminRoute.mjs';
+import { skipOnReactPages } from './src/admin/adminRoute.mjs';
 
 import { authPlugin } from './src/auth/authPlugin.mjs';
 
@@ -148,6 +149,7 @@ import {
 import { terrainHeightsProxy } from './src/data/terrainHeightsPlugin.mjs';
 
 import { openAiVoiceProxy } from './src/voice/openAiVoiceProxy.mjs';
+import { registerApiRoute } from './src/auth/apiRouteRegistry.mjs';
 
 
 /** Resolve __dirname for ESM context. */
@@ -276,7 +278,7 @@ function fetchNominatimSearch(query, viewbox) {
  */
 export function nominatimSearchProxy() {
   function install(middlewares) {
-    middlewares.use('/api/nominatim/search', async (req, res) => {
+    registerApiRoute(middlewares, '/api/nominatim/search', 'open', async (req, res) => {
       if (req.method !== 'GET') {
         res.statusCode = 405;
         res.setHeader('Content-Type', 'application/json');
@@ -345,7 +347,6 @@ export default defineConfig(({ mode }) => {
       serverLogWatchPlugin(),
       // Login guard: before every page rewrite, route and proxy below.
       authPlugin({ rootDir: __dirname }),
-      adminRoute(),
       serverLogPlugin({ audit: adminAudit, aisFeedEvidence: aisStreamKeyEvidence }),
       openSkyProxy(),
       celestrakProxy(),
@@ -389,7 +390,7 @@ export default defineConfig(({ mode }) => {
       // Framing protection belongs on the APP DOCUMENT, not on API responses:
       // a browser evaluates frame-ancestors against the framed page's own
       // navigation response. Without this, a hostile page could frame
-      // `/?setup=1`, align a lure over Provider Settings, and have the framed
+      // `/app?setup=1`, align a lure over Provider Settings, and have the framed
       // app issue a perfectly same-origin credential write that passes every
       // Host/Origin check. These headers apply to everything this dev server
       // serves, which is what makes that attack impossible rather than unlikely.

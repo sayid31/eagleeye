@@ -23,6 +23,7 @@ import { serveFromCover } from './overpassCoverIndex.mjs';
 import { createOverpassCoverStore } from './overpassCoverStore.mjs';
 import { overpassDiskTtlMs, readOverpassDisk, writeOverpassDisk } from './overpassDiskCache.mjs';
 import { fetchOverpassPayload, isCacheableOverpassPayload } from './overpassFetch.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 // --- Abuse guards for the Overpass proxy ------------------------------------
 /** Max accepted POST body for the Overpass proxy (Overpass QL queries are tiny). */
@@ -89,7 +90,7 @@ export function overpassProxy() {
   return {
     name: 'overpass-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/overpass', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/overpass', 'layers', async (req, res) => {
         // Hoisted out of the try so the catch's serve-stale lookup can see it
         // (a body-read failure would otherwise hit an out-of-scope reference).
         let cacheKey = null;

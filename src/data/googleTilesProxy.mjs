@@ -32,6 +32,7 @@ import { pipeline } from 'node:stream/promises';
 import { enforceOptInRateLimit, makeOptInRateLimiter } from '../server/proxyInfra.mjs';
 import { redactSecret } from '../server/redactSecret.mjs';
 import { buildGoogleTilesUpstreamUrl, resolveGoogleTilesUpstream } from './googleTilesUpstream.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /** Same-origin mount path of the tile proxy. */
 export const GOOGLE_TILES_ROUTE = '/api/google/3dtiles';
@@ -215,7 +216,7 @@ export function createGoogleTilesHandler({
  * @returns {import('vite').Plugin}
  */
 export function googleTilesProxy(options = {}) {
-  const install = (middlewares) => middlewares.use(GOOGLE_TILES_ROUTE, createGoogleTilesHandler(options));
+  const install = (middlewares) => registerApiRoute(middlewares, GOOGLE_TILES_ROUTE, 'premium', createGoogleTilesHandler(options));
   return {
     name: 'google-tiles-proxy',
     configureServer(server) {

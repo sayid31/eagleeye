@@ -8,7 +8,7 @@
  *  - GET    /api/admin/log?level=&source=&q=&offset=&limit= — newest first.
  *  - DELETE /api/admin/log — clear (leaves one `log.cleared` row).
  *
- * Admin routes are behind `requireActor(req, 'admin')`.
+ * Admin routes are behind `requireActor(req, 'super')`.
  *
  * @module admin/log/serverLogRoutes
  */
@@ -16,6 +16,7 @@
 import { requireActor } from '../../auth/requireActor.mjs';
 import { isSameOriginJson } from '../../server/sameOrigin.mjs';
 import { BROWSER_LOG_SOURCES, LOG_LEVELS, LOG_SOURCES } from './serverLogCore.mjs';
+import { registerApiRoute } from '../../auth/apiRouteRegistry.mjs';
 
 const MAX_BODY_BYTES = 16 * 1024;
 const MAX_EVENTS_PER_POST = 20;
@@ -69,9 +70,9 @@ export function parseLogQuery(url) {
  * @param {(entry: object) => void} [deps.audit] Records the clear in the audit trail.
  */
 export function installServerLogRoutes(middlewares, {
-  log, readRequestBody, guard = (req) => requireActor(req, 'admin'), budget = createEventBudget(), audit = () => {},
+  log, readRequestBody, guard = (req) => requireActor(req, 'super'), budget = createEventBudget(), audit = () => {},
 }) {
-  middlewares.use('/api/log', async (req, res) => {
+  registerApiRoute(middlewares, '/api/log', 'open', async (req, res) => {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
     if (!isSameOriginJson(req)) return sendJson(res, 403, { error: 'Origin tidak diizinkan' });
     let body;
@@ -89,7 +90,7 @@ export function installServerLogRoutes(middlewares, {
     return sendJson(res, granted < events.length ? 429 : 200, { accepted, dropped: events.length - accepted });
   });
 
-  middlewares.use('/api/admin/log', (req, res) => {
+  registerApiRoute(middlewares, '/api/admin/log', 'super', (req, res) => {
     const admitted = guard(req);
     if (!admitted.ok) return sendJson(res, admitted.status, { error: admitted.error });
     if (req.method === 'GET') return sendJson(res, 200, { ...log.query(parseLogQuery(req.url)), levels: LOG_LEVELS, sources: LOG_SOURCES });

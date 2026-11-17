@@ -17,6 +17,7 @@
 
 import { enforceOptInRateLimit, googleRateLimiter, readResponseTextCapped } from '../server/proxyInfra.mjs';
 import { redactSecret } from '../server/redactSecret.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /** Same-origin mount path of the geocoding proxy. */
 export const GOOGLE_GEOCODE_ROUTE = '/api/google/geocode';
@@ -155,7 +156,7 @@ export function createGoogleGeocodeHandler({
  * @returns {import('vite').Plugin}
  */
 export function googleGeocodeProxy(options = {}) {
-  const install = (middlewares) => middlewares.use(GOOGLE_GEOCODE_ROUTE, createGoogleGeocodeHandler(options));
+  const install = (middlewares) => registerApiRoute(middlewares, GOOGLE_GEOCODE_ROUTE, 'premium', createGoogleGeocodeHandler(options));
   return {
     name: 'google-geocode-proxy',
     configureServer(server) {

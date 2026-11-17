@@ -10,6 +10,7 @@
 import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import { cacheDecision } from '../server/staleWhileRevalidate.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /** Cache TTL: CelesTrak asks for no more than one GP fetch per group every ~2 h. */
 export const TLE_TTL_MS = 6 * 3600_000;
@@ -96,7 +97,7 @@ export function celestrakProxy({ cacheDir = path.join(process.cwd(), '.gev-cache
   return {
     name: 'celestrak-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/celestrak', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/celestrak', 'layers', async (req, res) => {
         const group = String(req.url || '').replace(/^\//, '').split('?')[0];
         if (!/^[a-z0-9-]+$/i.test(group)) {
           res.writeHead(400, { 'Content-Type': 'text/plain' });

@@ -1,22 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { adminPageRewrite, skipOnReactPages } from './adminRoute.mjs';
-
-test('admin page navigations are rewritten to admin.html', () => {
-  assert.equal(adminPageRewrite('/admin'), '/admin.html');
-  assert.equal(adminPageRewrite('/admin/'), '/admin.html');
-  assert.equal(adminPageRewrite('/admin/server-log'), '/admin.html');
-  assert.equal(adminPageRewrite('/admin/ai/persona?x=1'), '/admin.html?x=1');
-});
-
-test('non-admin, asset and API requests are left alone', () => {
-  assert.equal(adminPageRewrite('/'), null);
-  assert.equal(adminPageRewrite('/administrator'), null);
-  assert.equal(adminPageRewrite('/admin.html'), null);
-  assert.equal(adminPageRewrite('/admin/main.css'), null);
-  assert.equal(adminPageRewrite('/api/admin/session'), null);
-  assert.equal(adminPageRewrite(undefined), null);
-});
+import { skipOnReactPages } from './adminRoute.mjs';
 
 test('skipOnReactPages drops the wrapped html transform only for admin.html and login.html', () => {
   const tags = [{ tag: 'script' }];

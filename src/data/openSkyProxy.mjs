@@ -17,6 +17,7 @@ import { coalesceProxyRequest, readResponseJsonCapped } from '../server/proxyInf
 import { OPENSKY_CACHE_MS, recordOpenSkyCredits } from './openSkyCredits.mjs';
 import { normalizeAdsbLolPointResponse } from './adsbLolFallback.js';
 import { requiredFiniteQueryNumber } from './regionalProxyHandlers.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 // ---------------------------------------------------------------------------
 // OpenSky OAuth2 token + response cache state
@@ -314,7 +315,7 @@ export function openSkyProxy() {
   return {
     name: 'opensky-proxy',
     configureServer(server) {
-      server.middlewares.use('/api/opensky', async (req, res) => {
+      registerApiRoute(server.middlewares, '/api/opensky', 'layers', async (req, res) => {
         try {
           const requestedMode = normalizeOpenSkyAuthMode(process.env.OPENSKY_AUTH_MODE);
           const now = Date.now();

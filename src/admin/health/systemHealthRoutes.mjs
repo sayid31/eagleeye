@@ -1,7 +1,7 @@
 // src/admin/health/systemHealthRoutes.mjs
 /**
  * GET /api/admin/health — gathers the facts System Health shows (no provider
- * call is made) and returns `buildHealthReport`. Behind `requireActor(req, 'admin')`.
+ * call is made) and returns `buildHealthReport`. Behind `requireActor(req, 'super')`.
  * Sources are injected so the route is testable without a Vite server.
  *
  * @module admin/health/systemHealthRoutes
@@ -9,6 +9,7 @@
 
 import { requireActor } from '../../auth/requireActor.mjs';
 import { buildHealthReport } from './systemHealthCore.mjs';
+import { registerApiRoute } from '../../auth/apiRouteRegistry.mjs';
 
 /** How many audit rows to scan for the last test per provider. */
 const AUDIT_SCAN = 500;
@@ -19,8 +20,8 @@ const AUDIT_SCAN = 500;
  * @param {() => object} deps.gather Returns the raw facts (see buildHealthReport).
  * @param {(req: any) => {ok: boolean, status?: number, error?: string}} [deps.guard]
  */
-export function installSystemHealthRoutes(middlewares, { gather, guard = (req) => requireActor(req, 'admin') }) {
-  middlewares.use('/api/admin/health', (req, res) => {
+export function installSystemHealthRoutes(middlewares, { gather, guard = (req) => requireActor(req, 'super') }) {
+  registerApiRoute(middlewares, '/api/admin/health', 'super', (req, res) => {
     const send = (status, payload) => {
       res.statusCode = status;
       res.setHeader('Content-Type', 'application/json; charset=utf-8');

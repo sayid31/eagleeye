@@ -19,6 +19,7 @@ import path from 'node:path';
 import { promises as fsp } from 'node:fs';
 import { coalesceProxyRequest, readResponseTextCapped } from '../server/proxyInfra.mjs';
 import { cacheDecision } from '../server/staleWhileRevalidate.mjs';
+import { registerApiRoute } from '../auth/apiRouteRegistry.mjs';
 
 /** Cache TTL for the Launch Library 2 recent-launch feed (15 min). */
 export const LL2_CACHE_TTL_MS = 15 * 60_000;
@@ -126,7 +127,7 @@ export function rocketLaunchesProxy({
   }
 
   function install(middlewares) {
-    middlewares.use('/api/launches', async (req, res) => {
+    registerApiRoute(middlewares, '/api/launches', 'layers', async (req, res) => {
       if (req.method !== 'GET') {
         send(res, 405, JSON.stringify({ error: 'Method Not Allowed' }), 'NONE');
         return;
