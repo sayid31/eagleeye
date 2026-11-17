@@ -47,7 +47,7 @@ export function KillSwitchDialog({ change, onDone, onCancel }) {
         {change.killed ? <p className="adm-muted">{GATE_TEXT[change.gate]?.stops}</p> : null}
         <label className="adm-field">
           <span className="adm-field-label">{T.reasonLabel}</span>
-          <textarea className="adm-input" value={reason} maxLength={200} required={change.killed} disabled={busy} onChange={(e) => setReason(e.target.value)} />
+          <textarea className="adm-input" value={reason} maxLength={200} aria-required={change.killed} disabled={busy} onChange={(e) => setReason(e.target.value)} />
           <small className="adm-field-hint">{change.killed ? T.reasonHintOff : T.reasonHintOn}</small>
         </label>
         <label className="adm-field">
