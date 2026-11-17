@@ -24,25 +24,35 @@ export const SESSION_LIMIT_MESSAGES = Object.freeze({
   idle: (seconds) => `Sesi berakhir — tidak ada percakapan ${seconds} detik`,
 });
 
+/**
+ * Hard ceiling on one GPT-Live session, whatever the owner configured (or when
+ * the config could not be read). A running WebRTC session stays connected to
+ * OpenAI after an admin revokes `ai` — only NEW requests are refused — so this
+ * bounds how long that can last; the next start is a new `/api/live/session`
+ * request, which the server refuses without `ai` (docs/DECISIONS.md).
+ */
+export const MAX_LIVE_SESSION_MINUTES = 30;
+
 const TICK_MS = 1000;
 const positive = (n) => (typeof n === 'number' && Number.isFinite(n) && n > 0 ? n : 0);
 
 /**
- * Which limit ends the session first, from the owner's settings and the
- * seconds left today. Pure.
+ * Which limit ends the session first, from the owner's settings (capped at
+ * MAX_LIVE_SESSION_MINUTES) and the seconds left today. Pure.
  * @param {{sessionMinutes?: number, idleSeconds?: number, remainingSeconds?: number | null}} [limits]
  * @returns {{maxSeconds: number, maxReason: 'session' | 'daily' | null, idleSeconds: number, sessionMinutes: number}}
  */
 export function resolveSessionLimits({ sessionMinutes, idleSeconds, remainingSeconds } = {}) {
-  const sessionSeconds = positive(sessionMinutes) * 60;
+  const cappedMinutes = Math.min(positive(sessionMinutes) || MAX_LIVE_SESSION_MINUTES, MAX_LIVE_SESSION_MINUTES);
+  const sessionSeconds = cappedMinutes * 60;
   const daily = typeof remainingSeconds === 'number' && Number.isFinite(remainingSeconds) ? Math.max(0, remainingSeconds) : null;
-  let maxSeconds = sessionSeconds || Infinity;
-  let maxReason = sessionSeconds ? 'session' : null;
+  let maxSeconds = sessionSeconds;
+  let maxReason = 'session';
   if (daily !== null && daily < maxSeconds) {
     maxSeconds = daily;
     maxReason = 'daily';
   }
-  return { maxSeconds, maxReason, idleSeconds: positive(idleSeconds), sessionMinutes: positive(sessionMinutes) };
+  return { maxSeconds, maxReason, idleSeconds: positive(idleSeconds), sessionMinutes: cappedMinutes };
 }
 
 /**
@@ -91,8 +101,8 @@ export function createSessionLimitGuard({ onLimit, now = () => Date.now(), setIn
       active = configured;
       startMs = now();
       lastActivityMs = startMs;
-      // No limit configured: nothing to watch, but the session still counts as running.
-      if (active.maxSeconds !== Infinity || active.idleSeconds) timer = si(check, TICK_MS);
+      // Always watched: MAX_LIVE_SESSION_MINUTES applies even with no owner limit.
+      timer = si(check, TICK_MS);
     },
     /** Conversation activity (speech either way, or a tool call) resets the idle clock. */
     touch() { lastActivityMs = now(); },

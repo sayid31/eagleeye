@@ -74,9 +74,11 @@ function makeController(over = {}) {
   const documentRef = over.documentRef || makeDocument();
   let lastPc = null;
   const rtcPeerConnection = over.rtcPeerConnection || function () { lastPc = new FakeRTCPeerConnection(); return lastPc; };
-  // A controllable clock + captured interval so the cost meter is deterministic
-  // (and never leaves a real timer running across tests).
-  const clock = { nowMs: 0, tick: null };
+  // A controllable clock + captured intervals so the cost meter and the session
+  // cap (always armed) are deterministic and never leave a real timer running.
+  const ticks = new Map();
+  let nextTick = 1;
+  const clock = { nowMs: 0, tick: () => { for (const [id, fn] of [...ticks]) if (ticks.has(id)) fn(); } };
   const ctrl = new GevLiveController({
     runner: over.runner || (async () => ({ ok: true })),
     ui: over.ui || null,
@@ -87,8 +89,8 @@ function makeController(over = {}) {
     rtcPeerConnection,
     documentRef,
     nowFn: over.nowFn || (() => clock.nowMs),
-    setIntervalFn: over.setIntervalFn || ((fn) => { clock.tick = fn; return 1; }),
-    clearIntervalFn: over.clearIntervalFn || (() => { clock.tick = null; }),
+    setIntervalFn: over.setIntervalFn || ((fn) => { ticks.set(nextTick, fn); return nextTick++; }),
+    clearIntervalFn: over.clearIntervalFn || ((id) => { ticks.delete(id); }),
   });
   return { ctrl, stream, mediaDevices, documentRef, clock, getPc: () => lastPc };
 }

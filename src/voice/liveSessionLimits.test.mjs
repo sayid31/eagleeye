@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { createSessionLimitGuard, resolveSessionLimits } from './liveSessionLimits.js';
+import { MAX_LIVE_SESSION_MINUTES, createSessionLimitGuard, resolveSessionLimits } from './liveSessionLimits.js';
 
 function fakeClock() {
   let t = 1_000_000;
@@ -22,21 +22,31 @@ function guardWith(limits) {
   return { guard, clock, ended };
 }
 
-test('resolveSessionLimits: off by default, the tighter of session and daily wins', () => {
-  assert.deepEqual(resolveSessionLimits(), { maxSeconds: Infinity, maxReason: null, idleSeconds: 0, sessionMinutes: 0 });
+test('resolveSessionLimits: hard cap by default, the tighter of session and daily wins', () => {
+  assert.equal(MAX_LIVE_SESSION_MINUTES, 30);
+  assert.deepEqual(resolveSessionLimits(), { maxSeconds: 1800, maxReason: 'session', idleSeconds: 0, sessionMinutes: 30 });
   assert.equal(resolveSessionLimits({ sessionMinutes: 10 }).maxSeconds, 600);
   assert.deepEqual(resolveSessionLimits({ sessionMinutes: 10, remainingSeconds: 120 }).maxReason, 'daily');
   assert.deepEqual(resolveSessionLimits({ sessionMinutes: 1, remainingSeconds: 120 }).maxReason, 'session');
-  assert.equal(resolveSessionLimits({ remainingSeconds: null }).maxSeconds, Infinity);
+  assert.equal(resolveSessionLimits({ remainingSeconds: null }).maxSeconds, 1800);
   assert.equal(resolveSessionLimits({ remainingSeconds: -5 }).maxSeconds, 0);
 });
 
-test('no limits: no timer, never fires, stop still reports the session ran', () => {
+test('owner limits above the cap (or none) still end at MAX_LIVE_SESSION_MINUTES', () => {
+  assert.deepEqual(resolveSessionLimits({ sessionMinutes: 120 }), { maxSeconds: 1800, maxReason: 'session', idleSeconds: 0, sessionMinutes: 30 });
+  assert.equal(resolveSessionLimits({ sessionMinutes: 0 }).maxSeconds, 1800);
+  assert.equal(resolveSessionLimits({ sessionMinutes: Number.NaN }).maxSeconds, 1800);
+});
+
+test('no owner limits: the cap timer still closes the session once, stop still reports it ran', () => {
   const { guard, clock, ended } = guardWith({});
   guard.start();
-  assert.equal(clock.hasTimer(), false);
-  clock.advance(10_000);
+  assert.equal(clock.hasTimer(), true);
+  clock.advance(1799);
   assert.deepEqual(ended, []);
+  clock.advance(1);
+  clock.advance(60);
+  assert.deepEqual(ended, [{ kind: 'session', message: 'Sesi berakhir — batas durasi 30 menit' }]);
   assert.equal(guard.stop(), true);
   assert.equal(guard.stop(), false);
 });
