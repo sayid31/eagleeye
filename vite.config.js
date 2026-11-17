@@ -63,6 +63,7 @@ import fs from 'node:fs';
 
 import path from 'node:path';
 import { loadCheckoutEnv } from './src/config/dotenvPrecedence.mjs';
+import { devServerFsDeny, blockOpenInEditor } from './src/server/devServerExposure.mjs';
 
 import { overpassProxy } from './src/data/overpassProxy.mjs';
 import { celestrakProxy } from './src/data/celestrakProxy.mjs';
@@ -339,6 +340,7 @@ export default defineConfig(({ mode }) => {
   const localAllowedHosts = ['localhost', '127.0.0.1', '.local'];
   return {
     plugins: [
+      blockOpenInEditor(),
       skipOnReactPages(cesium()),
       // React is for the /admin dashboard and /login only; the map app stays plain JS.
       react({ include: /src\/(admin|login)\/.*\.jsx$/ }),
@@ -384,8 +386,8 @@ export default defineConfig(({ mode }) => {
         ? true
         : localAllowedHosts,
       fs: {
-        // Pinokio keeps optional credentials in this ignored local file.
-        deny: ['.env', '.env.*', '*.{crt,pem}', '**/.git/**', '**/ENVIRONMENT'],
+        // Credentials + runtime data (.gev-cache, .gev-data, logs/, *.db, *.jsonl) — see devServerExposure.mjs.
+        deny: devServerFsDeny(__dirname),
       },
       // Framing protection belongs on the APP DOCUMENT, not on API responses:
       // a browser evaluates frame-ancestors against the framed page's own
