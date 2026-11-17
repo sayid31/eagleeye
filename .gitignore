@@ -14,3 +14,5 @@ output/
 3d-models/
 pinokio/ENVIRONMENT
 pinokio/.installed
+# Auth database (Better Auth SQLite: users, sessions, login log) — owner-only, never commit.
+data/

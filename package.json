@@ -45,6 +45,7 @@
   },
   "dependencies": {
     "@mapbox/vector-tile": "^3.0.0",
+    "better-auth": "^1.7.25",
     "cesium": "^1.124.0",
     "egm96-universal": "^1.1.1",
     "hls.js": "^1.7.3",
