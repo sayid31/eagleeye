@@ -8,6 +8,7 @@ import assert from 'node:assert/strict';
 import { answerJson, FORCED_CHANGE_ME } from './mocks.mjs';
 import { SYSTEM_PROBES } from './probes.system.mjs';
 import { USER_PROBES } from './probes-users.mjs';
+import { CONFIG_PROBES } from './probes-config.mjs';
 import { expectEscapeRestoresFocus, expectFocusTrapped, focusInfo, focusMatches, press, tabOrder, tabUntil, waitForFocus } from './keyboard.mjs';
 
 const MAIN = '#main-content';
@@ -272,4 +273,5 @@ export const PROBES = [
   },
   ...SYSTEM_PROBES,
   ...USER_PROBES,
+  ...CONFIG_PROBES,
 ];
