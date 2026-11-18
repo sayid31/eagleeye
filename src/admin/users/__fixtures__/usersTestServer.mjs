@@ -100,7 +100,7 @@ export async function startUsersTestServer() {
   const rows = (sql, ...args) => state.db.prepare(sql).all(...args).map((row) => ({ ...row }));
   /** Sign-in-ready account (forced password change cleared) → its session cookie and id. */
   const makeStaff = async (actorCookie, email, role = 'user') => {
-    const [status, body] = await call('POST', '/api/admin/users', actorCookie, { email, name: `Staf ${role}`, role, password: STAFF_PASSWORD });
+    const [status, body] = await call('POST', '/api/admin/users', actorCookie, { email, name: `Staff ${role}`, role, password: STAFF_PASSWORD });
     if (status !== 201) throw new Error(`fixture: creating ${role} failed: ${status} ${body?.error}`);
     await (await state.auth.$context).internalAdapter.updateUser(body.user.id, { mustChangePassword: false });
     return { id: body.user.id, cookie: await signIn(email, STAFF_PASSWORD) };

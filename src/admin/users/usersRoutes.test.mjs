@@ -224,7 +224,7 @@ test('GET /audit: admin gets user.* on user accounts with other actors redacted;
   const adminTargets = new Set([admin.id, otherAdmin.id, ownerId]);
   assert.ok(asAdmin.entries.every((row) => !adminTargets.has(row.targetId)), 'no rows about admins');
   assert.ok(asAdmin.entries.every((row) => row.actorId === null || row.actorId === admin.id), 'other actors redacted');
-  assert.ok(asAdmin.entries.some((row) => row.actorId === admin.id && row.actorName === 'Staf admin'));
+  assert.ok(asAdmin.entries.some((row) => row.actorId === admin.id && row.actorName === 'Staff admin'));
   const [, asOwner] = await t.call('GET', '/api/admin/audit?limit=100', owner);
   assert.equal(asOwner.scope, 'all');
   const actions = new Set(asOwner.entries.map((row) => row.action));
