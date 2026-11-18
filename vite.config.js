@@ -109,6 +109,7 @@ import { defineConfig, loadEnv } from 'vite';
 
 import cesium from 'vite-plugin-cesium';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import { skipOnReactPages } from './src/admin/adminRoute.mjs';
 
 import { authPlugin } from './src/auth/authPlugin.mjs';
@@ -344,7 +345,8 @@ export default defineConfig(({ mode }) => {
       blockOpenInEditor(),
       skipOnReactPages(cesium()),
       // React is for the /admin dashboard and /login only; the map app stays plain JS.
-      react({ include: /src\/(admin|login)\/.*\.jsx$/ }),
+      react({ include: /src\/(admin|login|components|lib)\/.*\.jsx$/ }),
+      tailwindcss(), // processes only CSS that imports it (src/ui/app.css); the map's CSS never does
       // First of the server plugins: its watches must see every /api response,
       // including the login guard's 401/403.
       serverLogWatchPlugin(),
@@ -406,6 +408,7 @@ export default defineConfig(({ mode }) => {
     // Browser-visible values via import.meta.env.*. GOOGLE_MAPS_API_KEY is
     // deliberately absent: Google 3D Tiles and Geocoding go through the
     // /api/google/* proxies, so the browser only learns that a key exists.
+    resolve: { alias: { '@': path.resolve(__dirname, 'src') } },
     define: {
       'import.meta.env.GOOGLE_MAPS_PROXY_AVAILABLE': JSON.stringify(Boolean(String(env.GOOGLE_MAPS_API_KEY ?? '').trim())),
       'import.meta.env.CESIUM_ION_TOKEN': JSON.stringify(env.CESIUM_ION_TOKEN),
