@@ -8,7 +8,7 @@ import { navItems } from '../components/app/navModel.js';
 import { ROUTE_FEATURES } from './routes/index.js';
 import { loadPage, page } from './routes/pageRef.js';
 
-const itemLabels = (area) => navForArea(area).map((group) => [group.title, group.items.map((item) => item.label)]);
+const itemLabels = (area) => navForArea(area).map((group) => [group.title, group.items.filter((item) => !item.hidden).map((item) => item.label)]);
 
 test('basename follows the browser path: /dev and below → /dev, everything else → /admin', () => {
   assert.equal(adminBasename('/dev'), '/dev');
@@ -127,4 +127,11 @@ test('loadPage resolves a named export or a pick() result, and fails loudly on a
   assert.equal((await loadPage(page(async () => ({ Thing: Component }), 'Thing'))).default, Component);
   assert.equal((await loadPage(page(async () => ({ MAP: { a: Component } }), (m) => m.MAP.a))).default, Component);
   await assert.rejects(loadPage(page(async () => ({}), 'Missing')), /Page export not found: Missing/);
+});
+
+test('the component gallery is routable for /dev but not listed in the sidebar, and /admin has none', () => {
+  const kit = navItems(navForArea('dev')).find((item) => item.id === 'ui-kit');
+  assert.deepEqual([kit.path, kit.hidden, kit.page], ['/ui-kit', true, 'ui-kit']);
+  assert.deepEqual(breadcrumbFor('dev', '/ui-kit'), ['Sistem', 'Katalog komponen']);
+  assert.equal(navItems(navForArea('admin')).some((item) => item.id === 'ui-kit'), false);
 });

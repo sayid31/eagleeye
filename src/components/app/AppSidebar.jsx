@@ -55,7 +55,7 @@ export function AppSidebar({ brand, area, groups, pathname, user, areaLink, onSi
             <SidebarGroup key={group.id}>
               {group.title ? <SidebarGroupLabel>{group.title}</SidebarGroupLabel> : null}
               <SidebarGroupContent>
-                <SidebarMenu>{group.items.map((item) => <MenuItem key={item.id} item={item} pathname={pathname} />)}</SidebarMenu>
+                <SidebarMenu>{group.items.filter((item) => !item.hidden).map((item) => <MenuItem key={item.id} item={item} pathname={pathname} />)}</SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           ))}

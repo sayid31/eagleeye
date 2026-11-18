@@ -1,11 +1,11 @@
 // src/components/app/navModel.js
 /**
  * Pure model of a sidebar menu used by AppShell: groups of items, an item optionally having tabs (sub-routes shown as
- * tabs on the page, not in the sidebar). All paths are relative to the router basename, like `/users`.
+ * tabs on the page, not in the sidebar). A `hidden` item is routable and titled but not listed in the sidebar. All paths are relative to the router basename, like `/users`.
  *
  * @module components/app/navModel
  * @typedef {{id: string, label: string, path: string, page?: string}} NavTab
- * @typedef {{id: string, label: string, path: string, icon?: string, page?: string, tabs?: NavTab[]}} NavItem
+ * @typedef {{id: string, label: string, path: string, icon?: string, page?: string, tabs?: NavTab[], hidden?: boolean}} NavItem
  * @typedef {{id: string, title: string | null, items: NavItem[]}} NavGroup
  * @typedef {{label: string, href?: string}} Crumb
  */

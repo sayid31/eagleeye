@@ -23,6 +23,7 @@ export const NAV_COPY = Object.freeze({
     general: 'Umum',
     persona: 'Persona',
     logs: 'Log server',
+    uiKit: 'Katalog komponen',
   }),
   tabs: Object.freeze({
     loginLog: 'Log Login',

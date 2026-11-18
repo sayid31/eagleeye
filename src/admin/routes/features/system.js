@@ -23,6 +23,7 @@ export const systemRoutes = {
     'server-log': page(() => import('../../pages/ServerLogPage.jsx'), 'ServerLogPage'),
     'server-log-audit': page(() => import('../../pages/AuditLogPage.jsx'), 'AuditLogPage'),
     'server-log-health': page(() => import('../../pages/SystemHealthPage.jsx'), 'SystemHealthPage'),
+    'ui-kit': page(() => import('../../dev/UiKitPage.jsx'), 'UiKitPage'),
   },
   nav: {
     admin: [],
@@ -56,6 +57,13 @@ export const systemRoutes = {
         id: 'system',
         title: groups.system,
         items: [{
+          id: 'ui-kit',
+          label: items.uiKit,
+          path: '/ui-kit',
+          icon: 'general',
+          hidden: true,
+          page: 'ui-kit',
+        }, {
           id: 'logs',
           label: items.logs,
           path: '/logs',
