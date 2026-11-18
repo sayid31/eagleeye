@@ -13,6 +13,17 @@ import { CONFIG_PROBES } from './probes-config.mjs';
 import { expectEscapeRestoresFocus, expectFocusTrapped, focusInfo, focusMatches, press, tabOrder, tabUntil, waitForFocus } from './keyboard.mjs';
 
 const MAIN = '#main-content';
+/** The original /dev menu: sidebar label, path, page title (h1). */
+const DEV_ITEMS = [
+  ['Ringkasan sistem', '/', 'Ringkasan sistem'], ['Pengguna & Admin', '/users', 'Pengguna & Admin'], ['Log Login', '/login-log', 'Log Login'],
+  ['Kill switch', '/kill-switches', 'Kill switch'], ['Pemakaian', '/usage', 'Pemakaian & budget'], ['API Keys', '/api-keys', 'API Keys'],
+  ['Umum', '/ai/general', 'Umum'], ['Penyedia AI', '/ai/provider', 'Penyedia AI'], ['Persona', '/ai/persona', 'Persona'],
+  ['Pemakaian & Biaya', '/ai/usage', 'Pemakaian & Biaya'], ['Server Log', '/server-log', 'Server Log'], ['Audit Log', '/server-log/audit', 'Audit Log'],
+  ['Kesehatan Sistem', '/server-log/health', 'Kesehatan Sistem'], ['Audit', '/audit', 'Audit'],
+];
+const DEV_MENU = ['Ringkasan sistem', 'Pengguna & Admin', 'Log Login', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Umum', 'Penyedia AI', 'Persona',
+  'Pemakaian & Biaya', 'Server Log', 'Server Log', 'Audit Log', 'Kesehatan Sistem', 'Audit'];
+
 const USER_MENU = '[data-account-menu]';
 const SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]';
 
@@ -84,24 +95,29 @@ export const PROBES = [
       await page.click(SIDEBAR_TRIGGER);
       await page.waitForSelector('[role="dialog"] a[href]');
       const text = await page.$eval('[role="dialog"]', (el) => el.textContent);
-      for (const wanted of ['Akses', 'Kendali', 'Konfigurasi', 'Sistem', 'Ringkasan sistem', 'Pengguna & Admin', 'Aktivitas', 'Sakelar darurat', 'Pemakaian & Biaya', 'Penyedia & API Keys', 'Umum', 'Persona', 'Log server']) {
-        assert.ok(text.includes(wanted), `mobile menu is missing "${wanted}"`);
+      let at = 0;
+      for (const wanted of DEV_MENU) {
+        const next = text.indexOf(wanted, at);
+        assert.ok(next >= at, `mobile menu is missing "${wanted}" (or it is out of the original order)`);
+        at = next + wanted.length;
       }
       await expectFocusTrapped(page, '[role="dialog"]', 8);
       await expectEscapeRestoresFocus(page, '[role="dialog"]', SIDEBAR_TRIGGER);
     },
   },
   {
-    id: 'legacy-urls-redirect', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev',
+    id: 'original-urls-and-titles', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev',
     async run(page, env) {
-      const cases = [['/dev/login-log?userId=abc', '/dev/activity/login', '?userId=abc'], ['/dev/audit', '/dev/activity/audit', ''], ['/dev/api-keys', '/dev/providers/keys', ''],
-        ['/dev/ai/usage', '/dev/usage/ai', ''], ['/dev/server-log/health', '/dev/logs/health', ''], ['/dev/ai', '/dev/general', ''], ['/dev/usage', '/dev/usage/budget', ''], ['/admin/login-log', '/admin/activity/login', '']];
-      for (const [from, path, search] of cases) {
-        await page.goto(`${env.url}${from}`, { waitUntil: 'domcontentloaded' });
+      const labels = await page.$$eval('nav[aria-label^="Navigasi"] a', (nodes) => nodes.map((n) => n.textContent.trim()));
+      assert.deepEqual(labels, DEV_ITEMS.map(([label]) => label), 'sidebar items equal the original menu, in order');
+      for (const [label, path, title] of DEV_ITEMS) {
+        await page.goto(`${env.url}/dev${path === '/' ? '' : path}`, { waitUntil: 'domcontentloaded' });
         await page.waitForSelector(MAIN);
-        const now = await page.evaluate(() => ({ path: location.pathname, search: location.search }));
-        assert.deepEqual(now, { path, search }, `${from} → ${path}${search}`);
+        assert.equal(await page.$eval('#main-content h1', (el) => el.textContent), title, `${label} (${path}) page title`);
       }
+      await page.goto(`${env.url}/dev/ai`, { waitUntil: 'domcontentloaded' });
+      await page.waitForSelector(MAIN);
+      assert.equal(await page.evaluate(() => location.pathname), '/dev/ai/general', 'the bare /ai group opens its first page');
     },
   },
   {

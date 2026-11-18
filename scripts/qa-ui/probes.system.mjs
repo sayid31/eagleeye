@@ -1,6 +1,6 @@
 // scripts/qa-ui/probes.system.mjs
 /**
- * Keyboard / behaviour probes of the /dev system pages (Sakelar darurat dialog, Log server tabs, filters, detail sheet).
+ * Keyboard / behaviour probes of the /dev system pages (Kill switch dialog, Server Log pages, filters, detail sheet).
  * Same probe shape as probes.mjs; appended there as `...SYSTEM_PROBES`.
  */
 import assert from 'node:assert/strict';
@@ -71,18 +71,18 @@ export const SYSTEM_PROBES = [
     },
   },
   {
-    id: 'log-tabs-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/logs/server',
+    id: 'log-nav-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/server-log',
     async run(page) {
-      await tabUntil(page, 'nav[aria-label="Log server"] a[href$="/logs/health"]', { max: 40 });
+      await tabUntil(page, 'a[href="/dev/server-log/health"]', { max: 40 });
       await page.keyboard.press('Enter');
-      await page.waitForFunction(() => location.pathname === '/dev/logs/health');
+      await page.waitForFunction(() => location.pathname === '/dev/server-log/health');
       await page.waitForSelector('#main-content h1');
-      assert.equal(await page.$eval('#main-content h1', (el) => el.textContent), 'Kesehatan');
-      assert.equal(await page.$eval('nav[aria-label="Log server"] a[aria-current="page"]', (el) => el.textContent), 'Kesehatan');
+      assert.equal(await page.$eval('#main-content h1', (el) => el.textContent), 'Kesehatan Sistem');
+      assert.equal(await page.$eval('a[aria-current="page"]', (el) => el.textContent), 'Kesehatan Sistem');
     },
   },
   {
-    id: 'log-filter-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/logs/server',
+    id: 'log-filter-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/server-log',
     async run(page) {
       await page.waitForSelector('input[type="search"]');
       await tabUntil(page, 'input[type="search"]', { max: 40 });
@@ -102,7 +102,7 @@ export const SYSTEM_PROBES = [
     },
   },
   {
-    id: 'log-rows-detail-sheet-and-axe', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/logs/server',
+    id: 'log-rows-detail-sheet-and-axe', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/server-log',
     async run(page) {
       await seedLog(page);
       await page.reload({ waitUntil: 'domcontentloaded' });
@@ -121,11 +121,11 @@ export const SYSTEM_PROBES = [
     },
   },
   {
-    id: 'log-rows-are-cards-on-mobile', role: 'super_admin', viewport: 'mobile', theme: 'light', path: '/dev/logs/server',
+    id: 'log-rows-are-cards-on-mobile', role: 'super_admin', viewport: 'mobile', theme: 'light', path: '/dev/server-log',
     async run(page) {
       await seedLog(page);
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('ul[aria-label="Entri log server"] li');
+      await page.waitForSelector('ul[aria-label="Entri Server Log"] li');
       const shown = await page.evaluate(() => ({
         table: getComputedStyle(document.querySelector('section table').closest('div.rounded-lg')).display !== 'none',
         overflow: document.documentElement.scrollWidth > window.innerWidth,

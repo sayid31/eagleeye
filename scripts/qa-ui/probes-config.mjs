@@ -46,7 +46,7 @@ async function mockSettingsSave(page) {
 /** @type {Array<{id: string, role: string, viewport: 'desktop' | 'mobile', theme: 'light' | 'dark', path: string, run: (page: import('puppeteer').Page, env: {url: string}) => Promise<void>}>} */
 export const CONFIG_PROBES = [
   {
-    id: 'keys-sheet-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/providers/keys',
+    id: 'keys-sheet-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/api-keys',
     async run(page) {
       await mockKeys(page);
       const opener = 'button[aria-label="Ubah kunci OpenAI"]';
@@ -67,7 +67,7 @@ export const CONFIG_PROBES = [
     },
   },
   {
-    id: 'keys-remove-confirm-and-test', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/providers/keys',
+    id: 'keys-remove-confirm-and-test', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/api-keys',
     async run(page) {
       const calls = await mockKeys(page);
       await page.click('button[aria-label="Ubah kunci OpenAI"]');
@@ -95,29 +95,29 @@ export const CONFIG_PROBES = [
     },
   },
   {
-    id: 'persona-unsaved-changes-guard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/persona',
+    id: 'persona-unsaved-changes-guard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ai/persona',
     async run(page) {
       await clickText(page, '#main-content button', 'Tambah aturan');
       await waitForFocus(page, 'fieldset input');
       assert.equal(await barStatus(page), 'Perubahan belum disimpan');
-      await page.click('a[href="/dev/general"]');
+      await page.click('a[href="/dev/ai/general"]');
       await page.waitForSelector(CONFIRM);
       await waitForFocus(page, `${CONFIRM} button[data-slot="alert-dialog-cancel"]`);
       await page.keyboard.press('Escape');
       await gone(page, CONFIRM);
-      assert.equal(new URL(page.url()).pathname, '/dev/persona', 'Esc keeps the page');
+      assert.equal(new URL(page.url()).pathname, '/dev/ai/persona', 'Esc keeps the page');
       assert.equal(await barStatus(page), 'Perubahan belum disimpan');
       await clickText(page, '#main-content button', 'Batalkan perubahan');
       await page.waitForFunction((s) => document.querySelector('[aria-label="Simpan pengaturan"] [role="status"]')?.textContent.includes(s), { timeout: 3000 }, SAVED_STATUS);
       await clickText(page, '#main-content button', 'Tambah aturan');
-      await page.click('a[href="/dev/general"]');
+      await page.click('a[href="/dev/ai/general"]');
       await page.waitForSelector(CONFIRM);
       await page.click(`${CONFIRM} button[type="submit"]`);
-      await page.waitForFunction(() => location.pathname === '/dev/general', { timeout: 4000 });
+      await page.waitForFunction(() => location.pathname === '/dev/ai/general', { timeout: 4000 });
     },
   },
   {
-    id: 'general-save-by-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/general',
+    id: 'general-save-by-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ai/general',
     async run(page) {
       const calls = await mockSettingsSave(page);
       await page.waitForSelector('#main-content input[maxlength="40"]');
@@ -132,7 +132,7 @@ export const CONFIG_PROBES = [
     },
   },
   {
-    id: 'general-disable-voice-confirm-and-cap-note', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/general',
+    id: 'general-disable-voice-confirm-and-cap-note', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/ai/general',
     async run(page) {
       const calls = await mockSettingsSave(page);
       await page.waitForSelector('#main-content [role="switch"]');
@@ -161,23 +161,19 @@ export const CONFIG_PROBES = [
     },
   },
   {
-    id: 'provider-tabs-below-title-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/providers/keys',
+    id: 'ai-nav-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/api-keys',
     async run(page) {
-      const order = await page.evaluate(() => {
-        const h1 = document.querySelector('#main-content h1');
-        const nav = document.querySelector('#main-content nav[aria-label="Penyedia & API Keys"]');
-        return Boolean(h1 && nav && (h1.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING));
-      });
-      assert.equal(order, true, 'the tab strip comes after the h1');
-      await tabUntil(page, 'nav[aria-label="Penyedia & API Keys"] a[href$="/providers/ai"]', { max: 40 });
+      assert.equal(await text(page, '#main-content h1'), 'API Keys');
+      await tabUntil(page, 'a[href="/dev/ai/provider"]', { max: 40 });
       await page.keyboard.press('Enter');
-      await page.waitForFunction(() => location.pathname === '/dev/providers/ai');
+      await page.waitForFunction(() => location.pathname === '/dev/ai/provider');
       await page.waitForSelector('#main-content h1');
-      assert.equal(await text(page, 'nav[aria-label="Penyedia & API Keys"] a[aria-current="page"]'), 'Penyedia AI');
+      assert.equal(await text(page, '#main-content h1'), 'Penyedia AI');
+      assert.equal(await text(page, 'a[aria-current="page"]'), 'Penyedia AI');
     },
   },
   {
-    id: 'ai-model-select-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/providers/ai',
+    id: 'ai-model-select-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ai/provider',
     async run(page) {
       await page.waitForSelector('#main-content [role="combobox"]');
       await page.focus('#main-content [role="combobox"]');
@@ -193,15 +189,9 @@ export const CONFIG_PROBES = [
     },
   },
   {
-    id: 'usage-ai-tab-below-title', role: 'super_admin', viewport: 'mobile', theme: 'dark', path: '/dev/usage/ai',
+    id: 'ai-usage-title-mobile', role: 'super_admin', viewport: 'mobile', theme: 'dark', path: '/dev/ai/usage',
     async run(page) {
-      await page.waitForSelector('#main-content nav[aria-label="Pemakaian & Biaya"]');
-      const order = await page.evaluate(() => {
-        const h1 = document.querySelector('#main-content h1');
-        const nav = document.querySelector('#main-content nav[aria-label="Pemakaian & Biaya"]');
-        return Boolean(h1.compareDocumentPosition(nav) & Node.DOCUMENT_POSITION_FOLLOWING);
-      });
-      assert.equal(order, true);
+      assert.equal(await text(page, '#main-content h1'), 'Pemakaian & Biaya');
     },
   },
 ];
