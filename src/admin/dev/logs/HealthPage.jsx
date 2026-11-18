@@ -6,6 +6,7 @@
  */
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
+import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { HEALTH_COPY as T } from '@/copy/id/systemLogs';
 import { HealthBadge } from '../lib/HealthBadge.jsx';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
@@ -40,7 +41,7 @@ export function HealthPage() {
   const resource = useDevResource(fetchHealth);
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={T.title} description={T.description} actions={<RefreshBar label={T.refresh} loading={resource.loading} onRefresh={resource.reload} />} />
+      <PageHeader title={T.title} description={T.description} actions={<RefreshBar label={T.refresh} loading={resource.loading} onRefresh={resource.reload} />} tabs={<RouteTabNav />} />
       <ResourceBody resource={resource} loadingLabel={T.loadingLabel} errorTitle={T.errorTitle}>
         {(report) => {
           const view = healthView(report);

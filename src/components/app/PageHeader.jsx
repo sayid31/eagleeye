@@ -1,24 +1,30 @@
 // src/components/app/PageHeader.jsx
-/** The page's single <h1>, a one-line description and a slot for the primary actions; also sets the document title. */
+/**
+ * The page's single <h1>, a one-line description, a slot for the primary actions and an optional tab strip below the
+ * title (pages of a `RouteTabs` route pass `tabs={<RouteTabNav />}`); also sets the document title.
+ */
 import { useEffect } from 'react';
 import { usePageTitleSetter } from './PageTitleContext.jsx';
 
 /**
- * @param {{title: string, description?: string, actions?: import('react').ReactNode}} props
+ * @param {{title: string, description?: string, actions?: import('react').ReactNode, tabs?: import('react').ReactNode}} props
  */
-export function PageHeader({ title, description, actions }) {
+export function PageHeader({ title, description, actions, tabs }) {
   const setTitle = usePageTitleSetter();
   useEffect(() => {
     setTitle(title);
     return () => setTitle(null);
   }, [setTitle, title]);
   return (
-    <header className="mb-6 flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight text-balance">{title}</h1>
-        {description ? <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p> : null}
+    <header className="mb-6">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight text-balance">{title}</h1>
+          {description ? <p className="mt-1 max-w-prose text-sm text-muted-foreground">{description}</p> : null}
+        </div>
+        {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
-      {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
+      {tabs ? <div className="mt-4">{tabs}</div> : null}
     </header>
   );
 }
