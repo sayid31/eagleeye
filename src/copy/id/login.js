@@ -75,7 +75,6 @@ export const PASSWORD_COPY = Object.freeze({
   success: 'Password berhasil diganti.',
   redirecting: 'Mengalihkan…',
   signOut: 'Keluar',
-  backToAccount: 'Kembali ke akun',
 });
 
 /** Form checks (client) and server refusals of change-password. */
@@ -115,7 +114,6 @@ export const ACCOUNT_COPY = Object.freeze({
   emailNote: 'Email tidak bisa diubah sendiri. Hubungi admin bila perlu.',
   name: 'Nama tampilan',
   saveName: 'Simpan perubahan',
-  savingName: 'Menyimpan…',
   nameSaved: 'Nama disimpan.',
   nameRequired: 'Nama tidak boleh kosong.',
   /** @param {number} max */

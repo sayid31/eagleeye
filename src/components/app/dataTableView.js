@@ -24,15 +24,6 @@ export function tableState({ loading = false, error = null, rowCount }) {
 }
 
 /**
- * @param {number} value
- * @param {readonly number[]} [sizes]
- * @returns {number} `value` when it is an allowed size, otherwise the default.
- */
-export function normalizePageSize(value, sizes = PAGE_SIZES) {
-  return sizes.includes(value) ? value : (sizes.includes(DEFAULT_PAGE_SIZE) ? DEFAULT_PAGE_SIZE : sizes[0]);
-}
-
-/**
  * Pagination line and neighbours for a `{total, limit, offset}` page; `visible` is false when everything fits on one
  * page at the smallest page size (nothing to page through, nothing to choose).
  * @param {{total: number, limit: number, offset: number, sizes?: readonly number[]}} page

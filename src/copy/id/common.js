@@ -39,7 +39,6 @@ export const COPY_FIELD_COPY = Object.freeze({
   copy: 'Salin',
   copied: 'Tersalin',
   copyFailed: 'Gagal menyalin. Pilih teksnya lalu salin manual.',
-  copyLabel: (label) => `Salin ${label}`,
 });
 
 export const PASSWORD_INPUT_COPY = Object.freeze({
@@ -63,7 +62,6 @@ export const TABLE_COPY = Object.freeze({
   next: 'Berikutnya',
   pagination: 'Halaman data',
   range: (from, to, total) => `${from}–${to} dari ${total}`,
-  rangeUnknown: (from, to) => `${from}–${to}`,
   rowActions: (name) => `Aksi untuk ${name}`,
 });
 
@@ -85,5 +83,4 @@ export const CONFIRM_COPY = Object.freeze({
   typeToConfirm: (value) => `Ketik ${value} untuk konfirmasi`,
   reason: 'Alasan',
   password: 'Password Anda',
-  initialFocusHint: 'Fokus awal ada pada tombol Batal.',
 });

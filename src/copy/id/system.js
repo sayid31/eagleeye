@@ -172,7 +172,6 @@ export const USAGE_COPY = Object.freeze({
   refresh: 'Muat ulang',
   loadingLabel: 'Memuat pemakaian provider',
   errorTitle: 'Pemakaian provider tidak bisa dimuat',
-  statusOff: 'Belum dikonfigurasi',
   emptyNotConfigured: Object.freeze({ title: 'Provider belum dikonfigurasi', description: 'Isi API key-nya agar pemakaian tercatat di sini.', action: 'Kelola API key' }),
   emptyNoData: Object.freeze({ title: 'Belum ada data', description: 'Belum ada pemakaian sejak server mulai.' }),
   opensky: Object.freeze({

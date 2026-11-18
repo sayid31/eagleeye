@@ -1,10 +1,10 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ADMIN_AREAS, PAGE_TABLE, adminArea, adminBasename, areaHome, areaLabel, areaLeaves, areaSwitchFor, breadcrumbFor,
+  ADMIN_AREAS, PAGE_TABLE, adminArea, adminBasename, areaHome, areaLeaves, areaSwitchFor,
   navForArea, pathIsUnder, redirectsFor, roleLabel,
 } from './adminNav.js';
-import { navItems } from '../components/app/navModel.js';
+import { breadcrumbTrail, navItems } from '../components/app/navModel.js';
 import { ROUTE_FEATURES } from './routes/index.js';
 import { loadPage, page } from './routes/pageRef.js';
 
@@ -95,7 +95,10 @@ test('every route path is unique within an area, across pages and redirects', ()
   }
 });
 
-test('breadcrumbFor names the group (when titled), the page and the tab', () => {
+/** Crumb labels the header shows for a path (the same trail AppHeader renders). */
+const breadcrumbFor = (area, pathname) => breadcrumbTrail(navForArea(area), pathname).map((crumb) => crumb.label);
+
+test('breadcrumb trail names the group (when titled), the page and the tab', () => {
   assert.deepEqual(breadcrumbFor('dev', '/usage/ai'), ['Kendali', 'Pemakaian & Biaya', 'Pemakaian AI']);
   assert.deepEqual(breadcrumbFor('dev', '/kill-switches'), ['Kendali', 'Sakelar darurat']);
   assert.deepEqual(breadcrumbFor('dev', '/general'), ['Konfigurasi', 'Umum']);
@@ -106,9 +109,7 @@ test('breadcrumbFor names the group (when titled), the page and the tab', () => 
   assert.deepEqual(breadcrumbFor('admin', '/nope'), []);
 });
 
-test('labels: area label (Developer badge) and role label', () => {
-  assert.equal(areaLabel('admin'), 'Admin');
-  assert.equal(areaLabel('dev'), 'Developer');
+test('labels: role label', () => {
   assert.equal(roleLabel('super_admin'), 'Super admin');
   assert.equal(roleLabel('admin'), 'Admin');
   assert.equal(roleLabel('user'), '');

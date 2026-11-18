@@ -1,8 +1,8 @@
 // src/admin/users/usersErrors.mjs
 /**
  * Indonesian wording of every error code the account-management API answers
- * with (plan/auth/04 §Kontrak API). Shared by the server (`message` field) and
- * the admin UI, so a code always reads the same. Pure.
+ * with (plan/auth/04 §Kontrak API). Server wording (`message` field) for API clients and
+ * browser clients that read `message`; the admin UI itself renders copy/id/errors.js. Pure.
  *
  * @module admin/users/usersErrors
  */
@@ -27,7 +27,7 @@ export const USER_ERROR_MESSAGES = Object.freeze({
   REAUTH_REQUIRED: 'Masuk ulang dengan Google dulu (maksimal 10 menit sebelum aksi ini), lalu coba lagi.',
   CONFIRM_EMAIL_MISMATCH: 'Email konfirmasi tidak cocok dengan email akun.',
   AUTH_UNAVAILABLE: 'Layanan login sedang tidak tersedia.',
-  INTERNAL_ERROR: 'Terjadi kesalahan di server; lihat Server Log.',
+  INTERNAL_ERROR: 'Terjadi kesalahan di server; lihat Log server.',
 });
 
 const PASSWORD_REASONS = Object.freeze({
@@ -52,5 +52,5 @@ export function userErrorMessage(problem) {
   const code = detail.error ?? detail.code ?? 'INTERNAL_ERROR';
   if (code === 'PASSWORD_WEAK' && PASSWORD_REASONS[detail.reason]) return PASSWORD_REASONS[detail.reason](detail.min);
   if (code === 'INVALID_INPUT' && FIELD_LABELS[detail.field]) return `Isian ${FIELD_LABELS[detail.field]} tidak valid.`;
-  return USER_ERROR_MESSAGES[code] ?? `Permintaan gagal (${code}).`;
+  return USER_ERROR_MESSAGES[code] ?? 'Permintaan gagal.';
 }

@@ -13,7 +13,7 @@
 
 import { isSuperAdminRole } from '../auth/authRoles.mjs';
 import { SHELL_COPY } from '../copy/id/shell.js';
-import { breadcrumbTrail, navItems } from '../components/app/navModel.js';
+import { navItems } from '../components/app/navModel.js';
 import { ROUTE_FEATURES } from './routes/index.js';
 
 /** @typedef {'admin' | 'dev'} AdminArea */
@@ -110,25 +110,6 @@ export function redirectsFor(area) {
  */
 export function areaHome(area) {
   return navItems(navForArea(area))[0].path;
-}
-
-/**
- * Breadcrumb labels above the page (group title when there is one, page, tab); an unknown path yields none.
- * @param {AdminArea} area
- * @param {string} pathname Router path without the area basename.
- * @returns {string[]}
- */
-export function breadcrumbFor(area, pathname) {
-  return breadcrumbTrail(navForArea(area), pathname).map((crumb) => crumb.label);
-}
-
-/**
- * Sub-label of the area (shown as a badge for `/dev`).
- * @param {AdminArea} area
- * @returns {string}
- */
-export function areaLabel(area) {
-  return SHELL_COPY.areas[area];
 }
 
 /**

@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { confirmState, typedMatches, MIN_REASON_LENGTH } from './confirmDialogView.js';
-import { PAGE_SIZES, normalizePageSize, paginationView, tableState } from './dataTableView.js';
+import { PAGE_SIZES, paginationView, tableState } from './dataTableView.js';
 import { breadcrumbTrail, initialsFor, navItems, navTitleFor, pathMatches, resolveNav } from './navModel.js';
 import { documentTitle } from './pageTitle.js';
 import { splitActions } from './rowActionsView.js';
@@ -39,13 +39,6 @@ test('paginationView: "x–y dari z" line, neighbours, and hidden when it all fi
   assert.equal(paginationView({ total: 11, limit: 20, offset: 0 }).visible, true);
   assert.equal(paginationView({ total: 45, limit: 20, offset: 5 }).prevOffset, 0, 'never a negative offset');
   assert.equal(paginationView({ total: Number.NaN, limit: 20, offset: 0 }).total, 0);
-});
-
-test('normalizePageSize accepts only the offered sizes', () => {
-  assert.deepEqual([...PAGE_SIZES], [10, 20, 50]);
-  assert.equal(normalizePageSize(50), 50);
-  assert.equal(normalizePageSize(33), 20);
-  assert.equal(normalizePageSize(7, [5, 15]), 5);
 });
 
 test('confirmState: every guard must be satisfied and busy blocks', () => {

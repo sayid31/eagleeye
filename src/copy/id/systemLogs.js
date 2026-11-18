@@ -40,7 +40,6 @@ export const SERVER_LOG_COPY = Object.freeze({
   refresh: 'Muat ulang',
   columns: Object.freeze({ time: 'Waktu', level: 'Level', source: 'Sumber', event: 'Event', detail: 'Detail' }),
   repeat: (count) => `${count} kali`,
-  repeatSince: (count, since) => `${count} kali sejak ${since}`,
   openDetail: 'Lihat detail',
   openDetailFor: (code) => `Lihat detail ${code}`,
   empty: Object.freeze({ title: 'Log masih kosong', description: 'Belum ada error, peringatan, atau event yang tercatat.' }),
