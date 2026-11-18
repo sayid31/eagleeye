@@ -4,12 +4,12 @@
 import { searchCameras, statusTone } from './cameraInspectorModel.js';
 import { inspectorMarkup } from './cameraInspectorMarkup.js';
 
-const PANEL_TITLE = 'Kamera';
-const HINT_LAYER_OFF = 'Nyalakan lapisan CCTV untuk mencari kamera.';
-const HINT_NO_MATCH = 'Tidak ada kamera yang cocok.';
+const PANEL_TITLE = 'Camera';
+const HINT_LAYER_OFF = 'Turn on the CCTV layer to search for cameras.';
+const HINT_NO_MATCH = 'No matching cameras.';
 const countLabel = (shown, total) => (shown < total
-  ? `Menampilkan ${shown} dari ${total} kamera, persempit pencarian`
-  : `${total} kamera ditemukan`);
+  ? `Showing ${shown} of ${total} cameras, narrow the search`
+  : `Cameras found: ${total}`);
 
 function el(tag, className, text) {
   const node = document.createElement(tag);

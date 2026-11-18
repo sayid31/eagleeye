@@ -178,18 +178,18 @@ export const cctvFrameMixin = {
   _syncCctvSourceBadge(activeCamera, enabled) {
     if (!this._cctvSourceBadge) return;
     if (!enabled || !activeCamera) {
-      this._cctvSourceBadge.textContent = 'SUMBER · TIDAK DIKETAHUI';
+      this._cctvSourceBadge.textContent = 'SOURCE · UNKNOWN';
       this._cctvSourceBadge.dataset.frameState = 'idle';
       return;
     }
     const hasDisplayedFrame = this._cctvFrameWrap?.classList.contains('has-frame');
     if (this._cctvFrame?.dataset.loading === 'true' && !hasDisplayedFrame) {
-      this._cctvSourceBadge.textContent = 'FRAME · MEMUAT';
+      this._cctvSourceBadge.textContent = 'FRAME · LOADING';
       this._cctvSourceBadge.dataset.frameState = 'loading';
       return;
     }
     if (this._cctvFrame?.dataset.error === 'true' && !hasDisplayedFrame) {
-      this._cctvSourceBadge.textContent = 'FRAME · TIDAK TERSEDIA';
+      this._cctvSourceBadge.textContent = 'FRAME · UNAVAILABLE';
       this._cctvSourceBadge.dataset.frameState = 'error';
       return;
     }
@@ -197,7 +197,7 @@ export const cctvFrameMixin = {
     // plainly, ahead of the generic status, so a dead source is never read as
     // a fault in this app.
     if (isSourceOffline(activeCamera.sourceStatus)) {
-      this._cctvSourceBadge.textContent = '⛔ KAMERA MATI · SUMBER MATI';
+      this._cctvSourceBadge.textContent = '⛔ CAMERA DOWN · SOURCE DOWN';
       this._cctvSourceBadge.dataset.frameState = 'offline';
       return;
     }

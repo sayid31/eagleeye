@@ -18,7 +18,7 @@ import { mountStylePicker } from './stylePickerMount.js';
 const REFRESH_MS = 1500;
 const CLOCK_MS = 1000;
 const POSITION_MS = 500;
-const PANEL_TITLE = 'Layer data';
+const PANEL_TITLE = 'Data layers';
 const RAIL_PANELS = Object.freeze({ layers: 'data-panel', camera: 'cctv-panel', scenes: 'scene-panel',
   display: 'pp-toggles', context: 'global-context-panel',
 });

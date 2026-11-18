@@ -77,28 +77,28 @@ export function _deriveOpenSkyAuthError({ detail, authMode, authReason }) {
   const mode = _toLowerText(authMode);
 
   if (reason === 'oauth_invalid_or_missing') {
-    return 'Klien OAuth OpenSky hilang/tidak valid';
+    return 'OpenSky OAuth client missing/invalid';
   }
   if (reason === 'oauth_invalid_credentials') {
-    return 'Kredensial OAuth OpenSky ditolak';
+    return 'OpenSky OAuth credentials rejected';
   }
   if (reason === 'basic_invalid_credentials') {
-    return 'Nama pengguna/kata sandi OpenSky ditolak';
+    return 'OpenSky username/password rejected';
   }
   if (reason === 'missing_basic_creds' || reason === 'missing_oauth_and_basic_creds') {
-    return 'Autentikasi OpenSky belum ada';
+    return 'OpenSky authentication missing';
   }
   if (reason === 'auth_required') {
-    return 'Autentikasi OpenSky diperlukan';
+    return 'OpenSky authentication required';
   }
   if (reason.startsWith('oauth_') || reason.startsWith('basic_')) {
-    return 'Autentikasi OpenSky tidak valid';
+    return 'OpenSky authentication invalid';
   }
   if (reason === 'forced_anonymous' || mode === 'anon') {
-    return 'Autentikasi OpenSky diperlukan';
+    return 'OpenSky authentication required';
   }
   if (detail) return detail;
-  return 'Autentikasi OpenSky gagal';
+  return 'OpenSky authentication failed';
 }
 
 export function _normalizeTrackedIcao(candidate) {

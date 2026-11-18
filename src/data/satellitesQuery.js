@@ -138,10 +138,10 @@ export function getSatellitesRowControls() {
     const loading = S._denseStatus === 'loading';
     const failed = S._denseStatus === 'failed';
     const active = S._params.catalog === 'dense' && S._denseStatus === 'ready';
-    let title = 'Tambahkan seluruh cangkang pita lebar Starlink (ribuan titik tambahan)';
-    if (loading) title = 'Memuat cangkang Starlink…';
-    else if (failed) title = `Starlink ${S._denseError || 'gagal dimuat'} — klik untuk mencoba lagi`;
-    else if (active) title = 'Menampilkan seluruh cangkang Starlink — klik untuk katalog inti saja';
+    let title = 'Add the entire Starlink broadband shell (thousands of extra points)';
+    if (loading) title = 'Loading the Starlink shell…';
+    else if (failed) title = `Starlink ${S._denseError || 'failed to load'} — click to retry`;
+    else if (active) title = 'Showing the entire Starlink shell — click for the core catalog only';
     return {
       chips: [{
         id: 'catalog',

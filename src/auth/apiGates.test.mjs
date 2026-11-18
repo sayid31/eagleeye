@@ -76,8 +76,8 @@ test('kill switch: only layers/ai/premium can be switched off', () => {
 
 test('requireActor: admin vs super permission on the attached actor', () => {
   const req = (role) => ({ gevActor: { user: { id: 'u1' }, role } });
-  assert.deepEqual(requireActor({}, 'admin'), { ok: false, status: 401, error: 'Login diperlukan' });
-  assert.deepEqual(requireActor(req('user'), 'admin'), { ok: false, status: 403, error: 'Akses ditolak' });
+  assert.deepEqual(requireActor({}, 'admin'), { ok: false, status: 401, error: 'Login required' });
+  assert.deepEqual(requireActor(req('user'), 'admin'), { ok: false, status: 403, error: 'Access denied' });
   assert.deepEqual(requireActor(req('admin'), 'admin'), { ok: true, actorId: 'u1' });
   assert.equal(requireActor(req('admin'), 'super').status, 403);
   assert.deepEqual(requireActor(req('super_admin'), 'super'), { ok: true, actorId: 'u1' });

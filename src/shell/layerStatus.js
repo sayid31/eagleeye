@@ -32,15 +32,15 @@ const GROUP_BY_LAYER = Object.freeze({
 export const LAYER_LABELS = Object.freeze({
   flights: 'Pesawat sipil',
   military: 'Pesawat militer',
-  'ais-live-vessels': 'Kapal (AIS)',
-  satellites: 'Satelit',
-  'rocket-launches': 'Misi antariksa (30 hari)',
-  earthquakes: 'Gempa 24 jam',
+  'ais-live-vessels': 'Vessels (AIS)',
+  satellites: 'Satellites',
+  'rocket-launches': 'Space missions (30 days)',
+  earthquakes: 'Earthquakes 24 h',
   'local-firms': 'Titik api (NASA FIRMS)',
   'local-dams': 'Bendungan',
-  'local-sumbar-tsunami': 'Tsunami Sumbar (tidak resmi)',
+  'local-sumbar-tsunami': 'West Sumatra tsunami (unofficial)',
   'local-datacenters': 'Pusat data',
-  traffic: 'Lalu lintas',
+  traffic: 'Traffic',
   cctv: 'CCTV',
   radio: 'Radio',
   bikeshare: 'Sepeda bersama',
@@ -84,11 +84,11 @@ export function layerOrder(id, registryIndex) {
 export function agoLabel(timestamp, now = Date.now()) {
   if (!Number.isFinite(timestamp)) return null;
   const seconds = Math.max(0, Math.floor((now - timestamp) / 1000));
-  if (seconds < 10) return 'baru saja';
-  if (seconds < 60) return `${seconds} detik lalu`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)} menit lalu`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)} jam lalu`;
-  return `${Math.floor(seconds / 86400)} hari lalu`;
+  if (seconds < 10) return 'just now';
+  if (seconds < 60) return `${seconds} s ago`;
+  if (seconds < 3600) return `${Math.floor(seconds / 60)} min ago`;
+  if (seconds < 86400) return `${Math.floor(seconds / 3600)} h ago`;
+  return `${Math.floor(seconds / 86400)} d ago`;
 }
 
 /**
@@ -102,24 +102,24 @@ export function agoLabel(timestamp, now = Date.now()) {
 export function layerShellStatus(layer, now = Date.now()) {
   const stats = layer?.stats || {};
   const transitioning = layer?.lifecycleState === 'enabling' || layer?.lifecycleState === 'disabling';
-  if (transitioning) return { key: 'loading', label: 'Memuat', detail: '' };
+  if (transitioning) return { key: 'loading', label: 'Loading', detail: '' };
   if (layer?.lifecycleUncertain) {
-    return { key: 'degraded', label: 'Terganggu', detail: 'status belum pasti' };
+    return { key: 'degraded', label: 'Terganggu', detail: 'status uncertain' };
   }
   if (!layer?.enabled) return { key: 'off', label: 'Mati', detail: '' };
   const feed = layerFeedState(stats);
   const ago = agoLabel(stats.lastUpdate, now);
   switch (feed) {
     case 'loading':
-      return { key: 'loading', label: 'Memuat', detail: '' };
+      return { key: 'loading', label: 'Loading', detail: '' };
     case 'stale':
       return { key: 'degraded', label: 'Terganggu', detail: ago ? `data ${ago}` : 'data usang' };
     case 'fallback':
-      return { key: 'degraded', label: 'Terganggu', detail: 'memakai sumber cadangan' };
+      return { key: 'degraded', label: 'Terganggu', detail: 'using fallback source' };
     case 'unavailable':
-      return { key: 'degraded', label: 'Terganggu', detail: 'sumber tidak tersedia' };
+      return { key: 'degraded', label: 'Terganggu', detail: 'source unavailable' };
     case 'degraded':
-      return { key: 'degraded', label: 'Terganggu', detail: 'sebagian data bermasalah' };
+      return { key: 'degraded', label: 'Terganggu', detail: 'some data has problems' };
     default: {
       // A guidance prompt ("Perbesar untuk memuat…") is the only explanation
       // for an enabled layer that draws nothing, so it rides in the detail.

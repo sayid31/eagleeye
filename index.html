@@ -18,7 +18,7 @@
   <div id="world-overlay-root" aria-hidden="true">
     <canvas id="world-overlay-canvas"></canvas>
   </div>
-  <div id="world-overlay-actions" class="world-overlay-accessibility" role="region" aria-label="Target peta yang terlihat">
+  <div id="world-overlay-actions" class="world-overlay-accessibility" role="region" aria-label="Visible map targets">
     <div id="world-overlay-action-list"></div>
     <div id="world-overlay-status" role="status" aria-live="polite" aria-atomic="true"></div>
   </div>
@@ -32,19 +32,19 @@
 
   <!-- Style indicator -->
   <div id="style-indicator">
-    <span class="indicator-label">GAYA AKTIF</span>
+    <span class="indicator-label">ACTIVE STYLE</span>
     <span class="indicator-value" id="active-style-name">NORMAL</span>
   </div>
 
   <!-- Top-center camera and share actions -->
-  <nav id="top-center-actions" aria-label="Aksi globe">
-    <button id="clear-selected-layers" type="button" aria-label="Hapus pilihan layer data" title="Matikan semua layer data terpilih">
+  <nav id="top-center-actions" aria-label="Globe actions">
+    <button id="clear-selected-layers" type="button" aria-label="Clear data layer selection" title="Turn off all selected data layers">
       <span class="material-symbols-outlined" aria-hidden="true">layers_clear</span>
     </button>
-    <button id="share-btn" type="button" aria-label="Salin tautan bagikan" title="Salin tautan bagikan">
+    <button id="share-btn" type="button" aria-label="Copy share link" title="Copy share link">
       <span class="share-icon" aria-hidden="true">&#x1F517;</span>
     </button>
-    <button id="reset-globe-view" type="button" aria-label="Atur ulang ke tampilan globe penuh" title="Atur ulang kamera dan kembali ke tampilan globe penuh">
+    <button id="reset-globe-view" type="button" aria-label="Reset to the full globe view" title="Reset the camera and return to the full globe view">
       <span class="material-symbols-outlined" aria-hidden="true">public</span>
     </button>
   </nav>
@@ -59,20 +59,20 @@
        in lockstep with CAMERA_ANGLE_MODE_DEFAULT in cameraAngleMode.js and
        GLOBAL_POST_DEFAULTS.cameraAngle in uiConstants.js. Pinned in
        reasonableDefaults.test.mjs and cockpitMarkup.test.mjs. -->
-  <div class="globe-angle-seg" id="camera-angle-row" role="radiogroup" aria-label="Sudut kamera">
-    <button class="globe-angle-btn" id="camera-angle-atas" data-camera-angle="atas" type="button" role="radio" aria-checked="false" aria-label="2D — kamera tegak lurus dari atas" title="2D — kamera tegak lurus dari atas">2D</button>
-    <button class="globe-angle-btn active" id="camera-angle-samping" data-camera-angle="samping" type="button" role="radio" aria-checked="true" aria-label="3D — kamera miring seperti saat CCTV aktif" title="3D — kamera miring seperti saat CCTV aktif">3D</button>
+  <div class="globe-angle-seg" id="camera-angle-row" role="radiogroup" aria-label="Camera angle">
+    <button class="globe-angle-btn" id="camera-angle-atas" data-camera-angle="atas" type="button" role="radio" aria-checked="false" aria-label="2D — camera looking straight down" title="2D — camera looking straight down">2D</button>
+    <button class="globe-angle-btn active" id="camera-angle-samping" data-camera-angle="samping" type="button" role="radio" aria-checked="true" aria-label="3D — tilted camera, as when CCTV is active" title="3D — tilted camera, as when CCTV is active">3D</button>
   </div>
   <div id="global-loading-status" role="status" aria-live="polite" aria-atomic="true" hidden>
-    <span id="global-loading-label">MEMUAT DATA LIVE</span>
+    <span id="global-loading-label">LOADING LIVE DATA</span>
     <span id="global-loading-detail"></span>
   </div>
   <div id="traffic-sync-chip" aria-live="polite">
-    <span id="traffic-sync-label">menyinkronkan jaringan jalan</span>
+    <span id="traffic-sync-label">syncing road network</span>
     <span id="traffic-sync-progress">0%</span>
   </div>
   <div id="cctv-sync-chip" aria-live="polite">
-    <span id="cctv-sync-label">memuat frame</span>
+    <span id="cctv-sync-label">loading frame</span>
     <span id="cctv-sync-progress">0/0</span>
   </div>
 
@@ -85,7 +85,7 @@
   </div>
 
   <!-- Aircraft first-person view. It can be entered from the visible view switcher. -->
-  <section id="cockpit-hud" aria-label="Tampilan kokpit pesawat" hidden>
+  <section id="cockpit-hud" aria-label="Aircraft cockpit view" hidden>
     <div class="cockpit-visor-shell" aria-hidden="true">
       <div class="cockpit-roll-arc">
         <span style="--slot:-3;--depth:3">−30</span>
@@ -105,14 +105,14 @@
       <div class="cockpit-horizon-guide">
         <span></span><small>RATA</small><span></span>
       </div>
-      <div id="cockpit-route-direction" class="cockpit-route-direction" hidden aria-label="Perkiraan arah tujuan">
+      <div id="cockpit-route-direction" class="cockpit-route-direction" hidden aria-label="Estimated destination heading">
         <svg class="cockpit-route-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M12 2 4.58 19.93c-.34.83.51 1.63 1.31 1.27L12 18.47l6.11 2.73c.8.36 1.65-.44 1.31-1.27L12 2Z" />
         </svg>
         <small id="cockpit-route-direction-label">TUJ ---°</small>
       </div>
-      <div class="cockpit-visor-status cockpit-visor-status-left">BIDANG OPTIK · 01</div>
-      <div class="cockpit-visor-status cockpit-visor-status-right">KUNCI VISOR · AKTIF</div>
+      <div class="cockpit-visor-status cockpit-visor-status-left">OPTICAL FIELD · 01</div>
+      <div class="cockpit-visor-status cockpit-visor-status-right">VISOR LOCK · ACTIVE</div>
     </div>
     <div id="cockpit-speed-rim" class="cockpit-altitude-rim cockpit-speed-rim">
       <span class="cockpit-altitude-rim-label">KECEPATAN DARAT · KTS</span>
@@ -154,27 +154,27 @@
     </div>
     <div class="cockpit-topline">
       <div>
-        <span class="cockpit-kicker">ORANG PERTAMA</span>
+        <span class="cockpit-kicker">FIRST PERSON</span>
         <strong id="cockpit-callsign">PESAWAT</strong>
-        <span id="cockpit-aircraft-meta" class="cockpit-aircraft-meta">JEJAK LIVE · ARAH SEJAJAR</span>
+        <span id="cockpit-aircraft-meta" class="cockpit-aircraft-meta">LIVE TRACK · ALIGNED HEADING</span>
       </div>
       <div class="cockpit-vision-controls" role="group" aria-label="Gaya penglihatan kokpit">
-        <button id="cockpit-vision-previous" class="cockpit-vision-nav" type="button" aria-label="Gaya penglihatan kokpit sebelumnya" title="Gaya penglihatan sebelumnya">
+        <button id="cockpit-vision-previous" class="cockpit-vision-nav" type="button" aria-label="Previous cockpit vision style" title="Previous vision style">
           <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
-          <small>SEBELUM</small>
+          <small>PREVIOUS</small>
         </button>
-        <button id="cockpit-vision-current" class="cockpit-vision-current" type="button" data-cockpit-vision="optical" aria-label="Gaya penglihatan kokpit saat ini: NORMAL. Aktifkan untuk gaya berikutnya." title="Gaya saat ini: NORMAL — klik untuk berikutnya">
-          <small>SAAT INI</small>
+        <button id="cockpit-vision-current" class="cockpit-vision-current" type="button" data-cockpit-vision="optical" aria-label="Current cockpit vision style: NORMAL. Activate for the next style." title="Current style: NORMAL — click for next">
+          <small>CURRENT</small>
           <strong id="cockpit-vision-current-label" aria-live="polite">NORMAL</strong>
         </button>
-        <button id="cockpit-vision-next" class="cockpit-vision-nav" type="button" aria-label="Gaya penglihatan kokpit berikutnya" title="Gaya penglihatan berikutnya">
-          <small>BERIKUTNYA</small>
+        <button id="cockpit-vision-next" class="cockpit-vision-nav" type="button" aria-label="Next cockpit vision style" title="Next vision style">
+          <small>NEXT</small>
           <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
         </button>
       </div>
     </div>
     <div class="cockpit-reticle material-symbols-outlined" aria-hidden="true">my_location</div>
-    <div class="cockpit-compass" aria-label="Arah pesawat saat ini">
+    <div class="cockpit-compass" aria-label="Current aircraft heading">
       <div class="cockpit-instrument-row">
         <div class="cockpit-readout cockpit-speed">
           <span class="cockpit-readout-label">KECEPATAN DARAT</span>
@@ -195,24 +195,24 @@
       <span id="cockpit-clock">--:--:--Z</span>
       <span id="cockpit-position">--° · --°</span>
     </div>
-    <aside id="cockpit-context" class="cockpit-context-window" aria-label="Ringkasan kontak kokpit" hidden>
+    <aside id="cockpit-context" class="cockpit-context-window" aria-label="Cockpit contact summary" hidden>
       <header class="cockpit-context-header">
         <div>
           <span class="cockpit-context-kicker">KONTAK</span>
           <strong id="cockpit-context-subject">KONTAK · 250 KM</strong>
         </div>
         <nav class="cockpit-context-actions" aria-label="Navigasi kontak">
-          <button id="cockpit-context-previous" type="button" aria-label="Sebelumnya — kontak yang dikunjungi sebelumnya dalam jendela 250 km" title="Sebelumnya — kontak yang dikunjungi sebelumnya dalam jendela 250 km">
+          <button id="cockpit-context-previous" type="button" aria-label="Previous — previously visited contact within the 250 km window" title="Previous — previously visited contact within the 250 km window">
             <span class="material-symbols-outlined" aria-hidden="true">skip_previous</span>
           </button>
-          <button id="cockpit-context-next" type="button" aria-label="Berikutnya — kontak terdekat yang belum dikunjungi dalam jendela 250 km" title="Berikutnya — kontak terdekat yang belum dikunjungi dalam jendela 250 km">
+          <button id="cockpit-context-next" type="button" aria-label="Next — nearest unvisited contact within the 250 km window" title="Next — nearest unvisited contact within the 250 km window">
             <span class="material-symbols-outlined" aria-hidden="true">skip_next</span>
           </button>
           <button id="cockpit-context-toggle" type="button" aria-label="Ciutkan panel Kontak" aria-expanded="true" title="Ciutkan panel kontak">
             <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
           </button>
         </nav>
-        <span class="cockpit-context-qualifier">HANYA KONTEKS</span>
+        <span class="cockpit-context-qualifier">CONTEXT ONLY</span>
       </header>
       <div class="cockpit-context-cohorts" role="list" aria-label="Jumlah kelompok terdekat">
         <div role="listitem" data-context-cohort="flights"><span>PNB</span><strong>—</strong><small>OpenSky</small></div>
@@ -224,20 +224,20 @@
         <span id="cockpit-context-direction" class="material-symbols-outlined" aria-hidden="true">navigation</span>
         <div>
           <small>TERDEKAT TERAMATI / TERPETAKAN</small>
-          <strong id="cockpit-context-nearest-label">TIDAK ADA CONTOH TERSEDIA</strong>
+          <strong id="cockpit-context-nearest-label">NO SAMPLE AVAILABLE</strong>
         </div>
         <span id="cockpit-context-bearing">—</span>
         <span id="cockpit-context-distance">—</span>
       </div>
       <footer class="cockpit-context-footer">
-        <span id="cockpit-context-uncertainty">HANYA INPUT TERSEDIA · BUKAN TANDA AMAN</span>
+        <span id="cockpit-context-uncertainty">AVAILABLE INPUTS ONLY · NOT AN ALL-CLEAR</span>
         <button
           id="cockpit-weather-toggle"
           class="cockpit-context-weather"
           type="button"
-          aria-label="Nyalakan efek cuaca kokpit"
+          aria-label="Turn on cockpit weather effects"
           aria-pressed="false"
-          title="Nyalakan efek cuaca kokpit"
+          title="Turn on cockpit weather effects"
         >
           <span>CUACA</span>
           <strong id="cockpit-weather-state">MATI</strong>
@@ -245,21 +245,21 @@
         <time id="cockpit-context-updated">--:--:--Z</time>
       </footer>
     </aside>
-    <aside id="cockpit-signal-stream" class="cockpit-signal-window" aria-label="Karusel ringkasan kokpit" hidden>
-      <section id="cockpit-route" class="cockpit-route-card" aria-label="Perkiraan rencana penerbangan" hidden>
+    <aside id="cockpit-signal-stream" class="cockpit-signal-window" aria-label="Cockpit summary carousel" hidden>
+      <section id="cockpit-route" class="cockpit-route-card" aria-label="Estimated flight plan" hidden>
         <div class="cockpit-route-heading">
-          <span class="cockpit-route-kicker">PERKIRAAN RENCANA PENERBANGAN</span>
-          <small id="cockpit-route-status">DATA RUTE TIDAK TERSEDIA</small>
+          <span class="cockpit-route-kicker">ESTIMATED FLIGHT PLAN</span>
+          <small id="cockpit-route-status">ROUTE DATA UNAVAILABLE</small>
         </div>
         <div class="cockpit-route-endpoints">
           <div class="cockpit-route-airport">
-            <span>DARI</span>
-            <strong id="cockpit-route-from">TIDAK DIKETAHUI</strong>
+            <span>FROM</span>
+            <strong id="cockpit-route-from">UNKNOWN</strong>
           </div>
           <span class="cockpit-route-arrow material-symbols-outlined" aria-hidden="true">east</span>
           <div class="cockpit-route-airport">
             <span>KE</span>
-            <strong id="cockpit-route-to">TIDAK DIKETAHUI</strong>
+            <strong id="cockpit-route-to">UNKNOWN</strong>
           </div>
         </div>
       </section>
@@ -268,12 +268,12 @@
           <span id="cockpit-brief-kicker" class="cockpit-signal-kicker"><i aria-hidden="true"></i> SINYAL LIVE</span>
           <strong id="cockpit-brief-subtitle">PING TERAMATI / TERPETAKAN</strong>
         </div>
-        <nav class="cockpit-brief-actions" aria-label="Kontrol ringkasan kokpit">
-          <button id="cockpit-brief-previous" type="button" aria-label="Halaman ringkasan sebelumnya" title="Halaman ringkasan sebelumnya">
+        <nav class="cockpit-brief-actions" aria-label="Cockpit summary controls">
+          <button id="cockpit-brief-previous" type="button" aria-label="Previous summary page" title="Previous summary page">
             <span class="material-symbols-outlined" aria-hidden="true">chevron_left</span>
           </button>
           <span id="cockpit-brief-position" aria-live="polite">1 / 3</span>
-          <button id="cockpit-brief-next" type="button" aria-label="Halaman ringkasan berikutnya" title="Halaman ringkasan berikutnya">
+          <button id="cockpit-brief-next" type="button" aria-label="Next summary page" title="Next summary page">
             <span class="material-symbols-outlined" aria-hidden="true">chevron_right</span>
           </button>
           <button
@@ -281,9 +281,9 @@
             type="button"
             aria-label="SIKLUS MATI"
             aria-pressed="false"
-            title="Putar halaman ringkasan otomatis setiap 9 detik (Sinyal → Berita → Lokal). Berhenti sementara saat kursor atau fokus ada di panel. Data sinyal live tetap diperbarui terus-menerus."
+            title="Auto-rotate summary pages every 9 seconds (Signal → News → Local). Pauses while the cursor or focus is on the panel. Live signal data keeps updating."
           >SIKLUS MATI</button>
-          <button id="cockpit-signal-toggle" type="button" aria-label="Ciutkan panel ringkasan kokpit" aria-expanded="true" title="Ciutkan panel ringkasan">
+          <button id="cockpit-signal-toggle" type="button" aria-label="Collapse cockpit summary panel" aria-expanded="true" title="Collapse summary panel">
             <span class="material-symbols-outlined" aria-hidden="true">right_panel_close</span>
           </button>
         </nav>
@@ -292,7 +292,7 @@
         <section data-cockpit-brief-page="signals" aria-label="Sinyal live">
           <ol id="cockpit-signal-list" class="cockpit-signal-list" aria-live="polite"></ol>
         </section>
-        <section data-cockpit-brief-page="news" aria-label="Berita regional terbaru" hidden>
+        <section data-cockpit-brief-page="news" aria-label="Latest regional news" hidden>
           <div id="cockpit-news-status" class="cockpit-brief-status">MEMPEROLEH BERITA REGIONAL</div>
           <ol id="cockpit-news-list" class="cockpit-news-list" aria-live="polite"></ol>
         </section>
@@ -304,29 +304,29 @@
           <div class="cockpit-local-grid">
             <div><span>SUHU</span><strong id="cockpit-local-temperature">—</strong><small>OPEN-METEO</small></div>
             <div><span>ANGIN</span><strong id="cockpit-local-wind">—</strong><small id="cockpit-local-wind-direction">—</small></div>
-            <div><span>LANGIT</span><strong id="cockpit-local-condition">TIDAK DIKETAHUI</strong><small id="cockpit-local-cloud">—</small></div>
+            <div><span>LANGIT</span><strong id="cockpit-local-condition">UNKNOWN</strong><small id="cockpit-local-cloud">—</small></div>
             <div><span>CURAH</span><strong id="cockpit-local-precipitation">—</strong><small>MM</small></div>
           </div>
-          <a class="cockpit-weather-credit" href="https://open-meteo.com/" target="_blank" rel="noopener">Data cuaca oleh Open-Meteo.com</a>
+          <a class="cockpit-weather-credit" href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a>
         </section>
       </div>
       <footer class="cockpit-signal-footer">
-        <span id="cockpit-brief-source">PERISTIWA BERSUMBER · TANPA BERITA SINTETIS</span>
-        <nav class="cockpit-brief-tabs" aria-label="Halaman ringkasan kokpit">
-          <button type="button" data-cockpit-brief-index="0" aria-label="Tampilkan Sinyal Live" aria-current="true">SIN</button>
-          <button type="button" data-cockpit-brief-index="1" aria-label="Tampilkan Berita Regional">BERITA</button>
-          <button type="button" data-cockpit-brief-index="2" aria-label="Tampilkan Info Lokal">LOKAL</button>
+        <span id="cockpit-brief-source">SOURCED EVENTS · NO SYNTHETIC NEWS</span>
+        <nav class="cockpit-brief-tabs" aria-label="Cockpit summary pages">
+          <button type="button" data-cockpit-brief-index="0" aria-label="Show Live Signals" aria-current="true">SIN</button>
+          <button type="button" data-cockpit-brief-index="1" aria-label="Show Regional News">BERITA</button>
+          <button type="button" data-cockpit-brief-index="2" aria-label="Show Local Info">LOKAL</button>
         </nav>
       </footer>
     </aside>
-    <aside id="cockpit-utility-controls" class="cockpit-utility-controls" aria-label="Kontrol tampilan dan Radio kokpit">
+    <aside id="cockpit-utility-controls" class="cockpit-utility-controls" aria-label="Cockpit view and Radio controls">
       <div class="cockpit-utility-control">
         <div class="cockpit-utility-launcher" data-cockpit-launcher="display">
-          <span>TAMPILAN</span>
+          <span>VIEW</span>
           <span class="cockpit-utility-divider" aria-hidden="true"></span>
-          <button id="cockpit-display-toggle-btn" class="cockpit-utility-glyph" type="button" aria-expanded="false" aria-controls="cockpit-display-panel" aria-label="Bentangkan opsi tampilan Kokpit" title="Bentangkan opsi tampilan Kokpit">◀</button>
+          <button id="cockpit-display-toggle-btn" class="cockpit-utility-glyph" type="button" aria-expanded="false" aria-controls="cockpit-display-panel" aria-label="Expand Cockpit view options" title="Expand Cockpit view options">◀</button>
         </div>
-        <div id="cockpit-display-panel" class="cockpit-utility-popover" role="group" aria-label="Opsi tampilan Kokpit" hidden>
+        <div id="cockpit-display-panel" class="cockpit-utility-popover" role="group" aria-label="Cockpit view options" hidden>
           <div class="cockpit-display-slot" data-cockpit-display-slot="hud"></div>
           <div class="cockpit-display-slot" data-cockpit-display-slot="detection"></div>
           <div class="cockpit-display-slot" data-cockpit-display-slot="parameters"></div>
@@ -337,15 +337,15 @@
         <div class="cockpit-utility-launcher" data-cockpit-launcher="radio">
           <span>RADIO</span>
           <span class="cockpit-utility-divider" aria-hidden="true"></span>
-          <button id="cockpit-radio-toggle-btn" class="cockpit-utility-glyph" type="button" aria-expanded="false" aria-controls="cockpit-radio-panel" aria-label="Bentangkan kontrol Radio Kokpit" title="Bentangkan kontrol Radio Kokpit">◀</button>
+          <button id="cockpit-radio-toggle-btn" class="cockpit-utility-glyph" type="button" aria-expanded="false" aria-controls="cockpit-radio-panel" aria-label="Expand Cockpit Radio controls" title="Expand Cockpit Radio controls">◀</button>
         </div>
-        <div id="cockpit-radio-panel" class="cockpit-utility-popover cockpit-radio-compact" role="group" aria-label="Kontrol Radio ringkas Kokpit" hidden>
+        <div id="cockpit-radio-panel" class="cockpit-utility-popover cockpit-radio-compact" role="group" aria-label="Compact Cockpit Radio controls" hidden>
           <strong id="cockpit-radio-station" class="cockpit-radio-station">SIAP</strong>
-          <button id="cockpit-radio-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">NYALAKAN</button>
+          <button id="cockpit-radio-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">TURN ON</button>
           <div class="cockpit-radio-transport">
-            <button id="cockpit-radio-prev-btn" type="button" aria-label="Stasiun radio terfilter sebelumnya" disabled>◀◀</button>
+            <button id="cockpit-radio-prev-btn" type="button" aria-label="Previous filtered radio station" disabled>◀◀</button>
             <button id="cockpit-radio-play-btn" type="button" aria-label="Putar stasiun radio terpilih" disabled>▶</button>
-            <button id="cockpit-radio-next-btn" type="button" aria-label="Stasiun radio terfilter berikutnya" disabled>▶▶</button>
+            <button id="cockpit-radio-next-btn" type="button" aria-label="Next filtered radio station" disabled>▶▶</button>
           </div>
           <label class="cockpit-radio-volume" for="cockpit-radio-volume">
             <span>VOLUME</span>
@@ -355,24 +355,24 @@
         </div>
       </div>
     </aside>
-    <div class="cockpit-help">ESC KELUAR <span>·</span> C GANTI</div>
+    <div class="cockpit-help">ESC EXIT <span>·</span> C GANTI</div>
   </section>
 
-  <nav id="view-switcher" aria-label="Pengalih tampilan">
-    <button id="cockpit-reset-globe" type="button" aria-label="Atur ulang kokpit ke tampilan globe penuh" title="Keluar dari kokpit dan kembali ke tampilan globe penuh" hidden>
+  <nav id="view-switcher" aria-label="View switcher">
+    <button id="cockpit-reset-globe" type="button" aria-label="Reset the cockpit to the full globe view" title="Exit the cockpit and return to the full globe view" hidden>
       <span class="material-symbols-outlined" aria-hidden="true">public</span>
-      <span>ATUR ULANG</span>
+      <span>RESET</span>
     </button>
-    <button id="map-view-switch" type="button" aria-label="Keluar dari tampilan kokpit" aria-keyshortcuts="Escape C" title="Keluar dari tampilan kokpit" hidden>
+    <button id="map-view-switch" type="button" aria-label="Exit cockpit view" aria-keyshortcuts="Escape C" title="Exit cockpit view" hidden>
       <span class="material-symbols-outlined" aria-hidden="true">close_fullscreen</span>
-      <span>KELUAR KOKPIT</span>
+      <span>EXIT COCKPIT</span>
     </button>
   </nav>
 
   <!-- Post-processing toggles (top-right) -->
   <div id="pp-toggles" class="panel-collapsible collapsed" data-panel-id="pp-toggles">
     <div class="compact pp-header-row">
-      <span class="pp-header-label">TAMPILAN</span>
+      <span class="pp-header-label">VIEW</span>
       <span class="panel-divider" aria-hidden="true"></span>
       <button class="panel-collapse-btn pp-collapse-btn" data-collapse-target="pp-toggles" title="Ciutkan panel">&#x25C0;</button>
     </div>
@@ -409,12 +409,12 @@
       </div>
       <div class="pp-slider-row detection-fade-row" id="detection-fade-row">
         <label class="pp-slider-mini-label" for="detection-fade-slider">Pudar</label>
-        <input type="range" class="pp-slider" id="detection-fade-slider" min="0" max="40" step="1" value="7" aria-label="Jarak pudar deteksi" title="Jarak pudar overlay dunia di luar lubang intip sebagai persentase radiusnya" />
+        <input type="range" class="pp-slider" id="detection-fade-slider" min="0" max="40" step="1" value="7" aria-label="Jarak pudar deteksi" title="Fade distance of world overlays outside the peephole, as a percentage of its radius" />
         <span class="pp-slider-value" id="detection-fade-value">7%</span>
       </div>
       <div class="pp-slider-row detection-opacity-row" id="detection-opacity-row">
-        <label class="pp-slider-mini-label" for="detection-opacity-slider">Luar</label>
-        <input type="range" class="pp-slider" id="detection-opacity-slider" min="0" max="100" step="1" value="1" aria-label="Opasitas deteksi di luar lubang intip" title="Opasitas label dan kartu overlay dunia di luar jarak pudar" />
+        <label class="pp-slider-mini-label" for="detection-opacity-slider">Outer</label>
+        <input type="range" class="pp-slider" id="detection-opacity-slider" min="0" max="100" step="1" value="1" aria-label="Detection opacity outside the peephole" title="Opacity of world overlay labels and cards beyond the fade distance" />
         <span class="pp-slider-value" id="detection-opacity-value">1%</span>
       </div>
     </div>
@@ -432,7 +432,7 @@
            button ships lit and the mode row ships open — the same markup-carries-the-default
            convention as #scope-toggle. ui.js re-syncs both from durable layer state, which
            is what flips them back for a share link or a stored session carrying 3D off. -->
-      <button class="pp-toggle-btn active" id="models3d-toggle" aria-pressed="true" title="Pesawat 3D — ikon datar saat zoom jauh, model 3D saat dekat">
+      <button class="pp-toggle-btn active" id="models3d-toggle" aria-pressed="true" title="3D aircraft — flat icon when zoomed out, 3D model when close">
         <span class="pp-icon">&#x2708;</span>
         <span class="pp-label">3D</span>
       </button>
@@ -440,7 +440,7 @@
         <span class="pp-slider-mini-label">Model</span>
         <div class="pp-mode-seg" role="radiogroup" aria-label="Cakupan model 3D">
           <button class="pp-mode-btn active" id="models3d-mode-proximity" data-mode="proximity" role="radio" aria-checked="true">Dekat</button>
-          <button class="pp-mode-btn" id="models3d-mode-all" data-mode="all" role="radio" aria-checked="false">Semua</button>
+          <button class="pp-mode-btn" id="models3d-mode-all" data-mode="all" role="radio" aria-checked="false">All</button>
         </div>
       </div>
     </div>
@@ -456,7 +456,7 @@
              mirrors SCOPE_FEATHER_RATIO_DEFAULT in src/scopeMask.js. Feather
              softens the black mask edge; label fading is the separate Fade
              slider. -->
-        <input type="range" class="pp-slider" id="scope-feather-slider" min="0" max="100" value="11" title="Tepi halus lingkup sebagai persentase radius lubang intip" />
+        <input type="range" class="pp-slider" id="scope-feather-slider" min="0" max="100" value="11" title="Soft edge of the scope as a percentage of the peephole radius" />
         <span class="pp-slider-value" id="scope-feather-value">11%</span>
       </div>
       <div class="pp-slider-row visible" id="scope-intensity-row">
@@ -466,19 +466,19 @@
              scope"). This is a plain multiplier on the painted outside alpha:
              100% is today's shipped look, 0% paints nothing extra beyond what
              the Scope toggle's off state already gives. -->
-        <input type="range" class="pp-slider" id="scope-intensity-slider" min="0" max="100" value="0" title="Intensitas masker lingkup — 0% sepenuhnya transparan, 100% tampilan bawaan" />
+        <input type="range" class="pp-slider" id="scope-intensity-slider" min="0" max="100" value="0" title="Scope mask intensity — 0% fully transparent, 100% default look" />
         <span class="pp-slider-value" id="scope-intensity-value">0%</span>
       </div>
     </div>
     <div class="pp-toggle-group">
-      <button class="pp-toggle-btn" id="celestial-toggle" title="Cincin selestial — tampilkan globe penuh" aria-pressed="false">
+      <button class="pp-toggle-btn" id="celestial-toggle" title="Celestial ring — show the full globe" aria-pressed="false">
         <span class="pp-icon material-symbols-outlined" aria-hidden="true">flare</span>
         <span class="pp-label">Selestial</span>
       </button>
     </div>
-    <button class="pp-toggle-btn" id="clean-view-toggle" title="Sembunyikan antarmuka">
+    <button class="pp-toggle-btn" id="clean-view-toggle" title="Hide interface">
       <span class="pp-icon">&#x25A1;</span>
-      <span class="pp-label">Tampilan bersih</span>
+      <span class="pp-label">Clean view</span>
     </button>
     <div class="pp-toggle-group">
       <button class="pp-toggle-btn" id="bloom-toggle" title="Bloom / Cahaya">
@@ -501,10 +501,10 @@
       </div>
     </div>
   </div>
-  <button id="clean-view-exit" title="Kembalikan kontrol antarmuka">KELUAR TAMPILAN BERSIH</button>
+  <button id="clean-view-exit" title="Restore interface controls">EXIT CLEAN VIEW</button>
 
   <!-- Unified bottom command dock: locations, voice (injected at runtime), visual presets -->
-  <div id="command-dock" aria-label="Kontrol navigasi, suara, dan preset visual">
+  <div id="command-dock" aria-label="Navigation, voice, and visual preset controls">
   <!-- Control panel -->
   <div id="control-panel" class="panel-collapsible collapsed">
     <div class="panel-glow"></div>
@@ -556,10 +556,10 @@
       </div>
       <section class="map-source-section" aria-labelledby="map-source-label">
         <div class="map-source-heading">
-          <span id="map-source-label">SUMBER PETA</span>
+          <span id="map-source-label">MAP SOURCE</span>
           <span id="map-stack-status" class="pp-stack-status" aria-live="polite">3D</span>
         </div>
-        <div id="map-stack-chips" class="map-stack-chip-row" role="group" aria-label="Sumber peta"></div>
+        <div id="map-stack-chips" class="map-stack-chip-row" role="group" aria-label="Map source"></div>
       </section>
       </div>
       <div id="style-mini-status" class="panel-mini-status" aria-live="polite">
@@ -588,10 +588,10 @@
         <div class="location-city-row">
           <div id="location-pills" class="location-pills"></div>
           <div class="location-search-wrap">
-            <button id="search-toggle" class="search-toggle-btn" title="Cari lokasi mana pun">
+            <button id="search-toggle" class="search-toggle-btn" title="Search any location">
               <span>&#x1F50E;</span>
             </button>
-            <input type="text" id="location-search" placeholder="Cari lokasi mana pun..." autocomplete="off" spellcheck="false" />
+            <input type="text" id="location-search" placeholder="Search any location..." autocomplete="off" spellcheck="false" />
           </div>
         </div>
       </div>
@@ -631,56 +631,56 @@
              stream is actually attached (cctvPanelMixin._syncCctvVideoMirror). -->
         <video id="cctv-frame-video" muted playsinline autoplay></video>
       </div>
-      <div id="cctv-source-badge" role="status" aria-live="polite">SUMBER · TIDAK DIKETAHUI</div>
-      <div id="cctv-meta">Nyalakan CCTV untuk memuat persimpangan kamera</div>
+      <div id="cctv-source-badge" role="status" aria-live="polite">SOURCE · UNKNOWN</div>
+      <div id="cctv-meta">Turn on CCTV to load camera crossings</div>
       <div class="cctv-controls">
         <button id="cctv-enable-btn" class="scene-btn">CCTV MATI</button>
         <button id="cctv-nearest-btn" class="scene-btn">TERDEKAT</button>
       </div>
       <div class="cctv-controls">
-        <button id="cctv-prev-btn" class="scene-btn">SEBELUMNYA</button>
+        <button id="cctv-prev-btn" class="scene-btn">PREVIOUS</button>
         <div class="cctv-camera-picker">
           <button type="button" id="cctv-camera-trigger" class="cctv-camera-trigger"
             aria-haspopup="listbox" aria-expanded="false"
-            aria-controls="cctv-camera-listbox" aria-label="Kamera CCTV">Pilih kamera</button>
+            aria-controls="cctv-camera-listbox" aria-label="CCTV camera">Select camera</button>
           <ul id="cctv-camera-listbox" class="cctv-camera-listbox" role="listbox"
-            aria-label="Kamera CCTV" hidden></ul>
+            aria-label="CCTV camera" hidden></ul>
         </div>
-        <button id="cctv-next-btn" class="scene-btn">BERIKUTNYA</button>
+        <button id="cctv-next-btn" class="scene-btn">NEXT</button>
       </div>
       <details class="cctv-advanced">
         <summary>OPSI LANJUTAN</summary>
         <div class="cctv-controls">
-          <button id="cctv-focus-btn" class="scene-btn" title="Terbangkan kamera dunia ke kamera CCTV yang sedang aktif">FOKUS</button>
-          <button id="cctv-coverage-btn" class="scene-btn" title="Tampilkan area pandang kamera di peta: mati, bingkai, lalu volume viewshed">CAKUPAN MATI</button>
+          <button id="cctv-focus-btn" class="scene-btn" title="Fly the world camera to the currently active CCTV camera">FOKUS</button>
+          <button id="cctv-coverage-btn" class="scene-btn" title="Show the camera's field of view on the map: off, frame, then viewshed volume">CAKUPAN MATI</button>
         </div>
         <div class="cctv-controls">
-          <button id="cctv-auto-hop-btn" class="scene-btn" title="Berpindah ke kamera berikutnya secara otomatis tiap beberapa detik">LOMPAT OTOMATIS MATI</button>
-          <button id="cctv-projection-btn" class="scene-btn" title="Tampilkan layar video kamera di dunia 3D">PROYEKSI HIDUP</button>
+          <button id="cctv-auto-hop-btn" class="scene-btn" title="Switch to the next camera automatically every few seconds">LOMPAT OTOMATIS MATI</button>
+          <button id="cctv-projection-btn" class="scene-btn" title="Show the camera's video screen in the 3D world">PROYEKSI HIDUP</button>
         </div>
-        <span id="cctv-quality-chip" title="Kualitas kalibrasi posisi kamera">KAL · --</span>
+        <span id="cctv-quality-chip" title="Camera position calibration quality">KAL · --</span>
       </details>
       <div class="cctv-calibration-block">
         <div class="cctv-calibration-header">
           <div class="cctv-summary-label">KALIBRASI</div>
-          <button id="cctv-adjust-btn" class="scene-btn" title="Seret kamera di dunia: cincin memutar, panah menggeser, pegangan mengatur jarak/FOV">ATUR</button>
+          <button id="cctv-adjust-btn" class="scene-btn" title="Drag the camera in the world: ring rotates, arrows move, handle sets distance/FOV">ADJUST</button>
         </div>
-        <div id="cctv-cal-readout" class="cctv-cal-readout" aria-label="Pose kamera — klik nilai untuk mengetik">
-          <button class="cctv-cal-value" data-cal-field="heading" title="Arah (kompas °) — klik untuk mengetik">HDG --</button>
-          <button class="cctv-cal-value" data-cal-field="pitch" title="Kemiringan (° atas/bawah) — klik untuk mengetik">MIRING --</button>
-          <button class="cctv-cal-value" data-cal-field="fov" title="FOV horizontal (°) — klik untuk mengetik">FOV --</button>
-          <button class="cctv-cal-value" data-cal-field="range" title="Jarak / jarak bidang monitor (m) — klik untuk mengetik">JARAK --</button>
-          <button class="cctv-cal-value" data-cal-field="height" title="Tinggi pemasangan di atas tanah (m) — klik untuk mengetik">TGI --</button>
-          <button class="cctv-cal-value" data-cal-field="north" title="Selisih utara dari posisi katalog (m) — klik untuk mengetik">ΔU --</button>
-          <button class="cctv-cal-value" data-cal-field="east" title="Selisih timur dari posisi katalog (m) — klik untuk mengetik">ΔT --</button>
+        <div id="cctv-cal-readout" class="cctv-cal-readout" aria-label="Camera pose — click a value to type">
+          <button class="cctv-cal-value" data-cal-field="heading" title="Heading (compass °) — click to type">HDG --</button>
+          <button class="cctv-cal-value" data-cal-field="pitch" title="Tilt (° up/down) — click to type">MIRING --</button>
+          <button class="cctv-cal-value" data-cal-field="fov" title="Horizontal FOV (°) — click to type">FOV --</button>
+          <button class="cctv-cal-value" data-cal-field="range" title="Distance / monitor plane distance (m) — click to type">JARAK --</button>
+          <button class="cctv-cal-value" data-cal-field="height" title="Mounting height above ground (m) — click to type">TGI --</button>
+          <button class="cctv-cal-value" data-cal-field="north" title="North offset from catalog position (m) — click to type">ΔU --</button>
+          <button class="cctv-cal-value" data-cal-field="east" title="East offset from catalog position (m) — click to type">ΔT --</button>
         </div>
         <div class="cctv-controls cctv-calibration-actions">
-          <button id="cctv-calib-save-btn" class="scene-btn">SIMPAN KAL</button>
-          <button id="cctv-calib-reset-btn" class="scene-btn">ATUR ULANG KAL</button>
+          <button id="cctv-calib-save-btn" class="scene-btn">SAVE CAL</button>
+          <button id="cctv-calib-reset-btn" class="scene-btn">RESET CAL</button>
         </div>
       </div>
-      <div class="cctv-summary-label">RINGKASAN SKENARIO</div>
-      <div id="cctv-summary">Nyalakan CCTV untuk memulai ringkasan intelijen berbasis kamera.</div>
+      <div class="cctv-summary-label">SCENE SUMMARY</div>
+      <div id="cctv-summary">Turn on CCTV to start the camera-based intelligence summary.</div>
     </div>
   </div>
 
@@ -697,33 +697,33 @@
         <div class="scene-picker">
           <button type="button" id="scene-picker-trigger" class="scene-picker-trigger"
             aria-haspopup="listbox" aria-expanded="false"
-            aria-controls="scene-picker-listbox" aria-label="Resep skenario">Pilih skenario</button>
+            aria-controls="scene-picker-listbox" aria-label="Resep skenario">Select scene</button>
           <ul id="scene-picker-listbox" class="scene-picker-listbox" role="listbox"
             aria-label="Resep skenario" hidden></ul>
         </div>
-        <button id="scene-new-btn" class="scene-btn">BARU</button>
-        <button id="scene-delete-btn" class="scene-btn scene-btn-danger">HAPUS</button>
+        <button id="scene-new-btn" class="scene-btn">NEW</button>
+        <button id="scene-delete-btn" class="scene-btn scene-btn-danger">DELETE</button>
       </div>
       <div class="scene-controls">
         <button id="scene-capture-btn" class="scene-btn">AMBIL SHOT</button>
-        <button id="scene-update-shot-btn" class="scene-btn">PERBARUI SHOT</button>
+        <button id="scene-update-shot-btn" class="scene-btn">UPDATE SHOT</button>
       </div>
       <div id="scene-shot-list" class="scene-shot-list"></div>
       <div class="scene-controls">
-        <button id="scene-start-btn" class="scene-btn">MULAI</button>
+        <button id="scene-start-btn" class="scene-btn">START</button>
         <button id="scene-stop-btn" class="scene-btn scene-btn-danger">BERHENTI</button>
-        <button id="scene-next-btn" class="scene-btn">BERIKUTNYA</button>
+        <button id="scene-next-btn" class="scene-btn">NEXT</button>
       </div>
       <div class="scene-controls">
-        <button id="scene-export-btn" class="scene-btn">EKSPOR PRESET</button>
-        <button id="scene-import-btn" class="scene-btn">IMPOR</button>
+        <button id="scene-export-btn" class="scene-btn">EXPORT PRESET</button>
+        <button id="scene-import-btn" class="scene-btn">IMPORT</button>
         <button id="scene-download-btn" class="scene-btn">LOG PROSES</button>
         <input type="file" id="scene-import-file" accept="application/json,.json" hidden />
       </div>
       <div class="scene-progress">
         <div id="scene-progress-fill">0%</div>
       </div>
-      <div id="scene-status">Siap</div>
+      <div id="scene-status">Ready</div>
     </div>
   </div>
 
@@ -738,27 +738,27 @@
           <span class="panel-title">KONTEKS</span>
           <span class="panel-divider"></span>
           <div id="context-radio-dock" class="context-radio-dock">
-            <button id="context-radio-toggle-btn" class="context-radio-toggle" type="button" aria-expanded="false" aria-controls="context-radio-mini" aria-label="Buka kontrol Radio ringkas" title="Buka kontrol Radio ringkas">
+            <button id="context-radio-toggle-btn" class="context-radio-toggle" type="button" aria-expanded="false" aria-controls="context-radio-mini" aria-label="Open compact Radio controls" title="Open compact Radio controls">
               <span class="material-symbols-outlined" aria-hidden="true">radio</span>
             </button>
-            <div id="context-radio-mini" class="context-radio-mini" role="group" aria-label="Kontrol Radio ringkas" hidden>
+            <div id="context-radio-mini" class="context-radio-mini" role="group" aria-label="Compact Radio controls" hidden>
               <div class="context-radio-mini-heading">
                 <span>RADIO</span>
                 <strong id="context-radio-mini-station">RADIO SIAP</strong>
                 <span class="context-radio-mini-actions">
-                  <button id="context-radio-details-btn" type="button" aria-label="Buka kontrol Radio terperinci" aria-expanded="false" aria-controls="radio-panel" title="Buka kontrol Radio terperinci">
+                  <button id="context-radio-details-btn" type="button" aria-label="Open detailed Radio controls" aria-expanded="false" aria-controls="radio-panel" title="Open detailed Radio controls">
                     <span class="material-symbols-outlined" aria-hidden="true">open_in_full</span>
                   </button>
-                  <button id="context-radio-mini-close-btn" type="button" aria-label="Tutup kontrol Radio ringkas" title="Tutup kontrol Radio ringkas">
+                  <button id="context-radio-mini-close-btn" type="button" aria-label="Close compact Radio controls" title="Close compact Radio controls">
                     <span class="material-symbols-outlined" aria-hidden="true">close</span>
                   </button>
                 </span>
               </div>
-              <button id="context-radio-mini-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">NYALAKAN</button>
+              <button id="context-radio-mini-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">TURN ON</button>
               <div class="context-radio-mini-transport">
-                <button id="context-radio-mini-prev-btn" type="button" aria-label="Stasiun radio terfilter sebelumnya" title="Stasiun sebelumnya" disabled>◀◀</button>
+                <button id="context-radio-mini-prev-btn" type="button" aria-label="Previous filtered radio station" title="Previous station" disabled>◀◀</button>
                 <button id="context-radio-mini-play-btn" type="button" aria-label="Putar stasiun radio terpilih" title="Putar" disabled>▶</button>
-                <button id="context-radio-mini-next-btn" type="button" aria-label="Stasiun radio terfilter berikutnya" title="Stasiun berikutnya" disabled>▶▶</button>
+                <button id="context-radio-mini-next-btn" type="button" aria-label="Next filtered radio station" title="Next station" disabled>▶▶</button>
               </div>
               <label class="context-radio-mini-volume" for="context-radio-mini-volume">
                 <span>VOLUME</span>
@@ -770,7 +770,7 @@
           <button class="panel-collapse-btn" data-collapse-target="global-context-panel" title="Bentangkan panel">▶</button>
         </div>
         <div class="global-context-modes" role="tablist" aria-label="Mode konteks">
-          <button id="global-context-flights-btn" class="context-mode-button" type="button" role="tab" tabindex="0" aria-selected="false" aria-controls="context-flights-view" aria-label="KONTAK" title="Memutar kontak terdekat dari jenis apa pun yang Anda pilih — pesawat, kapal, instalasi. Satelit dilacak secara independen.">
+          <button id="global-context-flights-btn" class="context-mode-button" type="button" role="tab" tabindex="0" aria-selected="false" aria-controls="context-flights-view" aria-label="KONTAK" title="Cycles through the nearest contacts of any type you pick — aircraft, vessel, installation. Satellites are tracked independently.">
             <span class="material-symbols-outlined" aria-hidden="true">radar</span>
             <span>KONTAK</span>
           </button>
@@ -780,37 +780,37 @@
           </button>
         </div>
         <div id="context-mode-standby" class="context-mode-standby">
-          <strong>PILIH KONTEKS</strong>
-          <span>KONTAK — pesawat · kapal · situs terdekat<br>MISI ANTARIKSA — peluncuran &amp; aset orbital</span>
+          <strong>SELECT CONTEXT</strong>
+          <span>CONTACT — aircraft · vessel · nearest site<br>MISI ANTARIKSA — peluncuran &amp; aset orbital</span>
         </div>
         <section id="context-flights-view" class="context-mode-view" role="tabpanel" aria-labelledby="global-context-flights-btn" hidden>
-          <div class="global-context-actions" aria-label="Aksi Konteks Kontak">
+          <div class="global-context-actions" aria-label="Contact Context actions">
             <button id="cockpit-entry" type="button" hidden>
               <span class="material-symbols-outlined" aria-hidden="true">flight</span>
               <span>KOKPIT</span>
             </button>
-            <button id="installations-search-btn" class="panel-layer-toggle" type="button">CARI SITUS TERDEKAT</button>
-            <button id="tr3b-toggle" class="tr3b-toggle" type="button" aria-pressed="false" hidden aria-label="Klasifikasi ulang kontak terlacak sebagai TR-3B" title="Klasifikasi ulang sebagai TR-3B">🛸</button>
+            <button id="installations-search-btn" class="panel-layer-toggle" type="button">FIND NEAREST SITE</button>
+            <button id="tr3b-toggle" class="tr3b-toggle" type="button" aria-pressed="false" hidden aria-label="Reclassify the tracked contact as TR-3B" title="Reclassify as TR-3B">🛸</button>
           </div>
           <aside id="military-awareness-panel">
             <div class="military-awareness-standby">
               <strong>KONTEKS KONTAK MATI</strong>
-              <span>PILIH KONTAK UNTUK MEMUAT KEDEKATAN TERAMATI / TERPETAKAN</span>
+              <span>SELECT A CONTACT TO LOAD OBSERVED / MAPPED PROXIMITY</span>
             </div>
           </aside>
         </section>
         <section id="context-missions-view" class="context-mode-view" role="tabpanel" aria-labelledby="global-context-missions-btn" hidden>
           <div id="space-mission-panel-host">
-            <div id="space-mission-roster" class="space-mission-roster" aria-label="Misi antariksa tersedia">
+            <div id="space-mission-roster" class="space-mission-roster" aria-label="Space missions available">
               <div class="space-mission-roster-header">
                 <div>
-                  <strong>MISI TERSEDIA</strong>
-                  <span>PILIH MISI UNTUK DIPERIKSA</span>
+                  <strong>MISSIONS AVAILABLE</strong>
+                  <span>SELECT A MISSION TO INSPECT</span>
                 </div>
                 <output data-mission-roster-count>—</output>
               </div>
               <div class="space-mission-roster-list" data-mission-roster-list>
-                <div class="space-mission-roster-empty">MEMUAT INDEKS MISI 30 HARI</div>
+                <div class="space-mission-roster-empty">LOADING 30-DAY MISSION INDEX</div>
               </div>
             </div>
           </div>
@@ -824,37 +824,37 @@
               <button class="panel-collapse-btn" data-collapse-target="radio-panel" title="Bentangkan Radio" aria-label="Bentangkan bagian Radio">+</button>
             </div>
             <div class="radio-directory-row">
-              <button id="radio-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">NYALAKAN</button>
+              <button id="radio-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">TURN ON</button>
               <label class="radio-filter-label" for="radio-filter">TAG STASIUN</label>
               <select id="radio-filter" aria-label="Filter stasiun berdasarkan tag stasiun" disabled>
-                <option value="all">Semua</option>
+                <option value="all">All</option>
               </select>
             </div>
             <div id="radio-station-card" class="radio-station-card" aria-live="polite">
-              <strong id="radio-station-name">BELUM ADA STASIUN DIPILIH</strong>
-              <span id="radio-station-meta">Nyalakan Radio, lalu pilih penanda di globe atau gunakan tombol berikutnya.</span>
+              <strong id="radio-station-name">NO STATION SELECTED YET</strong>
+              <span id="radio-station-meta">Turn on Radio, then pick a marker on the globe or use the next button.</span>
               <span id="radio-station-tags"></span>
             </div>
             <div id="radio-tuner" class="radio-tuner" hidden>
               <div class="radio-tuner-header">
                 <span id="radio-tuner-band-label">BAND DIREKTORI</span>
-                <output id="radio-tuner-value" for="radio-tuner-slider">SERET UNTUK MENALA</output>
+                <output id="radio-tuner-value" for="radio-tuner-slider">DRAG TO TUNE</output>
               </div>
               <div class="radio-tuner-dial">
                 <div class="radio-tuner-scale" aria-hidden="true"></div>
                 <div id="radio-tuner-needle" class="radio-tuner-needle" aria-hidden="true"></div>
                 <input id="radio-tuner-slider" type="range" min="0" max="0" step="1" value="0"
-                  aria-label="Tala stasiun radio internet yang tersedia" aria-valuetext="Tidak ada stasiun tersedia" disabled />
+                  aria-label="Tune available internet radio stations" aria-valuetext="No stations available" disabled />
               </div>
               <div class="radio-tuner-readout">
-                <span id="radio-tuner-station">SEMUA · SERET JARUMNYA</span>
-                <span>MENEMPEL KE STASIUN TERSEDIA</span>
+                <span id="radio-tuner-station">ALL · DRAG THE NEEDLE</span>
+                <span>SNAPS TO AVAILABLE STATIONS</span>
               </div>
             </div>
             <div class="radio-transport" role="group" aria-label="Pemutaran radio">
-              <button id="radio-prev-btn" type="button" aria-label="Stasiun terfilter sebelumnya" disabled>SEBELUMNYA</button>
+              <button id="radio-prev-btn" type="button" aria-label="Previous filtered station" disabled>PREVIOUS</button>
               <button id="radio-play-btn" type="button" aria-label="Putar stasiun terpilih" disabled>PUTAR</button>
-              <button id="radio-next-btn" type="button" aria-label="Stasiun terfilter berikutnya" disabled>BERIKUTNYA</button>
+              <button id="radio-next-btn" type="button" aria-label="Next filtered station" disabled>NEXT</button>
               <button id="radio-stop-btn" type="button" aria-label="Hentikan pemutaran radio" disabled>BERHENTI</button>
             </div>
             <label class="radio-volume-row" for="radio-volume">
@@ -867,7 +867,7 @@
               <a id="radio-station-homepage" href="#" target="_blank" rel="noopener noreferrer" hidden>SITUS STASIUN</a>
               <a href="https://www.radio-browser.info/" target="_blank" rel="noopener noreferrer">DIREKTORI: RADIO BROWSER</a>
             </div>
-            <p class="radio-privacy">Audio tersambung langsung ke penyiar setelah Anda menekan putar. IP Anda terlihat oleh penyiar tersebut.</p>
+            <p class="radio-privacy">Audio connects directly to the broadcaster once you press play. Your IP is visible to that broadcaster.</p>
           </div>
         </section>
       </div>
@@ -883,23 +883,23 @@
   <aside id="first-run-launcher" role="dialog" aria-labelledby="first-run-title" aria-describedby="first-run-description" hidden>
     <div class="first-run-scanline" aria-hidden="true"></div>
     <header class="first-run-header">
-      <span class="first-run-kicker">KENDALI MISI · PELUNCURAN PERTAMA</span>
+      <span class="first-run-kicker">MISSION CONTROL · FIRST LAUNCH</span>
     </header>
-    <h2 id="first-run-title">Pilih tampilan pertama Anda</h2>
+    <h2 id="first-run-title">Choose your first view</h2>
     <!-- The card's one persuasive line, owner-authored and VERBATIM (2026-08-23)
          — including the unspaced em dash. The arc it has to carry: this looks
          like something you should not have access to → the sources are all
          public → the data is real. Tile subcopy stays purely functional. -->
-    <p id="first-run-description">Terasa seperti kokpit terlarang—lalu Anda sadar sumbernya publik dan datanya nyata.</p>
+    <p id="first-run-description">It feels like a forbidden cockpit—then you realize the sources are public and the data is real.</p>
     <div class="first-run-choices">
       <button type="button" data-first-run-choice="contacts">
         <span class="material-symbols-outlined" aria-hidden="true">radar</span>
-        <span><strong>KONTAK LIVE</strong><small>Pesawat, kapal, dan intelijen sekitar</small></span>
+        <span><strong>KONTAK LIVE</strong><small>Aircraft, vessels, and surrounding intelligence</small></span>
         <span class="material-symbols-outlined first-run-arrow" aria-hidden="true">arrow_forward</span>
       </button>
       <button type="button" data-first-run-choice="space-missions">
         <span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span>
-        <span><strong>MISI ANTARIKSA</strong><small>Peluncuran, wahana antariksa, dan konteks orbital</small></span>
+        <span><strong>MISI ANTARIKSA</strong><small>Launches, spacecraft, and orbital context</small></span>
         <span class="material-symbols-outlined first-run-arrow" aria-hidden="true">arrow_forward</span>
       </button>
       <button type="button" data-first-run-choice="environmental">
@@ -908,25 +908,25 @@
         <!-- Subcopy names BOTH feeds this tile turns on, because the launcher
              optimizes for the fully configured experience (owner ruling,
              2026-08-23) — see the mission table in src/firstRunExperience.js. -->
-        <span><strong data-first-run-environmental-title>LINGKUNGAN</strong><small>Gempa live dan titik api aktif, dari USGS dan NASA</small></span>
+        <span><strong data-first-run-environmental-title>LINGKUNGAN</strong><small>Live earthquakes and active fires, from USGS and NASA</small></span>
         <span class="material-symbols-outlined first-run-arrow" aria-hidden="true">arrow_forward</span>
       </button>
       <button type="button" class="first-run-explore" data-first-run-choice="explore">
         <span class="material-symbols-outlined" aria-hidden="true">public</span>
-        <span><strong>JELAJAH MANUAL</strong><small>Mulai dengan globe bersih</small></span>
+        <span><strong>JELAJAH MANUAL</strong><small>Start with a clean globe</small></span>
         <span class="material-symbols-outlined first-run-arrow" aria-hidden="true">arrow_forward</span>
       </button>
     </div>
     <div class="first-run-footer">
       <label class="first-run-suppress">
         <input type="checkbox" data-first-run-suppress />
-        <span>Jangan tampilkan lagi</span>
+        <span>Don't show again</span>
       </label>
-      <span>ESC untuk menutup</span>
+      <span>ESC to close</span>
     </div>
     <!-- Kept out of the footer row: it swaps to mission progress and errors, and
          a live region that also holds layout makes the row jump as it speaks. -->
-    <p class="first-run-note" data-first-run-status role="status" aria-live="polite">Tips: tombol MIK GEV di dock memungkinkan Anda berbicara dengan peta.</p>
+    <p class="first-run-note" data-first-run-status role="status" aria-live="polite">Tip: the GEV MIC button in the dock lets you talk to the map.</p>
   </aside>
 
   <!-- Intelligence HUD Overlay -->

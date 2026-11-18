@@ -28,11 +28,11 @@ export function deriveTrafficFlowError(error) {
   if (!error || error.name === 'AbortError') return null;
   const message = String(error.message || error);
   const status = Number(message.match(/HTTP (\d{3})/)?.[1]);
-  if (status === 503) return 'Kunci TomTom tidak tersedia';
-  if (status === 429) return 'Kuota harian TomTom habis';
-  if (status === 502 || status === 504) return 'Server TomTom tidak terjangkau';
-  if (Number.isFinite(status)) return `Galat aliran TomTom (HTTP ${status})`;
-  return 'Aliran TomTom tidak tersedia';
+  if (status === 503) return 'TomTom key unavailable';
+  if (status === 429) return 'TomTom daily quota used up';
+  if (status === 502 || status === 504) return 'TomTom server unreachable';
+  if (Number.isFinite(status)) return `TomTom flow error (HTTP ${status})`;
+  return 'TomTom flow unavailable';
 }
 
 /**
@@ -80,7 +80,7 @@ export function trafficFeedPresentation({
       mode,
       error: null,
       loadingLabel: fetching
-        ? (waitLabel || 'menyinkronkan aliran lalu lintas LIVE')
+        ? (waitLabel || 'syncing LIVE traffic flow')
         : `LIVE · aliran TomTom · cakupan ${coveragePct}%`,
     };
   }
@@ -90,8 +90,8 @@ export function trafficFeedPresentation({
   // A queued road fetch is the one thing worth saying over the remedy line,
   // and it keeps the leading mode word so it still cannot read as live.
   const idleLabel = statusUnavailable
-    ? 'SIMULASI — layanan lalu lintas tidak terjangkau'
-    : 'SIMULASI — tambahkan kunci TomTom untuk live';
+    ? 'SIMULATION — traffic service unreachable'
+    : 'SIMULATION — add a TomTom key for live';
   return {
     mode,
     error: null,

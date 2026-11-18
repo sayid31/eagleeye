@@ -65,11 +65,11 @@ function cleanText(value, keepNewlines) {
 function readText(value, field, max, errors, { keepNewlines = false } = {}) {
   if (value === undefined || value === null) return '';
   if (typeof value !== 'string') {
-    errors.push(`${field}: harus berupa teks`);
+    errors.push(`${field}: must be text`);
     return '';
   }
   const text = cleanText(value, keepNewlines);
-  if (text.length > max) errors.push(`${field}: maksimal ${max} karakter`);
+  if (text.length > max) errors.push(`${field}: at most ${max} characters`);
   return text;
 }
 
@@ -78,7 +78,7 @@ function readLimit(value, field, errors) {
   if (value === VOICE_COST_LIMIT_OFF) return VOICE_COST_LIMIT_OFF;
   if (typeof value !== 'number' || !Number.isFinite(value)
     || value < COST_LIMIT_MIN_USD || value > COST_LIMIT_MAX_USD) {
-    errors.push(`${field}: angka ${COST_LIMIT_MIN_USD}–${COST_LIMIT_MAX_USD}, 'off', atau kosong`);
+    errors.push(`${field}: a number ${COST_LIMIT_MIN_USD}–${COST_LIMIT_MAX_USD}, 'off', or empty`);
     return null;
   }
   return Math.round(value * 100) / 100;
@@ -87,7 +87,7 @@ function readLimit(value, field, errors) {
 function readBoolean(value, field, errors, fallback) {
   if (value === undefined) return fallback;
   if (typeof value !== 'boolean') {
-    errors.push(`${field}: harus true/false`);
+    errors.push(`${field}: must be true/false`);
     return fallback;
   }
   return value;
@@ -95,7 +95,7 @@ function readBoolean(value, field, errors, fallback) {
 
 function checkKeys(obj, allowed, where, errors) {
   for (const key of Object.keys(obj)) {
-    if (!allowed.includes(key)) errors.push(`${where}${key}: field tidak dikenal`);
+    if (!allowed.includes(key)) errors.push(`${where}${key}: unknown field`);
   }
 }
 
@@ -104,7 +104,7 @@ function readTopics(section, errors) {
   topics.enabled = readBoolean(section.enabled, 'topics.enabled', errors, false);
   if (section.allowed !== undefined) {
     if (!Array.isArray(section.allowed) || section.allowed.length > TOPICS_MAX) {
-      errors.push(`topics.allowed: daftar maksimal ${TOPICS_MAX} topik`);
+      errors.push(`topics.allowed: a list of at most ${TOPICS_MAX} topics`);
     } else {
       const seen = new Set();
       section.allowed.forEach((raw, index) => {
@@ -118,10 +118,10 @@ function readTopics(section, errors) {
   }
   topics.refusal = readText(section.refusal, 'topics.refusal', REFUSAL_MAX, errors);
   if (/[\r\n]/.test(String(section.refusal ?? ''))) {
-    errors.push('topics.refusal: harus satu kalimat tanpa baris baru');
+    errors.push('topics.refusal: must be one sentence without line breaks');
   }
   if (topics.enabled && topics.allowed.length === 0) {
-    errors.push('topics.allowed: wajib minimal satu topik saat pembatasan aktif');
+    errors.push('topics.allowed: at least one topic is required when the restriction is on');
   }
   return topics;
 }
@@ -134,18 +134,18 @@ function readTopics(section, errors) {
  * @returns {{ok: true, value: object} | {ok: false, errors: string[]}}
  */
 export function validateVoiceSettings(input) {
-  if (!isPlainObject(input)) return { ok: false, errors: ['body: harus berupa objek JSON'] };
+  if (!isPlainObject(input)) return { ok: false, errors: ['body: must be a JSON object'] };
   const errors = [];
   checkKeys(input, ROOT_KEYS, '', errors);
   for (const [name, keys] of Object.entries(SECTION_KEYS)) {
     if (input[name] !== undefined && !isPlainObject(input[name])) {
-      errors.push(`${name}: harus berupa objek`);
+      errors.push(`${name}: must be an object`);
     } else if (input[name] !== undefined) {
       checkKeys(input[name], keys, `${name}.`, errors);
     }
   }
   if (input.version !== undefined && input.version !== VOICE_SETTINGS_VERSION) {
-    errors.push(`version: harus ${VOICE_SETTINGS_VERSION}`);
+    errors.push(`version: must be ${VOICE_SETTINGS_VERSION}`);
   }
   if (errors.length) return { ok: false, errors };
 
@@ -157,7 +157,7 @@ export function validateVoiceSettings(input) {
   value.costLimits.capUsd = readLimit(cost.capUsd, 'costLimits.capUsd', errors);
   const { warnUsd, capUsd } = value.costLimits;
   if (typeof warnUsd === 'number' && typeof capUsd === 'number' && capUsd < warnUsd) {
-    errors.push('costLimits.capUsd: tidak boleh lebih kecil dari warnUsd');
+    errors.push('costLimits.capUsd: must not be smaller than warnUsd');
   }
   value.persona.name = readText(persona.name, 'persona.name', PERSONA_NAME_MAX, errors);
   value.persona.instructions = readText(

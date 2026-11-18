@@ -54,13 +54,13 @@ test('passwordRequirements: role length, upper bound and identity are checked li
 test('handoverMessage: Indonesian, login URL from the origin, email, temp password, must-change note', () => {
   const text = handoverMessage({ origin: 'https://eagle-eye.example.test/', email: 'ani@example.test', password: 'Tmp9xYzAbc' });
   assert.equal(text, [
-    'Akun EagleEye Anda sudah dibuat.',
+    'Your EagleEye account has been created.',
     '',
     'Alamat login: https://eagle-eye.example.test/login',
     'Email: ani@example.test',
     'Password sementara: Tmp9xYzAbc',
     '',
-    'Catatan: password ini wajib diganti saat login pertama. Jangan bagikan pesan ini ke orang lain.',
+    'Note: this password must be changed at first login. Do not share this message with anyone else.',
   ].join('\n'));
   assert.match(handoverMessage({ origin: 'http://localhost:4173', email: 'a@b.test', password: 'x', reset: true }), /^Password akun EagleEye Anda sudah direset\.\n\nAlamat login: http:\/\/localhost:4173\/login/);
 });

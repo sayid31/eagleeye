@@ -97,7 +97,7 @@ test('deleteUser = tombstone: PII scrubbed, sign-in methods gone, logs kept, ema
   assert.equal((await accounts.deleteUser(admin, made.user.id, { confirmEmail: 'wrong@example.test' })).code, 'CONFIRM_EMAIL_MISMATCH');
   assert.equal((await accounts.deleteUser(admin, made.user.id, { confirmEmail: 'BYE@example.test' })).ok, true);
   const row = t.rows('SELECT name, email, banned, deletedAt FROM "user" WHERE id = ?', made.user.id)[0];
-  assert.equal(row.name, 'Pengguna terhapus');
+  assert.equal(row.name, 'Deleted user');
   assert.match(row.email, /^deleted\+.+@deleted\.invalid$/);
   assert.equal(row.banned, 1);
   assert.ok(row.deletedAt);

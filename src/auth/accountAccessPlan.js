@@ -20,8 +20,8 @@ import { homeFor, isAdminRole } from './authRoles.mjs';
 import { loginUrlFor } from './nextPath.mjs';
 import { PASSWORD_CHANGE_PATH } from './pageRoutes.mjs';
 
-export const UNKNOWN_BANNER = 'Status akun tidak bisa diperiksa. Peta dasar tetap bisa dilihat; muat ulang halaman untuk mencoba lagi.';
-export const LIMITED_BANNER = 'Beberapa fitur belum diaktifkan admin';
+export const UNKNOWN_BANNER = 'Account status could not be checked. The base map is still viewable; reload the page to try again.';
+export const LIMITED_BANNER = 'Some features have not been enabled by an admin yet';
 
 /**
  * @typedef {{mode: 'full' | 'limited' | 'unknown' | 'leave', redirect: string | null,

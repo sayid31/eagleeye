@@ -28,9 +28,9 @@ const pathOf = (url) => String(url ?? '/').split('?')[0].split('#')[0] || '/';
 
 async function handleAuthEndpoint(req, res, state) {
   const decision = authEndpointDecision(req.method, req.url);
-  if (!decision.allowed) return sendJson(res, 404, { error: 'NOT_FOUND', message: 'Endpoint tidak ada' });
+  if (!decision.allowed) return sendJson(res, 404, { error: 'NOT_FOUND', message: 'Endpoint does not exist' });
   if (!authEndpointOriginAllowed({ method: req.method, headers: req.headers, trustedOrigin: state.config.origin })) {
-    return sendJson(res, 403, { error: 'ORIGIN_NOT_ALLOWED', message: 'Origin tidak diizinkan' });
+    return sendJson(res, 403, { error: 'ORIGIN_NOT_ALLOWED', message: 'Origin not allowed' });
   }
   withClientIp(req, state.config);
   if (!PASSWORD_CHANGE_ALLOWED.includes(decision.endpoint) && !decision.endpoint.startsWith('POST /sign-in/')) {
@@ -71,13 +71,13 @@ export function createAuthMiddleware(getState, { routes = [], mode = 'dev', allo
       state = await getState();
     } catch (error) {
       console.error(`[auth] unavailable, refusing ${pathname.startsWith('/api') ? 'API' : 'page'} request: ${error?.message || error}`);
-      return sendJson(res, 503, { error: 'AUTH_UNAVAILABLE', message: 'Login sedang tidak tersedia; lihat log server.' });
+      return sendJson(res, 503, { error: 'AUTH_UNAVAILABLE', message: 'Login is unavailable; see the server log.' });
     }
     const { config } = state;
 
     if (!config.ok) {
       if (pathname === '/api/me') return sendJson(res, 200, mePayload({ configured: false }));
-      if (isApi) return sendJson(res, 503, { error: 'AUTH_NOT_CONFIGURED', message: 'Login belum dikonfigurasi' });
+      if (isApi) return sendJson(res, 503, { error: 'AUTH_NOT_CONFIGURED', message: 'Login not configured' });
       const decision = route(null);
       if (decision.action === 'serve') { req.url = decision.url; return next(); }
       return decision.action === 'redirect' ? redirect(res, '/login') : sendNotFound(res);
@@ -92,7 +92,7 @@ export function createAuthMiddleware(getState, { routes = [], mode = 'dev', allo
       else actor = await state.resolver.resolveActor({ headers: req.headers });
     } catch (error) {
       console.error(`[auth] session lookup failed for ${isApi ? 'an API' : 'a page'} request: ${error?.message || error}`);
-      return sendJson(res, 503, { error: 'AUTH_UNAVAILABLE', message: 'Sesi tidak bisa diperiksa' });
+      return sendJson(res, 503, { error: 'AUTH_UNAVAILABLE', message: 'The session could not be checked' });
     }
 
     if (pathname === '/api/me') return sendJson(res, 200, mePayload({ configured: true, actor, googleSignIn: Boolean(config.google) }), setCookies);

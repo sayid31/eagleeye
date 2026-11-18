@@ -6,7 +6,7 @@
  * @module landing/mobileMenu
  */
 
-export const MENU_LABELS = Object.freeze({ open: 'Buka menu', close: 'Tutup menu' });
+export const MENU_LABELS = Object.freeze({ open: 'Open menu', close: 'Close menu' });
 
 /**
  * Attributes the button and header must carry for a state.

@@ -18,15 +18,15 @@ test('overviewCards: concise values with a sub-label per card', () => {
   assert.equal(cards.uptime.value, '1 j 05 mnt');
   assert.deepEqual(cards.gates, { status: 'warn', value: '2 dari 3 menyala', detail: 'Dimatikan: Voice & AI' });
   assert.deepEqual(cards.errors, { status: 'error', value: '2', detail: 'error dalam 24 jam terakhir' });
-  assert.deepEqual(cards.login.rows.map((row) => [row.status, row.text]), [['ok', 'Siap'], ['off', 'Belum aktif']]);
+  assert.deepEqual(cards.login.rows.map((row) => [row.status, row.text]), [['ok', 'Ready'], ['off', 'Not active']]);
 });
 
 test('overviewCards: all gates on and no errors read as ok; unconfigured login is an error', () => {
   const calm = overviewCards(summary({ killSwitches: [{ gate: 'ai', killed: false }], serverLog: { recentErrors: 0, windowHours: 24 } }));
-  assert.deepEqual([calm.gates.status, calm.gates.detail, calm.errors.status], ['ok', 'Semua fitur berbayar menyala', 'ok']);
+  assert.deepEqual([calm.gates.status, calm.gates.detail, calm.errors.status], ['ok', 'All paid features are on', 'ok']);
   assert.match(calm.errors.detail, /Tidak ada error/);
   const broken = overviewCards(summary({ auth: { configured: false, googleSignIn: true } }));
-  assert.deepEqual([broken.login.status, broken.login.rows[0].text, broken.login.rows[1].status], ['error', 'Belum siap', 'ok']);
+  assert.deepEqual([broken.login.status, broken.login.rows[0].text, broken.login.rows[1].status], ['error', 'Not ready', 'ok']);
 });
 
 test('keyPresence shows display names and presence only', () => {

@@ -6,14 +6,14 @@ const NOW = 1_800_000_000_000;
 
 test('gateRow: a never-changed gate is "Menyala" with no reason', () => {
   const row = gateRow({ gate: 'layers', killed: false, reason: null, updatedAt: null, updatedBy: null }, NOW);
-  assert.deepEqual([row.status, row.statusLabel, row.lastChange, row.reason, row.absolute], ['ok', 'Menyala', 'Belum pernah diubah.', null, null]);
+  assert.deepEqual([row.status, row.statusLabel, row.lastChange, row.reason, row.absolute], ['ok', 'On', 'Never changed.', null, null]);
   assert.equal(row.switchLabel, 'Layer data: menyala untuk semua akun');
 });
 
 test('gateRow: a switched-off gate says who, when and why', () => {
   const row = gateRow({ gate: 'ai', killed: true, reason: 'Biaya melonjak', updatedAt: NOW - 3 * 3_600_000, updatedBy: { id: 'u1', emailMasked: 'd***@x.test' } }, NOW);
   assert.equal(row.killed, true);
-  assert.equal(row.statusLabel, 'Dimatikan');
+  assert.equal(row.statusLabel, 'Off');
   assert.equal(row.lastChange, 'Diubah 3 jam lalu oleh d***@x.test.');
   assert.equal(row.reason, 'Alasan: Biaya melonjak');
   assert.ok(row.absolute);
@@ -22,7 +22,7 @@ test('gateRow: a switched-off gate says who, when and why', () => {
 
 test('gateTally + gateLabel', () => {
   assert.deepEqual(gateTally([{ gate: 'layers', killed: false }, { gate: 'ai', killed: true }]), { total: 2, on: 1, off: ['Voice & AI'] });
-  assert.equal(gateLabel('premium'), 'Peta premium & pencarian');
+  assert.equal(gateLabel('premium'), 'Premium map & search');
   assert.equal(gateLabel('x'), 'x');
 });
 

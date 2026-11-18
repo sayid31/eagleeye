@@ -203,7 +203,7 @@ export function composeRouteLabel(baseLabel, distM, durS, mode, fallback) {
   // Fallback = routing was unavailable, so we drew a straight line: label it as a
   // direct line with no travel time (never claim an "X min walk" we didn't compute).
   let metrics;
-  if (fallback) metrics = `${dist} · garis lurus (tanpa rute)`;
+  if (fallback) metrics = `${dist} · straight line (no route)`;
   else metrics = min != null ? `${dist} · ${min} min ${word}` : dist;
   return baseLabel ? `${baseLabel} — ${metrics}` : metrics;
 }

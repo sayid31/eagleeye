@@ -104,7 +104,7 @@ export async function updateRadioLayer() {
       S._degraded = body.degraded;
       S._stale = body.stale;
       S._error = preservingWarmCatalog
-        ? 'Pembaruan direktori terdegradasi; menampilkan katalog stasiun sebelumnya.'
+        ? 'Directory update degraded; showing the previous station catalog.'
         : (S._degraded ? 'Cakupan direktori Radio terdegradasi.' : null);
     } catch (error) {
       if (error?.name === 'AbortError' || !radioRequestIsCurrent(
@@ -115,8 +115,8 @@ export async function updateRadioLayer() {
         S._sessionGeneration,
       )) return;
       S._error = S._stations.length
-        ? 'Pembaruan direktori gagal; menampilkan katalog stasiun sebelumnya.'
-        : 'Direktori Radio sementara tidak tersedia.';
+        ? 'Directory update failed; showing the previous station catalog.'
+        : 'Radio directory temporarily unavailable.';
       S._stale = S._stations.length > 0;
       S._degraded = S._stations.length > 0;
     } finally {

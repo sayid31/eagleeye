@@ -152,12 +152,12 @@ export function createAuthHooks({ config, recordLogin, throttle, getContext }) {
       throw error;
     };
     const method = isGooglePath(ctx) ? 'google' : 'password';
-    if (!user || isAccountClosed(user)) return fail('disabled', method, refuse('FORBIDDEN', 'ACCOUNT_DISABLED', 'Akun dinonaktifkan, hubungi admin'));
+    if (!user || isAccountClosed(user)) return fail('disabled', method, refuse('FORBIDDEN', 'ACCOUNT_DISABLED', 'Account deactivated, contact an admin'));
     if (method === 'google' && (!reserved(user.email) || user.emailVerified !== true)) {
       return fail('google_denied', method, refuse('FORBIDDEN', 'GOOGLE_NOT_ALLOWED', 'Google sign-in is for the developer accounts only'));
     }
     if (ctx?.path === '/sign-in/email' && reserved(user.email) && user.passwordSetBy !== PASSWORD_SET_BY.cli) {
-      return fail('google_only', method, refuse('FORBIDDEN', 'GOOGLE_SIGN_IN_REQUIRED', 'Akun ini masuk lewat Google'));
+      return fail('google_only', method, refuse('FORBIDDEN', 'GOOGLE_SIGN_IN_REQUIRED', 'This account signs in with Google'));
     }
     return undefined;
   }

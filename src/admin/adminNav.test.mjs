@@ -22,15 +22,15 @@ test('basename follows the browser path: /dev and below → /dev, everything els
 });
 
 test('/admin menu is the original four items: Ringkasan, Pengguna, Log Login, Audit', () => {
-  assert.deepEqual(menu('admin'), [[null, [['Ringkasan', '/'], ['Pengguna', '/users'], ['Log Login', '/login-log'], ['Audit', '/audit']]]]);
+  assert.deepEqual(menu('admin'), [[null, [['Overview', '/'], ['Users', '/users'], ['Login Log', '/login-log'], ['Audit', '/audit']]]]);
 });
 
 test('/dev menu is the original list: fourteen pages, Konfigurasi AI and Server Log as labelled sub-lists, Audit last', () => {
   assert.deepEqual(menu('dev'), [
-    [null, [['Ringkasan sistem', '/'], ['Pengguna & Admin', '/users'], ['Log Login', '/login-log'], ['Kill switch', '/kill-switches'],
-      ['Pemakaian', '/usage'], ['API Keys', '/api-keys']]],
-    ['Konfigurasi AI', [['Umum', '/ai/general'], ['Penyedia AI', '/ai/provider'], ['Persona', '/ai/persona'], ['Pemakaian & Biaya', '/ai/usage']]],
-    ['Server Log', [['Server Log', '/server-log'], ['Audit Log', '/server-log/audit'], ['Kesehatan Sistem', '/server-log/health']]],
+    [null, [['System Overview', '/'], ['Users & Admins', '/users'], ['Login Log', '/login-log'], ['Kill switch', '/kill-switches'],
+      ['Usage', '/usage'], ['API Keys', '/api-keys']]],
+    ['AI Configuration', [['General', '/ai/general'], ['AI Provider', '/ai/provider'], ['Persona', '/ai/persona'], ['Usage & Cost', '/ai/usage']]],
+    ['Server Log', [['Server Log', '/server-log'], ['Audit Log', '/server-log/audit'], ['System Health', '/server-log/health']]],
     [null, [['Audit', '/audit']]],
   ]);
 });
@@ -93,14 +93,14 @@ test('every route path is unique within an area', () => {
 const breadcrumbFor = (area, pathname) => breadcrumbTrail(navForArea(area), pathname).map((crumb) => crumb.label);
 
 test('breadcrumb trail names the group (when titled and not the page itself) and the page', () => {
-  assert.deepEqual(breadcrumbFor('dev', '/ai/usage'), ['Konfigurasi AI', 'Pemakaian & Biaya']);
-  assert.deepEqual(breadcrumbFor('dev', '/ai/general'), ['Konfigurasi AI', 'Umum']);
+  assert.deepEqual(breadcrumbFor('dev', '/ai/usage'), ['AI Configuration', 'Usage & Cost']);
+  assert.deepEqual(breadcrumbFor('dev', '/ai/general'), ['AI Configuration', 'General']);
   assert.deepEqual(breadcrumbFor('dev', '/server-log'), ['Server Log']);
   assert.deepEqual(breadcrumbFor('dev', '/server-log/audit'), ['Server Log', 'Audit Log']);
-  assert.deepEqual(breadcrumbFor('dev', '/server-log/health'), ['Server Log', 'Kesehatan Sistem']);
+  assert.deepEqual(breadcrumbFor('dev', '/server-log/health'), ['Server Log', 'System Health']);
   assert.deepEqual(breadcrumbFor('dev', '/kill-switches'), ['Kill switch']);
-  assert.deepEqual(breadcrumbFor('dev', '/'), ['Ringkasan sistem']);
-  assert.deepEqual(breadcrumbFor('admin', '/'), ['Ringkasan']);
+  assert.deepEqual(breadcrumbFor('dev', '/'), ['System Overview']);
+  assert.deepEqual(breadcrumbFor('admin', '/'), ['Overview']);
   assert.deepEqual(breadcrumbFor('admin', '/audit'), ['Audit']);
   assert.deepEqual(breadcrumbFor('admin', '/activity/audit'), []);
   assert.deepEqual(breadcrumbFor('admin', '/nope'), []);
@@ -114,8 +114,8 @@ test('labels: role label', () => {
 });
 
 test('only a super_admin gets the link to the other area', () => {
-  assert.deepEqual(areaSwitchFor('admin', 'super_admin'), { href: '/dev', label: 'Buka area Developer' });
-  assert.deepEqual(areaSwitchFor('dev', 'super_admin'), { href: '/admin', label: 'Buka area Admin' });
+  assert.deepEqual(areaSwitchFor('admin', 'super_admin'), { href: '/dev', label: 'Open Developer area' });
+  assert.deepEqual(areaSwitchFor('dev', 'super_admin'), { href: '/admin', label: 'Open Admin area' });
   assert.equal(areaSwitchFor('admin', 'admin'), null);
   assert.equal(areaSwitchFor('admin', undefined), null);
 });
@@ -130,6 +130,6 @@ test('loadPage resolves a named export or a pick() result, and fails loudly on a
 test('the component gallery is routable for /dev but not listed in the sidebar, and /admin has none', () => {
   const kit = navItems(navForArea('dev')).find((item) => item.id === 'ui-kit');
   assert.deepEqual([kit.path, kit.hidden, kit.page], ['/ui-kit', true, 'ui-kit']);
-  assert.deepEqual(breadcrumbFor('dev', '/ui-kit'), ['Katalog komponen']);
+  assert.deepEqual(breadcrumbFor('dev', '/ui-kit'), ['Component catalog']);
   assert.equal(navItems(navForArea('admin')).some((item) => item.id === 'ui-kit'), false);
 });

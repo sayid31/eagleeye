@@ -17,11 +17,11 @@ export const GLOSSARY = Object.freeze([
   { avoid: 'Sakelar darurat', use: 'Kill switch' },
   { avoid: 'Log server', use: 'Server Log' },
   { avoid: 'Jejak audit', use: 'Audit Log' },
-  { avoid: 'Anggaran provider', use: 'Pemakaian & budget' },
+  { avoid: 'Anggaran provider', use: 'Usage & budget' },
   { avoid: 'Penyedia & API Keys', use: 'API Keys' },
   { avoid: 'Aktivitas', use: 'Log Login / Audit' },
-  { avoid: 'Pemakai', use: 'Pengguna' },
-  { avoid: 'Mati', use: 'Nonaktif' },
+  { avoid: 'Pemakai', use: 'Users' },
+  { avoid: 'Mati', use: 'Inactive' },
   { avoid: 'Sign-in', use: 'Login' },
 ]);
 

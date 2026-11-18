@@ -24,7 +24,7 @@ test('layers lock refuses every enable, allows disable, marks the list; release 
   assert.equal(guard({ enabled: true, layerId: 'earthquakes', origin: 'share-restore' }), LAYER_LOCK_REASON);
   assert.equal(guard({ enabled: false, layerId: 'earthquakes' }), null);
   assert.equal(list.classList.contains('account-locked'), true);
-  assert.deepEqual([list.getAttribute('aria-disabled'), list.getAttribute('title')], ['true', 'Belum diizinkan admin']);
+  assert.deepEqual([list.getAttribute('aria-disabled'), list.getAttribute('title')], ['true', 'Not yet allowed by an admin']);
   release();
   assert.equal(manager.guards.size, 0);
   assert.equal(list.classList.contains('account-locked'), false);

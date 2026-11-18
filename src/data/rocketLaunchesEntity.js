@@ -230,7 +230,7 @@ export function addLaunchEntity(launch, activeTleText = S._activeTleText) {
           createRocketMissionElementOverlayEntry({
             id: `reentry:${launch.id}:${stageIndex}`,
             position: reentryPosition,
-            text: 'MASUK KEMBALI TAHAP',
+            text: 'STAGE RE-ENTRY',
             accent: '#ffd166',
             priority: 700_000 - stageIndex,
             gapPx: 8,

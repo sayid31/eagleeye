@@ -9,15 +9,15 @@
 
 /** API error code → message (server replies and client fallbacks). */
 export const DEV_ERROR_MESSAGES = Object.freeze({
-  INVALID_INPUT: 'Isian tidak valid.',
-  INVALID_JSON: 'Body bukan JSON yang valid.',
-  BODY_TOO_LARGE: 'Body terlalu besar.',
-  METHOD_NOT_ALLOWED: 'Metode tidak didukung.',
-  NOT_FOUND: 'Endpoint tidak ada.',
-  REAUTH_FAILED: 'Password salah.',
-  REAUTH_REQUIRED: 'Masukkan password Anda, atau masuk ulang dengan Google lalu coba lagi dalam 10 menit.',
-  AUTH_UNAVAILABLE: 'Login sedang tidak tersedia; lihat Server Log.',
-  INTERNAL_ERROR: 'Terjadi error di server; lihat Server Log.',
-  SUPER_ADMIN_REQUIRED: 'Hanya super admin yang boleh mengakses ini.',
-  AUTH_REQUIRED: 'Sesi berakhir; masuk lagi.',
+  INVALID_INPUT: 'Invalid input.',
+  INVALID_JSON: 'Body is not valid JSON.',
+  BODY_TOO_LARGE: 'Body is too large.',
+  METHOD_NOT_ALLOWED: 'Method not supported.',
+  NOT_FOUND: 'Endpoint does not exist.',
+  REAUTH_FAILED: 'Wrong password.',
+  REAUTH_REQUIRED: 'Enter your password, or sign in with Google again and retry within 10 minutes.',
+  AUTH_UNAVAILABLE: 'Login is unavailable; see the Server Log.',
+  INTERNAL_ERROR: 'A server error occurred; see the Server Log.',
+  SUPER_ADMIN_REQUIRED: 'Only super admins can access this.',
+  AUTH_REQUIRED: 'Session ended; sign in again.',
 });

@@ -40,7 +40,7 @@ export function formatUtcClock(date) {
 /** Health chip text pieces; the degraded part is omitted when zero. */
 export function healthLabels({ live, degraded }) {
   return {
-    live: `${live} sumber live`,
+    live: `Live sources: ${live}`,
     degraded: degraded > 0 ? `${degraded} terganggu` : '',
   };
 }

@@ -30,7 +30,7 @@ export const ON_DEMAND_PLAYLIST_ATTEMPTS = 10;
 export const ON_DEMAND_PLAYLIST_DELAY_MS = 1000;
 
 /** Generic, credential-free message for any failed start. */
-export const ON_DEMAND_START_FAILED_MESSAGE = 'Kamera mati di sumber (stream tidak dapat dimulai)';
+export const ON_DEMAND_START_FAILED_MESSAGE = 'Camera down at the source (stream could not start)';
 
 /**
  * Validate a catalog `onDemand` object against the stream URL. `controlUrl`

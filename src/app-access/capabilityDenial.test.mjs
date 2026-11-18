@@ -27,7 +27,7 @@ test('toasts name the feature and why', () => {
 test('locked responses: HUD summary gets the quiet "not configured" shape, others the server refusal', () => {
   const hud = lockedResponseFor('/api/openai/hud-summary', 'ai', 'plan');
   assert.equal(isHudSummaryUnconfigured(hud.status, hud.body), true);
-  assert.deepEqual(lockedResponseFor('/api/opensky', 'layers', 'plan'), { status: 403, body: { error: 'CAPABILITY_REQUIRED', message: 'Belum diizinkan admin', gate: 'layers' } });
+  assert.deepEqual(lockedResponseFor('/api/opensky', 'layers', 'plan'), { status: 403, body: { error: 'CAPABILITY_REQUIRED', message: 'Not yet allowed by an admin', gate: 'layers' } });
   assert.deepEqual(lockedResponseFor('/api/google/geocode', 'premium', 'killed').status, 503);
   const roundTrip = lockedResponseFor('/api/live/session', 'ai', 'revoked');
   assert.deepEqual(readCapabilityDenial(roundTrip.status, roundTrip.body), { gate: 'ai', kind: 'revoked' });

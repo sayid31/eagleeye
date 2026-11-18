@@ -19,8 +19,8 @@ function buildSummaryText() {
   const active = getActiveRecord();
   if (!active) {
     return S._records.length
-      ? `${S._records.length} KAMERA SIAGA · BELUM ADA KAMERA DIPILIH · KLIK KAMERA UNTUK MENGAKTIFKAN`
-      : 'Tidak ada kamera di katalog.';
+      ? `${S._records.length} CAMERAS ON STANDBY · NO CAMERA SELECTED · CLICK A CAMERA TO ACTIVATE`
+      : 'No cameras in the catalog.';
   }
 
   const area = sectorAreaKm2(active.camera.rangeM, active.camera.fovDeg);

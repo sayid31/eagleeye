@@ -18,13 +18,13 @@ test('unknown, missing or tampered values fall back to Sistem', () => {
 });
 
 test('buttons come in the order Terang, Gelap, Sistem with Indonesian accessible names', () => {
-  assert.deepEqual(themeControlModel('light').map((button) => button.label), ['Terang', 'Gelap', 'Sistem']);
-  assert.deepEqual(Object.values(THEME_LABELS), ['Terang', 'Gelap', 'Sistem']);
+  assert.deepEqual(themeControlModel('light').map((button) => button.label), ['Light', 'Dark', 'System']);
+  assert.deepEqual(Object.values(THEME_LABELS), ['Light', 'Dark', 'System']);
 });
 
 test('landing.html carries the same three controls the model describes, with aria-pressed and a name each', () => {
   const html = readFileSync(fileURLToPath(new URL('../../landing.html', import.meta.url)), 'utf8');
   const buttons = [...html.matchAll(/<button type="button" data-theme-value="(\w+)" aria-pressed="(\w+)" aria-label="([^"]+)"/g)];
-  assert.deepEqual(buttons.map((match) => [match[1], match[3]]), [['light', 'Terang'], ['dark', 'Gelap'], ['system', 'Sistem']]);
+  assert.deepEqual(buttons.map((match) => [match[1], match[3]]), [['light', 'Light'], ['dark', 'Dark'], ['system', 'System']]);
   assert.deepEqual(buttons.filter((match) => match[2] === 'true').map((match) => match[1]), ['system']);
 });

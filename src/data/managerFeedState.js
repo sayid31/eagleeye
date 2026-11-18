@@ -38,11 +38,11 @@ export function cloneLayerParams(value) {
 /** Feed-state → toggle-panel button label. */
 export const FEED_STATE_LABELS = Object.freeze({
   nominal: 'HIDUP',
-  loading: 'MEMUAT',
+  loading: 'LOADING',
   degraded: 'MENURUN',
   stale: 'USANG',
-  fallback: 'CADANGAN',
-  unavailable: 'TIDAK TERSEDIA',
+  fallback: 'FALLBACK',
+  unavailable: 'UNAVAILABLE',
 });
 
 export function isAbortError(error) {

@@ -36,7 +36,7 @@ const ENVIRONMENTAL_LABELS = Object.freeze({
   // Keys stay English (they are the choice ids); titles are what the tile shows.
   ENVIRONMENTAL: Object.freeze({ title: 'LINGKUNGAN' }),
   EARTH_WATCH: Object.freeze({ title: 'PANTAU BUMI' }),
-  ACTIVE_EVENTS: Object.freeze({ title: 'PERISTIWA AKTIF' }),
+  ACTIVE_EVENTS: Object.freeze({ title: 'ACTIVE EVENTS' }),
 });
 
 /**
@@ -96,7 +96,7 @@ export const FIRST_RUN_MISSIONS = Object.freeze({
   'space-missions': Object.freeze({
     kind: 'context',
     contextMode: 'space-missions',
-    busyText: 'Membuka misi antariksa…',
+    busyText: 'Opening space mission…',
   }),
   environmental: Object.freeze({
     kind: 'globe',
@@ -114,7 +114,7 @@ export const FIRST_RUN_MISSIONS = Object.freeze({
     // before a launch. LEDGERED post-launch. Until it lands, keyless visitors
     // are judged on the layer row, which tells them the truth.
     layerIds: Object.freeze(['earthquakes', 'local-firms']),
-    busyText: 'Memindai peristiwa aktif…',
+    busyText: 'Scanning active events…',
   }),
   explore: Object.freeze({ kind: 'none' }),
 });
@@ -428,7 +428,7 @@ export function initFirstRunExperience({
     // <body> mid-flight and strands a keyboard visitor outside the launcher.
     for (const button of buttons) button.setAttribute('aria-disabled', String(next));
     if (!status) return;
-    if (next) status.textContent = FIRST_RUN_MISSIONS[choice]?.busyText || 'Memproses…';
+    if (next) status.textContent = FIRST_RUN_MISSIONS[choice]?.busyText || 'Processing…';
     else if (status.dataset.sticky !== 'true') status.textContent = defaultStatus;
   };
 
@@ -473,7 +473,7 @@ export function initFirstRunExperience({
     const detail = Array.isArray(failed) && failed.length ? ` (${failed.join(', ')})` : '';
     if (status) {
       status.dataset.sticky = 'true';
-      status.textContent = `Tidak bisa membuka misi itu${detail}. Coba lagi atau jelajahi manual.`;
+      status.textContent = `Could not open that mission${detail}. Try again or explore manually.`;
     }
     setBusy(false);
   };
@@ -489,7 +489,7 @@ export function initFirstRunExperience({
     if (box) box.checked = !wanted;
     if (!status) return;
     status.dataset.sticky = 'true';
-    status.textContent = 'Browser ini memblokir penyimpanan, jadi pilihan tidak bisa disimpan.';
+    status.textContent = 'This browser blocks storage, so the choice cannot be saved.';
   };
 
   function onKeyDown(event) {

@@ -71,9 +71,9 @@ const clip = (v) => String(v ?? '').slice(0, JUDGE_TEXT_MAX);
  * @returns {{ok: true, value: {question: string, answer: string, failedTools: string[]}} | {ok: false, error: string}}
  */
 export function validateJudgeTurn(input) {
-  if (!isPlainObject(input)) return { ok: false, error: 'body: harus berupa objek JSON' };
+  if (!isPlainObject(input)) return { ok: false, error: 'body: must be a JSON object' };
   const answer = clip(input.answer).trim();
-  if (!answer) return { ok: false, error: 'answer: wajib diisi' };
+  if (!answer) return { ok: false, error: 'answer: required' };
   const failedTools = Array.isArray(input.failedTools)
     ? input.failedTools.filter((t) => typeof t === 'string' && /^[a-z_]{1,40}$/.test(t)).slice(0, 10)
     : [];

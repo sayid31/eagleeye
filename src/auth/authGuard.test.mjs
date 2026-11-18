@@ -8,14 +8,14 @@ const decide = (over) => apiDecision({ method: 'GET', pathname: '/api/x', gates:
 
 test('apiDecision: unknown route 404, anonymous 401, cross-site 403, forced password change 403', () => {
   assert.equal(decide({ gates: [] }).status, 404);
-  assert.deepEqual(decide({ actor: null }), { action: 'deny', status: 401, code: 'AUTH_REQUIRED', error: 'Login diperlukan' });
+  assert.deepEqual(decide({ actor: null }), { action: 'deny', status: 401, code: 'AUTH_REQUIRED', error: 'Login required' });
   assert.equal(decide({ headers: { 'sec-fetch-site': 'cross-site' } }).code, 'CROSS_SITE_REFUSED');
   assert.equal(decide({ headers: { 'sec-fetch-site': 'none' } }).action, 'next', 'typed URL');
   assert.equal(decide({ actor: { ...user, mustChangePassword: true } }).code, 'PASSWORD_CHANGE_REQUIRED');
 });
 
 test('apiDecision: capability gates name the gate; every matching gate is required', () => {
-  assert.deepEqual(decide({ gates: ['ai'] }), { action: 'deny', status: 403, code: 'CAPABILITY_REQUIRED', error: 'Fitur belum diaktifkan admin', gate: 'ai' });
+  assert.deepEqual(decide({ gates: ['ai'] }), { action: 'deny', status: 403, code: 'CAPABILITY_REQUIRED', error: 'Feature not enabled by an admin', gate: 'ai' });
   assert.equal(decide({ gates: ['layers', 'premium'] }).gate, 'premium');
   assert.equal(decide({ gates: ['open'] }).action, 'next');
   assert.equal(decide({ gates: ['admin'] }).code, 'ADMIN_REQUIRED');
@@ -24,7 +24,7 @@ test('apiDecision: capability gates name the gate; every matching gate is requir
 });
 
 test('apiDecision: kill switch 503 after the gate check; writes need the exact Origin; admin writes JSON', () => {
-  assert.deepEqual(decide({ isKilled: (gate) => gate === 'layers' }), { action: 'deny', status: 503, code: 'FEATURE_DISABLED', error: 'Fitur sedang dimatikan oleh developer', gate: 'layers' });
+  assert.deepEqual(decide({ isKilled: (gate) => gate === 'layers' }), { action: 'deny', status: 503, code: 'FEATURE_DISABLED', error: 'Feature is currently turned off by the developer', gate: 'layers' });
   assert.equal(decide({ method: 'POST' }).code, 'ORIGIN_NOT_ALLOWED');
   assert.equal(decide({ method: 'POST', headers: { origin } }).action, 'next');
   const admin = { role: 'admin' };

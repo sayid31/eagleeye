@@ -24,7 +24,7 @@ test('UsersTable: named table, scoped headers, row menu per account, "Anda" on y
   const { UsersTable } = await load('UsersTable');
   const html = render(h(UsersTable, props()));
   assert.match(html, /<caption[^>]*sr-only[^>]*>Daftar pengguna<\/caption>/);
-  for (const header of ['Pengguna', 'Role', 'Status', 'Izin', 'Dibuat']) assert.match(html, new RegExp(`scope="col"[^>]*>${header}<`), header);
+  for (const header of ['Users', 'Role', 'Status', 'Permissions', 'Created']) assert.match(html, new RegExp(`scope="col"[^>]*>${header}<`), header);
   assert.match(html, /<span class="sr-only">Aksi<\/span>/, 'actions header is sr-only');
   assert.match(html, /aria-label="Aksi untuk sari@contoh\.test"/);
   assert.match(html, /aria-label="Aksi untuk dev@example\.test"/, 'own row: edit name + sign-out + nothing else, still a menu');
@@ -63,7 +63,7 @@ test('CapabilitySwitches: a fieldset with a legend, one labelled switch per capa
   const html = render(h(CapabilitySwitches, { value: { layers: true, ai: true, premium: false }, onChange() {} }));
   assert.match(html, /<legend[^>]*>Izin fitur<\/legend>/);
   assert.equal((html.match(/role="switch"/g) ?? []).length, 3);
-  for (const title of ['Layer data', 'Voice &amp; AI', 'Peta premium &amp; search']) assert.match(html, new RegExp(`<label[^>]*>${title}</label>`), title);
+  for (const title of ['Data layers', 'Voice &amp; AI', 'Peta premium &amp; search']) assert.match(html, new RegExp(`<label[^>]*>${title}</label>`), title);
   assert.match(html, /aria-checked="true"/);
   assert.match(html, /Berbiaya per permintaan \(Google Maps\)/);
   assert.equal((html.match(/aria-describedby="[^"]+-description"/g) ?? []).length, 3);
@@ -110,6 +110,6 @@ test('UsersOverviewPage: one h1, a busy skeleton before the stats arrive, and th
   const html = render(h(UsersOverviewPage));
   assert.equal((html.match(/<h1/g) ?? []).length, 1);
   assert.match(html, /role="status"[^>]*aria-busy="true"/);
-  for (const link of ['Kelola pengguna', 'Lihat log login', 'Lihat audit']) assert.match(html, new RegExp(link));
+  for (const link of ['Manage users', 'View login log', 'View audit']) assert.match(html, new RegExp(link));
   assert.match(html, /href="\/login-log"/);
 });

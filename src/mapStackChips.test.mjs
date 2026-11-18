@@ -223,8 +223,8 @@ test('models carry the stack\'s own reason and never invent an active chip', () 
     [
       {
         requirement: 'ION',
-        unavailableHint: 'Token Cesium ion diperlukan',
-        title: 'Token Cesium ion diperlukan',
+        unavailableHint: 'Cesium ion token required',
+        title: 'Cesium ion token required',
       },
       {
         requirement: '',

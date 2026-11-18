@@ -217,29 +217,29 @@ export function keySetupStatus(env = {}) {
  */
 export function validateKeySetupUpdates(body) {
   if (!body || typeof body !== 'object' || Array.isArray(body)) {
-    return { ok: false, error: 'Isi harus berupa objek JSON {ENV_VAR: nilai}' };
+    return { ok: false, error: 'Body must be a JSON object {ENV_VAR: value}' };
   }
   const entries = Object.entries(body);
-  if (entries.length === 0) return { ok: false, error: 'Tidak ada kunci yang diberikan' };
+  if (entries.length === 0) return { ok: false, error: 'No keys provided' };
   if (entries.length > KEY_SETUP_UPDATE_LIMIT) {
-    return { ok: false, error: `Maksimal ${KEY_SETUP_UPDATE_LIMIT} kunci per simpan` };
+    return { ok: false, error: `At most ${KEY_SETUP_UPDATE_LIMIT} keys per save` };
   }
   const known = knownKeySetupEnvVars();
   const updates = {};
   for (const [name, raw] of entries) {
-    if (!known.has(name)) return { ok: false, error: `Kunci tidak dikenal: ${name}` };
+    if (!known.has(name)) return { ok: false, error: `Unknown key: ${name}` };
     if (raw === null) {
       updates[name] = null;
       continue;
     }
-    if (typeof raw !== 'string') return { ok: false, error: `${name} harus berupa string` };
+    if (typeof raw !== 'string') return { ok: false, error: `${name} must be a string` };
     const value = raw.trim();
     if (!value) return { ok: false, error: `${name} kosong` };
     if (value.length > KEY_SETUP_VALUE_LIMIT) {
-      return { ok: false, error: `${name} lebih panjang dari kunci asli (maks ${KEY_SETUP_VALUE_LIMIT})` };
+      return { ok: false, error: `${name} is longer than a real key (max ${KEY_SETUP_VALUE_LIMIT})` };
     }
     if (!/^[\x21-\x7e]+$/.test(value)) {
-      return { ok: false, error: `${name} hanya boleh berisi karakter yang dapat dicetak tanpa spasi` };
+      return { ok: false, error: `${name} may only contain printable characters without spaces` };
     }
     // Reject the dotenv metacharacters that would round-trip WRONG when written
     // unquoted (# starts a comment, quotes redelimit, $ expands, backslash and
@@ -247,7 +247,7 @@ export function validateKeySetupUpdates(body) {
     // parseEnv and Vite's expansion read back. Real provider keys never contain
     // these; they are base64url / hex / JWT alphabets.
     if (/[#"'$\\`]/.test(value)) {
-      return { ok: false, error: `${name} berisi karakter yang tidak valid untuk kunci (#, tanda kutip, $, \\, atau backtick)` };
+      return { ok: false, error: `${name} contains characters that are not valid for a key (#, quotes, $, \\, or backtick)` };
     }
     updates[name] = value;
   }

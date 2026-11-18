@@ -84,7 +84,7 @@ test('esri-dark-gray construction failure falls back to osm with its own fallbac
   try {
     const state = await h.controller.setStack('esri-dark-gray');
     assert.equal(state.activeId, 'osm', 'construction failure must fall back to OSM, not strand on a blank layer');
-    assert.equal(state.lastError, 'Esri Dark Gray tidak tersedia; memakai OSM');
+    assert.equal(state.lastError, 'Esri Dark Gray unavailable; using OSM');
   } finally {
     h.restore();
   }

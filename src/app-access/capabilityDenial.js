@@ -15,13 +15,13 @@ import { HUD_SUMMARY_UNCONFIGURED_CODE } from '../hudSummaryResponse.js';
 
 /** UI label of each toggle (same words as the admin's Pengguna page). */
 export const CAPABILITY_LABELS = Object.freeze({
-  layers: 'Layer data',
+  layers: 'Data layers',
   ai: 'Voice & AI',
-  premium: 'Peta premium & search',
+  premium: 'Premium map & search',
 });
 
 /** Tooltip on every locked control. */
-export const LOCKED_TOOLTIP = 'Belum diizinkan admin';
+export const LOCKED_TOOLTIP = 'Not yet allowed by an admin';
 
 /** Why a gate is locked: off in the account at boot, revoked mid-session, or killed globally. */
 export const LOCK_KINDS = Object.freeze(['plan', 'revoked', 'killed']);
@@ -54,8 +54,8 @@ export function readCapabilityDenial(status, body, routeGate = null) {
 export function denialToast({ gate, kind }) {
   const label = CAPABILITY_LABELS[gate] ?? 'Fitur';
   return kind === 'killed'
-    ? `${label} sedang dimatikan developer — dinonaktifkan di halaman ini.`
-    : `${label} tidak lagi diizinkan admin — dinonaktifkan di halaman ini.`;
+    ? `${label} is currently turned off by the developer — disabled on this page.`
+    : `${label} is no longer allowed by an admin — disabled on this page.`;
 }
 
 /**
@@ -73,6 +73,6 @@ export function lockedResponseFor(path, gate, kind) {
     return { status: 200, body: { configured: false, code: HUD_SUMMARY_UNCONFIGURED_CODE, error: null, summary: null } };
   }
   return kind === 'killed'
-    ? { status: 503, body: { error: 'FEATURE_DISABLED', message: 'Fitur sedang dimatikan oleh developer', gate } }
+    ? { status: 503, body: { error: 'FEATURE_DISABLED', message: 'Feature is currently turned off by the developer', gate } }
     : { status: 403, body: { error: 'CAPABILITY_REQUIRED', message: LOCKED_TOOLTIP, gate } };
 }

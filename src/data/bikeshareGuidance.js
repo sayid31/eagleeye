@@ -57,13 +57,13 @@ export function bikeshareGuidance({ altitudeOk, center, inRangeCount, registry }
   if (!altitudeOk) {
     return {
       status: 'zoom-in',
-      message: `Perbesar peta (di bawah ±${BIKESHARE_ZOOM_HINT_KM} km) untuk memuat stasiun sepeda`,
+      message: `Zoom in (below ±${BIKESHARE_ZOOM_HINT_KM} km) to load bike stations`,
     };
   }
   if (inRangeCount > 0) return null;
   return {
     status: 'empty',
-    message: `Tidak ada sistem sepeda bersama di area ini${nearestText(nearestBikeshareCity(center, registry))}`,
+    message: `No bike-share system in this area${nearestText(nearestBikeshareCity(center, registry))}`,
   };
 }
 

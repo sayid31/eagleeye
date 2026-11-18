@@ -24,17 +24,17 @@ import { logClientEvent } from './clientLog.js';
 export const LAYER_HEALTH_POLL_MS = 5000;
 
 const FAULTS = Object.freeze({
-  unavailable: { level: 'error', text: 'sumber tidak tersedia' },
-  degraded: { level: 'warn', text: 'sebagian data bermasalah' },
+  unavailable: { level: 'error', text: 'source unavailable' },
+  degraded: { level: 'warn', text: 'some data has problems' },
   stale: { level: 'warn', text: 'data usang' },
-  fallback: { level: 'warn', text: 'memakai sumber cadangan' },
+  fallback: { level: 'warn', text: 'using fallback source' },
 });
 
 /** The layer's own explanation for its state, as one line. */
 export function layerFaultReason(stats = {}) {
   const raw = stats.error || stats.lastError || stats.managerRefreshError;
   const reason = raw instanceof Error ? raw.message : String(raw ?? '').trim();
-  return reason || 'tanpa keterangan dari layer';
+  return reason || 'no note from the layer';
 }
 
 /**
@@ -58,7 +58,7 @@ export function layerHealthEvents(previous, layers) {
     const fault = FAULTS[state];
     if (!fault) {
       if (before) {
-        events.push({ level: 'info', source: 'layer', code: 'layer.recovered', message: `${label} — normal kembali`, detail: { layer: layer.id } });
+        events.push({ level: 'info', source: 'layer', code: 'layer.recovered', message: `${label} — back to normal`, detail: { layer: layer.id } });
       }
       continue;
     }
@@ -91,7 +91,7 @@ export function layerVisibilityFailureEvent(change, name) {
     level: 'error',
     source: 'layer',
     code: 'layer.visibility_failed',
-    message: `${label} — gagal saat ${phase}: ${reason || 'tanpa keterangan'}`,
+    message: `${label} — failed during ${phase}: ${reason || 'no note'}`,
     detail: { layer: change.layerId, phase },
   };
 }

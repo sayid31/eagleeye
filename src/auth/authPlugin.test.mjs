@@ -97,7 +97,7 @@ test('/api/* gates: 401 anonymous, 403 CAPABILITY_REQUIRED with the gate, admin/
   assert.equal((await t.request('/api/opensky/states/all', { cookie: cookies.user })).status, 299);
   const hud = await t.request('/api/openai/hud-summary', { cookie: cookies.user });
   assert.equal(hud.status, 403);
-  assert.deepEqual(await hud.json(), { error: 'CAPABILITY_REQUIRED', message: 'Fitur belum diaktifkan admin', gate: 'ai' });
+  assert.deepEqual(await hud.json(), { error: 'CAPABILITY_REQUIRED', message: 'Feature not enabled by an admin', gate: 'ai' });
   assert.equal((await (await t.request('/api/google/3dtiles/root.json', { cookie: cookies.user })).json()).gate, 'premium');
   assert.equal((await t.request('/API/google/3dtiles/root.json', { cookie: cookies.admin })).status, 299, 'admins hold every toggle; Connect-style case-insensitive match');
   assert.equal((await (await t.request('/api/admin/users', { cookie: cookies.user })).json()).error, 'ADMIN_REQUIRED');
@@ -122,7 +122,7 @@ test('kill switch: a switched-off gate answers 503 FEATURE_DISABLED for everyone
     const owner = await signInOwner(killed);
     const res = await killed.request('/api/openai/hud-summary', { cookie: owner });
     assert.equal(res.status, 503);
-    assert.deepEqual(await res.json(), { error: 'FEATURE_DISABLED', message: 'Fitur sedang dimatikan oleh developer', gate: 'ai' });
+    assert.deepEqual(await res.json(), { error: 'FEATURE_DISABLED', message: 'Feature is currently turned off by the developer', gate: 'ai' });
     assert.equal((await killed.request('/api/admin/keys', { cookie: owner })).status, 299, 'role gates are never killed');
   } finally {
     await killed.close();

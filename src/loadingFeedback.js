@@ -34,7 +34,7 @@ export function normalizeLayerLoading(layer = {}) {
   return {
     id: String(layer.id || ''),
     // Same Indonesian label as the layer panel; the module's English name is only a fallback.
-    label: layerLabel(String(layer.id || ''), String(layer.name || layer.id || 'Layer')),
+    label: layerLabel(String(layer.id || ''), String(layer.name || layer.id || 'Layers')),
     loading,
     disabling,
     refresh: loading && layer.enabled && (stats.refreshing === true || accepted),
@@ -182,7 +182,7 @@ export function reduceTrafficSyncFeedback(previous, {
       // Neutral default: the layer always supplies its own LIVE/SIMULATED
       // label, and a fallback string must never claim a live feed on a
       // keyless build.
-      label: label || 'menyinkronkan jaringan jalan',
+      label: label || 'syncing road network',
       progressText: hasProgress ? `${progressPct}%` : '...',
     };
   }
@@ -286,17 +286,17 @@ export function reduceLoadingFeedback(previous, summary, nowMs, event = null) {
 export function presentLoadingFeedback(state, summary, nowMs) {
   if (!state?.visible) return null;
   if (state.phase === 'terminal') {
-    const labels = { complete: 'MUAT SELESAI', cancelled: 'MUAT DIBATALKAN', error: 'MUAT GAGAL' };
+    const labels = { complete: 'LOAD COMPLETE', cancelled: 'LOAD CANCELLED', error: 'LOAD FAILED' };
     const label = state.operation === 'disabling' && state.terminal === 'complete'
       ? 'DATA LIVE MATI'
-      : labels[state.terminal] || 'MUAT SELESAI';
+      : labels[state.terminal] || 'LOAD COMPLETE';
     return { state: state.terminal, label, detail: '' };
   }
   const active = summary.active;
   const elapsed = Math.max(0, nowMs - state.startedAt);
   const label = summary.disabling
     ? 'MEMATIKAN DATA LIVE'
-    : summary.refresh ? 'MEMPERBARUI DATA LIVE' : 'MEMUAT DATA LIVE';
+    : summary.refresh ? 'UPDATING LIVE DATA' : 'LOADING LIVE DATA';
   const names = active.slice(0, 2).map((record) => record.label).join(' · ');
   const suffix = active.length > 2 ? ` +${active.length - 2}` : '';
   // Layer names only: a layer that knows WHY it is slow says so on its own chip

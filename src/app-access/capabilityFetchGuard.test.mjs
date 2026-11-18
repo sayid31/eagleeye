@@ -22,7 +22,7 @@ test('a locked gate is answered locally: no network call, the server refusal sha
   const { target, network } = setup({ locks: { layers: 'plan' } });
   const response = await target.fetch('/api/opensky/states/all');
   assert.equal(response.status, 403);
-  assert.deepEqual(await response.json(), { error: 'CAPABILITY_REQUIRED', message: 'Belum diizinkan admin', gate: 'layers' });
+  assert.deepEqual(await response.json(), { error: 'CAPABILITY_REQUIRED', message: 'Not yet allowed by an admin', gate: 'layers' });
   assert.deepEqual(network, []);
 });
 

@@ -13,12 +13,12 @@ test('audit filter ids match the server types', () => {
 
 test('describeAuditEntry words each event in Indonesian with a status', () => {
   assert.deepEqual(describeAuditEntry({ event: 'keys.changed', saved: ['OPENAI_API_KEY'], removed: ['TOMTOM_API_KEY'] }),
-    { title: 'API key diubah', detail: 'disimpan: OPENAI_API_KEY · dihapus: TOMTOM_API_KEY', status: 'ok' });
+    { title: 'API key changed', detail: 'disimpan: OPENAI_API_KEY · dihapus: TOMTOM_API_KEY', status: 'ok' });
   assert.deepEqual(describeAuditEntry({ event: 'keys.tested', provider: 'openai', result: 'rejected', httpStatus: 401 }),
-    { title: 'Koneksi dites', detail: 'OpenAI: ditolak (HTTP 401)', status: 'error' });
+    { title: 'Connection tested', detail: 'OpenAI: ditolak (HTTP 401)', status: 'error' });
   assert.equal(describeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'persona'] }).detail, 'Diubah: limits, persona');
   assert.equal(describeAuditEntry({ event: 'admin.login_denied', result: 'not_admin' }).status, 'warn');
-  assert.equal(describeAuditEntry({ event: 'log.cleared' }).title, 'Server Log dikosongkan');
+  assert.equal(describeAuditEntry({ event: 'log.cleared' }).title, 'Server Log cleared');
   const unknown = describeAuditEntry({ event: 'something.new', provider: 'x', result: 'y' });
   assert.deepEqual([unknown.title, unknown.detail, unknown.status], ['something.new', 'x · y', 'off']);
 });
@@ -37,7 +37,7 @@ test('fetchAudit builds the query; failures carry status (and code only when the
   let url;
   await fetchAudit({ type: 'keys', offset: 100 }, async (u) => { url = u; return { ok: true, json: async () => ({}) }; });
   assert.equal(url, '/api/admin/audit?source=system&type=keys&offset=100');
-  const failure = await fetchHealth(async () => ({ ok: false, status: 401, json: async () => ({ error: 'Login diperlukan' }) })).catch((e) => e);
+  const failure = await fetchHealth(async () => ({ ok: false, status: 401, json: async () => ({ error: 'Login required' }) })).catch((e) => e);
   assert.equal(failure.status, 401);
   assert.equal(failure.code, null);
   const coded = await fetchLog({}, async () => ({ ok: false, status: 403, json: async () => ({ error: 'SUPER_ADMIN_REQUIRED' }) })).catch((e) => e);

@@ -47,7 +47,7 @@ function adminSetup({ guard = () => ({ ok: true, actorId: 'user-super-1' }), tes
 }
 
 test('admin keys: every route is refused when the guard refuses', async () => {
-  const { call, envPath } = adminSetup({ guard: () => ({ ok: false, status: 401, error: 'Login diperlukan' }) });
+  const { call, envPath } = adminSetup({ guard: () => ({ ok: false, status: 401, error: 'Login required' }) });
   assert.equal((await call()).status, 401);
   assert.equal((await call({ method: 'PUT', body: { OPENAI_API_KEY: FAKE } })).status, 401);
   assert.equal((await call({ method: 'POST', url: '/test', body: { id: 'openai' } })).status, 401);

@@ -1583,7 +1583,7 @@ async function runBrowserGroup(record) {
     const r = await settle('local-firms', 30);
     const s = r.stats || {};
     if (env.keys.FIRMS === false) {
-      return s.error === 'KUNCI DIPERLUKAN'
+      return s.error === 'KEY REQUIRED'
         ? pass('keyless and honest: getStats().error === "KUNCI DIPERLUKAN"')
         : fail(`keyless but error=${s.error} count=${s.count} — expected "KUNCI DIPERLUKAN"`);
     }

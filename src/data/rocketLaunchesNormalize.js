@@ -83,7 +83,7 @@ export function missionHoverPreviewRange(cameraHeight) {
  */
 export function formatMissionEventTime(launchTime) {
   const date = new Date(launchTime);
-  if (!launchTime || !Number.isFinite(date.getTime())) return 'TIDAK TERSEDIA';
+  if (!launchTime || !Number.isFinite(date.getTime())) return 'UNAVAILABLE';
   return `${date.toISOString().slice(0, 10)}\n${date.toISOString().slice(11, 19)} UTC`;
 }
 
@@ -142,7 +142,7 @@ function normalizeLanding(stage, fallbackName, category, index) {
       : attempted ? 'UPAYA PEMULIHAN'
         : recoveryType ? recoveryType.toUpperCase()
           : launcherStatus ? launcherStatus.toUpperCase()
-            : 'TIDAK ADA DATA PEMULIHAN';
+            : 'NO RECOVERY DATA';
   return {
     id: String(stage?.id || landing?.id || `${category}-${index}`),
     category,
@@ -176,7 +176,7 @@ function normalizeRecoveryStages(launch, payloads) {
       if (!flight?.landing) return;
       stages.push(normalizeLanding(
         { ...flight, type: payloads[index]?.type || 'Payload', serial_number: payloads[index]?.name },
-        payloads[index]?.name || `Muatan ${index + 1}`,
+        payloads[index]?.name || `Payload ${index + 1}`,
         'PAYLOAD',
         index,
       ));
@@ -283,10 +283,10 @@ export function normalizeRocketLaunches(payload, now = new Date()) {
     const payloads = normalizePayloadFlights(launch);
     return {
       id: String(launch.id || launch.slug || launch.name || `launch-${date}`),
-      name: launch.name || 'Peluncuran tanpa nama',
-      status: launch.status?.name || 'Tidak diketahui',
+      name: launch.name || 'Unnamed launch',
+      status: launch.status?.name || 'Unknown',
       launchTime: Number.isFinite(date) ? new Date(date).toISOString() : null,
-      launchSite: pad.name || location.name || 'Lokasi peluncuran tidak diketahui',
+      launchSite: pad.name || location.name || 'Launch site unknown',
       lat: Number.isFinite(lat) ? lat : null,
       lon: Number.isFinite(lon) ? lon : null,
       provider: launch.launch_service_provider?.name || null,

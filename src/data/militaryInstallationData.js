@@ -23,7 +23,7 @@ const CLASS_BY_MILITARY_TAG = {
  * attribution and the details panel read it.
  */
 const LABEL_BY_CLASS = {
-  airfield: 'Pangkalan udara militer',
+  airfield: 'Military air bases',
   naval_base: 'Pangkalan angkatan laut',
   range: 'Lapangan tembak',
   military_land: 'Lahan militer',

@@ -57,9 +57,9 @@ test('persona: length caps, newline kept in instructions, control chars dropped'
 test('topics: enabling needs a list; caps, dedupe, one-sentence refusal', () => {
   assert.equal(validateVoiceSettings({ topics: { enabled: true } }).ok, false);
   const ok = validateVoiceSettings({
-    topics: { enabled: true, allowed: ['Penerbangan', 'penerbangan', 'Kapal'], refusal: 'Maaf, itu di luar topik.' },
+    topics: { enabled: true, allowed: ['Penerbangan', 'penerbangan', 'Vessels'], refusal: 'Maaf, itu di luar topik.' },
   });
-  assert.deepEqual(ok.value.topics.allowed, ['Penerbangan', 'Kapal']);
+  assert.deepEqual(ok.value.topics.allowed, ['Penerbangan', 'Vessels']);
   assert.equal(validateVoiceSettings({ topics: { allowed: Array(21).fill('a') } }).ok, false);
   assert.equal(validateVoiceSettings({ topics: { allowed: ['x'.repeat(61)] } }).ok, false);
   assert.equal(validateVoiceSettings({ topics: { refusal: 'x'.repeat(161) } }).ok, false);

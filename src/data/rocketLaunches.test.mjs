@@ -312,7 +312,7 @@ test('keeps failed-launch mission details truthful without inventing paths', () 
     trajectory: [],
   }, false), {
     orbit: 'PLANNED · Geostationary Transfer Orbit',
-    ascent: 'TIDAK TERSEDIA',
+    ascent: 'UNAVAILABLE',
     replayAvailable: false,
   });
   assert.deepEqual(missionPathPresentation({
@@ -324,7 +324,7 @@ test('keeps failed-launch mission details truthful without inventing paths', () 
     ],
   }, false), {
     orbit: 'PLANNED · Low Earth Orbit',
-    ascent: 'TITIK LINTASAN DARI SUMBER',
+    ascent: 'TRAJECTORY POINTS FROM SOURCE',
     replayAvailable: false,
   });
 });
@@ -336,7 +336,7 @@ test('describes only renderable successful mission paths', () => {
     trajectory: [],
   }, true), {
     orbit: 'Low Earth Orbit',
-    ascent: 'ESTIMASI REKONSTRUKSI',
+    ascent: 'RECONSTRUCTION ESTIMATE',
     replayAvailable: true,
   });
   assert.deepEqual(missionPathPresentation({
@@ -345,7 +345,7 @@ test('describes only renderable successful mission paths', () => {
     trajectory: [{ latitude: 28.5, longitude: -80.5 }],
   }, false), {
     orbit: null,
-    ascent: 'TIDAK TERSEDIA',
+    ascent: 'UNAVAILABLE',
     replayAvailable: false,
   });
 });
@@ -728,7 +728,7 @@ test('formats the launch epoch for ascent and orbit replay labels', () => {
     formatMissionEventTime('2026-06-29T02:25:00Z'),
     '2026-06-29\n02:25:00 UTC',
   );
-  assert.equal(formatMissionEventTime(null), 'TIDAK TERSEDIA');
+  assert.equal(formatMissionEventTime(null), 'UNAVAILABLE');
 });
 
 test('reduces generic launch-site names to their identifying suffix', () => {
@@ -772,7 +772,7 @@ test('mission overlay factories preserve all four source-formatted label roles a
   assert.equal(selected.protected, true);
 
   const roles = [
-    ['reentry', 'MASUK KEMBALI TAHAP', '#ffd166', ['MASUK KEMBALI TAHAP', []]],
+    ['reentry', 'STAGE RE-ENTRY', '#ffd166', ['STAGE RE-ENTRY', []]],
     ['payload', 'EST. ORBIT POSITION\n2026-07-20\n10:00:00 UTC', '#ffd166', [
       'EST. ORBIT POSITION',
       ['2026-07-20', '10:00:00 UTC'],
@@ -1031,7 +1031,7 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
     assert.deepEqual(selectedPublication[3], ROCKET_MISSION_SELECTED_OVERLAY_SOURCE_OPTIONS);
     assert.deepEqual(selectedPublication[2].map(({ title }) => title), [
       'FALCON 9',
-      'MASUK KEMBALI TAHAP',
+      'STAGE RE-ENTRY',
       'EST. ORBIT POSITION',
       'ORBIT PROYEKSI',
     ]);

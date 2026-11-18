@@ -9,47 +9,47 @@
  */
 
 export const ERROR_MESSAGES = Object.freeze({
-  INVALID_INPUT: 'Data yang dikirim tidak valid. Periksa isian lalu coba lagi.',
-  INVALID_JSON: 'Permintaan tidak bisa dibaca. Muat ulang halaman lalu coba lagi.',
-  JSON_REQUIRED: 'Permintaan tidak bisa dibaca. Muat ulang halaman lalu coba lagi.',
-  BAD_REQUEST: 'Permintaan tidak valid. Muat ulang halaman lalu coba lagi.',
-  FIELD_NOT_ALLOWED: 'Ada isian yang tidak boleh diubah.',
-  BODY_TOO_LARGE: 'Data yang dikirim terlalu besar.',
-  RESPONSE_TOO_LARGE: 'Jawaban dari server terlalu besar untuk ditampilkan.',
-  NOT_FOUND: 'Data yang dicari tidak ditemukan. Mungkin sudah dihapus.',
-  PROVIDER_NOT_FOUND: 'Penyedia ini tidak dikenal.',
-  UNKNOWN_ACTION: 'Aksi ini tidak dikenal.',
-  METHOD_NOT_ALLOWED: 'Aksi ini tidak didukung. Muat ulang halaman lalu coba lagi.',
-  AUTH_REQUIRED: 'Sesi Anda berakhir. Masuk lagi untuk melanjutkan.',
-  UNAUTHORIZED: 'Sesi Anda berakhir. Masuk lagi untuk melanjutkan.',
-  FORBIDDEN: 'Anda tidak punya izin untuk aksi ini.',
-  ADMIN_REQUIRED: 'Hanya admin yang boleh membuka ini.',
-  SUPER_ADMIN_REQUIRED: 'Hanya super admin yang boleh melakukan ini.',
-  CAPABILITY_REQUIRED: 'Fitur ini belum diaktifkan untuk akun Anda. Hubungi admin.',
-  FEATURE_DISABLED: 'Fitur ini sedang dimatikan sementara oleh administrator.',
-  TARGET_FORBIDDEN: 'Anda tidak boleh mengubah akun ini.',
-  TARGET_IS_SUPER_ADMIN: 'Akun super admin hanya diatur lewat konfigurasi server.',
-  CANNOT_ACT_ON_SELF: 'Aksi ini tidak bisa dilakukan pada akun Anda sendiri.',
-  ROLE_NOT_ASSIGNABLE: 'Anda tidak boleh memberikan role ini.',
-  EMAIL_TAKEN: 'Email ini sudah dipakai akun lain.',
-  SUPER_ADMIN_EMAIL_RESERVED: 'Email ini dicadangkan untuk super admin.',
-  PASSWORD_WEAK: 'Password terlalu lemah.',
-  REAUTH_FAILED: 'Password Anda salah.',
-  REAUTH_REQUIRED: 'Masuk ulang dengan Google dulu (paling lama 10 menit sebelum aksi ini), lalu coba lagi.',
-  CONFIRM_EMAIL_MISMATCH: 'Email konfirmasi tidak sama dengan email akun.',
-  PASSWORD_CHANGE_REQUIRED: 'Anda harus mengganti password dulu.',
-  INVALID_EMAIL_OR_PASSWORD: 'Email atau password salah.',
-  ACCOUNT_DISABLED: 'Akun ini nonaktif. Hubungi admin.',
-  GOOGLE_SIGN_IN_REQUIRED: 'Akun ini masuk lewat Google.',
-  GOOGLE_NOT_ALLOWED: 'Akun Google ini tidak diizinkan masuk.',
-  SOCIAL_SIGN_IN_REFUSED: 'Masuk lewat Google ditolak.',
-  SIGN_UP_DISABLED: 'Pendaftaran mandiri tidak tersedia. Minta akun ke admin.',
-  RATE_LIMITED: 'Terlalu banyak percobaan. Tunggu sebentar lalu coba lagi.',
-  ORIGIN_NOT_ALLOWED: 'Permintaan ditolak karena berasal dari alamat yang tidak dikenal.',
-  CROSS_SITE_REFUSED: 'Permintaan ditolak karena berasal dari situs lain.',
-  AUTH_UNAVAILABLE: 'Layanan login sedang tidak tersedia. Coba lagi nanti.',
-  AUTH_NOT_CONFIGURED: 'Login belum dikonfigurasi di server ini.',
-  INTERNAL_ERROR: 'Terjadi kesalahan di server. Lihat Server Log untuk detailnya.',
+  INVALID_INPUT: 'The data sent is not valid. Check the fields and try again.',
+  INVALID_JSON: 'The request could not be read. Reload the page and try again.',
+  JSON_REQUIRED: 'The request could not be read. Reload the page and try again.',
+  BAD_REQUEST: 'The request is not valid. Reload the page and try again.',
+  FIELD_NOT_ALLOWED: 'Some fields cannot be changed.',
+  BODY_TOO_LARGE: 'The data sent is too large.',
+  RESPONSE_TOO_LARGE: 'The server response is too large to display.',
+  NOT_FOUND: 'The data you looked for was not found. It may have been deleted.',
+  PROVIDER_NOT_FOUND: 'This provider is not recognized.',
+  UNKNOWN_ACTION: 'This action is not recognized.',
+  METHOD_NOT_ALLOWED: 'This action is not supported. Reload the page and try again.',
+  AUTH_REQUIRED: 'Your session has ended. Sign in again to continue.',
+  UNAUTHORIZED: 'Your session has ended. Sign in again to continue.',
+  FORBIDDEN: 'You do not have permission for this action.',
+  ADMIN_REQUIRED: 'Only admins can open this.',
+  SUPER_ADMIN_REQUIRED: 'Only super admins can do this.',
+  CAPABILITY_REQUIRED: 'This feature has not been enabled for your account. Contact an admin.',
+  FEATURE_DISABLED: 'This feature is temporarily turned off by an administrator.',
+  TARGET_FORBIDDEN: 'You may not change this account.',
+  TARGET_IS_SUPER_ADMIN: 'Super admin accounts are managed only through the server configuration.',
+  CANNOT_ACT_ON_SELF: 'This action cannot be performed on your own account.',
+  ROLE_NOT_ASSIGNABLE: 'You may not grant this role.',
+  EMAIL_TAKEN: 'This email is already used by another account.',
+  SUPER_ADMIN_EMAIL_RESERVED: 'This email is reserved for super admins.',
+  PASSWORD_WEAK: 'Password is too weak.',
+  REAUTH_FAILED: 'Your password is incorrect.',
+  REAUTH_REQUIRED: 'Sign in with Google again first (within the last 10 minutes before this action), then try again.',
+  CONFIRM_EMAIL_MISMATCH: 'The confirmation email does not match the account email.',
+  PASSWORD_CHANGE_REQUIRED: 'You must change your password first.',
+  INVALID_EMAIL_OR_PASSWORD: 'Incorrect email or password.',
+  ACCOUNT_DISABLED: 'This account is inactive. Contact an admin.',
+  GOOGLE_SIGN_IN_REQUIRED: 'This account signs in with Google.',
+  GOOGLE_NOT_ALLOWED: 'This Google account is not allowed to sign in.',
+  SOCIAL_SIGN_IN_REFUSED: 'Google login was denied.',
+  SIGN_UP_DISABLED: 'Self-registration is not available. Ask an admin for an account.',
+  RATE_LIMITED: 'Too many attempts. Wait a moment and try again.',
+  ORIGIN_NOT_ALLOWED: 'The request was rejected because it came from an unrecognized address.',
+  CROSS_SITE_REFUSED: 'The request was rejected because it came from another site.',
+  AUTH_UNAVAILABLE: 'The login service is unavailable. Try again later.',
+  AUTH_NOT_CONFIGURED: 'Login is not configured on this server.',
+  INTERNAL_ERROR: 'Something went wrong on the server. See the Server Log for details.',
 });
 
 /** HTTP status class → sentence, used when the code is missing or unknown. */
@@ -63,20 +63,20 @@ export const STATUS_MESSAGES = Object.freeze({
   503: ERROR_MESSAGES.AUTH_UNAVAILABLE,
 });
 
-export const GENERIC_ERROR = 'Terjadi masalah. Coba lagi sebentar lagi.';
-export const NETWORK_ERROR = 'Tidak bisa terhubung ke server. Periksa koneksi Anda lalu coba lagi.';
+export const GENERIC_ERROR = 'Something went wrong. Try again in a moment.';
+export const NETWORK_ERROR = 'Could not reach the server. Check your connection and try again.';
 
 const PASSWORD_REASONS = Object.freeze({
-  too_short: (min) => (Number.isFinite(min) ? `Password minimal ${min} karakter.` : 'Password terlalu pendek.'),
-  too_long: () => 'Password maksimal 128 karakter.',
-  matches_identity: () => 'Password tidak boleh sama dengan email atau nama.',
+  too_short: (min) => (Number.isFinite(min) ? `Password must be at least ${min} characters.` : 'The password is too short.'),
+  too_long: () => 'Password must be at most 128 characters.',
+  matches_identity: () => 'Password cannot be the same as email or name.',
 });
 
 /** Field name (as the API reports it) → how the form labels it. */
 export const FIELD_LABELS = Object.freeze({
-  email: 'email', name: 'nama', role: 'role', capabilities: 'izin fitur', password: 'password', generate: 'pilihan password',
-  currentPassword: 'password Anda', confirmEmail: 'email konfirmasi', q: 'pencarian', status: 'status', userId: 'pengguna',
-  success: 'hasil', action: 'aksi', targetId: 'akun', source: 'sumber', id: 'akun', reason: 'alasan', gate: 'gate',
+  email: 'email', name: 'name', role: 'role', capabilities: 'feature permissions', password: 'password', generate: 'password choice',
+  currentPassword: 'your password', confirmEmail: 'confirmation email', q: 'search', status: 'status', userId: 'user',
+  success: 'result', action: 'action', targetId: 'account', source: 'source', id: 'account', reason: 'reason', gate: 'gate',
 });
 
 function normalize(problem) {
@@ -101,7 +101,7 @@ export function errorMessage(problem) {
   const detail = normalize(problem);
   if (detail.network) return NETWORK_ERROR;
   if (detail.code === 'PASSWORD_WEAK' && PASSWORD_REASONS[detail.reason]) return PASSWORD_REASONS[detail.reason](detail.min);
-  if (detail.code === 'INVALID_INPUT' && FIELD_LABELS[detail.field]) return `Isian ${FIELD_LABELS[detail.field]} tidak valid.`;
+  if (detail.code === 'INVALID_INPUT' && FIELD_LABELS[detail.field]) return `The ${FIELD_LABELS[detail.field]} field is not valid.`;
   if (detail.code && Object.hasOwn(ERROR_MESSAGES, detail.code)) return ERROR_MESSAGES[detail.code];
   if (detail.status && Object.hasOwn(STATUS_MESSAGES, detail.status)) return STATUS_MESSAGES[detail.status];
   if (detail.status && detail.status >= 500) return ERROR_MESSAGES.INTERNAL_ERROR;

@@ -29,6 +29,6 @@ export function osmWaitLabel(startedAtMs, nowMs) {
   if (elapsedMs < OSM_WAIT_REVEAL_MS) return null;
   const seconds = Math.floor(elapsedMs / 1000);
   return elapsedMs < OSM_WAIT_TYPICAL_MS
-    ? `antre di server peta OSM · ${seconds} dtk (biasanya ±${OSM_WAIT_TYPICAL_MS / 1000})`
-    : `server peta OSM masih antre · ${seconds} dtk`;
+    ? `queued at the OSM map server · ${seconds} s (typically ±${OSM_WAIT_TYPICAL_MS / 1000})`
+    : `OSM map server still queued · ${seconds} s`;
 }

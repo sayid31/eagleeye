@@ -36,7 +36,7 @@ test('anonymous → 401, user → 403 ADMIN_REQUIRED on every route; admin → 4
   }
   const [status, body] = await t.call('POST', `/api/admin/users/${user.id}/role`, admin.cookie, { role: 'admin', currentPassword: STAFF_PASSWORD });
   assert.deepEqual([status, body.error], [403, 'SUPER_ADMIN_REQUIRED']);
-  assert.equal(body.message, 'Hanya super admin yang boleh melakukan ini.');
+  assert.equal(body.message, 'Only super admins can do this.');
 });
 
 test('unknown sub-path 404, wrong method 405, malformed JSON 400, oversized body 413', async () => {
@@ -172,7 +172,7 @@ test('DELETE: confirm mismatch 400; tombstone hides the account and keeps its lo
   assert.equal((await t.call('GET', '/api/admin/users?q=bye', owner))[1].total, 0);
   const [, log] = await t.call('GET', `/api/admin/login-log?userId=${target.id}`, admin.cookie);
   assert.equal(log.total, logsBefore, 'admin still sees the deleted user\'s sign-ins');
-  assert.deepEqual([log.entries[0].userDeleted, log.entries[0].userName], [true, 'Pengguna terhapus']);
+  assert.deepEqual([log.entries[0].userDeleted, log.entries[0].userName], [true, 'Deleted user']);
 });
 
 test('POST /:id/role: super_admin + re-auth; promotion forces a password change; super targets refused', async () => {

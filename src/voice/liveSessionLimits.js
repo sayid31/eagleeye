@@ -19,9 +19,9 @@
 
 /** Spoken-UI reasons shown on the mic detail line when a limit closes a session. */
 export const SESSION_LIMIT_MESSAGES = Object.freeze({
-  session: (minutes) => `Sesi berakhir — batas durasi ${minutes} menit`,
-  daily: () => 'Sesi berakhir — menit suara harian habis',
-  idle: (seconds) => `Sesi berakhir — tidak ada percakapan ${seconds} detik`,
+  session: (minutes) => `Session ended — ${minutes}-minute duration limit`,
+  daily: () => 'Session ended — daily voice minutes used up',
+  idle: (seconds) => `Session ended — no conversation for ${seconds} seconds`,
 });
 
 /**

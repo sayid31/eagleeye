@@ -315,12 +315,12 @@ export const navigationLocationMixin = {
             this._collapsePOIRow();
             this._updateLocationMiniStatus();
           } else {
-            this._showToast('Lokasi tidak ditemukan');
+            this._showToast('Location not found');
           }
         } catch (err) {
           console.error('[Search] Geocoding failed:', err);
           if (this._disposed || generation !== this._navigationGeneration) return;
-          this._showToast('Pencarian gagal');
+          this._showToast('Search failed');
         } finally {
           this._settleLocationSearchUi(generation);
         }

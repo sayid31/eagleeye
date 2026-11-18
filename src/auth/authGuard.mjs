@@ -13,8 +13,8 @@ import { homeFor, normalizeRole } from './authRoles.mjs';
 /** Sec-Fetch-Site values a same-origin page (or a typed URL) sends. */
 const SAME_ORIGIN_FETCH_SITES = new Set(['same-origin', 'none']);
 const ROLE_GATE_ERRORS = {
-  admin: ['ADMIN_REQUIRED', 'Hanya admin yang boleh mengakses ini'],
-  super: ['SUPER_ADMIN_REQUIRED', 'Hanya super admin yang boleh mengakses ini'],
+  admin: ['ADMIN_REQUIRED', 'Only admins can access this'],
+  super: ['SUPER_ADMIN_REQUIRED', 'Only super admins can access this'],
 };
 
 const deny = (status, code, error, extra = {}) => ({ action: 'deny', status, code, error, ...extra });
@@ -32,22 +32,22 @@ const deny = (status, code, error, extra = {}) => ({ action: 'deny', status, cod
  * @returns {{action: 'next'} | {action: 'deny', status: number, code: string, error: string, gate?: string}}
  */
 export function apiDecision({ method, pathname, gates, actor, headers = {}, trustedOrigin, isKilled = () => false }) {
-  if (!gates.length) return deny(404, 'NOT_FOUND', 'Endpoint tidak ada');
+  if (!gates.length) return deny(404, 'NOT_FOUND', 'Endpoint does not exist');
   const fetchSite = headers['sec-fetch-site'];
-  if (fetchSite && !SAME_ORIGIN_FETCH_SITES.has(fetchSite)) return deny(403, 'CROSS_SITE_REFUSED', 'Permintaan dari situs lain ditolak');
-  if (!actor) return deny(401, 'AUTH_REQUIRED', 'Login diperlukan');
+  if (fetchSite && !SAME_ORIGIN_FETCH_SITES.has(fetchSite)) return deny(403, 'CROSS_SITE_REFUSED', 'Request from another site rejected');
+  if (!actor) return deny(401, 'AUTH_REQUIRED', 'Login required');
   if (actor.mustChangePassword) return deny(403, 'PASSWORD_CHANGE_REQUIRED', 'Ganti password dulu');
   for (const gate of gates) {
     if (hasGate(actor, gate)) continue;
     if (ROLE_GATE_ERRORS[gate]) return deny(403, ...ROLE_GATE_ERRORS[gate]);
-    return deny(403, 'CAPABILITY_REQUIRED', 'Fitur belum diaktifkan admin', { gate });
+    return deny(403, 'CAPABILITY_REQUIRED', 'Feature not enabled by an admin', { gate });
   }
   const killed = gates.find((gate) => isKilled(gate));
-  if (killed) return deny(503, 'FEATURE_DISABLED', 'Fitur sedang dimatikan oleh developer', { gate: killed });
+  if (killed) return deny(503, 'FEATURE_DISABLED', 'Feature is currently turned off by the developer', { gate: killed });
   if (method !== 'GET' && method !== 'HEAD') {
-    if (headers.origin !== trustedOrigin) return deny(403, 'ORIGIN_NOT_ALLOWED', 'Origin tidak diizinkan');
+    if (headers.origin !== trustedOrigin) return deny(403, 'ORIGIN_NOT_ALLOWED', 'Origin not allowed');
     if (routeMatches(pathname, '/api/admin') && !/^application\/json\b/i.test(String(headers['content-type'] ?? ''))) {
-      return deny(415, 'JSON_REQUIRED', 'Content-Type harus application/json');
+      return deny(415, 'JSON_REQUIRED', 'Content-Type must be application/json');
     }
   }
   return { action: 'next' };

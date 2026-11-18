@@ -26,14 +26,14 @@ export const LANDING_ROUTES = Object.freeze({
  * @typedef {{configured?: boolean, signedIn?: boolean, user?: MeUser, home?: string}} MePayload
  */
 
-const SIGN_OUT = Object.freeze({ label: 'Keluar', action: 'sign-out' });
-const OPEN_CONSOLE = Object.freeze({ label: 'Buka Konsol', href: LANDING_ROUTES.app });
+const SIGN_OUT = Object.freeze({ label: 'Sign out', action: 'sign-out' });
+const OPEN_CONSOLE = Object.freeze({ label: 'Open Console', href: LANDING_ROUTES.app });
 
 /** Per-role buttons, straight from the table in plan/auth/05-landing-page.md. */
 const ROLE_CTA = Object.freeze({
   user: {
     primary: OPEN_CONSOLE,
-    secondary: [{ label: 'Akun', href: LANDING_ROUTES.account }, SIGN_OUT],
+    secondary: [{ label: 'Account', href: LANDING_ROUTES.account }, SIGN_OUT],
   },
   admin: {
     primary: { label: 'Panel Admin', href: LANDING_ROUTES.admin },
@@ -71,7 +71,7 @@ export function landingCta(me, { accessContact = null } = {}) {
     return { primary: { ...byRole.primary }, secondary: byRole.secondary.map((item) => ({ ...item })) };
   }
   return {
-    primary: { label: 'Masuk', href: LANDING_ROUTES.login },
-    secondary: accessContact ? [{ label: 'Minta akses', href: accessContact }] : [],
+    primary: { label: 'Sign in', href: LANDING_ROUTES.login },
+    secondary: accessContact ? [{ label: 'Request access', href: accessContact }] : [],
   };
 }

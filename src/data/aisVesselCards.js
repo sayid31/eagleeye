@@ -17,7 +17,7 @@ export function trimHudValue(value, maxLength) {
 export function displayVesselName(record) {
   const name = String(record.name || '').trim();
   if (name && name !== 'VESSEL' && name !== record.mmsi) return name;
-  return record.mmsi ? `MMSI ${record.mmsi}` : 'KAPAL';
+  return record.mmsi ? `MMSI ${record.mmsi}` : 'VESSEL';
 }
 
 export function formatSpeed(speed) {
@@ -104,7 +104,7 @@ export function buildVesselCard(record) {
 export function buildSelectedVesselCard(record) {
   const direction = record.heading ?? record.course;
   const details = [[
-    vesselTypeShort(record) || 'KAPAL',
+    vesselTypeShort(record) || 'VESSEL',
     formatSpeed(record.speed),
     Number.isFinite(direction) ? `${Math.round(direction)}°` : '--°',
   ].join(' · ')];

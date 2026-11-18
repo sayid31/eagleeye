@@ -14,7 +14,7 @@ import { normalizeEmail, normalizeRole } from './authRoles.mjs';
 export const CREDENTIAL_PROVIDER = 'credential';
 export const DEFAULT_PAGE_SIZE = 20;
 export const MAX_PAGE_SIZE = 100;
-export const TOMBSTONE_NAME = 'Pengguna terhapus';
+export const TOMBSTONE_NAME = 'Deleted user';
 const TOMBSTONE_DOMAIN = 'deleted.invalid';
 
 /**

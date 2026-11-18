@@ -17,7 +17,7 @@ test('StatusBadge pairs colour with an icon and a word; the capability chip says
   assert.match(active, />Aktif</);
   assert.match(active, /<svg[^>]*aria-hidden="true"/);
   assert.match(active, /text-success/);
-  const on = render(h(CapabilityChip, { name: 'Layer data', enabled: true }));
+  const on = render(h(CapabilityChip, { name: 'Data layers', enabled: true }));
   const off = render(h(CapabilityChip, { name: 'Voice & AI', enabled: false }));
   assert.match(on, /Layer data<span class="sr-only">: aktif<\/span>/);
   assert.match(off, /Voice &amp; AI<span class="sr-only">: nonaktif<\/span>/);
@@ -31,7 +31,7 @@ test('LoadingState announces one busy status with an sr-only label; EmptyState a
   const loading = render(h(LoadingState, { label: 'Memuat pengguna' }));
   assert.match(loading, /role="status"[^>]*aria-busy="true"/);
   assert.match(loading, /<span class="sr-only">Memuat pengguna<\/span>/);
-  const empty = render(h(EmptyState, { title: 'Belum ada pengguna', description: 'Buat pengguna pertama.', action: h('button', null, 'Buat pengguna') }));
+  const empty = render(h(EmptyState, { title: 'No users yet', description: 'Buat pengguna pertama.', action: h('button', null, 'Create user') }));
   assert.match(empty, /Belum ada pengguna/);
   assert.match(empty, /<button>Buat pengguna<\/button>/);
   const failed = render(h(ErrorState, { error: { code: 'FEATURE_DISABLED', status: 503 }, onRetry() {} }));
@@ -44,7 +44,7 @@ test('LoadingState announces one busy status with an sr-only label; EmptyState a
 
 test('FormField wires label, description and error with id / aria-invalid / aria-describedby', async () => {
   const { FormField } = await load('FormField');
-  const html = render(h(FormField, { label: 'Email', description: 'Dipakai untuk masuk.', error: 'Isian email tidak valid.', required: true }, h('input', { type: 'email' })));
+  const html = render(h(FormField, { label: 'Email', description: 'Used to sign in.', error: 'Isian email tidak valid.', required: true }, h('input', { type: 'email' })));
   const id = /<input[^>]*\sid="([^"]+)"/.exec(html)[1];
   assert.match(html, new RegExp(`<label[^>]*for="${id.replace(/[:]/g, '\\:')}"`));
   assert.match(html, /aria-invalid="true"/);
@@ -52,7 +52,7 @@ test('FormField wires label, description and error with id / aria-invalid / aria
   assert.equal(described.length, 2);
   for (const target of described) assert.match(html, new RegExp(`\\sid="${target.replace(/[:]/g, '\\:')}"`));
   assert.match(html, /role="alert"[^>]*>Isian email tidak valid\./);
-  const clean = render(h(FormField, { label: 'Nama' }, h('input')));
+  const clean = render(h(FormField, { label: 'Name' }, h('input')));
   assert.doesNotMatch(clean, /aria-invalid|aria-describedby/);
   const viaFunction = render(h(FormField, { label: 'Role' }, (control) => h('button', { id: control.id }, 'x')));
   assert.match(viaFunction, /<button id=/);
@@ -71,22 +71,22 @@ test('PasswordInput: masked by default, toggle has aria-pressed and a state-awar
 
 test('CopyField: read-only labelled value, Salin button, aria-live confirmation, optional primary "Salin pesan"', async () => {
   const { CopyField } = await load('CopyField');
-  const html = render(h(CopyField, { label: 'Password sementara', value: 'abc-123' }));
+  const html = render(h(CopyField, { label: 'Temporary password', value: 'abc-123' }));
   assert.match(html, /readOnly|readonly/i);
   assert.match(html, /aria-label="Password sementara"/);
   assert.match(html, />Salin</);
   assert.match(html, /role="status"[^>]*aria-live="polite"/);
-  const both = render(h(CopyField, { label: 'Password', value: 'abc', extraCopy: { label: 'Salin pesan', text: 'Pesan lengkap' } }));
+  const both = render(h(CopyField, { label: 'Password', value: 'abc', extraCopy: { label: 'Copy message', text: 'Pesan lengkap' } }));
   assert.match(both, />Salin pesan</);
-  assert.ok(both.indexOf('Salin pesan') < both.indexOf('>Salin<'), 'the message copy comes first');
+  assert.ok(both.indexOf('Copy message') < both.indexOf('>Salin<'), 'the message copy comes first');
 });
 
 test('DataTable ready: sr-only caption, scope=col headers, md table + stacked cards, "x–y dari z" and page size', async () => {
   const { DataTable } = await load('DataTable');
   const rows = [{ id: 'a', name: 'Ani' }, { id: 'b', name: 'Budi' }];
   const props = {
-    caption: 'Daftar pengguna', rows, getRowId: (row) => row.id,
-    columns: [{ id: 'name', header: 'Nama', cell: (row) => row.name }, { id: 'act', header: 'Aksi', srOnlyHeader: true, cell: () => 'x' }],
+    caption: 'User list', rows, getRowId: (row) => row.id,
+    columns: [{ id: 'name', header: 'Name', cell: (row) => row.name }, { id: 'act', header: 'Actions', srOnlyHeader: true, cell: () => 'x' }],
     renderCard: (row) => h('b', null, `kartu ${row.name}`),
     pagination: { total: 45, limit: 20, offset: 20, onOffsetChange() {}, onLimitChange() {} },
   };
@@ -112,15 +112,15 @@ test('DataTable states: loading skeleton, human error with retry, empty vs filte
   assert.match(error, /role="alert"/);
   assert.match(error, /Sesi Anda berakhir/);
   assert.doesNotMatch(error, /AUTH_REQUIRED/);
-  assert.match(render(h(DataTable, { ...base, empty: h('p', null, 'Belum ada pengguna') })), /Belum ada pengguna/);
+  assert.match(render(h(DataTable, { ...base, empty: h('p', null, 'No users yet') })), /Belum ada pengguna/);
   assert.match(render(h(DataTable, { ...base, filtered: true })), /Tidak ada hasil/);
   for (const html of [render(h(DataTable, { ...base, loading: true })), error]) assert.doesNotMatch(html, /<table/);
-  assert.match(render(h(DataTable, { ...base, toolbar: h('input', { 'aria-label': 'Cari' }) })), /aria-label="Cari"/);
+  assert.match(render(h(DataTable, { ...base, toolbar: h('input', { 'aria-label': 'Search' }) })), /aria-label="Cari"/);
 });
 
 test('RowActions renders an accessible trigger and nothing when every action is hidden', async () => {
   const { RowActions } = await load('RowActions');
-  const html = render(h(RowActions, { label: 'Aksi untuk ani@contoh.test', items: [{ id: 'edit', label: 'Ubah', onSelect() {} }] }));
+  const html = render(h(RowActions, { label: 'Aksi untuk ani@contoh.test', items: [{ id: 'edit', label: 'Edit', onSelect() {} }] }));
   assert.match(html, /<button[^>]*aria-label="Aksi untuk ani@contoh.test"[^>]*aria-haspopup="menu"/);
   assert.equal(render(h(RowActions, { label: 'x', items: [{ id: 'a', label: 'A', onSelect() {}, hidden: true }] })), '');
 });
@@ -147,14 +147,14 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
     area: 'dev', brand: { name: 'EagleEye View', badge: 'Developer' }, groups: navForArea('dev'), pathname: '/ai/usage', user,
     areaLink: areaSwitchFor('dev', user.role), onSignOut() {},
   }, h('h1', null, 'Isi halaman')))));
-  assert.ok(html.indexOf('Lewati ke konten') < html.indexOf('data-slot="sidebar-wrapper"'), 'skip link precedes everything');
+  assert.ok(html.indexOf('Skip to content') < html.indexOf('data-slot="sidebar-wrapper"'), 'skip link precedes everything');
   assert.match(html, /<a href="#main-content"/);
   assert.match(html, /<main id="main-content" tabindex="-1"/);
   assert.equal((html.match(/<main/g) ?? []).length, 1, 'exactly one main landmark');
   assert.match(html, /<nav aria-label="Navigasi Developer"/);
   assert.match(html, /<nav aria-label="Breadcrumb"/);
-  const labels = ['Ringkasan sistem', 'Pengguna &amp; Admin', 'Log Login', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Umum', 'Penyedia AI', 'Persona',
-    'Pemakaian &amp; Biaya', 'Server Log', 'Audit Log', 'Kesehatan Sistem', 'Audit'];
+  const labels = ['System Overview', 'Pengguna &amp; Admin', 'Login Log', 'Kill switch', 'Usage', 'API Keys', 'AI Configuration', 'General', 'AI Provider', 'Persona',
+    'Pemakaian &amp; Biaya', 'Server Log', 'Audit Log', 'System Health', 'Audit'];
   let at = 0;
   for (const text of labels) {
     const next = html.indexOf(`>${text}<`, at);
@@ -162,7 +162,7 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
     at = next;
   }
   for (const gone of ['Akses', 'Kendali', 'Aktivitas', 'Sakelar', 'Log server']) assert.ok(!html.includes(gone), `no "${gone}"`);
-  assert.ok(!html.includes('Katalog komponen'), 'hidden item is not in the sidebar');
+  assert.ok(!html.includes('Component catalog'), 'hidden item is not in the sidebar');
   assert.match(html, />Developer</);
   assert.match(html, /aria-current="page"[^>]*>(?:<svg[^>]*><\/svg>|<svg[\s\S]*?<\/svg>)<span>Pemakaian &amp; Biaya/);
   assert.match(html, /data-account-menu[^>]*>[\s\S]*?<span class="sr-only">Menu akun: <\/span>dev@example\.test/, 'the account menu name contains its visible text');
@@ -180,7 +180,7 @@ test('AppShell (admin): no Developer badge and the four admin items', async () =
   }, null))));
   assert.doesNotMatch(html, />Developer</);
   assert.match(html, /<nav aria-label="Navigasi Admin"/);
-  for (const text of ['Ringkasan', 'Pengguna', 'Log Login', 'Audit']) assert.ok(html.includes(`>${text}<`), text);
+  for (const text of ['Overview', 'Users', 'Login Log', 'Audit']) assert.ok(html.includes(`>${text}<`), text);
   assert.ok(!html.includes('Aktivitas'));
 });
 

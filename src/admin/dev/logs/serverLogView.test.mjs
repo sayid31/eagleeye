@@ -27,7 +27,7 @@ test('isFiltered tells "no match" from "empty log"', () => {
 });
 
 test('levelBadge: icon + word per level, unknown reads as info', () => {
-  assert.deepEqual(['error', 'warn', 'info'].map((l) => levelBadge(l).label), ['Error', 'Peringatan', 'Info']);
+  assert.deepEqual(['error', 'warn', 'info'].map((l) => levelBadge(l).label), ['Error', 'Warning', 'Info']);
   assert.equal(levelBadge('error').tone, 'destructive');
   assert.equal(levelBadge('???').level, 'info');
 });
@@ -39,7 +39,7 @@ test('logRow: relative + absolute time, repeat count, context', () => {
   assert.equal(row.time.iso, new Date(entry.lastAt).toISOString());
   assert.equal(row.repeat, '12 kali');
   assert.equal(row.context, 'status=502');
-  assert.equal(row.source, 'Layanan eksternal');
+  assert.equal(row.source, 'External services');
   assert.equal(logRow({ ...entry, count: 1 }, NOW).repeat, '');
 });
 

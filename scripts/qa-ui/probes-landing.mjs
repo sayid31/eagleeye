@@ -45,15 +45,15 @@ export const LANDING_PROBES = [
         dark: document.documentElement.classList.contains('dark'), stored: localStorage.getItem('gev-theme'),
         pressed: [...document.querySelectorAll('.ld-theme [aria-pressed="true"]')].map((el) => el.getAttribute('aria-label')),
       }));
-      assert.deepEqual(await state(), { dark: false, stored: 'light', pressed: ['Terang'] });
+      assert.deepEqual(await state(), { dark: false, stored: 'light', pressed: ['Light'] });
       await page.focus('.ld-theme [data-theme-value="dark"]');
       await page.keyboard.press('Enter');
-      assert.deepEqual(await state(), { dark: true, stored: 'dark', pressed: ['Gelap'] });
+      assert.deepEqual(await state(), { dark: true, stored: 'dark', pressed: ['Dark'] });
       await page.focus('.ld-theme [data-theme-value="system"]');
       await page.keyboard.press('Space');
-      assert.deepEqual(await state(), { dark: false, stored: 'system', pressed: ['Sistem'] }, 'Sistem follows the emulated OS (light)');
+      assert.deepEqual(await state(), { dark: false, stored: 'system', pressed: ['System'] }, 'Sistem follows the emulated OS (light)');
       await page.click('.ld-theme [data-theme-value="light"]');
-      assert.deepEqual(await state(), { dark: false, stored: 'light', pressed: ['Terang'] });
+      assert.deepEqual(await state(), { dark: false, stored: 'light', pressed: ['Light'] });
     },
   },
   {
@@ -78,8 +78,8 @@ export const LANDING_PROBES = [
       assert.equal(await expanded(), 'false', 'choosing a link closes the menu');
     },
   },
-  ctaProbe('anonymous', 'Masuk', '/login'),
-  ctaProbe('user', 'Buka Konsol', '/app'),
+  ctaProbe('anonymous', 'Sign in', '/login'),
+  ctaProbe('user', 'Open Console', '/app'),
   ctaProbe('admin', 'Panel Admin', '/admin'),
   ctaProbe('super_admin', 'Developer Console', '/dev'),
   {

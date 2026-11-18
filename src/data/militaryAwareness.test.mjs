@@ -1532,7 +1532,7 @@ test('installation summaries disclose viewport-scoped coverage', () => {
   assert.match(empty.reason, /bukan survei lengkap 250 km/i);
 
   const unavailable = summarizeInstallationViewport([], { available: false, stale: false });
-  assert.equal(unavailable.reason, 'feed tidak tersedia');
+  assert.equal(unavailable.reason, 'feed unavailable');
 });
 
 test('compact Context snapshots retain installation coverage', () => {
@@ -1544,14 +1544,14 @@ test('compact Context snapshots retain installation coverage', () => {
       id: 'military-installations',
       label: 'Instalasi terpetakan',
       source: 'OpenStreetMap',
-      coverage: 'HANYA VIEWPORT SAAT INI',
+      coverage: 'CURRENT VIEWPORT ONLY',
       summary: {
         relationship: 'NEARBY', count: 2, reason: 'mapped matches', nearest: [],
       },
     }],
   }, { canNext: true });
 
-  assert.equal(snapshot.cohorts[0].coverage, 'HANYA VIEWPORT SAAT INI');
+  assert.equal(snapshot.cohorts[0].coverage, 'CURRENT VIEWPORT ONLY');
   assert.deepEqual(snapshot.navigation, { canNext: true });
 });
 
@@ -2429,7 +2429,7 @@ test('the contacts window reports exactly the counts the panel renders', () => {
     cohorts: [
       { id: 'flights', label: 'Flights', source: 'OpenSky', summary: { relationship: 'nearby', count: 42, reason: 'observed', nearest: [] } },
       { id: 'military', label: 'Penerbangan militer', source: 'adsb.lol', summary: { relationship: 'nearby', count: 13, reason: 'observed', nearest: [] } },
-      { id: 'ais-live-vessels', label: 'Kapal AIS', source: 'AISStream', summary: { relationship: 'unknown', count: null, reason: 'feed tidak tersedia', nearest: [] } },
+      { id: 'ais-live-vessels', label: 'AIS vessels', source: 'AISStream', summary: { relationship: 'unknown', count: null, reason: 'feed unavailable', nearest: [] } },
     ],
   };
   const snapshot = buildAwarenessContextSnapshot(results, {});

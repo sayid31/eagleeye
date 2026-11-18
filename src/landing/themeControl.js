@@ -9,7 +9,7 @@
 import { THEME_PREFERENCES, normalizePreference } from '../lib/themeCore.js';
 
 /** Accessible names of the three choices (also used as `aria-label`: the buttons are icon-only). */
-export const THEME_LABELS = Object.freeze({ light: 'Terang', dark: 'Gelap', system: 'Sistem' });
+export const THEME_LABELS = Object.freeze({ light: 'Light', dark: 'Dark', system: 'System' });
 
 /**
  * State of each button for the current preference.

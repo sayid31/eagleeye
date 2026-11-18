@@ -135,7 +135,7 @@ export const cctvCalibrationMixin = {
     if (this._cctvAdjustBtn) {
       const adjustOn = !!this._cctvState?.calibrationMode;
       this._cctvAdjustBtn.classList.toggle('active', adjustOn && canCalibrate);
-      this._cctvAdjustBtn.textContent = adjustOn ? 'ATUR AKTIF' : 'ATUR';
+      this._cctvAdjustBtn.textContent = adjustOn ? 'ADJUST ACTIVE' : 'ADJUST';
       this._cctvAdjustBtn.disabled = !canCalibrate;
     }
     if (this._cctvCalReadout) {

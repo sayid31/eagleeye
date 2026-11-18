@@ -23,7 +23,7 @@ export const AIS_LIVE_FETCH_TIMEOUT_MS = 20000;
 /** Bounded wait for the first accepted vessel position in one enabled session. */
 export const AIS_FIRST_CONNECT_GRACE_MS = 30000;
 
-export const AIS_FIRST_CONNECT_LABEL = 'menunggu posisi AIS pertama…';
+export const AIS_FIRST_CONNECT_LABEL = 'waiting for the first AIS position…';
 
 export const VISIBILITY_UPDATE_MS = 800;
 

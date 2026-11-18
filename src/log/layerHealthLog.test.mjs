@@ -62,7 +62,7 @@ test('degraded, stale and fallback are warnings', () => {
 test('layerFaultReason prefers the layer error and accepts Error objects', () => {
   assert.equal(layerFaultReason({ error: 'a', lastError: 'b' }), 'a');
   assert.equal(layerFaultReason({ managerRefreshError: new Error('refresh failed') }), 'refresh failed');
-  assert.equal(layerFaultReason({}), 'tanpa keterangan dari layer');
+  assert.equal(layerFaultReason({}), 'no note from the layer');
 });
 
 test('a failed enable from the manager becomes one error event', () => {

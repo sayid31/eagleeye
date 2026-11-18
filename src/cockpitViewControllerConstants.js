@@ -34,9 +34,9 @@ export const COCKPIT_GROUND_WAIT_TIMEOUT_MS = 5000;
 
 export const COCKPIT_BRIEF_ROTATE_MS = 9000;
 
-export const COCKPIT_BRIEF_CYCLE_OFF_HELP = 'Putar halaman ringkasan otomatis setiap 9 detik (Sinyal → Berita → Lokal). Berhenti sementara saat kursor atau fokus ada di panel. Data sinyal live tetap diperbarui terus-menerus.';
+export const COCKPIT_BRIEF_CYCLE_OFF_HELP = 'Auto-rotate summary pages every 9 seconds (Signal → News → Local). Pauses while the cursor or focus is on the panel. Live signal data keeps updating.';
 
-export const COCKPIT_BRIEF_CYCLE_ON_HELP = 'Hentikan perputaran halaman otomatis. Sebelumnya, Berikutnya, dan tab SIN/BERITA/LOKAL tetap tersedia.';
+export const COCKPIT_BRIEF_CYCLE_ON_HELP = 'Pause automatic page rotation. Previous, Next, and the SIG/NEWS/LOCAL tabs remain available.';
 
 export const COCKPIT_REGIONAL_REFRESH_MS = 5 * 60_000;
 
@@ -47,13 +47,13 @@ export const COCKPIT_BRIEF_PAGES = [
     id: 'signals',
     kicker: 'SINYAL LIVE',
     subtitle: 'PING TERAMATI / TERPETAKAN',
-    source: 'PERISTIWA BERSUMBER · TANPA BERITA SINTETIS',
+    source: 'SOURCED EVENTS · NO SYNTHETIC NEWS',
   },
   {
     id: 'news',
     kicker: 'BERITA REGIONAL',
-    subtitle: 'LIPUTAN TERBARU SESUAI LOKASI',
-    source: 'GOOGLE NEWS RSS · KUERI LOKASI · TERBARU',
+    subtitle: 'LATEST COVERAGE MATCHING LOCATION',
+    source: 'GOOGLE NEWS RSS · LOCATION QUERY · LATEST',
   },
   {
     id: 'local',

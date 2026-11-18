@@ -621,7 +621,7 @@ test('reports bounded installation requests as loading and clears on settlement'
     assert.equal(militaryInstallationsLayer.getStats().loading, true);
     assert.equal(
       militaryInstallationsLayer.getStats().loadingLabel,
-      'memuat konteks instalasi terpetakan',
+      'loading mapped installation context',
     );
     resolveInstallations({
       ok: true,

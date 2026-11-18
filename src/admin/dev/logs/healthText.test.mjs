@@ -60,6 +60,6 @@ test('unknown details and labels pass through unchanged (better English than a w
 
 test('describeOverall counts problems and warnings in Indonesian', () => {
   const report = (statuses) => ({ sections: [{ items: statuses.map((status) => ({ status })) }] });
-  assert.equal(describeOverall(report(['ok', 'off', 'unknown'])), 'Semua pengecekan baik');
+  assert.equal(describeOverall(report(['ok', 'off', 'unknown'])), 'All checks are healthy');
   assert.equal(describeOverall(report(['error', 'error', 'warn'])), '2 masalah · 1 peringatan');
 });

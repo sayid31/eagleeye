@@ -310,12 +310,12 @@ export function createFirmsHeatmapLayer({
      */
     getStats() {
       const now = Date.now();
-      const staleText = _lastUpdate ? `USANG · tersimpan ${formatAge(now - _lastUpdate) || '<1h'}` : 'USANG';
+      const staleText = _lastUpdate ? `STALE · stored ${formatAge(now - _lastUpdate) || '<1h'}` : 'USANG';
       let loadingLabel = '';
       if (_loading) {
         loadingLabel = _fires.length ? 'menyegarkan...' : 'memuat...';
       } else if (_keyRequired) {
-        loadingLabel = 'KUNCI DIPERLUKAN';
+        loadingLabel = 'KEY REQUIRED';
       } else if (_stale) {
         loadingLabel = staleText;
       } else if (_error) {
@@ -323,7 +323,7 @@ export function createFirmsHeatmapLayer({
       } else if (_partialReason) {
         loadingLabel = _partialReason;
       } else if (_lastUpdate) {
-        loadingLabel = `LIVE · diperbarui ${formatAgoMinutes(now - _lastUpdate)}`;
+        loadingLabel = `LIVE · updated ${formatAgoMinutes(now - _lastUpdate)}`;
       }
       return {
         count: _count,
@@ -332,7 +332,7 @@ export function createFirmsHeatmapLayer({
         loading: _loading,
         stale: _stale,
         degraded: Boolean(_partialReason),
-        error: _keyRequired ? 'KUNCI DIPERLUKAN' : (_stale ? staleText : (_error || _partialReason)),
+        error: _keyRequired ? 'KEY REQUIRED' : (_stale ? staleText : (_error || _partialReason)),
         loadingLabel,
       };
     },
@@ -478,7 +478,7 @@ export function createFirmsHeatmapLayer({
       if (reselected) selectFire(reselected);
     } catch (error) {
       console.warn(`[Data:${id}] FIRMS live load failed:`, error);
-      _error = 'feed live tidak tersedia';
+      _error = 'live feed unavailable';
     } finally {
       _loading = false;
     }
@@ -1355,9 +1355,9 @@ function cellAccent(normalized) {
 
 /** Millisecond delta → "<1m ago" / "Xm ago" / "Xh ago" (fresh-feed readout). */
 function formatAgoMinutes(deltaMs) {
-  if (!Number.isFinite(deltaMs) || deltaMs < 0) return 'baru saja';
+  if (!Number.isFinite(deltaMs) || deltaMs < 0) return 'just now';
   const minutes = Math.floor(deltaMs / 60000);
-  if (minutes < 1) return '<1m lalu';
-  if (minutes < 90) return `${minutes}m lalu`;
-  return `${Math.round(minutes / 60)}h lalu`;
+  if (minutes < 1) return '<1m ago';
+  if (minutes < 90) return `${minutes}m ago`;
+  return `${Math.round(minutes / 60)}h ago`;
 }

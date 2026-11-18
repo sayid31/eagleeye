@@ -22,13 +22,13 @@ function strings(value, seen = new Set()) {
 
 test('errorMessage: a known code maps to its Indonesian sentence', () => {
   assert.equal(errorMessage('FEATURE_DISABLED'), ERROR_MESSAGES.FEATURE_DISABLED);
-  assert.equal(errorMessage({ error: 'EMAIL_TAKEN' }), 'Email ini sudah dipakai akun lain.');
-  assert.equal(errorMessage(Object.assign(new Error('x'), { code: 'REAUTH_FAILED', status: 403 })), 'Password Anda salah.');
+  assert.equal(errorMessage({ error: 'EMAIL_TAKEN' }), 'This email is already used by another account.');
+  assert.equal(errorMessage(Object.assign(new Error('x'), { code: 'REAUTH_FAILED', status: 403 })), 'Your password is incorrect.');
 });
 
 test('errorMessage: detail-bearing codes name the reason or the field', () => {
   assert.equal(errorMessage({ error: 'PASSWORD_WEAK', reason: 'too_short', min: 15 }), 'Password minimal 15 karakter.');
-  assert.equal(errorMessage({ error: 'PASSWORD_WEAK', reason: 'matches_identity' }), 'Password tidak boleh sama dengan email atau nama.');
+  assert.equal(errorMessage({ error: 'PASSWORD_WEAK', reason: 'matches_identity' }), 'Password cannot be the same as email or name.');
   assert.equal(errorMessage({ error: 'PASSWORD_WEAK' }), ERROR_MESSAGES.PASSWORD_WEAK);
   assert.equal(errorMessage({ error: 'INVALID_INPUT', field: 'email' }), 'Isian email tidak valid.');
   assert.equal(errorMessage({ error: 'INVALID_INPUT', field: 'nope' }), ERROR_MESSAGES.INVALID_INPUT);
@@ -66,7 +66,7 @@ test('glossary: discouraged terms are found as whole phrases only, case-insensit
   assert.deepEqual(findGlossaryViolations('Matikan Sakelar darurat').map((row) => row.use), ['Kill switch']);
   assert.deepEqual(findGlossaryViolations('buka log server sekarang').map((row) => row.use), ['Server Log']);
   assert.deepEqual(findGlossaryViolations('Kill switch dan Server Log'), []);
-  assert.deepEqual(findGlossaryViolations('Jejak audit dan Anggaran provider').map((row) => row.use), ['Audit Log', 'Pemakaian & budget']);
+  assert.deepEqual(findGlossaryViolations('Jejak audit dan Anggaran provider').map((row) => row.use), ['Audit Log', 'Usage & budget']);
   assert.deepEqual(findGlossaryViolations('killswitches'), []);
   assert.ok(GLOSSARY.length >= 2);
 });

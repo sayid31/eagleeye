@@ -49,14 +49,14 @@ test('open feed with vessels is healthy (null)', () => {
 test('open feed without a received message is not a fresh healthy update', () => {
   assert.equal(
     deriveAisFeedError({ status: 'open', lastMessageAt: null, error: null }, 0),
-    'menunggu pesan AIS pertama…',
+    'waiting for the first AIS message…',
   );
 });
 
 test('open feed with a message but zero accepted positions stays non-fresh', () => {
   assert.equal(
     deriveAisFeedError({ status: 'open', lastMessageAt: 123, error: null }, 0),
-    'menunggu posisi AIS yang dapat dipakai…',
+    'waiting for a usable AIS position…',
   );
 });
 
@@ -87,7 +87,7 @@ test('raw rows that all fail normalization do not satisfy AIS product health', (
   });
   assert.equal(snapshot.rawRowCount, 1);
   assert.equal(snapshot.acceptedRowCount, 0);
-  assert.equal(snapshot.error, 'menunggu posisi AIS yang dapat dipakai…');
+  assert.equal(snapshot.error, 'waiting for a usable AIS position…');
 });
 
 test('accepted cached rows remain usable while transport reconnects', () => {
@@ -102,8 +102,8 @@ test('accepted cached rows remain usable while transport reconnects', () => {
 
 test('missing key with no rows surfaces a clean reason', () => {
   assert.equal(
-    deriveAisFeedError({ status: 'missing-key', error: 'AISSTREAM_API_KEY belum diatur' }, 0),
-    'AISSTREAM_API_KEY belum diatur',
+    deriveAisFeedError({ status: 'missing-key', error: 'AISSTREAM_API_KEY not set' }, 0),
+    'AISSTREAM_API_KEY not set',
   );
 });
 
@@ -140,11 +140,11 @@ test("'live' is the healthy status and reads exactly like the older 'open'", () 
   assert.equal(deriveAisFeedError({ status: 'live', lastMessageAt: 1, error: null }, 42), null);
   assert.equal(
     deriveAisFeedError({ status: 'live', lastMessageAt: null, error: null }, 0),
-    'menunggu pesan AIS pertama…',
+    'waiting for the first AIS message…',
   );
   assert.equal(
     deriveAisFeedError({ status: 'live', lastMessageAt: 123, error: null }, 0),
-    'menunggu posisi AIS yang dapat dipakai…',
+    'waiting for a usable AIS position…',
   );
 });
 
@@ -158,7 +158,7 @@ test('a stale feed is surfaced even though cached vessels are still on screen', 
 test('a stale feed without a silence figure still says the feed is silent', () => {
   assert.equal(
     deriveAisFeedError({ status: 'stale', lastMessageAt: 5 }, 0),
-    'feed senyap — tidak ada data AIS',
+    'feed silent — no AIS data',
   );
 });
 
@@ -180,7 +180,7 @@ test('DOWN is a visible terminal state, not a silent retry', () => {
 test('a rejected API key reads as actionable, not as a countdown', () => {
   assert.equal(
     deriveAisFeedError({ status: 'auth-failed', reconnectAttempt: 3 }, 4_000),
-    'Kunci API ditolak — periksa AISSTREAM_API_KEY',
+    'API key rejected — check AISSTREAM_API_KEY',
   );
 
   const runtime = makeFakeAisRuntime(1_000_000);
@@ -309,7 +309,7 @@ test('zero accepted rows preserve warm vessel selection, trail, and freshness ti
       loading: false,
       loadingLabel: '',
       stale: true,
-      error: 'menunggu posisi AIS yang dapat dipakai…',
+      error: 'waiting for a usable AIS position…',
       status: undefined,
       lastUpdate: 456,
       transportStatus: 'open',
@@ -348,7 +348,7 @@ test('open first load stays LOADING for one bounded first-connect grace period',
     assert.equal(feed.lastUpdate, null);
     assert.equal(feed.stale, false);
     assert.equal(feed.loading, true);
-    assert.equal(feed.loadingLabel, 'menunggu posisi AIS pertama…');
+    assert.equal(feed.loadingLabel, 'waiting for the first AIS position…');
     assert.equal(feed.error, null);
     assert.equal(feed.status, undefined);
     assert.equal(feed.firstConnectPhase, 'loading');
@@ -365,7 +365,7 @@ test('open first load stays LOADING for one bounded first-connect grace period',
     clock.advance(1);
     const expired = _getVesselFeedStateForTest();
     assert.equal(expired.loading, false);
-    assert.equal(expired.error, 'menunggu pesan AIS pertama…');
+    assert.equal(expired.error, 'waiting for the first AIS message…');
     assert.equal(expired.status, 'unavailable');
     assert.equal(expired.firstConnectPhase, 'unavailable');
     assert.equal(layerFeedState(aisLiveVesselsLayer.getStats()), 'unavailable');
@@ -405,13 +405,13 @@ test('definitive AIS transport failures end grace immediately', () => {
     _beginAisSessionForTest();
     _applyAisFeedSnapshotForTest({}, {
       status: 'missing-key',
-      error: 'AISSTREAM_API_KEY belum diatur',
+      error: 'AISSTREAM_API_KEY not set',
       rows: [],
     });
     const feed = _getVesselFeedStateForTest();
     assert.equal(feed.loading, false);
     assert.equal(feed.status, 'unavailable');
-    assert.equal(feed.error, 'AISSTREAM_API_KEY belum diatur');
+    assert.equal(feed.error, 'AISSTREAM_API_KEY not set');
     assert.equal(feed.firstConnectPhase, 'unavailable');
     assert.equal(clock.activeCount(), 0);
   } finally {
@@ -463,7 +463,7 @@ test('first accepted position ends grace and warm data survives later open silen
     assert.equal(feed.loading, false);
     assert.equal(feed.firstConnectPhase, 'ready');
     assert.equal(feed.stale, true);
-    assert.equal(feed.error, 'menunggu posisi AIS yang dapat dipakai…');
+    assert.equal(feed.error, 'waiting for a usable AIS position…');
   } finally {
     _setVesselStateForTest({ enabled: false });
     _setVesselOverlayHostForTest();
@@ -520,7 +520,7 @@ test('HTTP rejection ends first-connect grace without waiting for its deadline',
     status: 503,
     json: async () => ({
       status: 'missing-key',
-      error: 'AISSTREAM_API_KEY belum diatur',
+      error: 'AISSTREAM_API_KEY not set',
     }),
   });
   console.warn = () => {};
@@ -532,7 +532,7 @@ test('HTTP rejection ends first-connect grace without waiting for its deadline',
     const feed = _getVesselFeedStateForTest();
     assert.equal(feed.loading, false);
     assert.equal(feed.status, 'unavailable');
-    assert.equal(feed.error, 'AISSTREAM_API_KEY belum diatur');
+    assert.equal(feed.error, 'AISSTREAM_API_KEY not set');
     assert.equal(feed.firstConnectPhase, 'unavailable');
     assert.equal(clock.activeCount(), 0);
   } finally {
@@ -590,7 +590,7 @@ test('superseded AIS response cannot mutate or finalize a replacement request', 
     feed = _getVesselFeedStateForTest();
     assert.equal(feed.loading, false);
     assert.equal(feed.lastUpdate, 200);
-    assert.equal(feed.error, 'menunggu pesan AIS pertama…');
+    assert.equal(feed.error, 'waiting for the first AIS message…');
     assert.equal(feed.stale, true);
     assert.equal(feed.selectedMmsi, replacement.mmsi);
     assert.equal(feed.trailMmsi, replacement.mmsi);

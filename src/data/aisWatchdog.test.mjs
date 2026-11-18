@@ -94,7 +94,7 @@ test('keyless install reports the feature as off and never opens a socket', () =
   assert.deepEqual(h.types(), []);
   const snap = h.snapshot();
   assert.equal(snap.status, 'missing-key');
-  assert.equal(snap.error, 'AISSTREAM_API_KEY belum diatur');
+  assert.equal(snap.error, 'AISSTREAM_API_KEY not set');
   assert.equal(snap.reconnectAttempt, 0);
   assert.equal(snap.nextAttemptAt, null);
 });

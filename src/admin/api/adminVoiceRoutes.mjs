@@ -140,10 +140,10 @@ export function installAdminVoiceRoutes(middlewares, {
     try {
       parsed = JSON.parse(await readRequestBody(req, MAX_BODY_BYTES));
     } catch {
-      return sendJson(res, 400, { error: 'Body bukan JSON yang valid atau terlalu besar' });
+      return sendJson(res, 400, { error: 'Body is not valid JSON or is too large' });
     }
     const result = validateVoiceSettings(parsed);
-    if (!result.ok) return sendJson(res, 422, { error: 'Pengaturan tidak valid', details: result.errors });
+    if (!result.ok) return sendJson(res, 422, { error: 'Invalid settings', details: result.errors });
     const sections = changedSections(store.read().settings, result.value);
     try {
       store.write(result.value);

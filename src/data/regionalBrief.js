@@ -93,9 +93,9 @@ export function normalizeRegionalWeather(payload) {
 /** Translate the WMO weather code used by Open-Meteo into concise cockpit copy. */
 export function weatherCodeLabel(code) {
   const value = Number(code);
-  if (!Number.isFinite(value)) return 'KONDISI TIDAK DIKETAHUI';
+  if (!Number.isFinite(value)) return 'CONDITIONS UNKNOWN';
   if (value === 0) return 'CERAH';
-  if ([1, 2].includes(value)) return 'BERAWAN SEBAGIAN';
+  if ([1, 2].includes(value)) return 'PARTLY CLOUDY';
   if (value === 3) return 'MENDUNG';
   if ([45, 48].includes(value)) return 'BERKABUT';
   if (value >= 51 && value <= 57) return 'GERIMIS';

@@ -16,9 +16,9 @@ syncWeatherToggle(enabled) {
     this.weatherToggle.setAttribute('aria-pressed', String(active));
     this.weatherToggle.setAttribute(
       'aria-label',
-      `${active ? 'Matikan' : 'Nyalakan'} efek cuaca kokpit`,
+      `${active ? 'Turn off' : 'Turn on'} efek cuaca kokpit`,
     );
-    this.weatherToggle.title = `${active ? 'Matikan' : 'Nyalakan'} efek cuaca kokpit`;
+    this.weatherToggle.title = `${active ? 'Turn off' : 'Turn on'} efek cuaca kokpit`;
     if (this.weatherState) this.weatherState.textContent = active ? 'HIDUP' : 'MATI';
   },
 
@@ -79,7 +79,7 @@ dispatchCockpitModeChanged(active, info = null) {
     this._tr3bSignature = signature;
     this.tr3bToggle.hidden = !icao24;
     this.tr3bToggle.setAttribute('aria-pressed', converted ? 'true' : 'false');
-    this.tr3bToggle.title = converted ? 'Pulihkan pesawat asli' : 'Klasifikasi ulang sebagai TR-3B';
+    this.tr3bToggle.title = converted ? 'Restore original aircraft' : 'Reclassify as TR-3B';
   },
 
 syncEntry() {
@@ -150,8 +150,8 @@ setVisionMode(mode, { revealParameters = false } = {}) {
     const names = { optical: inherited, crt: 'CRT', nvg: 'Penglihatan malam', thermal: 'Termal', noir: 'Noir' };
     if (this.visionCurrent) {
       this.visionCurrent.dataset.cockpitVision = next;
-      this.visionCurrent.setAttribute('aria-label', `Gaya penglihatan kokpit saat ini: ${names[next]}. Aktifkan untuk gaya berikutnya.`);
-      this.visionCurrent.title = `Gaya saat ini: ${names[next]} — klik untuk berikutnya`;
+      this.visionCurrent.setAttribute('aria-label', `Current cockpit vision style: ${names[next]}. Activate for the next style.`);
+      this.visionCurrent.title = `Current style: ${names[next]} — click for next`;
     }
     if (this.visionCurrentLabel) this.visionCurrentLabel.textContent = labels[next];
     this.onVisionChange?.(next, this.active, { revealParameters });

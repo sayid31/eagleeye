@@ -10,7 +10,7 @@ test('isGuidanceStatus recognises the prompt states only', () => {
 });
 
 test('a refresh that lands in a guidance state is not a refresh failure', () => {
-  const stats = { status: 'zoom-in', error: 'Perbesar untuk memuat konteks instalasi terpetakan', count: 0 };
+  const stats = { status: 'zoom-in', error: 'Zoom in to load mapped installation context', count: 0 };
   assert.equal(refreshFailureFromStats(stats, 'Mapped Installations'), null);
 });
 

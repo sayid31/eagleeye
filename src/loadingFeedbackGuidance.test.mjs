@@ -14,7 +14,7 @@ const zoomInStats = {
   lastUpdate: null,
   stale: false,
   saturated: false,
-  error: 'Perbesar untuk memuat konteks instalasi terpetakan',
+  error: 'Zoom in to load mapped installation context',
   status: 'zoom-in',
   loading: false,
   loadingLabel: '',
@@ -46,7 +46,7 @@ test('enabling Mapped Installations at a global view does not announce LOAD FAIL
     type: 'visibility', layerId: 'military-installations', enabled: true,
   });
   assert.notEqual(state.terminal, 'error');
-  assert.notEqual(presentLoadingFeedback(state, zoomIn, 250)?.label, 'MUAT GAGAL');
+  assert.notEqual(presentLoadingFeedback(state, zoomIn, 250)?.label, 'LOAD FAILED');
 });
 
 test('empty and idle guidance carry their prompt without failing the batch', () => {
@@ -61,9 +61,9 @@ test('empty and idle guidance carry their prompt without failing the batch', () 
 test('a real failure still fails, and a manager refresh failure outranks guidance', () => {
   const unavailable = normalizeLayerLoading({
     id: 'military-installations', enabled: true, lifecycleState: 'enabled',
-    stats: { status: 'unavailable', error: 'Konteks instalasi tidak tersedia', count: 0 },
+    stats: { status: 'unavailable', error: 'Installation context unavailable', count: 0 },
   });
-  assert.equal(unavailable.error, 'Konteks instalasi tidak tersedia');
+  assert.equal(unavailable.error, 'Installation context unavailable');
   assert.equal(unavailable.unavailable, true);
 
   const refreshFailed = normalizeLayerLoading({
@@ -77,10 +77,10 @@ test('enabling into an unavailable proxy still announces LOAD FAILED', () => {
   const enabling = installations({ loading: true }, 'enabling');
   let state = reduceLoadingFeedback(createLoadingFeedbackState(), enabling, 0);
   state = reduceLoadingFeedback(state, enabling, 200);
-  const failed = installations({ status: 'unavailable', error: 'Konteks instalasi tidak tersedia', count: 0 });
+  const failed = installations({ status: 'unavailable', error: 'Installation context unavailable', count: 0 });
   state = reduceLoadingFeedback(state, failed, 250, {
     type: 'visibility', layerId: 'military-installations', enabled: true,
   });
   assert.equal(state.terminal, 'error');
-  assert.equal(presentLoadingFeedback(state, failed, 250).label, 'MUAT GAGAL');
+  assert.equal(presentLoadingFeedback(state, failed, 250).label, 'LOAD FAILED');
 });

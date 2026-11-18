@@ -28,7 +28,7 @@ test('nameProblem mirrors the server rule (trimmed, 1–80)', () => {
 });
 
 test('roleLabel: Indonesian role names, unknown passes through', () => {
-  assert.equal(roleLabel('user'), 'Pengguna');
+  assert.equal(roleLabel('user'), 'Users');
   assert.equal(roleLabel('admin'), 'Admin');
   assert.match(roleLabel('super_admin'), /Developer/);
   assert.equal(roleLabel('auditor'), 'auditor');
@@ -52,12 +52,12 @@ test('accountApi: update-user sends the trimmed name only; refusals come back as
 });
 
 test('backLinkFor names where the way back goes: map, Admin or Developer', () => {
-  assert.deepEqual(backLinkFor('/app'), { href: '/app', label: 'Kembali ke peta' });
-  assert.deepEqual(backLinkFor('/admin'), { href: '/admin', label: 'Kembali ke Admin' });
-  assert.deepEqual(backLinkFor('/dev'), { href: '/dev', label: 'Kembali ke Developer' });
-  assert.deepEqual(backLinkFor('/dev/users'), { href: '/dev/users', label: 'Kembali ke Developer' });
-  assert.deepEqual(backLinkFor('/devices'), { href: '/devices', label: 'Kembali ke peta' }, 'only /dev and /dev/… are Developer');
-  assert.deepEqual(backLinkFor(''), { href: '/app', label: 'Kembali ke peta' });
+  assert.deepEqual(backLinkFor('/app'), { href: '/app', label: 'Back to map' });
+  assert.deepEqual(backLinkFor('/admin'), { href: '/admin', label: 'Back to Admin' });
+  assert.deepEqual(backLinkFor('/dev'), { href: '/dev', label: 'Back to Developer' });
+  assert.deepEqual(backLinkFor('/dev/users'), { href: '/dev/users', label: 'Back to Developer' });
+  assert.deepEqual(backLinkFor('/devices'), { href: '/devices', label: 'Back to map' }, 'only /dev and /dev/… are Developer');
+  assert.deepEqual(backLinkFor(''), { href: '/app', label: 'Back to map' });
 });
 
 test('accountTab: ?tab=security opens Keamanan, anything else the profile', () => {

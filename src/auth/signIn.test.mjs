@@ -87,7 +87,7 @@ test('deactivated account: password correct → "Akun dinonaktifkan"; an open se
   assert.equal((await t.request('/api/log', { cookie })).status, 401);
   const again = await t.signIn('gone@example.test', PASSWORD);
   assert.equal(again.res.status, 403);
-  assert.deepEqual(await again.res.json(), { code: 'ACCOUNT_DISABLED', message: 'Akun dinonaktifkan, hubungi admin' });
+  assert.deepEqual(await again.res.json(), { code: 'ACCOUNT_DISABLED', message: 'Account deactivated, contact an admin' });
   assert.equal((await t.signIn('gone@example.test', 'wrong-password!!')).res.status, 401, 'a wrong password never reveals the state');
 });
 
@@ -131,6 +131,6 @@ test('env email: CLI password → super_admin; an admin-set password for an env 
   await ctx.adapter.update({ model: 'user', where: [{ field: 'email', value: OWNER_EMAIL }], update: { passwordSetBy: 'admin' } });
   const refused = await t.signIn(OWNER_EMAIL, OWNER_PASSWORD);
   assert.equal(refused.res.status, 403);
-  assert.deepEqual(await refused.res.json(), { code: 'GOOGLE_SIGN_IN_REQUIRED', message: 'Akun ini masuk lewat Google' });
+  assert.deepEqual(await refused.res.json(), { code: 'GOOGLE_SIGN_IN_REQUIRED', message: 'This account signs in with Google' });
   await t.state.services.bootstrap.setSuperAdminPassword(OWNER_EMAIL, OWNER_PASSWORD);
 });

@@ -66,7 +66,7 @@ test('createEventBudget resets each minute', () => {
 });
 
 test('admin log: guard first, then query with filters, then clear with a trace and an audit entry', async () => {
-  const denied = setup({ guard: () => ({ ok: false, status: 401, error: 'Login diperlukan' }) });
+  const denied = setup({ guard: () => ({ ok: false, status: 401, error: 'Login required' }) });
   assert.equal((await denied.call('/api/admin/log')).status, 401);
   assert.equal((await denied.call('/api/admin/log', { method: 'DELETE' })).status, 401);
 

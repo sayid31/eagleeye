@@ -78,14 +78,14 @@ export const cameraAngleMixin = {
       return {
         ok: false,
         cameraAngle: getCameraAngleMode(),
-        error: 'Opsi sudut kamera harus boolean',
+        error: 'The camera angle option must be a boolean',
       };
     }
     if (typeof tilt !== 'boolean') {
       return {
         ok: false,
         cameraAngle: getCameraAngleMode(),
-        error: 'Opsi sudut kamera harus boolean',
+        error: 'The camera angle option must be a boolean',
       };
     }
     if (syncShare) this.shareLinkManager?.claimRestoreLane?.('visual');

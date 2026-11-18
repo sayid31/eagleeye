@@ -81,13 +81,13 @@ export function installAnswerJudgeRoute(middlewares, {
 
   registerApiRoute(middlewares, '/api/voice/judge', 'ai', async (req, res) => {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
-    if (!isSameOriginJson(req)) return sendJson(res, 403, { error: 'Origin tidak diizinkan' });
+    if (!isSameOriginJson(req)) return sendJson(res, 403, { error: 'Origin not allowed' });
     if (!enforceRateLimit(req, res)) return undefined;
     let parsed;
     try {
       parsed = JSON.parse(await readRequestBody(req, MAX_BODY_BYTES));
     } catch {
-      return sendJson(res, 400, { error: 'Body bukan JSON yang valid atau terlalu besar' });
+      return sendJson(res, 400, { error: 'Body is not valid JSON or is too large' });
     }
     const turn = validateJudgeTurn(parsed);
     if (!turn.ok) return sendJson(res, 422, { error: turn.error });

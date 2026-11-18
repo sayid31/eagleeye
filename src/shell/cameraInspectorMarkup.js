@@ -4,12 +4,12 @@
 /** @returns {string} Search HTML, inserted after the CCTV panel header. */
 export function inspectorMarkup() {
   return `
-<section id="cam-inspector" class="cam-inspector" aria-label="Cari kamera">
+<section id="cam-inspector" class="cam-inspector" aria-label="Search cameras">
   <div class="cam-search">
     <span class="material-symbols-outlined" aria-hidden="true">search</span>
     <input id="cam-search-input" type="search" autocomplete="off" spellcheck="false"
-      placeholder="Cari kamera CCTV" aria-label="Cari kamera CCTV" aria-controls="cam-search-results" />
+      placeholder="Search CCTV cameras" aria-label="Search CCTV cameras" aria-controls="cam-search-results" />
   </div>
-  <ul id="cam-search-results" class="cam-search-results" aria-label="Hasil pencarian kamera" hidden></ul>
+  <ul id="cam-search-results" class="cam-search-results" aria-label="Camera search results" hidden></ul>
 </section>`;
 }

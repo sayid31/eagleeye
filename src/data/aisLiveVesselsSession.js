@@ -75,8 +75,8 @@ function scheduleFirstConnectExpiry(sessionId, delayMs) {
     state.firstConnectPhase = 'unavailable';
     state.loadingLabel = '';
     state.error = state.lastMessageAt
-      ? 'menunggu posisi AIS yang dapat dipakai…'
-      : 'menunggu pesan AIS pertama…';
+      ? 'waiting for a usable AIS position…'
+      : 'waiting for the first AIS message…';
     state.stale = state.count > 0;
   }, delayMs);
 }
@@ -97,7 +97,7 @@ function isDefinitiveTransportFailure(status) {
 
 function markAisUnavailable(reason) {
   settleFirstConnectPhase('unavailable');
-  state.error = reason || 'Pemuatan AIS live gagal';
+  state.error = reason || 'Live AIS load failed';
   state.stale = state.count > 0;
 }
 

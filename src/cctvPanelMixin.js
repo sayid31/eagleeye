@@ -180,7 +180,7 @@ export const cctvPanelMixin = {
    */
   async _toggleCctvEnabled(forceState) {
     if (!this._dataManager || !this._dataManager.layers?.has('cctv')) {
-      this._showToast('Layer CCTV tidak tersedia');
+      this._showToast('CCTV layer unavailable');
       return false;
     }
     const enabled = this._dataManager.isEnabled('cctv');
@@ -255,8 +255,8 @@ export const cctvPanelMixin = {
       const mode = state?.coverageMode || (state?.showCoverage ? 'on' : 'off');
       this._cctvCoverageBtn.classList.toggle('active', mode !== 'off');
       this._cctvCoverageBtn.textContent = mode === 'viewshed'
-        ? 'VIEWSHED AKTIF'
-        : mode === 'on' ? 'CAKUPAN AKTIF' : 'CAKUPAN MATI';
+        ? 'VIEWSHED ACTIVE'
+        : mode === 'on' ? 'COVERAGE ACTIVE' : 'CAKUPAN MATI';
       this._cctvCoverageBtn.disabled = !enabled;
     }
 
@@ -294,17 +294,17 @@ export const cctvPanelMixin = {
 
     if (this._cctvMeta) {
       if (activeCamera) {
-        const provider = cctvProviderDisplay(activeCamera.sourceLabel || activeCamera.provider) || 'Sumber Terkonfigurasi';
+        const provider = cctvProviderDisplay(activeCamera.sourceLabel || activeCamera.provider) || 'Configured Source';
         const statusMsg = activeCamera.sourceMessage ? ` · ${activeCamera.sourceMessage}` : '';
         const calBadge = activeCamera.calBadge ? this._calBadgeLabel(activeCamera.calBadge) : '';
         const projLabel = state?.showProjection !== false ? 'MONITOR' : 'OFF';
         this._cctvMeta.textContent = `${activeCamera.city} · HDG ${Math.round(activeCamera.headingDeg)}° · FOV ${Math.round(activeCamera.fovDeg)}° · JARAK ${Math.round(activeCamera.rangeM)}m · ${projLabel}${calBadge ? ` · ${calBadge}` : ''} · ${provider}${statusMsg}`;
       } else if (cameras.length > 0) {
         this._cctvMeta.textContent = enabled
-          ? `${cameras.length} kamera dimuat · klik kamera untuk mengaktifkan`
-          : `${cameras.length} kamera dimuat · nyalakan CCTV untuk mengaktifkan`;
+          ? `${cameras.length} cameras loaded · click a camera to activate`
+          : `${cameras.length} cameras loaded · turn on CCTV to activate`;
       } else {
-        this._cctvMeta.textContent = 'Nyalakan CCTV untuk memuat persimpangan kamera';
+        this._cctvMeta.textContent = 'Turn on CCTV to load camera crossings';
       }
     }
 
@@ -332,7 +332,7 @@ export const cctvPanelMixin = {
     }
 
     this._syncCctvSourceBadge(activeCamera, enabled);
-    this._typeCctvSummary(state?.summary || 'Nyalakan CCTV untuk memulai ringkasan intelijen berbasis kamera.');
+    this._typeCctvSummary(state?.summary || 'Turn on CCTV to start the camera-based intelligence summary.');
   },
 
   /**
@@ -344,7 +344,7 @@ export const cctvPanelMixin = {
    */
   _typeCctvSummary(text) {
     if (!this._cctvSummary) return;
-    const nextText = String(text || '').trim() || 'Ringkasan tidak tersedia.';
+    const nextText = String(text || '').trim() || 'Summary unavailable.';
     if (nextText === this._lastCctvSummaryText) return;
     this._lastCctvSummaryText = nextText;
 

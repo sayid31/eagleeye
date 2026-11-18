@@ -149,7 +149,7 @@ export const coverageWatchdogMixin = {
   _triggerCoverageFallback() {
     if (this._coverageFallbackPending) return;
     this._coverageFallbackPending = true;
-    const message = 'Google 3D tidak punya cakupan foto di sini; menampilkan Esri Satellite';
+    const message = 'Google 3D has no photo coverage here; showing Esri Satellite';
     this._onError?.(message, this.getStack('photoreal'));
     void this.setStack('esri-imagery', { silent: true }).then((state) => {
       if (state?.activeId === 'esri-imagery' || state?.activeId === 'osm') {

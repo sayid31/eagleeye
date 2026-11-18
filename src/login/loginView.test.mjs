@@ -53,10 +53,10 @@ test('Google button: only with next=/dev… AND googleSignIn from /api/me', () =
 });
 
 test('signInErrorText: every outcome in Indonesian; wrong/throttled share one generic text', () => {
-  assert.equal(signInErrorText('INVALID_EMAIL_OR_PASSWORD'), 'Email atau password salah.');
+  assert.equal(signInErrorText('INVALID_EMAIL_OR_PASSWORD'), 'Incorrect email or password.');
   assert.equal(signInErrorText('INVALID_EMAIL'), signInErrorText('INVALID_EMAIL_OR_PASSWORD'));
-  assert.equal(signInErrorText('ACCOUNT_DISABLED'), 'Akun dinonaktifkan, hubungi admin.');
-  assert.equal(signInErrorText('GOOGLE_SIGN_IN_REQUIRED'), 'Akun ini masuk lewat Google.');
+  assert.equal(signInErrorText('ACCOUNT_DISABLED'), 'Account deactivated, contact an admin.');
+  assert.equal(signInErrorText('GOOGLE_SIGN_IN_REQUIRED'), 'This account signs in with Google.');
   assert.match(signInErrorText('RATE_LIMITED'), /Terlalu banyak percobaan/);
   assert.match(signInErrorText('NETWORK'), /tidak bisa dihubungi/);
   assert.equal(signInErrorText('whatever'), SIGN_IN_GENERIC_ERROR);
@@ -71,7 +71,7 @@ test('loginMessage: session notice; Google refusals always generic whatever the 
     assert.deepEqual(loginMessage(q(`next=/dev&notice=google&error=${error}`)), LOGIN_NOTICES.google, error);
   }
   assert.doesNotMatch(LOGIN_NOTICES.google.text, /password|dinonaktifkan/i, 'reveals nothing about the account');
-  assert.deepEqual(loginMessage(q('error=ACCOUNT_DISABLED')), { tone: 'error', text: 'Akun dinonaktifkan, hubungi admin.' });
+  assert.deepEqual(loginMessage(q('error=ACCOUNT_DISABLED')), { tone: 'error', text: 'Account deactivated, contact an admin.' });
   assert.equal(loginMessage(q('notice=bogus')), null);
   assert.equal(loginMessage(q('')), null);
 });

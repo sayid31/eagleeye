@@ -40,19 +40,19 @@ test('LoginForm: labelled email + password, correct autocomplete, autofocus on e
 
 test('LoginForm: a refusal renders one role=alert banner and flags the password field when retrying it is the fix', async () => {
   const { LoginForm } = await load('LoginForm');
-  const html = render(h(LoginForm, { message: null, error: { code: 'INVALID_EMAIL_OR_PASSWORD', text: 'Email atau password salah.' }, busy: null, onSubmit: noop, onGoogle: null }));
+  const html = render(h(LoginForm, { message: null, error: { code: 'INVALID_EMAIL_OR_PASSWORD', text: 'Incorrect email or password.' }, busy: null, onSubmit: noop, onGoogle: null }));
   assert.equal((html.match(/role="alert"/g) ?? []).length, 1);
   assert.match(html, /<div[^>]*role="alert"[^>]*tabindex="-1"[^>]*>|<div[^>]*tabindex="-1"[^>]*role="alert"[^>]*>/i, 'focusable banner');
   assert.match(html, /Email atau password salah\./);
   assert.match(tag(html, 'password'), /\saria-invalid="true"/);
   assert.match(tag(html, 'password'), /aria-describedby="[^"]*login-alert/);
-  const other = render(h(LoginForm, { message: null, error: { code: 'ACCOUNT_DISABLED', text: 'Akun dinonaktifkan, hubungi admin.' }, busy: null, onSubmit: noop, onGoogle: null }));
+  const other = render(h(LoginForm, { message: null, error: { code: 'ACCOUNT_DISABLED', text: 'Account deactivated, contact an admin.' }, busy: null, onSubmit: noop, onGoogle: null }));
   assert.doesNotMatch(tag(other, 'password'), /\saria-invalid=/);
 });
 
 test('LoginForm: pending state disables the buttons, marks them busy and keeps the label; Google button + separator when allowed', async () => {
   const { LoginForm } = await load('LoginForm');
-  const html = render(h(LoginForm, { message: { tone: 'warn', text: 'Sesi berakhir. Silakan masuk lagi.' }, error: null, busy: 'password', onSubmit: noop, onGoogle: noop }));
+  const html = render(h(LoginForm, { message: { tone: 'warn', text: 'Session ended. Please sign in again.' }, error: null, busy: 'password', onSubmit: noop, onGoogle: noop }));
   assert.match(html, /<button[^>]*type="submit"[^>]*disabled=""[^>]*aria-busy="true"|<button[^>]*aria-busy="true"[^>]*disabled=""[^>]*type="submit"|<button[^>]*disabled=""[^>]*type="submit"/);
   assert.match(html, /readonly=""/i, 'inputs keep focus (read-only), they are not disabled');
   assert.match(html, /Masuk<\/button>/);
@@ -79,9 +79,9 @@ test('LoginApp: the card has exactly one <h1>, the title, the way back home and 
 test('PasswordChangeForm: three labelled fields with the right autocomplete, requirement list from the shared minimum', async () => {
   const { PasswordChangeForm } = await load('PasswordChangeForm');
   const html = render(h(PasswordChangeForm, { identity: { email: 'budi@example.test', name: 'Budi', role: 'user' }, onChanged: noop }));
-  labelFor(html, 'Password saat ini');
-  labelFor(html, 'Password baru');
-  labelFor(html, 'Ulangi password baru');
+  labelFor(html, 'Current password');
+  labelFor(html, 'New password');
+  labelFor(html, 'Repeat new password');
   assert.match(tag(html, 'current'), /autocomplete="current-password"/i);
   assert.match(tag(html, 'next'), /autocomplete="new-password"/i);
   assert.match(tag(html, 'confirm'), /autocomplete="new-password"/i);

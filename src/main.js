@@ -57,10 +57,10 @@ initLogoGaze();
  * @returns {string} best-effort error description
  */
 function describeError(error) {
-  if (!error) return 'Galat inisialisasi tidak diketahui';
+  if (!error) return 'Unknown initialization error';
   if (error instanceof Error) {
     if (error.message && error.message.trim()) return error.message.trim();
-    return error.name || 'Galat inisialisasi';
+    return error.name || 'Initialization error';
   }
   if (typeof error === 'string' && error.trim()) return error.trim();
   if (typeof error === 'object') {
@@ -90,7 +90,7 @@ async function init() {
     // The server only serves this page to a signed-in account; toggles it lacks
     // (layers / ai / premium) are locked in the UI and on the fetch path — see
     // src/auth/accountChrome.js and src/app-access/. Admins hold every toggle.
-    loaderStatus.textContent = 'Memeriksa akun...';
+    loaderStatus.textContent = 'Checking account...';
     const account = await resolveAccountAccess();
     if (account.redirect) {
       window.location.replace(account.redirect);
@@ -183,8 +183,8 @@ async function init() {
     viewer.scene.skyAtmosphere.brightnessShift = -0.08;
 
     loaderStatus.textContent = googleProxyAvailable || cesiumToken
-      ? 'Memuat Google 3D Tiles...'
-      : 'Memuat globe tanpa kunci...';
+      ? 'Loading Google 3D Tiles...'
+      : 'Loading keyless globe...';
     markBoot(BOOT_MARKS.PHOTOREAL_START);
     const photoreal = await loadPhotorealisticTileset(Cesium, {
       googleProxyAvailable,
@@ -206,12 +206,12 @@ async function init() {
         const tileError = photoreal.errors.at(-1);
         console.warn('[Init] Google 3D Tiles unavailable, using the keyless globe:', tileError);
         const tileErrorDetail = describeError(tileError);
-        loaderStatus.textContent = `Google 3D Tiles tidak tersedia (${tileErrorDetail}). Memuat globe tanpa kunci...`;
+        loaderStatus.textContent = `Google 3D Tiles unavailable (${tileErrorDetail}). Loading keyless globe...`;
       }
       viewer.scene.globe.show = true;
     }
 
-    loaderStatus.textContent = 'Menginisialisasi sistem...';
+    loaderStatus.textContent = 'Initializing system...';
 
     const mapStackController = new MapStackController(viewer, {
       googleTileset: tileset,
@@ -247,7 +247,7 @@ async function init() {
       loaderStatus.textContent = 'Terbang ke Jakarta, Indonesia...';
       flyToDefault(viewer);
     } else {
-      loaderStatus.textContent = 'Memulihkan tampilan yang dibagikan...';
+      loaderStatus.textContent = 'Restoring shared view...';
     }
 
     // Initialize data layer manager
@@ -442,7 +442,7 @@ async function init() {
 
   } catch (error) {
     console.error("EagleEye View initialization failed:", error);
-    loaderStatus.textContent = `Galat: ${describeError(error)}`;
+    loaderStatus.textContent = `Error: ${describeError(error)}`;
     loaderStatus.style.color = '#ff4444';
   }
 }

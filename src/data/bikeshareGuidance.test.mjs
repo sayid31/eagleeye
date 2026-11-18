@@ -68,7 +68,7 @@ test('guidance reaches the stats only when idle, empty and error-free', async ()
   const idle = { count: 0, lastUpdate: null, loading: false };
   assert.deepEqual(withBikeshareGuidance(idle, guidance), { ...idle, status: 'zoom-in', error: guidance.message });
   assert.equal(withBikeshareGuidance(idle, null), idle);
-  const failing = { ...idle, error: 'Galat pengambilan GBFS' };
+  const failing = { ...idle, error: 'GBFS fetch error' };
   assert.equal(withBikeshareGuidance(failing, guidance), failing, 'a real error is never masked');
   const loading = { ...idle, loading: true };
   assert.equal(withBikeshareGuidance(loading, guidance), loading);

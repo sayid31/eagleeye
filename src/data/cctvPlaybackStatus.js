@@ -27,40 +27,40 @@ export function isPlaybackStalled(playback) {
  */
 export function videoPlaceholderHealth(health, playback) {
   if (isSourceOffline(health?.status)) {
-    return { status: health.status, message: health.message || 'Kamera mati di sumber' };
+    return { status: health.status, message: health.message || 'Camera down at the source' };
   }
   // The proxy saw a 200 with no playlist in it: say that, it is the real cause.
   if (health?.message === EMPTY_PLAYLIST_MESSAGE) {
-    return { status: 'degraded', message: `${EMPTY_PLAYLIST_MESSAGE} · mencoba lagi` };
+    return { status: 'degraded', message: `${EMPTY_PLAYLIST_MESSAGE} · retrying` };
   }
   switch (playback?.state) {
     case 'retrying':
       if (playback.reason === NO_DATA_REASON) {
-        return { status: 'no-data', message: `Tidak ada data dari sumber · mencoba lagi (#${playback.attempt || 1})` };
+        return { status: 'no-data', message: `No data from the source · retrying (#${playback.attempt || 1})` };
       }
-      return { status: 'stalled', message: `Stream macet · mencoba lagi (#${playback.attempt || 1})` };
+      return { status: 'stalled', message: `Stream stalled · retrying (#${playback.attempt || 1})` };
     case 'recovering':
       return { status: 'recovering', message: 'Stream terputus · memulihkan' };
     case 'unavailable':
-      return { status: 'unavailable', message: 'Pemutar video tidak tersedia di browser ini' };
+      return { status: 'unavailable', message: 'Video player unavailable in this browser' };
     default:
       break;
   }
   if (health?.status === 'degraded' || health?.status === 'error') {
     return { status: health.status, message: health.message || health.status };
   }
-  return { status: 'waiting', message: 'Menunggu video' };
+  return { status: 'waiting', message: 'Waiting for video' };
 }
 
 const STREAM_BADGES = Object.freeze({
   connecting: { text: 'STREAM · MENGHUBUNGKAN', frameState: 'loading' },
   recovering: { text: 'STREAM · MEMULIHKAN', frameState: 'loading' },
-  retrying: { text: '⚠ STREAM MACET · MENCOBA LAGI', frameState: 'stalled' },
-  unavailable: { text: 'STREAM · PEMUTAR TIDAK TERSEDIA', frameState: 'error' },
+  retrying: { text: '⚠ STREAM STALLED · RETRYING', frameState: 'stalled' },
+  unavailable: { text: 'STREAM · PLAYER UNAVAILABLE', frameState: 'error' },
 });
 
-const NO_DATA_BADGE = Object.freeze({ text: '⚠ TIDAK ADA DATA DARI SUMBER · MENCOBA LAGI', frameState: 'stalled' });
-const EMPTY_PLAYLIST_BADGE = Object.freeze({ text: '⚠ SUMBER MENGIRIM PLAYLIST KOSONG', frameState: 'stalled' });
+const NO_DATA_BADGE = Object.freeze({ text: '⚠ NO DATA FROM SOURCE · RETRYING', frameState: 'stalled' });
+const EMPTY_PLAYLIST_BADGE = Object.freeze({ text: '⚠ SOURCE SENT AN EMPTY PLAYLIST', frameState: 'stalled' });
 
 /**
  * Panel badge for a non-healthy player or source, or null when playback is fine.

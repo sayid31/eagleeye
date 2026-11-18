@@ -56,7 +56,7 @@ export const cleanViewMixin = {
     this._globalContextFlightsBtn && (this._globalContextFlightsBtn.disabled = true);
     this._globalContextMissionsBtn && (this._globalContextMissionsBtn.disabled = true);
     this._clearSelectedLayersBtn.disabled = true;
-    this._clearSelectedLayersBtn.setAttribute('aria-label', 'Menghapus layer terpilih');
+    this._clearSelectedLayersBtn.setAttribute('aria-label', 'Clearing selected layers');
 
     const managerOperation = this._dataManager.clearSelectedLayers({
       origin: 'user',
@@ -65,16 +65,16 @@ export const cleanViewMixin = {
     this._clearSelectedLayersManagerPromise = managerOperation;
     const operation = managerOperation.then((result) => {
       if (result.targetIds.length === 0) {
-        this._showToast('Tidak ada layer terpilih');
+        this._showToast('No layers selected');
       } else if (result.notClearedIds.length > 0) {
-        this._showToast(`${result.notClearedIds.length} layer data tidak dapat dihapus`);
+        this._showToast(`Could not clear data layers: ${result.notClearedIds.length}`);
       } else {
-        this._showToast(`${result.clearedIds.length} layer data dihapus`);
+        this._showToast(`Data layers cleared: ${result.clearedIds.length}`);
       }
       return result;
     }).catch((error) => {
       console.warn('[Data] clear selected layers failed', error);
-      this._showToast('Layer terpilih tidak dapat dihapus');
+      this._showToast('Selected layers could not be cleared');
       return {
         targetIds: [],
         items: [],
@@ -91,7 +91,7 @@ export const cleanViewMixin = {
         this._globalContextMissionsBtn && (this._globalContextMissionsBtn.disabled = false);
       }
       this._clearSelectedLayersBtn.disabled = false;
-      this._clearSelectedLayersBtn.setAttribute('aria-label', 'Hapus layer terpilih');
+      this._clearSelectedLayersBtn.setAttribute('aria-label', 'Clear selected layers');
       this._preservePanelStateDuringLayerClear = false;
       this._clearSelectedLayersManagerPromise = null;
       this._clearSelectedLayersPromise = null;
@@ -147,8 +147,8 @@ export const cleanViewMixin = {
           longitude: Number(Cesium.Math.toDegrees(carto.longitude).toFixed(2)),
         },
       };
-      this._resetGlobeBtn?.setAttribute('aria-label', 'Atur ulang ke tampilan globe penuh');
-      this._cockpitResetGlobeBtn?.setAttribute('aria-label', 'Atur ulang kokpit ke tampilan globe penuh');
+      this._resetGlobeBtn?.setAttribute('aria-label', 'Reset to the full globe view');
+      this._cockpitResetGlobeBtn?.setAttribute('aria-label', 'Reset the cockpit to the full globe view');
       this._globeResetPromise = null;
       resolveReset(result);
     };
@@ -156,8 +156,8 @@ export const cleanViewMixin = {
       const height = this.viewer.camera.positionCartographic?.height;
       finish(!Number.isFinite(height) || Math.abs(height - GLOBE_VIEW.heightM) > 1000);
     }, 4200);
-    this._resetGlobeBtn?.setAttribute('aria-label', 'Mengatur ulang ke tampilan globe penuh');
-    this._cockpitResetGlobeBtn?.setAttribute('aria-label', 'Mengatur ulang kokpit ke tampilan globe penuh');
+    this._resetGlobeBtn?.setAttribute('aria-label', 'Resetting to the full globe view');
+    this._cockpitResetGlobeBtn?.setAttribute('aria-label', 'Resetting the cockpit to the full globe view');
     const target = flyToGlobeView(this.viewer, {
       onComplete: () => finish(false),
       onCancel: () => finish(true),

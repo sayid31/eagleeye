@@ -44,7 +44,7 @@ export function syncReplayButton() {
   button.textContent = 'ULANG PENDAKIAN';
   button.classList.remove('active');
   button.setAttribute('aria-pressed', String(active));
-  button.title = 'Putar ulang estimasi pendakian dengan kamera pengikut';
+  button.title = 'Replay the estimated ascent with a follow camera';
   if (transport) {
     transport.hidden = !active;
     transport.classList.toggle('is-paused', active && S._replayPaused);
@@ -52,8 +52,8 @@ export function syncReplayButton() {
     if (toggleButton) {
       toggleButton.disabled = !active;
       toggleButton.textContent = S._replayPaused ? '▶' : 'Ⅱ';
-      toggleButton.setAttribute('aria-label', S._replayPaused ? 'Lanjutkan ulangan' : 'Jeda ulangan');
-      toggleButton.title = S._replayPaused ? 'Lanjutkan ulangan' : 'Jeda ulangan';
+      toggleButton.setAttribute('aria-label', S._replayPaused ? 'Resume replay' : 'Jeda ulangan');
+      toggleButton.title = S._replayPaused ? 'Resume replay' : 'Jeda ulangan';
     }
   }
 }
@@ -66,7 +66,7 @@ export function syncReplayCountdownButton(state) {
     : state.preCountdownActive
       ? 'Menyiapkan lokasi peluncuran'
     : state.elapsedSinceStart < 1
-      ? 'Lepas landas'
+      ? 'Liftoff'
       : state.ascending ? 'Ulangan pendakian' : 'Ulangan orbit';
   transport.setAttribute('aria-label', `${phase}${S._replayPaused ? ', dijeda' : ''}`);
 }

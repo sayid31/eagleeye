@@ -121,8 +121,8 @@ export class MapStackController {
     // `premiumLockReason`: set by src/app-access/accessEffects.js when the account lacks `premium`.
     if (this.premiumLockReason && (stack?.requiresIon || stack?.kind === 'photoreal')) return this.premiumLockReason;
     return stack?.requiresIon
-      ? 'Token Cesium ion diperlukan untuk susunan Bing'
-      : `${stack?.label || 'Susunan peta ini'} tidak tersedia`;
+      ? 'Cesium ion token required for the Bing stack'
+      : `${stack?.label || 'This map stack'} is unavailable`;
   }
 
   getStack(id) {
@@ -346,7 +346,7 @@ export class MapStackController {
           credit: DEFAULT_OSM_CREDIT,
         });
         effectiveStackId = 'osm';
-        fallbackMessage = 'Esri Satellite tidak tersedia; memakai OSM';
+        fallbackMessage = 'Esri Satellite unavailable; using OSM';
       }
     } else if (stack.kind === 'esri-dark-gray') {
       try {
@@ -361,7 +361,7 @@ export class MapStackController {
           credit: DEFAULT_OSM_CREDIT,
         });
         effectiveStackId = 'osm';
-        fallbackMessage = 'Esri Dark Gray tidak tersedia; memakai OSM';
+        fallbackMessage = 'Esri Dark Gray unavailable; using OSM';
       }
     } else if (stack.kind === 'osm') {
       provider = new Cesium.OpenStreetMapImageryProvider({
@@ -399,7 +399,7 @@ export class MapStackController {
       if (failures < 2 || this._esriFallbackPending) return;
       this._esriFallbackPending = true;
       const failedStack = this.getStack(resolution.effectiveStackId);
-      const message = `Permintaan tile ${failedStack?.label || 'Esri'} gagal; memakai OSM`;
+      const message = `${failedStack?.label || 'Esri'} tile request failed; using OSM`;
       this._onError?.(message, failedStack);
       void this.setStack('osm', { silent: true }).then((state) => {
         if (state?.activeId === 'osm') {

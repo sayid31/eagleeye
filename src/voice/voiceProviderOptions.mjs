@@ -43,7 +43,7 @@ export function defaultProviderSettings() {
 function readChoice(value, field, options, errors) {
   if (value === undefined || value === null || value === '') return '';
   if (typeof value !== 'string' || !options.includes(value)) {
-    errors.push(`${field}: pilih salah satu dari daftar, atau kosong untuk default`);
+    errors.push(`${field}: pick one from the list, or leave empty for the default`);
     return '';
   }
   return value;

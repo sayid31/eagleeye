@@ -55,7 +55,7 @@ export const LAYER_METADATA = Object.freeze({
     id: 'cctv',
     name: 'CCTV',
     icon: '📹',
-    source: 'CCTV + cadangan Street View',
+    source: 'CCTV + Street View fallback',
     showInTogglePanel: true,
     hasRowControls: false,
   }),
@@ -103,7 +103,7 @@ export const LAYER_METADATA = Object.freeze({
     id: 'military-awareness',
     name: 'Global Context',
     icon: '◎',
-    source: 'Konteks kedekatan sumber terbuka',
+    source: 'Open-source proximity context',
     // Context is entered from its dedicated right rail, not as a raw layer.
     showInTogglePanel: false,
     hasRowControls: false,

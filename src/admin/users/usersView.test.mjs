@@ -95,13 +95,13 @@ test('errorField: duplicate or reserved email → email, weak password → passw
 });
 
 test('doneToast: one sentence per action, role changes share one, a failed audit line becomes a warning', () => {
-  assert.deepEqual(doneToast('create', {}), { text: 'Akun dibuat', level: 'success' });
-  assert.equal(doneToast('promote', {}).text, 'Role diubah');
-  assert.equal(doneToast('demote', {}).text, 'Role diubah');
-  assert.equal(doneToast('resetPassword', null).text, 'Password direset');
-  assert.equal(doneToast('revokeSessions', {}).text, 'Akun dikeluarkan dari semua perangkat');
+  assert.deepEqual(doneToast('create', {}), { text: 'Account created', level: 'success' });
+  assert.equal(doneToast('promote', {}).text, 'Role changed');
+  assert.equal(doneToast('demote', {}).text, 'Role changed');
+  assert.equal(doneToast('resetPassword', null).text, 'Password reset');
+  assert.equal(doneToast('revokeSessions', {}).text, 'Account signed out of all devices');
   const warned = doneToast('delete', { audit: 'failed' });
   assert.equal(warned.level, 'warning');
   assert.match(warned.text, /catatan audit gagal/);
-  assert.equal(doneToast('unknown-kind', {}).text, 'Perubahan disimpan');
+  assert.equal(doneToast('unknown-kind', {}).text, 'Changes saved');
 });

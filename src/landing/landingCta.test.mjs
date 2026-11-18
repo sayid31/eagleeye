@@ -9,10 +9,10 @@ const me = (role, extra = {}) => ({
   home: '/app',
 });
 const labels = (cta) => [cta.primary.label, ...cta.secondary.map((item) => item.label)];
-const SIGN_OUT = { label: 'Keluar', action: 'sign-out' };
+const SIGN_OUT = { label: 'Sign out', action: 'sign-out' };
 
 test('signed out, unconfigured, failed and malformed /api/me all show "Masuk" with no secondary', () => {
-  const signedOut = { primary: { label: 'Masuk', href: '/login' }, secondary: [] };
+  const signedOut = { primary: { label: 'Sign in', href: '/login' }, secondary: [] };
   assert.deepEqual(landingCta({ configured: true, signedIn: false, home: '/' }), signedOut);
   assert.deepEqual(landingCta({ configured: false, signedIn: false }), signedOut);
   assert.deepEqual(landingCta(null), signedOut, 'fetch failure or timeout');
@@ -22,22 +22,22 @@ test('signed out, unconfigured, failed and malformed /api/me all show "Masuk" wi
 });
 
 test('an unknown or prototype-named role falls back to "Masuk" instead of throwing', () => {
-  assert.equal(landingCta(me('guest')).primary.label, 'Masuk');
-  assert.equal(landingCta(me('toString')).primary.label, 'Masuk');
+  assert.equal(landingCta(me('guest')).primary.label, 'Sign in');
+  assert.equal(landingCta(me('toString')).primary.label, 'Sign in');
   assert.equal(landingCta(me(undefined)).primary.href, '/login');
 });
 
 test('user → Buka Konsol, with Akun and Keluar', () => {
   assert.deepEqual(landingCta(me('user')), {
-    primary: { label: 'Buka Konsol', href: '/app' },
-    secondary: [{ label: 'Akun', href: '/account' }, SIGN_OUT],
+    primary: { label: 'Open Console', href: '/app' },
+    secondary: [{ label: 'Account', href: '/account' }, SIGN_OUT],
   });
 });
 
 test('admin → Panel Admin, with Buka Konsol and Keluar', () => {
   assert.deepEqual(landingCta(me('admin')), {
     primary: { label: 'Panel Admin', href: '/admin' },
-    secondary: [{ label: 'Buka Konsol', href: '/app' }, SIGN_OUT],
+    secondary: [{ label: 'Open Console', href: '/app' }, SIGN_OUT],
   });
 });
 
@@ -59,10 +59,10 @@ test('mustChangePassword outranks every role: Ganti Password + Keluar only', () 
 
 test('"Minta akses" appears only for signed-out visitors and only when a contact is configured', () => {
   const contact = 'mailto:akses@example.test';
-  assert.deepEqual(landingCta(null, { accessContact: contact }).secondary, [{ label: 'Minta akses', href: contact }]);
+  assert.deepEqual(landingCta(null, { accessContact: contact }).secondary, [{ label: 'Request access', href: contact }]);
   assert.deepEqual(landingCta(null, { accessContact: null }).secondary, []);
   assert.deepEqual(landingCta(null, { accessContact: '' }).secondary, []);
-  assert.deepEqual(labels(landingCta(me('user'), { accessContact: contact })), ['Buka Konsol', 'Akun', 'Keluar']);
+  assert.deepEqual(labels(landingCta(me('user'), { accessContact: contact })), ['Open Console', 'Account', 'Sign out']);
 });
 
 test('no row ever offers a sign-up button', () => {
@@ -75,7 +75,7 @@ test('returned objects are copies: mutating one result does not leak into the ne
   first.primary.label = 'X';
   first.secondary.push({ label: 'Y', href: '/y' });
   first.secondary[1].label = 'Z';
-  assert.deepEqual(labels(landingCta(me('admin'))), ['Panel Admin', 'Buka Konsol', 'Keluar']);
+  assert.deepEqual(labels(landingCta(me('admin'))), ['Panel Admin', 'Open Console', 'Sign out']);
   assert.equal(LANDING_ROUTES.app, '/app');
   assert.ok(Object.isFrozen(LANDING_ROUTES));
 });

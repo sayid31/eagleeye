@@ -158,7 +158,7 @@ test('two consecutive blank samples trigger the Esri fallback and fire the toast
     await settledMove(t, h.moveEnd);
 
     assert.equal(h.controller.getActiveId(), 'esri-imagery');
-    assert.equal(h.controller.getState().lastError, 'Google 3D tidak punya cakupan foto di sini; menampilkan Esri Satellite');
+    assert.equal(h.controller.getState().lastError, 'Google 3D has no photo coverage here; showing Esri Satellite');
     assert.equal(h.controller.consumeCoverageFallbackFlag(), true, 'the flag reads true the first time');
     assert.equal(h.controller.consumeCoverageFallbackFlag(), false, 'and clears itself on read');
   } finally {
@@ -339,7 +339,7 @@ test('Esri unreachable at fallback time still stamps lastError and fires the toa
     await settledMove(t, h.moveEnd);
 
     assert.equal(h.controller.getActiveId(), 'osm', 'Esri\'s own OSM sub-fallback still applies underneath the coverage fallback');
-    assert.equal(h.controller.getState().lastError, 'Google 3D tidak punya cakupan foto di sini; menampilkan Esri Satellite');
+    assert.equal(h.controller.getState().lastError, 'Google 3D has no photo coverage here; showing Esri Satellite');
     assert.equal(h.controller.consumeCoverageFallbackFlag(), true);
   } finally {
     h.restore();
@@ -358,9 +358,9 @@ test('a fresh controller boots on Esri Satellite even when the Google tileset lo
 test('premiumLockReason names the admin lock on Google 3D and ion stacks only', () => {
   const viewer = { scene: { globe: { show: true } }, imageryLayers: {}, camera: {} };
   const controller = new MapStackController(viewer, {});
-  controller.premiumLockReason = 'Peta premium belum diizinkan admin';
+  controller.premiumLockReason = 'Premium map is not yet allowed by an admin';
   const reasons = Object.fromEntries(controller.getStacks().map((stack) => [stack.id, stack.unavailableReason]));
-  assert.equal(reasons.photoreal, 'Peta premium belum diizinkan admin');
-  assert.equal(reasons['bing-labels'], 'Peta premium belum diizinkan admin');
+  assert.equal(reasons.photoreal, 'Premium map is not yet allowed by an admin');
+  assert.equal(reasons['bing-labels'], 'Premium map is not yet allowed by an admin');
   assert.equal(reasons['esri-imagery'], null, 'keyless stacks stay available');
 });

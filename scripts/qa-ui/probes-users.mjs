@@ -37,8 +37,8 @@ export const USER_PROBES = [
     async run(page) {
       const label = await openFirstRowMenu(page);
       const items = await page.$$eval('[role="menu"] [role="menuitem"]', (nodes) => nodes.map((n) => n.textContent.trim()));
-      assert.ok(items.includes('Ubah akun') && items.includes('Reset password'), `row menu items: ${items.join(' | ')}`);
-      assert.equal(items.at(-1), 'Hapus akun', 'delete is last');
+      assert.ok(items.includes('Edit account') && items.includes('Reset password'), `row menu items: ${items.join(' | ')}`);
+      assert.equal(items.at(-1), 'Delete account', 'delete is last');
       assert.equal(await page.$eval('[role="menu"] [role="separator"]', () => true), true, 'destructive items sit below a separator');
       await press(page, 'ArrowDown');
       assert.equal((await focusInfo(page, '[role="menu"]')).inside, true);
@@ -49,7 +49,7 @@ export const USER_PROBES = [
     id: 'users-create-dialog-one-time-password', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/users',
     async run(page) {
       await page.waitForSelector(ROW_TRIGGER);
-      await clickText(page, 'header button, main button', 'Buat pengguna');
+      await clickText(page, 'header button, main button', 'Create user');
       await page.waitForSelector('[role="dialog"] input[type="email"]');
       await waitForFocus(page, '[role="dialog"] input[type="email"]');
       await page.type('[role="dialog"] input[type="email"]', 'probe.baru@contoh.example.test');
@@ -57,14 +57,14 @@ export const USER_PROBES = [
       await page.keyboard.type('Probe Baru');
       assert.equal(await page.$eval('[role="dialog"] button[type="submit"]', (b) => b.disabled), false);
       await page.keyboard.press('Enter');
-      await page.waitForFunction(() => document.querySelector('[role="dialog"] h2')?.textContent.startsWith('Akun dibuat'), { timeout: 8000 });
+      await page.waitForFunction(() => document.querySelector('[role="dialog"] h2')?.textContent.startsWith('Account created'), { timeout: 8000 });
       await waitForFocus(page, '[role="dialog"] h2');
       const done = '[role="dialog"] [data-slot="dialog-footer"] button';
       assert.equal(await page.$eval(done, (b) => b.disabled), true, 'Selesai is locked until the password is acknowledged');
       await page.keyboard.press('Escape');
       await page.waitForSelector('[role="alertdialog"]');
       assert.match(await page.$eval('[role="alertdialog"]', (el) => el.textContent), /Password hanya tampil sekali/);
-      await clickText(page, '[role="alertdialog"] button', 'Kembali dan salin');
+      await clickText(page, '[role="alertdialog"] button', 'Go back and copy');
       await gone(page, '[role="alertdialog"]');
       assert.equal(await page.$eval(done, (b) => b.disabled), true, 'backing out keeps the dialog and the lock');
       await page.click('[role="dialog"] button[role="checkbox"]');
@@ -80,7 +80,7 @@ export const USER_PROBES = [
     async run(page) {
       const label = await openFirstRowMenu(page);
       const email = label.replace('Aksi untuk ', '');
-      await clickText(page, '[role="menuitem"]', 'Hapus akun');
+      await clickText(page, '[role="menuitem"]', 'Delete account');
       await page.waitForSelector('[role="alertdialog"] input');
       const submit = '[role="alertdialog"] button[type="submit"]';
       assert.equal(await page.$eval(submit, (b) => b.disabled), true, 'starts disabled');
@@ -99,7 +99,7 @@ export const USER_PROBES = [
       await openFirstRowMenu(page);
       const patches = [];
       page.on('request', (request) => { if (request.method() === 'PATCH') patches.push(request.postData()); });
-      await clickText(page, '[role="menuitem"]', 'Ubah akun');
+      await clickText(page, '[role="menuitem"]', 'Edit account');
       await page.waitForSelector('[role="dialog"] button[role="switch"]');
       assert.equal(await page.$eval('[role="dialog"] button[type="submit"]', (b) => b.disabled), true, 'nothing changed yet');
       await page.click('[role="dialog"] button[role="switch"]');
@@ -113,7 +113,7 @@ export const USER_PROBES = [
     id: 'users-dialog-returns-focus', role: 'admin', viewport: 'desktop', theme: 'light', path: '/admin/users',
     async run(page) {
       const label = await openFirstRowMenu(page);
-      await clickText(page, '[role="menuitem"]', 'Ubah akun');
+      await clickText(page, '[role="menuitem"]', 'Edit account');
       await page.waitForSelector('[role="dialog"]');
       await page.keyboard.press('Escape');
       await gone(page, '[role="dialog"]');
@@ -132,7 +132,7 @@ export const USER_PROBES = [
       await page.click(CARD_TRIGGER);
       await page.waitForSelector('[role="menu"]');
       const items = await page.$$eval('[role="menu"] [role="menuitem"]', (nodes) => nodes.map((n) => n.textContent.trim()));
-      assert.ok(items.includes('Nonaktifkan akun') || items.includes('Aktifkan akun'), items.join(' | '));
+      assert.ok(items.includes('Deactivate account') || items.includes('Activate account'), items.join(' | '));
       await page.keyboard.press('Escape');
       await gone(page, '[role="menu"]');
     },

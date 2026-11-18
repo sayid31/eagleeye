@@ -11,7 +11,7 @@ import { expectFocusTrapped, focusInfo, tabUntil, waitForFocus } from './keyboar
 
 const SHEET = '[role="dialog"]';
 const CONFIRM = '[role="alertdialog"]';
-const SAVED_STATUS = 'Semua perubahan sudah tersimpan';
+const SAVED_STATUS = 'All changes are saved';
 const gone = (page, selector) => page.waitForFunction((s) => !document.querySelector(s), { timeout: 4000 }, selector);
 const text = (page, selector) => page.$eval(selector, (el) => el.textContent.replace(/\s+/g, ' ').trim());
 const barStatus = (page) => text(page, '[aria-label="Simpan pengaturan"] [role="status"]');
@@ -72,10 +72,10 @@ export const CONFIG_PROBES = [
       const calls = await mockKeys(page);
       await page.click('button[aria-label="Ubah kunci OpenAI"]');
       await page.waitForSelector(SHEET);
-      await clickText(page, `${SHEET} button`, 'Uji koneksi');
+      await clickText(page, `${SHEET} button`, 'Test connection');
       await page.waitForFunction(() => /Ditolak\./.test(document.querySelector('[role="dialog"] [aria-live="polite"]')?.textContent ?? ''), { timeout: 4000 });
       assert.doesNotMatch(await text(page, `${SHEET} [aria-live="polite"]`), /401/, 'no raw HTTP status');
-      await clickText(page, `${SHEET} button`, 'Hapus kunci');
+      await clickText(page, `${SHEET} button`, 'Delete key');
       await page.waitForSelector(CONFIRM);
       await waitForFocus(page, `${CONFIRM} button[data-slot="alert-dialog-cancel"]`);
       assert.match(await text(page, CONFIRM), /Fitur yang memakai OpenAI akan berhenti/);
@@ -83,7 +83,7 @@ export const CONFIG_PROBES = [
       await gone(page, CONFIRM);
       await page.waitForSelector(SHEET);
       assert.equal(calls.filter((c) => c.method === 'PUT').length, 0, 'cancelling removes nothing');
-      await clickText(page, `${SHEET} button`, 'Hapus kunci');
+      await clickText(page, `${SHEET} button`, 'Delete key');
       await page.waitForSelector(CONFIRM);
       await page.click(`${CONFIRM} button[type="submit"]`);
       await gone(page, SHEET);
@@ -97,19 +97,19 @@ export const CONFIG_PROBES = [
   {
     id: 'persona-unsaved-changes-guard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ai/persona',
     async run(page) {
-      await clickText(page, '#main-content button', 'Tambah aturan');
+      await clickText(page, '#main-content button', 'Add rule');
       await waitForFocus(page, 'fieldset input');
-      assert.equal(await barStatus(page), 'Perubahan belum disimpan');
+      assert.equal(await barStatus(page), 'Unsaved changes');
       await page.click('a[href="/dev/ai/general"]');
       await page.waitForSelector(CONFIRM);
       await waitForFocus(page, `${CONFIRM} button[data-slot="alert-dialog-cancel"]`);
       await page.keyboard.press('Escape');
       await gone(page, CONFIRM);
       assert.equal(new URL(page.url()).pathname, '/dev/ai/persona', 'Esc keeps the page');
-      assert.equal(await barStatus(page), 'Perubahan belum disimpan');
-      await clickText(page, '#main-content button', 'Batalkan perubahan');
+      assert.equal(await barStatus(page), 'Unsaved changes');
+      await clickText(page, '#main-content button', 'Discard changes');
       await page.waitForFunction((s) => document.querySelector('[aria-label="Simpan pengaturan"] [role="status"]')?.textContent.includes(s), { timeout: 3000 }, SAVED_STATUS);
-      await clickText(page, '#main-content button', 'Tambah aturan');
+      await clickText(page, '#main-content button', 'Add rule');
       await page.click('a[href="/dev/ai/general"]');
       await page.waitForSelector(CONFIRM);
       await page.click(`${CONFIRM} button[type="submit"]`);
@@ -123,7 +123,7 @@ export const CONFIG_PROBES = [
       await page.waitForSelector('#main-content input[maxlength="40"]');
       await page.focus('#main-content input[maxlength="40"]');
       await page.keyboard.type('Ela');
-      assert.equal(await barStatus(page), 'Perubahan belum disimpan');
+      assert.equal(await barStatus(page), 'Unsaved changes');
       await page.keyboard.press('Enter');
       await page.waitForSelector('[data-sonner-toast]');
       assert.match(await text(page, '[data-sonner-toast]'), /Pengaturan tersimpan/);
@@ -147,13 +147,13 @@ export const CONFIG_PROBES = [
       await page.focus('#main-content [role="switch"]');
       await page.keyboard.press('Space');
       await page.keyboard.press('Tab');
-      await clickText(page, '#main-content button', 'Simpan perubahan');
+      await clickText(page, '#main-content button', 'Save changes');
       await page.waitForSelector(CONFIRM);
       assert.match(await text(page, CONFIRM), /Nonaktifkan asisten suara\?/);
       await page.keyboard.press('Escape');
       await gone(page, CONFIRM);
       assert.equal(calls.length, 0, 'cancelling saves nothing');
-      await clickText(page, '#main-content button', 'Simpan perubahan');
+      await clickText(page, '#main-content button', 'Save changes');
       await page.waitForSelector(CONFIRM);
       await page.click(`${CONFIRM} button[type="submit"]`);
       await page.waitForSelector('[data-sonner-toast]');
@@ -167,8 +167,8 @@ export const CONFIG_PROBES = [
       await tabUntil(page, 'a[href="/dev/ai/provider"]', { max: 40 });
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => location.pathname === '/dev/ai/provider');
-      await page.waitForFunction(() => document.querySelector('#main-content h1')?.textContent === 'Penyedia AI', { timeout: 8000 });
-      assert.equal(await text(page, 'a[aria-current="page"]'), 'Penyedia AI');
+      await page.waitForFunction(() => document.querySelector('#main-content h1')?.textContent === 'AI Provider', { timeout: 8000 });
+      assert.equal(await text(page, 'a[aria-current="page"]'), 'AI Provider');
     },
   },
   {
@@ -182,15 +182,15 @@ export const CONFIG_PROBES = [
       await page.keyboard.press('Enter');
       await gone(page, '[role="listbox"]');
       await page.waitForFunction(() => document.querySelector('[aria-label="Simpan pengaturan"] [role="status"]')?.textContent.includes('belum disimpan'), { timeout: 3000 });
-      assert.equal(await barStatus(page), 'Perubahan belum disimpan', `listbox choice: ${await text(page, '#main-content [role="combobox"]')}`);
-      await clickText(page, '#main-content button', 'Batalkan perubahan');
+      assert.equal(await barStatus(page), 'Unsaved changes', `listbox choice: ${await text(page, '#main-content [role="combobox"]')}`);
+      await clickText(page, '#main-content button', 'Discard changes');
       await page.waitForFunction((s) => document.querySelector('[aria-label="Simpan pengaturan"] [role="status"]')?.textContent.includes(s), { timeout: 3000 }, SAVED_STATUS);
     },
   },
   {
     id: 'ai-usage-title-mobile', role: 'super_admin', viewport: 'mobile', theme: 'dark', path: '/dev/ai/usage',
     async run(page) {
-      assert.equal(await text(page, '#main-content h1'), 'Pemakaian & Biaya');
+      assert.equal(await text(page, '#main-content h1'), 'Usage & Cost');
     },
   },
 ];

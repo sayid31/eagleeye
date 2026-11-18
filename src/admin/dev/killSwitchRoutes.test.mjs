@@ -75,7 +75,7 @@ test('a killed gate answers 503 FEATURE_DISABLED for every role, super_admin inc
   for (const who of ['owner', 'admin', 'user']) {
     const blocked = await t.request('/api/opensky/states', { cookie: cookies[who] });
     assert.equal(blocked.status, 503, who);
-    assert.deepEqual(await blocked.json(), { error: 'FEATURE_DISABLED', message: 'Fitur sedang dimatikan oleh developer', gate: 'layers' });
+    assert.deepEqual(await blocked.json(), { error: 'FEATURE_DISABLED', message: 'Feature is currently turned off by the developer', gate: 'layers' });
     assert.equal((await t.request('/api/openai/hud-summary', { cookie: cookies[who] })).status, 299, `${who}: ai unaffected`);
   }
   assert.equal((await t.request(ROUTE, { cookie: cookies.owner })).status, 200, 'the switch page itself is never killable');

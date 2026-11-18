@@ -4,7 +4,7 @@ import { isPlaybackStalled, playbackBadge, videoPlaceholderHealth } from './cctv
 
 test('playlist health ok with no video is reported as waiting, never as the health message', () => {
   const out = videoPlaceholderHealth({ status: 'ok', message: 'Live stream connected' }, { state: 'connecting', attempt: 0 });
-  assert.equal(out.message, 'Menunggu video');
+  assert.equal(out.message, 'Waiting for video');
   assert.doesNotMatch(out.message, /connected/i);
 });
 
@@ -22,7 +22,7 @@ test('an offline source keeps its offline wording even while the player retries'
 
 test('degraded health keeps its own message when the player has nothing more specific', () => {
   assert.equal(videoPlaceholderHealth({ status: 'degraded', message: 'HTTP 502' }, null).message, 'HTTP 502');
-  assert.equal(videoPlaceholderHealth(null, null).message, 'Menunggu video');
+  assert.equal(videoPlaceholderHealth(null, null).message, 'Waiting for video');
 });
 
 test('only a retrying player counts as stalled', () => {

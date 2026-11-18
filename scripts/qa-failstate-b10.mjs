@@ -358,7 +358,7 @@ async function main() {
       );
       if (!hasError) exitCode = 1;
     }
-    const aisControl = await readLayerControl(page, 'ais-live-vessels', 'TIDAK TERSEDIA');
+    const aisControl = await readLayerControl(page, 'ais-live-vessels', 'UNAVAILABLE');
     const aisChipHonest = aisControl.feedState === 'unavailable'
       && aisControl.ariaLabel === 'Live AIS Vessels: TIDAK TERSEDIA';
     const aisMetaHonest = /^TIDAK TERSEDIA · AISStream · /i.test(aisControl.meta)
@@ -441,7 +441,7 @@ async function main() {
       const s = outageStats.stats;
       const notWiped = s.count > 0; // catalog preserved, not blanked to 0
       const errorSet = typeof s.error === 'string' && s.error.length > 0;
-      const outageControl = await readLayerControl(page, 'satellites', 'TIDAK TERSEDIA');
+      const outageControl = await readLayerControl(page, 'satellites', 'UNAVAILABLE');
       const outageChipHonest = outageControl.feedState === 'unavailable'
         && outageControl.ariaLabel === 'Satellites: TIDAK TERSEDIA';
       const outageMetaHonest = /^TIDAK TERSEDIA · CelesTrak · /i.test(outageControl.meta)

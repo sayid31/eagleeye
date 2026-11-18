@@ -29,8 +29,8 @@ test('stale data reads Terganggu with its age', () => {
 });
 
 test('fallback and unavailable feeds are Terganggu, not Live', () => {
-  assert.equal(layerShellStatus(row({ stats: { count: 1, fallback: true } }), NOW).detail, 'memakai sumber cadangan');
-  assert.equal(layerShellStatus(row({ stats: { status: 'unavailable' } }), NOW).detail, 'sumber tidak tersedia');
+  assert.equal(layerShellStatus(row({ stats: { count: 1, fallback: true } }), NOW).detail, 'using fallback source');
+  assert.equal(layerShellStatus(row({ stats: { status: 'unavailable' } }), NOW).detail, 'source unavailable');
 });
 
 test('an uncertain lifecycle is never Live, even with healthy stats', () => {
@@ -79,7 +79,7 @@ test('labels fall back to the declared name', () => {
 });
 
 test('agoLabel is Indonesian and tolerant of bad input', () => {
-  assert.equal(agoLabel(NOW - 5000, NOW), 'baru saja');
+  assert.equal(agoLabel(NOW - 5000, NOW), 'just now');
   assert.equal(agoLabel(NOW - 90_000, NOW), '1 menit lalu');
   assert.equal(agoLabel(undefined, NOW), null);
 });
@@ -87,9 +87,9 @@ test('agoLabel is Indonesian and tolerant of bad input', () => {
 test('an enabled layer waiting for zoom shows its prompt instead of a bare label', () => {
   const status = layerShellStatus(row({
     id: 'military-installations',
-    stats: { count: 0, lastUpdate: null, status: 'zoom-in', error: 'Perbesar untuk memuat konteks instalasi terpetakan' },
+    stats: { count: 0, lastUpdate: null, status: 'zoom-in', error: 'Zoom in to load mapped installation context' },
   }), NOW);
-  assert.deepEqual(status, { key: 'static', label: 'Data statis', detail: 'Perbesar untuk memuat konteks instalasi terpetakan' });
+  assert.deepEqual(status, { key: 'static', label: 'Data statis', detail: 'Zoom in to load mapped installation context' });
 });
 
 test('a non-guidance status never leaks its error text into a nominal detail', () => {

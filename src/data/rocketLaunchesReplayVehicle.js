@@ -229,11 +229,11 @@ export function updateReplayVehicleOverlay(occluder) {
     detail = `PELUNCURAN SIAGA\n${siteCallout}`;
   } else if (mode === 'ascent') {
     title = state.elapsedSinceStart < 1
-      ? `LEPAS LANDAS · ${mission}`
-      : `${launch.trajectory.length > 1 ? 'ULANGAN PENDAKIAN' : 'ESTIMASI PENDAKIAN'} · ${mission}`;
+      ? `LIFTOFF · ${mission}`
+      : `${launch.trajectory.length > 1 ? 'ULANGAN PENDAKIAN' : 'ESTIMATED ASCENT'} · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   } else if (mode === 'recovery') {
-    title = `MASUK KEMBALI / PEMULIHAN TAHAP · ${mission}`;
+    title = `STAGE RE-ENTRY / RECOVERY · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   } else if (mode === 'orbit') {
     title = `ULANGAN ORBIT · ${mission}`;

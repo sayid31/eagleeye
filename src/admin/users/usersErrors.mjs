@@ -8,38 +8,38 @@
  */
 
 export const USER_ERROR_MESSAGES = Object.freeze({
-  INVALID_INPUT: 'Data yang dikirim tidak valid.',
-  INVALID_JSON: 'Body permintaan harus JSON yang valid.',
-  BODY_TOO_LARGE: 'Body permintaan terlalu besar.',
-  NOT_FOUND: 'Akun tidak ditemukan.',
-  METHOD_NOT_ALLOWED: 'Metode tidak didukung untuk alamat ini.',
-  AUTH_REQUIRED: 'Login diperlukan.',
-  ADMIN_REQUIRED: 'Hanya admin yang boleh mengakses ini.',
-  SUPER_ADMIN_REQUIRED: 'Hanya super admin yang boleh melakukan ini.',
-  TARGET_FORBIDDEN: 'Anda tidak boleh mengubah akun ini.',
-  TARGET_IS_SUPER_ADMIN: 'Akun super admin hanya diatur lewat env dan CLI.',
-  CANNOT_ACT_ON_SELF: 'Aksi ini tidak bisa dilakukan pada akun Anda sendiri.',
-  ROLE_NOT_ASSIGNABLE: 'Anda tidak boleh memberikan role ini.',
-  EMAIL_TAKEN: 'Email sudah dipakai akun lain.',
-  SUPER_ADMIN_EMAIL_RESERVED: 'Email ini dicadangkan untuk super admin.',
-  PASSWORD_WEAK: 'Password terlalu lemah.',
-  REAUTH_FAILED: 'Password Anda salah.',
-  REAUTH_REQUIRED: 'Masuk ulang dengan Google dulu (maksimal 10 menit sebelum aksi ini), lalu coba lagi.',
-  CONFIRM_EMAIL_MISMATCH: 'Email konfirmasi tidak cocok dengan email akun.',
-  AUTH_UNAVAILABLE: 'Layanan login sedang tidak tersedia.',
-  INTERNAL_ERROR: 'Terjadi kesalahan di server; lihat Server Log.',
+  INVALID_INPUT: 'The data sent is not valid.',
+  INVALID_JSON: 'The request body must be valid JSON.',
+  BODY_TOO_LARGE: 'The request body is too large.',
+  NOT_FOUND: 'Account not found.',
+  METHOD_NOT_ALLOWED: 'Method not supported for this address.',
+  AUTH_REQUIRED: 'Login required.',
+  ADMIN_REQUIRED: 'Only admins can access this.',
+  SUPER_ADMIN_REQUIRED: 'Only super admins can do this.',
+  TARGET_FORBIDDEN: 'You may not change this account.',
+  TARGET_IS_SUPER_ADMIN: 'Super admin accounts are managed only through env and the CLI.',
+  CANNOT_ACT_ON_SELF: 'This action cannot be performed on your own account.',
+  ROLE_NOT_ASSIGNABLE: 'You may not grant this role.',
+  EMAIL_TAKEN: 'Email is already used by another account.',
+  SUPER_ADMIN_EMAIL_RESERVED: 'This email is reserved for super admins.',
+  PASSWORD_WEAK: 'Password is too weak.',
+  REAUTH_FAILED: 'Your password is incorrect.',
+  REAUTH_REQUIRED: 'Sign in with Google again first (at most 10 minutes before this action), then try again.',
+  CONFIRM_EMAIL_MISMATCH: 'The confirmation email does not match the account email.',
+  AUTH_UNAVAILABLE: 'The login service is unavailable.',
+  INTERNAL_ERROR: 'A server error occurred; see the Server Log.',
 });
 
 const PASSWORD_REASONS = Object.freeze({
-  too_short: (min) => `Password minimal ${min} karakter.`,
-  too_long: () => 'Password maksimal 128 karakter.',
-  matches_identity: () => 'Password tidak boleh sama dengan email atau nama.',
+  too_short: (min) => `Password must be at least ${min} characters.`,
+  too_long: () => 'Password must be at most 128 characters.',
+  matches_identity: () => 'Password cannot be the same as email or name.',
 });
 
 const FIELD_LABELS = Object.freeze({
-  email: 'email', name: 'nama', role: 'role', capabilities: 'izin fitur', password: 'password', generate: 'generate',
-  currentPassword: 'password Anda', confirmEmail: 'email konfirmasi', q: 'pencarian', status: 'status', userId: 'pengguna',
-  success: 'hasil', range: 'rentang waktu', action: 'aksi', targetId: 'akun', source: 'sumber', id: 'id akun',
+  email: 'email', name: 'nama', role: 'role', capabilities: 'feature permissions', password: 'password', generate: 'generate',
+  currentPassword: 'your password', confirmEmail: 'confirmation email', q: 'pencarian', status: 'status', userId: 'pengguna',
+  success: 'hasil', range: 'time range', action: 'aksi', targetId: 'akun', source: 'sumber', id: 'account id',
 });
 
 /**
@@ -51,6 +51,6 @@ export function userErrorMessage(problem) {
   const detail = typeof problem === 'string' ? { error: problem } : (problem ?? {});
   const code = detail.error ?? detail.code ?? 'INTERNAL_ERROR';
   if (code === 'PASSWORD_WEAK' && PASSWORD_REASONS[detail.reason]) return PASSWORD_REASONS[detail.reason](detail.min);
-  if (code === 'INVALID_INPUT' && FIELD_LABELS[detail.field]) return `Isian ${FIELD_LABELS[detail.field]} tidak valid.`;
-  return USER_ERROR_MESSAGES[code] ?? 'Permintaan gagal.';
+  if (code === 'INVALID_INPUT' && FIELD_LABELS[detail.field]) return `The ${FIELD_LABELS[detail.field]} field is not valid.`;
+  return USER_ERROR_MESSAGES[code] ?? 'Request failed.';
 }

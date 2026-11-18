@@ -73,7 +73,7 @@ const RADIO_CLUSTER_LABELS = Object.freeze({
   talk: 'TALK',
   weather: 'CUACA',
   'public-safety': 'KEAMANAN',
-  'aviation-marine': 'UDARA / LAUT',
+  'aviation-marine': 'AIR / SEA',
   'traffic-transit': 'TRANSIT',
   music: 'MUSIK',
   other: 'LAINNYA',
@@ -192,13 +192,13 @@ export function radioStationCategoryId(station) {
 export function buildRadioCategories(stations) {
   const rows = Array.isArray(stations) ? stations : [];
   const categories = [
-    { id: 'all', label: 'Semua' },
+    { id: 'all', label: 'All' },
     { id: 'news', label: 'Berita' },
     { id: 'talk', label: 'Talk' },
-    { id: 'weather', label: 'Cuaca / Darurat' },
+    { id: 'weather', label: 'Weather / Emergency' },
     { id: 'public-safety', label: 'Keselamatan publik' },
     { id: 'aviation-marine', label: 'Penerbangan / Maritim' },
-    { id: 'traffic-transit', label: 'Lalu lintas / Transit' },
+    { id: 'traffic-transit', label: 'Traffic / Transit' },
     { id: 'music', label: 'Musik' },
   ];
 
@@ -208,7 +208,7 @@ export function buildRadioCategories(stations) {
       categories.push({ id, label });
     }
   }
-  categories.push({ id: 'other', label: 'Lainnya' });
+  categories.push({ id: 'other', label: 'More' });
   return categories.map((category) => ({
     ...category,
     color: radioCategoryColor(category.id),

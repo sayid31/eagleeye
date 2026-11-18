@@ -10,7 +10,7 @@ import { copyToClipboard } from '../../lib/clipboard.js';
 import { readSidebarOpen, writeSidebarOpen } from '../../lib/sidebarState.js';
 
 const GROUPS = [
-  { id: 'main', title: null, items: [{ id: 'home', label: 'Ringkasan', path: '/' }] },
+  { id: 'main', title: null, items: [{ id: 'home', label: 'Overview', path: '/' }] },
   { id: 'kill', title: null, items: [{ id: 'kill', label: 'Kill switch', path: '/kill-switches' }] },
   { id: 'server-log', title: 'Server Log', path: '/server-log', items: [
     { id: 'log', label: 'Server Log', path: '/server-log' },
@@ -63,13 +63,13 @@ test('navModel: resolves the longest matching path, builds breadcrumbs and title
   assert.equal(resolveNav(GROUPS, '/server-log/audit').item.id, 'audit', 'the longest path wins over the parent page');
   assert.equal(resolveNav(GROUPS, '/server-log').item.id, 'log');
   assert.equal(resolveNav(GROUPS, '/nope'), null);
-  assert.deepEqual(breadcrumbTrail(GROUPS, '/'), [{ label: 'Ringkasan' }]);
+  assert.deepEqual(breadcrumbTrail(GROUPS, '/'), [{ label: 'Overview' }]);
   assert.deepEqual(breadcrumbTrail(GROUPS, '/kill-switches'), [{ label: 'Kill switch' }]);
   assert.deepEqual(breadcrumbTrail(GROUPS, '/server-log'), [{ label: 'Server Log' }], 'a page named like its group is one crumb');
   assert.deepEqual(breadcrumbTrail(GROUPS, '/server-log/audit'), [{ label: 'Server Log' }, { label: 'Audit Log' }]);
   assert.deepEqual(breadcrumbTrail(GROUPS, '/nope'), []);
   assert.equal(navTitleFor(GROUPS, '/server-log/audit'), 'Audit Log');
-  assert.equal(navTitleFor(GROUPS, '/'), 'Ringkasan');
+  assert.equal(navTitleFor(GROUPS, '/'), 'Overview');
   assert.equal(navTitleFor(GROUPS, '/nope'), null);
 });
 
@@ -83,7 +83,7 @@ test('initialsFor: name first, then the email local part, never empty', () => {
 });
 
 test('documentTitle follows "<page> · EagleEye View"', () => {
-  assert.equal(documentTitle('Pengguna'), 'Pengguna · EagleEye View');
+  assert.equal(documentTitle('Users'), 'Pengguna · EagleEye View');
   assert.equal(documentTitle('  '), 'EagleEye View');
   assert.equal(documentTitle(undefined), 'EagleEye View');
 });
@@ -91,8 +91,8 @@ test('documentTitle follows "<page> · EagleEye View"', () => {
 test('splitActions puts destructive actions last and drops hidden ones', () => {
   const noop = () => {};
   const { normal, destructive } = splitActions([
-    { id: 'delete', label: 'Hapus', onSelect: noop, destructive: true },
-    { id: 'edit', label: 'Ubah', onSelect: noop },
+    { id: 'delete', label: 'Delete', onSelect: noop, destructive: true },
+    { id: 'edit', label: 'Edit', onSelect: noop },
     { id: 'role', label: 'Ubah role', onSelect: noop, hidden: true },
     { id: 'reset', label: 'Reset password', onSelect: noop },
   ]);
@@ -105,7 +105,7 @@ test('status presentation: every known status has tone, icon and a word; unknown
     const view = statusPresentation(key);
     assert.ok(view.label.length > 0 && Object.hasOwn(TONE_CLASSES, view.tone) && view.icon, key);
   }
-  assert.equal(statusPresentation('active').label, 'Aktif');
+  assert.equal(statusPresentation('active').label, 'Active');
   assert.equal(statusPresentation('active', 'Online').label, 'Online');
   assert.equal(statusPresentation('toString').tone, 'muted');
 });
@@ -114,13 +114,13 @@ test('health states share StatusBadge: icon + word each, unrecognised reads as u
   assert.deepEqual(['ok', 'warn', 'error'].map((s) => statusPresentation(s).tone), ['success', 'warning', 'destructive']);
   assert.deepEqual(['ok', 'warn', 'error', 'off', 'unknown'].map((s) => statusPresentation(s).icon), ['check', 'warning', 'x', 'minus', 'help']);
   assert.equal(statusPresentation('weird').status, 'unknown');
-  assert.equal(statusPresentation('weird').label, 'Tanpa data');
-  assert.equal(statusPresentation('ok', 'Siap').label, 'Siap');
-  assert.equal(statusPresentation('ok', 'Siap').icon, statusPresentation('ok').icon);
+  assert.equal(statusPresentation('weird').label, 'No data');
+  assert.equal(statusPresentation('ok', 'Ready').label, 'Ready');
+  assert.equal(statusPresentation('ok', 'Ready').icon, statusPresentation('ok').icon);
 });
 
 test('capability chip: name always visible, on/off as an icon and screen-reader text (not a strike-through)', () => {
-  assert.deepEqual(capabilityPresentation('Layer data', true), { tone: 'success', icon: 'check', label: 'Layer data', srText: 'aktif' });
+  assert.deepEqual(capabilityPresentation('Data layers', true), { tone: 'success', icon: 'check', label: 'Data layers', srText: 'aktif' });
   assert.deepEqual(capabilityPresentation('Voice & AI', false), { tone: 'muted', icon: 'minus', label: 'Voice & AI', srText: 'nonaktif' });
 });
 

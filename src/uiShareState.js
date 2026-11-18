@@ -113,7 +113,7 @@ _syncShareState() {
       clearTimeout(this._cctvChipHideTimer);
       this._cctvChipHideTimer = null;
       this._cctvChipWasBusy = true;
-      setSplitFlapText(this._cctvSyncLabel, 'memuat frame');
+      setSplitFlapText(this._cctvSyncLabel, 'loading frame');
       // The counter is left plain on purpose: it ticks every few frames
       // during a grid load, and flapping it would read as a slot machine.
       this._cctvSyncProgress.textContent = `${loaded}/${total}`;
@@ -124,7 +124,7 @@ _syncShareState() {
     if (this._cctvChipWasBusy && enabled && total > 0) {
       // Load just completed — flash the final count, then auto-hide.
       this._cctvChipWasBusy = false;
-      setSplitFlapText(this._cctvSyncLabel, 'grid kamera siap');
+      setSplitFlapText(this._cctvSyncLabel, 'camera grid ready');
       this._cctvSyncProgress.textContent = `${total}/${total}`;
       this._cctvSyncChip.classList.add('visible');
       clearTimeout(this._cctvChipHideTimer);
@@ -226,10 +226,10 @@ _handleShareTrackingRestoreStatus(result) {
       : ++this._shareTrackingNoticeGeneration;
     const subject = result.label || 'entitas';
     const message = result.classification === 'expired'
-      ? `Pelacakan ${subject} yang dibagikan kedaluwarsa`
+      ? `Shared ${subject} tracking expired`
       : result.classification === 'source-unavailable'
-        ? `${subject} yang dibagikan tidak dapat dipulihkan — feed tidak tersedia`
-        : `${subject} yang dibagikan tidak tersedia`;
+        ? `Shared ${subject} could not be restored — feed unavailable`
+        : `Shared ${subject} unavailable`;
     const showAfterStartupCover = () => {
       requestAnimationFrame(() => {
         if (!canPresentDeferredStatusNotice(
@@ -272,7 +272,7 @@ _handleShareTrackingRestoreStatus(result) {
   _initShareButton() {
     this._shareBtn.addEventListener('click', async () => {
       const success = await this.shareLinkManager.copyLink();
-      this._showToast(success ? 'Tautan disalin!' : 'Gagal menyalin');
+      this._showToast(success ? 'Tautan disalin!' : 'Copy failed');
     });
   },
 

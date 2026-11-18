@@ -300,8 +300,8 @@ export function contextLayerEnableBlockReason({ contextMode, change, layerName =
   ) {
     return null;
   }
-  const label = String(layerName || change.layerId || 'layer itu');
-  return `Misi Antariksa mengisolasi data putar ulang. Keluar dari mode ini untuk menyalakan ${label}.`;
+  const label = String(layerName || change.layerId || 'that layer');
+  return `Space Missions isolates replay data. Leave this mode to turn on ${label}.`;
 }
 
 /**

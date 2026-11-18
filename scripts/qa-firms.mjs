@@ -325,7 +325,7 @@ async function main() {
 
     const keyless = await bootAndEnable(page, { timeoutS: 20 });
     {
-      const ok = keyless.error === 'KUNCI DIPERLUKAN' && keyless.count === 0;
+      const ok = keyless.error === 'KEY REQUIRED' && keyless.count === 0;
       record('KEYLESS: error "KUNCI DIPERLUKAN", zero fires, no crash', ok,
         `error=${JSON.stringify(keyless.error)} count=${keyless.count} label=${JSON.stringify(keyless.loadingLabel)}`);
       if (!ok) exitCode = 1;

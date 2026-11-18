@@ -109,7 +109,7 @@ export function installationSourceLabel(record) {
   const names = [...new Set((Array.isArray(record?.sources) ? record.sources : [])
     .map((source) => String(source?.name || '').trim())
     .filter(Boolean))];
-  return names.join(' + ') || 'Sumber terpetakan tidak diketahui';
+  return names.join(' + ') || 'Unknown mapped source';
 }
 
 /**
@@ -410,7 +410,7 @@ async function loadInstallations() {
     state.abort = null;
     state.loading = false;
     clearUnavailableRetry();
-    setInstallationStatus('zoom-in', 'Perbesar untuk memuat konteks instalasi terpetakan');
+    setInstallationStatus('zoom-in', 'Zoom in to load mapped installation context');
     return;
   }
   state.abort?.abort();
@@ -478,7 +478,7 @@ async function loadInstallations() {
         }
       } catch (error) {
         if (error?.name === 'AbortError') return;
-        placesError = 'Pencarian Google Places tidak tersedia; menampilkan situs terpetakan';
+        placesError = 'Google Places search unavailable; showing mapped sites';
       }
     }
     await resolveGroundFloorCellsBounded(records.map((record) => ({
@@ -497,14 +497,14 @@ async function loadInstallations() {
     setInstallationStatus(
       state.records.length ? (state.stale ? 'stale' : 'ready') : 'empty',
       payload.status === 'stale'
-        ? 'Menyajikan konteks terpetakan dari cache'
-        : (saturated ? 'Terlalu banyak situs terpetakan di tampilan untuk didaftar semuanya' : placesError),
+        ? 'Serving mapped context from cache'
+        : (saturated ? 'Too many mapped sites in view to list them all' : placesError),
     );
     renderRecords();
     warmInstallationFloors(state.records);
   } catch (error) {
     if (error?.name === 'AbortError') return;
-    setInstallationStatus('unavailable', error?.message || 'Konteks instalasi tidak tersedia');
+    setInstallationStatus('unavailable', error?.message || 'Installation context unavailable');
     scheduleUnavailableRetry();
   } finally {
     // An older aborted request must not clear a newer request's busy state.
@@ -631,7 +631,7 @@ const militaryInstallationsLayer = {
       error: state.error,
       status: state.status,
       loading: state.loading,
-      loadingLabel: state.loading ? 'memuat konteks instalasi terpetakan' : '',
+      loadingLabel: state.loading ? 'loading mapped installation context' : '',
     };
   },
 };

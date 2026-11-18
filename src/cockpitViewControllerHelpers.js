@@ -24,15 +24,15 @@ export function isRenderedOnScreen(element) {
 
 export function formatCockpitBriefAge(value) {
   const timestamp = Date.parse(value);
-  if (!Number.isFinite(timestamp)) return 'WAKTU TIDAK DIKETAHUI';
+  if (!Number.isFinite(timestamp)) return 'TIME UNKNOWN';
   const minutes = Math.max(0, Math.round((Date.now() - timestamp) / 60_000));
-  if (minutes < 60) return `${minutes} MNT LALU`;
+  if (minutes < 60) return `${minutes} MIN AGO`;
   const hours = Math.round(minutes / 60);
-  return hours < 48 ? `${hours} JAM LALU` : `${Math.round(hours / 24)} HARI LALU`;
+  return hours < 48 ? `${hours} H AGO` : `${Math.round(hours / 24)} D AGO`;
 }
 
 export function formatCockpitWindDirection(value) {
-  if (!Number.isFinite(value)) return 'ARAH TIDAK DIKETAHUI';
+  if (!Number.isFinite(value)) return 'BEARING UNKNOWN';
   const labels = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
   const normalized = ((value % 360) + 360) % 360;
   return `${labels[Math.round(normalized / 45) % labels.length]} · ${Math.round(normalized)}°`;

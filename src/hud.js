@@ -155,7 +155,7 @@ export class IntelHUD {
       <div class="hud-top-bar">
         <span class="hud-top-bar-left">EagleEye View</span>
         <span class="hud-top-bar-center">${this._missionId}</span>
-        <span class="hud-top-bar-right">HAL 1/1</span>
+        <span class="hud-top-bar-right">PAGE 1/1</span>
       </div>
 
       <div class="hud-corner hud-top-left">
@@ -164,7 +164,7 @@ export class IntelHUD {
           <div class="hud-system">${this._missionId}  ${this._sensorId}</div>
           <div class="hud-mode" id="hud-mode">NORMAL</div>
           <div class="hud-summary-wrap">
-            <div class="hud-summary-label">RINGKASAN</div>
+            <div class="hud-summary-label">SUMMARY</div>
             <div class="hud-summary" id="hud-summary">Awaiting telemetry...</div>
           </div>
         </div>

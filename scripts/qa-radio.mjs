@@ -488,10 +488,10 @@ async function main() {
         && uncertainPresentation.compactPowerText === 'SELARASKAN'
         && /tidak pasti/i.test(uncertainPresentation.fullLabel)
         && uncertainPresentation.fullText === 'SELARASKAN'
-        && uncertainPresentation.layerState === 'TIDAK PASTI'
+        && uncertainPresentation.layerState === 'UNCERTAIN'
         && /tidak pasti/i.test(uncertainPresentation.playbackMessage)
-        && uncertainPresentation.miniStation === 'STATUS RADIO TIDAK PASTI'
-        && uncertainPresentation.dataRailText === 'TIDAK PASTI'
+        && uncertainPresentation.miniStation === 'RADIO STATE UNCERTAIN'
+        && uncertainPresentation.dataRailText === 'UNCERTAIN'
         && uncertainPresentation.dataRailState === 'uncertain'
         && /tidak pasti/i.test(uncertainPresentation.dataRailLabel)
         && /tidak pasti/i.test(uncertainPresentation.dataRailMeta)
@@ -632,7 +632,7 @@ async function main() {
         && enablingPresentation.presentationActive === false
         && enablingPresentation.markerSourceVisible === false
         && enablingPresentation.full === 'MENYALAKAN'
-        && enablingPresentation.disclosure === 'Ke bagian Radio yang terbentang'
+        && enablingPresentation.disclosure === 'Go to the expanded Radio section'
         && enablingPresentation.disclosureControls === 'radio-panel'
         && enablingPresentation.disclosureExpanded === 'true'
         && enablingPresentation.compactPower === 'MENYALAKAN'
@@ -3141,8 +3141,8 @@ async function main() {
         && tunerRefreshRelease.unavailableId === tunerRefreshTarget.id
         && tunerRefreshRelease.selectedId !== tunerRefreshTarget.id
         && tunerRefreshRelease.plays === tunerRefreshTarget.plays
-        && tunerRefreshRelease.value === 'TIDAK SIARAN'
-        && tunerRefreshRelease.stationText === 'STASIUN TIDAK TERSEDIA'
+        && tunerRefreshRelease.value === 'NOT BROADCASTING'
+        && tunerRefreshRelease.stationText === 'STATION UNAVAILABLE'
         && /tidak tersedia setelah direktori diperbarui/i.test(tunerRefreshRelease.message),
       JSON.stringify(tunerRefreshRelease),
     );
@@ -4562,7 +4562,7 @@ async function main() {
       'expanded Context Radio icon reveals and scrolls to embedded Radio without an overlay or playback/camera theft',
       expandedContextRadioAfter.ariaControls === 'radio-panel'
         && expandedContextRadioAfter.expanded === 'true'
-        && expandedContextRadioAfter.label === 'Ke bagian Radio yang terbentang'
+        && expandedContextRadioAfter.label === 'Go to the expanded Radio section'
         && !expandedContextRadioAfter.radioCollapsed
         && expandedContextRadioAfter.compactHidden
         // Only assert movement when there is room to move. At a tall viewport

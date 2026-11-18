@@ -249,7 +249,7 @@ export function createEarthquakesLayer({ overlayHost = DEFAULT_OVERLAY_HOST } = 
 
     } catch (e) {
       console.warn('[Data:Earthquakes] Fetch error:', e);
-      _lastError = 'Galat jaringan USGS';
+      _lastError = 'USGS network error';
       return false;
     }
   },

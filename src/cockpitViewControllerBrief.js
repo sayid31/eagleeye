@@ -77,7 +77,7 @@ stopBriefRotation() {
 updateLocalPosition(info) {
     if (!this.localCoordinates) return;
     if (!Number.isFinite(info.latitude) || !Number.isFinite(info.longitude)) {
-      this.localCoordinates.textContent = 'POSISI TIDAK TERSEDIA';
+      this.localCoordinates.textContent = 'POSITION UNAVAILABLE';
       return;
     }
     const lat = `${Math.abs(info.latitude).toFixed(3)}°${info.latitude >= 0 ? 'N' : 'S'}`;
@@ -136,11 +136,11 @@ renderRegionalBriefStatus(status, info) {
       this.newsStatus.dataset.state = status;
       this.newsStatus.textContent = status === 'loading'
         ? 'MEMPEROLEH BERITA REGIONAL'
-        : 'BERITA REGIONAL TIDAK TERSEDIA';
+        : 'REGIONAL NEWS UNAVAILABLE';
     }
     if (status === 'unavailable') this.newsList?.replaceChildren();
     if (this.localPlace && status === 'loading') this.localPlace.textContent = 'MENENTUKAN WILAYAH';
-    if (this.localPlace && status === 'unavailable') this.localPlace.textContent = 'WILAYAH TIDAK TERSEDIA';
+    if (this.localPlace && status === 'unavailable') this.localPlace.textContent = 'REGION UNAVAILABLE';
     this.updateLocalPosition(info);
   },
 
@@ -150,8 +150,8 @@ renderRegionalBrief(payload, info) {
       this.newsStatus.hidden = articles.length > 0;
       this.newsStatus.dataset.state = payload?.newsStatus || 'unavailable';
       this.newsStatus.textContent = payload?.newsStatus === 'empty'
-        ? 'TIDAK ADA KECOCOKAN LOKASI TERBARU'
-        : 'BERITA REGIONAL TIDAK TERSEDIA';
+        ? 'NO RECENT LOCATION MATCH'
+        : 'REGIONAL NEWS UNAVAILABLE';
     }
     if (this.newsList) {
       this.newsList.replaceChildren(...articles.slice(0, 4).map((article) => {
@@ -163,14 +163,14 @@ renderRegionalBrief(payload, info) {
         const title = document.createElement('strong');
         title.textContent = article.title;
         const metadata = document.createElement('span');
-        metadata.textContent = `${article.domain || 'SUMBER'} · ${formatCockpitBriefAge(article.publishedAt)}`;
+        metadata.textContent = `${article.domain || 'SOURCE'} · ${formatCockpitBriefAge(article.publishedAt)}`;
         link.append(title, metadata);
         entry.append(link);
         return entry;
       }));
     }
 
-    const placeLabel = payload?.place?.label || payload?.place?.country || 'WILAYAH TIDAK TERSEDIA';
+    const placeLabel = payload?.place?.label || payload?.place?.country || 'REGION UNAVAILABLE';
     if (this.localPlace) this.localPlace.textContent = placeLabel.toUpperCase();
     this.updateLocalPosition(info);
     const weather = payload?.weather;
@@ -188,7 +188,7 @@ renderRegionalBrief(payload, info) {
     if (this.localCondition) this.localCondition.textContent = weatherCodeLabel(weather?.weatherCode);
     if (this.localCloud) {
       this.localCloud.textContent = Number.isFinite(weather?.cloudCoverPct)
-        ? `AWAN ${Math.round(weather.cloudCoverPct)}%` : 'AWAN TIDAK DIKETAHUI';
+        ? `AWAN ${Math.round(weather.cloudCoverPct)}%` : 'CLOUD COVER UNKNOWN';
     }
     if (this.localPrecipitation) {
       this.localPrecipitation.textContent = Number.isFinite(weather?.precipitationMm)

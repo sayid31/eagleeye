@@ -106,10 +106,10 @@ export function mountAccountChrome(plan, { doc = document, win = window, signOut
   const nav = doc.getElementById('top-center-actions');
   if (!nav) return;
   if (plan.showAdmin && !doc.getElementById('account-admin-btn')) {
-    nav.append(actionButton(doc, { id: 'account-admin-btn', icon: 'admin_panel_settings', label: 'Buka konsol admin', onClick: () => navigate(plan.adminHref ?? '/admin') }));
+    nav.append(actionButton(doc, { id: 'account-admin-btn', icon: 'admin_panel_settings', label: 'Open admin console', onClick: () => navigate(plan.adminHref ?? '/admin') }));
   }
   if (!doc.getElementById('account-signout-btn')) {
-    nav.append(actionButton(doc, { id: 'account-signout-btn', icon: 'logout', label: 'Keluar', onClick: () => { void signOut(); } }));
+    nav.append(actionButton(doc, { id: 'account-signout-btn', icon: 'logout', label: 'Sign out', onClick: () => { void signOut(); } }));
   }
 }
 

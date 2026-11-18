@@ -73,15 +73,15 @@ export function normalizeLedger(raw) {
  * @returns {{ok: true, value: {seconds: number, extrasUsd: number}} | {ok: false, error: string}}
  */
 export function validateUsageReport(input) {
-  if (!isPlainObject(input)) return { ok: false, error: 'body: harus berupa objek JSON' };
+  if (!isPlainObject(input)) return { ok: false, error: 'body: must be a JSON object' };
   const unknown = Object.keys(input).filter((key) => key !== 'seconds' && key !== 'extrasUsd');
-  if (unknown.length) return { ok: false, error: 'body: field tidak dikenal' };
+  if (unknown.length) return { ok: false, error: 'body: unknown field' };
   const { seconds, extrasUsd = 0 } = input;
   if (typeof seconds !== 'number' || !Number.isFinite(seconds) || seconds < 0 || seconds > MAX_REPORT_SECONDS) {
-    return { ok: false, error: `seconds: angka 0–${MAX_REPORT_SECONDS}` };
+    return { ok: false, error: `seconds: a number 0–${MAX_REPORT_SECONDS}` };
   }
   if (typeof extrasUsd !== 'number' || !Number.isFinite(extrasUsd) || extrasUsd < 0 || extrasUsd > MAX_REPORT_EXTRAS_USD) {
-    return { ok: false, error: `extrasUsd: angka 0–${MAX_REPORT_EXTRAS_USD}` };
+    return { ok: false, error: `extrasUsd: a number 0–${MAX_REPORT_EXTRAS_USD}` };
   }
   return { ok: true, value: { seconds, extrasUsd } };
 }

@@ -39,6 +39,6 @@ test('the audit route lists newest first, filters by type and pages', async () =
 });
 
 test('the audit route is refused without an admin session', async () => {
-  const { call } = setup(() => ({ ok: false, status: 401, error: 'Login diperlukan' }));
+  const { call } = setup(() => ({ ok: false, status: 401, error: 'Login required' }));
   assert.equal((await call()).status, 401);
 });

@@ -592,14 +592,14 @@ function buildSelectionLabel(record) {
 
   const lines = [
     stationLabel,
-    `🚲 ${bikes} tersedia · ${docks} dok · kapasitas ${capacity}`,
+    `🚲 ${bikes} available · ${docks} docks · capacity ${capacity}`,
   ];
 
   // Append warnings for stations that are offline or partially non-operational
   const abnormal = [];
-  if (record?.isInstalled === false) abnormal.push('⚠️ Belum terpasang');
-  if (record?.isRenting === false) abnormal.push('⚠️ Tidak menyewakan');
-  if (record?.isReturning === false) abnormal.push('⚠️ Tidak menerima pengembalian');
+  if (record?.isInstalled === false) abnormal.push('⚠️ Not installed');
+  if (record?.isRenting === false) abnormal.push('⚠️ Not renting');
+  if (record?.isReturning === false) abnormal.push('⚠️ Not accepting returns');
   if (abnormal.length > 0) {
     lines.push(abnormal.join(' · '));
   }
@@ -1001,7 +1001,7 @@ async function activateCity(cityId, generation) {
   } catch (error) {
     if (error?.name === 'AbortError') return;
     console.warn(`[Data:Bikeshare] ${cityId} activate error:`, error);
-    _error = 'Galat pengambilan GBFS';
+    _error = 'GBFS fetch error';
     deactivateCity(cityId);
     _activeCityIds.delete(cityId);
   } finally {
@@ -1206,7 +1206,7 @@ const bikeshareLayer = {
       } catch (error) {
         if (error?.name === 'AbortError') return;
         console.warn(`[Data:Bikeshare] ${cityId} status update error:`, error);
-        _error = 'Pembaruan status GBFS gagal';
+        _error = 'GBFS status update failed';
       }
     }));
 
@@ -1236,7 +1236,7 @@ const bikeshareLayer = {
     if (_loading) {
       stats.loadingLabel = _activeCityIds.size > 0
         ? `menyinkronkan ${_activeCityIds.size} feed kota...`
-        : 'memindai sistem terdekat...';
+        : 'scanning nearby systems...';
     }
     if (_error) stats.error = _error;
     return withBikeshareGuidance(stats, _guidance);

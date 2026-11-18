@@ -269,7 +269,7 @@ export function paintProjectionPlaceholder(ctx, camera, health = null) {
 export function placeholderStatusText(camera, health = null) {
   const reported = String(health?.message || '').trim();
   if (reported) return reported.toUpperCase();
-  return camera?.feedConfigured === false ? 'TANPA FEED' : 'MEMUAT VIDEO';
+  return camera?.feedConfigured === false ? 'NO FEED' : 'LOADING VIDEO';
 }
 
 /**

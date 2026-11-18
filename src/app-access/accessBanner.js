@@ -10,11 +10,11 @@
 import { CAPABILITY_LABELS } from './capabilityDenial.js';
 import { CAPABILITY_GATES } from './capabilityRoutes.js';
 
-export const ACCESS_BANNER_TITLE = 'Beberapa fitur belum diaktifkan admin';
-export const ACCESS_BANNER_DISMISS_LABEL = 'Tutup';
+export const ACCESS_BANNER_TITLE = 'Some features have not been enabled by an admin yet';
+export const ACCESS_BANNER_DISMISS_LABEL = 'Close';
 /** sessionStorage key holding the dismissed set's signature. */
 export const ACCESS_BANNER_DISMISS_KEY = 'gev:account-banner-dismissed';
-const KILLED_SUFFIX = ' (dimatikan sementara)';
+const KILLED_SUFFIX = ' (temporarily off)';
 
 /**
  * What the banner shows. Pure.

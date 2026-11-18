@@ -44,7 +44,7 @@ export function readToolGroups(section, errors) {
   const groups = defaultToolGroups();
   for (const id of VOICE_TOOL_GROUP_IDS) {
     if (section[id] === undefined) continue;
-    if (typeof section[id] !== 'boolean') errors.push(`toolGroups.${id}: harus true/false`);
+    if (typeof section[id] !== 'boolean') errors.push(`toolGroups.${id}: must be true/false`);
     else groups[id] = section[id];
   }
   return groups;
@@ -55,7 +55,7 @@ function readWhole(value, field, { min, max, fallback }, errors) {
   if (value === undefined) return fallback;
   if (value === null || value === 0) return 0;
   if (!Number.isInteger(value) || value < min || value > max) {
-    errors.push(`${field}: bilangan bulat ${min}–${max}, atau 0 untuk mati`);
+    errors.push(`${field}: a whole number ${min}–${max}, or 0 to turn off`);
     return 0;
   }
   return value;
@@ -87,7 +87,7 @@ export const EXTRA_RULE_TEXT_MAX = 200;
 export function readExtraRules(value, errors) {
   if (value === undefined || value === null) return [];
   if (!Array.isArray(value) || value.length > EXTRA_RULES_MAX) {
-    errors.push(`persona.extraRules: daftar maksimal ${EXTRA_RULES_MAX} aturan`);
+    errors.push(`persona.extraRules: a list of at most ${EXTRA_RULES_MAX} rules`);
     return [];
   }
   const rules = [];
@@ -95,7 +95,7 @@ export function readExtraRules(value, errors) {
     const where = `persona.extraRules[${index}]`;
     if (item === null || typeof item !== 'object' || Array.isArray(item)
       || Object.keys(item).some((key) => key !== 'forbid' && key !== 'instead')) {
-      errors.push(`${where}: harus berisi forbid dan instead saja`);
+      errors.push(`${where}: must contain only forbid and instead`);
       return;
     }
     const [forbid, instead] = ['forbid', 'instead'].map((key) => {
@@ -103,9 +103,9 @@ export function readExtraRules(value, errors) {
       if (typeof raw !== 'string') return null;
       return raw.replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ').replace(/\s+/g, ' ').trim();
     });
-    if (!forbid || !instead) errors.push(`${where}: larangan dan gantinya wajib diisi`);
+    if (!forbid || !instead) errors.push(`${where}: the prohibition and its replacement are required`);
     else if (forbid.length > EXTRA_RULE_TEXT_MAX || instead.length > EXTRA_RULE_TEXT_MAX) {
-      errors.push(`${where}: maksimal ${EXTRA_RULE_TEXT_MAX} karakter per kolom`);
+      errors.push(`${where}: at most ${EXTRA_RULE_TEXT_MAX} characters per field`);
     } else rules.push({ forbid, instead });
   });
   return rules;

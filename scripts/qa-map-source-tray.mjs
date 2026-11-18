@@ -315,12 +315,12 @@ try {
     'manager failure then queued share failure each receives its full visible dwell',
     acquiringFailureArbitration.failureStart.hidden === false
       && acquiringFailureArbitration.failureStart.state === 'error'
-      && acquiringFailureArbitration.failureStart.label === 'MUAT GAGAL'
+      && acquiringFailureArbitration.failureStart.label === 'LOAD FAILED'
       && acquiringFailureArbitration.queuedNoticeReady === true
       && acquiringFailureArbitration.shareFailureQueued.state === 'error'
-      && acquiringFailureArbitration.shareFailureQueued.label === 'MUAT GAGAL'
+      && acquiringFailureArbitration.shareFailureQueued.label === 'LOAD FAILED'
       && acquiringFailureArbitration.failureEnd.state === 'error'
-      && acquiringFailureArbitration.failureEnd.label === 'MUAT GAGAL'
+      && acquiringFailureArbitration.failureEnd.label === 'LOAD FAILED'
       && acquiringFailureArbitration.shareFailureStart.state === 'error'
       && acquiringFailureArbitration.shareFailureStart.label === SHARE_FAILURE_NOTICE
       && acquiringFailureArbitration.shareFailureEnd.label === SHARE_FAILURE_NOTICE

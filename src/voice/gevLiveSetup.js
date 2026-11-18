@@ -22,10 +22,10 @@ import { createLiveVoiceLog } from './liveVoiceLog.js';
 import { logClientEvent } from '../log/clientLog.js';
 
 /** Mic detail line when the owner switched voice off. */
-export const VOICE_DISABLED_MESSAGE = 'Suara dinonaktifkan di /admin > AI Configuration > General.';
+export const VOICE_DISABLED_MESSAGE = 'Voice is turned off in /admin > AI Configuration > General.';
 
 /** Mic detail line when the owner's daily voice minutes are used up. */
-export const DAILY_LIMIT_REACHED_MESSAGE = 'Menit suara harian sudah habis. Atur batasnya di /admin > AI Configuration > General.';
+export const DAILY_LIMIT_REACHED_MESSAGE = 'The daily voice minutes are used up. Set the limit in /admin > AI Configuration > General.';
 
 /**
  * Wrap the gevActions runner so the live-only `read_screen` tool goes to the

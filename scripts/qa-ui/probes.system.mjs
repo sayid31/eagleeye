@@ -76,8 +76,8 @@ export const SYSTEM_PROBES = [
       await tabUntil(page, 'a[href="/dev/server-log/health"]', { max: 40 });
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => location.pathname === '/dev/server-log/health');
-      await page.waitForFunction(() => document.querySelector('#main-content h1')?.textContent === 'Kesehatan Sistem', { timeout: 8000 });
-      assert.equal(await page.$eval('a[aria-current="page"]', (el) => el.textContent), 'Kesehatan Sistem');
+      await page.waitForFunction(() => document.querySelector('#main-content h1')?.textContent === 'System Health', { timeout: 8000 });
+      assert.equal(await page.$eval('a[aria-current="page"]', (el) => el.textContent), 'System Health');
     },
   },
   {
@@ -86,7 +86,7 @@ export const SYSTEM_PROBES = [
       await page.waitForSelector('input[type="search"]');
       await tabUntil(page, 'input[type="search"]', { max: 40 });
       await page.keyboard.type('zzz-tidak-ada');
-      await page.waitForFunction(() => document.querySelector('[data-slot="empty-title"]')?.textContent === 'Tidak ada entri yang cocok', { timeout: 8000 });
+      await page.waitForFunction(() => document.querySelector('[data-slot="empty-title"]')?.textContent === 'No matching entries', { timeout: 8000 });
       await page.$eval('input[type="search"]', (el) => { el.select(); });
       await page.keyboard.press('Backspace');
       await press(page, 'Tab');

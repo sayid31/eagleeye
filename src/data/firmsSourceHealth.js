@@ -47,5 +47,5 @@ export function firmsSourceSummary(sources) {
  */
 export function firmsPartialFailureReason(sources) {
   const failed = (sources || []).filter((s) => !s?.ok).map((s) => sourceLabel(s.source));
-  return failed.length ? `sumber FIRMS gagal: ${failed.join(', ')}` : null;
+  return failed.length ? `FIRMS source failed: ${failed.join(', ')}` : null;
 }

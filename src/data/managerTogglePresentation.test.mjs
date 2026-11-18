@@ -13,7 +13,7 @@ test('formatLayerCount compacts thousands', () => {
 });
 
 test('formatLayerAge buckets seconds, minutes and hours', () => {
-  assert.equal(formatLayerAge(NOW - 2_000, NOW), 'baru saja');
+  assert.equal(formatLayerAge(NOW - 2_000, NOW), 'just now');
   assert.equal(formatLayerAge(NOW - 42_000, NOW), '42d lalu');
   assert.equal(formatLayerAge(NOW - 5 * 60_000, NOW), '5m lalu');
   assert.equal(formatLayerAge(NOW - 3 * 3_600_000, NOW), '3j lalu');
@@ -61,13 +61,13 @@ test('a revoked enable presents OFF and heading to disabled before cleanup runs'
 
 test('a settled layer presents its feed state; uncertainty overrides it', () => {
   const live = toggleButtonPresentation({
-    name: 'Gempa', enabled: true, lifecycleState: 'enabled', stats: { count: 3, lastUpdate: NOW },
+    name: 'Earthquakes', enabled: true, lifecycleState: 'enabled', stats: { count: 3, lastUpdate: NOW },
   });
   assert.equal(live.on, true, 'falls back to settled state without an intent field');
   assert.equal(live.phase, null);
   assert.equal(live.feedClass, live.state);
 
-  const off = toggleButtonPresentation({ name: 'Gempa', enabled: false, lifecycleState: 'disabled', stats: {} });
+  const off = toggleButtonPresentation({ name: 'Earthquakes', enabled: false, lifecycleState: 'disabled', stats: {} });
   assert.equal(off.on, false);
   assert.equal(off.text, 'MATI');
   assert.equal(off.state, 'off');
@@ -75,7 +75,7 @@ test('a settled layer presents its feed state; uncertainty overrides it', () => 
   const uncertain = toggleButtonPresentation({
     name: 'Radio', enabled: true, lifecycleState: 'enabled', lifecycleUncertain: true, stats: {},
   });
-  assert.equal(uncertain.text, 'TIDAK PASTI');
+  assert.equal(uncertain.text, 'UNCERTAIN');
   assert.equal(uncertain.state, 'uncertain');
   assert.equal(uncertain.feedClass, null);
 });

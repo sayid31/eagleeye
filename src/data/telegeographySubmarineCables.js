@@ -692,7 +692,7 @@ export function createTeleGeographySubmarineCableLayer({
       // A stale or aborted load reports nothing: its failure belongs to a
       // lifecycle the user already left.
       if (owns() && error?.name !== 'AbortError') {
-        _error = error?.message || 'Gagal memuat TeleGeography';
+        _error = error?.message || 'Failed to load TeleGeography';
         console.warn('[Data:telegeography-submarine-cables]', _error, error);
       }
     } finally {

@@ -27,10 +27,10 @@ export function formatLayerCount(n) {
  */
 export function formatLayerAge(timestamp, now = Date.now()) {
   const diff = Math.floor((now - timestamp) / 1000);
-  if (diff < 5) return 'baru saja';
-  if (diff < 60) return `${diff}d lalu`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}m lalu`;
-  return `${Math.floor(diff / 3600)}j lalu`;
+  if (diff < 5) return 'just now';
+  if (diff < 60) return `${diff}s ago`;
+  if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+  return `${Math.floor(diff / 3600)}h ago`;
 }
 
 /**
@@ -50,16 +50,16 @@ export function buildLayerMetaText(layer, now = Date.now()) {
     return `${LIFECYCLE_LABELS[lifecycleState]} · ${source}`;
   }
   if (layer.lifecycleUncertain) {
-    return `TIDAK PASTI · ${source} · status siklus perlu direkonsiliasi`;
+    return `UNCERTAIN · ${source} · cycle state needs reconciling`;
   }
   const presentedError = stats.error || stats.lastError || stats.managerRefreshError;
   if (presentedError) {
     if (typeof stats.retryInSec === 'number' && stats.retryInSec > 0) {
-      return `${stateLabel} · ${source} · ${presentedError} · coba lagi ${stats.retryInSec}d`;
+      return `${stateLabel} · ${source} · ${presentedError} · retry ${stats.retryInSec}s`;
     }
     return `${stateLabel} · ${source} · ${presentedError}`;
   }
-  const ago = stats.lastUpdate ? formatLayerAge(stats.lastUpdate, now) : 'belum pernah';
+  const ago = stats.lastUpdate ? formatLayerAge(stats.lastUpdate, now) : 'never';
   if (stats.loading) {
     const loadingLabel = typeof stats.loadingLabel === 'string' && stats.loadingLabel.trim()
       ? stats.loadingLabel.trim()
@@ -74,7 +74,7 @@ export function buildLayerMetaText(layer, now = Date.now()) {
   }
   if (feedState === 'stale') {
     const retry = typeof stats.retryInSec === 'number' && stats.retryInSec > 0
-      ? ` · mencoba lagi dalam ${stats.retryInSec}d`
+      ? ` · retrying in ${stats.retryInSec}s`
       : '';
     return `${stateLabel} · ${source} · ${ago}${retry}`;
   }
@@ -102,7 +102,7 @@ export function toggleButtonPresentation(layer) {
   const phase = transitioning ? (on ? 'enabling' : 'disabling') : null;
   const text = phase
     ? LIFECYCLE_LABELS[phase]
-    : (uncertain ? 'TIDAK PASTI' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'MATI'));
+    : (uncertain ? 'UNCERTAIN' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'MATI'));
   return {
     on,
     transitioning,

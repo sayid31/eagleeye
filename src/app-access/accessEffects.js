@@ -22,12 +22,12 @@ import { createVoiceControl } from '../voice/gevLiveVoiceControlUi.js';
 import { DEFAULT_BOOT_STACK } from '../mapStackController.js';
 
 /** Reason the data-layer manager reports when an account without `layers` enables a layer. */
-export const LAYER_LOCK_REASON = 'Layer data belum diizinkan admin.';
+export const LAYER_LOCK_REASON = 'Data layers are not yet allowed by an admin.';
 /** Picker tooltip / toast for Google 3D and Cesium ion stacks without `premium`. */
-export const PREMIUM_LOCK_REASON = 'Peta premium belum diizinkan admin';
+export const PREMIUM_LOCK_REASON = 'Premium map is not yet allowed by an admin';
 /** Mic status and detail lines while voice is locked. */
-export const VOICE_LOCK_STATUS = 'TERKUNCI';
-export const VOICE_LOCK_DETAIL = 'BELUM DIIZINKAN ADMIN';
+export const VOICE_LOCK_STATUS = 'LOCKED';
+export const VOICE_LOCK_DETAIL = 'NOT YET ALLOWED BY ADMIN';
 
 /**
  * Refuse every layer enable and grey out the toggle list. Disabling stays allowed.
@@ -74,7 +74,7 @@ export function lockVoice({ doc = document, voice = globalThis.window?.__gevVoic
   ui.helpDetail.textContent = `Voice & AI: ${LOCKED_TOOLTIP}`;
   ui.costValue.hidden = true;
   ui.button.setAttribute('aria-disabled', 'true');
-  ui.button.setAttribute('aria-label', `Kontrol suara terkunci — ${LOCKED_TOOLTIP}`);
+  ui.button.setAttribute('aria-label', `Voice controls locked — ${LOCKED_TOOLTIP}`);
   ui.button.title = LOCKED_TOOLTIP;
   const badge = doc.createElement('span');
   badge.className = 'material-symbols-outlined account-lock-badge';

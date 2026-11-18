@@ -52,10 +52,10 @@ test('bodies: create/update/password/role/delete validated at the boundary', () 
 });
 
 test('userErrorMessage: Indonesian text per code, password reason, field', () => {
-  assert.equal(userErrorMessage('EMAIL_TAKEN'), 'Email sudah dipakai akun lain.');
+  assert.equal(userErrorMessage('EMAIL_TAKEN'), 'Email is already used by another account.');
   assert.equal(userErrorMessage({ error: 'PASSWORD_WEAK', reason: 'too_short', min: 15 }), 'Password minimal 15 karakter.');
   assert.equal(userErrorMessage({ error: 'INVALID_INPUT', field: 'email' }), 'Isian email tidak valid.');
-  assert.equal(userErrorMessage('SOMETHING_NEW'), 'Permintaan gagal.');
+  assert.equal(userErrorMessage('SOMETHING_NEW'), 'Request failed.');
 });
 
 test('usersApi: URLs, methods, JSON bodies; refusals throw with code and Indonesian message', async () => {
@@ -73,6 +73,6 @@ test('usersApi: URLs, methods, JSON bodies; refusals throw with code and Indones
     ['POST', '/api/admin/users/U1/role', '{"role":"admin","currentPassword":"pw"}'],
   ]);
   const refused = createUsersApi(fake({ ok: false, status: 409, json: async () => ({ error: 'EMAIL_TAKEN', message: 'x' }) }));
-  await assert.rejects(refused.create({}), (error) => error.code === 'EMAIL_TAKEN' && error.status === 409 && error.message === 'Email ini sudah dipakai akun lain.');
+  await assert.rejects(refused.create({}), (error) => error.code === 'EMAIL_TAKEN' && error.status === 409 && error.message === 'This email is already used by another account.');
   assert.equal(queryString({ a: '', b: null, offset: 0, limit: 0 }), '?limit=0');
 });

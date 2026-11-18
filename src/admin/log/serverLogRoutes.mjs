@@ -74,12 +74,12 @@ export function installServerLogRoutes(middlewares, {
 }) {
   registerApiRoute(middlewares, '/api/log', 'open', async (req, res) => {
     if (req.method !== 'POST') return sendJson(res, 405, { error: 'Method not allowed' });
-    if (!isSameOriginJson(req)) return sendJson(res, 403, { error: 'Origin tidak diizinkan' });
+    if (!isSameOriginJson(req)) return sendJson(res, 403, { error: 'Origin not allowed' });
     let body;
     try {
       body = JSON.parse(await readRequestBody(req, MAX_BODY_BYTES));
     } catch {
-      return sendJson(res, 400, { error: 'Body bukan JSON yang valid atau terlalu besar' });
+      return sendJson(res, 400, { error: 'Body is not valid JSON or is too large' });
     }
     const events = Array.isArray(body?.events) ? body.events.slice(0, MAX_EVENTS_PER_POST) : [];
     const granted = budget(events.length);

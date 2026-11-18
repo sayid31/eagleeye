@@ -5,7 +5,7 @@ import { createFakeDocument } from './__fixtures__/fakeDom.mjs';
 
 test('the banner lists the locked toggles in a fixed order; nothing locked → no banner', () => {
   const model = accessBannerModel(new Map([['premium', 'plan'], ['layers', 'plan']]), null);
-  assert.deepEqual(model, { title: ACCESS_BANNER_TITLE, items: ['Layer data', 'Peta premium & search'], key: 'layers:o,premium:o' });
+  assert.deepEqual(model, { title: ACCESS_BANNER_TITLE, items: ['Data layers', 'Premium map & search'], key: 'layers:o,premium:o' });
   assert.equal(accessBannerModel(new Map(), null), null);
 });
 
@@ -45,7 +45,7 @@ test('render: one banner with title, items and a Tutup button that reports the k
   const banner = banners[0];
   assert.equal(banner.getAttribute('role'), 'status');
   assert.equal(banner.children[0].textContent, `${ACCESS_BANNER_TITLE}:`);
-  assert.deepEqual(banner.children[1].children.map((li) => li.textContent), ['Layer data', 'Voice & AI']);
+  assert.deepEqual(banner.children[1].children.map((li) => li.textContent), ['Data layers', 'Voice & AI']);
   banner.children[2].click();
   assert.deepEqual(dismissed, ['layers:o,ai:o']);
   renderAccessBanner(doc, { text: 'Status akun tidak bisa diperiksa.' }, () => {});

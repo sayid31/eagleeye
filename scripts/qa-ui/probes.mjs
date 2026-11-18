@@ -15,14 +15,14 @@ import { expectEscapeRestoresFocus, expectFocusTrapped, focusInfo, focusMatches,
 const MAIN = '#main-content';
 /** The original /dev menu: sidebar label, path, page title (h1). */
 const DEV_ITEMS = [
-  ['Ringkasan sistem', '/', 'Ringkasan sistem'], ['Pengguna & Admin', '/users', 'Pengguna & Admin'], ['Log Login', '/login-log', 'Log Login'],
-  ['Kill switch', '/kill-switches', 'Kill switch'], ['Pemakaian', '/usage', 'Pemakaian & budget'], ['API Keys', '/api-keys', 'API Keys'],
-  ['Umum', '/ai/general', 'Umum'], ['Penyedia AI', '/ai/provider', 'Penyedia AI'], ['Persona', '/ai/persona', 'Persona'],
-  ['Pemakaian & Biaya', '/ai/usage', 'Pemakaian & Biaya'], ['Server Log', '/server-log', 'Server Log'], ['Audit Log', '/server-log/audit', 'Audit Log'],
-  ['Kesehatan Sistem', '/server-log/health', 'Kesehatan Sistem'], ['Audit', '/audit', 'Audit'],
+  ['System Overview', '/', 'System Overview'], ['Users & Admins', '/users', 'Users & Admins'], ['Login Log', '/login-log', 'Login Log'],
+  ['Kill switch', '/kill-switches', 'Kill switch'], ['Usage', '/usage', 'Usage & budget'], ['API Keys', '/api-keys', 'API Keys'],
+  ['General', '/ai/general', 'General'], ['AI Provider', '/ai/provider', 'AI Provider'], ['Persona', '/ai/persona', 'Persona'],
+  ['Usage & Cost', '/ai/usage', 'Usage & Cost'], ['Server Log', '/server-log', 'Server Log'], ['Audit Log', '/server-log/audit', 'Audit Log'],
+  ['System Health', '/server-log/health', 'System Health'], ['Audit', '/audit', 'Audit'],
 ];
-const DEV_MENU = ['Ringkasan sistem', 'Pengguna & Admin', 'Log Login', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Umum', 'Penyedia AI', 'Persona',
-  'Pemakaian & Biaya', 'Server Log', 'Server Log', 'Audit Log', 'Kesehatan Sistem', 'Audit'];
+const DEV_MENU = ['System Overview', 'Users & Admins', 'Login Log', 'Kill switch', 'Usage', 'API Keys', 'AI Configuration', 'General', 'AI Provider', 'Persona',
+  'Usage & Cost', 'Server Log', 'Server Log', 'Audit Log', 'System Health', 'Audit'];
 
 const USER_MENU = '[data-account-menu]';
 const SIDEBAR_TRIGGER = '[data-slot="sidebar-trigger"]';
@@ -66,7 +66,7 @@ export const PROBES = [
       await press(page, 'ArrowDown');
       assert.equal((await focusInfo(page, '[role="menu"]')).inside, true, 'arrow keys move focus into the menu');
       const items = await page.$$eval('[role="menu"] [role^="menuitem"]', (nodes) => nodes.map((n) => n.textContent.trim()));
-      for (const wanted of ['Tema tampilan', 'Buka peta', 'Buka area Admin', 'Keluar']) assert.ok(items.some((t) => t.includes(wanted)), `menu item "${wanted}" in ${items.join(' | ')}`);
+      for (const wanted of ['Display theme', 'Open map', 'Open Admin area', 'Sign out']) assert.ok(items.some((t) => t.includes(wanted)), `menu item "${wanted}" in ${items.join(' | ')}`);
       await expectEscapeRestoresFocus(page, '[role="menu"]', USER_MENU);
     },
   },
@@ -76,13 +76,13 @@ export const PROBES = [
       assert.equal(await dark(page), false);
       await page.click('header button[aria-label="Tema tampilan"]');
       await page.waitForSelector('[role="menuitemradio"]');
-      await (await byText(page, '[role="menuitemradio"]', 'Gelap')).click();
+      await (await byText(page, '[role="menuitemradio"]', 'Dark')).click();
       await page.waitForFunction(() => document.documentElement.classList.contains('dark'));
       assert.equal(await stored(page), 'dark');
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
       await page.click('header button[aria-label="Tema tampilan"]');
       await page.waitForSelector('[role="menuitemradio"]');
-      await (await byText(page, '[role="menuitemradio"]', 'Sistem')).click();
+      await (await byText(page, '[role="menuitemradio"]', 'System')).click();
       assert.equal(await stored(page), 'system');
       await page.reload({ waitUntil: 'domcontentloaded' });
       await page.waitForSelector(MAIN);
@@ -123,7 +123,7 @@ export const PROBES = [
   {
     id: 'confirm-dialog', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/ui-kit',
     async run(page) {
-      const opener = await byText(page, 'button', 'Hapus akun');
+      const opener = await byText(page, 'button', 'Delete account');
       await opener.focus();
       await page.keyboard.press('Enter');
       await page.waitForSelector('[role="alertdialog"]');
@@ -145,12 +145,12 @@ export const PROBES = [
   {
     id: 'confirm-dialog-error-stays-open', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ui-kit',
     async run(page) {
-      await (await byText(page, 'button', 'Aksi yang gagal')).click();
+      await (await byText(page, 'button', 'A failing action')).click();
       await page.waitForSelector('[role="alertdialog"] button[type="submit"]');
       await page.click('[role="alertdialog"] button[type="submit"]');
       await page.waitForSelector('[role="alertdialog"] [role="alert"]');
       const message = await page.$eval('[role="alertdialog"] [role="alert"]', (el) => el.textContent);
-      assert.equal(message, 'Password Anda salah.', 'the sentence from the code, never the code');
+      assert.equal(message, 'Your password is incorrect.', 'the sentence from the code, never the code');
     },
   },
   {
@@ -161,11 +161,11 @@ export const PROBES = [
       await page.keyboard.press('Enter');
       await page.waitForSelector('[role="menu"]');
       const labels = await page.$$eval('[role="menu"] [role="menuitem"]', (nodes) => nodes.map((n) => n.textContent.trim()));
-      assert.deepEqual(labels, ['Ubah', 'Hapus'], 'destructive action last');
+      assert.deepEqual(labels, ['Edit', 'Delete'], 'destructive action last');
       assert.equal(await page.$eval('[role="menu"] [role="separator"]', () => true), true, 'separator before the destructive item');
       await press(page, 'ArrowDown');
       await press(page, 'ArrowDown');
-      assert.equal((await focusInfo(page)).text, 'Hapus');
+      assert.equal((await focusInfo(page)).text, 'Delete');
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => !document.querySelector('[role="menu"]'));
       await waitForFocus(page, trigger);
@@ -175,10 +175,10 @@ export const PROBES = [
     id: 'copy-field', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ui-kit',
     async run(page, env) {
       await page.browserContext().overridePermissions(env.url, ['clipboard-read', 'clipboard-write']);
-      await (await byText(page, 'button', 'Salin pesan')).click();
-      await page.waitForFunction(() => [...document.querySelectorAll('[role="status"]')].some((el) => el.textContent.trim() === 'Tersalin'));
+      await (await byText(page, 'button', 'Copy message')).click();
+      await page.waitForFunction(() => [...document.querySelectorAll('[role="status"]')].some((el) => el.textContent.trim() === 'Copied'));
       const clip = await page.evaluate(() => navigator.clipboard.readText());
-      assert.equal(clip, 'Password sementara: Contoh-Sandi-Sementara-42');
+      assert.equal(clip, 'Temporary password: Example-Temporary-Password-42');
     },
   },
   {
@@ -232,7 +232,7 @@ export const PROBES = [
       await page.keyboard.press('Space');
       await page.waitForSelector('input[name="password"][type="text"]');
       assert.equal(await page.$eval(toggle, (el) => el.getAttribute('aria-pressed')), 'true');
-      assert.equal(await page.$eval(toggle, (el) => el.getAttribute('aria-label')), 'Sembunyikan password');
+      assert.equal(await page.$eval(toggle, (el) => el.getAttribute('aria-label')), 'Hide password');
       await waitForFocus(page, toggle);
       await page.keyboard.press('Enter');
       await page.waitForSelector('input[name="password"][type="password"]');
@@ -241,7 +241,7 @@ export const PROBES = [
   {
     id: 'login-forgot-password-popover', role: 'anonymous', viewport: 'desktop', theme: 'light', path: '/login',
     async run(page) {
-      const trigger = await byText(page, 'button', 'Lupa password?');
+      const trigger = await byText(page, 'button', 'Forgot password?');
       await trigger.focus();
       await page.keyboard.press('Enter');
       await page.waitForSelector('[data-slot="popover-content"]');
@@ -253,7 +253,7 @@ export const PROBES = [
   {
     id: 'account-revoke-others-confirm', role: 'admin', viewport: 'desktop', theme: 'light', path: '/account?tab=security',
     async run(page) {
-      const opener = await byText(page, 'button', 'Keluar dari perangkat lain');
+      const opener = await byText(page, 'button', 'Sign out of other devices');
       await opener.focus();
       await page.keyboard.press('Enter');
       await page.waitForSelector('[role="alertdialog"]');
@@ -268,8 +268,8 @@ export const PROBES = [
     async run(page) {
       await page.focus('[role="tab"][aria-selected="true"]');
       await press(page, 'ArrowRight');
-      await page.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent.trim() === 'Keamanan');
-      assert.equal(await page.$eval('[role="tab"][aria-selected="true"]', (el) => el.textContent.trim()), 'Keamanan');
+      await page.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent.trim() === 'Security');
+      assert.equal(await page.$eval('[role="tab"][aria-selected="true"]', (el) => el.textContent.trim()), 'Security');
       assert.equal(new URL(page.url()).searchParams.get('tab'), 'security');
     },
   },

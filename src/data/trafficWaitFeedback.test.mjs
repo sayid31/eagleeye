@@ -55,7 +55,7 @@ test('wait copy is ignored when nothing is fetching', () => {
   const waitLabel = osmWaitLabel(0, 20_000);
   assert.equal(
     trafficFeedPresentation({ liveMode: false, fetching: false, waitLabel }).loadingLabel,
-    'SIMULASI — tambahkan kunci TomTom untuk live',
+    'SIMULATION — add a TomTom key for live',
   );
 });
 
@@ -68,7 +68,7 @@ test('a keyed layer shows the queue note while fetching, and the outage copy sti
   const down = trafficFeedPresentation({
     liveMode: true,
     fetching: true,
-    flowError: 'Kuota harian TomTom habis',
+    flowError: 'TomTom daily quota used up',
     waitLabel,
   });
   assert.equal(down.loadingLabel, 'SIMULASI — Kuota harian TomTom habis');
@@ -79,5 +79,5 @@ test('the global banner names the loading layer only; the OSM queue note stays o
   const loading = { id: 'traffic', name: 'Traffic', enabled: true, stats: { loading: true, loadingLabel: osmWaitLabel(0, 9000) } };
   assert.ok(!('waitNote' in normalizeLayerLoading(loading)));
   const state = { ...createLoadingFeedbackState(), visible: true, phase: 'loading', startedAt: 0 };
-  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([loading]), 9000).detail, 'Lalu lintas');
+  assert.equal(presentLoadingFeedback(state, aggregateLayerLoading([loading]), 9000).detail, 'Traffic');
 });

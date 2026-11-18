@@ -25,7 +25,7 @@ renderCockpitSignals() {
         heading.className = 'cockpit-signal-target';
         heading.dataset.signalLayer = item.target.layerId;
         heading.dataset.signalId = item.target.id;
-        heading.setAttribute('aria-label', `Pilih penerbangan ${item.title}`);
+        heading.setAttribute('aria-label', `Select flight ${item.title}`);
         const label = document.createElement('span');
         label.className = 'cockpit-signal-target-label';
         label.textContent = item.title;
@@ -69,7 +69,7 @@ updateCockpitSignals(snapshot, unknownCount) {
         key: `flight:${subject.layerId}:${subject.id}`,
         tone: 'track',
         title: subject.label || subject.id,
-        detail: `${subject.layerId === 'military' ? 'PENERBANGAN MILITER' : 'PENERBANGAN KOMERSIAL'} · SAAT INI`,
+        detail: `${subject.layerId === 'military' ? 'MILITARY FLIGHT' : 'COMMERCIAL FLIGHT'} · CURRENT`,
         target: { layerId: subject.layerId, id: String(subject.id) },
         distanceM: -1,
       });
@@ -91,7 +91,7 @@ updateCockpitSignals(snapshot, unknownCount) {
           detail: `${cohort.id === 'military' ? 'PENERBANGAN MILITER' : 'PENERBANGAN KOMERSIAL'} · ${
             Number.isFinite(item.distanceM)
               ? `${item.distanceM < 10000 ? (item.distanceM / 1000).toFixed(1) : Math.round(item.distanceM / 1000)} KM`
-              : 'JARAK TIDAK DIKETAHUI'
+              : 'DISTANCE UNKNOWN'
           }`,
           target: { layerId: cohort.id, id: String(id) },
           distanceM: item.distanceM ?? Infinity,
@@ -111,8 +111,8 @@ updateCockpitSignals(snapshot, unknownCount) {
       nextItems.splice(4, Math.max(0, nextItems.length - 4), {
         key: 'input-status',
         tone: 'warning',
-        title: `${unknownCount} INPUT TIDAK DIKETAHUI`,
-        detail: sources || 'STATUS SUMBER TIDAK TERSEDIA',
+        title: `${unknownCount} INPUTS UNKNOWN`,
+        detail: sources || 'SOURCE STATUS UNAVAILABLE',
         target: null,
         timestamp: previous.get('input-status')?.timestamp || snapshot.evaluatedAt || Date.now(),
       });
@@ -148,8 +148,8 @@ setSignalCollapsed(collapsed, { user = false } = {}) {
     if (this.signalToggle) {
       const expanded = !this.signalCollapsed;
       this.signalToggle.setAttribute('aria-expanded', String(expanded));
-      this.signalToggle.setAttribute('aria-label', `${expanded ? 'Ciutkan' : 'Bentangkan'} panel ringkasan kokpit`);
-      this.signalToggle.title = `${expanded ? 'Ciutkan' : 'Bentangkan'} panel ringkasan`;
+      this.signalToggle.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} cockpit summary panel`);
+      this.signalToggle.title = `${expanded ? 'Collapse' : 'Expand'} summary panel`;
       const icon = this.signalToggle.querySelector('.material-symbols-outlined');
       if (icon) icon.textContent = expanded ? 'right_panel_close' : 'right_panel_open';
     }

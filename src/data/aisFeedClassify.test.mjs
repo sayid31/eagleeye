@@ -10,6 +10,6 @@ test('aisFetchFailureReason names a fetch timeout with its budget', () => {
 test('aisFetchFailureReason keeps other failure messages and has a fallback', () => {
   assert.equal(aisFetchFailureReason(new TypeError('Failed to fetch'), 20000), 'Failed to fetch');
   assert.equal(aisFetchFailureReason(new Error('AIS live HTTP 502'), 20000), 'AIS live HTTP 502');
-  assert.equal(aisFetchFailureReason(null, 20000), 'Pemuatan AIS live gagal');
-  assert.equal(aisFetchFailureReason(new Error(''), 20000), 'Pemuatan AIS live gagal');
+  assert.equal(aisFetchFailureReason(null, 20000), 'Live AIS load failed');
+  assert.equal(aisFetchFailureReason(new Error(''), 20000), 'Live AIS load failed');
 });

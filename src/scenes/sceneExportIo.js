@@ -60,7 +60,7 @@ export const sceneExportIoMixin = {
       this._renderShotList();
       this._updateStatus(`Diimpor: ${file.name}`);
     } catch {
-      this._updateStatus('Impor gagal (JSON tidak valid)');
+      this._updateStatus('Import failed (invalid JSON)');
     }
   },
 

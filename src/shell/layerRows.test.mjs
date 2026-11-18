@@ -16,7 +16,7 @@ test('rows hidden from the toggle panel are not planned', () => {
 
 test('each row carries label, honest status text and group order', () => {
   const byId = Object.fromEntries(planRows(layers, NOW).map((r) => [r.id, r]));
-  assert.equal(byId.traffic.label, 'Lalu lintas');
+  assert.equal(byId.traffic.label, 'Traffic');
   assert.equal(byId.traffic.statusText, 'Live');
   assert.equal(byId.flights.statusText, 'Mati');
   assert.equal(byId.earthquakes.statusText, 'Terganggu · data 2 jam lalu');

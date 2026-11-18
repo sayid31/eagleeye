@@ -73,7 +73,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
       if (!data || !Array.isArray(data.ac)) {
         S._backoff = true;
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;
-        S._lastError = 'Respons adsb.lol tidak valid';
+        S._lastError = 'Invalid adsb.lol response';
         return;
       }
 
@@ -81,7 +81,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
       if (data.ac.length > 0 && usableAircraft.length === 0) {
         S._backoff = true;
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;
-        S._lastError = 'Baris pesawat adsb.lol tidak valid';
+        S._lastError = 'Invalid adsb.lol aircraft row';
         return;
       }
 
@@ -472,7 +472,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
       console.warn('[Data:Military] Fetch error:', e);
       S._backoff = true;
       S._retryAt = Date.now() + ERROR_BACKOFF_INTERVAL;
-      S._lastError = 'Galat jaringan adsb.lol';
+      S._lastError = 'adsb.lol network error';
     } finally {
       _activeUpdateControllers.delete(resourceController);
     }

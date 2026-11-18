@@ -1882,7 +1882,7 @@ test('uncertain lifecycle state overrides ordinary feed status without disabling
 
   mgr._syncToggleButton(button, layer);
 
-  assert.equal(button.textContent, 'TIDAK PASTI');
+  assert.equal(button.textContent, 'UNCERTAIN');
   assert.equal(button.dataset.feedState, 'uncertain');
   assert.equal(button.disabled, false, 'the lifecycle toggle remains available to reconcile authority');
   assert.equal(attributes.get('aria-label'), 'Radio: TIDAK PASTI');

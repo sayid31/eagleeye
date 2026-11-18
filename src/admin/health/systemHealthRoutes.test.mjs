@@ -44,7 +44,7 @@ test('GET /api/admin/health returns a report; guard and method are enforced; a f
   assert.equal((await call(handler, 'POST')).status, 405);
 
   let denied;
-  installSystemHealthRoutes({ use: (_p, h) => { denied = h; } }, { gather: () => ({}), guard: () => ({ ok: false, status: 401, error: 'Login diperlukan' }) });
+  installSystemHealthRoutes({ use: (_p, h) => { denied = h; } }, { gather: () => ({}), guard: () => ({ ok: false, status: 401, error: 'Login required' }) });
   assert.equal((await call(denied)).status, 401);
 
   let broken;

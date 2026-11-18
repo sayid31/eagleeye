@@ -31,7 +31,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // leak into another domain. Slightly warm so it also separates from the
     // pure white the civilian air fleet draws in.
     color: '#fff6e5',
-    blurb: 'Stasiun berawak dan wahana yang berkunjung',
+    blurb: 'Crewed stations and visiting vehicles',
   }),
   nav: Object.freeze({
     label: 'NAV',
@@ -47,7 +47,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // overlay paints the SAT tier #bda4ff), and the geostationary belt draws
     // as one clean equatorial ring at globe scale.
     color: '#c89bff',
-    blurb: 'Sabuk geostasioner — komunikasi dan cuaca, diam di atas khatulistiwa',
+    blurb: 'Geostationary belt — communications and weather, parked over the equator',
   }),
   visual: Object.freeze({
     label: 'VISUAL',
@@ -55,7 +55,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // cyan it used to hold and recedes behind the three classes that mean
     // something. Still well clear of the dense shell by luminance.
     color: '#9fb3c4',
-    blurb: 'Objek paling terang dilihat mata telanjang — grup visual CelesTrak',
+    blurb: 'Brightest objects visible to the naked eye — CelesTrak visual group',
   }),
   comms: Object.freeze({
     label: 'COMMS',
@@ -64,7 +64,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // ~0.40 against VISUAL's ~0.69 keeps the two separable even when the
     // NVG/FLIR shaders collapse the scene to a single channel.
     color: '#54697f',
-    blurb: 'Cangkang konstelasi pita lebar — hanya tampil di mode DENSE',
+    blurb: 'Broadband constellation shell — only shown in DENSE mode',
   }),
 });
 

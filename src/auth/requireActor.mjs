@@ -21,7 +21,7 @@ const PERMISSIONS = new Set(['admin', 'super']);
 export function requireActor(req, permission) {
   if (!PERMISSIONS.has(permission)) throw new Error(`requireActor: unknown permission "${permission}"`);
   const actor = req?.gevActor;
-  if (!actor) return { ok: false, status: 401, error: 'Login diperlukan' };
-  if (!hasGate(actor, permission)) return { ok: false, status: 403, error: 'Akses ditolak' };
+  if (!actor) return { ok: false, status: 401, error: 'Login required' };
+  if (!hasGate(actor, permission)) return { ok: false, status: 403, error: 'Access denied' };
   return { ok: true, actorId: String(actor.user.id) };
 }

@@ -14,10 +14,10 @@ const MARKED_PROVIDER = /^UNOFFICIAL\s*[—-]\s*(.+?)\s*\(Internal Demo Only(?:,
 
 /** How precise the camera position is, as the pack's provider string states it. */
 const LOCATION_NOTES = Object.freeze({
-  'APPROX. LOCATION': 'lokasi perkiraan',
-  'APPROXIMATE LOCATION': 'lokasi perkiraan',
-  'SOURCE-PUBLISHED LOCATION': 'lokasi dari sumber',
-  'CITY-LEVEL ONLY': 'hanya tingkat kota',
+  'APPROX. LOCATION': 'approximate location',
+  'APPROXIMATE LOCATION': 'approximate location',
+  'SOURCE-PUBLISHED LOCATION': 'location from the source',
+  'CITY-LEVEL ONLY': 'city level only',
 });
 
 /**

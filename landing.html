@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>EagleEye View · Konsol intelijen geospasial real-time</title>
-  <meta name="description" content="EagleEye View: konsol intelijen geospasial real-time di browser. Pesawat, kapal, satelit, gempa, titik api, lalu lintas, dan CCTV publik di atas globe 3D, dengan kendali suara." />
+  <meta name="description" content="EagleEye View: a real-time geospatial intelligence console in the browser. Aircraft, vessels, satellites, earthquakes, fires, traffic, and public CCTV on a 3D globe, with voice control." />
   <meta name="color-scheme" content="light dark" />
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <!-- Anti-flash theme script: must stay before any stylesheet. Same text as THEME_INIT_SCRIPT (src/lib/themeCore.js). -->
@@ -19,30 +19,30 @@
   <script type="module" src="/src/landing/main.js"></script>
 </head>
 <body>
-  <a class="ld-skip" href="#main-content">Lewati ke konten</a>
+  <a class="ld-skip" href="#main-content">Skip to content</a>
 
   <header class="ld-header">
     <div class="ld-wrap ld-header__bar">
-      <a class="ld-brand" href="#top" aria-label="EagleEye View, ke atas halaman">
+      <a class="ld-brand" href="#top" aria-label="EagleEye View, back to top">
         <svg class="ld-brand__mark" viewBox="277 41 288 513" fill="currentColor" aria-hidden="true" focusable="false"><path transform="matrix(1,0,0,-1,469.979,417.2648)" d="M0 0V-.262C7.08 6.28 13.783 12.18 20.103 17.665L10.907 63.06 40.236 35.152C67.551 59.389 84.108 78.814 86.785 120.348L47.618 134.354 86.848 145.082C85.475 173.229 79.544 206.939 69.63 240.325L37.691 221.413 59.702 269.941C44.968 309.262 24.741 345.535 0 368.396V112.549H-20.033C-24.513 117.021-28.045 121.097-29.948 124.358-35.021 133.056-17.812 134.277-14.479 128.478-11.053 144.287-23.437 151.903-38.979 151.903H-58.217C-66.056 151.903-78.162 130.441-86.897 112.549H-98.067V368.396C-122.807 345.535-143.035 309.263-157.768 269.942L-135.757 221.413-167.696 240.325C-177.61 206.939-183.54 173.229-184.914 145.082L-145.685 134.354-184.851 120.349C-182.174 78.814-165.618 59.389-138.303 35.152L-108.972 63.06-118.168 17.664C-111.848 12.179-105.146 6.28-98.067-.262V.001L-86.683-11.382C-89.084-17.458-104.969-58.219-105.224-73.612-105.777-106.917-75.477-115.857-49.033-128.61-22.589-115.857 7.711-106.917 7.159-73.612 6.903-58.218-8.982-17.457-11.382-11.382Z"/></svg>
         <span>EagleEye View</span>
       </a>
-      <button class="ld-menu-btn" type="button" aria-expanded="false" aria-controls="ld-panel" aria-label="Buka menu"><span class="ld-i ld-i-menu" aria-hidden="true"></span></button>
+      <button class="ld-menu-btn" type="button" aria-expanded="false" aria-controls="ld-panel" aria-label="Open menu"><span class="ld-i ld-i-menu" aria-hidden="true"></span></button>
       <div class="ld-panel" id="ld-panel">
-        <nav class="ld-nav" aria-label="Bagian halaman">
+        <nav class="ld-nav" aria-label="Page sections">
           <a href="#lihat">Data</a>
-          <a href="#suara">Suara</a>
+          <a href="#suara">Voice</a>
           <a href="#gaya">Gaya</a>
-          <a href="#sumber">Sumber</a>
+          <a href="#sumber">Sources</a>
           <a href="#prinsip">Prinsip</a>
         </nav>
         <div class="ld-header__tools">
-          <div class="ld-theme" role="group" aria-label="Tema tampilan">
-            <button type="button" data-theme-value="light" aria-pressed="false" aria-label="Terang"><span class="ld-i ld-i-sun" aria-hidden="true"></span></button>
-            <button type="button" data-theme-value="dark" aria-pressed="false" aria-label="Gelap"><span class="ld-i ld-i-moon" aria-hidden="true"></span></button>
-            <button type="button" data-theme-value="system" aria-pressed="true" aria-label="Sistem"><span class="ld-i ld-i-monitor" aria-hidden="true"></span></button>
+          <div class="ld-theme" role="group" aria-label="Display theme">
+            <button type="button" data-theme-value="light" aria-pressed="false" aria-label="Light"><span class="ld-i ld-i-sun" aria-hidden="true"></span></button>
+            <button type="button" data-theme-value="dark" aria-pressed="false" aria-label="Dark"><span class="ld-i ld-i-moon" aria-hidden="true"></span></button>
+            <button type="button" data-theme-value="system" aria-pressed="true" aria-label="System"><span class="ld-i ld-i-monitor" aria-hidden="true"></span></button>
           </div>
-          <div class="ld-cta ld-header__cta" data-cta-slot="nav" aria-busy="true"><a class="ld-btn ld-btn--sm" href="/login">Masuk</a></div>
+          <div class="ld-cta ld-header__cta" data-cta-slot="nav" aria-busy="true"><a class="ld-btn ld-btn--sm" href="/login">Sign in</a></div>
         </div>
       </div>
     </div>
@@ -52,12 +52,12 @@
     <section class="ld-hero" id="top" aria-labelledby="hero-title">
       <div class="ld-wrap ld-hero__grid">
         <div class="ld-hero__copy">
-          <h1 id="hero-title">Konsol intelijen geospasial real-time untuk planet Bumi</h1>
-          <p class="ld-lead">Satu globe 3D di browser yang menyatukan sinyal publik: transponder pesawat, siaran AIS kapal, orbit satelit, seismograf, satelit pemantau api, dan kamera lalu lintas publik. Dikendalikan dengan mouse, keyboard, atau suara.</p>
-          <div class="ld-cta ld-cta--hero" data-cta-slot="hero" aria-busy="true" aria-live="polite"><a class="ld-btn ld-btn--primary" href="/login">Masuk</a></div>
-          <p class="ld-note">Akses khusus akun terdaftar. Tidak ada pendaftaran mandiri.</p>
+          <h1 id="hero-title">A real-time geospatial intelligence console for planet Earth</h1>
+          <p class="ld-lead">One 3D globe in the browser that brings together public signals: aircraft transponders, vessel AIS broadcasts, satellite orbits, seismographs, fire-monitoring satellites, and public traffic cameras. Controlled with mouse, keyboard, or voice.</p>
+          <div class="ld-cta ld-cta--hero" data-cta-slot="hero" aria-busy="true" aria-live="polite"><a class="ld-btn ld-btn--primary" href="/login">Sign in</a></div>
+          <p class="ld-note">Access is for registered accounts only. There is no self-registration.</p>
         </div>
-        <figure class="ld-visual" role="img" aria-label="Ilustrasi: globe dengan jejak penerbangan, orbit satelit, penanda kapal dan gempa, serta panel layer data">
+        <figure class="ld-visual" role="img" aria-label="Illustration: a globe with flight trails, satellite orbits, vessel and earthquake markers, and a data layer panel">
           <svg viewBox="0 0 520 420" focusable="false" aria-hidden="true">
             <circle class="ld-v-fill" cx="230" cy="215" r="160" />
             <g class="ld-v-lines" fill="none"><circle cx="230" cy="215" r="160" /><ellipse cx="230" cy="215" rx="138" ry="160" /><ellipse cx="230" cy="215" rx="80" ry="160" /><path d="M230 55V375M70 215H390M91.4 135H368.6M91.4 295H368.6M150 76.4H310M150 353.6H310" /></g>
@@ -72,13 +72,13 @@
             <circle class="ld-v-sat" cx="360" cy="105" r="6" />
           </svg>
           <div class="ld-visual__panel" aria-hidden="true">
-            <p>Layer data</p>
+            <p>Data layers</p>
             <ul>
               <li><span class="ld-dot ld-dot--air"></span>Pesawat<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--sea"></span>Kapal<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--sat"></span>Satelit<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--quake"></span>Gempa<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--traffic"></span>Lalu lintas<b>Simulasi</b></li>
+              <li><span class="ld-dot ld-dot--sea"></span>Vessels<b>Live</b></li>
+              <li><span class="ld-dot ld-dot--sat"></span>Satellites<b>Live</b></li>
+              <li><span class="ld-dot ld-dot--quake"></span>Earthquakes<b>Live</b></li>
+              <li><span class="ld-dot ld-dot--traffic"></span>Traffic<b>Simulasi</b></li>
             </ul>
           </div>
         </figure>
@@ -87,16 +87,16 @@
 
     <section class="ld-section" id="lihat" aria-labelledby="lihat-title">
       <div class="ld-wrap">
-        <h2 id="lihat-title">Apa yang bisa dilihat</h2>
-        <p class="ld-intro">Setiap sumber adalah layer yang bisa dinyalakan dan dimatikan. Panel layer menunjukkan status tiap sumber: live, terganggu, atau simulasi.</p>
+        <h2 id="lihat-title">What you can see</h2>
+        <p class="ld-intro">Every source is a layer you can turn on and off. The layer panel shows each source's status: live, degraded, or simulated.</p>
         <ul class="ld-cards">
-          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-plane"></span></span><h3>Pesawat</h3><p>Penerbangan sipil dari OpenSky Network dengan cadangan adsb.lol, plus penerbangan militer dari adsb.lol. Klik untuk melacak, atau masuk ke tampilan kokpit.</p></li>
-          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-ship"></span></span><h3>Kapal</h3><p>Posisi kapal dari siaran AIS melalui AISStream.io.</p></li>
-          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-satellite"></span></span><h3>Satelit</h3><p>Orbit dihitung di browser dari data TLE CelesTrak, beserta konteks peluncuran roket dari Launch Library 2.</p></li>
-          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-activity"></span><span class="ld-i ld-i-flame"></span></span><h3>Gempa &amp; kebakaran</h3><p>Gempa 24 jam terakhir dari USGS dan titik api satelit VIIRS dari NASA FIRMS.</p></li>
-          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-car"></span></span><h3>Lalu lintas</h3><p>Geometri jalan dari OpenStreetMap. Arus lalu lintas disimulasikan, atau live dari TomTom bila key-nya dipasang.</p></li>
-          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-cctv"></span></span><h3>CCTV publik</h3><p>Kamera lalu lintas publik (antara lain Austin, Caltrans, TfL London, dan kota-kota di Indonesia), lengkap dengan label status sumbernya.</p></li>
-          <li class="ld-card ld-card--full"><span class="ld-ico"><span class="ld-i ld-i-landmark"></span></span><h3>Infrastruktur</h3><p>Pusat data, bendungan, kabel bawah laut, dan konteks instalasi yang tercatat di peta terbuka.</p></li>
+          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-plane"></span></span><h3>Pesawat</h3><p>Civil flights from OpenSky Network with an adsb.lol fallback, plus military flights from adsb.lol. Click to track, or enter the cockpit view.</p></li>
+          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-ship"></span></span><h3>Vessels</h3><p>Vessel positions from AIS broadcasts via AISStream.io.</p></li>
+          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-satellite"></span></span><h3>Satellites</h3><p>Orbits computed in the browser from CelesTrak TLE data, plus rocket launch context from Launch Library 2.</p></li>
+          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-activity"></span><span class="ld-i ld-i-flame"></span></span><h3>Earthquakes &amp; fires</h3><p>Earthquakes from the last 24 hours from USGS and VIIRS satellite fire hotspots from NASA FIRMS.</p></li>
+          <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-car"></span></span><h3>Traffic</h3><p>Road geometry from OpenStreetMap. Traffic flow is simulated, or live from TomTom when its key is installed.</p></li>
+          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-cctv"></span></span><h3>CCTV publik</h3><p>Public traffic cameras (including Austin, Caltrans, TfL London, and cities in Indonesia), with a status label for each source.</p></li>
+          <li class="ld-card ld-card--full"><span class="ld-ico"><span class="ld-i ld-i-landmark"></span></span><h3>Infrastruktur</h3><p>Data centers, dams, submarine cables, and installation context recorded in open maps.</p></li>
         </ul>
       </div>
     </section>
@@ -104,21 +104,21 @@
     <section class="ld-section ld-section--alt" id="suara" aria-labelledby="suara-title">
       <div class="ld-wrap ld-split">
         <div>
-          <h2 id="suara-title">Kendali suara</h2>
-          <p class="ld-intro">Agen suara full-duplex mengendalikan konsol tanpa tangan: memindahkan kamera, menyalakan layer, melacak objek, mengganti gaya visual, sampai menggambar anotasi langsung di atas globe.</p>
+          <h2 id="suara-title">Voice control</h2>
+          <p class="ld-intro">A full-duplex voice agent drives the console hands-free: moving the camera, turning layers on, tracking objects, switching visual styles, even drawing annotations right on the globe.</p>
           <ul class="ld-checks">
-            <li><span class="ld-i ld-i-check" aria-hidden="true"></span>Agen hanya mengonfirmasi aksi yang benar-benar berhasil dijalankan.</li>
-            <li><span class="ld-i ld-i-check" aria-hidden="true"></span>Mikrofon aktif hanya setelah sesi suara dinyalakan oleh pengguna.</li>
-            <li><span class="ld-i ld-i-check" aria-hidden="true"></span>Audio sesi suara dikirim ke layanan OpenAI. Sesi dibuka lewat server konsol, sehingga kunci API tidak pernah sampai ke browser.</li>
+            <li><span class="ld-i ld-i-check" aria-hidden="true"></span>The agent only confirms actions that actually succeeded.</li>
+            <li><span class="ld-i ld-i-check" aria-hidden="true"></span>The microphone is active only after the user turns the voice session on.</li>
+            <li><span class="ld-i ld-i-check" aria-hidden="true"></span>Voice session audio is sent to the OpenAI service. Sessions are opened through the console server, so the API key never reaches the browser.</li>
           </ul>
         </div>
         <div class="ld-say">
           <h3><span class="ld-i ld-i-mic" aria-hidden="true"></span>Contoh perintah</h3>
-          <ul aria-label="Contoh perintah suara">
+          <ul aria-label="Example voice commands">
             <li>“Terbang ke Jakarta.”</li>
-            <li>“Nyalakan layer kapal dan gempa.”</li>
+            <li>“Turn on the vessel and earthquake layers.”</li>
             <li>“Lacak pesawat terdekat.”</li>
-            <li>“Ganti ke tampilan thermal.”</li>
+            <li>“Switch to the thermal view.”</li>
           </ul>
         </div>
       </div>
@@ -127,7 +127,7 @@
     <section class="ld-section" id="gaya" aria-labelledby="gaya-title">
       <div class="ld-wrap">
         <h2 id="gaya-title">Gaya visual &amp; misi</h2>
-        <p class="ld-intro">Shader post-process mengubah tampilan seluruh globe dengan satu klik atau satu perintah suara.</p>
+        <p class="ld-intro">A post-process shader changes the look of the whole globe with one click or one voice command.</p>
         <ul class="ld-styles">
           <li><span class="ld-i ld-i-eye" aria-hidden="true"></span><b>NVG</b><span>Night vision</span></li>
           <li><span class="ld-i ld-i-thermo" aria-hidden="true"></span><b>FLIR</b><span>Thermal</span></li>
@@ -137,7 +137,7 @@
           <li><span class="ld-i ld-i-sparkles" aria-hidden="true"></span><b>Anime</b><span>Cel-shading</span></li>
         </ul>
         <h3 class="ld-subhead"><span class="ld-i ld-i-clapper" aria-hidden="true"></span>Scene sinematik</h3>
-        <p class="ld-intro">Misi siap pakai menyalakan layer yang relevan, memilih gaya, lalu menggerakkan kamera secara otomatis, cocok untuk presentasi dan rekaman.</p>
+        <p class="ld-intro">Ready-made missions turn on the relevant layers, pick a style, then move the camera automatically, good for presentations and recordings.</p>
         <ul class="ld-chips">
           <li>Global Flights Radar</li><li>Orbital Watch</li><li>Thermal Threat Board</li><li>City Overload</li><li>Omniscience Pullback</li>
         </ul>
@@ -146,24 +146,24 @@
 
     <section class="ld-section ld-section--alt" id="sumber" aria-labelledby="sumber-title">
       <div class="ld-wrap">
-        <h2 id="sumber-title">Sumber data &amp; atribusi</h2>
-        <p class="ld-intro">Data diambil langsung dari penyedianya saat konsol dipakai. Setiap sumber tetap di bawah lisensi dan ketentuannya sendiri; atribusi lengkap tampil di dalam konsol (tautan “Data attribution”).</p>
-        <div class="ld-table-wrap" role="region" aria-label="Tabel sumber data dan lisensinya" tabindex="0">
+        <h2 id="sumber-title">Data sources &amp; attribution</h2>
+        <p class="ld-intro">Data is fetched directly from its providers while the console is in use. Each source stays under its own license and terms; full attribution appears inside the console (the “Data attribution” link).</p>
+        <div class="ld-table-wrap" role="region" aria-label="Table of data sources and their licenses" tabindex="0">
           <table class="ld-table">
-            <thead><tr><th scope="col">Sumber</th><th scope="col">Dipakai untuk</th><th scope="col">Lisensi / ketentuan</th></tr></thead>
+            <thead><tr><th scope="col">Sources</th><th scope="col">Used for</th><th scope="col">Lisensi / ketentuan</th></tr></thead>
             <tbody>
-              <tr><th scope="row">Google Map Tiles, Places, Geocoding</th><td>Globe 3D fotorealistik, pencarian lokasi</td><td>Google Maps Platform ToS</td></tr>
-              <tr><th scope="row">Esri World Imagery</th><td>Peta dasar tanpa key</td><td>Esri Master Agreement</td></tr>
+              <tr><th scope="row">Google Map Tiles, Places, Geocoding</th><td>Photorealistic 3D globe, location search</td><td>Google Maps Platform ToS</td></tr>
+              <tr><th scope="row">Esri World Imagery</th><td>Keyless basemap</td><td>Esri Master Agreement</td></tr>
               <tr><th scope="row">OpenSky Network</th><td>Penerbangan sipil</td><td>Lisensi non-komersial</td></tr>
-              <tr><th scope="row">adsb.lol</th><td>Penerbangan militer, cadangan penerbangan</td><td>ODbL 1.0</td></tr>
-              <tr><th scope="row">AISStream.io</th><td>Kapal (AIS)</td><td>Beta gratis, tanpa ToS formal</td></tr>
-              <tr><th scope="row">CelesTrak</th><td>Orbit satelit (TLE)</td><td>Data asal pemerintah AS, sitasi diminta</td></tr>
+              <tr><th scope="row">adsb.lol</th><td>Military flights, flight fallback</td><td>ODbL 1.0</td></tr>
+              <tr><th scope="row">AISStream.io</th><td>Vessels (AIS)</td><td>Free beta, no formal ToS</td></tr>
+              <tr><th scope="row">CelesTrak</th><td>Satellite orbits (TLE)</td><td>Data asal pemerintah AS, sitasi diminta</td></tr>
               <tr><th scope="row">The Space Devs · Launch Library 2</th><td>Peluncuran roket</td><td>Ketentuan The Space Devs</td></tr>
-              <tr><th scope="row">USGS</th><td>Gempa</td><td>Domain publik AS</td></tr>
+              <tr><th scope="row">USGS</th><td>Earthquakes</td><td>Domain publik AS</td></tr>
               <tr><th scope="row">NASA FIRMS</th><td>Titik api</td><td>Domain publik AS (CC0)</td></tr>
               <tr><th scope="row">OpenStreetMap</th><td>Jalan, instalasi, pusat data, bendungan</td><td>ODbL 1.0 · © OpenStreetMap contributors</td></tr>
-              <tr><th scope="row">TomTom Traffic</th><td>Arus lalu lintas live (opsional)</td><td>Ketentuan TomTom for Developers</td></tr>
-              <tr><th scope="row">TeleGeography</th><td>Kabel bawah laut</td><td>CC BY-NC-SA 3.0 (non-komersial)</td></tr>
+              <tr><th scope="row">TomTom Traffic</th><td>Live traffic flow (optional)</td><td>Ketentuan TomTom for Developers</td></tr>
+              <tr><th scope="row">TeleGeography</th><td>Submarine cables</td><td>CC BY-NC-SA 3.0 (non-komersial)</td></tr>
               <tr><th scope="row">City of Austin, Caltrans, TfL</th><td>CCTV publik</td><td>Ketentuan open data masing-masing</td></tr>
               <tr><th scope="row">Open-Meteo, Re:Earth Terrain, Radio Browser</th><td>Cuaca, terrain, radio</td><td>CC BY 4.0 · CC BY 4.0 · PDDL 1.0</td></tr>
             </tbody>
@@ -176,9 +176,9 @@
       <div class="ld-wrap">
         <h2 id="prinsip-title">Prinsip produk</h2>
         <ul class="ld-principles">
-          <li><span class="ld-ico ld-ico--yes"><span class="ld-i ld-i-check"></span></span><h3>Yang dimodelkan</h3><p>Kejadian, aset, infrastruktur, dan sistem: pesawat, kapal, satelit, gempa, kebakaran, kamera publik, dan kota.</p></li>
-          <li><span class="ld-ico ld-ico--no"><span class="ld-i ld-i-x"></span></span><h3>Yang tidak dilakukan</h3><p>Bukan alat pelacakan orang. Tidak ada pencarian berdasarkan nama orang dan tidak ada pengenalan wajah.</p></li>
-          <li><span class="ld-ico"><span class="ld-i ld-i-lock"></span></span><h3>Kunci di server</h3><p>Kunci API pihak ketiga hanya disimpan di server. Permintaan ke penyedia data lewat server konsol dan dibatasi agar tidak menghabiskan kuota gratis.</p></li>
+          <li><span class="ld-ico ld-ico--yes"><span class="ld-i ld-i-check"></span></span><h3>What it models</h3><p>Events, assets, infrastructure, and systems: aircraft, vessels, satellites, earthquakes, fires, public cameras, and cities.</p></li>
+          <li><span class="ld-ico ld-ico--no"><span class="ld-i ld-i-x"></span></span><h3>What it does not do</h3><p>Not a people-tracking tool. No search by a person's name and no face recognition.</p></li>
+          <li><span class="ld-ico"><span class="ld-i ld-i-lock"></span></span><h3>Keys on the server</h3><p>Third-party API keys are stored only on the server. Requests to data providers go through the console server and are throttled so free quotas are not exhausted.</p></li>
         </ul>
       </div>
     </section>
@@ -189,15 +189,15 @@
       <div>
         <p class="ld-brand ld-brand--footer"><span>EagleEye View</span></p>
         <p class="ld-muted">Konsol intelijen geospasial real-time.</p>
-        <p class="ld-muted" data-access-contact hidden>Butuh akses? <a href="#top">Minta akses</a></p>
+        <p class="ld-muted" data-access-contact hidden>Need access? <a href="#top">Request access</a></p>
       </div>
       <div>
         <h2 class="ld-footer__title">Lisensi</h2>
-        <p class="ld-muted">Kode sumber berlisensi MIT, © 2026 Bilawal Sidhu (proyek God's Eye View). Lisensi MIT tidak mencakup data pihak ketiga; setiap sumber data tetap di bawah lisensinya sendiri. Globe dirender dengan CesiumJS. Ikon: Lucide (ISC). Font: Geist (OFL).</p>
+        <p class="ld-muted">Source code licensed under MIT, © 2026 Bilawal Sidhu (God's Eye View project). The MIT license does not cover third-party data; each data source stays under its own license. The globe is rendered with CesiumJS. Icons: Lucide (ISC). Font: Geist (OFL).</p>
       </div>
       <div>
-        <h2 class="ld-footer__title">Data yang disimpan</h2>
-        <p class="ld-muted">Untuk akun: nama, email, dan log login (waktu, alamat IP, user agent). Halaman ini tidak memakai cookie pelacak atau analitik pihak ketiga.</p>
+        <h2 class="ld-footer__title">Stored data</h2>
+        <p class="ld-muted">For accounts: name, email, and login log (time, IP address, user agent). This page uses no tracking cookies or third-party analytics.</p>
       </div>
     </div>
   </footer>

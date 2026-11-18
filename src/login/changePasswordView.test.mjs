@@ -49,7 +49,7 @@ test('changePasswordIssue: role-aware length, identity, same, confirm — each o
 });
 
 test('changePasswordFailure: a wrong current password lands on that field, the rest on the form; unknown → generic', () => {
-  assert.deepEqual(changePasswordFailure({ status: 400, code: 'INVALID_PASSWORD' }), { field: 'current', message: 'Password saat ini salah.' });
+  assert.deepEqual(changePasswordFailure({ status: 400, code: 'INVALID_PASSWORD' }), { field: 'current', message: 'Current password is incorrect.' });
   assert.deepEqual(changePasswordFailure({ status: 400, code: 'PASSWORD_WEAK' }), { field: 'next', message: PASSWORD_ERRORS.PASSWORD_WEAK });
   assert.equal(changePasswordFailure({ status: 400, code: 'PASSWORD_TOO_SHORT' }).message, PASSWORD_ERRORS.PASSWORD_WEAK);
   assert.deepEqual(changePasswordFailure({ status: 400, code: 'PASSWORD_TOO_LONG' }), { field: 'next', message: PASSWORD_ERRORS.TOO_LONG });

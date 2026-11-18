@@ -87,7 +87,7 @@ export function syncCctvCameraListboxState({ trigger, listbox } = {}, { cameras 
   // DOM write is a mutation the panel observers and the browser must process.
   if (trigger) {
     const disabled = !enabled || cameraList.length === 0;
-    const label = activeCamera ? cctvCameraOptionLabel(activeCamera) : 'Pilih kamera';
+    const label = activeCamera ? cctvCameraOptionLabel(activeCamera) : 'Select camera';
     const selectedId = activeCamera ? activeCamera.id : '';
     if (trigger.disabled !== disabled) trigger.disabled = disabled;
     if (trigger.textContent !== label) trigger.textContent = label;

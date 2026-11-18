@@ -4,9 +4,9 @@ import { paintProjectionPlaceholder, placeholderStatusText } from './cctvProject
 
 test('placeholder status: source message first, then loading vs no-feed', () => {
   assert.equal(placeholderStatusText({ feedConfigured: true }, { message: 'Sumber mati' }), 'SUMBER MATI');
-  assert.equal(placeholderStatusText({ feedConfigured: true }, { status: 'degraded' }), 'MEMUAT VIDEO');
-  assert.equal(placeholderStatusText({ feedConfigured: false }), 'TANPA FEED');
-  assert.equal(placeholderStatusText(null), 'MEMUAT VIDEO');
+  assert.equal(placeholderStatusText({ feedConfigured: true }, { status: 'degraded' }), 'LOADING VIDEO');
+  assert.equal(placeholderStatusText({ feedConfigured: false }), 'NO FEED');
+  assert.equal(placeholderStatusText(null), 'LOADING VIDEO');
 });
 
 test('the placeholder does not repeat the camera name the card title already shows', () => {
@@ -16,5 +16,5 @@ test('the placeholder does not repeat the camera name the card title already sho
     set: () => true,
   });
   paintProjectionPlaceholder(ctx, { name: 'ATCS Mojosongo Barat', city: 'Surakarta', feedConfigured: true });
-  assert.deepEqual(texts, ['MEMUAT VIDEO', 'SURAKARTA']);
+  assert.deepEqual(texts, ['LOADING VIDEO', 'SURAKARTA']);
 });

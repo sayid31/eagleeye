@@ -43,7 +43,7 @@ test('a free-text search reports the destination, never the empty placeholder', 
 test('a single-segment geocode says it was searched rather than inventing context', () => {
   assert.deepEqual(
     locationMiniStatus({ searchedLabel: 'Japan' }),
-    { city: '📍 Japan', poi: 'Lokasi hasil pencarian' },
+    { city: '📍 Japan', poi: 'Search result location' },
   );
 });
 

@@ -25,20 +25,20 @@ test('compactIp: expanded IPv6 is shortened, IPv4 and blanks pass through', () =
 });
 
 test('login wording: failure reason, deleted and unknown accounts', () => {
-  assert.equal(loginFailureText({ reason: 'throttled' }), 'Ter-throttle');
+  assert.equal(loginFailureText({ reason: 'throttled' }), 'Throttled');
   assert.equal(loginFailureText({ reason: 'new_reason' }), 'new_reason');
   assert.equal(loginFailureText({}), '—');
-  assert.equal(loginAccountText({ userId: null }), 'Email tidak terdaftar');
-  assert.equal(loginAccountText({ userId: 'U1', userName: 'Pengguna terhapus', userDeleted: true }), 'Pengguna terhapus (terhapus)');
+  assert.equal(loginAccountText({ userId: null }), 'Email not registered');
+  assert.equal(loginAccountText({ userId: 'U1', userName: 'Deleted user', userDeleted: true }), 'Pengguna terhapus (terhapus)');
   assert.equal(loginAccountText({ userId: 'U1', userName: 'Ani' }), 'Ani');
 });
 
 test('audit wording: actor redaction, action text, detail summaries', () => {
-  assert.equal(auditActorText({ actorId: 'A1', actorName: 'Admin', actorRole: 'admin' }, adminMe), 'Anda');
+  assert.equal(auditActorText({ actorId: 'A1', actorName: 'Admin', actorRole: 'admin' }, adminMe), 'You');
   assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'super_admin' }, adminMe), 'Super admin');
   assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'admin' }, adminMe), 'Admin lain');
-  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: null }, adminMe), 'Sistem');
-  assert.equal(auditActionText('user.delete'), 'Akun dihapus');
+  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: null }, adminMe), 'System');
+  assert.equal(auditActionText('user.delete'), 'Account deleted');
   assert.equal(auditActionText('user.future'), 'user.future');
   assert.equal(auditDetailText('role user'), 'Role: Pengguna');
   assert.equal(auditDetailText('fields name,capabilities'), 'Diubah: nama, izin fitur');
@@ -80,7 +80,7 @@ test('rangeStart: window codes → ISO cutoff; unknown or empty → no cutoff', 
 test('formatRelative: just now, minutes, hours, yesterday, days, then the plain date; formatDateTime for the tooltip', () => {
   const now = Date.parse('2026-11-18T12:00:00.000Z');
   const ago = (seconds) => new Date(now - seconds * 1000).toISOString();
-  assert.equal(formatRelative(ago(10), now), 'baru saja');
+  assert.equal(formatRelative(ago(10), now), 'just now');
   assert.equal(formatRelative(ago(5 * 60), now), '5 menit yang lalu');
   assert.equal(formatRelative(ago(3 * 3600), now), '3 jam yang lalu');
   assert.equal(formatRelative(ago(26 * 3600), now), 'kemarin');

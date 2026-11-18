@@ -148,7 +148,7 @@ test('a running scene disables the trigger, closes the popup, and blocks opening
 test('empty scene list shows a placeholder and cannot open', () => {
   const { picker, trigger } = setup();
   picker.render([], null);
-  assert.equal(trigger.textContent, 'Belum ada skenario');
+  assert.equal(trigger.textContent, 'No scenes yet');
   picker.open();
   assert.equal(picker.isOpen(), false);
 });

@@ -16,7 +16,7 @@ test('TomTom card: big number, accessible meter, reset countdown to the next UTC
   const card = providerCard({ id: 'tomtom', configured: true, status: 'warn', data: { used: 830, budget: 1000, share: 0.83, date: '2026-11-18' } }, NOW);
   assert.equal(card.big.value, '830');
   assert.equal(card.big.unit, 'dari 1.000 tile hari ini');
-  assert.equal(card.statusLabel, 'Hampir habis');
+  assert.equal(card.statusLabel, 'Almost used up');
   const [meter] = card.meters;
   assert.deepEqual([meter.valueNow, meter.valueMax, meter.tone], [830, 1000, 'warning']);
   assert.equal(meter.text, '830 dari 1.000 tile (83%)');
@@ -38,16 +38,16 @@ test('OpenAI card: minutes meter only with a daily cap, judge meter only when th
   assert.deepEqual(card.facts.map((f) => f.value), ['~$0.50', '~$1.25']);
   const free = providerCard({ id: 'openai', configured: true, status: 'ok', data: { ...data, dailyMinutes: 0, judgeEnabled: false } }, NOW);
   assert.equal(free.meters.length, 0);
-  assert.equal(free.big.unit, 'menit hari ini, tanpa batas harian');
-  assert.ok(free.facts.some((f) => f.value === 'Judge nonaktif'));
+  assert.equal(free.big.unit, 'minutes today, no daily limit');
+  assert.ok(free.facts.some((f) => f.value === 'Judge off'));
   const off = providerCard({ id: 'openai', configured: true, status: 'off', data: { ...data, enabled: false } }, NOW);
-  assert.equal(off.statusLabel, 'Voice nonaktif');
+  assert.equal(off.statusLabel, 'Voice off');
 });
 
 test('a provider without data shows the right empty state, never zeros', () => {
   assert.equal(providerCard({ id: 'tomtom', configured: false, status: 'off', data: null }, NOW).empty, 'notConfigured');
   assert.equal(providerCard({ id: 'tomtom', configured: true, status: 'unknown', data: null }, NOW).empty, 'noData');
-  assert.equal(providerCard({ id: 'tomtom', configured: false, status: 'off', data: null }, NOW).statusLabel, 'Belum dikonfigurasi');
+  assert.equal(providerCard({ id: 'tomtom', configured: false, status: 'off', data: null }, NOW).statusLabel, 'Not configured');
   const cards = providerCards({ generatedAt: NOW, providers: [{ id: 'opensky', configured: false, status: 'off', data: null }] });
   assert.equal(cards[0].title, 'OpenSky');
 });

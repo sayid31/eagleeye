@@ -12,7 +12,7 @@ export const STATUS_LABELS = Object.freeze({
   connecting: 'MENGHUBUNGKAN',
   listening: 'MENDENGARKAN',
   executing: 'MENJALANKAN',
-  error: 'GALAT',
+  error: 'ERROR',
 });
 /** `data-status` values that differ from the controller status name. */
 export const DATASET_STATUS = Object.freeze({ executing: 'executing' });
@@ -43,33 +43,33 @@ export function createVoiceControl({ reset = false } = {}) {
     root.dataset.speaker = 'idle';
     root.innerHTML = `
       <div class="gev-voice-heading">
-        <div class="gev-voice-kicker">AGEN AI</div>
-        <div id="gev-voice-status">MATI</div>
+        <div class="gev-voice-kicker">AI AGENT</div>
+        <div id="gev-voice-status">OFF</div>
         <div class="gev-voice-cost">
-          <span id="gev-voice-cost-value" class="gev-voice-cost-value" data-level="ok" title="Perkiraan biaya sesi">~$0.00</span>
+          <span id="gev-voice-cost-value" class="gev-voice-cost-value" data-level="ok" title="Estimated session cost">~$0.00</span>
         </div>
       </div>
       ${voiceWaveMarkup('left')}
-      <button id="gev-voice-button" type="button" aria-label="Kontrol suara — klik untuk menyalakan atau mematikan suara" aria-describedby="gev-voice-help">
+      <button id="gev-voice-button" type="button" aria-label="Voice control — click to turn voice on or off" aria-describedby="gev-voice-help">
         <span class="gev-mic-arc" aria-hidden="true"></span>
         <span class="gev-mic-orbit"><img src="/voice-mic.svg" alt="" /></span>
-        <span class="gev-mic-label">HIDUP/MATI</span>
+        <span class="gev-mic-label">ON/OFF</span>
       </button>
       ${voiceWaveMarkup('right')}
       <div class="gev-voice-readout">
-        <div id="gev-voice-detail">SUARA SIAGA</div>
+        <div id="gev-voice-detail">VOICE STANDBY</div>
       </div>
       <div id="gev-voice-help" class="gev-voice-help-tray" role="tooltip">
-        <span class="gev-voice-help-kicker">KONTROL SUARA</span>
-        <span class="gev-voice-help-detail">Klik mik untuk menyalakan suara · bicara bebas, tanpa tombol tahan</span>
+        <span class="gev-voice-help-kicker">VOICE CONTROL</span>
+        <span class="gev-voice-help-detail">Click the mic to turn voice on · speak freely, no hold button</span>
       </div>
       <div class="gev-voice-error-tray" role="alert" aria-live="assertive">
         <div class="gev-voice-error-header">
-          <span>GALAT SISTEM SUARA</span>
-          <button class="gev-voice-error-dismiss" type="button">TUTUP</button>
+          <span>VOICE SYSTEM ERROR</span>
+          <button class="gev-voice-error-dismiss" type="button">CLOSE</button>
         </div>
         <div id="gev-voice-error-detail"></div>
-        <div class="gev-voice-error-hint">Periksa izin mikrofon dan akses jaringan, lalu coba lagi.</div>
+        <div class="gev-voice-error-hint">Check microphone permission and network access, then try again.</div>
       </div>
     `;
     const commandDock = document.getElementById('command-dock');

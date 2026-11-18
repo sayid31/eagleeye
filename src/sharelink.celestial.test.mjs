@@ -605,8 +605,8 @@ test('public visual facades reject the complete invalid request before authority
       ),
       validations: [
         'Invalid celestial ring enabled value',
-        'Opsi cincin selestial harus boolean',
-        'Cincin selestial hanya tersedia di gaya Normal',
+        'The celestial ring option must be a boolean',
+        'The celestial ring is only available in the Normal style',
       ],
     },
   ];
