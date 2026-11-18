@@ -60,8 +60,9 @@ async function runProbes(browser, env) {
     const viewport = VIEWPORTS.find((v) => v.id === probe.viewport);
     const page = await openPage(context, { theme: probe.theme, viewport });
     try {
+      await probe.setup?.(page);
       await page.goto(`${env.url}${probe.path}`, { waitUntil: 'domcontentloaded' });
-      await settle(page, '#main-content');
+      await settle(page, probe.waitFor ?? '#main-content');
       await probe.run(page, env);
       results.push({ id: probe.id, ok: true });
     } catch (error) {
