@@ -780,7 +780,7 @@ try {
       new Promise((resolve) => { setTimeout(() => resolve({ settled: false, value: null }), ms); }),
     ]);
     const row = () => [...document.querySelectorAll('#military-awareness-panel .military-awareness-row')]
-      .find((candidate) => candidate.querySelector('strong')?.textContent?.trim() === 'Instalasi terpetakan');
+      .find((candidate) => candidate.querySelector('strong')?.textContent?.trim() === 'Mapped installations');
     const installationCount = () => row()?.querySelector('b')?.textContent?.trim() || null;
     /** The REASON text, which is what tracks availability: the cohort engine
      *  answers 'feed tidak tersedia' / 'feed usang' when it refuses to count. */
@@ -924,7 +924,7 @@ try {
       && deferredInstallationReadiness.contacts.value === true
       && deferredInstallationReadiness.pendingLifecycle?.lifecycleState === 'enabling'
       && readsUnknown(deferredInstallationReadiness.pendingCount)
-      && /tidak tersedia|usang/i.test(String(deferredInstallationReadiness.pendingReason))
+      && /unavailable|stale/i.test(String(deferredInstallationReadiness.pendingReason))
       && deferredInstallationReadiness.cockpitAvailableAfterActivation
       && deferredInstallationReadiness.installed?.settled,
     JSON.stringify(deferredInstallationReadiness),
@@ -937,7 +937,7 @@ try {
       && deferredInstallationReadiness.fetchingCounts.length > 0
       && deferredInstallationReadiness.fetchingCounts.every(readsUnknown)
       && Array.isArray(deferredInstallationReadiness.fetchingReasons)
-      && deferredInstallationReadiness.fetchingReasons.every((r) => /tidak tersedia|usang/i.test(String(r))),
+      && deferredInstallationReadiness.fetchingReasons.every((r) => /unavailable|stale/i.test(String(r))),
     JSON.stringify({
       settledLifecycle: deferredInstallationReadiness.settledLifecycle,
       fetchingCounts: deferredInstallationReadiness.fetchingCounts,
@@ -948,7 +948,7 @@ try {
     deferredInstallationReadiness.exercised
       && deferredInstallationReadiness.answered?.settled
       && readsNumber(deferredInstallationReadiness.settledCount)
-      && !/tidak tersedia|usang/i.test(String(deferredInstallationReadiness.settledReason)),
+      && !/unavailable|stale/i.test(String(deferredInstallationReadiness.settledReason)),
     JSON.stringify({
       answered: deferredInstallationReadiness.answered,
       settledCount: deferredInstallationReadiness.settledCount,
@@ -1064,7 +1064,7 @@ try {
       previousDisabled: previous?.disabled,
       nextDisabled: next?.disabled,
       navigation: snapshot?.navigation || null,
-      contextStandby: signalText.includes('KONTEKS SIAGA'),
+      contextStandby: signalText.includes('CONTEXT STANDBY'),
     };
   });
   check(
@@ -1904,7 +1904,7 @@ try {
     contextTransition.afterExpansion === 1
       && contextTransition.afterRepeatedExpansion === 1
       && contextTransition.ariaExpanded === 'true'
-      && contextTransition.label === 'Ciutkan panel Kontak',
+      && contextTransition.label === 'Collapse Contact panel',
     JSON.stringify(contextTransition),
   );
   await page.screenshot({ path: path.join(shotsDir, 'restored-desktop.png') });

@@ -30,8 +30,8 @@ const GROUP_BY_LAYER = Object.freeze({
 
 /** Display labels; layers not listed keep the name the layer module declares. */
 export const LAYER_LABELS = Object.freeze({
-  flights: 'Pesawat sipil',
-  military: 'Pesawat militer',
+  flights: 'Civil aircraft',
+  military: 'Military aircraft',
   'ais-live-vessels': 'Vessels (AIS)',
   satellites: 'Satellites',
   'rocket-launches': 'Space missions (30 days)',
@@ -44,8 +44,8 @@ export const LAYER_LABELS = Object.freeze({
   cctv: 'CCTV',
   radio: 'Radio',
   bikeshare: 'Sepeda bersama',
-  'military-installations': 'Instalasi militer',
-  'military-awareness': 'Konteks global',
+  'military-installations': 'Military installations',
+  'military-awareness': 'Global context',
 });
 
 /** @param {string} id Layer id. @returns {string} Group id (defaults to `kota`). */
@@ -106,14 +106,14 @@ export function layerShellStatus(layer, now = Date.now()) {
   if (layer?.lifecycleUncertain) {
     return { key: 'degraded', label: 'Terganggu', detail: 'status uncertain' };
   }
-  if (!layer?.enabled) return { key: 'off', label: 'Mati', detail: '' };
+  if (!layer?.enabled) return { key: 'off', label: 'Off', detail: '' };
   const feed = layerFeedState(stats);
   const ago = agoLabel(stats.lastUpdate, now);
   switch (feed) {
     case 'loading':
       return { key: 'loading', label: 'Loading', detail: '' };
     case 'stale':
-      return { key: 'degraded', label: 'Terganggu', detail: ago ? `data ${ago}` : 'data usang' };
+      return { key: 'degraded', label: 'Terganggu', detail: ago ? `data ${ago}` : 'stale data' };
     case 'fallback':
       return { key: 'degraded', label: 'Terganggu', detail: 'using fallback source' };
     case 'unavailable':

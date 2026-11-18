@@ -108,7 +108,7 @@ test('missing key with no rows surfaces a clean reason', () => {
 });
 
 test('socket error with no rows surfaces "feed mati"', () => {
-  assert.equal(deriveAisFeedError({ status: 'error', error: 'AISStream websocket error' }, 0), 'feed mati');
+  assert.equal(deriveAisFeedError({ status: 'error', error: 'AISStream websocket error' }, 0), 'feed down');
 });
 
 test('closed feed with no rows surfaces "feed terputus"', () => {
@@ -167,7 +167,7 @@ test('reconnecting reports which attempt is in flight, rows or no rows', () => {
     deriveAisFeedError({ status: 'reconnecting', reconnectAttempt: 2 }, 900),
     'reconnecting to the feed… (percobaan 2)',
   );
-  assert.equal(deriveAisFeedError({ status: 'reconnecting' }, 0), 'menyambung ulang ke feed…');
+  assert.equal(deriveAisFeedError({ status: 'reconnecting' }, 0), 'reconnecting to the feed…');
 });
 
 test('DOWN is a visible terminal state, not a silent retry', () => {
@@ -1484,7 +1484,7 @@ test('vessel real layer lifecycle publishes protected selection and leaves no st
     assert.equal(publication.entries[0].variant, 'selected');
     assert.equal(publication.entries[0].protected, true);
     assert.equal(publication.entries[0].collisionGroup, 'ambient-card');
-    assert.match(publication.entries[0].accessibilityLabel, /Fokus kapal EVER GIVEN, MMSI 353136000/);
+    assert.match(publication.entries[0].accessibilityLabel, /Focus vessel EVER GIVEN, MMSI 353136000/);
     assert.equal(publication.entries[0].activate(), true);
     assert.equal(focusRequests.length, 1);
     assert.equal(focusRequests[0].id, '353136000');

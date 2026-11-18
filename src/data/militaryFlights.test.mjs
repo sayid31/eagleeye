@@ -141,7 +141,7 @@ test('nonempty adsb.lol payload with zero usable rows cannot prove share target 
     await militaryFlightsLayer.update({ camera: { positionCartographic: null }, scene: {} });
     const resolution = await militaryFlightsLayer.resolveTrackingRestoreTarget('ae1234');
     assert.equal(resolution.status, 'source-unavailable');
-    assert.match(militaryFlightsLayer.getStats().error, /Baris pesawat adsb\.lol tidak valid/);
+    assert.match(militaryFlightsLayer.getStats().error, /Invalid adsb\.lol aircraft row/);
     assert.equal(militaryFlightsLayer.getAnalystRecords().length, 1, 'warm aircraft data is preserved');
   } finally {
     globalThis.fetch = realFetch;

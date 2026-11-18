@@ -645,7 +645,7 @@ async function main() {
       + `(row="${state.firmsError ?? 'none'}", count=${state.firmsCount})\x1b[0m`);
     if (keyless) {
       record(
-        'KEYLESS: the FIRMS row tells the visitor the truth (KUNCI DIPERLUKAN)',
+        'KEYLESS: the FIRMS row tells the visitor the truth (KEY REQUIRED)',
         state.firmsError === 'KEY REQUIRED',
         `layer row reports "${state.firmsError}"`,
       );

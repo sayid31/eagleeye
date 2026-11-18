@@ -38,7 +38,7 @@ setBriefAutoRotate(enabled) {
     this.briefAutoRotateEnabled = Boolean(enabled);
     if (this.briefAutoToggle) {
       this.briefAutoToggle.setAttribute('aria-pressed', String(this.briefAutoRotateEnabled));
-      const label = this.briefAutoRotateEnabled ? 'SIKLUS NYALA' : 'SIKLUS MATI';
+      const label = this.briefAutoRotateEnabled ? 'SIKLUS NYALA' : 'CYCLE OFF';
       this.briefAutoToggle.textContent = label;
       const help = this.briefAutoRotateEnabled
         ? COCKPIT_BRIEF_CYCLE_ON_HELP
@@ -139,7 +139,7 @@ renderRegionalBriefStatus(status, info) {
         : 'REGIONAL NEWS UNAVAILABLE';
     }
     if (status === 'unavailable') this.newsList?.replaceChildren();
-    if (this.localPlace && status === 'loading') this.localPlace.textContent = 'MENENTUKAN WILAYAH';
+    if (this.localPlace && status === 'loading') this.localPlace.textContent = 'DETERMINING REGION';
     if (this.localPlace && status === 'unavailable') this.localPlace.textContent = 'REGION UNAVAILABLE';
     this.updateLocalPosition(info);
   },
@@ -196,7 +196,7 @@ renderRegionalBrief(payload, info) {
     }
     if (this.signalStream) this.signalStream.dataset.regionalStatus = payload?.status || 'partial';
     if (this.briefPageIndex === 1 && this.briefSource) {
-      this.briefSource.textContent = `${String(payload?.newsSource || 'BERITA REGIONAL').toUpperCase()} · KUERI LOKASI`;
+      this.briefSource.textContent = `${String(payload?.newsSource || 'REGIONAL NEWS').toUpperCase()} · LOCATION QUERY`;
     }
     this.scheduleContextLayout();
   },

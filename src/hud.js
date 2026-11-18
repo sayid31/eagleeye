@@ -475,7 +475,7 @@ export class IntelHUD {
    * @returns {'STREET'|'CITY'|'METRO'|'REGIONAL'|'GLOBAL'} Band label.
    */
   _viewBand(altM) {
-    if (altM < 1200) return 'JALAN';
+    if (altM < 1200) return 'ROAD';
     if (altM < 5000) return 'KOTA';
     if (altM < 30000) return 'METRO';
     if (altM < 250000) return 'REGIONAL';
@@ -594,7 +594,7 @@ export class IntelHUD {
     // NEAR the nearest catalogued POI at metro range; otherwise the lat/lon sector.
     const localityTag = composeLocalityTag(nearest, m.latDeg, m.lonDeg);
 
-    return `${modeLabel} ${band} ${localityTag} | ${region} | ALT ${altTag} | JENDELA ${winTag} | SUN ${m.sunEl.toFixed(0)}° | ONA ${m.ona.toFixed(0)}° | ${localTag}`;
+    return `${modeLabel} ${band} ${localityTag} | ${region} | ALT ${altTag} | WINDOW ${winTag} | SUN ${m.sunEl.toFixed(0)}° | ONA ${m.ona.toFixed(0)}° | ${localTag}`;
   }
 
   /**

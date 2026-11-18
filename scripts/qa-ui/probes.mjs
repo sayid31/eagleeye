@@ -74,13 +74,13 @@ export const PROBES = [
     id: 'theme-toggle', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev',
     async run(page) {
       assert.equal(await dark(page), false);
-      await page.click('header button[aria-label="Tema tampilan"]');
+      await page.click('header button[aria-label="Display theme"]');
       await page.waitForSelector('[role="menuitemradio"]');
       await (await byText(page, '[role="menuitemradio"]', 'Dark')).click();
       await page.waitForFunction(() => document.documentElement.classList.contains('dark'));
       assert.equal(await stored(page), 'dark');
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
-      await page.click('header button[aria-label="Tema tampilan"]');
+      await page.click('header button[aria-label="Display theme"]');
       await page.waitForSelector('[role="menuitemradio"]');
       await (await byText(page, '[role="menuitemradio"]', 'System')).click();
       assert.equal(await stored(page), 'system');
@@ -156,7 +156,7 @@ export const PROBES = [
   {
     id: 'row-actions-menu', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ui-kit',
     async run(page) {
-      const trigger = 'table button[aria-label^="Aksi untuk"]';
+      const trigger = 'table button[aria-label^="Actions for"]';
       await page.focus(trigger);
       await page.keyboard.press('Enter');
       await page.waitForSelector('[role="menu"]');
@@ -197,9 +197,9 @@ export const PROBES = [
     async run(page) {
       for (const [mode, selector] of [['loading', '[aria-busy="true"]'], ['error', '[role="alert"] [data-slot="empty-description"]'], ['empty', '[data-slot="empty-title"]'], ['ready', 'table']]) {
         await (await byText(page, '[aria-label="Keadaan tabel"] button', mode)).click();
-        await page.waitForSelector(`section[aria-label="Contoh daftar pengguna"] ${selector}`);
+        await page.waitForSelector(`section[aria-label="Example user list"] ${selector}`);
       }
-      assert.equal(await page.$eval('section[aria-label="Contoh daftar pengguna"] nav[aria-label="Halaman data"]', (el) => el.textContent.includes('dari 45')), true);
+      assert.equal(await page.$eval('section[aria-label="Example user list"] nav[aria-label="Data pages"]', (el) => el.textContent.includes('of 45')), true);
     },
   },
 
@@ -219,7 +219,7 @@ export const PROBES = [
       await page.waitForSelector('main [role="alert"]');
       await waitForFocus(page, 'input[name="password"]');
       const text = await page.$eval('main [role="alert"]', (el) => el.textContent);
-      assert.match(text, /Email atau password salah/);
+      assert.match(text, /Incorrect email or password/);
       assert.equal(await page.$eval('input[name="password"]', (el) => el.getAttribute('aria-invalid')), 'true');
     },
   },
@@ -245,7 +245,7 @@ export const PROBES = [
       await trigger.focus();
       await page.keyboard.press('Enter');
       await page.waitForSelector('[data-slot="popover-content"]');
-      assert.match(await page.$eval('[data-slot="popover-content"]', (el) => el.textContent), /Hubungi admin Anda/);
+      assert.match(await page.$eval('[data-slot="popover-content"]', (el) => el.textContent), /Contact your admin/);
       assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('[data-slot="popover-content"]'))), true, 'focus moves into the popover');
       await expectEscapeRestoresFocus(page, '[data-slot="popover-content"]', '[data-slot="popover-trigger"]');
     },
@@ -258,7 +258,7 @@ export const PROBES = [
       await page.keyboard.press('Enter');
       await page.waitForSelector('[role="alertdialog"]');
       await waitForFocus(page, '[role="alertdialog"] button[data-slot="alert-dialog-cancel"]');
-      assert.match(await page.$eval('[role="alertdialog"]', (el) => el.textContent), /akan keluar dan harus masuk lagi/);
+      assert.match(await page.$eval('[role="alertdialog"]', (el) => el.textContent), /will be signed out and must sign in again/);
       await expectFocusTrapped(page, '[role="alertdialog"]', 6);
       await expectEscapeRestoresFocus(page, '[role="alertdialog"]', 'main button[data-slot="button"]:not([role])');
     },
@@ -280,12 +280,12 @@ export const PROBES = [
       await page.reload({ waitUntil: 'domcontentloaded' });
       await page.waitForSelector('main form');
       assert.equal(await page.$$eval('header a[href]', (links) => links.length), 0, 'no link out of the page');
-      assert.match(await page.$eval('main', (el) => el.textContent), /Ganti password untuk melanjutkan/);
+      assert.match(await page.$eval('main', (el) => el.textContent), /Change your password to continue/);
       await waitForFocus(page, 'input[name="current"]');
       await page.type('input[name="current"]', 'old-password-123');
       await page.keyboard.press('Enter');
       await waitForFocus(page, 'input[name="next"]');
-      assert.match(await page.$eval('main', (el) => el.textContent), /minimal \d+ karakter/i);
+      assert.match(await page.$eval('main', (el) => el.textContent), /at least \d+ characters/i);
     },
   },
   ...SYSTEM_PROBES,

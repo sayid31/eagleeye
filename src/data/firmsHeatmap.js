@@ -310,7 +310,7 @@ export function createFirmsHeatmapLayer({
      */
     getStats() {
       const now = Date.now();
-      const staleText = _lastUpdate ? `STALE · stored ${formatAge(now - _lastUpdate) || '<1h'}` : 'USANG';
+      const staleText = _lastUpdate ? `STALE · stored ${formatAge(now - _lastUpdate) || '<1h'}` : 'STALE';
       let loadingLabel = '';
       if (_loading) {
         loadingLabel = _fires.length ? 'menyegarkan...' : 'memuat...';

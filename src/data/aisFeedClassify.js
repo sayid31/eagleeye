@@ -14,7 +14,7 @@ const AIS_STATUS_REASON = {
   unsupported: 'live feed not supported',
   connecting: 'menghubungkan ke feed…',
   closed: 'feed terputus',
-  error: 'feed mati',
+  error: 'feed down',
   idle: 'feed diam',
 };
 

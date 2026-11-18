@@ -288,7 +288,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
   if (state.phase === 'terminal') {
     const labels = { complete: 'LOAD COMPLETE', cancelled: 'LOAD CANCELLED', error: 'LOAD FAILED' };
     const label = state.operation === 'disabling' && state.terminal === 'complete'
-      ? 'DATA LIVE MATI'
+      ? 'LIVE DATA OFF'
       : labels[state.terminal] || 'LOAD COMPLETE';
     return { state: state.terminal, label, detail: '' };
   }

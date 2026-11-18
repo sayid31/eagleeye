@@ -41,7 +41,7 @@ export function syncReplayButton() {
   if (speedControl) speedControl.hidden = !replayAvailable;
   button.hidden = active || !replayAvailable;
   button.disabled = !replayAvailable;
-  button.textContent = 'ULANG PENDAKIAN';
+  button.textContent = 'REPLAY ASCENT';
   button.classList.remove('active');
   button.setAttribute('aria-pressed', String(active));
   button.title = 'Replay the estimated ascent with a follow camera';
@@ -64,7 +64,7 @@ export function syncReplayCountdownButton(state) {
   const phase = state.countdownActive
     ? `T minus ${state.countdownSeconds}`
     : state.preCountdownActive
-      ? 'Menyiapkan lokasi peluncuran'
+      ? 'Preparing the launch site'
     : state.elapsedSinceStart < 1
       ? 'Liftoff'
       : state.ascending ? 'Ulangan pendakian' : 'Ulangan orbit';

@@ -189,7 +189,7 @@ test('the Radio chip catches lifecycle rejection and semantic false through the 
     radioMixinSrc.indexOf("this._radioFilter?.addEventListener('change'"),
   );
   assert.match(radioControls, /await this\._runUserFacingContextAction\(/);
-  assert.match(radioControls, /Radio tidak dapat \$\{enabling \? 'dinyalakan' : 'dimatikan'\} dengan benar/);
+  assert.match(radioControls, /Radio could not be \$\{enabling \? 'turned on' : 'turned off'\} properly/);
   assert.match(radioControls, /if \(toggled === false\) return/);
 });
 

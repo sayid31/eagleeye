@@ -21,7 +21,7 @@ test('too high: ask the user to zoom in', () => {
 test('no system in reach: say so and name the nearest one', () => {
   const guidance = bikeshareGuidance({ altitudeOk: true, center: JAKARTA, inRangeCount: 0, registry: GBFS_CITY_REGISTRY });
   assert.equal(guidance.status, 'empty');
-  assert.match(guidance.message, /^Tidak ada sistem sepeda bersama di area ini — terdekat: Tokyo, ±5\.\d{3} km$/);
+  assert.match(guidance.message, /^No bike-share system in this area — nearest: Tokyo, ±5\.\d{3} km$/);
 });
 
 test('a system in reach needs no guidance', () => {

@@ -58,7 +58,7 @@ export const COCKPIT_BRIEF_PAGES = [
   {
     id: 'local',
     kicker: 'INFO LOKAL',
-    subtitle: 'TEMPAT / KONDISI / POSISI',
+    subtitle: 'PLACE / CONDITIONS / POSITION',
     source: 'OPENSTREETMAP · OPEN-METEO · UTC',
   },
 ];

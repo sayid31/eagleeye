@@ -143,7 +143,7 @@ try {
       && esriTileFailureFallback.before.hasLayer
       && esriTileFailureFallback.afterOne === 'esri-imagery'
       && esriTileFailureFallback.afterTwo.activeId === 'osm'
-      && /tile .+ gagal; memakai OSM/i.test(esriTileFailureFallback.afterTwo.lastError)
+      && /tile .+ failed; using OSM/i.test(esriTileFailureFallback.afterTwo.lastError)
       && esriTileFailureFallback.afterTwo.creditVisible === false
       && esriTileFailureFallback.afterTwo.globeShown
       && esriTileFailureFallback.afterTwo.hasLayer
@@ -271,7 +271,7 @@ try {
       ionSource.ariaDisabled === 'true'
         && ionSource.focused
         // The UI is Indonesian: _unavailableReason in src/mapStackController.js.
-        && /Token Cesium ion diperlukan/i.test(ionSource.ariaLabel)
+        && /Cesium ion token required/i.test(ionSource.ariaLabel)
         && ionSource.activeId === activeBeforeIonAttempt
         && JSON.stringify(ionSource.active) === JSON.stringify([activeBeforeIonAttempt]),
       JSON.stringify(ionSource),

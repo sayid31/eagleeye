@@ -71,7 +71,7 @@ export const cctvCalibrationMixin = {
         reset: true,
       },
     }, { origin: 'user' });
-    this._showToast('Kalibrasi CCTV diatur ulang');
+    this._showToast('CCTV calibration reset');
   },
 
   /**

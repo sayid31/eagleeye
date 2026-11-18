@@ -29,11 +29,11 @@ test('users copy: every risky action names its subject and its consequence', () 
   for (const kind of ['deactivate', 'activate', 'revokeSessions', 'delete', 'promote', 'demote']) {
     const { title, impact, action } = USERS_COPY.confirm[kind];
     assert.match(impact(name), /Budi/, kind);
-    assert.ok(action.length > 8 && !/^(Ya|OK|Lanjut)/.test(action), `specific action label for ${kind}`);
+    assert.ok(action.length > 8 && !/^(Yes|OK|Continue)/.test(action), `specific action label for ${kind}`);
     assert.match(title, /\?$/);
   }
-  assert.match(USERS_COPY.confirm.delete.impact(name), /tidak bisa dibatalkan/);
-  assert.match(USERS_COPY.confirm.deactivate.impact(name), /bisa diaktifkan lagi/);
+  assert.match(USERS_COPY.confirm.delete.impact(name), /cannot be undone/);
+  assert.match(USERS_COPY.confirm.deactivate.impact(name), /can be activated again/);
   assert.match(USERS_COPY.confirm.delete.typeLabel('a@b.test'), /a@b\.test/);
 });
 

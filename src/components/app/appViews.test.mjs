@@ -120,8 +120,8 @@ test('health states share StatusBadge: icon + word each, unrecognised reads as u
 });
 
 test('capability chip: name always visible, on/off as an icon and screen-reader text (not a strike-through)', () => {
-  assert.deepEqual(capabilityPresentation('Data layers', true), { tone: 'success', icon: 'check', label: 'Data layers', srText: 'aktif' });
-  assert.deepEqual(capabilityPresentation('Voice & AI', false), { tone: 'muted', icon: 'minus', label: 'Voice & AI', srText: 'nonaktif' });
+  assert.deepEqual(capabilityPresentation('Data layers', true), { tone: 'success', icon: 'check', label: 'Data layers', srText: 'active' });
+  assert.deepEqual(capabilityPresentation('Voice & AI', false), { tone: 'muted', icon: 'minus', label: 'Voice & AI', srText: 'inactive' });
 });
 
 test('copyToClipboard: Clipboard API first, textarea fallback, false when neither works', async () => {

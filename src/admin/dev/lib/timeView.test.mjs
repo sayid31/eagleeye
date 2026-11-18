@@ -10,7 +10,7 @@ test('formatRelative: just now, minutes, hours, days, then the date; a dash with
   assert.equal(formatRelative(NOW - 3 * 3_600_000, NOW), '3 h ago');
   assert.equal(formatRelative(NOW - 3 * 86_400_000, NOW), '3 d ago');
   assert.match(formatRelative(NOW - 90 * 86_400_000, NOW), /\d{2}/);
-  assert.doesNotMatch(formatRelative(NOW - 90 * 86_400_000, NOW), /lalu/);
+  assert.doesNotMatch(formatRelative(NOW - 90 * 86_400_000, NOW), /ago/);
   assert.equal(formatRelative(null, NOW), '—');
   assert.equal(formatRelative(NOW + 5_000, NOW), 'just now', 'a clock skewed into the future is not "negative"');
 });

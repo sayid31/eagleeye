@@ -7,9 +7,9 @@
 import assert from 'node:assert/strict';
 import { expectEscapeRestoresFocus, focusInfo, press, waitForFocus } from './keyboard.mjs';
 
-const TRIGGER = 'button[aria-label^="Aksi untuk"]';
+const TRIGGER = 'button[aria-label^="Actions for"]';
 const ROW_TRIGGER = `table ${TRIGGER}`;
-const CARD_TRIGGER = `ul[aria-label="Daftar pengguna"] ${TRIGGER}`;
+const CARD_TRIGGER = `ul[aria-label="User list"] ${TRIGGER}`;
 
 async function clickText(page, selector, text) {
   const handle = await page.evaluateHandle((s, t) => [...document.querySelectorAll(s)].find((el) => (el.textContent || '').trim().startsWith(t)) ?? null, selector, text);
@@ -60,10 +60,10 @@ export const USER_PROBES = [
       await page.waitForFunction(() => document.querySelector('[role="dialog"] h2')?.textContent.startsWith('Account created'), { timeout: 8000 });
       await waitForFocus(page, '[role="dialog"] h2');
       const done = '[role="dialog"] [data-slot="dialog-footer"] button';
-      assert.equal(await page.$eval(done, (b) => b.disabled), true, 'Selesai is locked until the password is acknowledged');
+      assert.equal(await page.$eval(done, (b) => b.disabled), true, 'Done is locked until the password is acknowledged');
       await page.keyboard.press('Escape');
       await page.waitForSelector('[role="alertdialog"]');
-      assert.match(await page.$eval('[role="alertdialog"]', (el) => el.textContent), /Password hanya tampil sekali/);
+      assert.match(await page.$eval('[role="alertdialog"]', (el) => el.textContent), /The password is shown only once/);
       await clickText(page, '[role="alertdialog"] button', 'Go back and copy');
       await gone(page, '[role="alertdialog"]');
       assert.equal(await page.$eval(done, (b) => b.disabled), true, 'backing out keeps the dialog and the lock');
@@ -79,7 +79,7 @@ export const USER_PROBES = [
     id: 'users-delete-type-to-confirm', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/users',
     async run(page) {
       const label = await openFirstRowMenu(page);
-      const email = label.replace('Aksi untuk ', '');
+      const email = label.replace('Actions for ', '');
       await clickText(page, '[role="menuitem"]', 'Delete account');
       await page.waitForSelector('[role="alertdialog"] input');
       const submit = '[role="alertdialog"] button[type="submit"]';
@@ -126,7 +126,7 @@ export const USER_PROBES = [
       await page.waitForSelector(CARD_TRIGGER);
       const shown = await page.evaluate(() => {
         const visible = (el) => Boolean(el) && getComputedStyle(el).display !== 'none';
-        return { table: visible(document.querySelector('section table')?.closest('div.rounded-lg')), cards: visible(document.querySelector('ul[aria-label="Daftar pengguna"]')) };
+        return { table: visible(document.querySelector('section table')?.closest('div.rounded-lg')), cards: visible(document.querySelector('ul[aria-label="User list"]')) };
       });
       assert.deepEqual(shown, { table: false, cards: true });
       await page.click(CARD_TRIGGER);

@@ -39,23 +39,23 @@ test('every detail the server can produce is said in Indonesian', () => {
 
 test('specific translations keep the numbers and the structure', () => {
   const lines = details(buildHealthReport(facts())).join('\n');
-  assert.match(lines, /Waktu aktif \| Mulai 2 jam lalu/);
-  assert.match(lines, /OpenAI \| Terpasang \(diatur di luar aplikasi\) · uji terakhir berhasil 5 menit lalu/);
-  assert.match(lines, /TomTom \| Terpasang \(di penyimpanan aplikasi\) · uji terakhir ditolak 25 jam lalu/);
-  assert.match(lines, /NASA FIRMS \| Belum dikonfigurasi/);
-  assert.match(lines, /Gagal: HTTP 502, 4 kali berturut-turut · 60 dtk lalu/);
-  assert.match(lines, /Jawaban terakhir HTTP 200 · 20 dtk lalu/);
-  assert.match(lines, /830 dari 1000 \(83%\) pada 2026-11-18 UTC/);
-  assert.match(lines, /21 menit dari 30 menit \(70%\)/);
-  assert.match(lines, /37 dari 300 panggilan hari ini/);
-  assert.match(lines, /42 baris · 125 KB dari 5 MB · ditulis 12 dtk lalu/);
+  assert.match(lines, /Uptime \| Started 2 h ago/);
+  assert.match(lines, /OpenAI \| Key set \(managed outside the app\) · last test succeeded 5 min ago/);
+  assert.match(lines, /TomTom \| Key set \(in app storage\) · last test rejected 25 h ago/);
+  assert.match(lines, /NASA FIRMS \| Not configured/);
+  assert.match(lines, /Failed: HTTP 502, 4 times in a row · 60 s ago/);
+  assert.match(lines, /Last response HTTP 200 · 20 s ago/);
+  assert.match(lines, /830 of 1000 \(83%\) on 2026-11-18 UTC/);
+  assert.match(lines, /21 min of 30 min \(70%\)/);
+  assert.match(lines, /37 of 300 calls today/);
+  assert.match(lines, /42 rows · 125 KB of 5 MB · written 12 s ago/);
 });
 
 test('unknown details and labels pass through unchanged (better English than a wrong translation)', () => {
   assert.equal(translateDetail('Something new happened'), 'Something new happened');
   assert.equal(translateLabel({ id: 'service./api/x', label: '/api/x' }), '/api/x');
   assert.equal(translateLabel({ id: 'key.firms', label: 'NASA FIRMS' }), 'NASA FIRMS');
-  assert.equal(translateAgo('5 h ago and never'), '5 jam lalu and belum pernah');
+  assert.equal(translateAgo('5 h ago and never'), '5 h ago and never');
 });
 
 test('describeOverall counts problems and warnings in Indonesian', () => {

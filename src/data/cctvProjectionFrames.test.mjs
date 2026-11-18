@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { paintProjectionPlaceholder, placeholderStatusText } from './cctvProjectionFrames.js';
 
 test('placeholder status: source message first, then loading vs no-feed', () => {
-  assert.equal(placeholderStatusText({ feedConfigured: true }, { message: 'Sumber mati' }), 'SUMBER MATI');
+  assert.equal(placeholderStatusText({ feedConfigured: true }, { message: 'Source down' }), 'SOURCE DOWN');
   assert.equal(placeholderStatusText({ feedConfigured: true }, { status: 'degraded' }), 'LOADING VIDEO');
   assert.equal(placeholderStatusText({ feedConfigured: false }), 'NO FEED');
   assert.equal(placeholderStatusText(null), 'LOADING VIDEO');

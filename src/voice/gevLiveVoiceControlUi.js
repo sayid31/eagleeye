@@ -8,7 +8,7 @@
 
 /** Mic status line text per controller status (the dock shows these words). */
 export const STATUS_LABELS = Object.freeze({
-  idle: 'MATI',
+  idle: 'OFF',
   connecting: 'MENGHUBUNGKAN',
   listening: 'MENDENGARKAN',
   executing: 'MENJALANKAN',

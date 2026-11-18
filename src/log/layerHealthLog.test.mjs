@@ -15,7 +15,7 @@ test('a layer turning unavailable is reported once with its label and reason', (
   assert.equal(event.level, 'error');
   assert.equal(event.source, 'layer');
   assert.equal(event.code, 'layer.unavailable');
-  assert.match(event.message, /— sumber tidak tersedia: waktu habis memuat AIS live \(>20 dtk\)$/);
+  assert.match(event.message, /— source unavailable: live AIS load timed out \(>20 s\)$/);
   assert.deepEqual(event.detail, { layer: 'ais-live-vessels', state: 'unavailable', count: 0 });
   assert.ok(normalizeLogEvent(event, { allowedSources: BROWSER_LOG_SOURCES }), 'must pass the /api/log ingest');
 
@@ -56,7 +56,7 @@ test('degraded, stale and fallback are warnings', () => {
     { id: 'satellites', enabled: true, lifecycleState: 'enabled', stats: { count: 5, lastUpdate: 1, stale: true } },
   ]);
   assert.deepEqual(events.map((e) => [e.level, e.code]), [['warn', 'layer.fallback'], ['warn', 'layer.stale']]);
-  assert.match(events[1].message, /data usang: tanpa keterangan dari layer$/);
+  assert.match(events[1].message, /stale data: no note from the layer$/);
 });
 
 test('layerFaultReason prefers the layer error and accepts Error objects', () => {
@@ -68,7 +68,7 @@ test('layerFaultReason prefers the layer error and accepts Error objects', () =>
 test('a failed enable from the manager becomes one error event', () => {
   const event = layerVisibilityFailureEvent({ type: 'visibility-failed', layerId: 'satellites', phase: 'resolve', error: new Error('chunk load failed') });
   assert.equal(event.code, 'layer.visibility_failed');
-  assert.match(event.message, /gagal saat resolve: chunk load failed$/);
+  assert.match(event.message, /failed during resolve: chunk load failed$/);
   assert.deepEqual(event.detail, { layer: 'satellites', phase: 'resolve' });
   assert.ok(normalizeLogEvent(event, { allowedSources: BROWSER_LOG_SOURCES }));
   assert.equal(layerVisibilityFailureEvent({ type: 'visibility', layerId: 'satellites' }), null);

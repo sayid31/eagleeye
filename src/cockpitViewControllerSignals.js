@@ -129,8 +129,8 @@ setContextCollapsed(collapsed) {
     if (this.contextToggle) {
       const expanded = !this.contextCollapsed;
       this.contextToggle.setAttribute('aria-expanded', String(expanded));
-      this.contextToggle.setAttribute('aria-label', `${expanded ? 'Ciutkan' : 'Bentangkan'} panel Kontak`);
-      this.contextToggle.title = `${expanded ? 'Ciutkan' : 'Bentangkan'} panel kontak`;
+      this.contextToggle.setAttribute('aria-label', `${expanded ? 'Collapse' : 'Expand'} Contact panel`);
+      this.contextToggle.title = `${expanded ? 'Collapse' : 'Expand'} contact panel`;
       const icon = this.contextToggle.querySelector('.material-symbols-outlined');
       if (icon) icon.textContent = expanded ? 'chevron_left' : 'chevron_right';
     }

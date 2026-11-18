@@ -88,7 +88,7 @@ export const USERS_COPY = Object.freeze({
     minLength: (min) => `At least ${min} characters`,
     maxLength: (max) => `At most ${max} characters`,
     notIdentity: 'Different from email and name',
-    met: 'terpenuhi',
+    met: 'met',
     unmet: 'not met yet',
   }),
   create: Object.freeze({

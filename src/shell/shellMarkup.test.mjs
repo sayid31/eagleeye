@@ -28,8 +28,8 @@ test('top bar has search, a live-region health chip and a UTC clock', () => {
 });
 
 test('search is for locations only and the rail reaches every collapsed panel', () => {
-  assert.match(topBarMarkup(), /placeholder="Cari lokasi"/);
-  assert.doesNotMatch(topBarMarkup(), /kamera|perintah/i);
+  assert.match(topBarMarkup(), /placeholder="Search location"/);
+  assert.doesNotMatch(topBarMarkup(), /camera|command/i);
   const ids = RAIL_ITEMS.map((item) => item.id);
   for (const id of ['layers', 'camera', 'scenes', 'display', 'context']) assert.ok(ids.includes(id), id);
 });

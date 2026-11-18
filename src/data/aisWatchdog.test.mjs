@@ -224,7 +224,7 @@ test('a silent socket is terminated once, then reconnected after backoff', () =>
   const afterKill = h.snapshot();
   assert.equal(afterKill.status, 'reconnecting');
   assert.equal(afterKill.reconnectAttempt, 1);
-  assert.match(afterKill.error, /tidak mengirim data selama \d+dtk/);
+  assert.match(afterKill.error, /sent no data for \d+s/);
 
   h.advance(4_000);
   h.tick();

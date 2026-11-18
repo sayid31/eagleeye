@@ -331,7 +331,7 @@ test('a 200 that yields no usable satellites is a failure, not a live catalog', 
       assert.equal(chip.active, false, `${name}: never active with zero dense points`);
       assert.equal(chip.state, 'error', `${name}: reported as a failure`);
       assert.equal(satellitesLayer.getParams().catalog, 'core', `${name}: mode reverted`);
-      assert.match(chip.title, /tidak mengembalikan satelit/, `${name}: says why`);
+      assert.match(chip.title, /returned no satellites/, `${name}: says why`);
       _clearDenseCatalogStateForTest();
     }
 

@@ -30,7 +30,7 @@ export function voiceStatusEvent(previous, next, detail = '') {
   if (previous === 'connecting' && next === 'listening') return { level: 'info', source: 'voice', code: 'voice.session_started', message: 'Voice session connected.' };
   if (next === 'error' && previous === 'connecting') return { level: 'error', source: 'voice', code: 'voice.session_failed', message: text || 'Voice session could not start.' };
   if (next === 'error' && (previous === 'listening' || previous === 'executing')) return { level: 'error', source: 'voice', code: 'voice.session_dropped', message: text || 'Voice session ended unexpectedly.' };
-  if (next === 'idle' && /^(Sesi berakhir|Session ended)/.test(text)) return { level: 'info', source: 'voice', code: 'voice.session_auto_closed', message: text };
+  if (next === 'idle' && /^(Session ended)/.test(text)) return { level: 'info', source: 'voice', code: 'voice.session_auto_closed', message: text };
   return null;
 }
 

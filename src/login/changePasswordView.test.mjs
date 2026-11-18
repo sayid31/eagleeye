@@ -41,7 +41,7 @@ test('changePasswordIssue: role-aware length, identity, same, confirm — each o
   assert.equal(changePasswordIssue(form('thirteen-char'), user), null, '13 chars ok for a user');
   assert.deepEqual(changePasswordIssue(form('thirteen-char'), admin), { field: 'next', message: 'The new password must be at least 15 characters.' });
   assert.equal(message(form('short'), user), 'The new password must be at least 12 characters.');
-  assert.match(message(form('x'.repeat(129)), user), /maksimal 128/);
+  assert.match(message(form('x'.repeat(129)), user), /at most 128/);
   assert.equal(message(form('budi@example.test'), user), PASSWORD_ERRORS.MATCHES_IDENTITY);
   assert.equal(message(form('Budi Santoso'), { ...user, name: 'budi santoso' }), PASSWORD_ERRORS.MATCHES_IDENTITY);
   assert.deepEqual(changePasswordIssue(form('old-password-123'), user), { field: 'next', message: PASSWORD_ERRORS.SAME_AS_CURRENT });

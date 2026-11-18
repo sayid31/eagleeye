@@ -220,13 +220,14 @@ export function updateReplayVehicleOverlay(occluder) {
   const mission = shortMissionLabel(launch.name, 22).toUpperCase();
   const siteName = compactLaunchSiteName(launch.launchSite);
   const siteCallout = siteName
-    ? `LOKASI PELUNCURAN · ${shortMissionLabel(siteName, 20).toUpperCase()}`
-    : 'LOKASI PELUNCURAN';
+    ? `LAUNCH SITE · ${shortMissionLabel(siteName, 20).toUpperCase()}`
+    : 'LAUNCH SITE';
   let title = mission;
   let detail = siteCallout;
   if (mode === 'countdown') {
     title = `T−${String(state.countdownSeconds).padStart(2, '0')} · ${mission}`;
-    detail = `PELUNCURAN SIAGA\n${siteCallout}`;
+    detail = `LAUNCH STANDBY
+${siteCallout}`;
   } else if (mode === 'ascent') {
     title = state.elapsedSinceStart < 1
       ? `LIFTOFF · ${mission}`

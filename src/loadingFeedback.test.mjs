@@ -402,7 +402,7 @@ test('describes disable work without reporting it as a completed load', () => {
   const visible = reduceLoadingFeedback(pending, summary, 200);
   assert.equal(presentLoadingFeedback(visible, summary, 200).label, 'MEMATIKAN DATA LIVE');
   const complete = reduceLoadingFeedback(visible, aggregateLayerLoading([]), 250);
-  assert.equal(presentLoadingFeedback(complete, aggregateLayerLoading([]), 250).label, 'DATA LIVE MATI');
+  assert.equal(presentLoadingFeedback(complete, aggregateLayerLoading([]), 250).label, 'LIVE DATA OFF');
 });
 
 test('a flow failure landing after the roads settle still ends the batch as LOAD FAILED', () => {

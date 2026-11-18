@@ -48,7 +48,7 @@ test('passwordRequirements: role length, upper bound and identity are checked li
   assert.equal(met({ password: 'x'.repeat(12), role: 'admin' }).min, false);
   assert.equal(met({ password: 'x'.repeat(129), role: 'user' }).max, false);
   assert.equal(met({ password: 'ani@example.test', role: 'user', email: 'ani@example.test' }).identity, false);
-  assert.match(passwordRequirements({ password: '', role: 'admin' })[0].label, /15 karakter/);
+  assert.match(passwordRequirements({ password: '', role: 'admin' })[0].label, /15 characters/);
 });
 
 test('handoverMessage: Indonesian, login URL from the origin, email, temp password, must-change note', () => {
@@ -62,5 +62,5 @@ test('handoverMessage: Indonesian, login URL from the origin, email, temp passwo
     '',
     'Note: this password must be changed at first login. Do not share this message with anyone else.',
   ].join('\n'));
-  assert.match(handoverMessage({ origin: 'http://localhost:4173', email: 'a@b.test', password: 'x', reset: true }), /^Password akun EagleEye Anda sudah direset\.\n\nAlamat login: http:\/\/localhost:4173\/login/);
+  assert.match(handoverMessage({ origin: 'http://localhost:4173', email: 'a@b.test', password: 'x', reset: true }), /^Your EagleEye account password has been reset\.\n\nLogin address: http:\/\/localhost:4173\/login/);
 });

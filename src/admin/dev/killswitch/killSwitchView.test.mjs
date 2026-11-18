@@ -14,10 +14,10 @@ test('gateRow: a switched-off gate says who, when and why', () => {
   const row = gateRow({ gate: 'ai', killed: true, reason: 'Biaya melonjak', updatedAt: NOW - 3 * 3_600_000, updatedBy: { id: 'u1', emailMasked: 'd***@x.test' } }, NOW);
   assert.equal(row.killed, true);
   assert.equal(row.statusLabel, 'Off');
-  assert.equal(row.lastChange, 'Changed 3 jam lalu by d***@x.test.');
+  assert.equal(row.lastChange, 'Changed 3 h ago by d***@x.test.');
   assert.equal(row.reason, 'Reason: Biaya melonjak');
   assert.ok(row.absolute);
-  assert.match(gateRow({ gate: 'ai', killed: true, reason: null, updatedAt: NOW, updatedBy: null }, NOW).lastChange, /akun yang tidak dikenal/);
+  assert.match(gateRow({ gate: 'ai', killed: true, reason: null, updatedAt: NOW, updatedBy: null }, NOW).lastChange, /an unknown account/);
 });
 
 test('gateTally + gateLabel', () => {
@@ -30,13 +30,13 @@ test('dialogConfig: switching off is destructive and needs a reason of ≥3 char
   const off = dialogConfig({ gate: 'ai', killed: true });
   assert.equal(off.destructive, true);
   assert.deepEqual([off.reason.required, off.reason.minLength], [true, 3]);
-  assert.match(off.impact, /semua orang termasuk Anda/);
-  assert.match(off.title, /Matikan Voice & AI untuk semua akun/);
+  assert.match(off.impact, /everyone including you/);
+  assert.match(off.title, /Turn off Voice & AI for all accounts/);
   const on = dialogConfig({ gate: 'ai', killed: false });
   assert.equal(on.destructive, false);
   assert.equal(on.reason.required, false);
   assert.equal(on.password.required, false, 'a Google-only super admin may leave the password empty');
-  assert.match(on.actionLabel, /Nyalakan/);
+  assert.match(on.actionLabel, /Turn back on/);
 });
 
 test('updateBody trims the reason and always sends a password string; savedToast warns when the audit failed', () => {

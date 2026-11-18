@@ -31,7 +31,7 @@ test('the panel no longer badges government-portal cameras as an unofficial sour
 
 test('the camera search sits in the inspector and picks cameras through selectCamera', () => {
   const markup = inspectorMarkup();
-  assert.match(markup, /id="cam-search-input"[^>]*aria-label="Cari kamera CCTV"/);
+  assert.match(markup, /id="cam-search-input"[^>]*aria-label="Search CCTV cameras"/);
   assert.match(markup, /id="cam-search-results"/);
   assert.match(controller, /searchCameras/);
 });
@@ -46,7 +46,7 @@ test('picking a search result flies to the camera through the panel select-and-f
 });
 
 test('the manual controls are always visible: no "Cari manual" button and no hide rule', () => {
-  assert.doesNotMatch(inspectorMarkup(), /cam-inspector-advanced|Cari manual/);
+  assert.doesNotMatch(inspectorMarkup(), /cam-inspector-advanced|Manual search/);
   const css = readFileSync(new URL('../theme/inspector.css', import.meta.url), 'utf8');
   assert.doesNotMatch(css, /ee-advanced-open|cam-inspector-advanced/);
 });

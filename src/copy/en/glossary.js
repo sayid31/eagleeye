@@ -21,7 +21,7 @@ export const GLOSSARY = Object.freeze([
   { avoid: 'Penyedia & API Keys', use: 'API Keys' },
   { avoid: 'Aktivitas', use: 'Log Login / Audit' },
   { avoid: 'Pemakai', use: 'Users' },
-  { avoid: 'Mati', use: 'Inactive' },
+  { avoid: 'Off', use: 'Inactive' },
   { avoid: 'Sign-in', use: 'Login' },
 ]);
 

@@ -232,7 +232,7 @@ export function evaluateSubject(subject, sourceStates = collectSourceStates()) {
       { id: 'ais-live-vessels', label: 'AIS vessels', source: vesselsState.stats.source || SOURCE_LABEL['ais-live-vessels'], summary: summarizeAwarenessCohortForNavigation(vessels, vesselsState) },
       {
         id: 'military-installations',
-        label: 'Instalasi terpetakan',
+        label: 'Mapped installations',
         source: installationsState.stats.source || SOURCE_LABEL['military-installations'],
         coverage: 'CURRENT VIEWPORT ONLY',
         summary: summarizeInstallationViewport(installations, installationsState),

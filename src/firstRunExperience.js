@@ -91,7 +91,7 @@ export const FIRST_RUN_MISSIONS = Object.freeze({
   contacts: Object.freeze({
     kind: 'context',
     contextMode: 'contacts',
-    busyText: 'Memulai kontak live…',
+    busyText: 'Starting live contact…',
   }),
   'space-missions': Object.freeze({
     kind: 'context',

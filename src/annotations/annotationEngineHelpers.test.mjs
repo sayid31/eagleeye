@@ -169,7 +169,7 @@ test('composeRouteLabel appends distance/duration for a real route', () => {
 
 test('composeRouteLabel marks a fallback straight-line with no travel time', () => {
   const label = composeRouteLabel('Downtown', 500, null, 'foot', true);
-  assert.match(label, /garis lurus \(tanpa rute\)/);
+  assert.match(label, /straight line \(no route\)/);
 });
 
 test('appendDistance appends a formatted distance to a base label', () => {

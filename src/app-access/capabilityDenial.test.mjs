@@ -21,7 +21,7 @@ test('other refusals are not capability locks', () => {
 
 test('toasts name the feature and why', () => {
   assert.equal(denialToast({ gate: 'layers', kind: 'revoked' }), `${CAPABILITY_LABELS.layers} is no longer allowed by an admin — disabled on this page.`);
-  assert.match(denialToast({ gate: 'ai', kind: 'killed' }), /^Voice & AI sedang dimatikan developer/);
+  assert.match(denialToast({ gate: 'ai', kind: 'killed' }), /^Voice & AI is currently turned off by the developer/);
 });
 
 test('locked responses: HUD summary gets the quiet "not configured" shape, others the server refusal', () => {

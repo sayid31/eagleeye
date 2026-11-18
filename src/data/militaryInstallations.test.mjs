@@ -476,7 +476,7 @@ test('a still-saturated exact viewport is reported honestly instead of implied c
   const harness = await runInstallationLoad({ elements, saturated: true, exactSaturated: true });
   try {
     assert.equal(harness.stats().saturated, true);
-    assert.match(harness.stats().error, /Terlalu banyak situs terpetakan/);
+    assert.match(harness.stats().error, /Too many mapped sites/);
   } finally {
     harness.restore();
   }

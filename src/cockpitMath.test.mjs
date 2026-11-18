@@ -68,7 +68,7 @@ test('cockpit altitude reads zero on the ground without changing airborne MSL', 
 test('cockpit Context scope distinguishes radius-complete feeds from viewport installations', () => {
   assert.equal(
     formatCockpitContextScope('TEST123', 250000, 'CURRENT VIEWPORT ONLY'),
-    'TEST123 · 250 KM JENDELA UDARA/LAUT · INSTALASI HANYA VIEWPORT SAAT INI',
+    'TEST123 · 250 KM AIR/SEA WINDOW · INSTALLATIONS CURRENT VIEWPORT ONLY',
   );
   assert.equal(
     formatCockpitContextScope('TEST123', 250000),

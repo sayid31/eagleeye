@@ -32,7 +32,7 @@ import { _clearTrail, _startTrail } from './militaryFlightsTrail.js';
  * @returns {string} Newline-separated label text
  */
 function _buildTrackedLabel(info, icao24) {
-  const stale = (S._missingPolls.get(icao24) || S._backoff) ? ' · USANG' : '';
+  const stale = (S._missingPolls.get(icao24) || S._backoff) ? ' · STALE' : '';
   const callsign = (_toCleanText(info?.callsign) || _toCleanText(info?.registration) || icao24) + stale;
   // Converted contacts report their class as TR-3B — that override is exactly
   // what the Easter egg replaces the real type with.

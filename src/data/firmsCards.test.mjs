@@ -64,7 +64,7 @@ test('buildSelectedFireCard: full detail card with coords, selected flag, no fad
   const card = buildSelectedFireCard(fire(), NOW);
   assert.equal(card.title, 'TITIK API · 1520 MW');
   assert.equal(card.selected, true);
-  assert.equal(card.details[0], 'keyakinan tinggi · 2h lalu · VIIRS N20');
+  assert.equal(card.details[0], 'high confidence · 2h ago · VIIRS N20');
   assert.equal(card.details[1], '61.914°N 122.944°W');
 });
 
@@ -81,7 +81,7 @@ test('buildCellCard: plural noun, max FRP and newest age, accent passthrough', (
   };
   const card = buildCellCard(candidate, NOW);
   assert.equal(card.title, '14 TITIK API');
-  assert.equal(card.details[0], 'maks 210 MW · baru 3h');
+  assert.equal(card.details[0], 'max 210 MW · new 3h');
   assert.equal(card.accent, accentForSeverity('orange'));
 });
 

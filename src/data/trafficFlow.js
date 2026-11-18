@@ -72,7 +72,7 @@ export function trafficFeedPresentation({
     // drops `loadingLabel` in its error branch, so the owner's SIMULATED copy
     // has to BE the error text or the steady state reverts to a bare
     // "TomTom daily budget reached" that never says what is on screen.
-    const degraded = `SIMULASI — ${flowError}`;
+    const degraded = `SIMULATION — ${flowError}`;
     return { mode, error: degraded, loadingLabel: degraded };
   }
   if (liveMode) {
@@ -95,7 +95,7 @@ export function trafficFeedPresentation({
   return {
     mode,
     error: null,
-    loadingLabel: fetching && waitLabel ? `SIMULASI — ${waitLabel}` : idleLabel,
+    loadingLabel: fetching && waitLabel ? `SIMULATION — ${waitLabel}` : idleLabel,
   };
 }
 

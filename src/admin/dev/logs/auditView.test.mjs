@@ -13,9 +13,9 @@ test('audit filter ids match the server types', () => {
 
 test('describeAuditEntry words each event in Indonesian with a status', () => {
   assert.deepEqual(describeAuditEntry({ event: 'keys.changed', saved: ['OPENAI_API_KEY'], removed: ['TOMTOM_API_KEY'] }),
-    { title: 'API key changed', detail: 'saved: OPENAI_API_KEY · dihapus: TOMTOM_API_KEY', status: 'ok' });
+    { title: 'API key changed', detail: 'saved: OPENAI_API_KEY · removed: TOMTOM_API_KEY', status: 'ok' });
   assert.deepEqual(describeAuditEntry({ event: 'keys.tested', provider: 'openai', result: 'rejected', httpStatus: 401 }),
-    { title: 'Connection tested', detail: 'OpenAI: ditolak (HTTP 401)', status: 'error' });
+    { title: 'Connection tested', detail: 'OpenAI: rejected (HTTP 401)', status: 'error' });
   assert.equal(describeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'persona'] }).detail, 'Changed: limits, persona');
   assert.equal(describeAuditEntry({ event: 'admin.login_denied', result: 'not_admin' }).status, 'warn');
   assert.equal(describeAuditEntry({ event: 'log.cleared' }).title, 'Server Log cleared');

@@ -168,7 +168,7 @@ function normalizeRecoveryStages(launch, payloads) {
   const spacecraftStages = Array.isArray(rocket.spacecraft_stage) ? rocket.spacecraft_stage : [];
   const stages = [
     ...launcherStages.map((stage, index) => normalizeLanding(stage, `Tahap peluncur ${index + 1}`, 'LAUNCHER', index)),
-    ...spacecraftStages.map((stage, index) => normalizeLanding(stage, `Tahap pesawat antariksa ${index + 1}`, 'SPACECRAFT', index)),
+    ...spacecraftStages.map((stage, index) => normalizeLanding(stage, `Spacecraft stage ${index + 1}`, 'SPACECRAFT', index)),
   ];
   const payloadFlights = rocket.payloads || launch.payloads || [];
   if (Array.isArray(payloadFlights)) {

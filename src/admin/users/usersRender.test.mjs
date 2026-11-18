@@ -23,24 +23,24 @@ const props = (extra) => ({ users: USERS, loading: false, error: null, onRetry()
 test('UsersTable: named table, scoped headers, row menu per account, "Anda" on your own row, both table and card list', async () => {
   const { UsersTable } = await load('UsersTable');
   const html = render(h(UsersTable, props()));
-  assert.match(html, /<caption[^>]*sr-only[^>]*>Daftar pengguna<\/caption>/);
+  assert.match(html, /<caption[^>]*sr-only[^>]*>User list<\/caption>/);
   for (const header of ['Users', 'Role', 'Status', 'Permissions', 'Created']) assert.match(html, new RegExp(`scope="col"[^>]*>${header}<`), header);
-  assert.match(html, /<span class="sr-only">Aksi<\/span>/, 'actions header is sr-only');
-  assert.match(html, /aria-label="Aksi untuk sari@contoh\.test"/);
-  assert.match(html, /aria-label="Aksi untuk dev@example\.test"/, 'own row: edit name + sign-out + nothing else, still a menu');
-  assert.match(html, /<ul class="grid gap-3 md:hidden" aria-label="Daftar pengguna">/, 'mobile card list');
-  assert.equal((html.match(/>Anda</g) ?? []).length >= 2, true, 'the marker shows in table and card');
-  assert.match(html, /aria-label="Aksi untuk other@example\.test"/, 'another super_admin still offers its read-only log links');
+  assert.match(html, /<span class="sr-only">Actions<\/span>/, 'actions header is sr-only');
+  assert.match(html, /aria-label="Actions for sari@contoh\.test"/);
+  assert.match(html, /aria-label="Actions for dev@example\.test"/, 'own row: edit name + sign-out + nothing else, still a menu');
+  assert.match(html, /<ul class="grid gap-3 md:hidden" aria-label="User list">/, 'mobile card list');
+  assert.equal((html.match(/>You</g) ?? []).length >= 2, true, 'the marker shows in table and card');
+  assert.match(html, /aria-label="Actions for other@example\.test"/, 'another super_admin still offers its read-only log links');
   assert.match(html, /title="Muhammad Abdurrahman Wijayakusuma Prasetyaningrum"/, 'long names keep the full text in a title');
 });
 
 test('UsersTable: capability chips say on/off in words; status badges carry text; /admin hides the role column', async () => {
   const { UsersTable } = await load('UsersTable');
   const html = render(h(UsersTable, props()));
-  assert.match(html, /Layer<span class="sr-only">: aktif<\/span>/);
-  assert.match(html, /AI<span class="sr-only">: nonaktif<\/span>/);
-  assert.match(html, />Nonaktif</);
-  assert.match(html, />Semua izin</, 'admins and super admins hold everything');
+  assert.match(html, /Layers<span class="sr-only">: active<\/span>/);
+  assert.match(html, /AI<span class="sr-only">: inactive<\/span>/);
+  assert.match(html, />Inactive</);
+  assert.match(html, />All permissions</, 'admins and super admins hold everything');
   const admin = render(h(UsersTable, props({ me: adminMe, area: 'admin', users: [USERS[0]] })));
   assert.doesNotMatch(admin, /scope="col"[^>]*>Role</);
 });
@@ -49,21 +49,21 @@ test('UsersTable: loading skeleton, empty state with the call to action, filtere
   const { UsersTable } = await load('UsersTable');
   assert.match(render(h(UsersTable, props({ users: [], loading: true }))), /role="status"[^>]*aria-busy="true"/);
   const empty = render(h(UsersTable, props({ users: [] })));
-  assert.match(empty, /Belum ada pengguna/);
-  assert.match(empty, /Buat pengguna pertama/);
-  assert.match(render(h(UsersTable, props({ users: [], filtered: true }))), /Tidak ada pengguna yang cocok/);
+  assert.match(empty, /No users yet/);
+  assert.match(empty, /Create the first user/);
+  assert.match(render(h(UsersTable, props({ users: [], filtered: true }))), /No matching users/);
   const failed = render(h(UsersTable, props({ users: [], error: Object.assign(new Error('x'), { code: 'ADMIN_REQUIRED', status: 403 }) })));
   assert.match(failed, /role="alert"/);
-  assert.match(failed, /Hanya admin yang boleh membuka ini\./);
-  assert.match(failed, /Coba lagi/);
+  assert.match(failed, /Only admins can open this\./);
+  assert.match(failed, /Try again/);
 });
 
 test('CapabilitySwitches: a fieldset with a legend, one labelled switch per capability, each with its cost line', async () => {
   const { CapabilitySwitches } = await load('UserFormFields');
   const html = render(h(CapabilitySwitches, { value: { layers: true, ai: true, premium: false }, onChange() {} }));
-  assert.match(html, /<legend[^>]*>Izin fitur<\/legend>/);
+  assert.match(html, /<legend[^>]*>Feature permissions<\/legend>/);
   assert.equal((html.match(/role="switch"/g) ?? []).length, 3);
-  for (const title of ['Data layers', 'Voice &amp; AI', 'Peta premium &amp; search']) assert.match(html, new RegExp(`<label[^>]*>${title}</label>`), title);
+  for (const title of ['Data layers', 'Voice &amp; AI', 'Premium map &amp; search']) assert.match(html, new RegExp(`<label[^>]*>${title}</label>`), title);
   assert.match(html, /aria-checked="true"/);
   assert.match(html, /Berbiaya per permintaan \(Google Maps\)/);
   assert.equal((html.match(/aria-describedby="[^"]+-description"/g) ?? []).length, 3);
@@ -73,14 +73,14 @@ test('PasswordChoice: radio group with both options; the typed case shows a labe
   const { PasswordChoice } = await load('UserFormFields');
   const generated = render(h(PasswordChoice, { mode: 'generate', password: '', role: 'user', onMode() {}, onPassword() {} }));
   assert.match(generated, /role="radiogroup"[^>]*aria-label="Password awal"/);
-  assert.match(generated, />Buat otomatis</);
+  assert.match(generated, />Auto-generate</);
   assert.match(generated, />Ketik sendiri</);
   assert.doesNotMatch(generated, /type="password"/);
   const typed = render(h(PasswordChoice, { mode: 'typed', password: 'pendek', role: 'admin', onMode() {}, onPassword() {} }));
   assert.match(typed, /type="password"/);
   assert.match(typed, /autoComplete="new-password"|autocomplete="new-password"/i);
-  assert.match(typed, /Minimal 15 karakter<span class="sr-only">: belum terpenuhi<\/span>/);
-  assert.match(typed, /Berbeda dari email dan nama<span class="sr-only">: terpenuhi<\/span>/);
+  assert.match(typed, /At least 15 characters<span class="sr-only">: not met yet<\/span>/);
+  assert.match(typed, /Different from email and name<span class="sr-only">: met<\/span>/);
 });
 
 test('TimeCell and IpCell: relative text with the absolute value in title and for screen readers; compact IP keeps the full one', async () => {
@@ -91,16 +91,16 @@ test('TimeCell and IpCell: relative text with the absolute value in title and fo
   assert.match(time, /<span class="sr-only"> \(/);
   const ip = render(h(IpCell, { ip: '0000:0000:0000:0000:0000:0000:0000:0001' }));
   assert.match(ip, />::1<span class="sr-only"> \(0000:0000/);
-  assert.match(ip, /title="Alamat IP lengkap: 0000/);
+  assert.match(ip, /title="Full IP address: 0000/);
   assert.match(render(h(DeviceCell, { userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) Chrome/145.0 Safari/537.36' })), /Chrome · macOS/);
 });
 
 test('LoginResultCell: success and failure badges carry icon + word, failure adds its reason', async () => {
   const { LoginResultCell } = await load('ActivityCells');
   const ok = render(h(LoginResultCell, { entry: { success: true } }));
-  assert.match(ok, />Berhasil</);
+  assert.match(ok, />Success</);
   const bad = render(h(LoginResultCell, { entry: { success: false, reason: 'throttled' } }));
-  assert.match(bad, />Gagal</);
+  assert.match(bad, />Failed</);
   assert.match(bad, /Ter-throttle/);
   assert.match(bad, /<svg[^>]*aria-hidden="true"/);
 });

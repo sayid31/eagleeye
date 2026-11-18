@@ -24,7 +24,7 @@ test('overviewCards: concise values with a sub-label per card', () => {
 test('overviewCards: all gates on and no errors read as ok; unconfigured login is an error', () => {
   const calm = overviewCards(summary({ killSwitches: [{ gate: 'ai', killed: false }], serverLog: { recentErrors: 0, windowHours: 24 } }));
   assert.deepEqual([calm.gates.status, calm.gates.detail, calm.errors.status], ['ok', 'All paid features are on', 'ok']);
-  assert.match(calm.errors.detail, /Tidak ada error/);
+  assert.match(calm.errors.detail, /No errors/);
   const broken = overviewCards(summary({ auth: { configured: false, googleSignIn: true } }));
   assert.deepEqual([broken.login.status, broken.login.rows[0].text, broken.login.rows[1].status], ['error', 'Not ready', 'ok']);
 });
@@ -43,7 +43,7 @@ test('doctorItems: plain-language title + text, level normalised, unknown ids fa
     { id: 'auth.future', level: 'info', params: {} },
   ]);
   assert.equal(items[0].level, 'error');
-  assert.match(items[0].text, /BETTER_AUTH_SECRET belum diisi, jadi login belum bisa dipakai/);
-  assert.match(items[1].text, /2 admin masuk hanya dengan password.*reverse proxy/);
+  assert.match(items[0].text, /BETTER_AUTH_SECRET is not set, so login cannot be used yet/);
+  assert.match(items[1].text, /2 admins sign in with a password only.*reverse proxy/);
   assert.deepEqual([items[2].level, items[2].title, items[2].text], ['warn', 'auth.future', 'auth.future']);
 });

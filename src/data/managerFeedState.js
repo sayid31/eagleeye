@@ -37,10 +37,10 @@ export function cloneLayerParams(value) {
 
 /** Feed-state → toggle-panel button label. */
 export const FEED_STATE_LABELS = Object.freeze({
-  nominal: 'HIDUP',
+  nominal: 'ON',
   loading: 'LOADING',
-  degraded: 'MENURUN',
-  stale: 'USANG',
+  degraded: 'DEGRADED',
+  stale: 'STALE',
   fallback: 'FALLBACK',
   unavailable: 'UNAVAILABLE',
 });

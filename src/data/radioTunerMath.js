@@ -71,7 +71,7 @@ const CATEGORY_MATCHERS = Object.freeze({
 const RADIO_CLUSTER_LABELS = Object.freeze({
   news: 'BERITA',
   talk: 'TALK',
-  weather: 'CUACA',
+  weather: 'WEATHER',
   'public-safety': 'KEAMANAN',
   'aviation-marine': 'AIR / SEA',
   'traffic-transit': 'TRANSIT',

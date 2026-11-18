@@ -628,7 +628,7 @@ export const radioPanelMixin = {
     if (this._radioLayerState) {
       this._radioLayerState.textContent = transitioning
         ? RADIO_LIFECYCLE_TEXT[lifecycleState]
-        : (uncertain ? 'UNCERTAIN' : (state.loading ? 'SINKRON' : (enabled ? `${state.filteredCount}/${state.stationCount}` : 'MATI')));
+        : (uncertain ? 'UNCERTAIN' : (state.loading ? 'SINKRON' : (enabled ? `${state.filteredCount}/${state.stationCount}` : 'OFF')));
     }
     if (this._radioEnableBtn) {
       this._radioEnableBtn.classList.toggle('active', enabled);
@@ -744,14 +744,14 @@ export const radioPanelMixin = {
       this._radioPlayBtn.disabled = !interactive || !hasStations;
       this._radioPlayBtn.classList.toggle('active', activePlayback);
       this._radioPlayBtn.textContent = action.toUpperCase();
-      this._radioPlayBtn.setAttribute('aria-label', `${action} stasiun radio ${selected ? 'terpilih' : 'terdekat'}`);
+      this._radioPlayBtn.setAttribute('aria-label', `${action} ${selected ? 'selected' : 'nearest'} radio station`);
     }
     if (this._contextRadioMiniPlayBtn) {
       const action = activePlayback ? 'Jeda' : (state.audioState === 'paused' ? 'Continue' : 'Putar');
       this._contextRadioMiniPlayBtn.disabled = !interactive || !hasStations;
       this._contextRadioMiniPlayBtn.classList.toggle('active', activePlayback);
       this._contextRadioMiniPlayBtn.textContent = activePlayback ? 'Ⅱ' : '▶';
-      this._contextRadioMiniPlayBtn.setAttribute('aria-label', `${action} stasiun radio ${selected ? 'terpilih' : 'terdekat'}`);
+      this._contextRadioMiniPlayBtn.setAttribute('aria-label', `${action} ${selected ? 'selected' : 'nearest'} radio station`);
       this._contextRadioMiniPlayBtn.title = action;
     }
     if (this._cockpitRadioPlayBtn) {
@@ -759,7 +759,7 @@ export const radioPanelMixin = {
       this._cockpitRadioPlayBtn.disabled = !interactive || !hasStations;
       this._cockpitRadioPlayBtn.classList.toggle('active', activePlayback);
       this._cockpitRadioPlayBtn.textContent = activePlayback ? 'Ⅱ' : '▶';
-      this._cockpitRadioPlayBtn.setAttribute('aria-label', `${action} stasiun radio ${selected ? 'terpilih' : 'terdekat'}`);
+      this._cockpitRadioPlayBtn.setAttribute('aria-label', `${action} ${selected ? 'selected' : 'nearest'} radio station`);
       this._cockpitRadioPlayBtn.title = action;
     }
     if (this._radioStopBtn) this._radioStopBtn.disabled = !interactive || state.audioState === 'stopped';
@@ -785,22 +785,22 @@ export const radioPanelMixin = {
     if (this._contextRadioMiniStation) {
       this._contextRadioMiniStation.textContent = uncertain
         ? 'RADIO STATE UNCERTAIN'
-        : (selected?.name || (state.loading ? 'SINKRONISASI DIREKTORI' : 'RADIO SIAP'));
+        : (selected?.name || (state.loading ? 'SINKRONISASI DIREKTORI' : 'RADIO READY'));
     }
     if (this._cockpitRadioStation) {
       this._cockpitRadioStation.textContent = uncertain
         ? 'UNCERTAIN'
-        : (selected?.name || (state.loading ? 'SINKRON' : 'SIAP'));
+        : (selected?.name || (state.loading ? 'SINKRON' : 'READY'));
     }
     if (this._radioPlaybackState) {
       const catalogSuffix = state.degraded
-        ? (state.stale ? ' · direktori usang/terdegradasi' : ' · direktori terdegradasi')
-        : (state.stale ? ' · direktori usang' : '');
+        ? (state.stale ? ' · directory stale/degraded' : ' · direktori terdegradasi')
+        : (state.stale ? ' · directory stale' : '');
       const outsideFilter = selected && state.selectedIndex < 0 ? ' · outside the current filter' : '';
       const messages = {
-        stopped: enabled ? 'Ready — playback starts only from your action' : 'Radio mati',
+        stopped: enabled ? 'Ready — playback starts only from your action' : 'Radio off',
         loading: 'Connecting directly to the broadcaster…',
-        buffering: 'Menyangga aliran penyiar…',
+        buffering: 'Buffering the broadcaster stream…',
         playing: `Memutar ${selected?.name || 'stasiun'}`,
         paused: `Dijeda ${selected?.name || 'stasiun'}`,
         error: state.audioError || 'Broadcaster stream unavailable',

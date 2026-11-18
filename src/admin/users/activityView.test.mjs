@@ -40,8 +40,8 @@ test('audit wording: actor redaction, action text, detail summaries', () => {
   assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: null }, adminMe), 'System');
   assert.equal(auditActionText('user.delete'), 'Account deleted');
   assert.equal(auditActionText('user.future'), 'user.future');
-  assert.equal(auditDetailText('role user'), 'Role: Pengguna');
-  assert.equal(auditDetailText('fields name,capabilities'), 'Changed: nama, izin fitur');
+  assert.equal(auditDetailText('role user'), 'Role: User');
+  assert.equal(auditDetailText('fields name,capabilities'), 'Changed: name, feature permissions');
   assert.equal(auditDetailText('user → admin'), 'User → Admin');
   assert.equal(auditDetailText('cli'), 'cli');
   assert.equal(auditDetailText(null), '');
@@ -81,10 +81,10 @@ test('formatRelative: just now, minutes, hours, yesterday, days, then the plain 
   const now = Date.parse('2026-11-18T12:00:00.000Z');
   const ago = (seconds) => new Date(now - seconds * 1000).toISOString();
   assert.equal(formatRelative(ago(10), now), 'just now');
-  assert.equal(formatRelative(ago(5 * 60), now), '5 menit yang lalu');
-  assert.equal(formatRelative(ago(3 * 3600), now), '3 jam yang lalu');
-  assert.equal(formatRelative(ago(26 * 3600), now), 'kemarin');
-  assert.equal(formatRelative(ago(5 * 86400), now), '5 hari yang lalu');
+  assert.equal(formatRelative(ago(5 * 60), now), '5 minutes ago');
+  assert.equal(formatRelative(ago(3 * 3600), now), '3 hours ago');
+  assert.equal(formatRelative(ago(26 * 3600), now), 'yesterday');
+  assert.equal(formatRelative(ago(5 * 86400), now), '5 days ago');
   assert.match(formatRelative(ago(90 * 86400), now), /2026/);
   assert.equal(formatRelative('nope', now), '—');
   assert.equal(formatRelative(null, now), '—');

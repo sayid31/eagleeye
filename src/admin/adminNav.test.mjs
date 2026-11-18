@@ -37,7 +37,7 @@ test('/dev menu is the original list: fourteen pages, Konfigurasi AI and Server 
 
 test('the menu has no tabs, no regrouping headings and none of the replaced terms', () => {
   const text = JSON.stringify(navForArea('dev')) + JSON.stringify(navForArea('admin'));
-  assert.doesNotMatch(text, /"tabs"|Akses|Kendali|Sakelar|Log server|Aktivitas|Jejak audit|Anggaran/);
+  assert.doesNotMatch(text, /"tabs"|Access|Controls|Emergency switch|Server log|Activity|Audit trail|Budget/);
   assert.match(text, /Kill switch/);
   assert.match(text, /Server Log/);
 });

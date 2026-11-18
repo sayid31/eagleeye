@@ -275,7 +275,7 @@ function renderRecords() {
     entity.gevTrackedId = `installations:${record.id}`;
     entity.gevDisplayPosition = () => displayPosition;
     entity.gevLabelModel = {
-      title: record.name || 'INSTALASI TERPETAKAN',
+      title: record.name || 'MAPPED INSTALLATIONS',
       details: [String(record.class || 'installation').replaceAll('_', ' ').toUpperCase()],
       accent: COLOR_BY_CLASS[record.class] || '#9ca6b0',
     };

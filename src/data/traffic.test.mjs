@@ -101,7 +101,7 @@ test('a mid-session flow outage degrades instead of reporting stale live coverag
   });
   // error and loadingLabel are ONE string: the manager's error branch renders
   // `error` and drops `loadingLabel`, so the copy has to live in both.
-  assert.equal(down.error, 'SIMULASI — Kuota harian TomTom habis');
+  assert.equal(down.error, 'SIMULATION — TomTom daily quota used up');
   assert.equal(down.loadingLabel, down.error);
   assert.ok(!down.loadingLabel.includes('87'));
   const busy = trafficFeedPresentation({
@@ -120,7 +120,7 @@ test('the rendered steady-state meta line carries the SIMULATED copy', () => {
       source: 'OpenStreetMap',
       stats: stats(trafficFeedPresentation({ liveMode: false })),
     }),
-    'CADANGAN · OpenStreetMap · SIMULASI — tambahkan kunci TomTom untuk live',
+    'FALLBACK · OpenStreetMap · SIMULATION — add a TomTom key for live',
   );
   assert.equal(
     mgr._buildMetaText({
@@ -130,7 +130,7 @@ test('the rendered steady-state meta line carries the SIMULATED copy', () => {
         flowError: 'TomTom daily quota used up',
       })),
     }),
-    'MENURUN · OpenStreetMap · SIMULASI — Kuota harian TomTom habis',
+    'DEGRADED · OpenStreetMap · SIMULATION — TomTom daily quota used up',
   );
 });
 

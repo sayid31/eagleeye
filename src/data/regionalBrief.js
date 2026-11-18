@@ -104,7 +104,7 @@ export function weatherCodeLabel(code) {
   if (value >= 80 && value <= 82) return 'HUJAN LOKAL';
   if (value >= 85 && value <= 86) return 'SALJU LOKAL';
   if (value >= 95) return 'BADAI PETIR';
-  return 'KONDISI CAMPURAN';
+  return 'MIXED CONDITIONS';
 }
 
 /** Great-circle distance used to avoid refetching a regional brief every animation frame. */

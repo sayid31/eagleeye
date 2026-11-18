@@ -65,8 +65,8 @@ test('an unmapped class title-cases instead of leaking an underscored tag', () =
   assert.equal(humanizeInstallationClass('danger_area'), 'Danger area');
   assert.equal(humanizeInstallationClass('checkpoint'), 'Checkpoint');
   assert.equal(humanizeInstallationClass('training_area_north'), 'Training area north');
-  assert.equal(humanizeInstallationClass(''), 'Instalasi terpetakan');
-  assert.equal(humanizeInstallationClass(null), 'Instalasi terpetakan');
+  assert.equal(humanizeInstallationClass(''), 'Mapped installations');
+  assert.equal(humanizeInstallationClass(null), 'Mapped installations');
 });
 
 test('accepts only small non-dateline request bboxes', () => {

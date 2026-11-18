@@ -1842,11 +1842,11 @@ test('layer metadata names degraded state instead of presenting an ordinary age'
   assert.equal(mgr._buildMetaText({
     source: 'TomTom',
     stats: { mode: 'sim', count: 120, lastUpdate: 1, loadingLabel: 'simulated traffic' },
-  }), 'CADANGAN · TomTom · simulated traffic');
+  }), 'FALLBACK · TomTom · simulated traffic');
   assert.equal(mgr._buildMetaText({
     source: 'CelesTrak',
     stats: { error: 'CelesTrak unreachable', count: 0, lastUpdate: null },
-  }), 'TIDAK TERSEDIA · CelesTrak · CelesTrak unreachable');
+  }), 'UNAVAILABLE · CelesTrak · CelesTrak unreachable');
   assert.equal(mgr._buildMetaText({
     source: 'CelesTrak',
     stats: {
@@ -1855,7 +1855,7 @@ test('layer metadata names degraded state instead of presenting an ordinary age'
       count: 50,
       lastUpdate: 1,
     },
-  }), 'TIDAK TERSEDIA · CelesTrak · CelesTrak unreachable');
+  }), 'UNAVAILABLE · CelesTrak · CelesTrak unreachable');
 });
 
 test('uncertain lifecycle state overrides ordinary feed status without disabling reconciliation', () => {
@@ -1885,7 +1885,7 @@ test('uncertain lifecycle state overrides ordinary feed status without disabling
   assert.equal(button.textContent, 'UNCERTAIN');
   assert.equal(button.dataset.feedState, 'uncertain');
   assert.equal(button.disabled, false, 'the lifecycle toggle remains available to reconcile authority');
-  assert.equal(attributes.get('aria-label'), 'Radio: TIDAK PASTI');
+  assert.equal(attributes.get('aria-label'), 'Radio: UNCERTAIN');
   assert.equal(classes.get('lifecycle-uncertain'), true);
   assert.equal(classes.get('feed-nominal'), false);
   assert.equal(

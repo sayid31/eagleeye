@@ -119,7 +119,7 @@ _syncDetectionUiFromEngine() {
     btn.setAttribute('aria-pressed', String(enabled));
     btn.setAttribute('aria-label', enabled
       ? `Overlay deteksi: ${DETECTION_MODE_LABELS_ID[modeLabel] || String(modeLabel).toLowerCase()}`
-      : 'Overlay deteksi: mati');
+      : 'Detection overlay: off');
     btn.classList.remove('active', 'god', 'panoptic');
     if (modeLabel === 'SPARSE') {
       btn.querySelector('.pp-label').textContent = DETECTION_MODE_LABELS_ID.SPARSE.toUpperCase();

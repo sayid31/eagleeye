@@ -84,7 +84,7 @@ enter() {
     this.signalSignatures.clear();
     this.showBriefPage(0);
     this.startBriefRotation();
-    const trackLabel = info.callsign || info.registration || info.icao24 || 'PESAWAT';
+    const trackLabel = info.callsign || info.registration || info.icao24 || 'AIRCRAFT';
     const trackHeading = String(Math.round(normalizeHeading(info.track ?? 0))).padStart(3, '0');
     this.pushCockpitSignal(
       'track',

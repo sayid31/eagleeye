@@ -74,11 +74,11 @@
           <div class="ld-visual__panel" aria-hidden="true">
             <p>Data layers</p>
             <ul>
-              <li><span class="ld-dot ld-dot--air"></span>Pesawat<b>Live</b></li>
+              <li><span class="ld-dot ld-dot--air"></span>Aircraft<b>Live</b></li>
               <li><span class="ld-dot ld-dot--sea"></span>Vessels<b>Live</b></li>
               <li><span class="ld-dot ld-dot--sat"></span>Satellites<b>Live</b></li>
               <li><span class="ld-dot ld-dot--quake"></span>Earthquakes<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--traffic"></span>Traffic<b>Simulasi</b></li>
+              <li><span class="ld-dot ld-dot--traffic"></span>Traffic<b>Simulated</b></li>
             </ul>
           </div>
         </figure>
@@ -90,7 +90,7 @@
         <h2 id="lihat-title">What you can see</h2>
         <p class="ld-intro">Every source is a layer you can turn on and off. The layer panel shows each source's status: live, degraded, or simulated.</p>
         <ul class="ld-cards">
-          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-plane"></span></span><h3>Pesawat</h3><p>Civil flights from OpenSky Network with an adsb.lol fallback, plus military flights from adsb.lol. Click to track, or enter the cockpit view.</p></li>
+          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-plane"></span></span><h3>Aircraft</h3><p>Civil flights from OpenSky Network with an adsb.lol fallback, plus military flights from adsb.lol. Click to track, or enter the cockpit view.</p></li>
           <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-ship"></span></span><h3>Vessels</h3><p>Vessel positions from AIS broadcasts via AISStream.io.</p></li>
           <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-satellite"></span></span><h3>Satellites</h3><p>Orbits computed in the browser from CelesTrak TLE data, plus rocket launch context from Launch Library 2.</p></li>
           <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-activity"></span><span class="ld-i ld-i-flame"></span></span><h3>Earthquakes &amp; fires</h3><p>Earthquakes from the last 24 hours from USGS and VIIRS satellite fire hotspots from NASA FIRMS.</p></li>
@@ -117,7 +117,7 @@
           <ul aria-label="Example voice commands">
             <li>“Terbang ke Jakarta.”</li>
             <li>“Turn on the vessel and earthquake layers.”</li>
-            <li>“Lacak pesawat terdekat.”</li>
+            <li>“Track the nearest aircraft.”</li>
             <li>“Switch to the thermal view.”</li>
           </ul>
         </div>
@@ -126,7 +126,7 @@
 
     <section class="ld-section" id="gaya" aria-labelledby="gaya-title">
       <div class="ld-wrap">
-        <h2 id="gaya-title">Gaya visual &amp; misi</h2>
+        <h2 id="gaya-title">Visual styles &amp; missions</h2>
         <p class="ld-intro">A post-process shader changes the look of the whole globe with one click or one voice command.</p>
         <ul class="ld-styles">
           <li><span class="ld-i ld-i-eye" aria-hidden="true"></span><b>NVG</b><span>Night vision</span></li>
@@ -158,14 +158,14 @@
               <tr><th scope="row">adsb.lol</th><td>Military flights, flight fallback</td><td>ODbL 1.0</td></tr>
               <tr><th scope="row">AISStream.io</th><td>Vessels (AIS)</td><td>Free beta, no formal ToS</td></tr>
               <tr><th scope="row">CelesTrak</th><td>Satellite orbits (TLE)</td><td>Data asal pemerintah AS, sitasi diminta</td></tr>
-              <tr><th scope="row">The Space Devs · Launch Library 2</th><td>Peluncuran roket</td><td>Ketentuan The Space Devs</td></tr>
+              <tr><th scope="row">The Space Devs · Launch Library 2</th><td>Rocket launches</td><td>Ketentuan The Space Devs</td></tr>
               <tr><th scope="row">USGS</th><td>Earthquakes</td><td>Domain publik AS</td></tr>
               <tr><th scope="row">NASA FIRMS</th><td>Titik api</td><td>Domain publik AS (CC0)</td></tr>
-              <tr><th scope="row">OpenStreetMap</th><td>Jalan, instalasi, pusat data, bendungan</td><td>ODbL 1.0 · © OpenStreetMap contributors</td></tr>
+              <tr><th scope="row">OpenStreetMap</th><td>Roads, installations, data centers, dams</td><td>ODbL 1.0 · © OpenStreetMap contributors</td></tr>
               <tr><th scope="row">TomTom Traffic</th><td>Live traffic flow (optional)</td><td>Ketentuan TomTom for Developers</td></tr>
               <tr><th scope="row">TeleGeography</th><td>Submarine cables</td><td>CC BY-NC-SA 3.0 (non-komersial)</td></tr>
               <tr><th scope="row">City of Austin, Caltrans, TfL</th><td>CCTV publik</td><td>Ketentuan open data masing-masing</td></tr>
-              <tr><th scope="row">Open-Meteo, Re:Earth Terrain, Radio Browser</th><td>Cuaca, terrain, radio</td><td>CC BY 4.0 · CC BY 4.0 · PDDL 1.0</td></tr>
+              <tr><th scope="row">Open-Meteo, Re:Earth Terrain, Radio Browser</th><td>Weather, terrain, radio</td><td>CC BY 4.0 · CC BY 4.0 · PDDL 1.0</td></tr>
             </tbody>
           </table>
         </div>

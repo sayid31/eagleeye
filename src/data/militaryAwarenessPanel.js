@@ -36,7 +36,7 @@ export function ensurePanel() {
 export function hidePanel() {
   if (state.panel) {
     const markup = `<div class="military-awareness-standby">
-      <strong>${state.enabled ? 'KONTEKS SIAP' : 'KONTEKS GLOBAL MATI'}</strong>
+      <strong>${state.enabled ? 'CONTEXT READY' : 'GLOBAL CONTEXT OFF'}</strong>
       <span>${state.enabled ? 'SELECT A FLIGHT, VESSEL, OR MAPPED INSTALLATION' : 'TURN ON TO LOAD OBSERVED / MAPPED PROXIMITY'}</span>
     </div>`;
     state.panel.hidden = false;

@@ -33,7 +33,7 @@ export const SYSTEM_PROBES = [
       await page.waitForSelector(DIALOG);
       await waitForFocus(page, `${DIALOG} button[data-slot="alert-dialog-cancel"]`);
       assert.equal(await page.$eval(`${DIALOG} button[type="submit"]`, (b) => b.disabled), true, 'switching off needs a reason first');
-      assert.match(await page.$eval(DIALOG, (el) => el.textContent), /semua orang termasuk Anda/);
+      assert.match(await page.$eval(DIALOG, (el) => el.textContent), /everyone including you/);
       await expectFocusTrapped(page, DIALOG, 10);
       await expectEscapeRestoresFocus(page, DIALOG, LAYERS_SWITCH);
       assert.equal(await page.$eval(LAYERS_SWITCH, (el) => el.getAttribute('aria-checked')), 'true', 'cancelling changes nothing');
@@ -48,7 +48,7 @@ export const SYSTEM_PROBES = [
       await page.focus(LAYERS_SWITCH);
       await page.keyboard.press('Space');
       await page.waitForSelector(`${DIALOG} textarea`);
-      await page.type(`${DIALOG} textarea`, 'uji probe keyboard');
+      await page.type(`${DIALOG} textarea`, 'keyboard probe test');
       assert.equal(await page.$eval(`${DIALOG} button[type="submit"]`, (b) => b.disabled), false);
       await page.keyboard.press('Tab');
       assert.equal((await focusInfo(page)).tag, 'input', 'Tab from the reason reaches the password field');
@@ -58,7 +58,7 @@ export const SYSTEM_PROBES = [
       await page.waitForFunction((s) => document.querySelector(s)?.getAttribute('aria-checked') === 'false', { timeout: 8000 }, LAYERS_SWITCH).catch(async () => {
         throw new Error(`switch did not turn off: ${await page.$eval('[data-gate="layers"]', (el) => el.textContent)}`);
       });
-      assert.match(await page.$eval('[data-gate="layers"]', (el) => el.textContent), /Dimatikan.*uji probe keyboard/s);
+      assert.match(await page.$eval('[data-gate="layers"]', (el) => el.textContent), /Off.*keyboard probe test/s);
       await waitForFocus(page, LAYERS_SWITCH);
       await page.keyboard.press('Space');
       await page.waitForSelector(DIALOG);
@@ -105,14 +105,14 @@ export const SYSTEM_PROBES = [
     async run(page) {
       await seedLog(page);
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('table button[aria-label^="Lihat detail"]');
+      await page.waitForSelector('table button[aria-label^="View details"]');
       const axe = await runAxe(page);
       assert.deepEqual(axe.blocking, [], `axe on the populated log: ${JSON.stringify(axe.blocking)}`);
-      const opener = 'table button[aria-label^="Lihat detail"]';
+      const opener = 'table button[aria-label^="View details"]';
       await page.focus(opener);
       await page.keyboard.press('Enter');
       await page.waitForSelector('[role="dialog"]');
-      assert.match(await page.$eval('[role="dialog"]', (el) => el.textContent), /Detail entri log/);
+      assert.match(await page.$eval('[role="dialog"]', (el) => el.textContent), /Log entry details/);
       await expectFocusTrapped(page, '[role="dialog"]', 6);
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => !document.querySelector('[role="dialog"]'));
@@ -124,7 +124,7 @@ export const SYSTEM_PROBES = [
     async run(page) {
       await seedLog(page);
       await page.reload({ waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('ul[aria-label="Entri Server Log"] li');
+      await page.waitForSelector('ul[aria-label="Server Log entries"] li');
       const shown = await page.evaluate(() => ({
         table: getComputedStyle(document.querySelector('section table').closest('div.rounded-lg')).display !== 'none',
         overflow: document.documentElement.scrollWidth > window.innerWidth,

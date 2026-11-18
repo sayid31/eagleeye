@@ -483,18 +483,18 @@ async function main() {
         && uncertainPresentation.prevDisabled
         && uncertainPresentation.playDisabled
         && uncertainPresentation.volumeDisabled
-        && /kontrol Radio ringkas/i.test(uncertainPresentation.disclosureLabel)
-        && /tidak pasti/i.test(uncertainPresentation.compactPowerLabel)
+        && /compact Radio controls/i.test(uncertainPresentation.disclosureLabel)
+        && /uncertain/i.test(uncertainPresentation.compactPowerLabel)
         && uncertainPresentation.compactPowerText === 'SELARASKAN'
-        && /tidak pasti/i.test(uncertainPresentation.fullLabel)
+        && /uncertain/i.test(uncertainPresentation.fullLabel)
         && uncertainPresentation.fullText === 'SELARASKAN'
         && uncertainPresentation.layerState === 'UNCERTAIN'
-        && /tidak pasti/i.test(uncertainPresentation.playbackMessage)
+        && /uncertain/i.test(uncertainPresentation.playbackMessage)
         && uncertainPresentation.miniStation === 'RADIO STATE UNCERTAIN'
         && uncertainPresentation.dataRailText === 'UNCERTAIN'
         && uncertainPresentation.dataRailState === 'uncertain'
-        && /tidak pasti/i.test(uncertainPresentation.dataRailLabel)
-        && /tidak pasti/i.test(uncertainPresentation.dataRailMeta)
+        && /uncertain/i.test(uncertainPresentation.dataRailLabel)
+        && /uncertain/i.test(uncertainPresentation.dataRailMeta)
         && uncertainPresentation.directSelect === false
         && uncertainPresentation.directPlay === false
         && uncertainPresentation.directCycle === false
@@ -549,10 +549,10 @@ async function main() {
         && disablingPresentation.presentationActive === false
         && disablingPresentation.markerSourceVisible === false
         && disablingPresentation.full === 'MEMATIKAN'
-        && /kontrol Radio ringkas/i.test(disablingPresentation.disclosure)
+        && /compact Radio controls/i.test(disablingPresentation.disclosure)
         && disablingPresentation.compactPower === 'MEMATIKAN'
         && disablingPresentation.layerState === 'MEMATIKAN'
-        && /sedang dimatikan/i.test(disablingPresentation.message)
+        && /is turning off/i.test(disablingPresentation.message)
         && disablingPresentation.stopDisabled
         && disablingPresentation.volumeDisabled,
       JSON.stringify(disablingPresentation),
@@ -637,7 +637,7 @@ async function main() {
         && enablingPresentation.disclosureExpanded === 'true'
         && enablingPresentation.compactPower === 'MENYALAKAN'
         && enablingPresentation.layerState === 'MENYALAKAN'
-        && /sedang dinyalakan/i.test(enablingPresentation.message)
+        && /is turning on/i.test(enablingPresentation.message)
         && enablingPresentation.tunerHidden
         && enablingPresentation.stopDisabled
         && enablingPresentation.volumeDisabled,
@@ -1211,7 +1211,7 @@ async function main() {
         ))
         && userFacingFailures.directEntryFailures.length === 4
         && userFacingFailures.directEntryFailures.every((failure) => (
-          failure.reason.includes('tidak dapat dimulai')
+          failure.reason.includes('could not start')
           && failure.retryReason === null
           && failure.toastMessages.length === 1
           && failure.toastMessages[0] === failure.reason
@@ -1252,13 +1252,13 @@ async function main() {
         && userFacingFailures.unrelatedManagerFailure.result === false
         && userFacingFailures.unrelatedManagerFailure.toastMessages.length === 1
         && userFacingFailures.unrelatedManagerFailure.toastMessages[0].includes('qa-unrelated-manager-failure could not be ${change.enabled ? \'turned on\' : \'turned off\'} properly')
-        && userFacingFailures.installationFalseMessage.includes('tidak dapat diperbarui')
+        && userFacingFailures.installationFalseMessage.includes('could not be updated')
         && userFacingFailures.installationFalseReleased
-        && userFacingFailures.installationEnableRejectionMessage.includes('tidak dapat diperbarui')
+        && userFacingFailures.installationEnableRejectionMessage.includes('could not be updated')
         && userFacingFailures.installationEnableRejectionReleased
-        && userFacingFailures.installationRejectionMessage.includes('tidak dapat diperbarui')
+        && userFacingFailures.installationRejectionMessage.includes('could not be updated')
         && userFacingFailures.installationRejectionReleased
-        && userFacingFailures.installationSearchFalseMessage.includes('tidak dapat diperbarui')
+        && userFacingFailures.installationSearchFalseMessage.includes('could not be updated')
         && userFacingFailures.installationSearchFalseReleased
         && userFacingFailures.unhandled.length === 0,
       JSON.stringify(userFacingFailures),
@@ -1584,7 +1584,7 @@ async function main() {
     );
     await page.select('#radio-filter', 'news');
     check('launcher enables Radio without forcing Context open', !initial.panelExpanded && !initial.contextExpanded && initial.nestedInContext);
-    check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Putar stasiun radio terdekat');
+    check('full Play is available before a station is selected', !initial.state.selected && initial.fullPlayEnabled && initial.fullPlayLabel === 'Putar ${selected ? \'selected\' : \'nearest\'} radio station');
 
     // Pointer input on the compact launcher follows; see the helper for why a
     // collapsed Context panel has no hitbox. Removed right after the block.
@@ -1646,7 +1646,7 @@ async function main() {
       compact.visible && compact.prevEnabled && compact.playEnabled && compact.nextEnabled && compact.volumeEnabled,
       JSON.stringify(compact),
     );
-    check('compact Play is available before a station is selected', compact.playLabel === 'Putar stasiun radio terdekat');
+    check('compact Play is available before a station is selected', compact.playLabel === 'Putar ${selected ? \'selected\' : \'nearest\'} radio station');
     check('compact Radio controls sit 20px below the launcher', compact.offsetBelowToggle === 20, `${compact.offsetBelowToggle}px`);
     const compactCloseDisclosure = await page.evaluate(() => {
       const launcher = document.getElementById('context-radio-toggle-btn');
@@ -3143,7 +3143,7 @@ async function main() {
         && tunerRefreshRelease.plays === tunerRefreshTarget.plays
         && tunerRefreshRelease.value === 'NOT BROADCASTING'
         && tunerRefreshRelease.stationText === 'STATION UNAVAILABLE'
-        && /tidak tersedia setelah direktori diperbarui/i.test(tunerRefreshRelease.message),
+        && /unavailable after the directory updated/i.test(tunerRefreshRelease.message),
       JSON.stringify(tunerRefreshRelease),
     );
     catalogStations = stations;

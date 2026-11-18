@@ -52,7 +52,7 @@ test('Cockpit has one reset action beside its bottom exit path', () => {
   assert.doesNotMatch(html, /id="cockpit-exit"/);
   assert.match(
     html,
-    /id="map-view-switch"[^>]*aria-label="Keluar dari tampilan kokpit"[^>]*aria-keyshortcuts="Escape C"[\s\S]*?close_fullscreen[\s\S]*?KELUAR KOKPIT/,
+    /id="map-view-switch"[^>]*aria-label="Exit cockpit view"[^>]*aria-keyshortcuts="Escape C"[\s\S]*?close_fullscreen[\s\S]*?EXIT COCKPIT/,
   );
   const topCenterActions = html.match(/<nav id="top-center-actions"[\s\S]*?<\/nav>/);
   assert.ok(topCenterActions, 'Top-center globe actions are missing');
@@ -65,7 +65,7 @@ test('Cockpit has one reset action beside its bottom exit path', () => {
   assert.doesNotMatch(viewSwitcher[0], /id="reset-globe-view"/, 'map-only reset must stay outside Cockpit');
   assert.match(
     viewSwitcher[0],
-    /id="cockpit-reset-globe"[^>]*type="button"[^>]*aria-label="Atur ulang kokpit ke tampilan globe penuh"[^>]*hidden[\s\S]*?public[\s\S]*?ATUR ULANG[\s\S]*?id="map-view-switch"/,
+    /id="cockpit-reset-globe"[^>]*type="button"[^>]*aria-label="Reset the cockpit to the full globe view"[^>]*hidden[\s\S]*?public[\s\S]*?RESET[\s\S]*?id="map-view-switch"/,
   );
 
   const actions = html.match(/<div class="global-context-actions"[\s\S]*?<\/div>/);
@@ -267,8 +267,8 @@ test('Cockpit owns a focused shared Display portal and compact Radio controls', 
   assert.match(html, /data-cockpit-display-slot="hud"/);
   assert.match(html, /data-cockpit-display-slot="detection"[\s\S]*?data-cockpit-display-slot="parameters"[\s\S]*?data-cockpit-display-slot="models3d"/);
   assert.doesNotMatch(html, /data-cockpit-display-slot="presets"/);
-  assert.match(html, /id="clear-selected-layers"[^>]*aria-label="Hapus pilihan layer data"/);
-  assert.match(html, /id="reset-globe-view"[^>]*aria-label="Atur ulang ke tampilan globe penuh"/);
+  assert.match(html, /id="clear-selected-layers"[^>]*aria-label="Clear data layer selection"/);
+  assert.match(html, /id="reset-globe-view"[^>]*aria-label="Reset to the full globe view"/);
   assert.match(css, /#top-center-actions\s*\{[\s\S]*?left:\s*50%;[\s\S]*?display:\s*flex;[\s\S]*?transform:\s*translateX\(-50%\)/);
   assert.match(css, /body\.ui-clean-view #top-center-actions/);
   assert.match(css, /body\.recording-mode #top-center-actions/);
@@ -365,7 +365,7 @@ test('Sudut is a small 2D | 3D pill in the top-right beside the globe icons, out
   assert.match(row[0], /data-camera-angle="atas"/);
   assert.match(row[0], /data-camera-angle="samping"/);
   assert.match(row[0], /role="radiogroup"/);
-  assert.doesNotMatch(row[0], />(Atas|Samping)</, 'the visible labels are 2D / 3D now');
+  assert.doesNotMatch(row[0], />(Top|Side)</, 'the visible labels are 2D / 3D now');
 
   // Fixed, and compact (was 36 px tall).
   const seg = css.match(/\.globe-angle-seg \{([^}]*)\}/);
@@ -803,7 +803,7 @@ test('cockpit weather control is off before JavaScript restores an explicit opt-
     /<button\s+id="cockpit-weather-toggle"[\s\S]*?<\/button>/,
   );
   assert.ok(match, 'cockpit weather toggle markup is missing');
-  assert.match(match[0], /aria-label="Nyalakan efek cuaca kokpit"/);
+  assert.match(match[0], /aria-label="Turn on cockpit weather effects"/);
   assert.match(match[0], /aria-pressed="false"/);
   assert.match(match[0], /id="cockpit-weather-state">MATI</);
 });
@@ -813,11 +813,11 @@ test('cockpit summary presents the focused item as Contact', () => {
     /<aside id="cockpit-context"[\s\S]*?<\/aside>/,
   );
   assert.ok(match, 'cockpit Contact summary is missing');
-  assert.match(match[0], /aria-label="Ringkasan kontak kokpit"/);
+  assert.match(match[0], /aria-label="Cockpit contact summary"/);
   assert.match(match[0], /class="cockpit-context-kicker">KONTAK</);
   assert.match(match[0], /aria-label="Navigasi kontak"/);
-  assert.match(match[0], /aria-label="Sebelumnya — kontak yang dikunjungi sebelumnya dalam jendela 250 km"/);
-  assert.match(match[0], /aria-label="Berikutnya — kontak terdekat yang belum dikunjungi dalam jendela 250 km"/);
+  assert.match(match[0], /aria-label="Previous — previously visited contact within the 250 km window"/);
+  assert.match(match[0], /aria-label="Next — nearest unvisited contact within the 250 km window"/);
   assert.match(match[0], /aria-label="Ciutkan panel Kontak"/);
   assert.doesNotMatch(match[0], />GLOBAL CONTEXT</);
   assert.match(cockpitSrc, /`\$\{expanded \? 'Ciutkan' : 'Bentangkan'\} panel Kontak`/);
@@ -837,7 +837,7 @@ test('Global Context names its mixed contact cycle without changing the stable m
   assert.ok(match, 'Global Context contacts button is missing');
   assert.match(match[0], />KONTAK</);
   assert.match(match[0], /aria-label="KONTAK"/);
-  assert.match(match[0], /title="Memutar kontak terdekat dari jenis apa pun yang Anda pilih — pesawat, kapal, instalasi\. Satelit dilacak secara independen\."/);
+  assert.match(match[0], /title="Cycles through the nearest contacts of any type you pick — aircraft, vessel, installation\. Satellites are tracked independently\."/);
   assert.doesNotMatch(match[0], />FLIGHTS</);
 });
 
@@ -855,7 +855,7 @@ test('Global Context standby describes both chooser modes', () => {
     /<div id="context-mode-standby"[\s\S]*?<\/div>/,
   );
   assert.ok(match, 'Global Context standby is missing');
-  assert.match(match[0], /KONTAK — pesawat · kapal · situs terdekat/);
+  assert.match(match[0], /CONTACT — aircraft · vessel · nearest site/);
   assert.match(match[0], /MISI ANTARIKSA — peluncuran &amp; aset orbital/);
 });
 
@@ -867,7 +867,7 @@ test('cockpit briefing cycle control keeps its state as the accessible name', ()
   assert.match(match[0], /aria-label="SIKLUS MATI"/);
   assert.match(match[0], /aria-pressed="false"/);
   assert.match(match[0], />SIKLUS MATI<\/button>/);
-  assert.match(match[0], /title="Putar halaman ringkasan otomatis setiap 9 detik \(Sinyal → Berita → Lokal\)\./);
+  assert.match(match[0], /title="Auto-rotate summary pages every 9 seconds \(Signal → News → Local\)\./);
 
   const update = cockpitSrc.match(
     /setBriefAutoRotate\(enabled\) \{([\s\S]*?)\n  \}\n\n  startBriefRotation/,

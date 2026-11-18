@@ -31,11 +31,11 @@ test('LoginForm: labelled email + password, correct autocomplete, autofocus on e
   assert.match(tag(html, 'password'), /autocomplete="current-password"/i);
   assert.doesNotMatch(html, /onpaste|autocomplete="off"/i, 'paste and password managers stay allowed');
   assert.match(html, /<form[^>]*novalidate/i, 'Indonesian inline messages instead of browser bubbles');
-  assert.match(html, /<button[^>]*type="submit"[^>]*>(?:(?!<\/button>).)*Masuk<\/button>/);
-  assert.match(html, /aria-pressed="false"[^>]*aria-label="Tampilkan password"|aria-label="Tampilkan password"[^>]*aria-pressed="false"/);
+  assert.match(html, /<button[^>]*type="submit"[^>]*>(?:(?!<\/button>).)*Sign in<\/button>/);
+  assert.match(html, /aria-pressed="false"[^>]*aria-label="Show password"|aria-label="Show password"[^>]*aria-pressed="false"/);
   assert.doesNotMatch(html, /role="alert"/, 'no banner without a message');
-  assert.doesNotMatch(html, /Masuk dengan Google/, 'Google only when allowed');
-  assert.match(html, /Lupa password\?/);
+  assert.doesNotMatch(html, /Sign in with Google/, 'Google only when allowed');
+  assert.match(html, /Forgot password\?/);
 });
 
 test('LoginForm: a refusal renders one role=alert banner and flags the password field when retrying it is the fix', async () => {
@@ -43,7 +43,7 @@ test('LoginForm: a refusal renders one role=alert banner and flags the password 
   const html = render(h(LoginForm, { message: null, error: { code: 'INVALID_EMAIL_OR_PASSWORD', text: 'Incorrect email or password.' }, busy: null, onSubmit: noop, onGoogle: null }));
   assert.equal((html.match(/role="alert"/g) ?? []).length, 1);
   assert.match(html, /<div[^>]*role="alert"[^>]*tabindex="-1"[^>]*>|<div[^>]*tabindex="-1"[^>]*role="alert"[^>]*>/i, 'focusable banner');
-  assert.match(html, /Email atau password salah\./);
+  assert.match(html, /Incorrect email or password\./);
   assert.match(tag(html, 'password'), /\saria-invalid="true"/);
   assert.match(tag(html, 'password'), /aria-describedby="[^"]*login-alert/);
   const other = render(h(LoginForm, { message: null, error: { code: 'ACCOUNT_DISABLED', text: 'Account deactivated, contact an admin.' }, busy: null, onSubmit: noop, onGoogle: null }));
@@ -55,11 +55,11 @@ test('LoginForm: pending state disables the buttons, marks them busy and keeps t
   const html = render(h(LoginForm, { message: { tone: 'warn', text: 'Session ended. Please sign in again.' }, error: null, busy: 'password', onSubmit: noop, onGoogle: noop }));
   assert.match(html, /<button[^>]*type="submit"[^>]*disabled=""[^>]*aria-busy="true"|<button[^>]*aria-busy="true"[^>]*disabled=""[^>]*type="submit"|<button[^>]*disabled=""[^>]*type="submit"/);
   assert.match(html, /readonly=""/i, 'inputs keep focus (read-only), they are not disabled');
-  assert.match(html, /Masuk<\/button>/);
-  assert.match(html, /Memproses…/);
-  assert.match(html, /Masuk dengan Google/);
-  assert.match(html, />atau</);
-  assert.match(html, /Sesi berakhir/);
+  assert.match(html, /Sign in<\/button>/);
+  assert.match(html, /Processing…/);
+  assert.match(html, /Sign in with Google/);
+  assert.match(html, />or</);
+  assert.match(html, /Session ended/);
 });
 
 test('LoginApp: the card has exactly one <h1>, the title, the way back home and no form while loading', async () => {
@@ -68,9 +68,9 @@ test('LoginApp: the card has exactly one <h1>, the title, the way back home and 
   const { ThemeProvider } = await loader.load('src/lib/theme.jsx');
   const html = render(h(ThemeProvider, null, h(MemoryRouter, null, h(LoginApp))));
   assert.equal((html.match(/<h1/g) ?? []).length, 1);
-  assert.match(html, /Masuk ke EagleEye View/);
+  assert.match(html, /Sign in to EagleEye View/);
   assert.match(html, /<main id="main-content"/);
-  assert.match(html, /href="\/"[^>]*>(?:(?!<\/a>).)*Kembali ke beranda/);
+  assert.match(html, /href="\/"[^>]*>(?:(?!<\/a>).)*Back to home/);
   assert.match(html, /role="status"/);
   assert.match(html, /aria-busy="true"/);
   assert.doesNotMatch(html, /<form/, 'the form waits for /api/me');
@@ -85,8 +85,8 @@ test('PasswordChangeForm: three labelled fields with the right autocomplete, req
   assert.match(tag(html, 'current'), /autocomplete="current-password"/i);
   assert.match(tag(html, 'next'), /autocomplete="new-password"/i);
   assert.match(tag(html, 'confirm'), /autocomplete="new-password"/i);
-  assert.match(html, new RegExp(`Minimal ${PASSWORD_MIN_USER} karakter<span class="sr-only">: belum terpenuhi`));
-  assert.match(html, /<ul[^>]*aria-label="Syarat password baru"/);
+  assert.match(html, new RegExp(`At least ${PASSWORD_MIN_USER} characters<span class="sr-only">: not met yet`));
+  assert.match(html, /<ul[^>]*aria-label="New password requirements"/);
   const listId = /<ul id="([^"]+)"/.exec(html)[1];
   assert.ok(tag(html, 'next').includes(listId), 'the new-password input points at its requirement list');
   assert.equal((html.match(/aria-pressed="false"/g) ?? []).length, 3, 'one show/hide toggle per field');

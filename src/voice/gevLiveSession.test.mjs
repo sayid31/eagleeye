@@ -309,7 +309,7 @@ test('a session limit ends the session with its reason and reports usage once', 
   clock.nowMs = 60_000;
   timers.tickAll();
   assert.equal(ctrl.status, 'idle');
-  assert.match(ui.detail.textContent, /batas durasi 1 menit/);
+  assert.match(ui.detail.textContent, /1-minute duration limit/);
   assert.equal(stream.getAudioTracks()[0].stopped, true, 'mic released at the limit');
   assert.equal(reports.length, 1);
   assert.ok(reports[0] >= 59, 'reports the elapsed seconds');

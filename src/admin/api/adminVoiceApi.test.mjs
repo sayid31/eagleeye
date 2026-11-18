@@ -23,7 +23,7 @@ test('saveVoiceSettings PUTs JSON', async () => {
 test('a validation failure surfaces the server error and up to three details', async () => {
   const body = { error: 'Invalid settings', details: ['a', 'b', 'c', 'd'] };
   await assert.rejects(saveVoiceSettings({}, reply(false, 422, body)), (error) => {
-    assert.equal(error.message, 'Saving settings failed — Pengaturan tidak valid: a; b; c');
+    assert.equal(error.message, 'Saving settings failed — Invalid settings: a; b; c');
     assert.equal(error.status, 422);
     return true;
   });

@@ -26,7 +26,7 @@ export const LAYER_HEALTH_POLL_MS = 5000;
 const FAULTS = Object.freeze({
   unavailable: { level: 'error', text: 'source unavailable' },
   degraded: { level: 'warn', text: 'some data has problems' },
-  stale: { level: 'warn', text: 'data usang' },
+  stale: { level: 'warn', text: 'stale data' },
   fallback: { level: 'warn', text: 'using fallback source' },
 });
 

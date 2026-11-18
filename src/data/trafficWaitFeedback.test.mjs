@@ -46,7 +46,7 @@ test('a clock that runs backwards never yields a negative counter', () => {
 test('keyless wait copy still leads with SIMULASI and never claims live', () => {
   const waitLabel = osmWaitLabel(0, 20_000);
   const feed = trafficFeedPresentation({ liveMode: false, fetching: true, waitLabel });
-  assert.equal(feed.loadingLabel, `SIMULASI — ${waitLabel}`);
+  assert.equal(feed.loadingLabel, `SIMULATION — ${waitLabel}`);
   assert.ok(!LIVE_CLAIM.test(feed.loadingLabel));
   assert.equal(feed.error, null);
 });
@@ -71,7 +71,7 @@ test('a keyed layer shows the queue note while fetching, and the outage copy sti
     flowError: 'TomTom daily quota used up',
     waitLabel,
   });
-  assert.equal(down.loadingLabel, 'SIMULASI — Kuota harian TomTom habis');
+  assert.equal(down.loadingLabel, 'SIMULATION — TomTom daily quota used up');
 });
 
 test('the global banner names the loading layer only; the OSM queue note stays on the traffic chip', () => {

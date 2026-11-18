@@ -102,7 +102,7 @@ export function toggleButtonPresentation(layer) {
   const phase = transitioning ? (on ? 'enabling' : 'disabling') : null;
   const text = phase
     ? LIFECYCLE_LABELS[phase]
-    : (uncertain ? 'UNCERTAIN' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'MATI'));
+    : (uncertain ? 'UNCERTAIN' : (layer.enabled ? FEED_STATE_LABELS[feedState] : 'OFF'));
   return {
     on,
     transitioning,

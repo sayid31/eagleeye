@@ -25,7 +25,7 @@ updateHud(info, nowMs = performance.now(), forceContext = false) {
     this.lastAircraftInfo = info;
     const heading = normalizeHeading(this.heading ?? info.track ?? 0);
     if (this.callsign) {
-      this.callsign.textContent = info.callsign || info.registration || info.icao24 || 'PESAWAT';
+      this.callsign.textContent = info.callsign || info.registration || info.icao24 || 'AIRCRAFT';
     }
     const speedKt = Number.isFinite(info.velocityMps) ? info.velocityMps * 1.94384 : null;
     setCockpitRollingValue(
@@ -108,7 +108,7 @@ updateHud(info, nowMs = performance.now(), forceContext = false) {
     if (this.aircraftMeta) {
       const feedState = this.surfaceAcquiring
         ? 'MEMPEROLEH PERMUKAAN'
-        : (this.surfaceFallback ? 'FALLBACK SURFACE' : (info.stale ? 'FEED USANG' : 'LACAK LIVE'));
+        : (this.surfaceFallback ? 'FALLBACK SURFACE' : (info.stale ? 'STALE FEED' : 'LACAK LIVE'));
       this.aircraftMeta.textContent = `${info.layerId === 'military' ? 'MILITER' : 'KOMERSIAL'} · ${feedState} · HALUAN SEJALAN`;
     }
     this.updateRoute(info);
@@ -172,7 +172,7 @@ updateContext(info, heading) {
       this.pushCockpitSignal(
         'context-status',
         'info',
-        'KONTEKS SIAGA',
+        'CONTEXT STANDBY',
         'TURN ON GLOBAL CONTEXT FOR PROXIMITY PING',
       );
       return;
@@ -209,7 +209,7 @@ updateContext(info, heading) {
       this.pushCockpitSignal(
         'context-status',
         'warning',
-        `KONTAK HILANG · ${snapshot.subject.label || snapshot.subject.id || 'SUBJEK'}`,
+        `CONTACT LOST · ${snapshot.subject.label || snapshot.subject.id || 'SUBJECT'}`,
         'SUBJECT LEFT THE FEED · READING HOLDS LAST DATA',
       );
       return;
@@ -271,7 +271,7 @@ updateContext(info, heading) {
     }
     if (this.contextBearing) {
       if (relative === null) this.contextBearing.textContent = 'AZM —';
-      else if (Math.abs(relative) < 8) this.contextBearing.textContent = 'DEPAN';
+      else if (Math.abs(relative) < 8) this.contextBearing.textContent = 'FRONT';
       else this.contextBearing.textContent = `${relative < 0 ? 'KI' : 'KA'} ${String(Math.round(Math.abs(relative))).padStart(3, '0')}°`;
     }
     if (this.contextUncertainty) {

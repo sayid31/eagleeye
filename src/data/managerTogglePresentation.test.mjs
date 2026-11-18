@@ -30,11 +30,11 @@ test('buildLayerMetaText leads with the lifecycle phase, then errors, then age',
   );
   assert.equal(
     buildLayerMetaText({ source: 'USGS', enabled: true, lifecycleState: 'enabled', stats: {} }, NOW),
-    'USGS · belum pernah',
+    'USGS · never',
   );
   assert.equal(
     buildLayerMetaText({ source: 'GBFS', enabled: true, lifecycleState: 'enabled', stats: { loading: true } }, NOW),
-    'GBFS · memuat...',
+    'GBFS · loading...',
   );
 });
 
@@ -69,7 +69,7 @@ test('a settled layer presents its feed state; uncertainty overrides it', () => 
 
   const off = toggleButtonPresentation({ name: 'Earthquakes', enabled: false, lifecycleState: 'disabled', stats: {} });
   assert.equal(off.on, false);
-  assert.equal(off.text, 'MATI');
+  assert.equal(off.text, 'OFF');
   assert.equal(off.state, 'off');
 
   const uncertain = toggleButtonPresentation({

@@ -244,14 +244,14 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(html, /aria-label="Pemutaran radio"/);
   assert.match(html, /id="context-radio-toggle-btn"[^>]*aria-expanded="false"[^>]*aria-controls="context-radio-mini"/);
   assert.doesNotMatch(html, /id="context-radio-toggle-btn"[^>]*aria-pressed=/);
-  assert.match(html, /id="context-radio-mini"[^>]*aria-label="Kontrol Radio ringkas"[^>]*hidden/);
+  assert.match(html, /id="context-radio-mini"[^>]*aria-label="Compact Radio controls"[^>]*hidden/);
   assert.match(html, /id="context-radio-mini-enable-btn"[^>]*aria-pressed="false"/);
   assert.match(html, /id="context-radio-details-btn"[^>]*aria-expanded="false"[^>]*aria-controls="radio-panel"/);
   assert.match(html, /id="context-radio-details-btn"[\s\S]*?<span class="material-symbols-outlined" aria-hidden="true">open_in_full<\/span>/);
-  assert.match(html, /id="context-radio-mini-close-btn"[^>]*aria-label="Tutup kontrol Radio ringkas"/);
+  assert.match(html, /id="context-radio-mini-close-btn"[^>]*aria-label="Close compact Radio controls"/);
   assert.match(html, /id="context-radio-mini-(?:prev|play|next)-btn"/);
   assert.match(html, /id="context-radio-mini-volume"/);
-  assert.match(html, /id="cockpit-radio-panel"[^>]*aria-label="Kontrol Radio ringkas Kokpit"[^>]*hidden/);
+  assert.match(html, /id="cockpit-radio-panel"[^>]*aria-label="Compact Cockpit Radio controls"[^>]*hidden/);
   assert.match(html, /id="cockpit-radio-enable-btn"[^>]*aria-pressed="false"/);
   assert.match(html, /id="cockpit-radio-(?:prev|play|next)-btn"/);
   assert.match(html, /id="cockpit-radio-volume"/);
@@ -259,7 +259,7 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(html, /id="radio-tuner-band-label">BAND DIREKTORI/);
   assert.match(html, /id="radio-tuner-slider"[^>]*type="range"/);
   assert.match(html, /id="radio-tuner-needle"[^>]*aria-hidden="true"/);
-  assert.match(html, /MENEMPEL KE STASIUN TERSEDIA/);
+  assert.match(html, /SNAPS TO AVAILABLE STATIONS/);
   assert.match(html, /class="radio-tuner-scale" aria-hidden="true"><\/div>/);
   assert.match(html, /DIREKTORI: RADIO BROWSER/);
   assert.match(html, /Audio tersambung langsung ke penyiar/);

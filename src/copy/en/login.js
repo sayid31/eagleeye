@@ -68,7 +68,7 @@ export const PASSWORD_COPY = Object.freeze({
   requirementIdentity: 'Not your email or name',
   requirementDifferent: 'Different from your current password',
   requirementMatch: 'Both new passwords match',
-  requirementMet: 'terpenuhi',
+  requirementMet: 'met',
   requirementUnmet: 'not met yet',
   submit: 'Save password',
   submitting: 'Saving…',

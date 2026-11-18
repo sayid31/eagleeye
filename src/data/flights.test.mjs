@@ -161,7 +161,7 @@ test('nonempty OpenSky payload with zero usable rows cannot prove share target a
     await flightsLayer.update({ camera: { positionCartographic: null }, scene: {} });
     const resolution = await flightsLayer.resolveTrackingRestoreTarget('abc123');
     assert.equal(resolution.status, 'source-unavailable');
-    assert.match(flightsLayer.getStats().error, /Baris pesawat OpenSky tidak valid/);
+    assert.match(flightsLayer.getStats().error, /Invalid OpenSky aircraft row/);
     assert.equal(flightsLayer.getAnalystRecords().length, 1, 'warm aircraft data is preserved');
   } finally {
     globalThis.fetch = realFetch;

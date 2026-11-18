@@ -8,7 +8,7 @@ const NOW = 1_700_000_000_000;
 const row = (over = {}) => ({ id: 'flights', enabled: true, lifecycleState: 'enabled', stats: { count: 5, lastUpdate: NOW }, ...over });
 
 test('a disabled layer reads Mati', () => {
-  assert.deepEqual(layerShellStatus(row({ enabled: false }), NOW), { key: 'off', label: 'Mati', detail: '' });
+  assert.deepEqual(layerShellStatus(row({ enabled: false }), NOW), { key: 'off', label: 'Off', detail: '' });
 });
 
 test('a healthy enabled layer reads Live', () => {
@@ -74,7 +74,7 @@ test('row order clusters by group while keeping registry order inside a group', 
 });
 
 test('labels fall back to the declared name', () => {
-  assert.equal(layerLabel('flights', 'Live Flights'), 'Pesawat sipil');
+  assert.equal(layerLabel('flights', 'Live Flights'), 'Civil aircraft');
   assert.equal(layerLabel('unknown', 'Declared'), 'Declared');
 });
 

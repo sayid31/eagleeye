@@ -250,8 +250,8 @@ const MUTATIONS = [
   {
     defect: 'the tile stops promising the fires it actually turns on',
     file: 'html',
-    from: '<small>Gempa live dan titik api aktif, dari USGS dan NASA</small>',
-    to: '<small>Gempa live di seluruh dunia, langsung dari USGS</small>',
+    from: '<small>Live earthquakes and active fires, from USGS and NASA</small>',
+    to: '<small>Live earthquakes worldwide, straight from USGS</small>',
   },
   {
     defect: "the owner-authored first-run line is quietly rewritten",

@@ -102,6 +102,6 @@ test('doneToast: one sentence per action, role changes share one, a failed audit
   assert.equal(doneToast('revokeSessions', {}).text, 'Account signed out of all devices');
   const warned = doneToast('delete', { audit: 'failed' });
   assert.equal(warned.level, 'warning');
-  assert.match(warned.text, /catatan audit gagal/);
+  assert.match(warned.text, /audit entry could not be written/);
   assert.equal(doneToast('unknown-kind', {}).text, 'Changes saved');
 });

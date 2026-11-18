@@ -105,7 +105,7 @@ test('clicking the switch mid-enable cancels the load and leaves the layer off',
   assert.equal(mgr.layers.get('local-firms').intervalId ?? null, null, 'no poll loop armed');
   const settled = syncedButton(mgr, 'local-firms');
   assert.equal(settled.classes.get('active'), false);
-  assert.equal(settled.textContent, 'MATI');
+  assert.equal(settled.textContent, 'OFF');
   await mgr.destroyAll();
 });
 

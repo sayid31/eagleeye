@@ -55,7 +55,7 @@ test('a preset city outranks a stale searched label', () => {
 });
 
 test('nothing selected keeps the honest empty placeholder', () => {
-  const empty = { city: '📍 Lokasi: --', poi: 'Penanda: --' };
+  const empty = { city: '📍 Location: --', poi: 'Penanda: --' };
   assert.deepEqual(locationMiniStatus(), empty);
   assert.deepEqual(locationMiniStatus({ city: null, searchedLabel: '' }), empty);
   assert.deepEqual(locationMiniStatus({ searchedLabel: '   ,  , ' }), empty);

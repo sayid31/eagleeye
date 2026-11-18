@@ -63,7 +63,7 @@ export function formatAwarenessLabel(value) {
  */
 export function summarizeAwarenessCohort(items, { available = true, stale = false, limit = 3 } = {}) {
   if (!available) return { relationship: AWARENESS_RELATIONSHIP.UNKNOWN, count: null, nearest: [], reason: 'feed unavailable' };
-  if (stale) return { relationship: AWARENESS_RELATIONSHIP.UNKNOWN, count: null, nearest: [], reason: 'feed usang' };
+  if (stale) return { relationship: AWARENESS_RELATIONSHIP.UNKNOWN, count: null, nearest: [], reason: 'stale feed' };
   const normalized = (Array.isArray(items) ? items : [])
     .filter((item) => Number.isFinite(item?.distanceM ?? item?.distance)
       && (item.distanceM ?? item.distance) >= 0)

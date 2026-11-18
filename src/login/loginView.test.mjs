@@ -57,8 +57,8 @@ test('signInErrorText: every outcome in Indonesian; wrong/throttled share one ge
   assert.equal(signInErrorText('INVALID_EMAIL'), signInErrorText('INVALID_EMAIL_OR_PASSWORD'));
   assert.equal(signInErrorText('ACCOUNT_DISABLED'), 'Account deactivated, contact an admin.');
   assert.equal(signInErrorText('GOOGLE_SIGN_IN_REQUIRED'), 'This account signs in with Google.');
-  assert.match(signInErrorText('RATE_LIMITED'), /Terlalu banyak percobaan/);
-  assert.match(signInErrorText('NETWORK'), /tidak bisa dihubungi/);
+  assert.match(signInErrorText('RATE_LIMITED'), /Too many attempts/);
+  assert.match(signInErrorText('NETWORK'), /could not be reached/);
   assert.equal(signInErrorText('whatever'), SIGN_IN_GENERIC_ERROR);
   assert.equal(signInErrorText('toString'), SIGN_IN_GENERIC_ERROR, 'prototype keys are not codes');
   assert.ok(Object.isFrozen(SIGN_IN_ERRORS));
@@ -70,7 +70,7 @@ test('loginMessage: session notice; Google refusals always generic whatever the 
   for (const error of ['GOOGLE_NOT_ALLOWED', 'account_not_linked', 'ACCOUNT_DISABLED', 'state_mismatch', '']) {
     assert.deepEqual(loginMessage(q(`next=/dev&notice=google&error=${error}`)), LOGIN_NOTICES.google, error);
   }
-  assert.doesNotMatch(LOGIN_NOTICES.google.text, /password|dinonaktifkan/i, 'reveals nothing about the account');
+  assert.doesNotMatch(LOGIN_NOTICES.google.text, /password|deactivated/i, 'reveals nothing about the account');
   assert.deepEqual(loginMessage(q('error=ACCOUNT_DISABLED')), { tone: 'error', text: 'Account deactivated, contact an admin.' });
   assert.equal(loginMessage(q('notice=bogus')), null);
   assert.equal(loginMessage(q('')), null);

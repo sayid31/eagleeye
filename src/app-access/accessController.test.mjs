@@ -62,9 +62,9 @@ test('a refusal before attach() is recorded and applied at attach', () => {
 });
 
 test('banner: unknown plan shows its status line; dismissed set shows nothing; a throwing effect is contained', () => {
-  const unknown = setup({ mode: 'unknown', layers: false, voice: false, keyedBasemaps: false, banner: 'Status akun tidak bisa diperiksa.' });
+  const unknown = setup({ mode: 'unknown', layers: false, voice: false, keyedBasemaps: false, banner: 'Account status could not be checked.' });
   unknown.access.refreshBanner();
-  assert.deepEqual(unknown.banners, [{ text: 'Status akun tidak bisa diperiksa.' }]);
+  assert.deepEqual(unknown.banners, [{ text: 'Account status could not be checked.' }]);
   const dismissed = setup({ voice: false }, 'ai:o');
   dismissed.access.refreshBanner();
   assert.deepEqual(dismissed.banners, [null]);

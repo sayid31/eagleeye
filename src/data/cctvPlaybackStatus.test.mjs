@@ -11,7 +11,7 @@ test('playlist health ok with no video is reported as waiting, never as the heal
 test('stalled and recovering players are named on the plane', () => {
   assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'retrying', attempt: 3 }).message, /macet.*#3/i);
   assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'recovering' }).message, /memulihkan/i);
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'unavailable' }).message, /tidak tersedia/i);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'unavailable' }).message, /unavailable/i);
 });
 
 test('an offline source keeps its offline wording even while the player retries', () => {
@@ -42,8 +42,8 @@ import { EMPTY_PLAYLIST_MESSAGE } from './cctvSourceHealth.mjs';
 
 test('an empty playlist from the source is named on the plane and the badge', () => {
   const health = { status: 'degraded', message: EMPTY_PLAYLIST_MESSAGE };
-  assert.match(videoPlaceholderHealth(health, { state: 'connecting' }).message, /playlist kosong/i);
-  assert.match(playbackBadge('connecting', { sourceMessage: EMPTY_PLAYLIST_MESSAGE }).text, /PLAYLIST KOSONG/);
+  assert.match(videoPlaceholderHealth(health, { state: 'connecting' }).message, /empty playlist/i);
+  assert.match(playbackBadge('connecting', { sourceMessage: EMPTY_PLAYLIST_MESSAGE }).text, /EMPTY PLAYLIST/);
 });
 
 test('a stale empty-playlist message never overrides a feed that is actually live', () => {
@@ -52,7 +52,7 @@ test('a stale empty-playlist message never overrides a feed that is actually liv
 
 test('a connect timeout is reported as no data from the source', () => {
   const playback = { state: 'retrying', attempt: 2, reason: 'no-data' };
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, playback).message, /tidak ada data dari sumber.*#2/i);
-  assert.match(playbackBadge('retrying', { reason: 'no-data' }).text, /TIDAK ADA DATA DARI SUMBER/);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, playback).message, /no data from the source.*#2/i);
+  assert.match(playbackBadge('retrying', { reason: 'no-data' }).text, /NO DATA FROM SOURCE/);
   assert.match(playbackBadge('retrying').text, /MACET/);
 });

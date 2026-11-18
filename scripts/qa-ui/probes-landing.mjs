@@ -51,7 +51,7 @@ export const LANDING_PROBES = [
       assert.deepEqual(await state(), { dark: true, stored: 'dark', pressed: ['Dark'] });
       await page.focus('.ld-theme [data-theme-value="system"]');
       await page.keyboard.press('Space');
-      assert.deepEqual(await state(), { dark: false, stored: 'system', pressed: ['System'] }, 'Sistem follows the emulated OS (light)');
+      assert.deepEqual(await state(), { dark: false, stored: 'system', pressed: ['System'] }, 'System follows the emulated OS (light)');
       await page.click('.ld-theme [data-theme-value="light"]');
       assert.deepEqual(await state(), { dark: false, stored: 'light', pressed: ['Light'] });
     },

@@ -16,10 +16,10 @@ syncWeatherToggle(enabled) {
     this.weatherToggle.setAttribute('aria-pressed', String(active));
     this.weatherToggle.setAttribute(
       'aria-label',
-      `${active ? 'Turn off' : 'Turn on'} efek cuaca kokpit`,
+      `${active ? 'Turn off' : 'Turn on'} cockpit weather effects`,
     );
-    this.weatherToggle.title = `${active ? 'Turn off' : 'Turn on'} efek cuaca kokpit`;
-    if (this.weatherState) this.weatherState.textContent = active ? 'HIDUP' : 'MATI';
+    this.weatherToggle.title = `${active ? 'Turn off' : 'Turn on'} cockpit weather effects`;
+    if (this.weatherState) this.weatherState.textContent = active ? 'ON' : 'OFF';
   },
 
 readAircraftInfo() {

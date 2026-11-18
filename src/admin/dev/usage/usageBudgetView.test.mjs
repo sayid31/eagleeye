@@ -20,7 +20,7 @@ test('TomTom card: big number, accessible meter, reset countdown to the next UTC
   const [meter] = card.meters;
   assert.deepEqual([meter.valueNow, meter.valueMax, meter.tone], [830, 1000, 'warning']);
   assert.equal(meter.text, '830 of 1.000 tiles (83%)');
-  assert.match(card.note, /Reset pukul 00\.00 UTC, 12 j 00 mnt lagi/);
+  assert.match(card.note, /Resets at 00:00 UTC, in 12 h 00 min/);
 });
 
 test('OpenSky card has no meter (the API reports remaining credits only) and says how fresh the number is', () => {
@@ -28,7 +28,7 @@ test('OpenSky card has no meter (the API reports remaining credits only) and say
   assert.equal(card.meters.length, 0);
   assert.equal(card.big.value, '3.000');
   assert.deepEqual(card.facts.map((f) => f.value), ['400', '9 dtk']);
-  assert.match(card.note, /4 menit lalu/);
+  assert.match(card.note, /4 min ago/);
 });
 
 test('OpenAI card: minutes meter only with a daily cap, judge meter only when the judge is on', () => {

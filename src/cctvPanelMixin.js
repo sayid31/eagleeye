@@ -161,7 +161,7 @@ export const cctvPanelMixin = {
         selectedCameraId: cameraId,
         calibration: { cameraId, save: true },
       }, { origin: 'user' });
-      this._showToast('Kalibrasi CCTV disimpan');
+      this._showToast('CCTV calibration saved');
     });
 
     this._cctvCalibResetBtn?.addEventListener('click', () => {
@@ -227,7 +227,7 @@ export const cctvPanelMixin = {
 
     if (this._cctvEnableBtn) {
       this._cctvEnableBtn.classList.toggle('active', enabled);
-      this._cctvEnableBtn.textContent = enabled ? 'CCTV HIDUP' : 'CCTV MATI';
+      this._cctvEnableBtn.textContent = enabled ? 'CCTV ON' : 'CCTV OFF';
     }
 
     if (this._cctvCameraListbox) {
@@ -256,21 +256,21 @@ export const cctvPanelMixin = {
       this._cctvCoverageBtn.classList.toggle('active', mode !== 'off');
       this._cctvCoverageBtn.textContent = mode === 'viewshed'
         ? 'VIEWSHED ACTIVE'
-        : mode === 'on' ? 'COVERAGE ACTIVE' : 'CAKUPAN MATI';
+        : mode === 'on' ? 'COVERAGE ACTIVE' : 'COVERAGE OFF';
       this._cctvCoverageBtn.disabled = !enabled;
     }
 
     if (this._cctvAutoHopBtn) {
       const autoHop = !!state?.autoHop;
       this._cctvAutoHopBtn.classList.toggle('active', autoHop);
-      this._cctvAutoHopBtn.textContent = autoHop ? 'LOMPAT OTOMATIS HIDUP' : 'LOMPAT OTOMATIS MATI';
+      this._cctvAutoHopBtn.textContent = autoHop ? 'AUTO-JUMP ON' : 'AUTO-JUMP OFF';
       this._cctvAutoHopBtn.disabled = !enabled;
     }
 
     if (this._cctvProjectionBtn) {
       const showProjection = state?.showProjection !== false;
       this._cctvProjectionBtn.classList.toggle('active', showProjection);
-      this._cctvProjectionBtn.textContent = showProjection ? 'PROYEKSI HIDUP' : 'PROYEKSI MATI';
+      this._cctvProjectionBtn.textContent = showProjection ? 'PROJECTION ON' : 'PROJECTION OFF';
       this._cctvProjectionBtn.disabled = !enabled;
     }
 
@@ -298,7 +298,7 @@ export const cctvPanelMixin = {
         const statusMsg = activeCamera.sourceMessage ? ` · ${activeCamera.sourceMessage}` : '';
         const calBadge = activeCamera.calBadge ? this._calBadgeLabel(activeCamera.calBadge) : '';
         const projLabel = state?.showProjection !== false ? 'MONITOR' : 'OFF';
-        this._cctvMeta.textContent = `${activeCamera.city} · HDG ${Math.round(activeCamera.headingDeg)}° · FOV ${Math.round(activeCamera.fovDeg)}° · JARAK ${Math.round(activeCamera.rangeM)}m · ${projLabel}${calBadge ? ` · ${calBadge}` : ''} · ${provider}${statusMsg}`;
+        this._cctvMeta.textContent = `${activeCamera.city} · HDG ${Math.round(activeCamera.headingDeg)}° · FOV ${Math.round(activeCamera.fovDeg)}° · RANGE ${Math.round(activeCamera.rangeM)}m · ${projLabel}${calBadge ? \` · ${calBadge}\` : ''} · ${provider}${statusMsg}`;
       } else if (cameras.length > 0) {
         this._cctvMeta.textContent = enabled
           ? `${cameras.length} cameras loaded · click a camera to activate`

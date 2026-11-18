@@ -12,7 +12,7 @@ test('the banner lists the locked toggles in a fixed order; nothing locked → n
 test('a kill switch is named as temporary; dismissal hides only the exact dismissed set', () => {
   const locks = new Map([['ai', 'killed']]);
   const model = accessBannerModel(locks, null);
-  assert.deepEqual(model.items, ['Voice & AI (dimatikan sementara)']);
+  assert.deepEqual(model.items, ['Voice & AI (temporarily off)']);
   assert.equal(accessBannerModel(locks, model.key), null);
   locks.set('layers', 'revoked');
   assert.notEqual(accessBannerModel(locks, model.key), null, 'a feature locked later brings the banner back');
@@ -48,7 +48,7 @@ test('render: one banner with title, items and a Tutup button that reports the k
   assert.deepEqual(banner.children[1].children.map((li) => li.textContent), ['Data layers', 'Voice & AI']);
   banner.children[2].click();
   assert.deepEqual(dismissed, ['layers:o,ai:o']);
-  renderAccessBanner(doc, { text: 'Status akun tidak bisa diperiksa.' }, () => {});
+  renderAccessBanner(doc, { text: 'Account status could not be checked.' }, () => {});
   assert.equal(doc.getElementById('account-banner').children.length, 1, 'a plain status line has no list or button');
   renderAccessBanner(doc, null, () => {});
   assert.equal(doc.getElementById('account-banner'), null);
