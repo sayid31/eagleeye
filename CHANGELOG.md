@@ -5,6 +5,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- **Visual beranda diganti globe titik-titik (dot-matrix) yang berputar pelan**, lengkap dengan garis lengkung antarkota dan
+  penanda berdenyut; mengikuti tema terang/gelap dan berhenti bergerak bila perangkat meminta animasi dikurangi. Kartu
+  legenda "Layer data" dihapus.
+
 ### Added
 
 - **Password sementara tampil sekali** dan harus dikonfirmasi sudah disalin sebelum dialog bisa ditutup; tombol "Salin pesan"
