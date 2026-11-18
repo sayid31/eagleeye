@@ -6,6 +6,7 @@
  */
 import assert from 'node:assert/strict';
 import { answerJson, FORCED_CHANGE_ME } from './mocks.mjs';
+import { SYSTEM_PROBES } from './probes.system.mjs';
 import { expectEscapeRestoresFocus, expectFocusTrapped, focusInfo, focusMatches, press, tabOrder, tabUntil, waitForFocus } from './keyboard.mjs';
 
 const MAIN = '#main-content';
@@ -268,4 +269,5 @@ export const PROBES = [
       assert.match(await page.$eval('main', (el) => el.textContent), /minimal \d+ karakter/i);
     },
   },
+  ...SYSTEM_PROBES,
 ];
