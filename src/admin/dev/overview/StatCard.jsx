@@ -3,7 +3,7 @@
 import { Link } from 'react-router';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { HealthBadge } from '../lib/HealthBadge.jsx';
+import { StatusBadge } from '@/components/app/StatusBadge';
 
 /**
  * @param {{title: string, status?: string, statusLabel?: string, value?: string, detail?: string, link?: {to: string, label: string},
@@ -14,7 +14,7 @@ export function StatCard({ title, status, statusLabel, value, detail, link, clas
     <Card className={cn('h-full', className)}>
       <CardHeader>
         <CardTitle role="heading" aria-level={2}>{title}</CardTitle>
-        {status ? <CardAction><HealthBadge status={status} label={statusLabel} /></CardAction> : null}
+        {status ? <CardAction><StatusBadge status={status} label={statusLabel} /></CardAction> : null}
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-1">
         {children ?? (

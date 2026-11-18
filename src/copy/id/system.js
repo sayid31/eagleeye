@@ -6,9 +6,6 @@
  * @module copy/id/system
  */
 
-/** One shared status word per health state; every badge pairs it with an icon (never colour alone). */
-export const HEALTH_STATUS_COPY = Object.freeze({ ok: 'Baik', warn: 'Peringatan', error: 'Masalah', off: 'Mati', unknown: 'Tanpa data' });
-
 /** Provider id → display name (the key store sends ALL-CAPS titles). */
 export const PROVIDER_NAMES = Object.freeze({
   'google-maps': 'Google Maps',

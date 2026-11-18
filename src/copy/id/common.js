@@ -76,8 +76,10 @@ export const STATUS_COPY = Object.freeze({
   failed: 'Gagal',
   on: 'aktif',
   off: 'nonaktif',
-  unknown: 'Tidak diketahui',
 });
+
+/** Health states of system pages / provider cards (StatusBadge keys ok, warn, error, off, unknown). */
+export const HEALTH_STATUS_COPY = Object.freeze({ ok: 'Baik', warn: 'Peringatan', error: 'Masalah', off: 'Mati', unknown: 'Tanpa data' });
 
 export const CONFIRM_COPY = Object.freeze({
   typeToConfirm: (value) => `Ketik ${value} untuk konfirmasi`,

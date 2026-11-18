@@ -4,7 +4,7 @@ import { CircleAlert, CircleCheck, TriangleAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { OVERVIEW_COPY as T } from '@/copy/id/system';
-import { HealthBadge } from '../lib/HealthBadge.jsx';
+import { StatusBadge } from '@/components/app/StatusBadge';
 import { doctorItems } from './overviewView.js';
 
 /** @param {{checks: {id: string, level: string, params?: object}[]}} props `summary.doctor` */
@@ -16,7 +16,7 @@ export function DoctorCard({ checks }) {
         <CardTitle role="heading" aria-level={2}>{T.doctor.title}</CardTitle>
         <CardDescription>{T.doctor.description}</CardDescription>
         <CardAction>
-          {items.length ? <HealthBadge status={items.some((item) => item.level === 'error') ? 'error' : 'warn'} label={T.doctor.count(items.length)} /> : <HealthBadge status="ok" />}
+          {items.length ? <StatusBadge status={items.some((item) => item.level === 'error') ? 'error' : 'warn'} label={T.doctor.count(items.length)} /> : <StatusBadge status="ok" />}
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-3">

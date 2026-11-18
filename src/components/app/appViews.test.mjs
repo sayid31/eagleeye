@@ -115,6 +115,15 @@ test('status presentation: every known status has tone, icon and a word; unknown
   assert.equal(statusPresentation('toString').tone, 'muted');
 });
 
+test('health states share StatusBadge: icon + word each, unrecognised reads as unknown, label overrides only the word', () => {
+  assert.deepEqual(['ok', 'warn', 'error'].map((s) => statusPresentation(s).tone), ['success', 'warning', 'destructive']);
+  assert.deepEqual(['ok', 'warn', 'error', 'off', 'unknown'].map((s) => statusPresentation(s).icon), ['check', 'warning', 'x', 'minus', 'help']);
+  assert.equal(statusPresentation('weird').status, 'unknown');
+  assert.equal(statusPresentation('weird').label, 'Tanpa data');
+  assert.equal(statusPresentation('ok', 'Siap').label, 'Siap');
+  assert.equal(statusPresentation('ok', 'Siap').icon, statusPresentation('ok').icon);
+});
+
 test('capability chip: name always visible, on/off as an icon and screen-reader text (not a strike-through)', () => {
   assert.deepEqual(capabilityPresentation('Layer data', true), { tone: 'success', icon: 'check', label: 'Layer data', srText: 'aktif' });
   assert.deepEqual(capabilityPresentation('Voice & AI', false), { tone: 'muted', icon: 'minus', label: 'Voice & AI', srText: 'nonaktif' });

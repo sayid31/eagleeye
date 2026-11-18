@@ -11,14 +11,14 @@ import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
 import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { AUDIT_COPY as T, AUDIT_FILTER_COPY } from '@/copy/id/systemLogs';
-import { HealthBadge } from '../lib/HealthBadge.jsx';
+import { StatusBadge } from '@/components/app/StatusBadge';
 import { LogTime } from './LogTime.jsx';
 import { ALL_TYPES, auditRows } from './auditView.js';
 import { useAuditLog } from './useAuditLog.js';
 
 const COLUMNS = [
   { id: 'time', header: T.columns.time, cell: (row) => <LogTime time={row.time} /> },
-  { id: 'change', header: T.columns.change, cell: (row) => <HealthBadge status={row.status} label={row.title} /> },
+  { id: 'change', header: T.columns.change, cell: (row) => <StatusBadge status={row.status} label={row.title} /> },
   { id: 'detail', header: T.columns.detail, className: 'min-w-64 whitespace-normal', cell: (row) => <span className="text-sm break-words">{row.detail || '—'}</span> },
   { id: 'via', header: T.columns.via, cell: (row) => <span className="text-sm text-muted-foreground">{row.via || '—'}</span> },
 ];
@@ -60,7 +60,7 @@ export function AuditLogPage() {
         )}
         renderCard={(row) => (
           <div className="flex flex-col gap-2">
-            <div className="flex flex-wrap items-center justify-between gap-2"><HealthBadge status={row.status} label={row.title} /><LogTime time={row.time} /></div>
+            <div className="flex flex-wrap items-center justify-between gap-2"><StatusBadge status={row.status} label={row.title} /><LogTime time={row.time} /></div>
             {row.detail ? <p className="text-sm break-words">{row.detail}</p> : null}
             {row.via ? <p className="text-sm text-muted-foreground">{row.via}</p> : null}
           </div>

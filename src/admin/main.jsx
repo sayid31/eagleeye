@@ -7,7 +7,6 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter } from 'react-router';
 import { AppProviders } from '@/components/app/AppProviders.jsx';
 import '../ui/app.css';
-import './adminTheme.css';
 import { AdminApp } from './AdminApp.jsx';
 import { AdminGate } from './AdminGate.jsx';
 import { adminArea, adminBasename } from './adminNav.js';

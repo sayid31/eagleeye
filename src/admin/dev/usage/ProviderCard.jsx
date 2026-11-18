@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { USAGE_COPY as T } from '@/copy/id/system';
-import { HealthBadge } from '../lib/HealthBadge.jsx';
+import { StatusBadge } from '@/components/app/StatusBadge';
 import { UsageMeter } from './UsageMeter.jsx';
 
 function Body({ card }) {
@@ -49,7 +49,7 @@ export function ProviderCard({ card, footer }) {
       <CardHeader>
         <CardTitle role="heading" aria-level={2}>{card.title}</CardTitle>
         <CardDescription>{card.description}</CardDescription>
-        <CardAction><HealthBadge status={card.status} label={card.statusLabel} /></CardAction>
+        <CardAction><StatusBadge status={card.status} label={card.statusLabel} /></CardAction>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4">
         <Body card={card} />

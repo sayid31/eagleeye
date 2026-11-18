@@ -2,7 +2,7 @@
 /** One paid gate: name, what it stops, a Switch (menyala / dimatikan) and who changed it last, when and why. */
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { HealthBadge } from '../lib/HealthBadge.jsx';
+import { StatusBadge } from '@/components/app/StatusBadge';
 
 /**
  * @param {{row: ReturnType<typeof import('./killSwitchView.js').gateRow>, onToggle: (gate: string, killed: boolean) => void}} props
@@ -19,7 +19,7 @@ export function GateCard({ row, onToggle }) {
         </CardAction>
       </CardHeader>
       <CardContent className="flex flex-col gap-2">
-        <div><HealthBadge status={row.status} label={row.statusLabel} /></div>
+        <div><StatusBadge status={row.status} label={row.statusLabel} /></div>
         <p className="text-sm text-muted-foreground" title={row.absolute ?? undefined}>{row.lastChange}</p>
         {row.reason ? <p className="text-sm break-words">{row.reason}</p> : null}
       </CardContent>

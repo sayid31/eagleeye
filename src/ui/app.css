@@ -4,7 +4,7 @@
  * (scripts/qa-ui isolation check pins this). `source(none)` + explicit @source keep the class scanner out of style.css
  * and the map modules.
  */
-@layer theme, base, legacy, components, utilities;
+@layer theme, base, components, utilities;
 @import 'tailwindcss' source(none);
 @import 'tw-animate-css';
 @import './shadcn-tailwind.css';

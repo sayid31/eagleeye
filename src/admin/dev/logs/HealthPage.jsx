@@ -8,7 +8,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { PageHeader } from '@/components/app/PageHeader.jsx';
 import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { HEALTH_COPY as T } from '@/copy/id/systemLogs';
-import { HealthBadge } from '../lib/HealthBadge.jsx';
+import { StatusBadge } from '@/components/app/StatusBadge';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
 import { ResourceBody } from '../lib/ResourceBody.jsx';
 import { useDevResource } from '../lib/useDevResource.js';
@@ -27,7 +27,7 @@ function SectionCard({ section }) {
                 <p className="text-sm font-medium break-words">{item.label}</p>
                 <p className="text-sm break-words text-muted-foreground">{item.detail}</p>
               </div>
-              <HealthBadge status={item.status} className="shrink-0 self-start" />
+              <StatusBadge status={item.status} className="shrink-0 self-start" />
             </li>
           ))}
         </ul>
@@ -51,7 +51,7 @@ export function HealthPage() {
                 <CardHeader>
                   <CardTitle role="heading" aria-level={2}>{view.summary}</CardTitle>
                   <CardDescription>{view.checkedAt} · {T.testHint}</CardDescription>
-                  <CardAction><HealthBadge status={view.status} /></CardAction>
+                  <CardAction><StatusBadge status={view.status} /></CardAction>
                 </CardHeader>
               </Card>
               <div className="gap-4 lg:columns-2">

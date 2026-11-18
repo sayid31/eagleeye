@@ -1,16 +1,16 @@
 // src/components/app/StatusBadge.jsx
 /** Status pills that always pair colour with an icon and a word, plus capability chips (name + sr-only on/off). */
-import { CircleCheck, CircleMinus, CircleX, Clock, Info, KeyRound } from 'lucide-react';
+import { CircleCheck, CircleHelp, CircleMinus, CircleX, Clock, Info, KeyRound, TriangleAlert } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { TONE_CLASSES, capabilityPresentation, statusPresentation } from './statusBadgeView.js';
 
-const ICONS = { check: CircleCheck, minus: CircleMinus, x: CircleX, clock: Clock, key: KeyRound, info: Info };
+const ICONS = { check: CircleCheck, minus: CircleMinus, x: CircleX, clock: Clock, key: KeyRound, info: Info, warning: TriangleAlert, help: CircleHelp };
 
 function Pill({ view, children, className }) {
   const Icon = ICONS[view.icon] ?? Info;
   return (
-    <Badge variant="outline" className={cn('border-transparent', TONE_CLASSES[view.tone], className)}>
+    <Badge variant="outline" className={cn('border-transparent', TONE_CLASSES[view.tone], className)} data-status={view.status}>
       <Icon aria-hidden="true" data-icon="inline-start" />
       {children}
     </Badge>
@@ -19,7 +19,7 @@ function Pill({ view, children, className }) {
 
 /**
  * @param {{status: string, label?: string, className?: string}} props `status` is a key of STATUSES (active, inactive,
- *   throttled, mustChangePassword, success, failed).
+ *   throttled, mustChangePassword, success, failed, ok, warn, error, off, unknown); anything else reads as unknown.
  */
 export function StatusBadge({ status, label, className }) {
   const view = statusPresentation(status, label);
