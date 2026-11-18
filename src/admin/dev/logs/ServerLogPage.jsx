@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/app/ConfirmDialog.jsx';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
+import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { SERVER_LOG_COPY as T } from '@/copy/id/systemLogs';
 import { useAutoRefresh } from '../lib/useAutoRefresh.js';
 import { LogDetailSheet } from './LogDetailSheet.jsx';
@@ -45,6 +46,7 @@ export function ServerLogPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        tabs={<RouteTabNav />}
         title={T.title}
         description={T.description}
         actions={(

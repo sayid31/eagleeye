@@ -9,7 +9,7 @@
  *   `path` may carry a query; `setup` runs before navigation (see mocks.mjs).
  */
 
-import { SETUPS } from './mocks.mjs';
+import { SETUPS, SETUPS_CONFIG } from './mocks.mjs';
 
 const SHELL_READY = '#main-content h1, #main-content [role="alert"], #main-content [data-slot="empty"]';
 const ADMIN_ROLES = ['admin', 'super_admin'];
@@ -40,8 +40,10 @@ export const PAGES = [
   shell('dev-kill-switches', '/dev/kill-switches', ['super_admin']),
   shell('dev-usage-budget', '/dev/usage/budget', ['super_admin']),
   shell('dev-usage-ai', '/dev/usage/ai', ['super_admin']),
+  { ...shell('dev-usage-ai-data', '/dev/usage/ai', ['super_admin']), setup: SETUPS_CONFIG.usagePopulated, note: 'a week of sessions (mocked usage)' },
   shell('dev-providers-keys', '/dev/providers/keys', ['super_admin']),
   shell('dev-providers-ai', '/dev/providers/ai', ['super_admin']),
+  { ...shell('dev-providers-keys-mixed', '/dev/providers/keys', ['super_admin']), setup: SETUPS_CONFIG.keysMixed, note: 'every key state (mocked /api/admin/keys)' },
   shell('dev-general', '/dev/general', ['super_admin']),
   shell('dev-persona', '/dev/persona', ['super_admin']),
   shell('dev-logs-server', '/dev/logs/server', ['super_admin']),

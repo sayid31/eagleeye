@@ -4,6 +4,7 @@
  * usage, read-only, from the server's own counters. A provider without a key shows an empty state, not zeros.
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';
+import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { USAGE_COPY as T } from '@/copy/id/system';
 import { fetchUsage } from '../devApi.js';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
@@ -19,6 +20,7 @@ export function UsageBudgetPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        tabs={<RouteTabNav />}
         title={T.title}
         description={T.description}
         actions={<RefreshBar label={T.refresh} updatedAt={resource.data?.generatedAt} loading={resource.loading} onRefresh={resource.reload} />}

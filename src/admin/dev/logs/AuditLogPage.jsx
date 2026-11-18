@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
+import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { AUDIT_COPY as T, AUDIT_FILTER_COPY } from '@/copy/id/systemLogs';
 import { HealthBadge } from '../lib/HealthBadge.jsx';
 import { LogTime } from './LogTime.jsx';
@@ -30,6 +31,7 @@ export function AuditLogPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        tabs={<RouteTabNav />}
         title={T.title}
         description={T.description}
         actions={(

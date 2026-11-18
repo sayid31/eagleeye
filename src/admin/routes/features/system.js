@@ -2,7 +2,7 @@
 /**
  * Feature "Sistem" (/dev only): system overview, Sakelar darurat, Pemakaian & Biaya, Log server (+ audit trail, health).
  * Owner of: src/admin/dev/** (overview, killswitch, usage, logs). Edit ONLY this file to add or move a page of this
- * feature (see access.js for the shape). The "Pemakaian AI" tab (`ai-usage`) still points at the AI configuration page.
+ * feature (see access.js for the shape). The "Pemakaian AI" tab (`ai-usage`) is the W4 page src/admin/config/AiUsagePage.jsx.
  *
  * @module admin/routes/features/system
  */
@@ -18,7 +18,7 @@ export const systemRoutes = {
     'dev-overview': page(() => import('../../dev/overview/SystemOverviewPage.jsx'), 'SystemOverviewPage'),
     'dev-kill-switches': page(() => import('../../dev/killswitch/KillSwitchPage.jsx'), 'KillSwitchPage'),
     'dev-usage': page(() => import('../../dev/usage/UsageBudgetPage.jsx'), 'UsageBudgetPage'),
-    'ai-usage': page(() => import('../../pages/UsagePage.jsx'), 'UsagePage'),
+    'ai-usage': page(() => import('../../config/AiUsagePage.jsx'), 'AiUsagePage'),
     'server-log': page(() => import('../../dev/logs/ServerLogPage.jsx'), 'ServerLogPage'),
     'server-log-audit': page(() => import('../../dev/logs/AuditLogPage.jsx'), 'AuditLogPage'),
     'server-log-health': page(() => import('../../dev/logs/HealthPage.jsx'), 'HealthPage'),

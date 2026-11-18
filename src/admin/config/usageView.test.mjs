@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultVoiceSettings, validateVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
-import { costFormFromSettings, describeDailyCap, formatDuration, formatEstimate, limitToText, settingsFromCostForm, textToLimit } from './usageView.js';
+import { costFormFromSettings, formatDuration, formatEstimate, limitToText, effectiveLimitsLine, settingsFromCostForm, textToLimit, todayView } from './usageView.js';
 
 test('formatDuration covers zero, seconds, minutes and hours', () => {
   assert.equal(formatDuration(0), '0 min');
@@ -16,11 +16,24 @@ test('formatEstimate marks money as an estimate', () => {
   assert.equal(formatEstimate(0.111), '~$0.11');
 });
 
-test('describeDailyCap: no limit, some left, used up', () => {
-  const at = (dailyMinutes, remainingSeconds) => describeDailyCap({ dailyMinutes, remainingSeconds, summary: { today: { seconds: 600 } } });
-  assert.equal(at(0, null), '10 min terpakai hari ini · tanpa batas harian');
-  assert.equal(at(30, 1200), '10 min dari 30 min terpakai hari ini · sisa 20 min');
-  assert.match(at(10, 0), /batas tercapai, sesi baru ditolak sampai tengah malam/);
+test('todayView: no limit, some left, used up', () => {
+  const at = (dailyMinutes, remainingSeconds) => todayView({ dailyMinutes, remainingSeconds, summary: { today: { seconds: 600, estimatedUsd: 0.5 } } });
+  assert.equal(at(0, null).line, '10 min terpakai hari ini. Tanpa batas harian.');
+  assert.equal(at(0, null).meter, null);
+  const some = at(30, 1200);
+  assert.equal(some.line, '10 min dari 30 menit terpakai hari ini. Sisa 20 min.');
+  assert.deepEqual([some.meter.tone, some.meter.percent, some.meter.valueMax], ['success', 33, 30]);
+  assert.equal(some.cost, '~$0.50');
+  const close = at(12, 120);
+  assert.equal(close.meter.tone, 'warning');
+  const gone = at(10, 0);
+  assert.equal(gone.reached, true);
+  assert.equal(gone.meter.tone, 'destructive');
+  assert.match(gone.line, /sesi baru ditolak sampai tengah malam/);
+});
+
+test('effectiveLimitsLine words the limits in force', () => {
+  assert.equal(effectiveLimitsLine({ costLimits: { effective: { warnUsd: 1, capUsd: null } } }), 'Berlaku sekarang: peringatan di ~$1.00, sesi berhenti di mati.');
 });
 
 test('cost form: empty = built-in default, off = none, number = USD; base fields survive', () => {
@@ -30,7 +43,7 @@ test('cost form: empty = built-in default, off = none, number = USD; base fields
   assert.deepEqual(r.settings.costLimits, { warnUsd: 1.5, capUsd: 'off' });
   assert.equal(r.settings.limits.dailyMinutes, 30);
   assert.equal(validateVoiceSettings(r.settings).ok, true);
-  assert.equal(settingsFromCostForm(base, { warn: 'abc', cap: '' }).ok, false);
+  assert.deepEqual(Object.keys(settingsFromCostForm(base, { warn: 'abc', cap: '' }).errors), ['warn']);
 });
 
 test('textToLimit / limitToText: empty = default, off = disabled, number, garbage rejected', () => {

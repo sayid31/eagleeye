@@ -1,25 +1,28 @@
-// src/admin/pages/personaForm.js
+// src/admin/config/personaForm.js
 /**
- * Form model of AI Configuration → Persona: the locked core rules grouped for
+ * Form model of Konfigurasi → Persona: the locked core rules grouped for
  * display, and the owner's extra rules ⇄ editable rows. The server validates
  * again (`readExtraRules`); these checks only give a faster message.
  *
- * Like the General page, a save starts from the settings last loaded and
+ * Like the Umum page, a save starts from the settings last loaded and
  * overwrites only `persona.extraRules`, so every other section survives.
  *
  * Pure — no DOM, no network.
  *
- * @module admin/pages/personaForm
+ * @module admin/config/personaForm
  */
 
+import { PERSONA_COPY } from '../../copy/id/configForms.js';
+import { REFUSAL_MAX, TOPICS_MAX, defaultVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
+
+const COPY = PERSONA_COPY;
+export { REFUSAL_MAX, TOPICS_MAX };
 export const EXTRA_RULES_MAX = 20;
 export const EXTRA_RULE_TEXT_MAX = 200;
 
-const GUARD_LABELS = { prompt: 'Prompt', 'prompt+code': 'Prompt + kode' };
-
 /** Badge text for what enforces a core rule. */
 export function guardLabel(guard) {
-  return GUARD_LABELS[guard] ?? 'Prompt';
+  return COPY.core.guards[guard] ?? COPY.core.guards.prompt;
 }
 
 /**
@@ -40,14 +43,13 @@ export function groupCoreRules(groups, rules) {
 export function summarizeCoreRules(groups) {
   const rules = groups.flatMap((group) => group.rules);
   const backed = rules.filter((rule) => rule.guard === 'prompt+code').length;
-  return `${rules.length} aturan dalam ${groups.length} grup · ${backed} juga dijaga kode aplikasi, sisanya hanya oleh prompt suara`;
+  return COPY.core.summary(rules.length, groups.length, backed);
 }
 
-/** "7 rules" / "6 rules · 1 enforced by code" for a collapsed group header. */
+/** "7 aturan" / "6 aturan · 1 dijaga kode" for a group header. */
 export function describeRuleGroup(group) {
   const backed = group.rules.filter((rule) => rule.guard === 'prompt+code').length;
-  const count = `${group.rules.length} aturan`;
-  return backed ? `${count} · ${backed} dijaga kode` : count;
+  return COPY.core.group(group.rules.length, backed);
 }
 
 /** @param {object} settings Server settings snapshot. */
@@ -65,18 +67,18 @@ export function extraRuleRows(settings) {
 export function settingsFromPersonaForm(base, rows, topicForm = topicFormFromSettings(base)) {
   const errors = [];
   const allowed = String(topicForm.topics ?? '').split('\n').map((t) => t.trim()).filter(Boolean);
-  if (topicForm.topicsEnabled && allowed.length === 0) errors.push('Batasan topik aktif: tambahkan minimal satu topik yang diizinkan (satu per baris).');
+  if (topicForm.topicsEnabled && allowed.length === 0) errors.push(COPY.validation.topicsEmpty);
   const extraRules = [];
   rows.forEach((row, index) => {
     const forbid = String(row.forbid ?? '').trim();
     const instead = String(row.instead ?? '').trim();
     if (!forbid && !instead) return;
-    if (!forbid || !instead) errors.push(`Aturan tambahan ${index + 1}: isi kolom Dilarang dan Gantinya.`);
+    if (!forbid || !instead) errors.push(COPY.validation.ruleHalf(index + 1));
     else if (forbid.length > EXTRA_RULE_TEXT_MAX || instead.length > EXTRA_RULE_TEXT_MAX) {
-      errors.push(`Aturan tambahan ${index + 1}: maksimal ${EXTRA_RULE_TEXT_MAX} karakter per kolom.`);
+      errors.push(COPY.validation.ruleLong(index + 1, EXTRA_RULE_TEXT_MAX));
     } else extraRules.push({ forbid, instead });
   });
-  if (extraRules.length > EXTRA_RULES_MAX) errors.push(`Maksimal ${EXTRA_RULES_MAX} aturan tambahan.`);
+  if (extraRules.length > EXTRA_RULES_MAX) errors.push(COPY.validation.tooMany(EXTRA_RULES_MAX));
   if (errors.length) return { ok: false, errors };
   return {
     ok: true,
@@ -100,4 +102,10 @@ export function topicFormFromSettings(settings) {
     topics: (settings.topics?.allowed ?? []).join('\n'),
     refusal: settings.topics?.refusal ?? '',
   };
+}
+
+/** Extra rules and topic fields back at the application defaults (none, restriction off). */
+export function defaultPersonaForm() {
+  const defaults = defaultVoiceSettings();
+  return { rows: extraRuleRows(defaults), topics: topicFormFromSettings(defaults) };
 }

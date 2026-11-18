@@ -74,7 +74,13 @@ test('every string in src/copy/id respects the glossary and is written in Indone
   // GLOSSARY lists the discouraged terms themselves, so it is the one export that may contain them.
   const all = strings(Object.fromEntries(Object.entries(copy).filter(([name]) => name !== 'GLOSSARY')));
   assert.ok(all.length > 80);
-  for (const text of all) assert.deepEqual(findGlossaryViolations(text), [], text);
+  const rawCodes = new RegExp(`\\b(${Object.keys(ERROR_MESSAGES).join('|')})\\b`);
+  for (const text of all) {
+    assert.deepEqual(findGlossaryViolations(text), [], text);
+    // Copy that can be shown to a person never spells an API error code. ERROR_MESSAGES is the one export whose keys are codes,
+    // and strings() reads values only.
+    assert.doesNotMatch(text, rawCodes, text);
+  }
   const files = readdirSync(dir).filter((name) => name.endsWith('.js') && name !== 'glossary.js');
   assert.ok(files.length >= 5);
   for (const file of files) {
