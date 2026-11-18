@@ -129,7 +129,7 @@ Read `docs/CURRENT-STATE.md` → "UI system" before touching them.
   dependency; keep their style, re-apply the patches listed in `sidebar.jsx`); product
   patterns `src/components/app/` (AppShell, DataTable, ConfirmDialog, FormField, …);
   theme `src/lib/theme.jsx` + `themeCore.js`; all UI strings `src/copy/id/` (glossary:
-  "Sakelar darurat", "Log server"); route registration `src/admin/routes/features/*.js`.
+  "Kill switch", "Server Log" — the original menu names); route registration `src/admin/routes/features/*.js`.
 - **Rules.** Build a page from `components/ui` + `components/app` and Tailwind utilities with
   **token colours only** (`bg-card`, `text-muted-foreground`, never hex, no `!important`).
   **Never edit `style.css` for admin/login UI** — it is the map's stylesheet. New strings go
@@ -138,7 +138,7 @@ Read `docs/CURRENT-STATE.md` → "UI system" before touching them.
   A pure `.js` module that node tests import must use relative imports (the `@` alias exists
   only for Vite); `.jsx` is tested through `src/testing/jsxLoader.mjs`.
 - **Adding a page.** Create the page component, then register it in the feature file that owns
-  it (`pages`, `nav`, `redirects`) — `adminNav.js`/`AdminApp.jsx` are composition only. Add the
+  it (`pages`), then add its entry to the one menu table in `adminNav.js` (the sidebar list keeps the original items, order and paths; no tabs-as-pages, no redirects). Add the
   URL to `scripts/qa-ui/pages.mjs`. Old `.adm-*` CSS is a temporary `@layer legacy` bridge;
   delete it with the last page that uses it.
 - **Gates.** `npm run qa:contrast` (token contrast) and `npm run qa:ui` (axe, reflow, console,
