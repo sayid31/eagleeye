@@ -33,15 +33,16 @@ const bool = (value) => value === 1 || value === true;
  */
 export function createAdminLogQueries(db, { now = () => Date.now() } = {}) {
   /**
-   * @param {{roles: string[] | null, userId?: string, success?: boolean, limit: number, offset: number}} filter
+   * @param {{roles: string[] | null, userId?: string, success?: boolean, since?: string, limit: number, offset: number}} filter
    *   `roles: null` = every row (super_admin); otherwise only rows of accounts with those roles.
    */
-  function loginLog({ roles, userId, success, limit, offset }) {
+  function loginLog({ roles, userId, success, since, limit, offset }) {
     const where = [];
     const args = [];
     if (roles) { where.push(`u.role IN (${placeholders(roles)})`); args.push(...roles); }
     if (userId) { where.push('l.userId = ?'); args.push(userId); }
     if (success !== undefined) { where.push('l.success = ?'); args.push(success ? 1 : 0); }
+    if (since) { where.push('l.createdAt >= ?'); args.push(since); }
     const from = `FROM login_log l LEFT JOIN "user" u ON u.id = l.userId${where.length ? ` WHERE ${where.join(' AND ')}` : ''}`;
     const entries = rows(db, `SELECT l.id, l.createdAt, l.userId, u.name AS userName, u.email AS userEmail, u.role AS userRole,
       u.deletedAt AS userDeletedAt, l.success, l.reason, l.ip, l.userAgent, l.method ${from}
@@ -54,9 +55,9 @@ export function createAdminLogQueries(db, { now = () => Date.now() } = {}) {
   }
 
   /**
-   * @param {{scope: 'admin' | 'all', action?: string, targetId?: string, limit: number, offset: number}} filter
+   * @param {{scope: 'admin' | 'all', action?: string, targetId?: string, since?: string, limit: number, offset: number}} filter
    */
-  function accountAudit({ scope, action, targetId, limit, offset }) {
+  function accountAudit({ scope, action, targetId, since, limit, offset }) {
     const where = [];
     const args = [];
     if (scope === 'admin') {
@@ -66,6 +67,7 @@ export function createAdminLogQueries(db, { now = () => Date.now() } = {}) {
     }
     if (action) { where.push('a.action = ?'); args.push(action); }
     if (targetId) { where.push('a.targetId = ?'); args.push(targetId); }
+    if (since) { where.push('a.createdAt >= ?'); args.push(since); }
     const filter = where.length ? ` WHERE ${where.join(' AND ')}` : '';
     const entries = rows(db, `SELECT a.id, a.createdAt, a.actorId, a.actorRole, actor.name AS actorName, a.action, a.targetType,
       a.targetId, a.targetEmailMasked, target.name AS targetName, a.summary

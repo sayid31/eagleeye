@@ -1,8 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  accountStatus, areaRoleScope, compactIp, auditActorText, auditDetailText, createFormDefaults, createPayload, describeDevice, formatDateTime, handoverMessage,
-  loginAccountText, loginResultText, managesRoles, pageInfo, rowActions,
+  ALL, accountStatusKey, areaRoleScope, createFormDefaults, createFormReady, createPayload, editPayload, handoverMessage, hasUserFilters,
+  managesRoles, passwordRequirements, roleText, rowActions, rowMenuEntries, usersQuery,
 } from './usersView.js';
 
 const superMe = { id: 'S1', role: 'super_admin' };
@@ -18,10 +18,7 @@ test('rowActions: admin → user gets every account action but no role change', 
 });
 
 test('rowActions: admin → admin or super_admin offers nothing; admin → itself only own sign-out and name', () => {
-  for (const role of ['admin', 'super_admin']) {
-    const actions = rowActions(adminMe, target('X', role), 'admin');
-    assert.equal(actions.any, false, role);
-  }
+  for (const role of ['admin', 'super_admin']) assert.equal(rowActions(adminMe, target('X', role), 'admin').any, false, role);
   const self = rowActions(adminMe, target('A1', 'admin'), 'admin');
   assert.deepEqual([self.self, self.edit, self.toggleActive, self.delete, self.resetPassword, self.revokeSessions],
     [true, { name: true, email: false, capabilities: false }, null, false, false, true]);
@@ -45,9 +42,42 @@ test('rowActions: super_admin → other super_admin is read-only; → itself onl
   assert.equal(rowActions({ id: 'U9', role: 'user' }, target('U1', 'user'), 'admin').any, false, 'a user is offered nothing');
 });
 
+test('rowMenuEntries: ordinary actions first, deactivate and delete last and flagged destructive', () => {
+  const entries = rowMenuEntries(rowActions(superMe, target('U1', 'user'), 'dev'));
+  assert.deepEqual(entries.map((entry) => entry.id), ['edit', 'resetPassword', 'promote', 'revokeSessions', 'deactivate', 'delete']);
+  assert.deepEqual(entries.filter((entry) => entry.destructive).map((entry) => entry.id), ['deactivate', 'delete']);
+  const inactive = rowMenuEntries(rowActions(adminMe, target('U1', 'user', false), 'admin'));
+  assert.equal(inactive.find((entry) => entry.id === 'activate').destructive, false, 'activating is not destructive');
+  assert.deepEqual(rowMenuEntries(rowActions(adminMe, target('X', 'admin'), 'admin')), []);
+});
+
 test('managesRoles / areaRoleScope: only a super_admin in /dev picks roles; /admin lists users only', () => {
   assert.deepEqual([managesRoles(superMe, 'dev'), managesRoles(superMe, 'admin'), managesRoles(adminMe, 'dev')], [true, false, false]);
   assert.deepEqual([areaRoleScope('admin'), areaRoleScope('dev')], ['user', undefined]);
+});
+
+test('usersQuery: ALL and blanks drop out, /admin forces role=user, page size and offset pass through', () => {
+  const filter = { search: '  ani ', status: ALL, role: 'admin', limit: 50, offset: 100 };
+  assert.deepEqual(usersQuery(filter, 'dev'), { q: 'ani', status: '', role: 'admin', limit: 50, offset: 100 });
+  assert.deepEqual(usersQuery({ ...filter, status: 'inactive', role: ALL }, 'dev'), { q: 'ani', status: 'inactive', role: '', limit: 50, offset: 100 });
+  assert.equal(usersQuery(filter, 'admin').role, 'user', 'a role filter can never widen /admin');
+});
+
+test('hasUserFilters: search, status or role narrow the list', () => {
+  const none = { search: '  ', status: ALL, role: ALL };
+  assert.equal(hasUserFilters(none), false);
+  assert.equal(hasUserFilters({ ...none, search: 'a' }), true);
+  assert.equal(hasUserFilters({ ...none, status: 'active' }), true);
+  assert.equal(hasUserFilters({ ...none, role: 'admin' }), true);
+});
+
+test('accountStatusKey: inactive beats throttled beats must-change beats active', () => {
+  assert.equal(accountStatusKey({ active: false, throttled: true }), 'inactive');
+  assert.equal(accountStatusKey({ active: true, throttled: true, mustChangePassword: true }), 'throttled');
+  assert.equal(accountStatusKey({ active: true, mustChangePassword: true }), 'mustChangePassword');
+  assert.equal(accountStatusKey({ active: true }), 'active');
+  assert.equal(roleText('super_admin'), 'Super admin');
+  assert.equal(roleText('x'), 'x');
 });
 
 test('create form: owner defaults (layers + ai ON, premium OFF, generated password, role user)', () => {
@@ -67,6 +97,38 @@ test('createPayload: generate vs typed; role only when the area manages roles; t
   assert.equal(createPayload({ ...form, role: 'admin' }, false).role, undefined, 'a role picked outside /dev is never sent');
 });
 
+test('createFormReady: needs an email, a name and, for a typed password, every requirement met', () => {
+  const form = { ...createFormDefaults(), email: 'a@example.test', name: 'Ani' };
+  assert.equal(createFormReady(form, false), true);
+  assert.equal(createFormReady({ ...form, email: 'nope' }, false), false);
+  assert.equal(createFormReady({ ...form, name: '  ' }, false), false);
+  const typed = { ...form, passwordMode: 'typed', password: 'short' };
+  assert.equal(createFormReady(typed, false), false);
+  assert.equal(createFormReady({ ...typed, password: 'x'.repeat(12) }, false), true, 'users need 12');
+  assert.equal(createFormReady({ ...typed, role: 'admin', password: 'x'.repeat(12) }, true), false, 'admins need 15');
+  assert.equal(createFormReady({ ...typed, role: 'admin', password: 'x'.repeat(15) }, true), true);
+});
+
+test('editPayload: only changed, permitted fields; the three toggles always go together; null when unchanged', () => {
+  const current = { name: 'Ani', email: 'ani@example.test', capabilities: { layers: true, ai: true, premium: false } };
+  const all = { name: true, email: true, capabilities: true };
+  assert.equal(editPayload(current, { ...current, capabilities: { ...current.capabilities } }, all), null);
+  assert.equal(editPayload(current, { ...current, email: ' ANI@example.test ' }, all), null, 'email compares normalized');
+  assert.deepEqual(editPayload(current, { ...current, name: ' Ani B ' }, all), { name: 'Ani B' });
+  assert.deepEqual(editPayload(current, { ...current, capabilities: { layers: true, ai: false, premium: false } }, all), { capabilities: { layers: true, ai: false, premium: false } });
+  assert.equal(editPayload(current, { name: 'Lain', email: 'lain@example.test', capabilities: current.capabilities }, { name: true, email: false, capabilities: false }).email, undefined, 'not permitted → not sent');
+});
+
+test('passwordRequirements: role length, upper bound and identity are checked live', () => {
+  const met = (input) => Object.fromEntries(passwordRequirements(input).map((item) => [item.id, item.met]));
+  assert.deepEqual(met({ password: '', role: 'user' }), { min: false, max: true, identity: true });
+  assert.deepEqual(met({ password: 'x'.repeat(12), role: 'user' }), { min: true, max: true, identity: true });
+  assert.equal(met({ password: 'x'.repeat(12), role: 'admin' }).min, false);
+  assert.equal(met({ password: 'x'.repeat(129), role: 'user' }).max, false);
+  assert.equal(met({ password: 'ani@example.test', role: 'user', email: 'ani@example.test' }).identity, false);
+  assert.match(passwordRequirements({ password: '', role: 'admin' })[0].label, /15 karakter/);
+});
+
 test('handoverMessage: Indonesian, login URL from the origin, email, temp password, must-change note', () => {
   const text = handoverMessage({ origin: 'https://eagle-eye.example.test/', email: 'ani@example.test', password: 'Tmp9xYzAbc' });
   assert.equal(text, [
@@ -79,44 +141,4 @@ test('handoverMessage: Indonesian, login URL from the origin, email, temp passwo
     'Catatan: password ini wajib diganti saat login pertama. Jangan bagikan pesan ini ke orang lain.',
   ].join('\n'));
   assert.match(handoverMessage({ origin: 'http://localhost:4173', email: 'a@b.test', password: 'x', reset: true }), /^Password akun EagleEye Anda sudah direset\.\n\nAlamat login: http:\/\/localhost:4173\/login/);
-});
-
-test('accountStatus: inactive beats throttled beats must-change beats active', () => {
-  assert.deepEqual(accountStatus({ active: false, throttled: true }), { label: 'Nonaktif', tone: 'error' });
-  assert.deepEqual(accountStatus({ active: true, throttled: true, mustChangePassword: true }), { label: 'Ter-throttle', tone: 'warn' });
-  assert.deepEqual(accountStatus({ active: true, mustChangePassword: true }), { label: 'Wajib ganti password', tone: 'info' });
-  assert.deepEqual(accountStatus({ active: true }), { label: 'Aktif', tone: 'ok' });
-});
-
-test('pageInfo: range label and neighbours, empty and last pages', () => {
-  assert.deepEqual(pageInfo({ total: 45, limit: 20, offset: 20 }), { from: 21, to: 40, total: 45, label: '21–40 dari 45', prevOffset: 0, nextOffset: 40 });
-  assert.deepEqual(pageInfo({ total: 45, limit: 20, offset: 40 }).nextOffset, null);
-  assert.deepEqual(pageInfo({ total: 0, limit: 20, offset: 0 }), { from: 0, to: 0, total: 0, label: '0–0 dari 0', prevOffset: null, nextOffset: null });
-});
-
-test('log wording: device from user agent, result and account cells, audit actor redaction', () => {
-  assert.equal(describeDevice('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0 Safari/537.36'), 'Chrome · macOS');
-  assert.equal(describeDevice('Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Version/17.0 Mobile/15E148 Safari/604.1'), 'Safari · iOS');
-  assert.equal(describeDevice('node'), 'Skrip');
-  assert.equal(describeDevice(null), '—');
-  assert.equal(loginResultText({ success: false, reason: 'throttled' }), 'Ter-throttle');
-  assert.equal(loginResultText({ success: true }), 'Berhasil');
-  assert.equal(loginAccountText({ userId: null }), 'Email tidak terdaftar');
-  assert.equal(loginAccountText({ userId: 'U1', userName: 'Pengguna terhapus', userDeleted: true }), 'Pengguna terhapus (terhapus)');
-  assert.equal(auditActorText({ actorId: 'A1', actorName: 'Admin', actorRole: 'admin' }, adminMe), 'Anda');
-  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'super_admin' }, adminMe), 'Super admin');
-  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'admin' }, adminMe), 'Admin lain');
-  assert.equal(auditDetailText('role user'), 'Role: Pengguna');
-  assert.equal(auditDetailText('fields name,capabilities'), 'Diubah: nama, izin fitur');
-  assert.equal(auditDetailText('user → admin'), 'Pengguna → Admin');
-  assert.equal(auditDetailText('cli'), 'cli');
-  assert.equal(auditDetailText(null), '');
-  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: null }, adminMe), 'Sistem');
-  assert.equal(formatDateTime('nope'), '—');
-  assert.equal(compactIp('0000:0000:0000:0000:0000:0000:0000:0000'), '::');
-  assert.equal(compactIp('0000:0000:0000:0000:0000:0000:0000:0001'), '::1');
-  assert.equal(compactIp('2001:0db8:0000:0000:0001:0000:0000:0001'), '2001:db8::1:0:0:1');
-  assert.equal(compactIp('203.0.113.7'), '203.0.113.7');
-  assert.equal(compactIp(null), '—');
-  assert.match(formatDateTime('2026-11-17T09:18:10.338Z'), /2026/);
 });

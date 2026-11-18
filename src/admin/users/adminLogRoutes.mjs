@@ -2,9 +2,9 @@
 /**
  * Read-only log routes for /admin and /dev, gate `admin`:
  *
- *   GET /api/admin/login-log?userId&success&limit&offset
+ *   GET /api/admin/login-log?userId&success&range&limit&offset
  *       admin: sign-ins of `user` accounts; super_admin: every row.
- *   GET /api/admin/audit?source=account&action&targetId&limit&offset   (default source)
+ *   GET /api/admin/audit?source=account&action&targetId&range&limit&offset   (default source)
  *       the `audit_log` table — admin: `user.*` actions on `user` accounts;
  *       super_admin: every action.
  *   GET /api/admin/audit?source=system&…
@@ -21,6 +21,7 @@
 import { registerApiRoute } from '../../auth/apiRouteRegistry.mjs';
 import { ROLE_SUPER_ADMIN } from '../../auth/authRoles.mjs';
 import { requireActor } from '../../auth/requireActor.mjs';
+import { rangeStart } from './activityRange.mjs';
 import { parseAccountAuditQuery, parseLoginLogQuery } from './usersBoundary.mjs';
 import { bootedState, guarded, sendError, sendInvalid, sendResult } from './usersHttp.mjs';
 import { logQueriesFor, visibleRoles } from './usersRoutes.mjs';
@@ -63,7 +64,8 @@ export function installAdminLogRoutes(middlewares, { getState }) {
     const actor = req.gevActor;
     const queries = logQueriesFor(await bootedState(getState));
     const roles = actor.role === ROLE_SUPER_ADMIN ? null : visibleRoles(actor);
-    const page = queries.loginLog({ ...query, roles });
+    const { range, ...filter } = query;
+    const page = queries.loginLog({ ...filter, since: rangeStart(range), roles });
     return sendResult(res, { ok: true, ...page, limit: query.limit, offset: query.offset });
   }));
 
@@ -74,7 +76,8 @@ export function installAdminLogRoutes(middlewares, { getState }) {
     if (query.error) return sendInvalid(res, query.error);
     const actor = req.gevActor;
     const scope = actor.role === ROLE_SUPER_ADMIN ? 'all' : 'admin';
-    const page = logQueriesFor(await bootedState(getState)).accountAudit({ ...query, scope });
+    const { range, ...filter } = query;
+    const page = logQueriesFor(await bootedState(getState)).accountAudit({ ...filter, since: rangeStart(range), scope });
     return sendResult(res, { ok: true, source: 'account', scope, entries: redactAuditActors(page.entries, actor), total: page.total, limit: query.limit, offset: query.offset });
   }));
 }
