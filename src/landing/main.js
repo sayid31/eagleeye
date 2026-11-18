@@ -53,7 +53,7 @@ function ctaElement(item, className) {
 
 /**
  * Replace the contents of every `[data-cta-slot]` with the computed buttons.
- * `hero` and `menu` slots get primary + secondary; the `nav` slot gets the primary only.
+ * `hero` slots get primary + secondary; the header (`nav`) slot gets the primary only.
  * @param {import('./landingCta.js').LandingCta} cta
  */
 function renderCta(cta) {

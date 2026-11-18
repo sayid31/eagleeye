@@ -18,7 +18,7 @@ test('landing.html loads nothing from another origin (no CDN, no web fonts)', ()
 
 test('landing.html works without JS: the CTA slots default to "Masuk" → /login', () => {
   const slots = [...html.matchAll(/data-cta-slot="(\w+)"[^>]*>\s*<a [^>]*href="([^"]+)"[^>]*>([^<]+)</g)];
-  assert.deepEqual(slots.map(([, slot, href, label]) => [slot, href, label]), [['menu', '/login', 'Masuk'], ['nav', '/login', 'Masuk'], ['hero', '/login', 'Masuk']]);
+  assert.deepEqual(slots.map(([, slot, href, label]) => [slot, href, label]), [['nav', '/login', 'Masuk'], ['hero', '/login', 'Masuk']]);
   assert.match(html, /<p class="ld-muted" data-access-contact hidden>/, 'request-access contact is hidden until configured');
 });
 

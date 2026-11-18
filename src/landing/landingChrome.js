@@ -47,7 +47,7 @@ export function mountThemeControl(root = document) {
 export function mountMobileMenu(root = document) {
   const header = root.querySelector('.ld-header');
   const button = header?.querySelector('.ld-menu-btn');
-  const nav = header?.querySelector('.ld-nav');
+  const nav = header?.querySelector('.ld-panel');
   if (!header || !button || !nav) return;
   let open = false;
   const render = () => {
@@ -66,7 +66,7 @@ export function mountMobileMenu(root = document) {
   });
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape' || !open) return;
-    const returnFocus = shouldReturnFocus({ open, focusInsideNav: header.contains(document.activeElement) });
+    const returnFocus = shouldReturnFocus({ open, focusInsidePanel: header.contains(document.activeElement) });
     apply('escape');
     if (returnFocus) button.focus();
   });

@@ -31,9 +31,9 @@ export function nextMenuState(open, action) {
 /**
  * Whether Esc should move focus back to the menu button: only when the menu was open and focus sat inside the panel
  * (or on the button itself, where focus already is).
- * @param {{open: boolean, focusInsideNav: boolean}} state
+ * @param {{open: boolean, focusInsidePanel: boolean}} state
  * @returns {boolean}
  */
-export function shouldReturnFocus({ open, focusInsideNav }) {
-  return open && focusInsideNav;
+export function shouldReturnFocus({ open, focusInsidePanel }) {
+  return open && focusInsidePanel;
 }

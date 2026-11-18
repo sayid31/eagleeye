@@ -23,15 +23,15 @@ test('toggle flips; Esc, choosing a link and clicking outside only ever close', 
 });
 
 test('Esc returns focus to the button only while the menu is open and focus is in the header', () => {
-  assert.equal(shouldReturnFocus({ open: true, focusInsideNav: true }), true);
-  assert.equal(shouldReturnFocus({ open: true, focusInsideNav: false }), false);
-  assert.equal(shouldReturnFocus({ open: false, focusInsideNav: true }), false);
+  assert.equal(shouldReturnFocus({ open: true, focusInsidePanel: true }), true);
+  assert.equal(shouldReturnFocus({ open: true, focusInsidePanel: false }), false);
+  assert.equal(shouldReturnFocus({ open: false, focusInsidePanel: true }), false);
 });
 
-test('landing.html wires the disclosure button to the nav it controls (aria-controls → id), closed by default', () => {
+test('landing.html wires the disclosure button to the nav it controls (aria-controls → id of the panel), closed by default', () => {
   const html = readFileSync(fileURLToPath(new URL('../../landing.html', import.meta.url)), 'utf8');
   const button = html.match(/<button class="ld-menu-btn" type="button" aria-expanded="(\w+)" aria-controls="([^"]+)"/);
   assert.ok(button, 'menu button');
   assert.equal(button[1], 'false');
-  assert.match(html, new RegExp(`<nav class="ld-nav" id="${button[2]}" aria-label="[^"]+"`));
+  assert.match(html, new RegExp(`<div class="ld-panel" id="${button[2]}"`));
 });

@@ -27,23 +27,24 @@
         <svg class="ld-brand__mark" viewBox="277 41 288 513" fill="currentColor" aria-hidden="true" focusable="false"><path transform="matrix(1,0,0,-1,469.979,417.2648)" d="M0 0V-.262C7.08 6.28 13.783 12.18 20.103 17.665L10.907 63.06 40.236 35.152C67.551 59.389 84.108 78.814 86.785 120.348L47.618 134.354 86.848 145.082C85.475 173.229 79.544 206.939 69.63 240.325L37.691 221.413 59.702 269.941C44.968 309.262 24.741 345.535 0 368.396V112.549H-20.033C-24.513 117.021-28.045 121.097-29.948 124.358-35.021 133.056-17.812 134.277-14.479 128.478-11.053 144.287-23.437 151.903-38.979 151.903H-58.217C-66.056 151.903-78.162 130.441-86.897 112.549H-98.067V368.396C-122.807 345.535-143.035 309.263-157.768 269.942L-135.757 221.413-167.696 240.325C-177.61 206.939-183.54 173.229-184.914 145.082L-145.685 134.354-184.851 120.349C-182.174 78.814-165.618 59.389-138.303 35.152L-108.972 63.06-118.168 17.664C-111.848 12.179-105.146 6.28-98.067-.262V.001L-86.683-11.382C-89.084-17.458-104.969-58.219-105.224-73.612-105.777-106.917-75.477-115.857-49.033-128.61-22.589-115.857 7.711-106.917 7.159-73.612 6.903-58.218-8.982-17.457-11.382-11.382Z"/></svg>
         <span>EagleEye View</span>
       </a>
-      <nav class="ld-nav" id="ld-nav" aria-label="Bagian halaman">
-        <a href="#lihat">Data</a>
-        <a href="#suara">Suara</a>
-        <a href="#gaya">Gaya</a>
-        <a href="#akses">Akses</a>
-        <a href="#sumber">Sumber</a>
-        <a href="#prinsip">Prinsip</a>
-        <div class="ld-menu__cta ld-cta" data-cta-slot="menu" aria-busy="true"><a class="ld-btn ld-btn--primary" href="/login">Masuk</a></div>
-      </nav>
-      <div class="ld-header__tools">
-        <div class="ld-theme" role="group" aria-label="Tema tampilan">
-          <button type="button" data-theme-value="light" aria-pressed="false" aria-label="Terang"><span class="ld-i ld-i-sun" aria-hidden="true"></span></button>
-          <button type="button" data-theme-value="dark" aria-pressed="false" aria-label="Gelap"><span class="ld-i ld-i-moon" aria-hidden="true"></span></button>
-          <button type="button" data-theme-value="system" aria-pressed="true" aria-label="Sistem"><span class="ld-i ld-i-monitor" aria-hidden="true"></span></button>
+      <button class="ld-menu-btn" type="button" aria-expanded="false" aria-controls="ld-panel" aria-label="Buka menu"><span class="ld-i ld-i-menu" aria-hidden="true"></span></button>
+      <div class="ld-panel" id="ld-panel">
+        <nav class="ld-nav" aria-label="Bagian halaman">
+          <a href="#lihat">Data</a>
+          <a href="#suara">Suara</a>
+          <a href="#gaya">Gaya</a>
+          <a href="#akses">Akses</a>
+          <a href="#sumber">Sumber</a>
+          <a href="#prinsip">Prinsip</a>
+        </nav>
+        <div class="ld-header__tools">
+          <div class="ld-theme" role="group" aria-label="Tema tampilan">
+            <button type="button" data-theme-value="light" aria-pressed="false" aria-label="Terang"><span class="ld-i ld-i-sun" aria-hidden="true"></span></button>
+            <button type="button" data-theme-value="dark" aria-pressed="false" aria-label="Gelap"><span class="ld-i ld-i-moon" aria-hidden="true"></span></button>
+            <button type="button" data-theme-value="system" aria-pressed="true" aria-label="Sistem"><span class="ld-i ld-i-monitor" aria-hidden="true"></span></button>
+          </div>
+          <div class="ld-cta ld-header__cta" data-cta-slot="nav" aria-busy="true"><a class="ld-btn ld-btn--sm" href="/login">Masuk</a></div>
         </div>
-        <div class="ld-cta ld-header__cta" data-cta-slot="nav" aria-busy="true"><a class="ld-btn ld-btn--sm" href="/login">Masuk</a></div>
-        <button class="ld-menu-btn" type="button" aria-expanded="false" aria-controls="ld-nav" aria-label="Buka menu"><span class="ld-i ld-i-menu" aria-hidden="true"></span></button>
       </div>
     </div>
   </header>

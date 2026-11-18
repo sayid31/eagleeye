@@ -10,7 +10,7 @@ import { focusInfo, press, tabUntil, waitForFocus } from './keyboard.mjs';
 
 const MAIN = 'main#main-content';
 const MENU_BUTTON = '.ld-menu-btn';
-const NAV = '#ld-nav';
+const NAV = '#ld-panel';
 const visible = (page, selector) => page.$eval(selector, (el) => { const box = el.getBoundingClientRect(); return box.width > 0 && box.height > 0 && getComputedStyle(el).visibility !== 'hidden'; });
 const heroCta = (page) => page.$eval('[data-cta-slot="hero"] a', (a) => ({ text: a.textContent.trim(), href: a.getAttribute('href') }));
 
@@ -60,13 +60,13 @@ export const LANDING_PROBES = [
     id: 'landing-mobile-menu', role: 'anonymous', viewport: 'mobile', theme: 'dark', path: '/', waitFor: MAIN,
     async run(page) {
       const expanded = () => page.$eval(MENU_BUTTON, (el) => el.getAttribute('aria-expanded'));
-      assert.equal(await visible(page, NAV), false, 'nav is collapsed on a phone');
+      assert.equal(await visible(page, NAV), false, 'panel is collapsed on a phone');
       assert.equal(await expanded(), 'false');
       await page.focus(MENU_BUTTON);
       await page.keyboard.press('Enter');
       assert.equal(await expanded(), 'true');
       assert.equal(await visible(page, NAV), true);
-      assert.equal(await page.$eval(MENU_BUTTON, (el) => el.getAttribute('aria-controls')), 'ld-nav');
+      assert.equal(await page.$eval(MENU_BUTTON, (el) => el.getAttribute('aria-controls')), 'ld-panel');
       await press(page, 'Tab');
       assert.equal((await focusInfo(page, NAV)).inside, true, 'Tab leads into the opened menu');
       await page.keyboard.press('Escape');
@@ -74,7 +74,7 @@ export const LANDING_PROBES = [
       assert.equal(await visible(page, NAV), false);
       await waitForFocus(page, MENU_BUTTON);
       await page.keyboard.press('Space');
-      await page.click(`${NAV} a[href="#sumber"]`);
+      await page.click(`${NAV} .ld-nav a[href="#sumber"]`);
       assert.equal(await expanded(), 'false', 'choosing a link closes the menu');
     },
   },
@@ -87,7 +87,7 @@ export const LANDING_PROBES = [
     setup: (page) => answerJson(page, { '/api/me': LOCKED_USER_ME }),
     async run(page) {
       const geometry = await page.evaluate(() => {
-        const box = (selector) => { const el = document.querySelector(selector); return el ? el.getBoundingClientRect() : null; };
+        const box = (selector) => { const el = document.querySelector(selector); if (!el) return null; const { top, bottom, left, right, width, height } = el.getBoundingClientRect(); return { top, bottom, left, right, width, height }; };
         const banner = box('#account-banner');
         const header = ['#title-bar', '#top-center-actions', '#camera-angle-row'].map(box).filter((rect) => rect && rect.height > 0);
         return { banner, headerBottom: Math.max(0, ...header.map((rect) => rect.bottom)), scrollWidth: document.documentElement.scrollWidth, innerWidth: window.innerWidth };
