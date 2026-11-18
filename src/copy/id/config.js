@@ -86,7 +86,7 @@ export const PROVIDERS_COPY = Object.freeze({
   columns: { provider: 'Penyedia', status: 'Status kunci', source: 'Sumber', test: 'Tes koneksi terakhir', actions: 'Aksi' },
   status: { set: 'Terpasang', unset: 'Belum', rejected: 'Ditolak' },
   sources: { env: '.env', pinokio: 'ENVIRONMENT Pinokio', external: 'Keychain atau shell', none: '—' },
-  tier: { metered: 'Akun berbayar', free: 'Free tier' },
+  tier: { metered: 'Akun berbayar', free: 'Gratis' },
   test: { never: 'Belum dites', at: (label, time) => `${label} • ${time}` },
   actions: { change: 'Ubah kunci', install: 'Pasang kunci', changeLabel: (name) => `Ubah kunci ${name}`, installLabel: (name) => `Pasang kunci ${name}` },
   empty: { title: 'Tidak ada penyedia', description: 'Server tidak mengirim daftar penyedia. Muat ulang halaman.' },
