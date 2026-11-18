@@ -26,6 +26,11 @@ export const PUBLIC_ASSET_FILES = Object.freeze([
   '/style.css', '/logo.svg', '/pin.svg', '/location.svg', '/visual-presets.svg', '/voice-mic.svg',
 ]);
 const MODEL_FILE = /^\/models\/[A-Za-z0-9_-]+\.glb$/;
+/**
+ * Self-hosted UI fonts (src/ui/fonts.css points at these woff2 files). The login page is public and the dev server
+ * serves them from node_modules, so exactly this shape is allowed: one font file, nothing else in the package.
+ */
+const FONT_FILE = /^\/node_modules\/@fontsource-variable\/[a-z0-9-]+\/files\/[a-z0-9-]+\.woff2$/;
 /** `/@fs/` (absolute file paths) is needed only when Vite runs from another root (Pinokio). */
 const FS_PREFIX = '/@fs/';
 // Encoded dot/slash/backslash/NUL: a path a later decoder could turn into a traversal.
@@ -50,6 +55,7 @@ export function isPlainPath(pathname) {
 export function isPublicAsset(pathname, { mode = 'dev', allowFsPrefix = false } = {}) {
   if (!isPlainPath(pathname)) return false;
   if (PUBLIC_ASSET_FILES.includes(pathname) || MODEL_FILE.test(pathname)) return true;
+  if (mode === 'dev' && FONT_FILE.test(pathname)) return true;
   const prefixes = mode === 'preview' ? PREVIEW_ASSET_PREFIXES : DEV_ASSET_PREFIXES;
   if (prefixes.some((prefix) => pathname.startsWith(prefix))) return true;
   return mode === 'dev' && allowFsPrefix && pathname.startsWith(FS_PREFIX);

@@ -7,7 +7,10 @@
   <meta name="description" content="EagleEye View: konsol intelijen geospasial real-time di browser. Pesawat, kapal, satelit, gempa, titik api, lalu lintas, dan CCTV publik di atas globe 3D, dengan kendali suara." />
   <meta name="theme-color" content="#07080d" />
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <!-- Anti-flash theme script: must stay before any stylesheet. Same text as THEME_INIT_SCRIPT (src/lib/themeCore.js). -->
+  <script>(function(){var p='system';try{p=localStorage.getItem('gev-theme')||'system'}catch(e){p='system'}if(p!=='light'&&p!=='dark')p='system';var d=p==='dark'||(p==='system'&&typeof matchMedia==='function'&&matchMedia('(prefers-color-scheme: dark)').matches);var r=document.documentElement;r.classList.toggle('dark',d);r.style.colorScheme=d?'dark':'light'})();</script>
   <!-- No web fonts: system stacks only, so the page makes no third-party request. -->
+  <link rel="stylesheet" href="/src/ui/tokens.css" />
   <link rel="stylesheet" href="/src/landing/landing.css" />
   <script type="module" src="/src/landing/main.js"></script>
 </head>

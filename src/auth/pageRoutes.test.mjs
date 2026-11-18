@@ -87,3 +87,14 @@ test('/ always rewrites to the public landing, keeping the query for its legacy-
   assert.deepEqual(decide('/?trafficDebug=1', ROLES.admin), { action: 'serve', url: '/landing.html?trafficDebug=1' });
   assert.equal(pageRouteDecision({ method: 'POST', url: '/', actor: null }).action, 'not-found');
 });
+
+test('assets: only self-hosted UI font files (woff2) from node_modules are public, and only in dev', () => {
+  const font = '/node_modules/@fontsource-variable/geist/files/geist-latin-wght-normal.woff2';
+  assert.equal(isPublicAsset(font), true);
+  assert.equal(isPublicAsset('/node_modules/@fontsource-variable/geist-mono/files/geist-mono-latin-ext-wght-normal.woff2'), true);
+  assert.equal(isPublicAsset(font, { mode: 'preview' }), false, 'preview serves hashed /assets/ only');
+  assert.equal(isPublicAsset('/node_modules/@fontsource-variable/geist/package.json'), false);
+  assert.equal(isPublicAsset('/node_modules/@fontsource-variable/geist/files/../package.json'), false);
+  assert.equal(isPublicAsset('/node_modules/@fontsource-variable/geist/files/x.woff2.map'), false);
+  assert.equal(isPublicAsset('/node_modules/better-auth/package.json'), false);
+});

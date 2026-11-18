@@ -1,0 +1,103 @@
+/*
+ * Design tokens of EagleEye View's work surfaces (login, account, admin, dev, landing): the shadcn/ui neutral theme,
+ * oklch, with the deliberate overrides listed below. Plain CSS custom properties, no Tailwind and no @apply, so the
+ * vanilla landing imports this file as-is and src/ui/app.css maps the same names into Tailwind (`@theme inline`).
+ * The map console (style.css) does NOT use these tokens.
+ *
+ * Overrides of the stock shadcn neutral values (why: docs/DECISIONS.md, "UI tokens"). Every pair is gated by
+ * `npm run qa:contrast` (scripts/ui-contrast.mjs), so edit values there-and-here together:
+ *   - --primary / --ring / --sidebar-primary: one restrained blue (hue 262) instead of near-black/white.
+ *   - --input: raised until a control border reaches 3:1 on the page and on cards (WCAG 1.4.11; stock = 1.8-2.1:1).
+ *   - --border: slightly raised, still decorative (cards, dividers). Control borders use --input.
+ *   - --muted-foreground (light): darkened so it reads 4.5:1 on --muted too (stock = 4.3:1).
+ *   - --link: text-safe blue for inline links (4.5:1 on background, card and muted in both themes).
+ *   - --destructive: kept inside the sRGB gamut; light value darkened so its soft (10% tint) variant reads 4.5:1.
+ *   - --success / --warning / --info (+ -foreground): semantic status colours; --radius is 0.5rem.
+ * All colours are opaque so the contrast gate reads the exact value the browser paints.
+ */
+:root {
+  color-scheme: light;
+  --font-sans: 'Geist Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --radius: 0.5rem;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.52 0.17 262);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.5 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.54 0.2 27);
+  --border: oklch(0.87 0 0);
+  --input: oklch(0.64 0 0);
+  --ring: oklch(0.56 0.16 262);
+  --link: oklch(0.52 0.17 262);
+  --success: oklch(0.5 0.12 150);
+  --success-foreground: oklch(0.985 0 0);
+  --warning: oklch(0.5 0.1 65);
+  --warning-foreground: oklch(0.985 0 0);
+  --info: oklch(0.5 0.1 235);
+  --info-foreground: oklch(0.985 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: oklch(0.52 0.17 262);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: oklch(0.87 0 0);
+  --sidebar-ring: oklch(0.56 0.16 262);
+}
+
+.dark {
+  color-scheme: dark;
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.56 0.17 262);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.18 22);
+  --border: oklch(0.34 0 0);
+  --input: oklch(0.52 0 0);
+  --ring: oklch(0.62 0.15 262);
+  --link: oklch(0.74 0.12 262);
+  --success: oklch(0.75 0.15 150);
+  --success-foreground: oklch(0.145 0 0);
+  --warning: oklch(0.82 0.14 80);
+  --warning-foreground: oklch(0.145 0 0);
+  --info: oklch(0.76 0.11 230);
+  --info-foreground: oklch(0.145 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.56 0.17 262);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(0.34 0 0);
+  --sidebar-ring: oklch(0.62 0.15 262);
+}
