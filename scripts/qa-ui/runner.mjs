@@ -52,10 +52,12 @@ async function runCell(context, env, { page: spec, role, theme, viewport }) {
   const page = await openPage(context, { theme, viewport });
   const recorder = recordConsole(page);
   try {
+    await spec.setup?.(page);
     await page.goto(`${env.url}${spec.path}`, { waitUntil: 'domcontentloaded', timeout: 30_000 });
     await settle(page, spec.waitFor);
     result.finalPath = new URL(page.url()).pathname;
-    if (result.finalPath !== spec.path) result.failures.push(`landed on ${result.finalPath}, expected ${spec.path}`);
+    const expectedPath = spec.path.split('?')[0];
+    if (result.finalPath !== expectedPath) result.failures.push(`landed on ${result.finalPath}, expected ${expectedPath}`);
     const dark = await page.evaluate(() => document.documentElement.classList.contains('dark'));
     if (dark !== (theme === 'dark')) result.failures.push(`theme not applied: html.dark=${dark}, wanted ${theme}`);
     if (env.axe !== false) result.axe = await runAxe(page);

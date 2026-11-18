@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { LOGIN_NOTICES, SIGN_IN_ERRORS, SIGN_IN_GENERIC_ERROR } from './loginCopy.js';
-import { MAX_NEXT_HASH_LENGTH, afterSignInLocation, loginMessage, loginPageState, nextWithHash, showGoogleButton, signInErrorText } from './loginView.js';
+import { findGlossaryViolations } from '../copy/id/glossary.js';
+import { LOGIN_COPY, LOGIN_NOTICES, SIGN_IN_ERRORS, SIGN_IN_GENERIC_ERROR } from '../copy/id/login.js';
+import { MAX_NEXT_HASH_LENGTH, afterSignInLocation, loginFieldProblems, loginMessage, loginPageState, nextWithHash, showGoogleButton, signInErrorText, signInFocusTarget } from './loginView.js';
 
 const q = (query) => new URLSearchParams(query);
 const signedIn = (role, home, extra = {}) => ({ configured: true, signedIn: true, home, googleSignIn: false, user: { role, mustChangePassword: false, ...extra } });

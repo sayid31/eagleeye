@@ -5,8 +5,11 @@
  * `--all-roles` also runs the others. `anonymous` = no session. `waitFor` is a selector that means "rendered".
  *
  * @typedef {{id: string, path: string, roles: Array<'anonymous' | 'user' | 'admin' | 'super_admin'>, waitFor: string,
- *   surface: 'react' | 'vanilla', note?: string}} QaPage
+ *   surface: 'react' | 'vanilla', note?: string, setup?: (page: import('puppeteer').Page) => Promise<void>}} QaPage
+ *   `path` may carry a query; `setup` runs before navigation (see mocks.mjs).
  */
+
+import { SETUPS } from './mocks.mjs';
 
 const SHELL_READY = '#main-content h1, #main-content [role="alert"], #main-content [data-slot="empty"]';
 const ADMIN_ROLES = ['admin', 'super_admin'];
@@ -16,9 +19,16 @@ const shell = (id, path, roles) => ({ id, path, roles, waitFor: SHELL_READY, sur
 /** @type {QaPage[]} */
 export const PAGES = [
   { id: 'landing', path: '/', roles: ['anonymous'], waitFor: 'main', surface: 'vanilla' },
-  { id: 'login', path: '/login', roles: ['anonymous'], waitFor: 'form, [role="alert"], main', surface: 'react' },
-  { id: 'account', path: '/account', roles: ['user', 'admin', 'super_admin'], waitFor: 'main', surface: 'react' },
-  { id: 'account-password', path: '/account/password', roles: ['user'], waitFor: 'form, main', surface: 'react' },
+  { id: 'login', path: '/login', roles: ['anonymous'], waitFor: 'main form', surface: 'react' },
+  { id: 'login-dev-google', path: '/login?next=/dev', roles: ['anonymous'], waitFor: 'main form', surface: 'react', setup: SETUPS.googleConfigured, note: 'Google configured (mocked /api/me)' },
+  { id: 'login-session-notice', path: '/login?notice=session', roles: ['anonymous'], waitFor: 'main [role="alert"]', surface: 'react' },
+  { id: 'login-refused', path: '/login?error=ACCOUNT_DISABLED', roles: ['anonymous'], waitFor: 'main [role="alert"]', surface: 'react' },
+  { id: 'login-not-configured', path: '/login', roles: ['anonymous'], waitFor: 'main [role="alert"]', surface: 'react', setup: SETUPS.notConfigured, note: 'login switched off (mocked /api/me)' },
+  { id: 'account', path: '/account', roles: ['user', 'admin', 'super_admin'], waitFor: '#main-content [data-slot="tabs"]', surface: 'react' },
+  { id: 'account-security', path: '/account?tab=security', roles: ['admin'], waitFor: '#main-content form', surface: 'react' },
+  { id: 'account-google', path: '/account?tab=security', roles: ['super_admin'], waitFor: '#main-content [data-slot="card"]', surface: 'react', setup: SETUPS.googleOnlyAccount, note: 'Google-only account (mocked get-session)' },
+  { id: 'account-password', path: '/account/password', roles: ['user'], waitFor: '#main-content form', surface: 'react' },
+  { id: 'account-password-forced', path: '/account/password', roles: ['user'], waitFor: '#main-content form', surface: 'react', setup: SETUPS.forcedChange, note: 'forced change (mocked /api/me)' },
   shell('admin-overview', '/admin', ADMIN_ROLES),
   shell('admin-users', '/admin/users', ADMIN_ROLES),
   shell('admin-activity-login', '/admin/activity/login', ADMIN_ROLES),

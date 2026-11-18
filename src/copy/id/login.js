@@ -1,24 +1,26 @@
 /**
- * Every Indonesian string shown by `/login`, `/account` and `/account/password`
- * (one place to review or translate). Technical terms (email, password, Google)
- * stay in English, as in the rest of the console.
+ * Indonesian UI strings of `/login`, `/account` and `/account/password` (one place to review or translate).
+ * Technical terms (email, password, Google) stay in English, as in the rest of the console.
  *
- * @module login/loginCopy
+ * @module copy/id/login
  */
 
-import { PASSWORD_MAX } from '../auth/passwordPolicy.mjs';
-
-export const BRAND = Object.freeze({ name: 'EagleEye', accent: 'View' });
+import { PASSWORD_MAX } from '../../auth/passwordPolicy.mjs';
+import { APP_NAME } from './common.js';
 
 export const LOGIN_COPY = Object.freeze({
+  title: `Masuk ke ${APP_NAME}`,
   lead: 'Masuk dengan akun yang dibuat admin.',
+  pageTitle: 'Masuk',
   checking: 'Memeriksa sesi…',
   notConfiguredTitle: 'Login belum dikonfigurasi',
   notConfiguredBody: 'Server belum menyiapkan login. Pemilik server dapat menjalankan',
   notConfiguredCommand: 'npm run doctor',
   sessionCheckFailed: 'Sesi tidak bisa diperiksa. Muat ulang halaman ini.',
   email: 'Email',
+  emailRequired: 'Isi email Anda.',
   password: 'Password',
+  passwordRequired: 'Isi password Anda.',
   submit: 'Masuk',
   submitting: 'Memproses…',
   google: 'Masuk dengan Google',
@@ -26,9 +28,9 @@ export const LOGIN_COPY = Object.freeze({
   googleStartFailed: 'Google tidak bisa dibuka. Coba lagi.',
   divider: 'atau',
   forgot: 'Lupa password?',
+  forgotTitle: 'Lupa password?',
   forgotAnswer: 'Hubungi admin Anda untuk mengatur ulang password.',
-  showPassword: 'Tampilkan password',
-  hidePassword: 'Sembunyikan password',
+  backHome: 'Kembali ke beranda',
 });
 
 /** Sign-in refusals by server code. Wrong password and throttled share the generic text on purpose. */
@@ -50,15 +52,24 @@ export const LOGIN_NOTICES = Object.freeze({
 });
 
 export const PASSWORD_COPY = Object.freeze({
-  forcedTitle: 'Ganti password',
+  title: 'Ganti password',
   forcedLead: 'Password Anda diatur oleh admin. Pilih password baru sebelum melanjutkan.',
   voluntaryLead: 'Pilih password baru untuk akun Anda.',
+  forcedAlertTitle: 'Ganti password untuk melanjutkan',
+  forcedAlertBody: 'Anda belum bisa memakai EagleEye View sebelum memilih password sendiri.',
   otherDevices: 'Setelah diganti, perangkat lain otomatis dikeluarkan.',
   current: 'Password saat ini',
   next: 'Password baru',
+  nextDescription: 'Kalimat panjang lebih kuat dari kombinasi simbol.',
   confirm: 'Ulangi password baru',
+  requirementsLabel: 'Syarat password baru',
   /** @param {number} min */
-  hint: (min) => `Minimal ${min} karakter, maksimal ${PASSWORD_MAX}. Bukan email atau nama Anda. Kalimat panjang lebih kuat dari kombinasi simbol.`,
+  requirementLength: (min) => `Minimal ${min} karakter`,
+  requirementIdentity: 'Bukan email atau nama Anda',
+  requirementDifferent: 'Berbeda dari password saat ini',
+  requirementMatch: 'Kedua password baru sama',
+  requirementMet: 'terpenuhi',
+  requirementUnmet: 'belum terpenuhi',
   submit: 'Simpan password',
   submitting: 'Menyimpan…',
   success: 'Password berhasil diganti.',
@@ -87,30 +98,40 @@ export const PASSWORD_ERRORS = Object.freeze({
 
 export const ACCOUNT_COPY = Object.freeze({
   title: 'Akun saya',
+  description: 'Kelola profil dan keamanan akun Anda.',
+  tabsLabel: 'Bagian akun',
+  tabProfile: 'Profil',
+  tabSecurity: 'Keamanan',
   back: 'Kembali',
-  loading: 'Memuat akun…',
-  loadFailed: 'Akun tidak bisa dimuat. Muat ulang halaman ini.',
-  profile: 'Profil',
+  backToMap: 'Kembali ke peta',
+  backToAdmin: 'Kembali ke Admin',
+  backToDev: 'Kembali ke Developer',
+  loading: 'Memuat akun',
+  loadFailedTitle: 'Akun tidak bisa dimuat',
+  loadFailed: 'Periksa koneksi Anda lalu coba lagi.',
+  profileTitle: 'Profil',
+  profileDescription: 'Nama tampilan Anda di EagleEye View.',
   email: 'Email',
   emailNote: 'Email tidak bisa diubah sendiri. Hubungi admin bila perlu.',
-  role: 'Peran',
   name: 'Nama tampilan',
-  saveName: 'Simpan nama',
+  saveName: 'Simpan perubahan',
   savingName: 'Menyimpan…',
   nameSaved: 'Nama disimpan.',
   nameRequired: 'Nama tidak boleh kosong.',
   /** @param {number} max */
   nameTooLong: (max) => `Nama maksimal ${max} karakter.`,
   nameFailed: 'Nama tidak bisa disimpan. Coba lagi.',
-  passwordSection: 'Password',
-  googleManaged: 'Akun ini masuk lewat Google — keamanannya (password, verifikasi 2 langkah) dikelola akun Google Anda.',
-  sessions: 'Perangkat',
+  passwordTitle: 'Password',
+  googleManagedTitle: 'Password dikelola Google',
+  googleManaged: 'Akun ini masuk lewat Google. Password dan verifikasi 2 langkah dikelola di akun Google Anda.',
+  sessionsTitle: 'Perangkat lain',
   sessionsLead: 'Keluarkan akun ini dari semua perangkat lain. Perangkat ini tetap masuk.',
   revokeOthers: 'Keluar dari perangkat lain',
-  revoking: 'Memproses…',
+  revokeTitle: 'Keluar dari perangkat lain?',
+  revokeImpact: 'Semua perangkat lain yang memakai akun ini akan keluar dan harus masuk lagi. Perangkat ini tetap masuk. Anda bisa masuk lagi di perangkat itu kapan saja.',
   revoked: 'Perangkat lain sudah dikeluarkan.',
-  revokeFailed: 'Perangkat lain tidak bisa dikeluarkan. Coba lagi.',
   signOut: 'Keluar',
+  signingOut: 'Keluar…',
 });
 
 /** Role names as shown to the account holder. */

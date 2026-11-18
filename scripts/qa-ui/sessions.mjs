@@ -13,11 +13,12 @@ import { mintSessionCookie } from '../../src/auth/authSessionMint.mjs';
 import { PASSWORD_SET_BY } from '../../src/auth/authRoles.mjs';
 import { QA_SUPER_ADMIN_EMAIL, REPO_ROOT } from './server.mjs';
 
+// admin/user hold a password (so /account shows the password section, as for any password account); super_admin above.
 const ACCOUNTS = Object.freeze({
   // A super_admin must hold a CLI-set password (or a Google account) or the actor resolver refuses the role.
   super_admin: { email: QA_SUPER_ADMIN_EMAIL, name: 'Dev Owner', role: 'super_admin', passwordSetBy: PASSWORD_SET_BY.cli },
-  admin: { email: 'admin@example.test', name: 'Ani Admin', role: 'admin' },
-  user: { email: 'user@example.test', name: 'Budi Pengguna', role: 'user' },
+  admin: { email: 'admin@example.test', name: 'Ani Admin', role: 'admin', passwordSetBy: PASSWORD_SET_BY.self },
+  user: { email: 'user@example.test', name: 'Budi Pengguna', role: 'user', passwordSetBy: PASSWORD_SET_BY.admin },
 });
 
 /**
