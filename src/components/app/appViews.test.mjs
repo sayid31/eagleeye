@@ -11,9 +11,10 @@ import { readSidebarOpen, writeSidebarOpen } from '../../lib/sidebarState.js';
 
 const GROUPS = [
   { id: 'main', title: null, items: [{ id: 'home', label: 'Ringkasan', path: '/' }] },
-  { id: 'control', title: 'Kendali', items: [
-    { id: 'kill', label: 'Sakelar darurat', path: '/kill-switches' },
-    { id: 'usage', label: 'Pemakaian & Biaya', path: '/usage', tabs: [{ id: 'budget', label: 'Anggaran provider', path: '/usage/budget' }, { id: 'ai', label: 'Pemakaian AI', path: '/usage/ai' }] },
+  { id: 'kill', title: null, items: [{ id: 'kill', label: 'Kill switch', path: '/kill-switches' }] },
+  { id: 'server-log', title: 'Server Log', path: '/server-log', items: [
+    { id: 'log', label: 'Server Log', path: '/server-log' },
+    { id: 'audit', label: 'Audit Log', path: '/server-log/audit' },
   ] },
 ];
 
@@ -56,17 +57,18 @@ test('confirmState: every guard must be satisfied and busy blocks', () => {
 test('navModel: resolves the longest matching path, builds breadcrumbs and titles', () => {
   assert.equal(pathMatches('/', '/'), true);
   assert.equal(pathMatches('/users', '/'), false);
-  assert.equal(pathMatches('/usage/ai', '/usage'), true);
-  assert.equal(pathMatches('/usagex', '/usage'), false);
-  assert.equal(navItems(GROUPS).length, 3);
-  assert.equal(resolveNav(GROUPS, '/usage/ai').tab.id, 'ai');
-  assert.equal(resolveNav(GROUPS, '/usage').tab, null);
+  assert.equal(pathMatches('/server-log/audit', '/server-log'), true);
+  assert.equal(pathMatches('/server-logx', '/server-log'), false);
+  assert.equal(navItems(GROUPS).length, 4);
+  assert.equal(resolveNav(GROUPS, '/server-log/audit').item.id, 'audit', 'the longest path wins over the parent page');
+  assert.equal(resolveNav(GROUPS, '/server-log').item.id, 'log');
   assert.equal(resolveNav(GROUPS, '/nope'), null);
   assert.deepEqual(breadcrumbTrail(GROUPS, '/'), [{ label: 'Ringkasan' }]);
-  assert.deepEqual(breadcrumbTrail(GROUPS, '/kill-switches'), [{ label: 'Kendali' }, { label: 'Sakelar darurat' }]);
-  assert.deepEqual(breadcrumbTrail(GROUPS, '/usage/ai'), [{ label: 'Kendali' }, { label: 'Pemakaian & Biaya', href: '/usage' }, { label: 'Pemakaian AI' }]);
+  assert.deepEqual(breadcrumbTrail(GROUPS, '/kill-switches'), [{ label: 'Kill switch' }]);
+  assert.deepEqual(breadcrumbTrail(GROUPS, '/server-log'), [{ label: 'Server Log' }], 'a page named like its group is one crumb');
+  assert.deepEqual(breadcrumbTrail(GROUPS, '/server-log/audit'), [{ label: 'Server Log' }, { label: 'Audit Log' }]);
   assert.deepEqual(breadcrumbTrail(GROUPS, '/nope'), []);
-  assert.equal(navTitleFor(GROUPS, '/usage/budget'), 'Pemakaian & Biaya: Anggaran provider');
+  assert.equal(navTitleFor(GROUPS, '/server-log/audit'), 'Audit Log');
   assert.equal(navTitleFor(GROUPS, '/'), 'Ringkasan');
   assert.equal(navTitleFor(GROUPS, '/nope'), null);
 });

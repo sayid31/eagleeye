@@ -1,5 +1,5 @@
 // src/components/app/AppSidebar.jsx
-/** Sidebar of the shell: brand, menu (titled groups are labelled sub-lists; collapsible to icons on desktop, a Sheet with every item on mobile), account foot. */
+/** Sidebar of the shell: brand, grouped menu (desktop collapsible to icons, mobile Sheet with every item), account menu. */
 import { Link } from 'react-router';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -7,7 +7,7 @@ import {
   SidebarMenuItem, SidebarRail, useSidebar,
 } from '@/components/ui/sidebar';
 import { SHELL_COPY } from '@/copy/id/shell';
-import { SidebarAccount } from './SidebarAccount.jsx';
+import { UserMenu } from './UserMenu.jsx';
 import { navIcon } from './navIcons.js';
 import { pathMatches } from './navModel.js';
 
@@ -37,13 +37,19 @@ export function AppSidebar({ brand, area, groups, pathname, user, areaLink, onSi
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center gap-2 p-2">
-          <img src="/logo.svg" alt="" width="20" height="36" className="h-8 w-auto shrink-0" />
-          <span className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
-            <span className="truncate font-semibold">{brand.name}</span>
-            {brand.badge ? <Badge variant="secondary" className="mt-0.5 w-fit">{brand.badge}</Badge> : null}
-          </span>
-        </div>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton size="lg" asChild>
+              <a href="/app" title={SHELL_COPY.openMap}>
+                <img src="/logo.svg" alt="" width="20" height="36" className="h-8 w-auto shrink-0" />
+                <span className="grid flex-1 text-left leading-tight">
+                  <span className="truncate font-semibold">{brand.name}</span>
+                  {brand.badge ? <Badge variant="secondary" className="mt-0.5 w-fit">{brand.badge}</Badge> : null}
+                </span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
         <nav aria-label={SHELL_COPY.sidebarLabel(SHELL_COPY.areas[area] ?? area)} className="flex flex-col gap-2">
@@ -57,7 +63,7 @@ export function AppSidebar({ brand, area, groups, pathname, user, areaLink, onSi
           ))}
         </nav>
       </SidebarContent>
-      <SidebarFooter><SidebarAccount user={user} areaLink={areaLink} onSignOut={onSignOut} /></SidebarFooter>
+      <SidebarFooter><UserMenu user={user} areaLink={areaLink} onSignOut={onSignOut} /></SidebarFooter>
       <SidebarRail />
     </Sidebar>
   );

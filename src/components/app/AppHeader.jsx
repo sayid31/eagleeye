@@ -1,5 +1,5 @@
 // src/components/app/AppHeader.jsx
-/** Top bar of the shell: sidebar trigger and breadcrumb (a labelled <nav>). Sticky, 56 px tall. */
+/** Top bar of the shell: sidebar trigger, breadcrumb (a labelled <nav>), theme toggle. Sticky, 56 px tall. */
 import { Fragment } from 'react';
 import { Link } from 'react-router';
 import {
@@ -7,6 +7,7 @@ import {
 } from '@/components/ui/breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { SidebarTrigger } from '@/components/ui/sidebar';
+import { ThemeToggle } from './ThemeToggle.jsx';
 
 /** @param {{crumbs: import('./navModel.js').Crumb[], badge?: string}} props */
 export function AppHeader({ crumbs, badge }) {
@@ -32,6 +33,7 @@ export function AppHeader({ crumbs, badge }) {
         </BreadcrumbList>
       </Breadcrumb>
       {badge ? <span className="hidden rounded-md bg-secondary px-2 py-0.5 text-xs font-medium text-secondary-foreground sm:inline">{badge}</span> : null}
+      <ThemeToggle />
     </header>
   );
 }
