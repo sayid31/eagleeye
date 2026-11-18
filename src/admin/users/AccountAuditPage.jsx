@@ -8,7 +8,7 @@ import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { Badge } from '@/components/ui/badge';
 import { AUDIT_ACTIONS } from '../../auth/auditLog.mjs';
-import { ACTIVITY_COPY } from '../../copy/id/users.js';
+import { ACTIVITY_COPY } from '../../copy/en/users.js';
 import { ActivityFilters } from './ActivityFilters.jsx';
 import { TwoLine } from './ActivityCells.jsx';
 import { FilterSelect } from './FilterSelect.jsx';

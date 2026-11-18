@@ -2,7 +2,7 @@
  * Indonesian UI strings of `/login`, `/account` and `/account/password` (one place to review or translate).
  * Technical terms (email, password, Google) stay in English, as in the rest of the console.
  *
- * @module copy/id/login
+ * @module copy/en/login
  */
 
 import { PASSWORD_MAX } from '../../auth/passwordPolicy.mjs';

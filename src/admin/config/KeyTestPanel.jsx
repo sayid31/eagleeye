@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { CircleCheck, CircleX, TriangleAlert, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { KEY_SHEET_COPY as T } from '@/copy/id/config';
+import { KEY_SHEET_COPY as T } from '@/copy/en/config';
 import { testKey } from '../api/adminKeysApi.js';
 import { failureMessage } from './failureMessage.js';
 import { describeTestResult, testNote } from './providerKeysView.js';

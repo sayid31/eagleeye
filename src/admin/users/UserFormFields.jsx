@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { FormField } from '@/components/app/FormField.jsx';
 import { PasswordInput } from '@/components/app/PasswordInput.jsx';
 import { CAPABILITY_KEYS } from '../../auth/authCapabilities.mjs';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { passwordRequirements } from './userFormView.js';
 
 /** One capability switch with its one-line cost / impact description. */

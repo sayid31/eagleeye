@@ -7,7 +7,7 @@
 
 import { loginUrlFor } from '../auth/nextPath.mjs';
 import { MAX_NAME_LENGTH_CLIENT } from './accountApi.js';
-import { ACCOUNT_COPY, ROLE_LABELS } from '../copy/id/login.js';
+import { ACCOUNT_COPY, ROLE_LABELS } from '../copy/en/login.js';
 import { CHANGE_PASSWORD_PATH } from './loginView.js';
 
 /**

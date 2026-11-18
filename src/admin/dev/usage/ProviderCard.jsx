@@ -5,7 +5,7 @@ import { Link } from 'react-router';
 import { Button } from '@/components/ui/button';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
-import { USAGE_COPY as T } from '@/copy/id/system';
+import { USAGE_COPY as T } from '@/copy/en/system';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { UsageMeter } from './UsageMeter.jsx';
 

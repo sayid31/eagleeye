@@ -12,7 +12,7 @@
  * @module admin/config/personaForm
  */
 
-import { PERSONA_COPY } from '../../copy/id/configForms.js';
+import { PERSONA_COPY } from '../../copy/en/configForms.js';
 import { REFUSAL_MAX, TOPICS_MAX, defaultVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
 
 const COPY = PERSONA_COPY;

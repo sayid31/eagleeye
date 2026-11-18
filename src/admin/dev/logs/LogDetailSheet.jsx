@@ -1,7 +1,7 @@
 // src/admin/dev/logs/LogDetailSheet.jsx
 /** Full text of one log entry (the table clips long messages): code, message, counts, times, context. */
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
-import { SERVER_LOG_COPY as T } from '@/copy/id/systemLogs';
+import { SERVER_LOG_COPY as T } from '@/copy/en/systemLogs';
 import { useReturnFocus } from '@/lib/useReturnFocus';
 import { LogLevelBadge } from './LogLevelBadge.jsx';
 import { describeContext, detailFacts, levelBadge } from './serverLogView.js';

@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
-import { SHELL_COPY } from '@/copy/id/shell';
+import { SHELL_COPY } from '@/copy/en/shell';
 import { fetchMe } from '../auth/authClientApi.js';
 import { adminGateDecision } from './adminGateDecision.js';
 

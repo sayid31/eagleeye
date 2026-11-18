@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
 import { changePassword } from '../auth/authClientApi.js';
 import { PASSWORD_MAX } from '../auth/passwordPolicy.mjs';
-import { PASSWORD_COPY, PASSWORD_ERRORS } from '../copy/id/login.js';
+import { PASSWORD_COPY, PASSWORD_ERRORS } from '../copy/en/login.js';
 import { changePasswordFailure, changePasswordIssue, passwordRequirements } from './changePasswordView.js';
 import { PasswordRequirements } from './PasswordRequirements.jsx';
 

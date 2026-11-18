@@ -3,7 +3,7 @@
 import { Link } from 'react-router';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/app/StatusBadge.jsx';
-import { OVERVIEW_COPY as T } from '@/copy/id/system';
+import { OVERVIEW_COPY as T } from '@/copy/en/system';
 import { keyPresence } from './overviewView.js';
 
 /** @param {{keys: {id: string, title: string, set: boolean}[]}} props */

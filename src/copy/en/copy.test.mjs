@@ -71,7 +71,7 @@ test('glossary: discouraged terms are found as whole phrases only, case-insensit
   assert.ok(GLOSSARY.length >= 2);
 });
 
-test('every string in src/copy/id respects the glossary and is written in Indonesian punctuation (no raw error codes)', () => {
+test('every string in src/copy/en respects the glossary and is written in Indonesian punctuation (no raw error codes)', () => {
   // GLOSSARY lists the discouraged terms themselves, so it is the one export that may contain them.
   const all = strings(Object.fromEntries(Object.entries(copy).filter(([name]) => name !== 'GLOSSARY')));
   assert.ok(all.length > 80);

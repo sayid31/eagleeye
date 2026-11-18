@@ -1,7 +1,7 @@
 // src/components/app/LoadingState.jsx
 /** Content-shaped skeletons instead of a "Memuat…" line. The wrapper announces the busy state once. */
 import { Skeleton } from '@/components/ui/skeleton';
-import { COMMON_COPY, STATE_COPY } from '@/copy/id/common';
+import { COMMON_COPY, STATE_COPY } from '@/copy/en/common';
 
 const SKELETON_ROW_KEYS = Array.from({ length: 20 }, (_, index) => `row-${index}`);
 

@@ -1,10 +1,10 @@
-// src/copy/id/config.js
+// src/copy/en/config.js
 /**
  * Indonesian copy of the /dev Konfigurasi pages: API Keys (keys table, "Ubah kunci" sheet, model and voice),
  * plus the strings shared by every settings form (save bar, leave warning). Umum, Persona and Pemakaian & Biaya live in
  * configForms.js and are re-exported from here. Pure data; no API error codes (see errors.js).
  *
- * @module copy/id/config
+ * @module copy/en/config
  */
 export * from './configForms.js';
 

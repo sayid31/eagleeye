@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { GENERAL_COPY as T } from '@/copy/id/configForms';
+import { GENERAL_COPY as T } from '@/copy/en/configForms';
 import { CharCounter } from './CharCounter.jsx';
 import { SettingSwitch } from './SettingSwitch.jsx';
 import { LIMIT_FIELDS, PERSONA_INSTRUCTIONS_MAX, PERSONA_NAME_MAX, describeToolGroup, hardCapNote, sessionCapWarning } from './generalForm.js';

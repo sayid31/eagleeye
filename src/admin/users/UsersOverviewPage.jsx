@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { OVERVIEW_COPY } from '../../copy/id/users.js';
+import { OVERVIEW_COPY } from '../../copy/en/users.js';
 import { overviewCards, overviewIsEmpty } from './overviewView.js';
 import { usersApi } from './usersApi.js';
 import { useResource } from './useResource.js';

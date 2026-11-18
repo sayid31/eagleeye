@@ -10,7 +10,7 @@ import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { GENERAL_COPY as T } from '@/copy/id/configForms';
+import { GENERAL_COPY as T } from '@/copy/en/configForms';
 import { AssistantCard, LimitsCard, ToolsCard } from './GeneralSections.jsx';
 import { LeaveGuard } from './LeaveGuard.jsx';
 import { SaveBar } from './SaveBar.jsx';

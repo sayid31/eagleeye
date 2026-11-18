@@ -6,7 +6,7 @@ import {
   Sidebar, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupContent, SidebarGroupLabel, SidebarHeader, SidebarMenu, SidebarMenuButton,
   SidebarMenuItem, SidebarRail, useSidebar,
 } from '@/components/ui/sidebar';
-import { SHELL_COPY } from '@/copy/id/shell';
+import { SHELL_COPY } from '@/copy/en/shell';
 import { UserMenu } from './UserMenu.jsx';
 import { navIcon } from './navIcons.js';
 import { resolveNav } from './navModel.js';

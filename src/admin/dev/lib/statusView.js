@@ -4,7 +4,7 @@
  *
  * @module admin/dev/lib/statusView
  */
-import { PROVIDER_NAMES } from '../../../copy/id/system.js';
+import { PROVIDER_NAMES } from '../../../copy/en/system.js';
 
 /** Provider display name for a key-store id; falls back to the server title (ALL CAPS), then the id. */
 export function providerName(id, title) {

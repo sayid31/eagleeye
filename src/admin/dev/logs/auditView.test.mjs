@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { AUDIT_TYPES } from '../../audit/adminAuditRoutes.mjs';
-import { AUDIT_FILTER_COPY } from '../../../copy/id/systemLogs.js';
+import { AUDIT_FILTER_COPY } from '../../../copy/en/systemLogs.js';
 import { ALL_TYPES, auditRows, auditTypeParam, describeAuditEntry } from './auditView.js';
 import { fetchAudit, fetchHealth, fetchLog } from './logsApi.js';
 

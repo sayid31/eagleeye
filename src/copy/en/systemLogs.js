@@ -2,7 +2,7 @@
  * Indonesian strings of the Server Log area of /dev: Server Log, Audit Log, Kesehatan Sistem. The health report is built
  * server-side in English; the `HEALTH_*` tables here are what healthText.js uses to say the same facts in Indonesian.
  *
- * @module copy/id/systemLogs
+ * @module copy/en/systemLogs
  */
 
 export const LOG_LEVEL_COPY = Object.freeze({ error: 'Error', warn: 'Peringatan', info: 'Info' });

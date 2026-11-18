@@ -11,7 +11,7 @@ import { useSearchParams } from 'react-router';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LOGIN_COPY } from '../copy/id/login.js';
+import { LOGIN_COPY } from '../copy/en/login.js';
 import { fetchMe, signInWithPassword, startGoogleSignIn } from '../auth/authClientApi.js';
 import { AuthLayout } from './AuthLayout.jsx';
 import { BrandMark } from './BrandMark.jsx';

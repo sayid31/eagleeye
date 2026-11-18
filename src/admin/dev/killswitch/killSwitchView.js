@@ -5,7 +5,7 @@
  *
  * @module admin/dev/killswitch/killSwitchView
  */
-import { GATE_COPY, KILL_SWITCH_COPY as T } from '../../../copy/id/system.js';
+import { GATE_COPY, KILL_SWITCH_COPY as T } from '../../../copy/en/system.js';
 import { MIN_KILL_REASON_LENGTH } from '../killSwitchCore.mjs';
 import { formatAbsolute, formatRelative } from '../lib/timeView.js';
 

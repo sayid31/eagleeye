@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { COMMON_COPY } from '@/copy/id/common';
+import { COMMON_COPY } from '@/copy/en/common';
 import { splitActions } from './rowActionsView.js';
 
 function Item({ action }) {

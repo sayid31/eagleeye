@@ -4,7 +4,7 @@
  * usage, read-only, from the server's own counters. A provider without a key shows an empty state, not zeros.
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { USAGE_COPY as T } from '@/copy/id/system';
+import { USAGE_COPY as T } from '@/copy/en/system';
 import { fetchUsage } from '../devApi.js';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
 import { ResourceBody } from '../lib/ResourceBody.jsx';

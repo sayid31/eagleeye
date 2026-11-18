@@ -15,7 +15,7 @@ import { Popover, PopoverContent, PopoverDescription, PopoverHeader, PopoverTitl
 import { Separator } from '@/components/ui/separator';
 import { Spinner } from '@/components/ui/spinner';
 import { PASSWORD_MAX } from '../auth/passwordPolicy.mjs';
-import { LOGIN_COPY } from '../copy/id/login.js';
+import { LOGIN_COPY } from '../copy/en/login.js';
 import { GoogleMark } from './GoogleMark.jsx';
 import { loginFieldProblems, signInFocusTarget } from './loginView.js';
 

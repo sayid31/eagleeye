@@ -11,7 +11,7 @@ import { LoadingState } from '@/components/app/LoadingState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AI_PROVIDER_COPY as T, PROVIDERS_COPY } from '@/copy/id/config';
+import { AI_PROVIDER_COPY as T, PROVIDERS_COPY } from '@/copy/en/config';
 import { SettingsCard } from './GeneralSections.jsx';
 import { LeaveGuard } from './LeaveGuard.jsx';
 import { KeyStatusBadge } from './ProviderCells.jsx';

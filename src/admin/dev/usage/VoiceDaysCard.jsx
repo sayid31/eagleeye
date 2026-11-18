@@ -3,7 +3,7 @@
 import { Link } from 'react-router';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DataTable } from '@/components/app/DataTable.jsx';
-import { USAGE_COPY as T } from '@/copy/id/system';
+import { USAGE_COPY as T } from '@/copy/en/system';
 import { voiceDayRows } from './usageBudgetView.js';
 
 const COLUMNS = [

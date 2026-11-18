@@ -13,8 +13,8 @@
  */
 
 import { isSuperAdminRole } from '../auth/authRoles.mjs';
-import { SHELL_COPY } from '../copy/id/shell.js';
-import { NAV_COPY } from '../copy/id/nav.js';
+import { SHELL_COPY } from '../copy/en/shell.js';
+import { NAV_COPY } from '../copy/en/nav.js';
 import { navItems } from '../components/app/navModel.js';
 import { ROUTE_FEATURES } from './routes/index.js';
 

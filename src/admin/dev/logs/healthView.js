@@ -5,7 +5,7 @@
  *
  * @module admin/dev/logs/healthView
  */
-import { HEALTH_COPY as H } from '../../../copy/id/systemLogs.js';
+import { HEALTH_COPY as H } from '../../../copy/en/systemLogs.js';
 import { formatAbsolute } from '../lib/timeView.js';
 import { translateDetail, translateLabel, translateSection } from './healthText.js';
 

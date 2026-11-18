@@ -1,6 +1,6 @@
 /** Filter bar of Log Login and Audit: time range, the page's own select (children), the account, and reset. */
 import { Button } from '@/components/ui/button';
-import { ACTIVITY_COPY } from '../../copy/id/users.js';
+import { ACTIVITY_COPY } from '../../copy/en/users.js';
 import { FilterSelect } from './FilterSelect.jsx';
 import { useUserOptions } from './useUserOptions.js';
 import { ALL } from './usersView.js';

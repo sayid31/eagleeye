@@ -1,4 +1,4 @@
-// src/copy/id/ui.js
+// src/copy/en/ui.js
 /** Indonesian replacements for the English strings (screen-reader text, default labels) inside the generated shadcn components. */
 
 export const UI_COPY = Object.freeze({

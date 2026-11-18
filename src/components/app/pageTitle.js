@@ -4,7 +4,7 @@
  *
  * @module components/app/pageTitle
  */
-import { APP_NAME } from '../../copy/id/common.js';
+import { APP_NAME } from '../../copy/en/common.js';
 
 export const TITLE_SEPARATOR = ' · ';
 

@@ -5,7 +5,7 @@
  *
  * @module admin/dev/logs/auditView
  */
-import { AUDIT_COPY as T } from '../../../copy/id/systemLogs.js';
+import { AUDIT_COPY as T } from '../../../copy/en/systemLogs.js';
 import { providerName } from '../lib/statusView.js';
 import { formatAbsolute, formatRelative } from '../lib/timeView.js';
 

@@ -2,7 +2,7 @@
 import { Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { FilterSelect } from './FilterSelect.jsx';
 
 const { toolbar: COPY } = USERS_COPY;

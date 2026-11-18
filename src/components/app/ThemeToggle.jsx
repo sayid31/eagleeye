@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { THEME_COPY } from '@/copy/id/common';
+import { THEME_COPY } from '@/copy/en/common';
 import { useTheme } from '@/lib/theme';
 
 /** The three radio items, reused by the account menu. */

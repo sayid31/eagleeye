@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { ACCOUNT_COPY } from '../copy/id/login.js';
+import { ACCOUNT_COPY } from '../copy/en/login.js';
 import { MAX_NAME_LENGTH_CLIENT, updateDisplayName } from './accountApi.js';
 import { nameProblem, roleLabel } from './accountView.js';
 

@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import { ConfirmDialog } from '@/components/app/ConfirmDialog.jsx';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { ACCOUNT_COPY, PASSWORD_COPY } from '../copy/id/login.js';
+import { ACCOUNT_COPY, PASSWORD_COPY } from '../copy/en/login.js';
 import { revokeOtherSessions } from './accountApi.js';
 import { PasswordChangeForm } from './PasswordChangeForm.jsx';
 

@@ -3,7 +3,7 @@
 import { KeyRound } from 'lucide-react';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
-import { PROVIDERS_COPY as T } from '@/copy/id/config';
+import { PROVIDERS_COPY as T } from '@/copy/en/config';
 import { KeyStatusBadge, ProviderAction, ProviderCell, TestCell } from './ProviderCells.jsx';
 
 /** @param {{rows: object[], loading: boolean, error: unknown, onRetry: () => void, onOpen: (id: string, opener: HTMLElement) => void, busy: boolean}} props */

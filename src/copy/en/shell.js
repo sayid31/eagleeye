@@ -1,4 +1,4 @@
-// src/copy/id/shell.js
+// src/copy/en/shell.js
 /** Indonesian strings of the application shell (/admin and /dev): sidebar, header, account menu, skip link. */
 
 export const SHELL_COPY = Object.freeze({

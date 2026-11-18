@@ -5,7 +5,7 @@ import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { USAGE_AI_COPY as T } from '@/copy/id/configForms';
+import { USAGE_AI_COPY as T } from '@/copy/en/configForms';
 import { UsageMeter } from '../dev/usage/UsageMeter.jsx';
 import { formatDuration, formatEstimate, todayView } from './usageView.js';
 

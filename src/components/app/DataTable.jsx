@@ -8,7 +8,7 @@ import { useId } from 'react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { STATE_COPY, TABLE_COPY } from '@/copy/id/common';
+import { STATE_COPY, TABLE_COPY } from '@/copy/en/common';
 import { cn } from '@/lib/utils';
 import { EmptyState } from './EmptyState.jsx';
 import { ErrorState } from './ErrorState.jsx';

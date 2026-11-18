@@ -5,7 +5,7 @@ import { CapabilityChip, StatusBadge } from '@/components/app/StatusBadge.jsx';
 import { initialsFor } from '@/components/app/navModel.js';
 import { CAPABILITY_KEYS } from '../../auth/authCapabilities.mjs';
 import { ROLE_USER } from '../../auth/authRoles.mjs';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { TimeCell } from './TimeCell.jsx';
 import { accountStatusKey, roleText } from './usersView.js';
 

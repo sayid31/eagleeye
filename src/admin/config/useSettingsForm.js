@@ -6,7 +6,7 @@
  */
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { SAVE_COPY } from '../../copy/id/config.js';
+import { SAVE_COPY } from '../../copy/en/config.js';
 import { saveVoiceSettings } from '../api/adminVoiceApi.js';
 import { formatAbsolute } from '../dev/lib/timeView.js';
 import { isDirty } from './dirtyState.js';

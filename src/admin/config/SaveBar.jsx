@@ -8,7 +8,7 @@ import { CircleAlert, CircleCheck, CircleDot } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { SAVE_COPY } from '@/copy/id/config';
+import { SAVE_COPY } from '@/copy/en/config';
 
 function statusLine({ dirty, saving, savedAt }) {
   if (saving) return { Icon: null, text: SAVE_COPY.saving, className: 'text-muted-foreground' };

@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { SheetDescription, SheetFooter, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Spinner } from '@/components/ui/spinner';
-import { KEY_SHEET_COPY as T } from '@/copy/id/config';
+import { KEY_SHEET_COPY as T } from '@/copy/en/config';
 import { saveKeys } from '../api/adminKeysApi.js';
 import { failureMessage } from './failureMessage.js';
 import { KeyTestPanel } from './KeyTestPanel.jsx';

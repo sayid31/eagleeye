@@ -4,10 +4,10 @@ import { Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router';
 import { AppShell } from '@/components/app/AppShell.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
-import { APP_NAME } from '@/copy/id/common';
+import { APP_NAME } from '@/copy/en/common';
 import { signOutAndLeave } from '../auth/authClientApi.js';
 import { areaSwitchFor, navForArea } from './adminNav.js';
-import { SHELL_COPY } from '@/copy/id/shell';
+import { SHELL_COPY } from '@/copy/en/shell';
 
 /** Developer area gets a badge so it never passes for /admin. */
 const brandFor = (area) => ({ name: APP_NAME, badge: area === 'dev' ? SHELL_COPY.developerBadge : undefined });

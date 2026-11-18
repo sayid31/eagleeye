@@ -4,7 +4,7 @@
  *
  * @module admin/users/usersFormat
  */
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 
 const MINUTE_S = 60;
 const HOUR_S = 60 * MINUTE_S;

@@ -10,7 +10,7 @@
  *
  * @module admin/config/generalForm
  */
-import { GENERAL_COPY } from '../../copy/id/configForms.js';
+import { GENERAL_COPY } from '../../copy/en/configForms.js';
 import { MAX_LIVE_SESSION_MINUTES } from '../../voice/liveSessionLimits.js';
 import { PERSONA_INSTRUCTIONS_MAX, PERSONA_NAME_MAX, defaultVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
 

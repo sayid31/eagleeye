@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
-import { USAGE_AI_COPY as T } from '@/copy/id/configForms';
+import { USAGE_AI_COPY as T } from '@/copy/en/configForms';
 import { saveVoiceSettings } from '../api/adminVoiceApi.js';
 import { isDirty } from './dirtyState.js';
 import { failureMessage } from './failureMessage.js';

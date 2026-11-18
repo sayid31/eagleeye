@@ -2,7 +2,7 @@
 /**
  * Indonesian wording of every error code the account-management API answers
  * with (plan/auth/04 §Kontrak API). Server wording (`message` field) for API clients and
- * browser clients that read `message`; the admin UI itself renders copy/id/errors.js. Pure.
+ * browser clients that read `message`; the admin UI itself renders copy/en/errors.js. Pure.
  *
  * @module admin/users/usersErrors
  */

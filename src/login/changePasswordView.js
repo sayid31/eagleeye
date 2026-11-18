@@ -9,7 +9,7 @@
 
 import { normalizeEmail } from '../auth/authRoles.mjs';
 import { minPasswordLength, validatePassword } from '../auth/passwordPolicy.mjs';
-import { PASSWORD_COPY, PASSWORD_ERRORS } from '../copy/id/login.js';
+import { PASSWORD_COPY, PASSWORD_ERRORS } from '../copy/en/login.js';
 
 /** @typedef {'current' | 'next' | 'confirm'} PasswordField */
 /** @typedef {{field: PasswordField | null, message: string}} PasswordIssue `field` null = a form-level message. */

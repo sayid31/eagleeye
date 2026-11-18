@@ -1,6 +1,6 @@
 import { cn } from "cn"
 import { Loader2Icon } from "lucide-react"
-import { UI_COPY } from "@/copy/id/ui"
+import { UI_COPY } from "@/copy/en/ui"
 
 function Spinner({
   className,

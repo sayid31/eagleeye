@@ -4,7 +4,7 @@
  * presence per provider (never a value) and the doctor's login warnings. Read-only; one reload button.
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { OVERVIEW_COPY as T } from '@/copy/id/system';
+import { OVERVIEW_COPY as T } from '@/copy/en/system';
 import { fetchSystemSummary } from '../devApi.js';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
 import { ResourceBody } from '../lib/ResourceBody.jsx';

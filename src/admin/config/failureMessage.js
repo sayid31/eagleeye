@@ -6,7 +6,7 @@
  *
  * @module admin/config/failureMessage
  */
-import { errorMessage } from '../../copy/id/errors.js';
+import { errorMessage } from '../../copy/en/errors.js';
 
 const WORDED_STATUSES = new Set([400, 409, 422]);
 

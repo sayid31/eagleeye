@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { MAX_NAME_LENGTH } from '../auth/authHooks.mjs';
 import { MAX_NAME_LENGTH_CLIENT, fetchSessionUser, revokeOtherSessions, updateDisplayName } from './accountApi.js';
 import { accountPageState, accountTab, backLinkFor, hasPasswordSignIn, nameProblem, roleLabel } from './accountView.js';
-import { ACCOUNT_COPY } from '../copy/id/login.js';
+import { ACCOUNT_COPY } from '../copy/en/login.js';
 
 const me = (user = {}) => ({ configured: true, signedIn: true, home: '/admin', googleSignIn: false, user: { role: 'admin', mustChangePassword: false, ...user } });
 

@@ -30,7 +30,7 @@ test('the scan finds the React surfaces (guards against an empty glob passing si
   assert.ok(sources.length > 80, `only ${sources.length} files scanned`);
 });
 
-test('no JSX text node or text attribute is a literal: user-visible strings live in src/copy/id', () => {
+test('no JSX text node or text attribute is a literal: user-visible strings live in src/copy/en', () => {
   const offenders = [];
   for (const { rel, code } of sources) {
     for (const match of code.matchAll(JSX_TEXT)) {

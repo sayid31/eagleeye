@@ -2,7 +2,7 @@
 /** "Diperbarui 14.02" plus a refresh button, for a PageHeader `actions` slot. */
 import { RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { SYSTEM_TIME_COPY } from '@/copy/id/system';
+import { SYSTEM_TIME_COPY } from '@/copy/en/system';
 import { formatAbsolute } from './timeView.js';
 
 /**

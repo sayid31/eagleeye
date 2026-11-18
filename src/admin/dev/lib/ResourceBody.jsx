@@ -4,7 +4,7 @@ import { CircleAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
-import { errorMessage } from '@/copy/id/errors';
+import { errorMessage } from '@/copy/en/errors';
 
 /**
  * @param {{

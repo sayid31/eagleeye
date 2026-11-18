@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { PASSWORD_MIN_ADMIN, PASSWORD_MIN_USER } from '../auth/passwordPolicy.mjs';
-import { PASSWORD_ERRORS } from '../copy/id/login.js';
+import { PASSWORD_ERRORS } from '../copy/en/login.js';
 import { changePasswordFailure, changePasswordIssue, passwordRequirements } from './changePasswordView.js';
 
 const user = { email: 'budi@example.test', name: 'Budi Santoso', role: 'user' }; // test-only

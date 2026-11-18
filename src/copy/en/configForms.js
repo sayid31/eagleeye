@@ -1,9 +1,9 @@
-// src/copy/id/configForms.js
+// src/copy/en/configForms.js
 /**
  * Indonesian copy of Umum, Persona and Pemakaian & Biaya (the voice-settings forms). Re-exported by config.js.
  * Pure data; the tool-group texts translate the server's English labels, which also go into the voice prompt.
  *
- * @module copy/id/configForms
+ * @module copy/en/configForms
  */
 
 export const GENERAL_COPY = Object.freeze({

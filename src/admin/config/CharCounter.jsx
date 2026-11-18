@@ -1,7 +1,7 @@
 // src/admin/config/CharCounter.jsx
 /** "420/1000 karakter"; turns to the warning colour in the last tenth so the limit never surprises. */
 import { cn } from '@/lib/utils';
-import { PERSONA_COPY } from '@/copy/id/configForms';
+import { PERSONA_COPY } from '@/copy/en/configForms';
 
 /** @param {{used: number, max: number, className?: string}} props */
 export function CharCounter({ used, max, className }) {

@@ -1,11 +1,11 @@
-// src/copy/id/errors.js
+// src/copy/en/errors.js
 /**
  * One place that turns an API error into a sentence a person can act on. The UI never shows a raw code or an HTTP
  * status ("503 FEATURE_DISABLED"); it shows `errorMessage(...)`. Accepts a bare code, an API payload
  * (`{error|code, field?, reason?, min?}`), a `Response`-like `{status}`, or an Error carrying `.code`/`.status`/`.field`
  * (what the api modules throw). Resolution: known code → status class → generic sentence.
  *
- * @module copy/id/errors
+ * @module copy/en/errors
  */
 
 export const ERROR_MESSAGES = Object.freeze({

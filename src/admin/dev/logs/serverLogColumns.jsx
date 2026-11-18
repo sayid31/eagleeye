@@ -3,7 +3,7 @@
 import { PanelRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { SERVER_LOG_COPY as T } from '@/copy/id/systemLogs';
+import { SERVER_LOG_COPY as T } from '@/copy/en/systemLogs';
 import { LogLevelBadge } from './LogLevelBadge.jsx';
 import { LogTime } from './LogTime.jsx';
 

@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/app/PageHeader.jsx';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { StatusBadge } from '@/components/app/StatusBadge.jsx';
-import { ACTIVITY_COPY } from '../../copy/id/users.js';
+import { ACTIVITY_COPY } from '../../copy/en/users.js';
 import { ActivityFilters } from './ActivityFilters.jsx';
 import { DeviceCell, IpCell, LoginAccountCell, LoginResultCell } from './ActivityCells.jsx';
 import { FilterSelect } from './FilterSelect.jsx';

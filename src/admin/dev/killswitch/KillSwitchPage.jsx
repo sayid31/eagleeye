@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ConfirmDialog } from '@/components/app/ConfirmDialog.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { KILL_SWITCH_COPY as T } from '@/copy/id/system';
+import { KILL_SWITCH_COPY as T } from '@/copy/en/system';
 import { fetchKillSwitches, updateKillSwitch } from '../devApi.js';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
 import { ResourceBody } from '../lib/ResourceBody.jsx';

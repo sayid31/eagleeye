@@ -5,7 +5,7 @@
  *
  * @module components/app/statusBadgeView
  */
-import { HEALTH_STATUS_COPY, STATUS_COPY } from '../../copy/id/common.js';
+import { HEALTH_STATUS_COPY, STATUS_COPY } from '../../copy/en/common.js';
 
 /** Tailwind classes per tone: tinted background + the semantic colour as text (4.5:1, gated by qa:contrast). */
 export const TONE_CLASSES = Object.freeze({

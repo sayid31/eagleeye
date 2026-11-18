@@ -12,9 +12,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
-import { COMMON_COPY, CONFIRM_COPY } from '@/copy/id/common';
+import { COMMON_COPY, CONFIRM_COPY } from '@/copy/en/common';
 import { useReturnFocus } from '@/lib/useReturnFocus';
-import { errorMessage } from '@/copy/id/errors';
+import { errorMessage } from '@/copy/en/errors';
 import { FormField } from './FormField.jsx';
 import { PasswordInput } from './PasswordInput.jsx';
 import { confirmState } from './confirmDialogView.js';

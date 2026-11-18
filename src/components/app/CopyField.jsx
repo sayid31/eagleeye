@@ -3,7 +3,7 @@
 import { Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { COPY_FIELD_COPY } from '@/copy/id/common';
+import { COPY_FIELD_COPY } from '@/copy/en/common';
 import { useCopyToClipboard } from './useCopyToClipboard.js';
 
 /** One copy button; `text` is what lands on the clipboard (may differ from the displayed value, e.g. a full message). */

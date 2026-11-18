@@ -3,7 +3,7 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/app/StatusBadge.jsx';
-import { PROVIDERS_COPY as T } from '@/copy/id/config';
+import { PROVIDERS_COPY as T } from '@/copy/en/config';
 import { formatAbsolute } from '../dev/lib/timeView.js';
 import { describeTestResult } from './providerKeysView.js';
 

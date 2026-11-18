@@ -5,7 +5,7 @@
  *
  * @module admin/dev/logs/serverLogView
  */
-import { LOG_LEVEL_COPY, LOG_SOURCE_COPY, SERVER_LOG_COPY as T } from '../../../copy/id/systemLogs.js';
+import { LOG_LEVEL_COPY, LOG_SOURCE_COPY, SERVER_LOG_COPY as T } from '../../../copy/en/systemLogs.js';
 import { formatAbsolute, formatRelative } from '../lib/timeView.js';
 
 /** Select values for "no filter" (a Radix Select item cannot have an empty value). */

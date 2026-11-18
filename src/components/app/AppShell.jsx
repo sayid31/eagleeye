@@ -6,7 +6,7 @@
  */
 import { useEffect, useRef, useState } from 'react';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
-import { SHELL_COPY } from '@/copy/id/shell';
+import { SHELL_COPY } from '@/copy/en/shell';
 import { readSidebarOpen } from '@/lib/sidebarState';
 import { AppHeader } from './AppHeader.jsx';
 import { AppSidebar } from './AppSidebar.jsx';

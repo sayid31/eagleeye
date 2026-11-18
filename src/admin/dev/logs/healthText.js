@@ -2,12 +2,12 @@
 /**
  * Says the health report in Indonesian. The server builds each item's label and detail in English
  * (systemHealthCore.mjs, whose output and tests stay as they are), so this module maps known item ids and detail
- * shapes to the Indonesian templates in copy/id/systemLogs.js. A detail it does not recognise is shown unchanged:
+ * shapes to the Indonesian templates in copy/en/systemLogs.js. A detail it does not recognise is shown unchanged:
  * better English than a wrong translation. Pure.
  *
  * @module admin/dev/logs/healthText
  */
-import { HEALTH_COPY as H } from '../../../copy/id/systemLogs.js';
+import { HEALTH_COPY as H } from '../../../copy/en/systemLogs.js';
 import { providerName } from '../lib/statusView.js';
 
 /** "3 min ago" / "never" (server `ago()`) inside any text → Indonesian. */

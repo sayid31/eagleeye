@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Spinner } from '@/components/ui/spinner';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { DiscardPasswordDialog, OneTimePasswordPanel, useOneTimeGuard } from './OneTimePasswordPanel.jsx';
 import { UserDialog } from './UserDialog.jsx';
 import { PasswordChoice } from './UserFormFields.jsx';

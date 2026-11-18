@@ -6,7 +6,7 @@
  *
  * @module admin/dev/usage/usageBudgetView
  */
-import { USAGE_COPY as T } from '../../../copy/id/system.js';
+import { USAGE_COPY as T } from '../../../copy/en/system.js';
 import { formatCostUsd } from '../../../voice/voiceCost.js';
 import { formatCountdown, formatRelative, formatUptime, nextUtcMidnight } from '../lib/timeView.js';
 

@@ -8,7 +8,7 @@
 
 import { authorizeUserAction } from '../../auth/authHierarchy.mjs';
 import { ROLE_ADMIN, ROLE_SUPER_ADMIN, ROLE_USER } from '../../auth/authRoles.mjs';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 
 /** Default and maximum page size of the list (API: 20, max 100). */
 export const USERS_PAGE_SIZE = 20;

@@ -1,8 +1,8 @@
 // src/admin/dev/devText.js
 /**
  * Messages of the `/dev` system API (devHttp.mjs: `{error: CODE, message}` replies). Server side only: the pages never
- * show these; they word an error with `errorMessage()` from src/copy/id/errors.js, and every other UI string of the
- * system pages lives in src/copy/id/system.js and systemLogs.js.
+ * show these; they word an error with `errorMessage()` from src/copy/en/errors.js, and every other UI string of the
+ * system pages lives in src/copy/en/system.js and systemLogs.js.
  *
  * @module admin/dev/devText
  */

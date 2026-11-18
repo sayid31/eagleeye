@@ -8,7 +8,7 @@ import { useLocation, useNavigate } from 'react-router';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { UserDialogs } from './UserDialogs.jsx';
 import { UsersTable } from './UsersTable.jsx';
 import { UsersToolbar } from './UsersToolbar.jsx';

@@ -12,8 +12,8 @@ import { documentTitle } from '@/components/app/pageTitle.js';
 import { ThemeToggle } from '@/components/app/ThemeToggle.jsx';
 import { Button } from '@/components/ui/button';
 import { Spinner } from '@/components/ui/spinner';
-import { APP_NAME } from '@/copy/id/common.js';
-import { ACCOUNT_COPY } from '../copy/id/login.js';
+import { APP_NAME } from '@/copy/en/common.js';
+import { ACCOUNT_COPY } from '../copy/en/login.js';
 import { signOutAndLeave } from '../auth/authClientApi.js';
 import { BrandMark } from './BrandMark.jsx';
 

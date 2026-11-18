@@ -1,6 +1,6 @@
 /** Cell building blocks shared by the Log Login and Audit tables. */
 import { StatusBadge } from '@/components/app/StatusBadge.jsx';
-import { ACTIVITY_COPY } from '../../copy/id/users.js';
+import { ACTIVITY_COPY } from '../../copy/en/users.js';
 import { compactIp, describeDevice, loginAccountText, loginFailureText } from './activityView.js';
 
 /** Two-line cell: a main line and a muted sub line, both truncating with the full text in `title`. */

@@ -9,7 +9,7 @@
  * On/off vocabulary: accounts, capabilities and settings are "aktif / nonaktif" ("nonaktifkan"); only the Kill switch
  * gates are "menyala / dimatikan" (a switch). "Mati" alone is never used.
  *
- * @module copy/id/glossary
+ * @module copy/en/glossary
  */
 
 /** @type {ReadonlyArray<{avoid: string, use: string}>} */

@@ -9,7 +9,7 @@
  * @module admin/config/usageView
  */
 
-import { USAGE_AI_COPY } from '../../copy/id/configForms.js';
+import { USAGE_AI_COPY } from '../../copy/en/configForms.js';
 import { formatCostUsd } from '../../voice/voiceCost.js';
 import { meterProgress } from '../dev/usage/usageBudgetView.js';
 

@@ -3,7 +3,7 @@
  * The log pages live in systemLogs.js. Technical terms (API key, token, voice, layer, runtime) stay English; "Sakelar
  * darurat" is the glossary term for the global kill switch (glossary.js).
  *
- * @module copy/id/system
+ * @module copy/en/system
  */
 
 /** Provider id → display name (the key store sends ALL-CAPS titles). */

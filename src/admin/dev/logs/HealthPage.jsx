@@ -6,7 +6,7 @@
  */
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { HEALTH_COPY as T } from '@/copy/id/systemLogs';
+import { HEALTH_COPY as T } from '@/copy/en/systemLogs';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
 import { ResourceBody } from '../lib/ResourceBody.jsx';

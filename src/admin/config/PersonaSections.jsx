@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { PERSONA_COPY as T } from '@/copy/id/configForms';
+import { PERSONA_COPY as T } from '@/copy/en/configForms';
 import { CharCounter } from './CharCounter.jsx';
 import { SettingSwitch } from './SettingSwitch.jsx';
 import { SettingsCard } from './GeneralSections.jsx';

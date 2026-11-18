@@ -7,8 +7,8 @@ import {
   DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
-import { THEME_COPY } from '@/copy/id/common';
-import { SHELL_COPY } from '@/copy/id/shell';
+import { THEME_COPY } from '@/copy/en/common';
+import { SHELL_COPY } from '@/copy/en/shell';
 import { ThemeRadioItems } from './ThemeToggle.jsx';
 import { initialsFor } from './navModel.js';
 

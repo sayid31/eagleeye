@@ -5,7 +5,7 @@
  *
  * @module admin/dev/lib/timeView
  */
-import { SYSTEM_TIME_COPY as T } from '../../../copy/id/system.js';
+import { SYSTEM_TIME_COPY as T } from '../../../copy/en/system.js';
 
 const MINUTE = 60;
 const HOUR = 3600;

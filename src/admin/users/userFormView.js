@@ -7,7 +7,7 @@
 import { CAPABILITY_KEYS, DEFAULT_CAPABILITIES } from '../../auth/authCapabilities.mjs';
 import { ROLE_USER, normalizeEmail } from '../../auth/authRoles.mjs';
 import { PASSWORD_MAX, minPasswordLength, validatePassword } from '../../auth/passwordPolicy.mjs';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 
 /**
  * Empty create form (owner defaults: Layer data + Voice & AI on, premium off).

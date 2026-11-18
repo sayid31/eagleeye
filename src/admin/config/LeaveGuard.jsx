@@ -7,7 +7,7 @@
 import { useEffect, useState } from 'react';
 import { useHref, useNavigate } from 'react-router';
 import { ConfirmDialog } from '@/components/app/ConfirmDialog.jsx';
-import { SAVE_COPY } from '@/copy/id/config';
+import { SAVE_COPY } from '@/copy/en/config';
 import { isLeavingClick } from './dirtyState.js';
 
 /** @param {{dirty: boolean}} props */

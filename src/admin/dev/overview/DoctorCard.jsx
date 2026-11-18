@@ -3,7 +3,7 @@
 import { CircleAlert, CircleCheck, TriangleAlert } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { OVERVIEW_COPY as T } from '@/copy/id/system';
+import { OVERVIEW_COPY as T } from '@/copy/en/system';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { doctorItems } from './overviewView.js';
 

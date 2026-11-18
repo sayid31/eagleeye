@@ -5,7 +5,7 @@
  *
  * @module admin/dev/overview/overviewView
  */
-import { DOCTOR_COPY, OVERVIEW_COPY as T } from '../../../copy/id/system.js';
+import { DOCTOR_COPY, OVERVIEW_COPY as T } from '../../../copy/en/system.js';
 import { gateTally } from '../killswitch/killSwitchView.js';
 import { providerName } from '../lib/statusView.js';
 import { formatAbsolute, formatUptime } from '../lib/timeView.js';

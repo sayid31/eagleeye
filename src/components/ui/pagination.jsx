@@ -3,7 +3,7 @@ import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
-import { UI_COPY } from "@/copy/id/ui"
+import { UI_COPY } from "@/copy/en/ui"
 
 function Pagination({
   className,

@@ -3,7 +3,7 @@
  * `run` resolves to the call's result, or undefined when it failed (the sentence is then in `error`).
  */
 import { useCallback, useState } from 'react';
-import { errorMessage } from '@/copy/id/errors';
+import { errorMessage } from '@/copy/en/errors';
 
 /**
  * @returns {{busy: boolean, error: string, failure: unknown, run: <T>(call: () => Promise<T>) => Promise<T | undefined>, clear: () => void}}

@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { RotateCw } from 'lucide-react';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { PROVIDERS_COPY as T } from '@/copy/id/config';
+import { PROVIDERS_COPY as T } from '@/copy/en/config';
 import { KeySheet } from './KeySheet.jsx';
 import { ProviderTable } from './ProviderTable.jsx';
 import { providerRows, providersSummary } from './providerKeysView.js';

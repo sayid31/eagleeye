@@ -10,7 +10,7 @@
  */
 import {
   KEY_FIELD_LABELS, KEY_SHEET_COPY, KEY_TEST_NOTES, KEY_TEST_RESULTS, KEY_UNREACHABLE_HINTS, PROVIDERS_COPY, PROVIDER_COPY,
-} from '../../copy/id/config.js';
+} from '../../copy/en/config.js';
 
 const COPY = PROVIDERS_COPY;
 

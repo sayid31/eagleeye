@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Spinner } from '@/components/ui/spinner';
 import { FormField } from '@/components/app/FormField.jsx';
 import { ROLE_ADMIN, ROLE_USER } from '../../auth/authRoles.mjs';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { DiscardPasswordDialog, OneTimePasswordPanel, useOneTimeGuard } from './OneTimePasswordPanel.jsx';
 import { UserDialog } from './UserDialog.jsx';
 import { CapabilitySwitches, PasswordChoice } from './UserFormFields.jsx';

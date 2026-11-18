@@ -5,7 +5,7 @@
  * @module admin/users/activityView
  */
 import { ROLE_SUPER_ADMIN } from '../../auth/authRoles.mjs';
-import { ACTIVITY_COPY, USERS_COPY } from '../../copy/id/users.js';
+import { ACTIVITY_COPY, USERS_COPY } from '../../copy/en/users.js';
 import { ACTIVITY_RANGES } from './activityRange.mjs';
 import { ALL, roleText } from './usersView.js';
 

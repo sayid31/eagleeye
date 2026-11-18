@@ -7,7 +7,7 @@ import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PASSWORD_INPUT_COPY } from '@/copy/id/common';
+import { PASSWORD_INPUT_COPY } from '@/copy/en/common';
 import { cn } from '@/lib/utils';
 
 /**

@@ -2,7 +2,7 @@
 /** Nothing to show yet: icon, title, one line of explanation and an optional call to action. */
 import { Inbox } from 'lucide-react';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { STATE_COPY } from '@/copy/id/common';
+import { STATE_COPY } from '@/copy/en/common';
 
 /**
  * @param {{icon?: import('react').ElementType, title?: string, description?: string, action?: import('react').ReactNode, className?: string}} props

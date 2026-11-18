@@ -2,7 +2,7 @@ import * as React from "react"
 import { cn } from "cn"
 import { Slot } from "radix-ui"
 import { ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
-import { UI_COPY } from "@/copy/id/ui"
+import { UI_COPY } from "@/copy/en/ui"
 
 function Breadcrumb({
   className,

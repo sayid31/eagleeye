@@ -12,7 +12,7 @@ import { ConfirmDialog } from '@/components/app/ConfirmDialog.jsx';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { SERVER_LOG_COPY as T } from '@/copy/id/systemLogs';
+import { SERVER_LOG_COPY as T } from '@/copy/en/systemLogs';
 import { useAutoRefresh } from '../lib/useAutoRefresh.js';
 import { LogDetailSheet } from './LogDetailSheet.jsx';
 import { LogToolbar } from './LogToolbar.jsx';

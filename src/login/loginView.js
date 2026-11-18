@@ -6,7 +6,7 @@
  */
 
 import { safeNextPath } from '../auth/nextPath.mjs';
-import { LOGIN_COPY, LOGIN_NOTICES, SIGN_IN_ERRORS, SIGN_IN_GENERIC_ERROR } from '../copy/id/login.js';
+import { LOGIN_COPY, LOGIN_NOTICES, SIGN_IN_ERRORS, SIGN_IN_GENERIC_ERROR } from '../copy/en/login.js';
 
 export const CHANGE_PASSWORD_PATH = '/account/password';
 /** Share-link state can be long (camera + layers + annotations); anything longer is dropped. */

@@ -1,7 +1,7 @@
 // src/login/PasswordRequirements.jsx
 /** The live checklist under the new-password field: icon + words + a screen-reader state, never colour alone. */
 import { Check, Circle } from 'lucide-react';
-import { PASSWORD_COPY } from '../copy/id/login.js';
+import { PASSWORD_COPY } from '../copy/en/login.js';
 
 /**
  * @param {{id: string, items: ReturnType<typeof import('./changePasswordView.js').passwordRequirements>}} props

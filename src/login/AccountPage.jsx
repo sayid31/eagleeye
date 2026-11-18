@@ -9,7 +9,7 @@ import { useSearchParams } from 'react-router';
 import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ACCOUNT_COPY } from '../copy/id/login.js';
+import { ACCOUNT_COPY } from '../copy/en/login.js';
 import { AccountLayout } from './AccountLayout.jsx';
 import { fetchSessionUser } from './accountApi.js';
 import { useMe } from './accountHooks.js';

@@ -5,7 +5,7 @@ import { DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/co
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { FormField } from '@/components/app/FormField.jsx';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { UserDialog } from './UserDialog.jsx';
 import { CapabilitySwitches } from './UserFormFields.jsx';
 import { usersApi } from './usersApi.js';

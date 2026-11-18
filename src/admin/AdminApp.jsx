@@ -7,7 +7,7 @@
 import { lazy } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
-import { SHELL_COPY } from '@/copy/id/shell';
+import { SHELL_COPY } from '@/copy/en/shell';
 import { PAGE_TABLE, areaHome, areaLeaves, groupRedirects } from './adminNav.js';
 import { AdminLayout } from './AdminLayout.jsx';
 import { loadPage } from './routes/pageRef.js';

@@ -5,7 +5,7 @@ import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { RowActions } from '@/components/app/RowActions.jsx';
 import { Button } from '@/components/ui/button';
-import { USERS_COPY } from '../../copy/id/users.js';
+import { USERS_COPY } from '../../copy/en/users.js';
 import { CapabilityCell, RoleCell, StatusCell, UserCard, UserCell } from './UserCells.jsx';
 import { afterMenuCloses } from './afterMenuCloses.js';
 import { TimeCell } from './TimeCell.jsx';

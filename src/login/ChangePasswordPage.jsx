@@ -13,7 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { homeFor } from '../auth/authRoles.mjs';
-import { ACCOUNT_COPY, LOGIN_COPY, PASSWORD_COPY } from '../copy/id/login.js';
+import { ACCOUNT_COPY, LOGIN_COPY, PASSWORD_COPY } from '../copy/en/login.js';
 import { AccountLayout } from './AccountLayout.jsx';
 import { useMe } from './accountHooks.js';
 import { backLinkFor } from './accountView.js';

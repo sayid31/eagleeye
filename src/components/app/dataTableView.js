@@ -5,7 +5,7 @@
  *
  * @module components/app/dataTableView
  */
-import { TABLE_COPY } from '../../copy/id/common.js';
+import { TABLE_COPY } from '../../copy/en/common.js';
 
 export const PAGE_SIZES = Object.freeze([10, 20, 50]);
 export const DEFAULT_PAGE_SIZE = 20;

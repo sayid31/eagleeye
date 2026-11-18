@@ -1,10 +1,10 @@
-// src/copy/id/users.js
+// src/copy/en/users.js
 /**
  * Indonesian copy of the user-management surfaces of /admin and /dev: Pengguna (list, create, edit, risky actions),
  * Log Login and Audit and the /admin Ringkasan. Pure data; builders (functions) take the subject of the
  * sentence so a dialog can name the account. Terminology follows glossary.js ("Server Log", "Audit Log").
  *
- * @module copy/id/users
+ * @module copy/en/users
  */
 
 export const USERS_COPY = Object.freeze({

@@ -1,7 +1,7 @@
 
 import { useTheme } from "@/lib/theme"
 import { Toaster as Sonner } from "sonner";
-import { UI_COPY } from "@/copy/id/ui"
+import { UI_COPY } from "@/copy/en/ui"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({

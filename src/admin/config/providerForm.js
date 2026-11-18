@@ -7,7 +7,7 @@
  *
  * @module admin/config/providerForm
  */
-import { AI_PROVIDER_COPY as COPY } from '../../copy/id/config.js';
+import { AI_PROVIDER_COPY as COPY } from '../../copy/en/config.js';
 
 /** Human text for where an effective value comes from. */
 export function describeSource(source) {

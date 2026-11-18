@@ -10,7 +10,7 @@ import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
 import { Button } from '@/components/ui/button';
-import { PERSONA_COPY as T } from '@/copy/id/configForms';
+import { PERSONA_COPY as T } from '@/copy/en/configForms';
 import { LeaveGuard } from './LeaveGuard.jsx';
 import { CoreRulesCard, ExtraRulesCard, TopicsCard } from './PersonaSections.jsx';
 import { SaveBar } from './SaveBar.jsx';

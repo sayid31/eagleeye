@@ -3,8 +3,8 @@
 import { CircleAlert } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empty';
-import { COMMON_COPY, STATE_COPY } from '@/copy/id/common';
-import { errorMessage } from '@/copy/id/errors';
+import { COMMON_COPY, STATE_COPY } from '@/copy/en/common';
+import { errorMessage } from '@/copy/en/errors';
 
 /**
  * @param {{error?: unknown, message?: string, title?: string, onRetry?: () => void, retryLabel?: string, className?: string}} props

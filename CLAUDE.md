@@ -128,12 +128,12 @@ Read `docs/CURRENT-STATE.md` → "UI system" before touching them.
   `src/components/ui/` (JSX, `npx shadcn@latest add …`, the `shadcn` package is **not** a
   dependency; keep their style, re-apply the patches listed in `sidebar.jsx`); product
   patterns `src/components/app/` (AppShell, DataTable, ConfirmDialog, FormField, …);
-  theme `src/lib/theme.jsx` + `themeCore.js`; all UI strings `src/copy/id/` (glossary:
+  theme `src/lib/theme.jsx` + `themeCore.js`; all UI strings `src/copy/en/` (glossary:
   "Kill switch", "Server Log" — the original menu names); route registration `src/admin/routes/features/*.js`.
 - **Rules.** Build a page from `components/ui` + `components/app` and Tailwind utilities with
   **token colours only** (`bg-card`, `text-muted-foreground`, never hex, no `!important`).
   **Never edit `style.css` for admin/login UI** — it is the map's stylesheet. New strings go
-  in `src/copy/id/`; API errors through `errorMessage()` (never show a code or HTTP status).
+  in `src/copy/en/`; API errors through `errorMessage()` (never show a code or HTTP status).
   Open dialogs from code with `ConfirmDialog` or pass `useReturnFocus` to `onCloseAutoFocus`.
   A pure `.js` module that node tests import must use relative imports (the `@` alias exists
   only for Vite); `.jsx` is tested through `src/testing/jsxLoader.mjs`.
