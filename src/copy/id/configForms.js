@@ -8,7 +8,7 @@
 
 export const GENERAL_COPY = Object.freeze({
   title: 'Umum',
-  description: 'Asisten suara: nyala atau mati, nama, izin tools, dan batas sesi. Perubahan berlaku mulai sesi suara berikutnya.',
+  description: 'Asisten suara: aktif atau nonaktif, nama, izin tools, dan batas sesi. Perubahan berlaku mulai sesi suara berikutnya.',
   loading: 'Memuat pengaturan',
   loadError: 'Pengaturan tidak bisa dimuat',
   storedInvalid: 'File pengaturan tersimpan tidak bisa dibaca. Pengaturan bawaan berlaku sampai Anda menyimpan.',
@@ -20,8 +20,8 @@ export const GENERAL_COPY = Object.freeze({
   },
   assistant: {
     title: 'Asisten',
-    description: 'Nyala atau mati, nama, dan gaya bicara.',
-    enabled: { title: 'Asisten suara aktif', description: 'Mati: tombol mic menolak memulai sesi baru.' },
+    description: 'Aktif atau nonaktif, nama, dan gaya bicara.',
+    enabled: { title: 'Asisten suara aktif', description: 'Nonaktif: tombol mic menolak memulai sesi baru.' },
     name: { label: 'Nama asisten', description: (max) => `Opsional, maksimal ${max} karakter. Kosong memakai nama bawaan.` },
     notes: {
       label: 'Catatan kepribadian',
@@ -31,7 +31,7 @@ export const GENERAL_COPY = Object.freeze({
   },
   tools: {
     title: 'Izin tools',
-    description: 'Grup yang dimatikan sama sekali tidak ditawarkan ke model suara, jadi tool di dalamnya tidak bisa dipanggil.',
+    description: 'Grup yang nonaktif sama sekali tidak ditawarkan ke model suara, jadi tool di dalamnya tidak bisa dipanggil.',
     group: (label, count) => `${label} (${count} tools)`,
   },
   limits: {
@@ -58,9 +58,9 @@ export const GENERAL_COPY = Object.freeze({
     annotate: { label: 'Menggambar di peta', description: 'Menggambar tanda, area, dan rute di peta, lalu menghapusnya.' },
   },
   disableVoice: {
-    title: 'Matikan asisten suara?',
-    impact: 'Tombol mic akan menolak memulai sesi baru untuk semua pengguna. Sesi yang sedang berjalan tidak terputus. Bisa dinyalakan lagi kapan saja.',
-    action: 'Matikan dan simpan',
+    title: 'Nonaktifkan asisten suara?',
+    impact: 'Tombol mic akan menolak memulai sesi baru untuk semua pengguna. Sesi yang sedang berjalan tidak terputus. Bisa diaktifkan lagi kapan saja.',
+    action: 'Nonaktifkan dan simpan',
   },
   resetLimits: {
     title: 'Kembalikan batas sesi ke bawaan?',
@@ -116,7 +116,7 @@ export const PERSONA_COPY = Object.freeze({
   reset: {
     button: 'Kembalikan ke bawaan',
     title: 'Kembalikan persona ke bawaan?',
-    impact: 'Semua aturan tambahan dihapus dan batasan topik dimatikan. Aturan inti tidak berubah. Belum tersimpan sampai Anda menekan Simpan perubahan.',
+    impact: 'Semua aturan tambahan dihapus dan batasan topik dinonaktifkan. Aturan inti tidak berubah. Belum tersimpan sampai Anda menekan Simpan perubahan.',
     action: 'Kembalikan ke bawaan',
   },
   saved: 'Persona tersimpan. Sesi suara baru memakai aturan ini; sesi yang sedang berjalan tetap memakai yang lama.',
@@ -152,7 +152,7 @@ export const USAGE_AI_COPY = Object.freeze({
     title: 'Batas biaya per sesi',
     description: (warn, cap) => `Kosong memakai default bawaan (peringatan ${warn}, berhenti ${cap}). Isi "off" untuk tanpa batas.`,
     effective: (warn, cap) => `Berlaku sekarang: peringatan di ${warn}, sesi berhenti di ${cap}.`,
-    off: 'mati',
+    off: 'nonaktif',
     warn: { label: 'Peringatan (USD)', placeholder: 'Bawaan' },
     cap: { label: 'Batas keras (USD)', placeholder: 'Bawaan' },
     invalid: 'Batas biaya: isi jumlah dolar, "off", atau kosongkan untuk default bawaan.',
@@ -165,6 +165,6 @@ export const USAGE_AI_COPY = Object.freeze({
     live: (model, perMin) => `Audio live (${model}): $${perMin} per menit, ditagih per detik.`,
     reader: (model, input, output) => `Pembaca layar (${model}): $${input} / $${output} per 1 juta token input / output.`,
     excluded: 'Tidak termasuk: backend model yang didelegasikan dan tool call-nya, yang ditagih terpisah oleh OpenAI.',
-    judge: (model, input, output, enabled) => `Judge keluar topik (${model}): $${input} / $${output} per 1 juta token input / output, sekitar $0.0002 per jawaban yang dinilai; ${enabled ? 'termasuk di tabel harian (Panggilan judge).' : 'sedang dimatikan.'}`,
+    judge: (model, input, output, enabled) => `Judge keluar topik (${model}): $${input} / $${output} per 1 juta token input / output, sekitar $0.0002 per jawaban yang dinilai; ${enabled ? 'termasuk di tabel harian (Panggilan judge).' : 'sedang nonaktif.'}`,
   },
 });

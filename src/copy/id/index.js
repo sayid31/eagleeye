@@ -11,3 +11,4 @@ export * from './system.js';
 export * from './systemLogs.js';
 export * from './users.js';
 export * from './config.js';
+export * from './configForms.js';

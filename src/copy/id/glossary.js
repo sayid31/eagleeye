@@ -5,6 +5,9 @@
  * `avoid` is matched case-insensitively and as a whole phrase, only against text shown to people (code, endpoints,
  * file names and audit action ids keep their names). Add a row when a new inconsistency shows up.
  *
+ * On/off vocabulary: accounts, capabilities and settings are "aktif / nonaktif" ("nonaktifkan"); only the Sakelar darurat
+ * gates are "menyala / dimatikan" (a switch). "Mati" alone is never used.
+ *
  * @module copy/id/glossary
  */
 
@@ -14,6 +17,9 @@ export const GLOSSARY = Object.freeze([
   { avoid: 'Server Log', use: 'Log server' },
   { avoid: 'Audit Log', use: 'Jejak audit' },
   { avoid: 'Kesehatan Sistem', use: 'Kesehatan' },
+  { avoid: 'Pemakai', use: 'Pengguna' },
+  { avoid: 'Mati', use: 'Nonaktif' },
+  { avoid: 'Sign-in', use: 'Login' },
 ]);
 
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
