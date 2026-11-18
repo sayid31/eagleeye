@@ -10,6 +10,7 @@
 import { signOut } from '../auth/authClientApi.js';
 import { accessContactHref } from './landingConfig.js';
 import { landingCta } from './landingCta.js';
+import { mountMobileMenu, mountThemeControl } from './landingChrome.js';
 import { fetchMe } from './landingSession.js';
 import { legacyAppRedirect } from './legacyShareRedirect.js';
 
@@ -52,7 +53,7 @@ function ctaElement(item, className) {
 
 /**
  * Replace the contents of every `[data-cta-slot]` with the computed buttons.
- * `hero` slots get primary + secondary; `nav` slots get the primary only.
+ * `hero` and `menu` slots get primary + secondary; the `nav` slot gets the primary only.
  * @param {import('./landingCta.js').LandingCta} cta
  */
 function renderCta(cta) {
@@ -81,6 +82,8 @@ async function start() {
     window.location.replace(redirect);
     return;
   }
+  mountThemeControl();
+  mountMobileMenu();
   const contact = accessContactHref();
   renderContact(contact);
   renderCta(landingCta(await fetchMe(), { accessContact: contact }));
