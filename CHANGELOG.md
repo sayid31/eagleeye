@@ -82,6 +82,16 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Tampilan baru untuk `/admin` dan `/dev`, terang dan gelap.** Menu samping yang bisa dilipat (di HP jadi
+  panel geser berisi semua menu), breadcrumb, tautan "Lewati ke konten", dan menu akun berisi tema
+  (Terang / Gelap / Sistem), "Buka peta", pindah area, dan "Keluar". Pilihan tema tersimpan dan dipakai
+  bersama oleh halaman login, admin, dan beranda tanpa kedip saat dibuka. Font Geist dimuat dari server
+  sendiri, tanpa permintaan ke pihak ketiga. Isi tiap halaman masih tampilan lama; dirombak bertahap.
+- **Menu `/admin` dan `/dev` dirapikan.** `/admin`: Ringkasan, Pengguna, Aktivitas (tab Log Login | Audit).
+  `/dev`: Ringkasan sistem, Akses (Pengguna & Admin, Aktivitas), Kendali (Sakelar darurat, Pemakaian & Biaya),
+  Konfigurasi (Penyedia & API Keys, Umum, Persona), Sistem (Log server). "Kill switch" kini "Sakelar darurat"
+  dan "Server Log" kini "Log server". Alamat lama (mis. `/dev/api-keys`, `/dev/server-log`, `/admin/login-log`)
+  otomatis diarahkan ke halaman barunya.
 - **Semua layanan data (`/api/*`) kini menolak permintaan tanpa login** (`401`), dari akun yang menunggu
   persetujuan atau diblokir (`403`). Halaman `/admin` hanya untuk admin aktif; pengelolaan API key hanya
   untuk super admin (admin tetap bisa memilih model dan suara di Penyedia AI). Audit Log mencatat id

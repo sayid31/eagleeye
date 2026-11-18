@@ -88,8 +88,9 @@ with secrets directly from the browser.
 ### UI vs. layer logic — kept strictly separate
 
 - **`src/ui.js`** — the runtime UI: panels, HUD wiring, style switching, the
-  control facade. This file is large (10k+ lines); when editing, search for
-  the specific control/panel by name rather than reading it top to bottom.
+  control facade. The file itself is ~850 lines; the panels are split across
+  the many `src/ui*.js` and `*Mixin.js` modules next to it, so search for the
+  specific control/panel by name rather than reading top to bottom.
 - **`src/hud.js`** — intelligence HUD + AI scene-summary text.
 - **`src/data/<layer>.js`** — one file per data layer (see contract above).
   Layer logic never reaches into `ui.js` internals directly; it exposes
@@ -113,6 +114,33 @@ with secrets directly from the browser.
 - **`src/data/local_data/`** — bundled static datasets (dams, datacenters,
   submarine cables, SF neighborhoods, Natural Earth regions), each with its
   own provenance tracked in `DATA_SOURCES.md`.
+
+### React surfaces (`/login`, `/account`, `/admin`, `/dev`) — the shadcn/ui system
+
+These are a separate product surface from the map: Tailwind + shadcn/ui, light and dark.
+Read `docs/CURRENT-STATE.md` → "UI system" before touching them.
+
+- **Where things live.** Tokens `src/ui/tokens.css` (plain CSS, shared with the landing);
+  Tailwind entry `src/ui/app.css` (imported **only** from `src/admin/main.jsx` and
+  `src/login/main.jsx` — never from the map or the landing); generated shadcn components
+  `src/components/ui/` (JSX, `npx shadcn@latest add …`, the `shadcn` package is **not** a
+  dependency; keep their style, re-apply the patches listed in `sidebar.jsx`); product
+  patterns `src/components/app/` (AppShell, DataTable, ConfirmDialog, FormField, …);
+  theme `src/lib/theme.jsx` + `themeCore.js`; all UI strings `src/copy/id/` (glossary:
+  "Sakelar darurat", "Log server"); route registration `src/admin/routes/features/*.js`.
+- **Rules.** Build a page from `components/ui` + `components/app` and Tailwind utilities with
+  **token colours only** (`bg-card`, `text-muted-foreground`, never hex, no `!important`).
+  **Never edit `style.css` for admin/login UI** — it is the map's stylesheet. New strings go
+  in `src/copy/id/`; API errors through `errorMessage()` (never show a code or HTTP status).
+  Open dialogs from code with `ConfirmDialog` or pass `useReturnFocus` to `onCloseAutoFocus`.
+  A pure `.js` module that node tests import must use relative imports (the `@` alias exists
+  only for Vite); `.jsx` is tested through `src/testing/jsxLoader.mjs`.
+- **Adding a page.** Create the page component, then register it in the feature file that owns
+  it (`pages`, `nav`, `redirects`) — `adminNav.js`/`AdminApp.jsx` are composition only. Add the
+  URL to `scripts/qa-ui/pages.mjs`. Old `.adm-*` CSS is a temporary `@layer legacy` bridge;
+  delete it with the last page that uses it.
+- **Gates.** `npm run qa:contrast` (token contrast) and `npm run qa:ui` (axe, reflow, console,
+  keyboard probes, build isolation; `npm run qa:ui -- --only <page-id>` for one page).
 
 ### `vite.config.js` — the proxy/secrets boundary
 
