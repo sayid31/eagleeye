@@ -5,6 +5,7 @@
  * their flows (login, create-user → temporary password, delete confirmation, ...) using the helpers in keyboard.mjs.
  */
 import assert from 'node:assert/strict';
+import { SYSTEM_PROBES } from './probes.system.mjs';
 import { expectEscapeRestoresFocus, expectFocusTrapped, focusInfo, focusMatches, press, tabOrder, tabUntil, waitForFocus } from './keyboard.mjs';
 
 const MAIN = '#main-content';
@@ -181,4 +182,5 @@ export const PROBES = [
       assert.equal(await page.$eval('section[aria-label="Contoh daftar pengguna"] nav[aria-label="Halaman data"]', (el) => el.textContent.includes('dari 45')), true);
     },
   },
+  ...SYSTEM_PROBES,
 ];
