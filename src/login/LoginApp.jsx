@@ -6,20 +6,24 @@
  * A share link's hash (`/app#…` → `/login?next=/app#…`) is carried to `next`.
  */
 import { useEffect, useState } from 'react';
+import { ArrowLeft, CircleAlert } from 'lucide-react';
 import { useSearchParams } from 'react-router';
-import { GoogleLogo } from '../admin/GoogleLogo.jsx';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { LOGIN_COPY } from '../copy/id/login.js';
 import { fetchMe, signInWithPassword, startGoogleSignIn } from '../auth/authClientApi.js';
-import { PASSWORD_MAX } from '../auth/passwordPolicy.mjs';
-import { BRAND, LOGIN_COPY } from './loginCopy.js';
+import { AuthLayout } from './AuthLayout.jsx';
+import { BrandMark } from './BrandMark.jsx';
+import { LoginForm } from './LoginForm.jsx';
 import { afterSignInLocation, loginMessage, loginPageState, showGoogleButton, signInErrorText } from './loginView.js';
-import { PasswordInput } from './PasswordInput.jsx';
 
 export function LoginApp() {
   const [params] = useSearchParams();
   const [state, setState] = useState({ view: 'loading', me: null });
   const [busy, setBusy] = useState(null); // 'password' | 'google' | null
-  const [error, setError] = useState(null);
-  const [forgotOpen, setForgotOpen] = useState(false);
+  const [error, setError] = useState(null); // {code, text} of the last refusal
+  const [startupError, setStartupError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,19 +37,17 @@ export function LoginApp() {
         console.warn(`[login] /api/me failed: ${failure.message}`);
         if (cancelled) return;
         setState({ view: 'sign-in', me: null });
-        setError(LOGIN_COPY.sessionCheckFailed);
+        setStartupError({ tone: 'error', text: LOGIN_COPY.sessionCheckFailed });
       });
     return () => { cancelled = true; };
   }, []);
 
-  const submit = async (event) => {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
+  const submit = async ({ email, password }) => {
     setBusy('password');
     setError(null);
     let result;
     try {
-      result = await signInWithPassword({ email: String(form.get('email') ?? '').trim(), password: String(form.get('password') ?? '') });
+      result = await signInWithPassword({ email, password });
       if (result.ok) {
         window.location.replace(afterSignInLocation(params, await fetchMe(), window.location.hash));
         return;
@@ -54,7 +56,7 @@ export function LoginApp() {
       console.warn(`[login] sign-in request failed: ${failure.message}`);
       result = { ok: false, code: 'NETWORK' };
     }
-    setError(signInErrorText(result.code));
+    setError({ code: result.code, text: signInErrorText(result.code) });
     setBusy(null);
   };
 
@@ -64,57 +66,56 @@ export function LoginApp() {
     startGoogleSignIn().catch((failure) => {
       console.warn(`[login] ${failure.message}`);
       setBusy(null);
-      setError(LOGIN_COPY.googleStartFailed);
+      setError({ code: 'GOOGLE_START', text: LOGIN_COPY.googleStartFailed });
     });
   };
 
-  const message = loginMessage(params);
   const signIn = state.view === 'sign-in';
   const withGoogle = signIn && showGoogleButton(params, state.me);
   return (
-    <main className="adm-login">
-      <section className="adm-login-card login-card" aria-busy={state.view === 'loading'}>
-        <img className="adm-login-logo" src="/logo.svg" alt="" width="56" height="56" />
-        <h1>{BRAND.name} <span>{BRAND.accent}</span></h1>
-        {state.view === 'not-configured' ? (
-          <div className="login-alert login-alert-error" role="alert">
-            <strong>{LOGIN_COPY.notConfiguredTitle}</strong>
-            <p>{LOGIN_COPY.notConfiguredBody} <code>{LOGIN_COPY.notConfiguredCommand}</code>.</p>
-          </div>
-        ) : <p className="adm-login-lead">{LOGIN_COPY.lead}</p>}
-        {message && state.view !== 'not-configured' ? <p className={`login-alert login-alert-${message.tone}`} role="alert">{message.text}</p> : null}
-        {state.view === 'loading' ? <p className="adm-muted">{LOGIN_COPY.checking}</p> : null}
-        {signIn ? (
-          <form className="login-form" onSubmit={submit}>
-            <label className="login-field">
-              <span>{LOGIN_COPY.email}</span>
-              <input name="email" type="email" autoComplete="username" inputMode="email" required autoFocus disabled={busy !== null} spellCheck={false} autoCapitalize="off" />
-            </label>
-            <PasswordInput label={LOGIN_COPY.password} name="password" autoComplete="current-password" disabled={busy !== null} maxLength={PASSWORD_MAX} />
-            {error ? <p className="login-alert login-alert-error" role="alert">{error}</p> : null}
-            <button type="submit" className="adm-btn adm-btn-primary login-submit" disabled={busy !== null} aria-busy={busy === 'password'}>
-              {busy === 'password' ? LOGIN_COPY.submitting : LOGIN_COPY.submit}
-            </button>
-          </form>
-        ) : null}
-        {withGoogle ? (
-          <>
-            <p className="login-divider"><span>{LOGIN_COPY.divider}</span></p>
-            <button type="button" className="adm-google-btn" onClick={google} disabled={busy !== null} aria-busy={busy === 'google'}>
-              <GoogleLogo />
-              <span>{busy === 'google' ? LOGIN_COPY.googleStarting : LOGIN_COPY.google}</span>
-            </button>
-          </>
-        ) : null}
-        {signIn ? (
-          <div className="adm-login-note">
-            <button type="button" className="login-linkish" aria-expanded={forgotOpen} aria-controls="login-forgot" onClick={() => setForgotOpen((open) => !open)}>
-              {LOGIN_COPY.forgot}
-            </button>
-            {forgotOpen ? <p id="login-forgot" className="login-forgot" role="note">{LOGIN_COPY.forgotAnswer}</p> : null}
-          </div>
-        ) : null}
-      </section>
-    </main>
+    <AuthLayout>
+      <Card className="w-full max-w-sm gap-6 [--card-spacing:--spacing(6)] sm:[--card-spacing:--spacing(8)]" aria-busy={state.view === 'loading'}>
+        <CardHeader className="items-center justify-items-center gap-3 text-center">
+          <BrandMark className="mb-1 h-12 w-auto text-primary" />
+          <h1 className="font-heading text-xl font-semibold tracking-tight">{LOGIN_COPY.title}</h1>
+          {state.view !== 'not-configured' ? <p className="text-sm text-muted-foreground">{LOGIN_COPY.lead}</p> : null}
+        </CardHeader>
+        <CardContent>
+          {state.view === 'loading' ? <FormSkeleton /> : null}
+          {state.view === 'not-configured' ? <NotConfigured /> : null}
+          {signIn ? <LoginForm message={loginMessage(params) ?? startupError} error={error} busy={busy} onSubmit={submit} onGoogle={withGoogle ? google : null} /> : null}
+        </CardContent>
+      </Card>
+      <a href="/" className="inline-flex items-center gap-1.5 rounded-md text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+        <ArrowLeft aria-hidden="true" className="size-4" />{LOGIN_COPY.backHome}
+      </a>
+    </AuthLayout>
+  );
+}
+
+/** Placeholder shaped like the form while `/api/me` answers; announces itself once. */
+function FormSkeleton() {
+  return (
+    <div role="status" aria-live="polite" className="grid gap-4">
+      <span className="sr-only">{LOGIN_COPY.checking}</span>
+      <div aria-hidden="true" className="grid gap-4">
+        <div className="grid gap-2"><Skeleton className="h-4 w-12" /><Skeleton className="h-10 w-full" /></div>
+        <div className="grid gap-2"><Skeleton className="h-4 w-20" /><Skeleton className="h-10 w-full" /></div>
+        <Skeleton className="h-10 w-full" />
+      </div>
+    </div>
+  );
+}
+
+/** Login is switched off on this server: say why and who can fix it, with no form to fill. */
+function NotConfigured() {
+  return (
+    <Alert variant="destructive">
+      <CircleAlert aria-hidden="true" />
+      <AlertTitle>{LOGIN_COPY.notConfiguredTitle}</AlertTitle>
+      <AlertDescription>
+        {LOGIN_COPY.notConfiguredBody} <code className="rounded bg-muted px-1 py-0.5 font-mono text-xs text-foreground">{LOGIN_COPY.notConfiguredCommand}</code>.
+      </AlertDescription>
+    </Alert>
   );
 }

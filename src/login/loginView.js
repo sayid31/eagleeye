@@ -6,13 +6,15 @@
  */
 
 import { safeNextPath } from '../auth/nextPath.mjs';
-import { LOGIN_NOTICES, SIGN_IN_ERRORS, SIGN_IN_GENERIC_ERROR } from './loginCopy.js';
+import { LOGIN_COPY, LOGIN_NOTICES, SIGN_IN_ERRORS, SIGN_IN_GENERIC_ERROR } from '../copy/id/login.js';
 
 export const CHANGE_PASSWORD_PATH = '/account/password';
 /** Share-link state can be long (camera + layers + annotations); anything longer is dropped. */
 export const MAX_NEXT_HASH_LENGTH = 8192;
 // Control characters would never come from the app's own share links.
 const CONTROL_CHARS = /[\u0000-\u001f\u007f]/;
+/** Refusals that mean "try the password again" (focus goes back to the password field, not the banner). */
+const RETRY_PASSWORD_CODES = new Set(['INVALID_EMAIL_OR_PASSWORD', 'INVALID_EMAIL']);
 
 /**
  * @param {string} code Server code of a refused sign-in.
@@ -85,4 +87,26 @@ export function loginPageState(me) {
   if (me && me.configured === false) return { view: 'not-configured' };
   if (me?.signedIn) return { view: 'redirect', location: me.user?.mustChangePassword ? CHANGE_PASSWORD_PATH : (me.home || '/app') };
   return { view: 'sign-in' };
+}
+
+/**
+ * Required-field check done before any request (the form has `noValidate`, so the browser's English bubbles never show).
+ * @param {{email: string, password: string}} values
+ * @returns {{email?: string, password?: string}} A message per empty field; `{}` when the form may be sent.
+ */
+export function loginFieldProblems({ email, password }) {
+  const problems = {};
+  if (!String(email ?? '').trim()) problems.email = LOGIN_COPY.emailRequired;
+  if (!password) problems.password = LOGIN_COPY.passwordRequired;
+  return problems;
+}
+
+/**
+ * Where keyboard focus goes after a refused sign-in: back to the password field when retrying it is the fix,
+ * otherwise to the error banner so a screen reader starts from the explanation.
+ * @param {string} code Server code of the refusal.
+ * @returns {'password' | 'alert'}
+ */
+export function signInFocusTarget(code) {
+  return RETRY_PASSWORD_CODES.has(code) ? 'password' : 'alert';
 }

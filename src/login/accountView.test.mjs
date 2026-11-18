@@ -2,8 +2,8 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { MAX_NAME_LENGTH } from '../auth/authHooks.mjs';
 import { MAX_NAME_LENGTH_CLIENT, fetchSessionUser, revokeOtherSessions, updateDisplayName } from './accountApi.js';
-import { accountPageState, hasPasswordSignIn, nameProblem, roleLabel } from './accountView.js';
-import { ACCOUNT_COPY } from './loginCopy.js';
+import { accountPageState, accountTab, backLinkFor, hasPasswordSignIn, nameProblem, roleLabel } from './accountView.js';
+import { ACCOUNT_COPY } from '../copy/id/login.js';
 
 const me = (user = {}) => ({ configured: true, signedIn: true, home: '/admin', googleSignIn: false, user: { role: 'admin', mustChangePassword: false, ...user } });
 
@@ -49,4 +49,20 @@ test('accountApi: update-user sends the trimmed name only; refusals come back as
   assert.deepEqual(await fetchSessionUser(fake(200, { user: { id: 'u1', passwordSetBy: 'cli' } })), { id: 'u1', passwordSetBy: 'cli' });
   assert.equal(await fetchSessionUser(fake(200, null)), null);
   await assert.rejects(fetchSessionUser(fake(500, {})), /HTTP 500/);
+});
+
+test('backLinkFor names where the way back goes: map, Admin or Developer', () => {
+  assert.deepEqual(backLinkFor('/app'), { href: '/app', label: 'Kembali ke peta' });
+  assert.deepEqual(backLinkFor('/admin'), { href: '/admin', label: 'Kembali ke Admin' });
+  assert.deepEqual(backLinkFor('/dev'), { href: '/dev', label: 'Kembali ke Developer' });
+  assert.deepEqual(backLinkFor('/dev/users'), { href: '/dev/users', label: 'Kembali ke Developer' });
+  assert.deepEqual(backLinkFor('/devices'), { href: '/devices', label: 'Kembali ke peta' }, 'only /dev and /dev/… are Developer');
+  assert.deepEqual(backLinkFor(''), { href: '/app', label: 'Kembali ke peta' });
+});
+
+test('accountTab: ?tab=security opens Keamanan, anything else the profile', () => {
+  assert.equal(accountTab(new URLSearchParams('tab=security')), 'security');
+  assert.equal(accountTab(new URLSearchParams('tab=profile')), 'profile');
+  assert.equal(accountTab(new URLSearchParams('tab=constructor')), 'profile');
+  assert.equal(accountTab(new URLSearchParams('')), 'profile');
 });
