@@ -15,7 +15,7 @@ const summary = (patch = {}) => ({
 test('overviewCards: concise values with a sub-label per card', () => {
   const cards = overviewCards(summary());
   assert.deepEqual(cards.version, { value: 'v1.2.3', detail: 'Running on Bun 1.2.8' });
-  assert.equal(cards.uptime.value, '1 j 05 mnt');
+  assert.equal(cards.uptime.value, '1 h 05 min');
   assert.deepEqual(cards.gates, { status: 'warn', value: '2 of 3 on', detail: 'Turned off: Voice & AI' });
   assert.deepEqual(cards.errors, { status: 'error', value: '2', detail: 'errors in the last 24 hours' });
   assert.deepEqual(cards.login.rows.map((row) => [row.status, row.text]), [['ok', 'Ready'], ['off', 'Not active']]);

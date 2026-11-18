@@ -301,11 +301,11 @@ try {
     acquiringLifecycle.pending.hidden === false
       && acquiringLifecycle.pending.state === 'acquiring'
       && acquiringLifecycle.pending.label === 'ACQUIRING'
-      && acquiringLifecycle.pending.detail === 'DIBAGIKAN FLIGHT'
+      && acquiringLifecycle.pending.detail === 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}'
       && acquiringLifecycle.followed.hidden === true
       && acquiringLifecycle.staleTerminal.hidden === false
       && acquiringLifecycle.staleTerminal.state === 'acquiring'
-      && acquiringLifecycle.staleTerminal.detail === 'DIBAGIKAN MILITARY FLIGHT'
+      && acquiringLifecycle.staleTerminal.detail === 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}'
       && acquiringLifecycle.cancelled.hidden === true,
     JSON.stringify(acquiringLifecycle),
   );

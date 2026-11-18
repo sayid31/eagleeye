@@ -187,7 +187,7 @@ test('the Contact panel never hides itself out from under its own NEXT button', 
   assert.match(body, /'AZM —'/);
   // A culled subject holds last-known content behind the CONTACT LOST cue.
   assert.match(body, /readout\.contactLost/);
-  assert.match(body, /KONTAK HILANG/);
+  assert.match(body, /CONTACT LOST/);
   assert.match(body, /this\.context\.dataset\.state = 'lost'/);
   assert.match(body, /if \(readout\.contactLost\) \{/, 'the CONTACT LOST branch is missing');
   // PREVIOUS/NEXT must be written before any early return, so the operator can
@@ -805,7 +805,7 @@ test('cockpit weather control is off before JavaScript restores an explicit opt-
   assert.ok(match, 'cockpit weather toggle markup is missing');
   assert.match(match[0], /aria-label="Turn on cockpit weather effects"/);
   assert.match(match[0], /aria-pressed="false"/);
-  assert.match(match[0], /id="cockpit-weather-state">MATI</);
+  assert.match(match[0], /id="cockpit-weather-state">OFF</);
 });
 
 test('cockpit summary presents the focused item as Contact', () => {
@@ -814,13 +814,13 @@ test('cockpit summary presents the focused item as Contact', () => {
   );
   assert.ok(match, 'cockpit Contact summary is missing');
   assert.match(match[0], /aria-label="Cockpit contact summary"/);
-  assert.match(match[0], /class="cockpit-context-kicker">KONTAK</);
-  assert.match(match[0], /aria-label="Navigasi kontak"/);
+  assert.match(match[0], /class="cockpit-context-kicker">CONTACT</);
+  assert.match(match[0], /aria-label="Contact navigation"/);
   assert.match(match[0], /aria-label="Previous — previously visited contact within the 250 km window"/);
   assert.match(match[0], /aria-label="Next — nearest unvisited contact within the 250 km window"/);
-  assert.match(match[0], /aria-label="Ciutkan panel Kontak"/);
+  assert.match(match[0], /aria-label="Collapse Contact panel"/);
   assert.doesNotMatch(match[0], />GLOBAL CONTEXT</);
-  assert.match(cockpitSrc, /`\$\{expanded \? 'Ciutkan' : 'Bentangkan'\} panel Kontak`/);
+  assert.match(cockpitSrc, /`\$\{expanded \? 'Collapse' : 'Expand'\} Contact panel`/);
 });
 
 test('Cockpit Contact navigation omits the redundant Focus camera action', () => {
@@ -835,8 +835,8 @@ test('Global Context names its mixed contact cycle without changing the stable m
     /<button id="global-context-flights-btn"[\s\S]*?<\/button>/,
   );
   assert.ok(match, 'Global Context contacts button is missing');
-  assert.match(match[0], />KONTAK</);
-  assert.match(match[0], /aria-label="KONTAK"/);
+  assert.match(match[0], />CONTACT</);
+  assert.match(match[0], /aria-label="CONTACT"/);
   assert.match(match[0], /title="Cycles through the nearest contacts of any type you pick — aircraft, vessel, installation\. Satellites are tracked independently\."/);
   assert.doesNotMatch(match[0], />FLIGHTS</);
 });
@@ -856,7 +856,7 @@ test('Global Context standby describes both chooser modes', () => {
   );
   assert.ok(match, 'Global Context standby is missing');
   assert.match(match[0], /CONTACT — aircraft · vessel · nearest site/);
-  assert.match(match[0], /MISI ANTARIKSA — peluncuran &amp; aset orbital/);
+  assert.match(match[0], /SPACE MISSIONS — launches &amp; orbital assets/);
 });
 
 test('cockpit briefing cycle control keeps its state as the accessible name', () => {
@@ -864,16 +864,16 @@ test('cockpit briefing cycle control keeps its state as the accessible name', ()
     /<button\s+id="cockpit-brief-auto"[\s\S]*?<\/button>/,
   );
   assert.ok(match, 'cockpit briefing cycle toggle is missing');
-  assert.match(match[0], /aria-label="SIKLUS MATI"/);
+  assert.match(match[0], /aria-label="CYCLE OFF"/);
   assert.match(match[0], /aria-pressed="false"/);
-  assert.match(match[0], />SIKLUS MATI<\/button>/);
+  assert.match(match[0], />CYCLE OFF<\/button>/);
   assert.match(match[0], /title="Auto-rotate summary pages every 9 seconds \(Signal → News → Local\)\./);
 
   const update = cockpitSrc.match(
     /setBriefAutoRotate\(enabled\) \{([\s\S]*?)\n  \}\n\n  startBriefRotation/,
   );
   assert.ok(update, 'cockpit briefing cycle state updater is missing');
-  assert.match(update[1], /const label = this\.briefAutoRotateEnabled \? 'SIKLUS NYALA' : 'SIKLUS MATI';/);
+  assert.match(update[1], /const label = this\.briefAutoRotateEnabled \? 'CYCLE ON' : 'CYCLE OFF';/);
   assert.match(update[1], /setAttribute\('aria-label', label\)/);
   assert.match(update[1], /\.title = help;/);
   assert.doesNotMatch(update[1], /setAttribute\('aria-label', help\)/);

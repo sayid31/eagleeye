@@ -36,7 +36,7 @@ test('login wording: failure reason, deleted and unknown accounts', () => {
 test('audit wording: actor redaction, action text, detail summaries', () => {
   assert.equal(auditActorText({ actorId: 'A1', actorName: 'Admin', actorRole: 'admin' }, adminMe), 'You');
   assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'super_admin' }, adminMe), 'Super admin');
-  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'admin' }, adminMe), 'Admin lain');
+  assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: 'admin' }, adminMe), 'another Admin');
   assert.equal(auditActorText({ actorId: null, actorName: null, actorRole: null }, adminMe), 'System');
   assert.equal(auditActionText('user.delete'), 'Account deleted');
   assert.equal(auditActionText('user.future'), 'user.future');

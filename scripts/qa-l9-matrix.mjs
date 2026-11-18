@@ -1550,7 +1550,7 @@ async function runBrowserGroup(record) {
     if (live && s.count > 0) {
       // Chip vocabulary: ON / LOADING / DEGRADED / STALE / FALLBACK /
       // UNAVAILABLE (src/data/manager.js:12-19). A live feed with rows reads ON.
-      return /^HIDUP$/i.test(chip.text)
+      return /^ON$/i.test(chip.text)
         ? pass(`${s.count} vessels live: chip="ON", transport=${transport}, lastMessage=${s.lastMessageAt || 'n/a'}`)
         : fail(`transport=${transport} with ${s.count} vessels, but the chip reads "${chip.text}" — a live feed must present as ON`);
     }
@@ -1563,7 +1563,7 @@ async function runBrowserGroup(record) {
     if (['stale', 'reconnecting', 'down'].includes(transport)) {
       // Degraded is ENV only when it is SURFACED. Cached rows must read STALE;
       // no usable rows must read UNAVAILABLE.
-      const expected = s.count > 0 ? /USANG|MENURUN/i : /UNAVAILABLE|DEGRADED/i;
+      const expected = s.count > 0 ? /STALE|DEGRADED/i : /UNAVAILABLE|DEGRADED/i;
       return expected.test(chip.text)
         ? skip(`feed is ${transport}${s.count > 0 ? ` with ${s.count} CACHED vessels` : ''} and the UI says so (chip="${chip.text}", error="${String(s.error || '').slice(0, 60)}", retryInSec=${s.retryInSec}) — honest degradation, not a live feed`, 'ENV')
         : fail(`feed is ${transport} with ${s.count} vessels but the chip reads "${chip.text}" — a degraded feed that presents as healthy is exactly the invisible outage this check exists for`);
@@ -1572,7 +1572,7 @@ async function runBrowserGroup(record) {
       return fail(`${s.count} vessels with transport="${transport}" — neither live nor a recognised degraded state, so this cannot be called a live feed (chip="${chip.text}")`);
     }
     // Keyed but empty: honest only if the UI says so.
-    return /TIDAK TERSEDIA|MEMUAT|MENURUN|USANG/i.test(chip.text)
+    return /UNAVAILABLE|LOADING|DEGRADED|STALE/i.test(chip.text)
       ? skip(`keyed but 0 vessels and the UI says so (chip="${chip.text}", transport=${transport}, error="${String(s.error || '').slice(0, 60)}") — AISStream connects open-but-silent upstream`, 'ENV')
       : fail(`keyed, 0 vessels, and the chip claims "${chip.text}" — the layer is empty without surfacing it`);
   });
@@ -1606,7 +1606,7 @@ async function runBrowserGroup(record) {
     const s = r.stats || {};
     if (env.keys.TOMTOM === false) {
       const label = String(s.loadingLabel || '');
-      return s.mode === 'sim' && /SIMULASI/i.test(label)
+      return s.mode === 'sim' && /SIMULATION/i.test(label)
         ? pass(`sim mode labelled honestly: "${label.slice(0, 70)}"`)
         : fail(`mode=${s.mode} label="${label.slice(0, 70)}" — expected sim + a SIMULATED label`);
     }

@@ -57,7 +57,7 @@ test('the mini-status reads its copy from the shared formatter', () => {
   const body = navMixin.slice(start, navMixin.indexOf('\n  }', start));
   assert.match(body, /locationMiniStatus\(\{[\s\S]*?searchedLabel: this\._searchedLocationLabel,[\s\S]*?\}\)/);
   // No second copy of the placeholder strings to drift out of sync.
-  assert.doesNotMatch(body, /Lokasi: --/);
+  assert.doesNotMatch(body, /Location: --/);
 });
 
 test('selecting a preset location clears the superseded search label', () => {

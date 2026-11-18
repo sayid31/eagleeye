@@ -25,18 +25,18 @@ test('formatAbsolute: day + month + time, the year only when it is not the curre
 });
 
 test('formatUptime', () => {
-  assert.equal(formatUptime(45), '45 dtk');
-  assert.equal(formatUptime(600), '10 mnt');
-  assert.equal(formatUptime(3900), '1 j 05 mnt');
+  assert.equal(formatUptime(45), '45 s');
+  assert.equal(formatUptime(600), '10 min');
+  assert.equal(formatUptime(3900), '1 h 05 min');
   assert.equal(formatUptime(190_000), '2 d 4 h');
-  assert.equal(formatUptime(-5), '0 dtk');
+  assert.equal(formatUptime(-5), '0 s');
 });
 
 test('nextUtcMidnight + formatCountdown: when the TomTom day resets', () => {
   assert.equal(nextUtcMidnight('2026-11-18'), Date.UTC(2026, 10, 19));
   assert.equal(nextUtcMidnight('2026-12-31'), Date.UTC(2027, 0, 1));
   assert.ok(Number.isNaN(nextUtcMidnight('nope')));
-  assert.equal(formatCountdown(nextUtcMidnight('2026-11-18'), NOW), '12 j 00 mnt');
-  assert.equal(formatCountdown(NOW - 1000, NOW), '0 dtk');
-  assert.equal(formatCountdown(Number.NaN, NOW), '0 dtk');
+  assert.equal(formatCountdown(nextUtcMidnight('2026-11-18'), NOW), '12 h 00 min');
+  assert.equal(formatCountdown(NOW - 1000, NOW), '0 s');
+  assert.equal(formatCountdown(Number.NaN, NOW), '0 s');
 });

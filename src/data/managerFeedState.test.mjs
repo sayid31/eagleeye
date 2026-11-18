@@ -25,7 +25,7 @@ test('a refresh with a real error still reports it', () => {
 });
 
 test('the chip keeps reading a zoom-in prompt as nominal, and stale when the cache is stale', () => {
-  assert.equal(layerFeedState({ status: 'zoom-in', error: 'Perbesar…', count: 0 }), 'nominal');
-  assert.equal(layerFeedState({ status: 'zoom-in', error: 'Perbesar…', count: 3, stale: true }), 'stale');
+  assert.equal(layerFeedState({ status: 'zoom-in', error: 'Zoom in…', count: 0 }), 'nominal');
+  assert.equal(layerFeedState({ status: 'zoom-in', error: 'Zoom in…', count: 3, stale: true }), 'stale');
   assert.equal(layerFeedState({ status: 'unavailable', error: 'HTTP 503', count: 0 }), 'unavailable');
 });

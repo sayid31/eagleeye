@@ -27,7 +27,7 @@ test('OpenSky card has no meter (the API reports remaining credits only) and say
   const card = providerCard({ id: 'opensky', configured: true, status: 'ok', data: { remaining: 3000, at: NOW - 240_000, warnAt: 400, ttlMs: 9000 } }, NOW);
   assert.equal(card.meters.length, 0);
   assert.equal(card.big.value, '3.000');
-  assert.deepEqual(card.facts.map((f) => f.value), ['400', '9 dtk']);
+  assert.deepEqual(card.facts.map((f) => f.value), ['400', '9 s']);
   assert.match(card.note, /4 min ago/);
 });
 
@@ -54,5 +54,5 @@ test('a provider without data shows the right empty state, never zeros', () => {
 
 test('voiceDayRows marks idle days and formats audio and cost', () => {
   const rows = voiceDayRows([{ day: '2026-11-17', seconds: 600, sessions: 2, estimatedUsd: 0.4 }, { day: '2026-11-16', seconds: 0, sessions: 0, estimatedUsd: 0 }]);
-  assert.deepEqual([rows[0].audio, rows[0].cost, rows[0].idle, rows[1].idle], ['10 mnt', '~$0.40', false, true]);
+  assert.deepEqual([rows[0].audio, rows[0].cost, rows[0].idle, rows[1].idle], ['10 min', '~$0.40', false, true]);
 });

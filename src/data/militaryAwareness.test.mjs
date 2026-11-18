@@ -367,7 +367,7 @@ test('pending mapped installations render as unknown instead of a false zero', a
     assert.match(installations?.reason || '', /unavailable/i);
     assert.match(
       runtime.panel()?.innerHTML || '',
-      /Instalasi terpetakan<\/strong><b aria-live="polite">\?<\/b>/,
+      /Mapped installations<\/strong><b aria-live="polite">\?<\/b>/,
       'the operator sees ? rather than an all-clear 0 while installations load',
     );
   } finally {

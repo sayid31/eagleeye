@@ -45,7 +45,7 @@ test('loading keeps the last report; disabled, transitioning and guidance layers
   const quiet = layerHealthEvents(new Map(), [
     ais(timeoutStats, { enabled: false }),
     ais(timeoutStats, { lifecycleState: 'enabling' }),
-    { id: 'military-installations', enabled: true, lifecycleState: 'enabled', stats: { status: 'zoom-in', error: 'Perbesar…', count: 0 } },
+    { id: 'military-installations', enabled: true, lifecycleState: 'enabled', stats: { status: 'zoom-in', error: 'Zoom in…', count: 0 } },
   ]);
   assert.deepEqual(quiet.events, []);
 });

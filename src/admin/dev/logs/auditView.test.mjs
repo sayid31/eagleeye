@@ -28,7 +28,7 @@ test('auditRows keeps the server order and builds unique ids', () => {
   const rows = auditRows([{ at, event: 'log.cleared', source: 'admin' }, { at, event: 'log.cleared' }], 1_800_000_060_000);
   assert.equal(rows.length, 2);
   assert.notEqual(rows[0].id, rows[1].id);
-  assert.equal(rows[0].via, 'Lewat admin');
+  assert.equal(rows[0].via, 'Via admin');
   assert.equal(rows[0].time.relative, '1 min ago');
   assert.equal(rows[1].via, '');
 });

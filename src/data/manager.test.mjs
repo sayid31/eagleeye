@@ -1838,7 +1838,7 @@ test('layer metadata names degraded state instead of presenting an ordinary age'
   assert.match(mgr._buildMetaText({
     source: 'AISStream',
     stats: { stale: true, count: 20, lastUpdate: Date.now() - 10_000 },
-  }), /^USANG · AISStream · /);
+  }), /^STALE · AISStream · /);
   assert.equal(mgr._buildMetaText({
     source: 'TomTom',
     stats: { mode: 'sim', count: 120, lastUpdate: 1, loadingLabel: 'simulated traffic' },

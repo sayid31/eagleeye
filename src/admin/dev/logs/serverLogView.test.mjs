@@ -37,7 +37,7 @@ test('logRow: relative + absolute time, repeat count, context', () => {
   assert.equal(row.time.relative, '2 min ago');
   assert.ok(row.time.absolute.length > 5);
   assert.equal(row.time.iso, new Date(entry.lastAt).toISOString());
-  assert.equal(row.repeat, '12 kali');
+  assert.equal(row.repeat, '12×');
   assert.equal(row.context, 'status=502');
   assert.equal(row.source, 'External services');
   assert.equal(logRow({ ...entry, count: 1 }, NOW).repeat, '');

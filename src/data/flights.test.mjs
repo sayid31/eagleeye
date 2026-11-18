@@ -230,7 +230,7 @@ test('flights poll refreshes tracked callsign/FL/kts and marks a missed poll STA
     await flightsLayer.update(viewer);
     assert.match(
       [entity.gevLabelModel.title, ...entity.gevLabelModel.details].join(' · '),
-      /USANG/,
+      /STALE/,
     );
   } finally {
     globalThis.fetch = realFetch;

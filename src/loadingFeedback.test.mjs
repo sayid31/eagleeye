@@ -34,14 +34,14 @@ test('universal status notices reuse the standard failure dwell', () => {
 test('acquiring notices persist without a dwell until explicitly cleared', () => {
   const notice = createGlobalStatusNotice('ACQUIRING', 1000, {
     state: 'acquiring',
-    detail: 'DIBAGIKAN FLIGHT',
+    detail: 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}',
     persistent: true,
   });
   assert.equal(notice.hideAt, null);
   assert.deepEqual(presentGlobalStatusNotice(notice, 1_000_000), {
     state: 'acquiring',
     label: 'ACQUIRING',
-    detail: 'DIBAGIKAN FLIGHT',
+    detail: 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}',
   });
 });
 
@@ -123,7 +123,7 @@ test('persistent acquisition never hides an unrelated manager failure', () => {
   });
   const acquiring = createGlobalStatusNotice('ACQUIRING', 100, {
     state: 'acquiring',
-    detail: 'DIBAGIKAN FLIGHT',
+    detail: 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}',
     persistent: true,
   });
 
@@ -576,7 +576,7 @@ test('aggregates Mapped Installations refresh beside CCTV without changing eithe
   const visible = reduceLoadingFeedback(pending, summary, 200);
   assert.deepEqual(
     presentLoadingFeedback(visible, summary, 200),
-    { state: 'refresh', label: 'UPDATING LIVE DATA', detail: 'CCTV · Instalasi militer' },
+    { state: 'refresh', label: 'UPDATING LIVE DATA', detail: 'CCTV · Military installations' },
   );
 });
 

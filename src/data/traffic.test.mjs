@@ -70,7 +70,7 @@ test('no keyless label ever implies a live feed', () => {
   ].map((feed) => feed.loadingLabel);
   for (const label of labels) {
     assert.ok(!LIVE_CLAIM.test(label), `label implies live data: ${label}`);
-    assert.ok(label.startsWith('SIMULASI'), `fallback label must lead with the mode: ${label}`);
+    assert.ok(label.startsWith('SIMULATION'), `fallback label must lead with the mode: ${label}`);
   }
 });
 
@@ -85,7 +85,7 @@ test('a healthy keyed layer reports live flow with its real coverage', () => {
   assert.deepEqual(idle, {
     mode: 'live',
     error: null,
-    loadingLabel: 'LIVE · aliran TomTom · cakupan 87%',
+    loadingLabel: 'LIVE · TomTom flow · coverage 87%',
   });
   assert.equal(
     trafficFeedPresentation({ liveMode: true, fetching: true }).loadingLabel,

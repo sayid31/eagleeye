@@ -2581,8 +2581,8 @@ async function main() {
       return { texts: radio.getOverlayDiagnostics().clusterTexts };
     });
     check(
-      'Weather / Emergency view labels its cluster callouts CUACA',
-      weatherCluster.texts.length > 0 && weatherCluster.texts.every((text) => /^\d+ CUACA$/.test(text)),
+      'Weather / Emergency view labels its cluster callouts WEATHER',
+      weatherCluster.texts.length > 0 && weatherCluster.texts.every((text) => /^\d+ WEATHER$/.test(text)),
       JSON.stringify(weatherCluster),
     );
     await page.select('#radio-filter', 'news');

@@ -56,7 +56,7 @@ test('handoverMessage: Indonesian, login URL from the origin, email, temp passwo
   assert.equal(text, [
     'Your EagleEye account has been created.',
     '',
-    'Alamat login: https://eagle-eye.example.test/login',
+    'Login address: https://eagle-eye.example.test/login',
     'Email: ani@example.test',
     'Temporary password: Tmp9xYzAbc',
     '',

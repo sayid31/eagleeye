@@ -18,11 +18,11 @@ test('the NEAR bound is metro scale, not continental', () => {
 test('a landmark under the camera reads NEAR', () => {
   assert.equal(
     composeLocalityTag({ ...ALCATRAZ, distKm: 2.4 }, 37.8267, -122.4230),
-    'DEKAT ALCATRAZ ISLAND (SAN FRANCISCO) 2KM',
+    'NEAR ALCATRAZ ISLAND (SAN FRANCISCO) 2KM',
   );
   assert.equal(
     composeLocalityTag({ ...LINCOLN, distKm: 0.6 }, 38.8893, -77.0502),
-    'DEKAT LINCOLN MEMORIAL (WASHINGTON DC) 1KM',
+    'NEAR LINCOLN MEMORIAL (WASHINGTON DC) 1KM',
   );
 });
 
@@ -30,12 +30,12 @@ test('the field failures now fall through to the SECTOR readout', () => {
   // Over Moscow, 2,470 km from the nearest catalogued POI.
   assert.equal(
     composeLocalityTag({ ...SACRE_COEUR, distKm: 2470 }, 55.7558, 37.6173),
-    'SEKTOR 55.76N 37.62E',
+    'SECTOR 55.76N 37.62E',
   );
   // Over Chicago, 962 km from the Lincoln Memorial.
   assert.equal(
     composeLocalityTag({ ...LINCOLN, distKm: 962 }, 41.8781, -87.6298),
-    'SEKTOR 41.88N 87.63W',
+    'SECTOR 41.88N 87.63W',
   );
 });
 
@@ -57,14 +57,14 @@ test('a real but distant POI no longer reads as NEAR (2026-09 Kawah Ijen report)
   const ULUN_DANU_BERATAN = { poi: 'Pura Ulun Danu Beratan', city: 'Denpasar' };
   assert.equal(
     composeLocalityTag({ ...ULUN_DANU_BERATAN, distKm: 102 }, -8.058, 114.242),
-    'SEKTOR 8.06S 114.24E',
+    'SECTOR 8.06S 114.24E',
   );
 });
 
 test('southern and western hemispheres carry the right suffixes', () => {
   // Rio and Honolulu — the two the fallback already handled correctly in the field.
-  assert.equal(composeLocalityTag(null, -22.9068, -43.1729), 'SEKTOR 22.91S 43.17W');
-  assert.equal(composeLocalityTag(null, 21.3069, -157.8583), 'SEKTOR 21.31N 157.86W');
+  assert.equal(composeLocalityTag(null, -22.9068, -43.1729), 'SECTOR 22.91S 43.17W');
+  assert.equal(composeLocalityTag(null, 21.3069, -157.8583), 'SECTOR 21.31N 157.86W');
 });
 
 // The tests above all pass against a hud.js that still computes the tag inline —

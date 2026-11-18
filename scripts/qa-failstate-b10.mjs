@@ -409,8 +409,8 @@ async function main() {
       const partialChipHonest = partialStats.count > 0
         && /CelesTrak groups unavailable: 1/i.test(partialStats.error || '')
         && partialControl.feedState === 'degraded'
-        && partialControl.ariaLabel === 'Satellites: MENURUN';
-      const partialMetaHonest = /^MENURUN · CelesTrak · /i.test(partialControl.meta)
+        && partialControl.ariaLabel === 'Satellites: DEGRADED';
+      const partialMetaHonest = /^DEGRADED · CelesTrak · /i.test(partialControl.meta)
         && /CelesTrak groups unavailable: 1/i.test(partialControl.meta);
       record(
         'Satellites: partial outage renders a DEGRADED chip',
