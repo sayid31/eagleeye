@@ -28,13 +28,13 @@ test('every Indonesia pack provider in config loses its unofficial marking', asy
 
 test('camera names lose the pack suffix; other names pass through', () => {
   assert.equal(cctvCameraName('Traffic Light Pace - Pace Barat (SOURCE-PUBLISHED LOCATION — Live — Unofficial)'), 'Traffic Light Pace - Pace Barat');
-  assert.equal(cctvCameraName('Simpang Lima (Live — Unofficial)'), 'FALLBACK · TomTom · simulated traffic');
+  assert.equal(cctvCameraName('Simpang Lima (Live — Unofficial)'), 'Simpang Lima');
   assert.equal(cctvCameraName('Lamar Blvd (Austin)'), 'Lamar Blvd (Austin)');
   assert.equal(cctvCameraName(undefined), '');
 });
 
 test('map label is the plain name, cut to the budget with an ellipsis, falling back to the id', () => {
-  assert.equal(cctvMapLabel({ id: 'x', name: 'Simpang Lima (Live — Unofficial)' }), 'FALLBACK · TomTom · simulated traffic');
+  assert.equal(cctvMapLabel({ id: 'x', name: 'Simpang Lima (Live — Unofficial)' }), 'Simpang Lima');
   const long = cctvMapLabel({ id: 'x', name: 'Traffic Light Pace - Pace Utara Kabupaten Nganjuk (APPROX. LOCATION — Live — Unofficial)' });
   assert.ok(long.length <= CCTV_MAP_LABEL_MAX, long);
   assert.match(long, /^Traffic Light Pace - Pace Utara…$/);

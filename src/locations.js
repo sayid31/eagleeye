@@ -185,7 +185,7 @@ export const CITY_POIS = {
       { name: 'Sam Poo Kong', lat: -6.9963, lon: 110.3980, alt: 350, pitch: -25, heading: 30, buildingHeight: 12 },
       { name: 'Blenduk Church (Kota Lama)', lat: -6.9682, lon: 110.4275, alt: 300, pitch: -25, heading: 180, buildingHeight: 20 },
       { name: 'Masjid Agung Jawa Tengah', lat: -6.9839, lon: 110.4458, alt: 450, pitch: -25, heading: 0, buildingHeight: 30 },
-      { name: 'FALLBACK · TomTom · simulated traffic', lat: -6.9906, lon: 110.4237, alt: 400, pitch: -35, heading: 0, buildingHeight: 10 },
+      { name: 'Simpang Lima', lat: -6.9906, lon: 110.4237, alt: 400, pitch: -35, heading: 0, buildingHeight: 10 },
     ],
   },
   yogyakarta: {

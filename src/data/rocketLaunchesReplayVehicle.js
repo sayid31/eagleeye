@@ -226,8 +226,7 @@ export function updateReplayVehicleOverlay(occluder) {
   let detail = siteCallout;
   if (mode === 'countdown') {
     title = `T−${String(state.countdownSeconds).padStart(2, '0')} · ${mission}`;
-    detail = `LAUNCH STANDBY
-${siteCallout}`;
+    detail = `LAUNCH STANDBY\n${siteCallout}`;
   } else if (mode === 'ascent') {
     title = state.elapsedSinceStart < 1
       ? `LIFTOFF · ${mission}`
