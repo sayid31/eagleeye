@@ -89,12 +89,12 @@ export const PROVIDERS_COPY = Object.freeze({
   sources: { env: '.env', pinokio: 'Pinokio ENVIRONMENT', external: 'Keychain or shell', none: '—' },
   tier: { metered: 'Paid account', free: 'Free' },
   test: { never: 'Not tested', at: (label, time) => `${label} • ${time}` },
-  actions: { change: 'Change key', install: 'Add key', changeLabel: (name) => `Change ${name} key`, installLabel: (name) => `Add ${name} key` },
+  actions: { change: 'Change key', install: 'Add key', changeLabel: (name) => `Change key for ${name}`, installLabel: (name) => `Add key for ${name}` },
   empty: { title: 'No providers', description: 'The server did not send a provider list. Reload the page.' },
 });
 
 export const KEY_SHEET_COPY = Object.freeze({
-  title: (name, set) => (set ? `Change ${name} key` : `Add ${name} key`),
+  title: (name, set) => (set ? `Change key for ${name}` : `Add key for ${name}`),
   getKey: 'Get a key',
   externalTitle: 'Managed outside the app',
   externalBody: 'This key is managed where the server runs (shell, Keychain, or launcher), so it can only be changed there. You can still test its connection.',

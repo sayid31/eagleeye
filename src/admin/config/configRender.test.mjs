@@ -28,8 +28,8 @@ test('provider table: caption, scoped headers, status + source words, one labell
   const html = render(h(ProviderTable, { rows: providerRows(PAYLOAD, { openai: { result: 'ok', at: Date.UTC(2026, 10, 18, 7, 2) } }), loading: false, error: null, onRetry: noop, onOpen: noop, busy: false }));
   assert.match(html, /<caption[^>]*sr-only[^>]*>Providers and API key status<\/caption>/);
   assert.equal([...html.matchAll(/<th[^>]*scope="col"/g)].length, 5);
-  assert.match(html, /aria-label="Change OpenAI key"/);
-  assert.match(html, /aria-label="Add OpenSky key"/);
+  assert.match(html, /aria-label="Change key for OpenAI"/);
+  assert.match(html, /aria-label="Add key for OpenSky"/);
   assert.match(html, /Key set/);
   assert.match(html, />Not set</);
   assert.match(html, /Keychain or shell/);

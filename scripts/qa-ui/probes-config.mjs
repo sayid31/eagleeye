@@ -34,7 +34,7 @@ async function mockKeys(page) {
     '/api/admin/keys/test': () => ({ id: 'openai', result: 'rejected', httpStatus: 401, message: 'x' }),
   });
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('button[aria-label="Change OpenAI key"]');
+  await page.waitForSelector('button[aria-label="Change key for OpenAI"]');
   return calls;
 }
 
@@ -49,11 +49,11 @@ export const CONFIG_PROBES = [
     id: 'keys-sheet-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/api-keys',
     async run(page) {
       await mockKeys(page);
-      const opener = 'button[aria-label="Change OpenAI key"]';
+      const opener = 'button[aria-label="Change key for OpenAI"]';
       await page.focus(opener);
       await page.keyboard.press('Enter');
       await page.waitForSelector(SHEET);
-      assert.match(await text(page, `${SHEET} [data-slot="sheet-title"]`), /Change OpenAI key/);
+      assert.match(await text(page, `${SHEET} [data-slot="sheet-title"]`), /Change key for OpenAI/);
       assert.equal((await focusInfo(page, SHEET)).inside, true, 'focus moves into the sheet');
       await expectFocusTrapped(page, SHEET, 12);
       assert.equal(await page.$eval(`${SHEET} input`, (el) => el.type), 'password', 'the key field is secret');
@@ -70,7 +70,7 @@ export const CONFIG_PROBES = [
     id: 'keys-remove-confirm-and-test', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/api-keys',
     async run(page) {
       const calls = await mockKeys(page);
-      await page.click('button[aria-label="Change OpenAI key"]');
+      await page.click('button[aria-label="Change key for OpenAI"]');
       await page.waitForSelector(SHEET);
       await clickText(page, `${SHEET} button`, 'Test connection');
       await page.waitForFunction(() => /Rejected\./.test(document.querySelector('[role="dialog"] [aria-live="polite"]')?.textContent ?? ''), { timeout: 4000 });
@@ -91,7 +91,7 @@ export const CONFIG_PROBES = [
       assert.deepEqual(put.body, { OPENAI_API_KEY: null });
       await page.waitForSelector('[data-sonner-toast]');
       assert.match(await text(page, '#main-content [role="status"]'), /Server is restarting/);
-      assert.equal(await page.$eval('button[aria-label="Add OpenAI key"]', (b) => b.disabled), true, 'writes stay off while the server restarts');
+      assert.equal(await page.$eval('button[aria-label="Add key for OpenAI"]', (b) => b.disabled), true, 'writes stay off while the server restarts');
     },
   },
   {
