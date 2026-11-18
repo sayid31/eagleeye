@@ -11,8 +11,8 @@ export const STATIC_LAYER_IDS = Object.freeze([
 ]);
 
 export const LAYER_GROUPS = Object.freeze([
-  { id: 'pergerakan', label: 'Pergerakan' },
-  { id: 'lingkungan', label: 'Lingkungan' },
+  { id: 'pergerakan', label: 'Movement' },
+  { id: 'lingkungan', label: 'Environment' },
   { id: 'kota', label: 'Kota' },
 ]);
 
@@ -36,14 +36,14 @@ export const LAYER_LABELS = Object.freeze({
   satellites: 'Satellites',
   'rocket-launches': 'Space missions (30 days)',
   earthquakes: 'Earthquakes 24 h',
-  'local-firms': 'Titik api (NASA FIRMS)',
-  'local-dams': 'Bendungan',
+  'local-firms': 'Fire hotspots (NASA FIRMS)',
+  'local-dams': 'Dams',
   'local-sumbar-tsunami': 'West Sumatra tsunami (unofficial)',
-  'local-datacenters': 'Pusat data',
+  'local-datacenters': 'Data centers',
   traffic: 'Traffic',
   cctv: 'CCTV',
   radio: 'Radio',
-  bikeshare: 'Sepeda bersama',
+  bikeshare: 'Bike share',
   'military-installations': 'Military installations',
   'military-awareness': 'Global context',
 });
@@ -104,7 +104,7 @@ export function layerShellStatus(layer, now = Date.now()) {
   const transitioning = layer?.lifecycleState === 'enabling' || layer?.lifecycleState === 'disabling';
   if (transitioning) return { key: 'loading', label: 'Loading', detail: '' };
   if (layer?.lifecycleUncertain) {
-    return { key: 'degraded', label: 'Terganggu', detail: 'status uncertain' };
+    return { key: 'degraded', label: 'Degraded', detail: 'status uncertain' };
   }
   if (!layer?.enabled) return { key: 'off', label: 'Off', detail: '' };
   const feed = layerFeedState(stats);
@@ -113,19 +113,19 @@ export function layerShellStatus(layer, now = Date.now()) {
     case 'loading':
       return { key: 'loading', label: 'Loading', detail: '' };
     case 'stale':
-      return { key: 'degraded', label: 'Terganggu', detail: ago ? `data ${ago}` : 'stale data' };
+      return { key: 'degraded', label: 'Degraded', detail: ago ? `data ${ago}` : 'stale data' };
     case 'fallback':
-      return { key: 'degraded', label: 'Terganggu', detail: 'using fallback source' };
+      return { key: 'degraded', label: 'Degraded', detail: 'using fallback source' };
     case 'unavailable':
-      return { key: 'degraded', label: 'Terganggu', detail: 'source unavailable' };
+      return { key: 'degraded', label: 'Degraded', detail: 'source unavailable' };
     case 'degraded':
-      return { key: 'degraded', label: 'Terganggu', detail: 'some data has problems' };
+      return { key: 'degraded', label: 'Degraded', detail: 'some data has problems' };
     default: {
       // A guidance prompt ("Perbesar untuk memuat…") is the only explanation
       // for an enabled layer that draws nothing, so it rides in the detail.
       const detail = isGuidanceStatus(stats.status) && stats.error ? String(stats.error) : '';
       return STATIC_LAYER_IDS.includes(layer?.id)
-        ? { key: 'static', label: 'Data statis', detail }
+        ? { key: 'static', label: 'Static data', detail }
         : { key: 'live', label: 'Live', detail };
     }
   }

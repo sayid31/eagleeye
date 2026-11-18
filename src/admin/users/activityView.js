@@ -20,7 +20,7 @@ const AUDIT = ACTIVITY_COPY.audit;
 export function describeDevice(userAgent) {
   const ua = String(userAgent ?? '');
   if (!ua) return '—';
-  const browser = [[/Edg\//, 'Edge'], [/OPR\//, 'Opera'], [/Firefox\//, 'Firefox'], [/Chrome\//, 'Chrome'], [/Safari\//, 'Safari'], [/node|undici|curl/i, 'Skrip']]
+  const browser = [[/Edg\//, 'Edge'], [/OPR\//, 'Opera'], [/Firefox\//, 'Firefox'], [/Chrome\//, 'Chrome'], [/Safari\//, 'Safari'], [/node|undici|curl/i, 'Script']]
     .find(([pattern]) => pattern.test(ua))?.[1] ?? 'Browser lain';
   const os = [[/Android/, 'Android'], [/iPhone|iPad/, 'iOS'], [/Windows/, 'Windows'], [/Mac OS X|Macintosh/, 'macOS'], [/Linux/, 'Linux']]
     .find(([pattern]) => pattern.test(ua))?.[1];

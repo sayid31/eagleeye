@@ -52,8 +52,8 @@ export function syncReplayButton() {
     if (toggleButton) {
       toggleButton.disabled = !active;
       toggleButton.textContent = S._replayPaused ? '▶' : 'Ⅱ';
-      toggleButton.setAttribute('aria-label', S._replayPaused ? 'Resume replay' : 'Jeda ulangan');
-      toggleButton.title = S._replayPaused ? 'Resume replay' : 'Jeda ulangan';
+      toggleButton.setAttribute('aria-label', S._replayPaused ? 'Resume replay' : 'Pause replay');
+      toggleButton.title = S._replayPaused ? 'Resume replay' : 'Pause replay';
     }
   }
 }
@@ -67,8 +67,8 @@ export function syncReplayCountdownButton(state) {
       ? 'Preparing the launch site'
     : state.elapsedSinceStart < 1
       ? 'Liftoff'
-      : state.ascending ? 'Ulangan pendakian' : 'Ulangan orbit';
-  transport.setAttribute('aria-label', `${phase}${S._replayPaused ? ', dijeda' : ''}`);
+      : state.ascending ? 'Ascent replay' : 'Orbit replay';
+  transport.setAttribute('aria-label', `${phase}${S._replayPaused ? ', paused' : ''}`);
 }
 
 export function syncReplaySpeedControl() {

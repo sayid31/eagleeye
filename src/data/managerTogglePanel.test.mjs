@@ -71,7 +71,7 @@ test('a layer still enabling shows its switch ON and clickable', async () => {
   assert.equal(button.classes.get('active'), true);
   assert.equal(button.classes.get('enabling'), true);
   assert.equal(button.disabled, false);
-  assert.equal(button.textContent, 'MENYALAKAN');
+  assert.equal(button.textContent, 'TURNING ON');
   assert.equal(button.attributes.get('aria-pressed'), 'true');
 
   layer.releaseInit();
@@ -92,7 +92,7 @@ test('clicking the switch mid-enable cancels the load and leaves the layer off',
   assert.equal(mgr.isEffectivelyEnabled('local-firms'), false, 'the OFF intent is effective at once');
   const midFlight = syncedButton(mgr, 'local-firms');
   assert.equal(midFlight.classes.get('active'), false, 'switch flips OFF before cleanup runs');
-  assert.equal(midFlight.textContent, 'MEMATIKAN');
+  assert.equal(midFlight.textContent, 'TURNING OFF');
   assert.equal(midFlight.classes.get('disabling'), true);
   assert.equal(midFlight.disabled, false);
 

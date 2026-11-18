@@ -234,7 +234,7 @@ export function validateKeySetupUpdates(body) {
     }
     if (typeof raw !== 'string') return { ok: false, error: `${name} must be a string` };
     const value = raw.trim();
-    if (!value) return { ok: false, error: `${name} kosong` };
+    if (!value) return { ok: false, error: `${${name} is empty};
     if (value.length > KEY_SETUP_VALUE_LIMIT) {
       return { ok: false, error: `${name} is longer than a real key (max ${KEY_SETUP_VALUE_LIMIT})` };
     }

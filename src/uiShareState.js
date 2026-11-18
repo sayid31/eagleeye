@@ -202,9 +202,9 @@ _handleShareTrackingRestoreStatus(result) {
     if (result.classification === 'pending') {
       this._shareTrackingNoticeGeneration += 1;
       this._shareTrackingAcquiringKey = trackingKey;
-      this._showGlobalStatusNotice('MEMPEROLEH', {
+      this._showGlobalStatusNotice('ACQUIRING', {
         state: 'acquiring',
-        detail: `DIBAGIKAN ${String(result.label || 'OBJEK').toUpperCase()}`,
+        detail: `SHARED ${String(result.label || 'OBJECT').toUpperCase()}`,
         persistent: true,
       });
       return;
@@ -224,7 +224,7 @@ _handleShareTrackingRestoreStatus(result) {
     const noticeGeneration = ownsAcquiringNotice
       ? this._shareTrackingNoticeGeneration
       : ++this._shareTrackingNoticeGeneration;
-    const subject = result.label || 'entitas';
+    const subject = result.label || 'entity';
     const message = result.classification === 'expired'
       ? `Shared ${subject} tracking expired`
       : result.classification === 'source-unavailable'
@@ -272,7 +272,7 @@ _handleShareTrackingRestoreStatus(result) {
   _initShareButton() {
     this._shareBtn.addEventListener('click', async () => {
       const success = await this.shareLinkManager.copyLink();
-      this._showToast(success ? 'Tautan disalin!' : 'Copy failed');
+      this._showToast(success ? 'Link copied!' : 'Copy failed');
     });
   },
 

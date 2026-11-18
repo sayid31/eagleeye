@@ -2,7 +2,7 @@
 // icon rail. DOM only, no Cesium, so it is testable with a stand-in document.
 import { RAIL_STYLE_SLOT_ID } from './shellMarkup.js';
 
-const STYLE_PICKER_TITLE = 'Gaya visual';
+const STYLE_PICKER_TITLE = 'Visual style';
 
 /**
  * Move the visual-style picker (#control-panel) from the bottom dock into the

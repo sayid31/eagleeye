@@ -489,15 +489,15 @@ export class IntelHUD {
    * @returns {string} Region name (e.g. `"EUROPE"`, `"NORTHERN OCEANIC GRID"`).
    */
   _regionLabel(lat, lon) {
-    if (lat > 72) return 'ARKTIK';
-    if (lat < -60) return 'ANTARKTIKA';
-    if (lat >= 5 && lat <= 83 && lon >= -170 && lon <= -50) return 'AMERIKA UTARA';
-    if (lat >= -60 && lat <= 15 && lon >= -90 && lon <= -30) return 'AMERIKA SELATAN';
-    if (lat >= 34 && lat <= 72 && lon >= -25 && lon <= 45) return 'EROPA';
-    if (lat >= -35 && lat <= 38 && lon >= -20 && lon <= 55) return 'AFRIKA';
+    if (lat > 72) return 'ARCTIC';
+    if (lat < -60) return 'ANTARCTICA';
+    if (lat >= 5 && lat <= 83 && lon >= -170 && lon <= -50) return 'NORTH AMERICA';
+    if (lat >= -60 && lat <= 15 && lon >= -90 && lon <= -30) return 'SOUTH AMERICA';
+    if (lat >= 34 && lat <= 72 && lon >= -25 && lon <= 45) return 'EUROPE';
+    if (lat >= -35 && lat <= 38 && lon >= -20 && lon <= 55) return 'AFRICA';
     if (lat >= 5 && lat <= 80 && lon >= 45 && lon <= 180) return 'ASIA';
-    if (lat >= -50 && lat <= 5 && lon >= 110 && lon <= 180) return 'OSEANIA';
-    return lat >= 0 ? 'GRID SAMUDRA UTARA' : 'GRID SAMUDRA SELATAN';
+    if (lat >= -50 && lat <= 5 && lon >= 110 && lon <= 180) return 'OCEANIA';
+    return lat >= 0 ? 'NORTH OCEAN GRID' : 'SOUTH OCEAN GRID';
   }
 
   /**
@@ -738,7 +738,7 @@ export class IntelHUD {
     // Update mode label
     const modeEl = document.getElementById('hud-mode');
     if (modeEl) {
-      const modeNames = { surveillance: 'NVG', thermal: 'FLIR', retro: 'CRT', snow: 'SALJU' };
+      const modeNames = { surveillance: 'NVG', thermal: 'FLIR', retro: 'CRT', snow: 'SNOW' };
       modeEl.textContent = modeNames[styleName] || styleName.toUpperCase();
     }
     // Update color scheme

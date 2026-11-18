@@ -145,7 +145,7 @@ export function getSatellitesRowControls() {
     return {
       chips: [{
         id: 'catalog',
-        label: loading ? 'PADAT ···' : (failed ? 'PADAT ✕' : 'PADAT'),
+        label: loading ? 'DENSE ···' : (failed ? 'DENSE ✕' : 'DENSE'),
         active,
         busy: loading,
         disabled: loading,

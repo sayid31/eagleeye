@@ -38,7 +38,7 @@ setBriefAutoRotate(enabled) {
     this.briefAutoRotateEnabled = Boolean(enabled);
     if (this.briefAutoToggle) {
       this.briefAutoToggle.setAttribute('aria-pressed', String(this.briefAutoRotateEnabled));
-      const label = this.briefAutoRotateEnabled ? 'SIKLUS NYALA' : 'CYCLE OFF';
+      const label = this.briefAutoRotateEnabled ? 'CYCLE ON' : 'CYCLE OFF';
       this.briefAutoToggle.textContent = label;
       const help = this.briefAutoRotateEnabled
         ? COCKPIT_BRIEF_CYCLE_ON_HELP
@@ -135,7 +135,7 @@ renderRegionalBriefStatus(status, info) {
       this.newsStatus.hidden = false;
       this.newsStatus.dataset.state = status;
       this.newsStatus.textContent = status === 'loading'
-        ? 'MEMPEROLEH BERITA REGIONAL'
+        ? 'ACQUIRING REGIONAL NEWS'
         : 'REGIONAL NEWS UNAVAILABLE';
     }
     if (status === 'unavailable') this.newsList?.replaceChildren();

@@ -43,7 +43,7 @@ const ROLE_CTA = Object.freeze({
     primary: { label: 'Developer Console', href: LANDING_ROUTES.dev },
     secondary: [
       { label: 'Panel Admin', href: LANDING_ROUTES.admin },
-      { label: 'Konsol', href: LANDING_ROUTES.app },
+      { label: 'Console', href: LANDING_ROUTES.app },
       SIGN_OUT,
     ],
   },
@@ -62,7 +62,7 @@ export function landingCta(me, { accessContact = null } = {}) {
   const user = me?.configured !== false && me?.signedIn === true ? me.user : null;
   if (user?.mustChangePassword === true) {
     return {
-      primary: { label: 'Ganti Password', href: LANDING_ROUTES.changePassword },
+      primary: { label: 'Change Password', href: LANDING_ROUTES.changePassword },
       secondary: [{ ...SIGN_OUT }],
     };
   }

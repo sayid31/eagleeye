@@ -32,7 +32,7 @@ test('universal status notices reuse the standard failure dwell', () => {
 });
 
 test('acquiring notices persist without a dwell until explicitly cleared', () => {
-  const notice = createGlobalStatusNotice('MEMPEROLEH', 1000, {
+  const notice = createGlobalStatusNotice('ACQUIRING', 1000, {
     state: 'acquiring',
     detail: 'DIBAGIKAN FLIGHT',
     persistent: true,
@@ -40,7 +40,7 @@ test('acquiring notices persist without a dwell until explicitly cleared', () =>
   assert.equal(notice.hideAt, null);
   assert.deepEqual(presentGlobalStatusNotice(notice, 1_000_000), {
     state: 'acquiring',
-    label: 'MEMPEROLEH',
+    label: 'ACQUIRING',
     detail: 'DIBAGIKAN FLIGHT',
   });
 });
@@ -121,7 +121,7 @@ test('persistent acquisition never hides an unrelated manager failure', () => {
   loading = reduceLoadingFeedback(loading, idle, 300, {
     type: 'visibility-failed', layerId: 'traffic', error: new Error('offline'),
   });
-  const acquiring = createGlobalStatusNotice('MEMPEROLEH', 100, {
+  const acquiring = createGlobalStatusNotice('ACQUIRING', 100, {
     state: 'acquiring',
     detail: 'DIBAGIKAN FLIGHT',
     persistent: true,
@@ -139,7 +139,7 @@ test('persistent acquisition never hides an unrelated manager failure', () => {
   loading = reduceLoadingFeedback(loading, idle, 300 + LOADING_FAILURE_DWELL_MS);
   assert.equal(
     presentGlobalLoadingStatus(acquiring, loading, idle, 300 + LOADING_FAILURE_DWELL_MS).label,
-    'MEMPEROLEH',
+    'ACQUIRING',
     'the still-owned acquisition resumes only after the full failure dwell is visible',
   );
 });
@@ -400,7 +400,7 @@ test('describes disable work without reporting it as a completed load', () => {
   }]);
   const pending = reduceLoadingFeedback(createLoadingFeedbackState(), summary, 0);
   const visible = reduceLoadingFeedback(pending, summary, 200);
-  assert.equal(presentLoadingFeedback(visible, summary, 200).label, 'MEMATIKAN DATA LIVE');
+  assert.equal(presentLoadingFeedback(visible, summary, 200).label, 'TURNING OFF LIVE DATA');
   const complete = reduceLoadingFeedback(visible, aggregateLayerLoading([]), 250);
   assert.equal(presentLoadingFeedback(complete, aggregateLayerLoading([]), 250).label, 'LIVE DATA OFF');
 });

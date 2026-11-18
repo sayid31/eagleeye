@@ -69,14 +69,14 @@ const CATEGORY_MATCHERS = Object.freeze({
 });
 
 const RADIO_CLUSTER_LABELS = Object.freeze({
-  news: 'BERITA',
+  news: 'NEWS',
   talk: 'TALK',
   weather: 'WEATHER',
-  'public-safety': 'KEAMANAN',
+  'public-safety': 'SECURITY',
   'aviation-marine': 'AIR / SEA',
   'traffic-transit': 'TRANSIT',
-  music: 'MUSIK',
-  other: 'LAINNYA',
+  music: 'MUSIC',
+  other: 'OTHER',
 });
 
 const RADIO_MARKER_CATEGORY_ORDER = Object.freeze([
@@ -193,13 +193,13 @@ export function buildRadioCategories(stations) {
   const rows = Array.isArray(stations) ? stations : [];
   const categories = [
     { id: 'all', label: 'All' },
-    { id: 'news', label: 'Berita' },
+    { id: 'news', label: 'News' },
     { id: 'talk', label: 'Talk' },
     { id: 'weather', label: 'Weather / Emergency' },
-    { id: 'public-safety', label: 'Keselamatan publik' },
+    { id: 'public-safety', label: 'Public safety' },
     { id: 'aviation-marine', label: 'Penerbangan / Maritim' },
     { id: 'traffic-transit', label: 'Traffic / Transit' },
-    { id: 'music', label: 'Musik' },
+    { id: 'music', label: 'Music' },
   ];
 
   for (const [genre, label] of MUSIC_GENRES) {

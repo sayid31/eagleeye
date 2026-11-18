@@ -95,7 +95,7 @@ export const LAYER_METADATA = Object.freeze({
     id: 'military-installations',
     name: 'Mapped Installations',
     icon: '⌖',
-    source: 'OpenStreetMap + Google Maps Places (opsional)',
+    source: 'OpenStreetMap + Google Maps Places (optional)',
     showInTogglePanel: true,
     hasRowControls: false,
   }),

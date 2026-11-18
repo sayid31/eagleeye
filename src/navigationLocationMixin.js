@@ -18,7 +18,7 @@ const STYLE_STATUS_LABELS = {
   thermal: 'FLIR',
   anime: 'ANIME',
   noir: 'NOIR',
-  snow: 'SALJU',
+  snow: 'SNOW',
 };
 
 /**

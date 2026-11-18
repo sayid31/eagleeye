@@ -67,7 +67,7 @@ export function renderMissionPanel() {
       ? `${endpoint.lat.toFixed(2)}, ${endpoint.lon.toFixed(2)} · ${endpoint.accuracy}`
       : stage.downrangeKm > 0 ? `${stage.downrangeKm.toLocaleString()} KM DOWNRANGE` : 'POSITION UNAVAILABLE';
     const stageDetail = [
-      Number.isFinite(stage.flightNumber) ? `PENERBANGAN ${stage.flightNumber}` : null,
+      Number.isFinite(stage.flightNumber) ? `FLIGHT ${stage.flightNumber}` : null,
       stage.reused ? 'REUSED' : null,
       stage.recoveryType,
     ].filter(Boolean).join(' · ');

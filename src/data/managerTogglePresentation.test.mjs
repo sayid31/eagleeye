@@ -40,23 +40,23 @@ test('buildLayerMetaText leads with the lifecycle phase, then errors, then age',
 
 test('a still-enabling layer presents ON with the enabling label', () => {
   const view = toggleButtonPresentation({
-    name: 'Titik api', enabled: false, effectiveEnabled: true, lifecycleState: 'enabling', stats: {},
+    name: 'Fire hotspots', enabled: false, effectiveEnabled: true, lifecycleState: 'enabling', stats: {},
   });
   assert.equal(view.on, true);
   assert.equal(view.phase, 'enabling');
   assert.equal(view.state, 'enabling');
-  assert.equal(view.text, 'MENYALAKAN');
+  assert.equal(view.text, 'TURNING ON');
   assert.equal(view.ariaLabel, 'Titik api: MENYALAKAN');
   assert.equal(view.feedClass, null, 'no feed colouring before the layer is settled ON');
 });
 
 test('a revoked enable presents OFF and heading to disabled before cleanup runs', () => {
   const view = toggleButtonPresentation({
-    name: 'Titik api', enabled: false, effectiveEnabled: false, lifecycleState: 'enabling', stats: {},
+    name: 'Fire hotspots', enabled: false, effectiveEnabled: false, lifecycleState: 'enabling', stats: {},
   });
   assert.equal(view.on, false);
   assert.equal(view.phase, 'disabling');
-  assert.equal(view.text, 'MEMATIKAN');
+  assert.equal(view.text, 'TURNING OFF');
 });
 
 test('a settled layer presents its feed state; uncertainty overrides it', () => {

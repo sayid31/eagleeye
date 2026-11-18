@@ -102,7 +102,7 @@ export function renderAccessBanner(doc, model, onDismiss) {
   close.type = 'button';
   close.className = 'account-banner-close';
   close.textContent = ACCESS_BANNER_DISMISS_LABEL;
-  close.setAttribute('aria-label', `${ACCESS_BANNER_DISMISS_LABEL} pemberitahuan`);
+  close.setAttribute('aria-label', `${ACCESS_BANNER_DISMISS_LABEL} notification`);
   close.addEventListener('click', () => onDismiss(model.key));
   banner.append(list, close);
 }

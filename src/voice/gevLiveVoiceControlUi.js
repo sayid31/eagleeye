@@ -9,9 +9,9 @@
 /** Mic status line text per controller status (the dock shows these words). */
 export const STATUS_LABELS = Object.freeze({
   idle: 'OFF',
-  connecting: 'MENGHUBUNGKAN',
-  listening: 'MENDENGARKAN',
-  executing: 'MENJALANKAN',
+  connecting: 'CONNECTING',
+  listening: 'LISTENING',
+  executing: 'EXECUTING',
   error: 'ERROR',
 });
 /** `data-status` values that differ from the controller status name. */

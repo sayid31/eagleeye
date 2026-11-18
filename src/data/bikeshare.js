@@ -1235,7 +1235,7 @@ const bikeshareLayer = {
     };
     if (_loading) {
       stats.loadingLabel = _activeCityIds.size > 0
-        ? `menyinkronkan ${_activeCityIds.size} feed kota...`
+        ? `syncing ${_activeCityIds.size} city feeds...`
         : 'scanning nearby systems...';
     }
     if (_error) stats.error = _error;

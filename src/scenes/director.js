@@ -271,7 +271,7 @@ export class SceneDirector {
         this._renderShotList();
       });
       label.addEventListener('dblclick', () => {
-        const nextTitle = window.prompt('Judul shot', shot.title);
+        const nextTitle = window.prompt('Shot title', shot.title);
         if (!nextTitle) return;
         shot.title = nextTitle.trim() || shot.title;
         this._saveProject();
@@ -334,7 +334,7 @@ export class SceneDirector {
 
   /** Prompt the user for a name and append a new empty scene to the project. */
   _createScene() {
-    const sceneName = window.prompt('New scene name', `Skenario ${this._project.scenes.length + 1}`);
+    const sceneName = window.prompt('New scene name', `Scene ${this._project.scenes.length + 1}`);
     if (!sceneName) return;
 
     const scene = {
@@ -687,7 +687,7 @@ export class SceneDirector {
     // Initialize telemetry accumulator for this run
     this._activeRun = {
       recipeId: `project-${PROJECT_VERSION}`,
-      title: 'Jalankan Skenario Terbuka',
+      title: 'Run Open Scene',
       startedAt: new Date().toISOString(),
       estimatedDurationSec,
       scenesRun: queue.length,

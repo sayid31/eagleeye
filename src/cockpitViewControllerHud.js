@@ -107,9 +107,9 @@ updateHud(info, nowMs = performance.now(), forceContext = false) {
     }
     if (this.aircraftMeta) {
       const feedState = this.surfaceAcquiring
-        ? 'MEMPEROLEH PERMUKAAN'
-        : (this.surfaceFallback ? 'FALLBACK SURFACE' : (info.stale ? 'STALE FEED' : 'LACAK LIVE'));
-      this.aircraftMeta.textContent = `${info.layerId === 'military' ? 'MILITER' : 'KOMERSIAL'} · ${feedState} · HALUAN SEJALAN`;
+        ? 'ACQUIRING SURFACE'
+        : (this.surfaceFallback ? 'FALLBACK SURFACE' : (info.stale ? 'STALE FEED' : 'LIVE TRACK'));
+      this.aircraftMeta.textContent = `${info.layerId === 'military' ? 'MILITARY' : 'COMMERCIAL'} · ${feedState} · ALIGNED HEADING`;
     }
     this.updateRoute(info);
     if (forceContext
@@ -156,7 +156,7 @@ updateRoute(info) {
       this.routeDirection.style.setProperty('--route-angle', `${displayedRelative.toFixed(2)}deg`);
     }
     if (this.routeDirectionLabel) {
-      this.routeDirectionLabel.textContent = `TUJ ${String(Math.round(destinationBearing)).padStart(3, '0')}°`;
+      this.routeDirectionLabel.textContent = `DST ${String(Math.round(destinationBearing)).padStart(3, '0')}°`;
     }
   },
 

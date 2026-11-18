@@ -36,7 +36,7 @@ export function apiDecision({ method, pathname, gates, actor, headers = {}, trus
   const fetchSite = headers['sec-fetch-site'];
   if (fetchSite && !SAME_ORIGIN_FETCH_SITES.has(fetchSite)) return deny(403, 'CROSS_SITE_REFUSED', 'Request from another site rejected');
   if (!actor) return deny(401, 'AUTH_REQUIRED', 'Login required');
-  if (actor.mustChangePassword) return deny(403, 'PASSWORD_CHANGE_REQUIRED', 'Ganti password dulu');
+  if (actor.mustChangePassword) return deny(403, 'PASSWORD_CHANGE_REQUIRED', 'Change your password first');
   for (const gate of gates) {
     if (hasGate(actor, gate)) continue;
     if (ROLE_GATE_ERRORS[gate]) return deny(403, ...ROLE_GATE_ERRORS[gate]);

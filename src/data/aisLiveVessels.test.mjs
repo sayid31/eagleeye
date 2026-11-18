@@ -112,7 +112,7 @@ test('socket error with no rows surfaces "feed mati"', () => {
 });
 
 test('closed feed with no rows surfaces "feed terputus"', () => {
-  assert.equal(deriveAisFeedError({ status: 'closed', error: null }, 0), 'feed terputus');
+  assert.equal(deriveAisFeedError({ status: 'closed', error: null }, 0), 'feed disconnected');
 });
 
 test('non-open status but rows still flowing is treated as stale, not down (null)', () => {

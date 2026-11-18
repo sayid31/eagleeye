@@ -300,7 +300,7 @@ try {
     'ACQUIRING DOM notice persists, ignores stale terminals, and clears on ownership completion',
     acquiringLifecycle.pending.hidden === false
       && acquiringLifecycle.pending.state === 'acquiring'
-      && acquiringLifecycle.pending.label === 'MEMPEROLEH'
+      && acquiringLifecycle.pending.label === 'ACQUIRING'
       && acquiringLifecycle.pending.detail === 'DIBAGIKAN FLIGHT'
       && acquiringLifecycle.followed.hidden === true
       && acquiringLifecycle.staleTerminal.hidden === false

@@ -52,7 +52,7 @@ export function readCapabilityDenial(status, body, routeGate = null) {
  * @returns {string}
  */
 export function denialToast({ gate, kind }) {
-  const label = CAPABILITY_LABELS[gate] ?? 'Fitur';
+  const label = CAPABILITY_LABELS[gate] ?? 'Feature';
   return kind === 'killed'
     ? `${label} is currently turned off by the developer — disabled on this page.`
     : `${label} is no longer allowed by an admin — disabled on this page.`;

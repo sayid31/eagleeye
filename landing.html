@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>EagleEye View · Konsol intelijen geospasial real-time</title>
+  <title>EagleEye View · Real-time geospatial intelligence console</title>
   <meta name="description" content="EagleEye View: a real-time geospatial intelligence console in the browser. Aircraft, vessels, satellites, earthquakes, fires, traffic, and public CCTV on a 3D globe, with voice control." />
   <meta name="color-scheme" content="light dark" />
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
@@ -32,9 +32,9 @@
         <nav class="ld-nav" aria-label="Page sections">
           <a href="#lihat">Data</a>
           <a href="#suara">Voice</a>
-          <a href="#gaya">Gaya</a>
+          <a href="#gaya">Style</a>
           <a href="#sumber">Sources</a>
-          <a href="#prinsip">Prinsip</a>
+          <a href="#prinsip">Principles</a>
         </nav>
         <div class="ld-header__tools">
           <div class="ld-theme" role="group" aria-label="Display theme">
@@ -95,8 +95,8 @@
           <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-satellite"></span></span><h3>Satellites</h3><p>Orbits computed in the browser from CelesTrak TLE data, plus rocket launch context from Launch Library 2.</p></li>
           <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-activity"></span><span class="ld-i ld-i-flame"></span></span><h3>Earthquakes &amp; fires</h3><p>Earthquakes from the last 24 hours from USGS and VIIRS satellite fire hotspots from NASA FIRMS.</p></li>
           <li class="ld-card"><span class="ld-ico"><span class="ld-i ld-i-car"></span></span><h3>Traffic</h3><p>Road geometry from OpenStreetMap. Traffic flow is simulated, or live from TomTom when its key is installed.</p></li>
-          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-cctv"></span></span><h3>CCTV publik</h3><p>Public traffic cameras (including Austin, Caltrans, TfL London, and cities in Indonesia), with a status label for each source.</p></li>
-          <li class="ld-card ld-card--full"><span class="ld-ico"><span class="ld-i ld-i-landmark"></span></span><h3>Infrastruktur</h3><p>Data centers, dams, submarine cables, and installation context recorded in open maps.</p></li>
+          <li class="ld-card ld-card--wide"><span class="ld-ico"><span class="ld-i ld-i-cctv"></span></span><h3>Public CCTV</h3><p>Public traffic cameras (including Austin, Caltrans, TfL London, and cities in Indonesia), with a status label for each source.</p></li>
+          <li class="ld-card ld-card--full"><span class="ld-ico"><span class="ld-i ld-i-landmark"></span></span><h3>Infrastructure</h3><p>Data centers, dams, submarine cables, and installation context recorded in open maps.</p></li>
         </ul>
       </div>
     </section>
@@ -113,9 +113,9 @@
           </ul>
         </div>
         <div class="ld-say">
-          <h3><span class="ld-i ld-i-mic" aria-hidden="true"></span>Contoh perintah</h3>
+          <h3><span class="ld-i ld-i-mic" aria-hidden="true"></span>Example commands</h3>
           <ul aria-label="Example voice commands">
-            <li>“Terbang ke Jakarta.”</li>
+            <li>“Fly to Jakarta.”</li>
             <li>“Turn on the vessel and earthquake layers.”</li>
             <li>“Track the nearest aircraft.”</li>
             <li>“Switch to the thermal view.”</li>
@@ -131,12 +131,12 @@
         <ul class="ld-styles">
           <li><span class="ld-i ld-i-eye" aria-hidden="true"></span><b>NVG</b><span>Night vision</span></li>
           <li><span class="ld-i ld-i-thermo" aria-hidden="true"></span><b>FLIR</b><span>Thermal</span></li>
-          <li><span class="ld-i ld-i-monitor" aria-hidden="true"></span><b>CRT</b><span>Monitor tabung</span></li>
+          <li><span class="ld-i ld-i-monitor" aria-hidden="true"></span><b>CRT</b><span>CRT monitor</span></li>
           <li><span class="ld-i ld-i-contrast" aria-hidden="true"></span><b>Noir</b><span>Hitam-putih</span></li>
-          <li><span class="ld-i ld-i-snow" aria-hidden="true"></span><b>Snow</b><span>Salju</span></li>
+          <li><span class="ld-i ld-i-snow" aria-hidden="true"></span><b>Snow</b><span>Snow</span></li>
           <li><span class="ld-i ld-i-sparkles" aria-hidden="true"></span><b>Anime</b><span>Cel-shading</span></li>
         </ul>
-        <h3 class="ld-subhead"><span class="ld-i ld-i-clapper" aria-hidden="true"></span>Scene sinematik</h3>
+        <h3 class="ld-subhead"><span class="ld-i ld-i-clapper" aria-hidden="true"></span>Cinematic scenes</h3>
         <p class="ld-intro">Ready-made missions turn on the relevant layers, pick a style, then move the camera automatically, good for presentations and recordings.</p>
         <ul class="ld-chips">
           <li>Global Flights Radar</li><li>Orbital Watch</li><li>Thermal Threat Board</li><li>City Overload</li><li>Omniscience Pullback</li>
@@ -150,21 +150,21 @@
         <p class="ld-intro">Data is fetched directly from its providers while the console is in use. Each source stays under its own license and terms; full attribution appears inside the console (the “Data attribution” link).</p>
         <div class="ld-table-wrap" role="region" aria-label="Table of data sources and their licenses" tabindex="0">
           <table class="ld-table">
-            <thead><tr><th scope="col">Sources</th><th scope="col">Used for</th><th scope="col">Lisensi / ketentuan</th></tr></thead>
+            <thead><tr><th scope="col">Sources</th><th scope="col">Used for</th><th scope="col">License / terms</th></tr></thead>
             <tbody>
               <tr><th scope="row">Google Map Tiles, Places, Geocoding</th><td>Photorealistic 3D globe, location search</td><td>Google Maps Platform ToS</td></tr>
               <tr><th scope="row">Esri World Imagery</th><td>Keyless basemap</td><td>Esri Master Agreement</td></tr>
-              <tr><th scope="row">OpenSky Network</th><td>Penerbangan sipil</td><td>Lisensi non-komersial</td></tr>
+              <tr><th scope="row">OpenSky Network</th><td>Civil flights</td><td>Non-commercial license</td></tr>
               <tr><th scope="row">adsb.lol</th><td>Military flights, flight fallback</td><td>ODbL 1.0</td></tr>
               <tr><th scope="row">AISStream.io</th><td>Vessels (AIS)</td><td>Free beta, no formal ToS</td></tr>
-              <tr><th scope="row">CelesTrak</th><td>Satellite orbits (TLE)</td><td>Data asal pemerintah AS, sitasi diminta</td></tr>
-              <tr><th scope="row">The Space Devs · Launch Library 2</th><td>Rocket launches</td><td>Ketentuan The Space Devs</td></tr>
-              <tr><th scope="row">USGS</th><td>Earthquakes</td><td>Domain publik AS</td></tr>
-              <tr><th scope="row">NASA FIRMS</th><td>Titik api</td><td>Domain publik AS (CC0)</td></tr>
+              <tr><th scope="row">CelesTrak</th><td>Satellite orbits (TLE)</td><td>US government data, citation requested</td></tr>
+              <tr><th scope="row">The Space Devs · Launch Library 2</th><td>Rocket launches</td><td>The Space Devs terms</td></tr>
+              <tr><th scope="row">USGS</th><td>Earthquakes</td><td>US public domain</td></tr>
+              <tr><th scope="row">NASA FIRMS</th><td>Fire hotspots</td><td>US public domain (CC0)</td></tr>
               <tr><th scope="row">OpenStreetMap</th><td>Roads, installations, data centers, dams</td><td>ODbL 1.0 · © OpenStreetMap contributors</td></tr>
-              <tr><th scope="row">TomTom Traffic</th><td>Live traffic flow (optional)</td><td>Ketentuan TomTom for Developers</td></tr>
-              <tr><th scope="row">TeleGeography</th><td>Submarine cables</td><td>CC BY-NC-SA 3.0 (non-komersial)</td></tr>
-              <tr><th scope="row">City of Austin, Caltrans, TfL</th><td>CCTV publik</td><td>Ketentuan open data masing-masing</td></tr>
+              <tr><th scope="row">TomTom Traffic</th><td>Live traffic flow (optional)</td><td>TomTom for Developers terms</td></tr>
+              <tr><th scope="row">TeleGeography</th><td>Submarine cables</td><td>CC BY-NC-SA 3.0 (non-commercial)</td></tr>
+              <tr><th scope="row">City of Austin, Caltrans, TfL</th><td>Public CCTV</td><td>Each open data set's own terms</td></tr>
               <tr><th scope="row">Open-Meteo, Re:Earth Terrain, Radio Browser</th><td>Weather, terrain, radio</td><td>CC BY 4.0 · CC BY 4.0 · PDDL 1.0</td></tr>
             </tbody>
           </table>
@@ -174,7 +174,7 @@
 
     <section class="ld-section" id="prinsip" aria-labelledby="prinsip-title">
       <div class="ld-wrap">
-        <h2 id="prinsip-title">Prinsip produk</h2>
+        <h2 id="prinsip-title">Product principles</h2>
         <ul class="ld-principles">
           <li><span class="ld-ico ld-ico--yes"><span class="ld-i ld-i-check"></span></span><h3>What it models</h3><p>Events, assets, infrastructure, and systems: aircraft, vessels, satellites, earthquakes, fires, public cameras, and cities.</p></li>
           <li><span class="ld-ico ld-ico--no"><span class="ld-i ld-i-x"></span></span><h3>What it does not do</h3><p>Not a people-tracking tool. No search by a person's name and no face recognition.</p></li>
@@ -188,11 +188,11 @@
     <div class="ld-wrap ld-footer__grid">
       <div>
         <p class="ld-brand ld-brand--footer"><span>EagleEye View</span></p>
-        <p class="ld-muted">Konsol intelijen geospasial real-time.</p>
+        <p class="ld-muted">Real-time geospatial intelligence console.</p>
         <p class="ld-muted" data-access-contact hidden>Need access? <a href="#top">Request access</a></p>
       </div>
       <div>
-        <h2 class="ld-footer__title">Lisensi</h2>
+        <h2 class="ld-footer__title">License</h2>
         <p class="ld-muted">Source code licensed under MIT, © 2026 Bilawal Sidhu (God's Eye View project). The MIT license does not cover third-party data; each data source stays under its own license. The globe is rendered with CesiumJS. Icons: Lucide (ISC). Font: Geist (OFL).</p>
       </div>
       <div>

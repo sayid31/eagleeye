@@ -604,7 +604,7 @@ export const publicApiMixin = {
    */
   _toggleOrbit() {
     if (!this._currentTarget) {
-      this._showToast('Terbang ke POI dulu');
+      this._showToast('Fly to a POI first');
       return;
     }
 

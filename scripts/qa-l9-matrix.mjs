@@ -2005,7 +2005,7 @@ async function runBrowserGroup(record) {
         // eslint-disable-next-line no-await-in-loop
         await new Promise((r) => setTimeout(r, 500));
         const status = document.getElementById('gev-voice-status')?.textContent?.trim() || '';
-        if (status && status !== 'MENGHUBUNGKAN') break;
+        if (status && status !== 'CONNECTING') break;
       }
       let diag = null;
       try { diag = vc.getDiagnostics?.(); } catch { /* not started */ }

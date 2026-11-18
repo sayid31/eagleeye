@@ -10,7 +10,7 @@
  * readout reporting "Location: --" while the camera sat over the destination.
  */
 
-const EMPTY = Object.freeze({ city: '📍 Location: --', poi: 'Penanda: --' });
+const EMPTY = Object.freeze({ city: '📍 Location: --', poi: 'Marker: --' });
 
 /** Split a geocoder `formatted_address` into its trimmed, non-empty segments. */
 export function addressSegments(label) {

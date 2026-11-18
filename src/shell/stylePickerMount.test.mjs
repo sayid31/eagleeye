@@ -52,7 +52,7 @@ test('the style picker moves from the dock into the rail slot and back to its ol
     const restore = mountStylePicker();
     assert.equal(picker.parentNode, slot, 'the picker now lives in the rail');
     assert.deepEqual(dock.children.map((child) => child.id), ['gev-voice-control'], 'only the mic stays in the dock');
-    assert.equal(toggle.getAttribute('title'), 'Gaya visual', 'the rail button gets a tooltip like its neighbours');
+    assert.equal(toggle.getAttribute('title'), 'Visual style', 'the rail button gets a tooltip like its neighbours');
 
     restore();
     assert.deepEqual(dock.children.map((child) => child.id), ['control-panel', 'gev-voice-control']);

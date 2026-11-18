@@ -44,14 +44,14 @@ test('admin → Panel Admin, with Buka Konsol and Keluar', () => {
 test('super_admin → Developer Console, with Panel Admin, Konsol and Keluar', () => {
   assert.deepEqual(landingCta(me('super_admin')), {
     primary: { label: 'Developer Console', href: '/dev' },
-    secondary: [{ label: 'Panel Admin', href: '/admin' }, { label: 'Konsol', href: '/app' }, SIGN_OUT],
+    secondary: [{ label: 'Panel Admin', href: '/admin' }, { label: 'Console', href: '/app' }, SIGN_OUT],
   });
 });
 
 test('mustChangePassword outranks every role: Ganti Password + Keluar only', () => {
   for (const role of ['user', 'admin', 'super_admin']) {
     assert.deepEqual(landingCta(me(role, { mustChangePassword: true })), {
-      primary: { label: 'Ganti Password', href: '/account/password' },
+      primary: { label: 'Change Password', href: '/account/password' },
       secondary: [SIGN_OUT],
     }, role);
   }

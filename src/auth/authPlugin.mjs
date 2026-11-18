@@ -35,7 +35,7 @@ async function handleAuthEndpoint(req, res, state) {
   withClientIp(req, state.config);
   if (!PASSWORD_CHANGE_ALLOWED.includes(decision.endpoint) && !decision.endpoint.startsWith('POST /sign-in/')) {
     const actor = await state.resolver.resolveActor({ headers: req.headers });
-    if (actor?.mustChangePassword) return sendJson(res, 403, { error: 'PASSWORD_CHANGE_REQUIRED', message: 'Ganti password dulu' });
+    if (actor?.mustChangePassword) return sendJson(res, 403, { error: 'PASSWORD_CHANGE_REQUIRED', message: 'Change your password first' });
   }
   if (req.method !== 'GET') {
     res.once('finish', () => {

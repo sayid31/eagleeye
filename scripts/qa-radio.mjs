@@ -373,7 +373,7 @@ async function main() {
     check('All is the initial Radio filter', initial.state.filter === 'all' && initial.state.filteredCount === 750, `${initial.state.filteredCount} stations`);
     check(
       'the default All filter exposes a draggable directory tuner band',
-      initial.tunerVisible && initial.tunerCount === 750 && initial.tunerLabel === 'BAND DIREKTORI',
+      initial.tunerVisible && initial.tunerCount === 750 && initial.tunerLabel === 'DIRECTORY BAND',
       JSON.stringify({ visible: initial.tunerVisible, count: initial.tunerCount, label: initial.tunerLabel }),
     );
     const uncertainPresentation = await page.evaluate(async () => {
@@ -485,9 +485,9 @@ async function main() {
         && uncertainPresentation.volumeDisabled
         && /compact Radio controls/i.test(uncertainPresentation.disclosureLabel)
         && /uncertain/i.test(uncertainPresentation.compactPowerLabel)
-        && uncertainPresentation.compactPowerText === 'SELARASKAN'
+        && uncertainPresentation.compactPowerText === 'ALIGN'
         && /uncertain/i.test(uncertainPresentation.fullLabel)
-        && uncertainPresentation.fullText === 'SELARASKAN'
+        && uncertainPresentation.fullText === 'ALIGN'
         && uncertainPresentation.layerState === 'UNCERTAIN'
         && /uncertain/i.test(uncertainPresentation.playbackMessage)
         && uncertainPresentation.miniStation === 'RADIO STATE UNCERTAIN'
@@ -548,10 +548,10 @@ async function main() {
         && disablingPresentation.manager.lifecycleState === 'disabling'
         && disablingPresentation.presentationActive === false
         && disablingPresentation.markerSourceVisible === false
-        && disablingPresentation.full === 'MEMATIKAN'
+        && disablingPresentation.full === 'TURNING OFF'
         && /compact Radio controls/i.test(disablingPresentation.disclosure)
-        && disablingPresentation.compactPower === 'MEMATIKAN'
-        && disablingPresentation.layerState === 'MEMATIKAN'
+        && disablingPresentation.compactPower === 'TURNING OFF'
+        && disablingPresentation.layerState === 'TURNING OFF'
         && /is turning off/i.test(disablingPresentation.message)
         && disablingPresentation.stopDisabled
         && disablingPresentation.volumeDisabled,
@@ -631,12 +631,12 @@ async function main() {
         && enablingPresentation.manager.lifecycleState === 'enabling'
         && enablingPresentation.presentationActive === false
         && enablingPresentation.markerSourceVisible === false
-        && enablingPresentation.full === 'MENYALAKAN'
+        && enablingPresentation.full === 'TURNING ON'
         && enablingPresentation.disclosure === 'Go to the expanded Radio section'
         && enablingPresentation.disclosureControls === 'radio-panel'
         && enablingPresentation.disclosureExpanded === 'true'
-        && enablingPresentation.compactPower === 'MENYALAKAN'
-        && enablingPresentation.layerState === 'MENYALAKAN'
+        && enablingPresentation.compactPower === 'TURNING ON'
+        && enablingPresentation.layerState === 'TURNING ON'
         && /is turning on/i.test(enablingPresentation.message)
         && enablingPresentation.tunerHidden
         && enablingPresentation.stopDisabled

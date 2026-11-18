@@ -295,7 +295,7 @@ export function presentLoadingFeedback(state, summary, nowMs) {
   const active = summary.active;
   const elapsed = Math.max(0, nowMs - state.startedAt);
   const label = summary.disabling
-    ? 'MEMATIKAN DATA LIVE'
+    ? 'TURNING OFF LIVE DATA'
     : summary.refresh ? 'UPDATING LIVE DATA' : 'LOADING LIVE DATA';
   const names = active.slice(0, 2).map((record) => record.label).join(' · ');
   const suffix = active.length > 2 ? ` +${active.length - 2}` : '';

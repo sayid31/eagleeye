@@ -98,7 +98,7 @@ async function init() {
     }
     mountAccountChrome(account);
 
-    loaderStatus.textContent = 'Mengonfigurasi viewer...';
+    loaderStatus.textContent = 'Configuring viewer...';
 
     // A server-side Google key provides Google 3D plus Google geocoding through
     // same-origin proxies (/api/google/*); the browser only learns that the key
@@ -244,7 +244,7 @@ async function init() {
 
     // If no share link state, do default fly-to Jakarta
     if (!styleManager.hasShareState) {
-      loaderStatus.textContent = 'Terbang ke Jakarta, Indonesia...';
+      loaderStatus.textContent = 'Flying to Jakarta, Indonesia...';
       flyToDefault(viewer);
     } else {
       loaderStatus.textContent = 'Restoring shared view...';

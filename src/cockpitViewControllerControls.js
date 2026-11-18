@@ -147,7 +147,7 @@ setVisionMode(mode, { revealParameters = false } = {}) {
     this.visionMode = next;
     const inherited = String(this.getInheritedVisionLabel?.() || 'NORMAL').toUpperCase();
     const labels = { optical: inherited, crt: 'CRT', nvg: 'NVG', thermal: 'FLIR', noir: 'NOIR' };
-    const names = { optical: inherited, crt: 'CRT', nvg: 'Penglihatan malam', thermal: 'Termal', noir: 'Noir' };
+    const names = { optical: inherited, crt: 'CRT', nvg: 'Night vision', thermal: 'Termal', noir: 'Noir' };
     if (this.visionCurrent) {
       this.visionCurrent.dataset.cockpitVision = next;
       this.visionCurrent.setAttribute('aria-label', `Current cockpit vision style: ${names[next]}. Activate for the next style.`);

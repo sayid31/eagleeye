@@ -89,8 +89,8 @@ enter() {
     this.pushCockpitSignal(
       'track',
       'track',
-      'TRACK DIPEROLEH',
-      `${trackLabel} · HALUAN ${trackHeading}°`,
+      'TRACK ACQUIRED',
+      `${trackLabel} · HEADING ${trackHeading}°`,
     );
     this.updateHud(info, performance.now(), true);
     this.setVisionMode(this.visionMode);

@@ -381,7 +381,7 @@ export function addLaunchEntity(launch, activeTleText = S._activeTleText) {
       createRocketMissionElementOverlayEntry({
         id: `orbit:${launch.id}`,
         position: orbitLabelPosition,
-        text: satelliteTrack ? 'ORBIT' : 'ORBIT PROYEKSI',
+        text: satelliteTrack ? 'ORBIT' : 'PROJECTED ORBIT',
         accent: satelliteTrack ? '#22e6e6' : '#c084fc',
         priority: 800_000,
         gapPx: 8,

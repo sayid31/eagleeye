@@ -58,8 +58,8 @@ export async function updateFlightsLayer(viewer, { signal = null } = {}) {
         S._backoff = true;
         S._retryAt = nowMs + BACKOFF_INTERVAL;
         S._lastError = authMode && authMode !== 'anon'
-          ? 'OpenSky dibatasi laju'
-          : 'OpenSky dibatasi laju (anonim)';
+          ? 'OpenSky rate-limited'
+          : 'OpenSky rate-limited (anonymous)';
         return;
       }
 

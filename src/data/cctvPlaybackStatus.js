@@ -40,7 +40,7 @@ export function videoPlaceholderHealth(health, playback) {
       }
       return { status: 'stalled', message: `Stream stalled · retrying (#${playback.attempt || 1})` };
     case 'recovering':
-      return { status: 'recovering', message: 'Stream terputus · memulihkan' };
+      return { status: 'recovering', message: 'Stream dropped · recovering' };
     case 'unavailable':
       return { status: 'unavailable', message: 'Video player unavailable in this browser' };
     default:
@@ -53,8 +53,8 @@ export function videoPlaceholderHealth(health, playback) {
 }
 
 const STREAM_BADGES = Object.freeze({
-  connecting: { text: 'STREAM · MENGHUBUNGKAN', frameState: 'loading' },
-  recovering: { text: 'STREAM · MEMULIHKAN', frameState: 'loading' },
+  connecting: { text: 'STREAM · CONNECTING', frameState: 'loading' },
+  recovering: { text: 'STREAM · RECOVERING', frameState: 'loading' },
   retrying: { text: '⚠ STREAM STALLED · RETRYING', frameState: 'stalled' },
   unavailable: { text: 'STREAM · PLAYER UNAVAILABLE', frameState: 'error' },
 });

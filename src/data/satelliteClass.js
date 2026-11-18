@@ -39,7 +39,7 @@ export const SATELLITE_CLASSES = Object.freeze({
     // ("how many GPS satellites are up?"). Takes over the slot the catch-all
     // VISUAL group used to occupy, so this adds no new hue to the app.
     color: '#4fd8ff',
-    blurb: 'Navigasi GNSS — GPS, GLONASS, Galileo',
+    blurb: 'GNSS navigation — GPS, GLONASS, Galileo',
   }),
   geo: Object.freeze({
     label: 'GEO',

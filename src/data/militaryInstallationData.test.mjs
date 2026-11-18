@@ -40,7 +40,7 @@ test('an unnamed feature reads as its class, never as a raw OSM id', () => {
 
   assert.deepEqual(
     result.records.map((record) => record.name),
-    ['Lapangan tembak', 'Military air bases', 'Pangkalan angkatan laut', 'Lahan militer', 'Lapangan tembak'],
+    ['Firing ranges', 'Military air bases', 'Naval bases', 'Military land', 'Firing ranges'],
   );
   for (const record of result.records) {
     assert.doesNotMatch(record.name, /\d/, `label must carry no OSM id: ${record.name}`);

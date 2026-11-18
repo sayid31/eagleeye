@@ -81,7 +81,7 @@ export function trafficFeedPresentation({
       error: null,
       loadingLabel: fetching
         ? (waitLabel || 'syncing LIVE traffic flow')
-        : `LIVE · aliran TomTom · cakupan ${coveragePct}%`,
+        : `LIVE · TomTom flow · coverage ${coveragePct}%`,
     };
   }
   // Keyless simulation — one terse line that names the mode and the remedy

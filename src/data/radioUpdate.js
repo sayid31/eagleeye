@@ -105,7 +105,7 @@ export async function updateRadioLayer() {
       S._stale = body.stale;
       S._error = preservingWarmCatalog
         ? 'Directory update degraded; showing the previous station catalog.'
-        : (S._degraded ? 'Cakupan direktori Radio terdegradasi.' : null);
+        : (S._degraded ? 'Radio directory coverage degraded.' : null);
     } catch (error) {
       if (error?.name === 'AbortError' || !radioRequestIsCurrent(
         generation,

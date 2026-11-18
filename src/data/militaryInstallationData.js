@@ -24,9 +24,9 @@ const CLASS_BY_MILITARY_TAG = {
  */
 const LABEL_BY_CLASS = {
   airfield: 'Military air bases',
-  naval_base: 'Pangkalan angkatan laut',
-  range: 'Lapangan tembak',
-  military_land: 'Lahan militer',
+  naval_base: 'Naval bases',
+  range: 'Firing ranges',
+  military_land: 'Military land',
 };
 
 const MAX_FOOTPRINT_POINTS = 400;

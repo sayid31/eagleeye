@@ -51,7 +51,7 @@ function TableDemo() {
       rows={rows}
       getRowId={(row) => row.id}
       toolbar={(
-        <div role="group" aria-label="Keadaan tabel" className="flex gap-2">
+        <div role="group" aria-label="Table states" className="flex gap-2">
           {['ready', 'loading', 'error', 'empty'].map((value) => (
             <Button key={value} size="sm" variant={mode === value ? 'default' : 'outline'} aria-pressed={mode === value} onClick={() => setMode(value)}>{value}</Button>
           ))}
@@ -105,8 +105,8 @@ export function UiKitPage() {
         <CopyField label="Temporary password" value="Example-Temporary-Password-42" extraCopy={{ label: 'Copy message', text: 'Temporary password: Example-Temporary-Password-42' }} />
       </Section>
       <Section title="Dialogs and toasts"><DialogDemo /><Button variant="outline" className="w-fit" onClick={() => toast.success('Changes saved')}>Show toast</Button></Section>
-      <Section title="Tabel"><TableDemo /></Section>
-      <Section title="Keadaan"><EmptyState title="No users yet" description="Create the first user to get started." /><ErrorState error={{ code: 'FEATURE_DISABLED', status: 503 }} onRetry={() => toast('Retrying')} /><LoadingState rows={3} /></Section>
+      <Section title="Table"><TableDemo /></Section>
+      <Section title="States"><EmptyState title="No users yet" description="Create the first user to get started." /><ErrorState error={{ code: 'FEATURE_DISABLED', status: 503 }} onRetry={() => toast('Retrying')} /><LoadingState rows={3} /></Section>
     </div>
   );
 }

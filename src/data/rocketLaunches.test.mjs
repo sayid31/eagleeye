@@ -550,7 +550,7 @@ test('normalizes detailed payload and stage recovery records', () => {
   assert.equal(launches[0].payloads[0].amount, 2);
   assert.equal(launches[0].payloads[0].massKg, 420);
   assert.equal(launches[0].recoveryStages[0].name, 'Core · B1099');
-  assert.equal(launches[0].recoveryStages[0].status, 'DIPULIHKAN');
+  assert.equal(launches[0].recoveryStages[0].status, 'RECOVERED');
   assert.equal(launches[0].recoveryStages[0].downrangeKm, 610);
   assert.equal(launches[0].recoveryStages[0].lat, 30.1);
   assert.equal(launches[0].recoveryStages[0].lon, -76.2);
@@ -777,7 +777,7 @@ test('mission overlay factories preserve all four source-formatted label roles a
       'EST. ORBIT POSITION',
       ['2026-07-20', '10:00:00 UTC'],
     ]],
-    ['orbit', 'ORBIT PROYEKSI', '#c084fc', ['ORBIT PROYEKSI', []]],
+    ['orbit', 'PROJECTED ORBIT', '#c084fc', ['PROJECTED ORBIT', []]],
   ];
   for (const [id, text, accent, [title, details]] of roles) {
     const entry = createRocketMissionElementOverlayEntry({ id, position, text, accent });
@@ -1033,7 +1033,7 @@ test('real mission build, select, refresh, deselect, disable, and destroy paths 
       'FALCON 9',
       'STAGE RE-ENTRY',
       'EST. ORBIT POSITION',
-      'ORBIT PROYEKSI',
+      'PROJECTED ORBIT',
     ]);
     assert.deepEqual(selectedPublication[2][0].details, ['LAUNCH SITE · 39A']);
     assert.match(selectedPublication[2][2].details[0], /^\d{4}-\d{2}-\d{2}$/);

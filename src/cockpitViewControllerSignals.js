@@ -88,7 +88,7 @@ updateCockpitSignals(snapshot, unknownCount) {
           // contact reads as its registration here too. Same helper the
           // Context panel's nearest list uses.
           title: formatAwarenessLabel(item),
-          detail: `${cohort.id === 'military' ? 'PENERBANGAN MILITER' : 'PENERBANGAN KOMERSIAL'} · ${
+          detail: `${cohort.id === 'military' ? 'MILITARY FLIGHT' : 'COMMERCIAL FLIGHT'} · ${
             Number.isFinite(item.distanceM)
               ? `${item.distanceM < 10000 ? (item.distanceM / 1000).toFixed(1) : Math.round(item.distanceM / 1000)} KM`
               : 'DISTANCE UNKNOWN'

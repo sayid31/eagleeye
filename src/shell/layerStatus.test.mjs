@@ -24,7 +24,7 @@ test('bundled datasets never claim Live', () => {
 test('stale data reads Terganggu with its age', () => {
   const status = layerShellStatus(row({ stats: { count: 3, stale: true, lastUpdate: NOW - 14 * 3600 * 1000 } }), NOW);
   assert.equal(status.key, 'degraded');
-  assert.equal(status.label, 'Terganggu');
+  assert.equal(status.label, 'Degraded');
   assert.equal(status.detail, 'data 14 h ago');
 });
 
@@ -89,7 +89,7 @@ test('an enabled layer waiting for zoom shows its prompt instead of a bare label
     id: 'military-installations',
     stats: { count: 0, lastUpdate: null, status: 'zoom-in', error: 'Zoom in to load mapped installation context' },
   }), NOW);
-  assert.deepEqual(status, { key: 'static', label: 'Data statis', detail: 'Zoom in to load mapped installation context' });
+  assert.deepEqual(status, { key: 'static', label: 'Static data', detail: 'Zoom in to load mapped installation context' });
 });
 
 test('a non-guidance status never leaks its error text into a nominal detail', () => {

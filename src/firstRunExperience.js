@@ -34,8 +34,8 @@ export const ENVIRONMENTAL_LABEL_CHOICE = 'ENVIRONMENTAL';
 
 const ENVIRONMENTAL_LABELS = Object.freeze({
   // Keys stay English (they are the choice ids); titles are what the tile shows.
-  ENVIRONMENTAL: Object.freeze({ title: 'LINGKUNGAN' }),
-  EARTH_WATCH: Object.freeze({ title: 'PANTAU BUMI' }),
+  ENVIRONMENTAL: Object.freeze({ title: 'ENVIRONMENT' }),
+  EARTH_WATCH: Object.freeze({ title: 'MONITOR EARTH' }),
   ACTIVE_EVENTS: Object.freeze({ title: 'ACTIVE EVENTS' }),
 });
 

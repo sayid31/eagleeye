@@ -382,7 +382,7 @@ export function createAisWatchdog(options = {}) {
   function onClose(eventGeneration) {
     if (!ownsGeneration(eventGeneration)) return [];
     release();
-    if (!error) error = 'WebSocket AISStream tertutup';
+    if (!error) error = 'AISStream WebSocket closed';
     scheduleRetry('transport');
     return [];
   }

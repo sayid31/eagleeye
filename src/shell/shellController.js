@@ -107,7 +107,7 @@ export function initShell({ viewer, dataManager, mapStackController }) {
       chip.className = 'ee-active-count';
       header.querySelector('.panel-divider')?.after(chip);
     }
-    const text = `${activeCount(layers)} aktif`;
+    const text = `${activeCount(layers)} active`;
     if (chip.textContent !== text) chip.textContent = text;
   }
 

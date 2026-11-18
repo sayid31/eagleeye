@@ -12,10 +12,10 @@
 const AIS_STATUS_REASON = {
   'missing-key': 'AISSTREAM_API_KEY not set',
   unsupported: 'live feed not supported',
-  connecting: 'menghubungkan ke feed…',
-  closed: 'feed terputus',
+  connecting: 'connecting to the feed…',
+  closed: 'feed disconnected',
   error: 'feed down',
-  idle: 'feed diam',
+  idle: 'feed silent',
 };
 
 /**
@@ -51,7 +51,7 @@ function describeDegradedAisFeed(status, payload) {
       : 'feed silent — no AIS data';
   }
   const attempt = Number(payload?.reconnectAttempt);
-  const suffix = Number.isFinite(attempt) && attempt >= 1 ? ` (percobaan ${attempt})` : '';
+  const suffix = Number.isFinite(attempt) && attempt >= 1 ? ` (attempt ${attempt})` : '';
   return status === 'down'
     ? `feed down — retrying slowly${suffix}`
     : `reconnecting to the feed…${suffix}`;

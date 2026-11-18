@@ -5,7 +5,7 @@
 export const RAIL_ITEMS = Object.freeze([
   { id: 'layers', label: 'Data layers', icon: 'layers', target: '.panel-collapse-btn[data-collapse-target="data-panel"]' },
   { id: 'camera', label: 'Camera', icon: 'videocam', target: '.panel-collapse-btn[data-collapse-target="cctv-panel"]' },
-  { id: 'scenes', label: 'Skenario', icon: 'movie', target: '.panel-collapse-btn[data-collapse-target="scene-panel"]' },
+  { id: 'scenes', label: 'Scenes', icon: 'movie', target: '.panel-collapse-btn[data-collapse-target="scene-panel"]' },
   { id: 'display', label: 'View', icon: 'tune', target: '.panel-collapse-btn[data-collapse-target="pp-toggles"]' },
   { id: 'context', label: 'Context', icon: 'monitoring', target: '.panel-collapse-btn[data-collapse-target="global-context-panel"]' },
 ]);

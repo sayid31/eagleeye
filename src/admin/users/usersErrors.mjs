@@ -37,9 +37,9 @@ const PASSWORD_REASONS = Object.freeze({
 });
 
 const FIELD_LABELS = Object.freeze({
-  email: 'email', name: 'nama', role: 'role', capabilities: 'feature permissions', password: 'password', generate: 'generate',
-  currentPassword: 'your password', confirmEmail: 'confirmation email', q: 'pencarian', status: 'status', userId: 'pengguna',
-  success: 'hasil', range: 'time range', action: 'aksi', targetId: 'akun', source: 'sumber', id: 'account id',
+  email: 'email', name: 'name', role: 'role', capabilities: 'feature permissions', password: 'password', generate: 'generate',
+  currentPassword: 'your password', confirmEmail: 'confirmation email', q: 'search', status: 'status', userId: 'user',
+  success: 'result', range: 'time range', action: 'action', targetId: 'account', source: 'source', id: 'account id',
 });
 
 /**

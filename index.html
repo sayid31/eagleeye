@@ -109,7 +109,7 @@
         <svg class="cockpit-route-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path d="M12 2 4.58 19.93c-.34.83.51 1.63 1.31 1.27L12 18.47l6.11 2.73c.8.36 1.65-.44 1.31-1.27L12 2Z" />
         </svg>
-        <small id="cockpit-route-direction-label">TUJ ---°</small>
+        <small id="cockpit-route-direction-label">DST ---°</small>
       </div>
       <div class="cockpit-visor-status cockpit-visor-status-left">OPTICAL FIELD · 01</div>
       <div class="cockpit-visor-status cockpit-visor-status-right">VISOR LOCK · ACTIVE</div>
@@ -215,7 +215,7 @@
         <span class="cockpit-context-qualifier">CONTEXT ONLY</span>
       </header>
       <div class="cockpit-context-cohorts" role="list" aria-label="Number of nearest groups">
-        <div role="listitem" data-context-cohort="flights"><span>PNB</span><strong>—</strong><small>OpenSky</small></div>
+        <div role="listitem" data-context-cohort="flights"><span>FLT</span><strong>—</strong><small>OpenSky</small></div>
         <div role="listitem" data-context-cohort="military"><span>MIL</span><strong>—</strong><small>adsb.lol</small></div>
         <div role="listitem" data-context-cohort="ais-live-vessels"><span>AIS</span><strong>—</strong><small>AISStream</small></div>
         <div role="listitem" data-context-cohort="military-installations"><span>SITUS</span><strong>—</strong><small>OpenStreetMap</small></div>
@@ -265,8 +265,8 @@
       </section>
       <header class="cockpit-signal-header">
         <div class="cockpit-brief-heading">
-          <span id="cockpit-brief-kicker" class="cockpit-signal-kicker"><i aria-hidden="true"></i> SINYAL LIVE</span>
-          <strong id="cockpit-brief-subtitle">PING TERAMATI / TERPETAKAN</strong>
+          <span id="cockpit-brief-kicker" class="cockpit-signal-kicker"><i aria-hidden="true"></i> LIVE SIGNALS</span>
+          <strong id="cockpit-brief-subtitle">OBSERVED / MAPPED PING</strong>
         </div>
         <nav class="cockpit-brief-actions" aria-label="Cockpit summary controls">
           <button id="cockpit-brief-previous" type="button" aria-label="Previous summary page" title="Previous summary page">
@@ -289,11 +289,11 @@
         </nav>
       </header>
       <div class="cockpit-brief-stage">
-        <section data-cockpit-brief-page="signals" aria-label="Sinyal live">
+        <section data-cockpit-brief-page="signals" aria-label="Live signals">
           <ol id="cockpit-signal-list" class="cockpit-signal-list" aria-live="polite"></ol>
         </section>
         <section data-cockpit-brief-page="news" aria-label="Latest regional news" hidden>
-          <div id="cockpit-news-status" class="cockpit-brief-status">MEMPEROLEH BERITA REGIONAL</div>
+          <div id="cockpit-news-status" class="cockpit-brief-status">ACQUIRING REGIONAL NEWS</div>
           <ol id="cockpit-news-list" class="cockpit-news-list" aria-live="polite"></ol>
         </section>
         <section data-cockpit-brief-page="local" aria-label="Location-based information" hidden>
@@ -302,10 +302,10 @@
             <small id="cockpit-local-coordinates">--</small>
           </div>
           <div class="cockpit-local-grid">
-            <div><span>SUHU</span><strong id="cockpit-local-temperature">—</strong><small>OPEN-METEO</small></div>
-            <div><span>ANGIN</span><strong id="cockpit-local-wind">—</strong><small id="cockpit-local-wind-direction">—</small></div>
-            <div><span>LANGIT</span><strong id="cockpit-local-condition">UNKNOWN</strong><small id="cockpit-local-cloud">—</small></div>
-            <div><span>CURAH</span><strong id="cockpit-local-precipitation">—</strong><small>MM</small></div>
+            <div><span>TEMP</span><strong id="cockpit-local-temperature">—</strong><small>OPEN-METEO</small></div>
+            <div><span>WIND</span><strong id="cockpit-local-wind">—</strong><small id="cockpit-local-wind-direction">—</small></div>
+            <div><span>SKY</span><strong id="cockpit-local-condition">UNKNOWN</strong><small id="cockpit-local-cloud">—</small></div>
+            <div><span>PRECIP</span><strong id="cockpit-local-precipitation">—</strong><small>MM</small></div>
           </div>
           <a class="cockpit-weather-credit" href="https://open-meteo.com/" target="_blank" rel="noopener">Weather data by Open-Meteo.com</a>
         </section>
@@ -314,7 +314,7 @@
         <span id="cockpit-brief-source">SOURCED EVENTS · NO SYNTHETIC NEWS</span>
         <nav class="cockpit-brief-tabs" aria-label="Cockpit summary pages">
           <button type="button" data-cockpit-brief-index="0" aria-label="Show Live Signals" aria-current="true">SIN</button>
-          <button type="button" data-cockpit-brief-index="1" aria-label="Show Regional News">BERITA</button>
+          <button type="button" data-cockpit-brief-index="1" aria-label="Show Regional News">NEWS</button>
           <button type="button" data-cockpit-brief-index="2" aria-label="Show Local Info">LOKAL</button>
         </nav>
       </footer>
@@ -355,7 +355,7 @@
         </div>
       </div>
     </aside>
-    <div class="cockpit-help">ESC EXIT <span>·</span> C GANTI</div>
+    <div class="cockpit-help">ESC EXIT <span>·</span> C SWITCH</div>
   </section>
 
   <nav id="view-switcher" aria-label="View switcher">
@@ -374,41 +374,41 @@
     <div class="compact pp-header-row">
       <span class="pp-header-label">VIEW</span>
       <span class="panel-divider" aria-hidden="true"></span>
-      <button class="panel-collapse-btn pp-collapse-btn" data-collapse-target="pp-toggles" title="Ciutkan panel">&#x25C0;</button>
+      <button class="panel-collapse-btn pp-collapse-btn" data-collapse-target="pp-toggles" title="Collapse panel">&#x25C0;</button>
     </div>
     <div class="pp-toggle-group">
-      <button class="pp-toggle-btn" id="hud-toggle" title="HUD intelijen (H)">
+      <button class="pp-toggle-btn" id="hud-toggle" title="Intelligence HUD (H)">
         <span class="pp-icon">&#x25CE;</span>
         <span class="pp-label">HUD</span>
       </button>
       <div class="pp-slider-row" id="hud-layout-row">
-        <span class="pp-slider-mini-label">Tata letak</span>
-        <select id="hud-layout-select" class="pp-select" aria-label="Tata letak HUD">
-          <option value="tactical">Taktis</option>
+        <span class="pp-slider-mini-label">Layout</span>
+        <select id="hud-layout-select" class="pp-select" aria-label="HUD layout">
+          <option value="tactical">Tactical</option>
           <option value="operator">Operator</option>
           <option value="minimal">Minimal</option>
         </select>
       </div>
     </div>
     <div class="pp-toggle-group">
-      <button class="pp-toggle-btn" id="detection-toggle" title="Overlay deteksi (D)" aria-label="Overlay deteksi" aria-pressed="false">
+      <button class="pp-toggle-btn" id="detection-toggle" title="Detection overlay (D)" aria-label="Detection overlay" aria-pressed="false">
         <span class="pp-icon">&#x25A3;</span>
-        <span class="pp-label">DETEKSI</span>
+        <span class="pp-label">DETECTION</span>
       </button>
       <div class="pp-slider-row detection-slider-row" id="detection-slider-row">
-        <label class="pp-slider-mini-label" for="detection-density-slider">Kepadatan</label>
-        <input type="range" class="pp-slider" id="detection-density-slider" min="0" max="100" step="25" value="50" aria-label="Kepadatan label deteksi" />
+        <label class="pp-slider-mini-label" for="detection-density-slider">Density</label>
+        <input type="range" class="pp-slider" id="detection-density-slider" min="0" max="100" step="25" value="50" aria-label="Detection label density" />
         <span class="pp-slider-value" id="detection-density-value">50%</span>
       </div>
       <div class="pp-slider-row detection-allocation-row" id="detection-allocation-row">
-        <span class="pp-slider-mini-label">Alokasi</span>
-        <div class="pp-mode-seg detection-allocation-seg" role="radiogroup" aria-label="Alokasi label deteksi">
-          <button class="pp-mode-btn active" id="detection-allocation-elastic" data-allocation="ELASTIC" role="radio" aria-checked="true">Elastis</button>
-          <button class="pp-mode-btn" id="detection-allocation-weighted" data-allocation="WEIGHTED" role="radio" aria-checked="false">Berbobot</button>
+        <span class="pp-slider-mini-label">Allocation</span>
+        <div class="pp-mode-seg detection-allocation-seg" role="radiogroup" aria-label="Detection label allocation">
+          <button class="pp-mode-btn active" id="detection-allocation-elastic" data-allocation="ELASTIC" role="radio" aria-checked="true">Elastic</button>
+          <button class="pp-mode-btn" id="detection-allocation-weighted" data-allocation="WEIGHTED" role="radio" aria-checked="false">Weighted</button>
         </div>
       </div>
       <div class="pp-slider-row detection-fade-row" id="detection-fade-row">
-        <label class="pp-slider-mini-label" for="detection-fade-slider">Pudar</label>
+        <label class="pp-slider-mini-label" for="detection-fade-slider">Fade</label>
         <input type="range" class="pp-slider" id="detection-fade-slider" min="0" max="40" step="1" value="7" aria-label="Detection fade distance" title="Fade distance of world overlays outside the peephole, as a percentage of its radius" />
         <span class="pp-slider-value" id="detection-fade-value">7%</span>
       </div>
@@ -423,7 +423,7 @@
       <div class="param-panel-header">
         <span class="param-panel-title">PARAMETER</span>
         <span class="param-panel-divider"></span>
-        <button class="panel-collapse-btn" id="param-panel-collapse-btn" data-collapse-target="param-slider-panel" title="Ciutkan panel">−</button>
+        <button class="panel-collapse-btn" id="param-panel-collapse-btn" data-collapse-target="param-slider-panel" title="Collapse panel">−</button>
       </div>
       <div id="param-sliders"></div>
     </div>
@@ -438,19 +438,19 @@
       </button>
       <div class="pp-slider-row visible" id="models3d-mode-row">
         <span class="pp-slider-mini-label">Model</span>
-        <div class="pp-mode-seg" role="radiogroup" aria-label="Cakupan model 3D">
-          <button class="pp-mode-btn active" id="models3d-mode-proximity" data-mode="proximity" role="radio" aria-checked="true">Dekat</button>
+        <div class="pp-mode-seg" role="radiogroup" aria-label="3D model coverage">
+          <button class="pp-mode-btn active" id="models3d-mode-proximity" data-mode="proximity" role="radio" aria-checked="true">Near</button>
           <button class="pp-mode-btn" id="models3d-mode-all" data-mode="all" role="radio" aria-checked="false">All</button>
         </div>
       </div>
     </div>
     <div class="pp-toggle-group">
-      <button class="pp-toggle-btn active" id="scope-toggle" title="Lingkup — masker viewport melingkar" aria-pressed="true">
+      <button class="pp-toggle-btn active" id="scope-toggle" title="Scope — circular viewport mask" aria-pressed="true">
         <span class="pp-icon material-symbols-outlined" aria-hidden="true">adjust</span>
-        <span class="pp-label">Lingkup</span>
+        <span class="pp-label">Scope</span>
       </button>
       <div class="pp-slider-row visible" id="scope-slider-row">
-        <span class="pp-slider-mini-label">Tepi halus</span>
+        <span class="pp-slider-mini-label">Soft edge</span>
         <!-- Feather starts at an 11% soft scope-mask edge (owner final lock
              2026-08-24, superseding the 08-22 hard-crop and 08-23 8% rulings);
              mirrors SCOPE_FEATHER_RATIO_DEFAULT in src/scopeMask.js. Feather
@@ -460,7 +460,7 @@
         <span class="pp-slider-value" id="scope-feather-value">11%</span>
       </div>
       <div class="pp-slider-row visible" id="scope-intensity-row">
-        <span class="pp-slider-mini-label">Intensitas</span>
+        <span class="pp-slider-mini-label">Intensity</span>
         <!-- Independent of the terminus/override system in src/scopeMask.js
              (that band stays 94..100% by design — "a hole in the mask, not a
              scope"). This is a plain multiplier on the painted outside alpha:
@@ -473,7 +473,7 @@
     <div class="pp-toggle-group">
       <button class="pp-toggle-btn" id="celestial-toggle" title="Celestial ring — show the full globe" aria-pressed="false">
         <span class="pp-icon material-symbols-outlined" aria-hidden="true">flare</span>
-        <span class="pp-label">Selestial</span>
+        <span class="pp-label">Celestial</span>
       </button>
     </div>
     <button class="pp-toggle-btn" id="clean-view-toggle" title="Hide interface">
@@ -491,9 +491,9 @@
       </div>
     </div>
     <div class="pp-toggle-group">
-      <button class="pp-toggle-btn" id="sharpen-toggle" title="Penajaman">
+      <button class="pp-toggle-btn" id="sharpen-toggle" title="Sharpening">
         <span class="pp-icon">&#x1F50D;</span>
-        <span class="pp-label">Penajaman</span>
+        <span class="pp-label">Sharpening</span>
       </button>
       <div class="pp-slider-row" id="sharpen-slider-row">
         <input type="range" class="pp-slider" id="sharpen-intensity-slider" min="0" max="100" value="49" />
@@ -511,12 +511,12 @@
     <div class="panel-inner">
       <button id="control-panel-toggle" class="panel-header dock-tray-toggle" type="button"
         data-dock-toggle-target="control-panel" aria-expanded="false"
-        aria-controls="control-panel-popover" aria-label="Bentangkan Preset Visual">
+        aria-controls="control-panel-popover" aria-label="Expand Visual Presets">
         <span class="panel-title"><span class="dock-label-icon dock-label-icon-presets" aria-hidden="true"></span>PRESET VISUAL</span>
         <span class="panel-divider"></span>
       </button>
       <div id="control-panel-popover" class="dock-popover-content">
-      <button class="dock-pin-btn" data-pin-target="control-panel" type="button" aria-label="Sematkan preset visual" aria-pressed="false" title="Biarkan preset visual tetap terbuka"><img src="/pin.svg" alt="" /></button>
+      <button class="dock-pin-btn" data-pin-target="control-panel" type="button" aria-label="Pin visual presets" aria-pressed="false" title="Keep visual presets open"><img src="/pin.svg" alt="" /></button>
       <div id="style-buttons" class="button-grid">
         <button class="style-btn active" data-style="normal">
           <span class="btn-icon">◯</span>
@@ -550,7 +550,7 @@
         </button>
         <button class="style-btn" data-style="snow">
           <span class="btn-icon">❄</span>
-          <span class="btn-label">Salju</span>
+          <span class="btn-label">Snow</span>
           <span class="btn-key">7</span>
         </button>
       </div>
@@ -563,7 +563,7 @@
       </section>
       </div>
       <div id="style-mini-status" class="panel-mini-status" aria-live="polite">
-        <span class="panel-mini-label">Gaya</span>
+        <span class="panel-mini-label">Style</span>
         <span id="style-mini-value" class="panel-mini-value">NORMAL</span>
       </div>
     </div>
@@ -575,11 +575,11 @@
     <div class="location-inner">
       <div class="location-toolbar">
         <span class="location-toolbar-label"><span class="dock-label-icon dock-label-icon-location" aria-hidden="true"></span>LOCATION</span>
-        <button class="panel-collapse-btn" data-collapse-target="location-bar" title="Ciutkan panel">+</button>
+        <button class="panel-collapse-btn" data-collapse-target="location-bar" title="Collapse panel">+</button>
       </div>
       <div id="location-mini-status" class="location-mini-status" aria-live="polite">
         <div id="location-mini-city" class="location-mini-city">📍 Location: --</div>
-        <div id="location-mini-poi" class="location-mini-poi">Penanda: --</div>
+        <div id="location-mini-poi" class="location-mini-poi">Marker: --</div>
       </div>
       <div class="dock-popover-content">
         <button class="dock-pin-btn" data-pin-target="location-bar" type="button" aria-label="Pin the location tray" aria-pressed="false" title="Keep the location tray open"><img src="/pin.svg" alt="" /></button>
@@ -607,7 +607,7 @@
       <div class="panel-header">
         <span class="panel-title">LAYER DATA</span>
         <span class="panel-divider"></span>
-        <button class="panel-collapse-btn" data-collapse-target="data-panel" title="Ciutkan panel">+</button>
+        <button class="panel-collapse-btn" data-collapse-target="data-panel" title="Collapse panel">+</button>
       </div>
       <div id="data-toggles" class="data-toggle-list"></div>
     </div>
@@ -620,7 +620,7 @@
       <div class="panel-header">
         <span class="panel-title">CCTV</span>
         <span class="panel-divider"></span>
-        <button class="panel-collapse-btn" data-collapse-target="cctv-panel" title="Ciutkan panel">+</button>
+        <button class="panel-collapse-btn" data-collapse-target="cctv-panel" title="Collapse panel">+</button>
       </div>
       <div id="cctv-frame-wrap" class="cctv-frame-wrap">
         <img id="cctv-frame" alt="Frame feed CCTV" />
@@ -649,9 +649,9 @@
         <button id="cctv-next-btn" class="scene-btn">NEXT</button>
       </div>
       <details class="cctv-advanced">
-        <summary>OPSI LANJUTAN</summary>
+        <summary>ADVANCED OPTIONS</summary>
         <div class="cctv-controls">
-          <button id="cctv-focus-btn" class="scene-btn" title="Fly the world camera to the currently active CCTV camera">FOKUS</button>
+          <button id="cctv-focus-btn" class="scene-btn" title="Fly the world camera to the currently active CCTV camera">FOCUS</button>
           <button id="cctv-coverage-btn" class="scene-btn" title="Show the camera's field of view on the map: off, frame, then viewshed volume">COVERAGE OFF</button>
         </div>
         <div class="cctv-controls">
@@ -662,7 +662,7 @@
       </details>
       <div class="cctv-calibration-block">
         <div class="cctv-calibration-header">
-          <div class="cctv-summary-label">KALIBRASI</div>
+          <div class="cctv-summary-label">CALIBRATION</div>
           <button id="cctv-adjust-btn" class="scene-btn" title="Drag the camera in the world: ring rotates, arrows move, handle sets distance/FOV">ADJUST</button>
         </div>
         <div id="cctv-cal-readout" class="cctv-cal-readout" aria-label="Camera pose — click a value to type">
@@ -670,7 +670,7 @@
           <button class="cctv-cal-value" data-cal-field="pitch" title="Tilt (° up/down) — click to type">MIRING --</button>
           <button class="cctv-cal-value" data-cal-field="fov" title="Horizontal FOV (°) — click to type">FOV --</button>
           <button class="cctv-cal-value" data-cal-field="range" title="Distance / monitor plane distance (m) — click to type">RANGE --</button>
-          <button class="cctv-cal-value" data-cal-field="height" title="Mounting height above ground (m) — click to type">TGI --</button>
+          <button class="cctv-cal-value" data-cal-field="height" title="Mounting height above ground (m) — click to type">HGT --</button>
           <button class="cctv-cal-value" data-cal-field="north" title="North offset from catalog position (m) — click to type">ΔU --</button>
           <button class="cctv-cal-value" data-cal-field="east" title="East offset from catalog position (m) — click to type">ΔT --</button>
         </div>
@@ -689,29 +689,29 @@
     <div class="panel-glow"></div>
     <div class="scene-panel-inner">
       <div class="panel-header">
-        <span class="panel-title">SKENARIO</span>
+        <span class="panel-title">SCENES</span>
         <span class="panel-divider"></span>
-        <button class="panel-collapse-btn" data-collapse-target="scene-panel" title="Ciutkan panel">+</button>
+        <button class="panel-collapse-btn" data-collapse-target="scene-panel" title="Collapse panel">+</button>
       </div>
       <div class="scene-controls">
         <div class="scene-picker">
           <button type="button" id="scene-picker-trigger" class="scene-picker-trigger"
             aria-haspopup="listbox" aria-expanded="false"
-            aria-controls="scene-picker-listbox" aria-label="Resep skenario">Select scene</button>
+            aria-controls="scene-picker-listbox" aria-label="Scene recipes">Select scene</button>
           <ul id="scene-picker-listbox" class="scene-picker-listbox" role="listbox"
-            aria-label="Resep skenario" hidden></ul>
+            aria-label="Scene recipes" hidden></ul>
         </div>
         <button id="scene-new-btn" class="scene-btn">NEW</button>
         <button id="scene-delete-btn" class="scene-btn scene-btn-danger">DELETE</button>
       </div>
       <div class="scene-controls">
-        <button id="scene-capture-btn" class="scene-btn">AMBIL SHOT</button>
+        <button id="scene-capture-btn" class="scene-btn">TAKE SHOT</button>
         <button id="scene-update-shot-btn" class="scene-btn">UPDATE SHOT</button>
       </div>
       <div id="scene-shot-list" class="scene-shot-list"></div>
       <div class="scene-controls">
         <button id="scene-start-btn" class="scene-btn">START</button>
-        <button id="scene-stop-btn" class="scene-btn scene-btn-danger">BERHENTI</button>
+        <button id="scene-stop-btn" class="scene-btn scene-btn-danger">STOP</button>
         <button id="scene-next-btn" class="scene-btn">NEXT</button>
       </div>
       <div class="scene-controls">
@@ -757,7 +757,7 @@
               <button id="context-radio-mini-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">TURN ON</button>
               <div class="context-radio-mini-transport">
                 <button id="context-radio-mini-prev-btn" type="button" aria-label="Previous filtered radio station" title="Previous station" disabled>◀◀</button>
-                <button id="context-radio-mini-play-btn" type="button" aria-label="Play selected radio station" title="Putar" disabled>▶</button>
+                <button id="context-radio-mini-play-btn" type="button" aria-label="Play selected radio station" title="Play" disabled>▶</button>
                 <button id="context-radio-mini-next-btn" type="button" aria-label="Next filtered radio station" title="Next station" disabled>▶▶</button>
               </div>
               <label class="context-radio-mini-volume" for="context-radio-mini-volume">
@@ -767,7 +767,7 @@
               </label>
             </div>
           </div>
-          <button class="panel-collapse-btn" data-collapse-target="global-context-panel" title="Bentangkan panel">▶</button>
+          <button class="panel-collapse-btn" data-collapse-target="global-context-panel" title="Expand panel">▶</button>
         </div>
         <div class="global-context-modes" role="tablist" aria-label="Context mode">
           <button id="global-context-flights-btn" class="context-mode-button" type="button" role="tab" tabindex="0" aria-selected="false" aria-controls="context-flights-view" aria-label="CONTACT" title="Cycles through the nearest contacts of any type you pick — aircraft, vessel, installation. Satellites are tracked independently.">
@@ -815,13 +815,13 @@
             </div>
           </div>
         </section>
-        <section id="radio-panel" class="panel-collapsible collapsed" data-panel-id="radio-panel" aria-label="Pendamping radio internet">
+        <section id="radio-panel" class="panel-collapsible collapsed" data-panel-id="radio-panel" aria-label="Internet radio companion">
           <div class="radio-panel-inner">
             <div class="panel-header">
               <span class="panel-title">RADIO</span>
               <span id="radio-layer-state" class="radio-layer-state">OFF</span>
               <span class="panel-divider"></span>
-              <button class="panel-collapse-btn" data-collapse-target="radio-panel" title="Bentangkan Radio" aria-label="Bentangkan bagian Radio">+</button>
+              <button class="panel-collapse-btn" data-collapse-target="radio-panel" title="Expand Radio" aria-label="Expand Radio section">+</button>
             </div>
             <div class="radio-directory-row">
               <button id="radio-enable-btn" class="panel-layer-toggle" type="button" aria-pressed="false">TURN ON</button>
@@ -837,7 +837,7 @@
             </div>
             <div id="radio-tuner" class="radio-tuner" hidden>
               <div class="radio-tuner-header">
-                <span id="radio-tuner-band-label">BAND DIREKTORI</span>
+                <span id="radio-tuner-band-label">DIRECTORY BAND</span>
                 <output id="radio-tuner-value" for="radio-tuner-slider">DRAG TO TUNE</output>
               </div>
               <div class="radio-tuner-dial">
@@ -851,11 +851,11 @@
                 <span>SNAPS TO AVAILABLE STATIONS</span>
               </div>
             </div>
-            <div class="radio-transport" role="group" aria-label="Pemutaran radio">
+            <div class="radio-transport" role="group" aria-label="Radio playback">
               <button id="radio-prev-btn" type="button" aria-label="Previous filtered station" disabled>PREVIOUS</button>
-              <button id="radio-play-btn" type="button" aria-label="Play selected station" disabled>PUTAR</button>
+              <button id="radio-play-btn" type="button" aria-label="Play selected station" disabled>PLAY</button>
               <button id="radio-next-btn" type="button" aria-label="Next filtered station" disabled>NEXT</button>
-              <button id="radio-stop-btn" type="button" aria-label="Hentikan pemutaran radio" disabled>BERHENTI</button>
+              <button id="radio-stop-btn" type="button" aria-label="Stop radio playback" disabled>STOP</button>
             </div>
             <label class="radio-volume-row" for="radio-volume">
               <span>VOLUME</span>
@@ -865,7 +865,7 @@
             <div id="radio-playback-state" class="radio-playback-state" role="status" aria-live="polite">Radio off</div>
             <div class="radio-links">
               <a id="radio-station-homepage" href="#" target="_blank" rel="noopener noreferrer" hidden>STATION SITE</a>
-              <a href="https://www.radio-browser.info/" target="_blank" rel="noopener noreferrer">DIREKTORI: RADIO BROWSER</a>
+              <a href="https://www.radio-browser.info/" target="_blank" rel="noopener noreferrer">DIRECTORY: RADIO BROWSER</a>
             </div>
             <p class="radio-privacy">Audio connects directly to the broadcaster once you press play. Your IP is visible to that broadcaster.</p>
           </div>
@@ -908,12 +908,12 @@
         <!-- Subcopy names BOTH feeds this tile turns on, because the launcher
              optimizes for the fully configured experience (owner ruling,
              2026-08-23) — see the mission table in src/firstRunExperience.js. -->
-        <span><strong data-first-run-environmental-title>LINGKUNGAN</strong><small>Live earthquakes and active fires, from USGS and NASA</small></span>
+        <span><strong data-first-run-environmental-title>ENVIRONMENT</strong><small>Live earthquakes and active fires, from USGS and NASA</small></span>
         <span class="material-symbols-outlined first-run-arrow" aria-hidden="true">arrow_forward</span>
       </button>
       <button type="button" class="first-run-explore" data-first-run-choice="explore">
         <span class="material-symbols-outlined" aria-hidden="true">public</span>
-        <span><strong>JELAJAH MANUAL</strong><small>Start with a clean globe</small></span>
+        <span><strong>EXPLORE MANUALLY</strong><small>Start with a clean globe</small></span>
         <span class="material-symbols-outlined first-run-arrow" aria-hidden="true">arrow_forward</span>
       </button>
     </div>
@@ -937,7 +937,7 @@
     <div class="loader-content">
       <span class="loader-logo brand-logo" data-logo-gaze data-logo-src="/logo.svg" aria-hidden="true"><img src="/logo.svg" alt="" /></span>
       <h2>EAGLEEYE <span class="title-accent">VIEW</span></h2>
-      <p class="loader-status">Menginisialisasi dunia fotorealistis...</p>
+      <p class="loader-status">Initializing photorealistic world...</p>
     </div>
   </div>
 

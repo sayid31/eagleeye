@@ -5,8 +5,8 @@ import { layerFeedState, FEED_STATE_LABELS } from './managerFeedState.js';
 
 /** Lifecycle transition → user-visible (Indonesian) label; the state keys stay English. */
 export const LIFECYCLE_LABELS = Object.freeze({
-  enabling: 'MENYALAKAN',
-  disabling: 'MEMATIKAN',
+  enabling: 'TURNING ON',
+  disabling: 'TURNING OFF',
 });
 
 /**

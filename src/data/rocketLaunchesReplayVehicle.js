@@ -231,16 +231,16 @@ ${siteCallout}`;
   } else if (mode === 'ascent') {
     title = state.elapsedSinceStart < 1
       ? `LIFTOFF · ${mission}`
-      : `${launch.trajectory.length > 1 ? 'ULANGAN PENDAKIAN' : 'ESTIMATED ASCENT'} · ${mission}`;
+      : `${launch.trajectory.length > 1 ? 'ASCENT REPLAY' : 'ESTIMATED ASCENT'} · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   } else if (mode === 'recovery') {
     title = `STAGE RE-ENTRY / RECOVERY · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   } else if (mode === 'orbit') {
-    title = `ULANGAN ORBIT · ${mission}`;
+    title = `ORBIT REPLAY · ${mission}`;
     detail = formatMissionEventTime(state.eventTime);
   }
-  if (S._replayPaused) title = `DIJEDA · ${title}`;
+  if (S._replayPaused) title = `PAUSED · ${title}`;
   const nextText = `${title}\n${detail}`;
   if (nextText !== S._replayVehicleOverlayText) {
     S._replayVehicleOverlayText = nextText;

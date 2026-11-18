@@ -349,7 +349,7 @@ export function createFirmsHeatmapLayer({
         latitude: strongest.lat,
         longitude: strongest.lon,
         frp: strongest.frp,
-        label: `Titik api · FRP ${formatFrp(strongest.frp)} MW`,
+        label: `Fire hotspot · FRP ${formatFrp(strongest.frp)} MW`,
       };
     },
 
@@ -873,7 +873,7 @@ export function createFirmsHeatmapLayer({
     requestWorldFocus({
       kind: 'fire',
       id: fireDetectionKey(fire),
-      label: 'TITIK API',
+      label: 'FIRE HOTSPOTS',
       position: firePosition(fire),
     });
   }
@@ -999,7 +999,7 @@ export function createFirmsHeatmapLayer({
       layerName: name,
       source: 'NASA FIRMS',
       dataSource: _dataSource,
-      label: `Titik api · FRP ${formatFrp(fire.frp)} MW`,
+      label: `Fire hotspot · FRP ${formatFrp(fire.frp)} MW`,
       latitude: fire.lat,
       longitude: fire.lon,
       properties: {

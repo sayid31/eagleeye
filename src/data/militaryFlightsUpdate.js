@@ -51,7 +51,7 @@ export async function updateMilitaryFlightsLayer(viewer, { signal = null } = {})
         // hammer the upstream and the UI reads honestly.
         if (response.status === 429) {
           S._retryAt = nowMs + BACKOFF_INTERVAL;
-          S._lastError = 'adsb.lol dibatasi laju';
+          S._lastError = 'adsb.lol rate-limited';
           return;
         }
         S._retryAt = nowMs + ERROR_BACKOFF_INTERVAL;

@@ -45,19 +45,19 @@ export const COCKPIT_REGIONAL_REFRESH_DISTANCE_M = 25_000;
 export const COCKPIT_BRIEF_PAGES = [
   {
     id: 'signals',
-    kicker: 'SINYAL LIVE',
-    subtitle: 'PING TERAMATI / TERPETAKAN',
+    kicker: 'LIVE SIGNALS',
+    subtitle: 'OBSERVED / MAPPED PING',
     source: 'SOURCED EVENTS · NO SYNTHETIC NEWS',
   },
   {
     id: 'news',
-    kicker: 'BERITA REGIONAL',
+    kicker: 'REGIONAL NEWS',
     subtitle: 'LATEST COVERAGE MATCHING LOCATION',
     source: 'GOOGLE NEWS RSS · LOCATION QUERY · LATEST',
   },
   {
     id: 'local',
-    kicker: 'INFO LOKAL',
+    kicker: 'LOCAL INFO',
     subtitle: 'PLACE / CONDITIONS / POSITION',
     source: 'OPENSTREETMAP · OPEN-METEO · UTC',
   },
