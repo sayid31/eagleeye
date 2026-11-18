@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  ALL, accountStatusKey, areaRoleScope, createFormDefaults, createFormReady, createPayload, editPayload, handoverMessage, hasUserFilters,
+  ALL, accountStatusKey, doneToast, errorField, areaRoleScope, createFormDefaults, createFormReady, createPayload, editPayload, handoverMessage, hasUserFilters,
   managesRoles, passwordRequirements, roleText, rowActions, rowMenuEntries, usersQuery,
 } from './usersView.js';
 
@@ -44,11 +44,13 @@ test('rowActions: super_admin → other super_admin is read-only; → itself onl
 
 test('rowMenuEntries: ordinary actions first, deactivate and delete last and flagged destructive', () => {
   const entries = rowMenuEntries(rowActions(superMe, target('U1', 'user'), 'dev'));
-  assert.deepEqual(entries.map((entry) => entry.id), ['edit', 'resetPassword', 'promote', 'revokeSessions', 'deactivate', 'delete']);
+  assert.deepEqual(entries.map((entry) => entry.id), ['edit', 'resetPassword', 'promote', 'revokeSessions', 'loginLog', 'audit', 'deactivate', 'delete']);
   assert.deepEqual(entries.filter((entry) => entry.destructive).map((entry) => entry.id), ['deactivate', 'delete']);
   const inactive = rowMenuEntries(rowActions(adminMe, target('U1', 'user', false), 'admin'));
   assert.equal(inactive.find((entry) => entry.id === 'activate').destructive, false, 'activating is not destructive');
-  assert.deepEqual(rowMenuEntries(rowActions(adminMe, target('X', 'admin'), 'admin')), []);
+  assert.deepEqual(rowMenuEntries(rowActions(adminMe, target('X', 'admin'), 'admin')).map((entry) => entry.id), ['loginLog', 'audit'], 'a read-only row still links to its logs');
+  const own = rowMenuEntries(rowActions(superMe, target('S1', 'super_admin'), 'dev')).map((entry) => entry.id);
+  assert.deepEqual(own, ['edit', 'revokeSessions'], 'no log links on your own row');
 });
 
 test('managesRoles / areaRoleScope: only a super_admin in /dev picks roles; /admin lists users only', () => {
@@ -141,4 +143,28 @@ test('handoverMessage: Indonesian, login URL from the origin, email, temp passwo
     'Catatan: password ini wajib diganti saat login pertama. Jangan bagikan pesan ini ke orang lain.',
   ].join('\n'));
   assert.match(handoverMessage({ origin: 'http://localhost:4173', email: 'a@b.test', password: 'x', reset: true }), /^Password akun EagleEye Anda sudah direset\.\n\nAlamat login: http:\/\/localhost:4173\/login/);
+});
+
+test('errorField: duplicate or reserved email → email, weak password → password, invalid input → its field, else null', () => {
+  const fields = ['email', 'name', 'password'];
+  assert.equal(errorField({ code: 'EMAIL_TAKEN' }, fields), 'email');
+  assert.equal(errorField({ code: 'SUPER_ADMIN_EMAIL_RESERVED' }, fields), 'email');
+  assert.equal(errorField({ code: 'PASSWORD_WEAK' }, fields), 'password');
+  assert.equal(errorField({ code: 'INVALID_INPUT', field: 'name' }, fields), 'name');
+  assert.equal(errorField({ code: 'INVALID_INPUT', field: 'capabilities' }, fields), null, 'not a field of the form');
+  assert.equal(errorField({ code: 'EMAIL_TAKEN' }, ['name']), null, 'the form lacks that field');
+  assert.equal(errorField({ code: 'INTERNAL_ERROR' }, fields), null);
+  assert.equal(errorField(null, fields), null);
+});
+
+test('doneToast: one sentence per action, role changes share one, a failed audit line becomes a warning', () => {
+  assert.deepEqual(doneToast('create', {}), { text: 'Akun dibuat', level: 'success' });
+  assert.equal(doneToast('promote', {}).text, 'Role diubah');
+  assert.equal(doneToast('demote', {}).text, 'Role diubah');
+  assert.equal(doneToast('resetPassword', null).text, 'Password direset');
+  assert.equal(doneToast('revokeSessions', {}).text, 'Akun dikeluarkan dari semua perangkat');
+  const warned = doneToast('delete', { audit: 'failed' });
+  assert.equal(warned.level, 'warning');
+  assert.match(warned.text, /catatan audit gagal/);
+  assert.equal(doneToast('unknown-kind', {}).text, 'Perubahan disimpan');
 });

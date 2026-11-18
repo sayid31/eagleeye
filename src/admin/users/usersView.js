@@ -62,6 +62,7 @@ export function rowActions(me, target, area) {
 
 /**
  * Menu entries of a row in display order, destructive ones flagged (RowActions puts them last under a separator).
+ * Someone else's row also links to that account's Log Login and Audit (read-only views, always allowed).
  * @param {ReturnType<typeof rowActions>} actions
  * @returns {Array<{id: string, destructive: boolean}>}
  */
@@ -71,6 +72,8 @@ export function rowMenuEntries(actions) {
     actions.resetPassword && { id: 'resetPassword', destructive: false },
     actions.role && { id: actions.role, destructive: false },
     actions.revokeSessions && { id: 'revokeSessions', destructive: false },
+    !actions.self && { id: 'loginLog', destructive: false },
+    !actions.self && { id: 'audit', destructive: false },
     actions.toggleActive && { id: actions.toggleActive, destructive: actions.toggleActive === 'deactivate' },
     actions.delete && { id: 'delete', destructive: true },
   ];
@@ -93,6 +96,38 @@ export function usersQuery({ search, status, role, limit, offset }, area) {
  */
 export function hasUserFilters({ search, status, role }) {
   return search.trim() !== '' || status !== ALL || role !== ALL;
+}
+
+/** API failure code → the form field it is about (shown inline under that field instead of in the dialog alert). */
+const FIELD_OF_CODE = Object.freeze({ EMAIL_TAKEN: 'email', SUPER_ADMIN_EMAIL_RESERVED: 'email', PASSWORD_WEAK: 'password' });
+
+/**
+ * Field a failed save belongs to, when the form has it.
+ * @param {{code?: string, field?: string} | null | undefined} failure Error thrown by the api module.
+ * @param {readonly string[]} fields Fields the form shows.
+ * @returns {string | null}
+ */
+export function errorField(failure, fields) {
+  const field = FIELD_OF_CODE[failure?.code] ?? (failure?.code === 'INVALID_INPUT' ? failure.field : null);
+  return fields.includes(field) ? field : null;
+}
+
+/** Dialog kind → key of USERS_COPY.toast (promote and demote both read "Role diubah"). */
+const TOAST_KEY = Object.freeze({
+  create: 'created', edit: 'updated', deactivate: 'deactivated', activate: 'activated', revokeSessions: 'revoked',
+  delete: 'deleted', promote: 'roleChanged', demote: 'roleChanged', resetPassword: 'passwordReset',
+});
+
+/**
+ * Toast text after an action succeeded; `audit: 'failed'` in the reply (the action worked, its log line did not) is
+ * reported as a warning instead of a plain success.
+ * @param {string} kind Dialog kind.
+ * @param {{audit?: string} | null | undefined} result API reply.
+ * @returns {{text: string, level: 'success' | 'warning'}}
+ */
+export function doneToast(kind, result) {
+  if (result?.audit === 'failed') return { text: USERS_COPY.toast.auditFailed, level: 'warning' };
+  return { text: USERS_COPY.toast[TOAST_KEY[kind]] ?? USERS_COPY.toast.updated, level: 'success' };
 }
 
 /** Status key of StatusBadge for an account: inactive beats throttled beats must-change beats active. */

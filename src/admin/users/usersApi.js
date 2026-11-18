@@ -2,7 +2,7 @@
  * Browser-side calls to the account-management API (session cookie):
  * `/api/admin/users`, `/api/admin/login-log`, `/api/admin/audit` (account
  * source). A refused call throws an Error whose `message` is the Indonesian
- * text for its code and whose `code`/`status` say what happened.
+ * text for its code and whose `code`/`status`/`field`/`reason`/`min` say what happened (errorMessage() reads them).
  *
  * @module admin/users/usersApi
  */
@@ -39,6 +39,8 @@ async function call(fetchFn, method, url, body) {
   error.code = payload.error ?? `HTTP_${response.status}`;
   error.status = response.status;
   error.field = payload.field;
+  error.reason = payload.reason;
+  error.min = payload.min;
   throw error;
 }
 
@@ -63,9 +65,9 @@ export function createUsersApi(fetchFn = (...args) => fetch(...args)) {
     remove: (id, confirmEmail) => call(fetchFn, 'DELETE', byId(id), { confirmEmail }),
     /** @param {{role: 'user' | 'admin', currentPassword?: string}} body */
     setRole: (id, body) => call(fetchFn, 'POST', `${byId(id)}/role`, body),
-    /** @param {{userId?: string, success?: string, limit?: number, offset?: number}} filter */
+    /** @param {{userId?: string, success?: string, range?: string, limit?: number, offset?: number}} filter */
     loginLog: (filter) => call(fetchFn, 'GET', `/api/admin/login-log${queryString(filter)}`),
-    /** @param {{action?: string, targetId?: string, limit?: number, offset?: number}} filter */
+    /** @param {{action?: string, targetId?: string, range?: string, limit?: number, offset?: number}} filter */
     audit: (filter) => call(fetchFn, 'GET', `/api/admin/audit${queryString({ source: 'account', ...filter })}`),
   };
 }
