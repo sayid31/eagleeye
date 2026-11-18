@@ -11,6 +11,7 @@ import { signOut } from '../auth/authClientApi.js';
 import { accessContactHref } from './landingConfig.js';
 import { landingCta } from './landingCta.js';
 import { mountMobileMenu, mountThemeControl } from './landingChrome.js';
+import { mountHeroGlobe } from './hero-globe.js';
 import { fetchMe } from './landingSession.js';
 import { legacyAppRedirect } from './legacyShareRedirect.js';
 
@@ -84,6 +85,8 @@ async function start() {
   }
   mountThemeControl();
   mountMobileMenu();
+  const globe = document.querySelector('[data-hero-globe]');
+  if (globe) mountHeroGlobe(globe);
   const contact = accessContactHref();
   renderContact(contact);
   renderCta(landingCta(await fetchMe(), { accessContact: contact }));
