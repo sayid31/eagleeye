@@ -7,6 +7,7 @@
 import assert from 'node:assert/strict';
 import { answerJson, FORCED_CHANGE_ME } from './mocks.mjs';
 import { SYSTEM_PROBES } from './probes.system.mjs';
+import { LANDING_PROBES } from './probes-landing.mjs';
 import { USER_PROBES } from './probes-users.mjs';
 import { expectEscapeRestoresFocus, expectFocusTrapped, focusInfo, focusMatches, press, tabOrder, tabUntil, waitForFocus } from './keyboard.mjs';
 
@@ -25,7 +26,7 @@ export async function byText(page, selector, text) {
 const dark = (page) => page.evaluate(() => document.documentElement.classList.contains('dark'));
 const stored = (page) => page.evaluate(() => localStorage.getItem('gev-theme'));
 
-/** @type {Array<{id: string, role: string, viewport: 'desktop' | 'mobile', theme: 'light' | 'dark', path: string, run: (page: import('puppeteer').Page, env: {url: string}) => Promise<void>}>} */
+/** @type {Array<{id: string, role: string, viewport: 'desktop' | 'mobile', theme: 'light' | 'dark', path: string, run: (page: import('puppeteer').Page, env: {url: string}) => Promise<void>, waitFor?: string, setup?: (page: import('puppeteer').Page) => Promise<void>}>} */
 export const PROBES = [
   {
     id: 'skip-link', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev',
@@ -272,4 +273,5 @@ export const PROBES = [
   },
   ...SYSTEM_PROBES,
   ...USER_PROBES,
+  ...LANDING_PROBES,
 ];

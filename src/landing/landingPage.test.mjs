@@ -5,7 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { skipOnReactPages } from '../admin/adminRoute.mjs';
 
 const html = readFileSync(fileURLToPath(new URL('../../landing.html', import.meta.url)), 'utf8');
-const css = readFileSync(fileURLToPath(new URL('./landing.css', import.meta.url)), 'utf8');
+const CSS_FILES = ['base', 'icons', 'header', 'hero', 'sections'];
+const css = CSS_FILES.map((name) => readFileSync(fileURLToPath(new URL(`./landing.${name}.css`, import.meta.url)), 'utf8')).join('\n');
 
 test('landing.html loads nothing from another origin (no CDN, no web fonts)', () => {
   const urls = [...html.matchAll(/\b(?:src|href)="([^"]+)"/g)].map((match) => match[1]);
@@ -18,7 +19,7 @@ test('landing.html loads nothing from another origin (no CDN, no web fonts)', ()
 test('landing.html works without JS: the CTA slots default to "Masuk" → /login', () => {
   const slots = [...html.matchAll(/data-cta-slot="(\w+)"[^>]*>\s*<a [^>]*href="([^"]+)"[^>]*>([^<]+)</g)];
   assert.deepEqual(slots.map(([, slot, href, label]) => [slot, href, label]), [['nav', '/login', 'Masuk'], ['hero', '/login', 'Masuk']]);
-  assert.match(html, /<p data-access-contact hidden>/, 'request-access contact is hidden until configured');
+  assert.match(html, /<p class="ld-muted" data-access-contact hidden>/, 'request-access contact is hidden until configured');
 });
 
 test('landing.html states the product boundary and the required page metadata', () => {
@@ -39,10 +40,10 @@ test('every in-page anchor points at an element that exists', () => {
   for (const anchor of anchors) assert.ok(ids.has(anchor), `#${anchor}`);
 });
 
-test('animations run only under prefers-reduced-motion: no-preference', () => {
-  const outside = css.replace(/@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}/, '');
-  assert.match(css, /prefers-reduced-motion: no-preference[\s\S]*animation:/);
-  assert.doesNotMatch(outside, /animation:/);
+test('motion (transition, smooth scroll) runs only under prefers-reduced-motion: no-preference', () => {
+  const outside = css.replace(/@media \(prefers-reduced-motion: no-preference\) \{[\s\S]*?\n\}\n/g, '');
+  assert.match(css, /prefers-reduced-motion: no-preference[\s\S]*transition:/);
+  assert.doesNotMatch(outside, /animation:|transition:|scroll-behavior:/);
 });
 
 test('the Cesium html injection is skipped for landing.html like the other globe-less pages', () => {

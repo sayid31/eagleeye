@@ -1,0 +1,203 @@
+/*
+ * Landing page, base layer: reset, type scale, layout wrapper, buttons, focus. Plain CSS on the shared shadcn tokens
+ * (src/ui/tokens.css), no Tailwind. Motion (transitions, smooth scroll) lives only inside
+ * `prefers-reduced-motion: no-preference` blocks, so visitors who ask for less motion get none.
+ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+  /* Anchors land below the sticky header (WCAG 2.4.11: focused/targeted content is not hidden behind it). */
+  scroll-padding-top: 5rem;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p,
+ul,
+ol,
+figure {
+  margin: 0;
+}
+
+ul,
+ol {
+  padding: 0;
+  list-style: none;
+}
+
+h1,
+h2,
+h3 {
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+h2 {
+  font-size: clamp(1.625rem, 1.2rem + 1.6vw, 2.25rem);
+}
+
+h3 {
+  font-size: 1.0625rem;
+  letter-spacing: -0.01em;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+a {
+  color: var(--link);
+  text-underline-offset: 0.2em;
+}
+
+img,
+svg {
+  max-width: 100%;
+}
+
+strong {
+  font-weight: 650;
+}
+
+main:focus {
+  outline: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.ld-wrap {
+  width: 100%;
+  max-width: 72rem;
+  margin-inline: auto;
+  padding-inline: 1rem;
+}
+
+.ld-skip {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 100;
+  padding: 0.5rem 0.875rem;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+
+.ld-skip:focus-visible {
+  transform: none;
+}
+
+.ld-muted {
+  color: var(--muted-foreground);
+  font-size: 0.9375rem;
+}
+
+/* Buttons: primary (filled), ghost (outline), small variant for the header. 44px tall on touch, never below 24px. */
+.ld-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0.5rem 1.25rem;
+  border: 1px solid var(--input);
+  border-radius: var(--radius);
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.ld-btn:hover {
+  background: var(--accent);
+}
+
+.ld-btn--primary {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.ld-btn--primary:hover {
+  background: color-mix(in oklab, var(--primary) 88%, var(--foreground));
+}
+
+.ld-btn--ghost {
+  background: transparent;
+}
+
+.ld-btn--sm {
+  min-height: 2.25rem;
+  padding: 0.25rem 0.875rem;
+  border-color: var(--primary);
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.ld-btn--sm:hover {
+  background: color-mix(in oklab, var(--primary) 88%, var(--foreground));
+}
+
+.ld-btn:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.ld-cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+@media (min-width: 40rem) {
+  .ld-wrap {
+    padding-inline: 1.5rem;
+  }
+}
+
+@media (min-width: 64rem) {
+  .ld-wrap {
+    padding-inline: 2rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .ld-btn {
+    transition: background-color 0.15s ease;
+  }
+}

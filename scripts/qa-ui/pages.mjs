@@ -18,7 +18,7 @@ const shell = (id, path, roles) => ({ id, path, roles, waitFor: SHELL_READY, sur
 
 /** @type {QaPage[]} */
 export const PAGES = [
-  { id: 'landing', path: '/', roles: ['anonymous'], waitFor: 'main', surface: 'vanilla' },
+  { id: 'landing', path: '/', roles: ['anonymous', 'user', 'admin', 'super_admin'], waitFor: 'main', surface: 'vanilla', note: 'one entry per CTA state (--all-roles)' },
   { id: 'login', path: '/login', roles: ['anonymous'], waitFor: 'main form', surface: 'react' },
   { id: 'login-dev-google', path: '/login?next=/dev', roles: ['anonymous'], waitFor: 'main form', surface: 'react', setup: SETUPS.googleConfigured, note: 'Google configured (mocked /api/me)' },
   { id: 'login-session-notice', path: '/login?notice=session', roles: ['anonymous'], waitFor: 'main [role="alert"]', surface: 'react' },

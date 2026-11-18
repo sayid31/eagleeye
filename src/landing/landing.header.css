@@ -1,0 +1,193 @@
+/*
+ * Landing page, header: sticky bar with the brand, a disclosure button and ONE panel (`.ld-panel`) that holds the
+ * section nav, the theme control and the session CTA. DOM order is button -> panel so Tab follows what opens, on
+ * phones the panel drops below the bar; from 60rem it is laid out inline and the button disappears. The state lives
+ * on `.ld-header[data-menu-open]` (src/landing/mobileMenu.js); without that attribute (no JS) the panel stays visible.
+ */
+.ld-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  border-bottom: 1px solid var(--border);
+  background: var(--background);
+}
+
+.ld-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  min-height: 3.5rem;
+}
+
+.ld-panel {
+  flex-basis: 100%;
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 1rem;
+}
+
+.ld-header[data-menu-open='false'] .ld-panel {
+  display: none;
+}
+
+.ld-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.75rem;
+  color: var(--foreground);
+  font-size: 1.0625rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+}
+
+.ld-brand__mark {
+  height: 1.5rem;
+  width: auto;
+  color: var(--primary);
+}
+
+.ld-header__tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.ld-header__cta {
+  flex: 1 1 auto;
+  justify-content: flex-end;
+}
+
+.ld-theme {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--input);
+  border-radius: calc(var(--radius) + 2px);
+}
+
+.ld-theme button,
+.ld-menu-btn {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: calc(var(--radius) - 1px);
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+
+.ld-theme button:hover,
+.ld-menu-btn:hover {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.ld-theme button[aria-pressed='true'] {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+.ld-menu-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-left: auto;
+  border: 1px solid var(--input);
+  color: var(--foreground);
+}
+
+.ld-menu-btn .ld-i-menu {
+  --ld-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 5h16'/%3E%3Cpath d='M4 12h16'/%3E%3Cpath d='M4 19h16'/%3E%3C/svg%3E");
+}
+
+.ld-menu-btn[aria-expanded='true'] .ld-i-menu {
+  --ld-icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18'/%3E%3Cpath d='m6 6 12 12'/%3E%3C/svg%3E");
+}
+
+/* Narrow: the nav is a vertical list inside the panel. */
+.ld-nav {
+  display: flex;
+  flex-direction: column;
+}
+
+.ld-nav > a {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.ld-nav > a:hover {
+  color: var(--link);
+}
+
+@media (scripting: none) {
+  .ld-menu-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 60rem) {
+  .ld-header__bar {
+    flex-wrap: nowrap;
+  }
+
+  .ld-menu-btn {
+    display: none;
+  }
+
+  .ld-panel,
+  .ld-header[data-menu-open='false'] .ld-panel {
+    flex: 1 1 auto;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    display: flex;
+    padding-bottom: 0;
+  }
+
+  .ld-nav {
+    flex-direction: row;
+    gap: 0.25rem;
+    margin-inline: auto;
+  }
+
+  .ld-nav > a {
+    padding-inline: 0.75rem;
+    border: 0;
+    border-radius: var(--radius);
+    color: var(--muted-foreground);
+  }
+
+  .ld-nav > a:hover {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
+
+  .ld-header__tools {
+    margin-top: 0;
+  }
+
+  .ld-header__cta {
+    flex: none;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ld-theme button,
+  .ld-menu-btn,
+  .ld-nav > a {
+    transition: background-color 0.15s ease, color 0.15s ease;
+  }
+}
