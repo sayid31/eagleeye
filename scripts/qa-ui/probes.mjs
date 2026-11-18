@@ -5,6 +5,7 @@
  * their flows (login, create-user → temporary password, delete confirmation, ...) using the helpers in keyboard.mjs.
  */
 import assert from 'node:assert/strict';
+import { answerJson, FORCED_CHANGE_ME } from './mocks.mjs';
 import { expectEscapeRestoresFocus, expectFocusTrapped, focusInfo, focusMatches, press, tabOrder, tabUntil, waitForFocus } from './keyboard.mjs';
 
 const MAIN = '#main-content';
@@ -179,6 +180,92 @@ export const PROBES = [
         await page.waitForSelector(`section[aria-label="Contoh daftar pengguna"] ${selector}`);
       }
       assert.equal(await page.$eval('section[aria-label="Contoh daftar pengguna"] nav[aria-label="Halaman data"]', (el) => el.textContent.includes('dari 45')), true);
+    },
+  },
+
+  // --- /login and /account (worker W1) ---
+  {
+    id: 'login-keyboard-submit-and-error-focus', role: 'anonymous', viewport: 'desktop', theme: 'light', path: '/login',
+    async run(page) {
+      await waitForFocus(page, 'input[name="email"]');
+      await page.keyboard.press('Enter');
+      await waitForFocus(page, 'input[name="email"]');
+      assert.equal(await page.$eval('input[name="email"]', (el) => el.getAttribute('aria-invalid')), 'true', 'empty email flagged inline');
+      await page.keyboard.type('nobody@example.test');
+      await press(page, 'Tab');
+      assert.equal((await focusInfo(page)).id !== '', true, 'Tab reaches the password field');
+      await page.keyboard.type('definitely-wrong-password');
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('main [role="alert"]');
+      await waitForFocus(page, 'input[name="password"]');
+      const text = await page.$eval('main [role="alert"]', (el) => el.textContent);
+      assert.match(text, /Email atau password salah/);
+      assert.equal(await page.$eval('input[name="password"]', (el) => el.getAttribute('aria-invalid')), 'true');
+    },
+  },
+  {
+    id: 'login-show-password-toggle', role: 'anonymous', viewport: 'desktop', theme: 'dark', path: '/login',
+    async run(page) {
+      await page.type('input[name="password"]', 'secret-value-123');
+      const toggle = 'button[aria-pressed]';
+      await page.focus(toggle);
+      await page.keyboard.press('Space');
+      await page.waitForSelector('input[name="password"][type="text"]');
+      assert.equal(await page.$eval(toggle, (el) => el.getAttribute('aria-pressed')), 'true');
+      assert.equal(await page.$eval(toggle, (el) => el.getAttribute('aria-label')), 'Sembunyikan password');
+      await waitForFocus(page, toggle);
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('input[name="password"][type="password"]');
+    },
+  },
+  {
+    id: 'login-forgot-password-popover', role: 'anonymous', viewport: 'desktop', theme: 'light', path: '/login',
+    async run(page) {
+      const trigger = await byText(page, 'button', 'Lupa password?');
+      await trigger.focus();
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('[data-slot="popover-content"]');
+      assert.match(await page.$eval('[data-slot="popover-content"]', (el) => el.textContent), /Hubungi admin Anda/);
+      assert.equal(await page.evaluate(() => Boolean(document.activeElement?.closest('[data-slot="popover-content"]'))), true, 'focus moves into the popover');
+      await expectEscapeRestoresFocus(page, '[data-slot="popover-content"]', '[data-slot="popover-trigger"]');
+    },
+  },
+  {
+    id: 'account-revoke-others-confirm', role: 'admin', viewport: 'desktop', theme: 'light', path: '/account?tab=security',
+    async run(page) {
+      const opener = await byText(page, 'button', 'Keluar dari perangkat lain');
+      await opener.focus();
+      await page.keyboard.press('Enter');
+      await page.waitForSelector('[role="alertdialog"]');
+      await waitForFocus(page, '[role="alertdialog"] button[data-slot="alert-dialog-cancel"]');
+      assert.match(await page.$eval('[role="alertdialog"]', (el) => el.textContent), /akan keluar dan harus masuk lagi/);
+      await expectFocusTrapped(page, '[role="alertdialog"]', 6);
+      await expectEscapeRestoresFocus(page, '[role="alertdialog"]', 'main button[data-slot="button"]:not([role])');
+    },
+  },
+  {
+    id: 'account-tabs-arrow-keys', role: 'admin', viewport: 'desktop', theme: 'light', path: '/account',
+    async run(page) {
+      await page.focus('[role="tab"][aria-selected="true"]');
+      await press(page, 'ArrowRight');
+      await page.waitForFunction(() => document.querySelector('[role="tab"][aria-selected="true"]')?.textContent.trim() === 'Keamanan');
+      assert.equal(await page.$eval('[role="tab"][aria-selected="true"]', (el) => el.textContent.trim()), 'Keamanan');
+      assert.equal(new URL(page.url()).searchParams.get('tab'), 'security');
+    },
+  },
+  {
+    id: 'forced-password-change-has-no-navigation', role: 'user', viewport: 'desktop', theme: 'light', path: '/account/password',
+    async run(page) {
+      await answerJson(page, { '/api/me': FORCED_CHANGE_ME });
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('main form');
+      assert.equal(await page.$$eval('header a[href]', (links) => links.length), 0, 'no link out of the page');
+      assert.match(await page.$eval('main', (el) => el.textContent), /Ganti password untuk melanjutkan/);
+      await waitForFocus(page, 'input[name="current"]');
+      await page.type('input[name="current"]', 'old-password-123');
+      await page.keyboard.press('Enter');
+      await waitForFocus(page, 'input[name="next"]');
+      assert.match(await page.$eval('main', (el) => el.textContent), /minimal \d+ karakter/i);
     },
   },
 ];
