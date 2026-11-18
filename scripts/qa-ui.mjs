@@ -26,6 +26,7 @@ import { openPage, planMatrix, runMatrix } from './qa-ui/runner.mjs';
 import { buildReport } from './qa-ui/report.mjs';
 import { settle } from './qa-ui/checks.mjs';
 import { REPO_ROOT, startIsolatedServer } from './qa-ui/server.mjs';
+import { seedUsersData } from './qa-ui/seed-users.mjs';
 import { mintRoleSessions } from './qa-ui/sessions.mjs';
 
 const args = process.argv.slice(2);
@@ -83,6 +84,7 @@ async function main() {
   let browser;
   try {
     sessions = await mintRoleSessions({ env: server.env, port });
+    await seedUsersData({ url: server.url, cookie: sessions.cookies.super_admin, dbFile: server.env.AUTH_DATABASE_FILE });
     browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
     const env = { url: server.url, cookies: sessions.cookies, runDir, compare: flag('compare'), updateBaseline: flag('update-baseline'), axe: !flag('no-axe') };
     const cells = planMatrix({
