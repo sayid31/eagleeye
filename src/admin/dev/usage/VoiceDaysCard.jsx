@@ -32,7 +32,7 @@ export function VoiceDaysCard({ days }) {
             </div>
           )}
         />
-        <Link to="/usage/ai" className="text-sm font-medium text-link underline-offset-4 hover:underline">{T.openai.detailsLink}</Link>
+        <Link to="/ai/usage" className="text-sm font-medium text-link underline-offset-4 hover:underline">{T.openai.detailsLink}</Link>
       </CardContent>
     </Card>
   );

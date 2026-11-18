@@ -1,6 +1,6 @@
 // src/admin/dev/logs/logsApi.js
 /**
- * Browser-side calls of the Log server area (session cookie): the server log (list, clear), the key/AI audit trail and
+ * Browser-side calls of the Server Log area (session cookie): the server log (list, clear), the key/AI audit trail and
  * the health report. A failure throws an Error carrying `status` (and `code` when the server sent one), which
  * ErrorState/ConfirmDialog turn into a sentence; `message` is for developers only.
  *

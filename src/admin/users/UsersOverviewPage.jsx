@@ -18,8 +18,8 @@ import { useResource } from './useResource.js';
 const ICONS = { users: Users, userX: UserX, clock: Clock, key: KeyRound, login: LogIn, alert: AlertTriangle };
 const LINKS = [
   { id: 'users', to: '/users', icon: Users },
-  { id: 'loginLog', to: '/activity/login', icon: LogIn },
-  { id: 'audit', to: '/activity/audit', icon: History },
+  { id: 'loginLog', to: '/login-log', icon: LogIn },
+  { id: 'audit', to: '/audit', icon: History },
 ];
 
 function StatCard({ card }) {

@@ -18,7 +18,7 @@ test('describeAuditEntry words each event in Indonesian with a status', () => {
     { title: 'Koneksi dites', detail: 'OpenAI: ditolak (HTTP 401)', status: 'error' });
   assert.equal(describeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'persona'] }).detail, 'Diubah: limits, persona');
   assert.equal(describeAuditEntry({ event: 'admin.login_denied', result: 'not_admin' }).status, 'warn');
-  assert.equal(describeAuditEntry({ event: 'log.cleared' }).title, 'Log server dikosongkan');
+  assert.equal(describeAuditEntry({ event: 'log.cleared' }).title, 'Server Log dikosongkan');
   const unknown = describeAuditEntry({ event: 'something.new', provider: 'x', result: 'y' });
   assert.deepEqual([unknown.title, unknown.detail, unknown.status], ['something.new', 'x · y', 'off']);
 });

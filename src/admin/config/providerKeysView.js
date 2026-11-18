@@ -1,6 +1,6 @@
 // src/admin/config/providerKeysView.js
 /**
- * View-model of Penyedia & API Keys: one row per provider from GET /api/admin/keys (never a key value — only presence
+ * View-model of API Keys: one row per provider from GET /api/admin/keys (never a key value — only presence
  * and source), the input rules of the "Ubah kunci" sheet and the wording of connection-test results. The server
  * validates every value again (`validateKeySetupUpdates`).
  *

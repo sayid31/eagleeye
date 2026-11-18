@@ -28,7 +28,7 @@ test('failureMessage shows the server sentence for 4xx validation, a mapped sent
   assert.equal(failureMessage(failure(400, 'Kunci tidak dikenal: FOO')), 'Kunci tidak dikenal: FOO');
   assert.equal(failureMessage(failure(422, 'Pengaturan tidak valid: a; b')), 'Pengaturan tidak valid: a; b');
   assert.match(failureMessage(failure(403, 'Akses ditolak')), /izin/);
-  assert.match(failureMessage(failure(500, 'boom')), /Log server/);
+  assert.match(failureMessage(failure(500, 'boom')), /Server Log/);
   assert.match(failureMessage(failure(400, 'INVALID_INPUT')), /tidak valid/);
   assert.match(failureMessage(new TypeError('Failed to fetch')), /terhubung/);
 });

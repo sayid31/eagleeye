@@ -1,7 +1,7 @@
 // src/copy/id/config.js
 /**
- * Indonesian copy of the /dev Konfigurasi pages: Penyedia & API Keys (keys table, "Ubah kunci" sheet, model and voice),
- * plus the strings shared by every settings form (save bar, leave warning). Umum, Persona and Pemakaian AI live in
+ * Indonesian copy of the /dev Konfigurasi pages: API Keys (keys table, "Ubah kunci" sheet, model and voice),
+ * plus the strings shared by every settings form (save bar, leave warning). Umum, Persona and Pemakaian & Biaya live in
  * configForms.js and are re-exported from here. Pure data; no API error codes (see errors.js).
  *
  * @module copy/id/config
@@ -71,9 +71,10 @@ export const SAVE_COPY = Object.freeze({
 });
 
 export const PROVIDERS_COPY = Object.freeze({
-  title: 'Penyedia & API Keys',
+  title: 'API Keys',
+  aiTitle: 'Penyedia AI',
   keysDescription: 'Kunci layanan data dan AI yang dipakai server. Isi kunci tidak pernah ditampilkan, hanya ada atau tidaknya.',
-  aiDescription: 'Suara dan model untuk asisten suara. Kunci OpenAI diatur di tab API Keys.',
+  aiDescription: 'Suara dan model untuk asisten suara. Kunci OpenAI diatur di API Keys.',
   loading: 'Memuat penyedia',
   loadError: 'Penyedia tidak bisa dimuat',
   tableCaption: 'Penyedia dan status kunci API',

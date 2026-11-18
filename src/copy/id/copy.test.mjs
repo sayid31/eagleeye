@@ -63,9 +63,10 @@ test('every API error code the server and the older api modules know has a sente
 });
 
 test('glossary: discouraged terms are found as whole phrases only, case-insensitively', () => {
-  assert.deepEqual(findGlossaryViolations('Matikan Kill switch').map((row) => row.use), ['Sakelar darurat']);
-  assert.deepEqual(findGlossaryViolations('buka server log sekarang').map((row) => row.use), ['Log server']);
-  assert.deepEqual(findGlossaryViolations('Sakelar darurat dan Log server'), []);
+  assert.deepEqual(findGlossaryViolations('Matikan Sakelar darurat').map((row) => row.use), ['Kill switch']);
+  assert.deepEqual(findGlossaryViolations('buka log server sekarang').map((row) => row.use), ['Server Log']);
+  assert.deepEqual(findGlossaryViolations('Kill switch dan Server Log'), []);
+  assert.deepEqual(findGlossaryViolations('Jejak audit dan Anggaran provider').map((row) => row.use), ['Audit Log', 'Pemakaian & budget']);
   assert.deepEqual(findGlossaryViolations('killswitches'), []);
   assert.ok(GLOSSARY.length >= 2);
 });

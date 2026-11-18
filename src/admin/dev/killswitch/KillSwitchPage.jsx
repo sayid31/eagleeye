@@ -1,6 +1,6 @@
 // src/admin/dev/killswitch/KillSwitchPage.jsx
 /**
- * /dev → Sakelar darurat: one card per paid gate (Layer data, Voice & AI, Peta premium & pencarian). Switching one off
+ * /dev → Kill switch: one card per paid gate (Layer data, Voice & AI, Peta premium & pencarian). Switching one off
  * is refused for every account, super_admin included, until it is switched back on. A change opens ConfirmDialog
  * (impact, reason, password); the server re-checks identity and writes the `killswitch.update` audit row.
  */
@@ -18,7 +18,7 @@ import { useDevResource } from '../lib/useDevResource.js';
 import { GateCard } from './GateCard.jsx';
 import { dialogConfig, gateRows, savedToast, updateBody } from './killSwitchView.js';
 
-/** Sakelar darurat page. */
+/** Kill switch page. */
 export function KillSwitchPage() {
   const resource = useDevResource(fetchKillSwitches);
   const [change, setChange] = useState(null);

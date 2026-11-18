@@ -1,9 +1,8 @@
 /**
- * Log Login (/admin/activity/login, /dev/activity/login): every sign-in attempt, newest first, filterable by time
+ * Log Login (/admin/login-log, /dev/login-log): every sign-in attempt, newest first, filterable by time
  * range, result and account, paged. The server decides which rows an admin may see (user accounts only).
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { StatusBadge } from '@/components/app/StatusBadge.jsx';
@@ -52,7 +51,7 @@ export function LoginLogPage({ area = 'admin' }) {
   ];
   return (
     <>
-      <PageHeader title={ACTIVITY_COPY.title} description={COPY.description[area]} tabs={<RouteTabNav />} />
+      <PageHeader title={ACTIVITY_COPY.loginLog.title} description={COPY.description[area]} />
       <DataTable
         caption={COPY.caption}
         columns={columns}

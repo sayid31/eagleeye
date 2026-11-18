@@ -1,6 +1,6 @@
 // src/admin/config/usageView.js
 /**
- * Presentation helpers for Pemakaian & Biaya → Pemakaian AI: duration and
+ * Presentation helpers for Konfigurasi AI → Pemakaian & Biaya: duration and
  * money formatting, the daily-cap status line, and the per-session cost-limit
  * form (empty = built-in default, "off" = none, else USD).
  *

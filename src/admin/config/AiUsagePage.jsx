@@ -1,6 +1,6 @@
 // src/admin/config/AiUsagePage.jsx
 /**
- * /dev → Pemakaian & Biaya → Pemakaian AI: today's minutes against the daily cap, a per-day table priced with the
+ * /dev → Konfigurasi AI → Pemakaian & Biaya: today's minutes against the daily cap, a per-day table priced with the
  * current GPT-Live rates, the per-session cost limits and what the estimate leaves out.
  */
 import { useCallback, useState } from 'react';
@@ -8,7 +8,6 @@ import { RefreshCw } from 'lucide-react';
 import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { Button } from '@/components/ui/button';
 import { USAGE_AI_COPY as T } from '@/copy/id/configForms';
 import { USAGE_COPY } from '@/copy/id/system';
@@ -20,7 +19,7 @@ import { useVoiceSettingsResource } from './useVoiceSettingsResource.js';
 
 const DEFAULT_DAYS = 30;
 
-/** Pemakaian AI tab. */
+/** Pemakaian & Biaya page. */
 export function AiUsagePage() {
   const [days, setDays] = useState(DEFAULT_DAYS);
   const usage = useResource(useCallback(() => fetchVoiceUsage(days), [days]), `usage-${days}`);
@@ -47,7 +46,6 @@ export function AiUsagePage() {
       <PageHeader
         title={T.title}
         description={T.description}
-        tabs={<RouteTabNav />}
         actions={(
           <Button variant="outline" size="sm" aria-disabled={usage.loading || undefined} onClick={() => { if (!usage.loading) reloadAll(); }}>
             <RefreshCw aria-hidden="true" data-icon="inline-start" className={usage.loading ? 'animate-spin motion-reduce:animate-none' : undefined} />

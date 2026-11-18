@@ -1,6 +1,6 @@
 // src/admin/dev/overview/SystemOverviewPage.jsx
 /**
- * /dev → Ringkasan sistem: version, uptime, login configuration, Sakelar darurat state, recent log errors, API key
+ * /dev → Ringkasan sistem: version, uptime, login configuration, Kill switch state, recent log errors, API key
  * presence per provider (never a value) and the doctor's login warnings. Read-only; one reload button.
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';

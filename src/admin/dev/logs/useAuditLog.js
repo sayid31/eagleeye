@@ -1,6 +1,6 @@
 // src/admin/dev/logs/useAuditLog.js
 /**
- * State of the audit tab. The audit API has no total, only `nextOffset`, so pages accumulate ("Muat lebih banyak")
+ * State of the Audit Log page. The audit API has no total, only `nextOffset`, so pages accumulate ("Muat lebih banyak")
  * instead of paginating; changing the type starts over. A stale reply (older request) is dropped.
  */
 import { useCallback, useEffect, useRef, useState } from 'react';

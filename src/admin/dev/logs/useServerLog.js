@@ -1,6 +1,6 @@
 // src/admin/dev/logs/useServerLog.js
 /**
- * State of the Log server tab: filter, server page (limit/offset), the current reply and a silent refresh used by the
+ * State of the Server Log page: filter, server page (limit/offset), the current reply and a silent refresh used by the
  * auto-refresh. A reply that arrives after a newer request was sent is dropped. Changing a filter returns to page 1.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

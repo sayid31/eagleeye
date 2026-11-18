@@ -17,7 +17,7 @@ const ICONS = {
   deactivate: UserX, activate: UserCheck, delete: Trash2, loginLog: LogIn, audit: History,
 };
 /** Menu entries that open another page instead of a dialog: id → path (router-relative). */
-const LINKS = { loginLog: (user) => `/activity/login?userId=${encodeURIComponent(user.id)}`, audit: (user) => `/activity/audit?userId=${encodeURIComponent(user.id)}` };
+const LINKS = { loginLog: (user) => `/login-log?userId=${encodeURIComponent(user.id)}`, audit: (user) => `/audit?userId=${encodeURIComponent(user.id)}` };
 
 /** Menu of one row, or the read-only note when the actor may do nothing to it. */
 function RowMenu({ user, me, area, onOpen }) {

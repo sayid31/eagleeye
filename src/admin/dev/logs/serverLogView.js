@@ -1,6 +1,6 @@
 // src/admin/dev/logs/serverLogView.js
 /**
- * View-model of the Log server tab: filter → API query, level badge, table rows and the detail-sheet facts. Pure — no
+ * View-model of the Server Log page: filter → API query, level badge, table rows and the detail-sheet facts. Pure — no
  * DOM, no network. Entries are already redacted server-side (no key, token or email), nothing here adds data.
  *
  * @module admin/dev/logs/serverLogView

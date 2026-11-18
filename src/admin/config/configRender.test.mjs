@@ -102,7 +102,7 @@ test('Persona: core rules are read-only with their guard, extra rules are labell
   assert.match(topics, /aria-checked="true"/);
 });
 
-test('Pemakaian AI: cost + audio, a labelled progress meter, per-day table and the empty state', async () => {
+test('Pemakaian & Biaya: cost + audio, a labelled progress meter, per-day table and the empty state', async () => {
   const { TodayCard, DailyCard } = await load('AiUsageSections');
   const day = { day: '2026-11-18', sessions: 2, seconds: 600, extrasUsd: 0.01, judgeCalls: 3, estimatedUsd: 0.5 };
   const usage = {
@@ -114,7 +114,7 @@ test('Pemakaian AI: cost + audio, a labelled progress meter, per-day table and t
   assert.match(today, /~\$0\.50/);
   const daily = render(h(DailyCard, { usage, days: 30, onDays: noop, loading: false }));
   assert.match(daily, /aria-pressed="true"[^>]*>30 hari</);
-  assert.match(daily, /<caption[^>]*sr-only[^>]*>Pemakaian AI per hari/);
+  assert.match(daily, /<caption[^>]*sr-only[^>]*>Pemakaian harian/);
   const none = render(h(DailyCard, { usage: { ...usage, summary: { ...usage.summary, rows: [{ ...day, sessions: 0 }] } }, days: 7, onDays: noop, loading: false }));
   assert.match(none, /Belum ada pemakaian/);
 });

@@ -16,8 +16,8 @@ export const DEV_ERROR_MESSAGES = Object.freeze({
   NOT_FOUND: 'Endpoint tidak ada.',
   REAUTH_FAILED: 'Password salah.',
   REAUTH_REQUIRED: 'Masukkan password Anda, atau masuk ulang dengan Google lalu coba lagi dalam 10 menit.',
-  AUTH_UNAVAILABLE: 'Login sedang tidak tersedia; lihat log server.',
-  INTERNAL_ERROR: 'Terjadi error di server; lihat log server.',
+  AUTH_UNAVAILABLE: 'Login sedang tidak tersedia; lihat Server Log.',
+  INTERNAL_ERROR: 'Terjadi error di server; lihat Server Log.',
   SUPER_ADMIN_REQUIRED: 'Hanya super admin yang boleh mengakses ini.',
   AUTH_REQUIRED: 'Sesi berakhir; masuk lagi.',
 });

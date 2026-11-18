@@ -143,8 +143,8 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
   const { AppProviders } = await load('AppProviders');
   const { navForArea, areaSwitchFor } = await loader.load('src/admin/adminNav.js');
   const user = { id: 'u', name: 'Dev Owner', email: 'dev@example.test', role: 'super_admin' };
-  const html = render(h(AppProviders, null, h(StaticRouter, { location: '/usage/ai' }, h(AppShell, {
-    area: 'dev', brand: { name: 'EagleEye View', badge: 'Developer' }, groups: navForArea('dev'), pathname: '/usage/ai', user,
+  const html = render(h(AppProviders, null, h(StaticRouter, { location: '/ai/usage' }, h(AppShell, {
+    area: 'dev', brand: { name: 'EagleEye View', badge: 'Developer' }, groups: navForArea('dev'), pathname: '/ai/usage', user,
     areaLink: areaSwitchFor('dev', user.role), onSignOut() {},
   }, h('h1', null, 'Isi halaman')))));
   assert.ok(html.indexOf('Lewati ke konten') < html.indexOf('data-slot="sidebar-wrapper"'), 'skip link precedes everything');
@@ -153,9 +153,15 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
   assert.equal((html.match(/<main/g) ?? []).length, 1, 'exactly one main landmark');
   assert.match(html, /<nav aria-label="Navigasi Developer"/);
   assert.match(html, /<nav aria-label="Breadcrumb"/);
-  for (const text of ['Akses', 'Kendali', 'Konfigurasi', 'Sistem', 'Ringkasan sistem', 'Pengguna &amp; Admin', 'Aktivitas', 'Sakelar darurat', 'Pemakaian &amp; Biaya', 'Penyedia &amp; API Keys', 'Umum', 'Persona', 'Log server']) {
-    assert.ok(html.includes(text), `sidebar has "${text}"`);
+  const labels = ['Ringkasan sistem', 'Pengguna &amp; Admin', 'Log Login', 'Kill switch', 'Pemakaian', 'API Keys', 'Konfigurasi AI', 'Umum', 'Penyedia AI', 'Persona',
+    'Pemakaian &amp; Biaya', 'Server Log', 'Audit Log', 'Kesehatan Sistem', 'Audit'];
+  let at = 0;
+  for (const text of labels) {
+    const next = html.indexOf(`>${text}<`, at);
+    assert.ok(next >= at, `sidebar has "${text}" after the previous item (original order)`);
+    at = next;
   }
+  for (const gone of ['Akses', 'Kendali', 'Aktivitas', 'Sakelar', 'Log server']) assert.ok(!html.includes(gone), `no "${gone}"`);
   assert.ok(!html.includes('Katalog komponen'), 'hidden item is not in the sidebar');
   assert.match(html, />Developer</);
   assert.match(html, /aria-current="page"[^>]*>(?:<svg[^>]*><\/svg>|<svg[\s\S]*?<\/svg>)<span>Pemakaian &amp; Biaya/);
@@ -165,7 +171,7 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
   assert.match(html, /aria-label="Buka atau tutup menu samping"/);
 });
 
-test('AppShell (admin): no Developer badge and the three admin items', async () => {
+test('AppShell (admin): no Developer badge and the four admin items', async () => {
   const { AppShell } = await load('AppShell');
   const { AppProviders } = await load('AppProviders');
   const { navForArea } = await loader.load('src/admin/adminNav.js');
@@ -174,5 +180,17 @@ test('AppShell (admin): no Developer badge and the three admin items', async () 
   }, null))));
   assert.doesNotMatch(html, />Developer</);
   assert.match(html, /<nav aria-label="Navigasi Admin"/);
-  for (const text of ['Ringkasan', 'Pengguna', 'Aktivitas']) assert.ok(html.includes(text), text);
+  for (const text of ['Ringkasan', 'Pengguna', 'Log Login', 'Audit']) assert.ok(html.includes(`>${text}<`), text);
+  assert.ok(!html.includes('Aktivitas'));
+});
+
+test('AppShell (dev): a nested page marks only itself current, not its parent page (/server-log/audit vs /server-log)', async () => {
+  const { AppShell } = await load('AppShell');
+  const { AppProviders } = await load('AppProviders');
+  const { navForArea } = await loader.load('src/admin/adminNav.js');
+  const html = render(h(AppProviders, null, h(StaticRouter, { location: '/server-log/audit' }, h(AppShell, {
+    area: 'dev', brand: { name: 'EagleEye View' }, groups: navForArea('dev'), pathname: '/server-log/audit', user: { email: 'a@b.test', role: 'super_admin' }, onSignOut() {},
+  }, null))));
+  const current = [...html.matchAll(/aria-current="page"[^>]*>(?:<svg[\s\S]*?<\/svg>)?<span>([^<]*)</g)].map((m) => m[1]);
+  assert.deepEqual(current, ['Audit Log']);
 });

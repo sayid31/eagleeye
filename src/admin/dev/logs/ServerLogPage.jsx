@@ -1,6 +1,6 @@
 // src/admin/dev/logs/ServerLogPage.jsx
 /**
- * /dev → Log server → Log: newest first, filter by level / source / text, repeated entries merged with a count, a
+ * /dev → Server Log → Server Log: newest first, filter by level / source / text, repeated entries merged with a count, a
  * detail sheet for long messages, optional auto-refresh (paused while the tab is hidden) and "Kosongkan log" behind a
  * confirmation. Entries are redacted server-side (no key, token, email or conversation text).
  */
@@ -12,7 +12,6 @@ import { ConfirmDialog } from '@/components/app/ConfirmDialog.jsx';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { SERVER_LOG_COPY as T } from '@/copy/id/systemLogs';
 import { useAutoRefresh } from '../lib/useAutoRefresh.js';
 import { LogDetailSheet } from './LogDetailSheet.jsx';
@@ -25,7 +24,7 @@ import { useServerLog } from './useServerLog.js';
 /** Interval of the optional auto-refresh. */
 export const AUTO_REFRESH_MS = 15_000;
 
-/** Log server → Log tab. */
+/** Server Log → Server Log page. */
 export function ServerLogPage() {
   const log = useServerLog();
   const [autoRefresh, setAutoRefresh] = useState(false);
@@ -46,7 +45,6 @@ export function ServerLogPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        tabs={<RouteTabNav />}
         title={T.title}
         description={T.description}
         actions={(

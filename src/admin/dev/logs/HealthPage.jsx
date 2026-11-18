@@ -1,12 +1,11 @@
 // src/admin/dev/logs/HealthPage.jsx
 /**
- * /dev → Log server → Kesehatan: one status per thing that can break — API keys (last connection test), the live AIS
+ * /dev → Server Log → Kesehatan Sistem: one status per thing that can break — API keys (last connection test), the live AIS
  * feed, external services seen in traffic, quotas, voice limits and the log files. Read-only: nothing here calls a
  * provider; re-check a key with "Uji koneksi" on the providers page.
  */
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { HEALTH_COPY as T } from '@/copy/id/systemLogs';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { RefreshBar } from '../lib/RefreshBar.jsx';
@@ -36,12 +35,12 @@ function SectionCard({ section }) {
   );
 }
 
-/** Log server → Kesehatan tab. */
+/** Server Log → Kesehatan Sistem page. */
 export function HealthPage() {
   const resource = useDevResource(fetchHealth);
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title={T.title} description={T.description} actions={<RefreshBar label={T.refresh} loading={resource.loading} onRefresh={resource.reload} />} tabs={<RouteTabNav />} />
+      <PageHeader title={T.title} description={T.description} actions={<RefreshBar label={T.refresh} loading={resource.loading} onRefresh={resource.reload} />} />
       <ResourceBody resource={resource} loadingLabel={T.loadingLabel} errorTitle={T.errorTitle}>
         {(report) => {
           const view = healthView(report);

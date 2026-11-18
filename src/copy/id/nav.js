@@ -1,40 +1,30 @@
-// src/copy/id/nav.js
 /**
- * Menu labels of /admin and /dev (the information architecture of docs/CURRENT-STATE.md, "UI"). One entry per page or
- * tab id; adminNav composes them. Terminology follows glossary.js ("Sakelar darurat", "Log server").
+ * Menu labels of /admin and /dev, exactly as the dashboard has always named them (docs/CURRENT-STATE.md, "UI").
+ * adminNav.js composes the menu from these. Terminology follows glossary.js ("Kill switch", "Server Log").
  */
 
 export const NAV_COPY = Object.freeze({
   groups: Object.freeze({
-    access: 'Akses',
-    control: 'Kendali',
-    config: 'Konfigurasi',
-    system: 'Sistem',
+    aiConfig: 'Konfigurasi AI',
+    serverLog: 'Server Log',
   }),
   items: Object.freeze({
     overview: 'Ringkasan',
     systemOverview: 'Ringkasan sistem',
     users: 'Pengguna',
     usersAndAdmins: 'Pengguna & Admin',
-    activity: 'Aktivitas',
-    killSwitches: 'Sakelar darurat',
-    usageAndCost: 'Pemakaian & Biaya',
-    providers: 'Penyedia & API Keys',
-    general: 'Umum',
-    persona: 'Persona',
-    logs: 'Log server',
-    uiKit: 'Katalog komponen',
-  }),
-  tabs: Object.freeze({
     loginLog: 'Log Login',
-    accountAudit: 'Audit akun',
-    audit: 'Audit',
-    providerBudget: 'Anggaran provider',
-    aiUsage: 'Pemakaian AI',
+    killSwitches: 'Kill switch',
+    usage: 'Pemakaian',
     apiKeys: 'API Keys',
+    general: 'Umum',
     aiProvider: 'Penyedia AI',
-    serverLog: 'Log',
-    keyAudit: 'Jejak audit kunci & AI',
-    health: 'Kesehatan',
+    persona: 'Persona',
+    aiUsage: 'Pemakaian & Biaya',
+    serverLog: 'Server Log',
+    auditLog: 'Audit Log',
+    health: 'Kesehatan Sistem',
+    audit: 'Audit',
+    uiKit: 'Katalog komponen',
   }),
 });

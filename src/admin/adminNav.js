@@ -1,44 +1,87 @@
 // src/admin/adminNav.js
 /**
- * Composes the menu, the page table and the legacy redirects of the two dashboard areas from the route features
- * (src/admin/routes/features/*.js, listed in routes/index.js). This file owns no page: to add or move one, edit the
- * feature file that owns it.
- *  - `/admin` (admin + super_admin): Ringkasan · Pengguna · Aktivitas (tabs Log Login | Audit).
- *  - `/dev` (super_admin only): Ringkasan sistem; Akses; Kendali; Konfigurasi; Sistem.
+ * Menu structure of the two dashboard areas served by the one admin bundle:
+ *  - `/admin` (admin + super_admin): Ringkasan · Pengguna · Log Login · Audit.
+ *  - `/dev` (super_admin only): Ringkasan sistem · Pengguna & Admin · Log Login · Kill switch · Pemakaian · API Keys ·
+ *    Konfigurasi AI (Umum, Penyedia AI, Persona, Pemakaian & Biaya) · Server Log (Server Log, Audit Log,
+ *    Kesehatan Sistem) · Audit.
  * Pure data, so the sidebar, the router and the tests read one source of truth. The server guard enforces the same
- * area split; this only decides what to render. Paths are relative to the area basename; `/` is the area home.
+ * area split; this only decides what to render. Paths are relative to the area basename; `/` is the area home. A
+ * titled group is a labelled sub-list in the sidebar; its pages are registered in routes/features/*.js (PAGE_TABLE).
  *
  * @module admin/adminNav
  */
 
 import { isSuperAdminRole } from '../auth/authRoles.mjs';
 import { SHELL_COPY } from '../copy/id/shell.js';
+import { NAV_COPY } from '../copy/id/nav.js';
 import { navItems } from '../components/app/navModel.js';
 import { ROUTE_FEATURES } from './routes/index.js';
 
 /** @typedef {'admin' | 'dev'} AdminArea */
-/** @typedef {import('../components/app/navModel.js').NavGroup & {order: number}} NavGroup */
-/** @typedef {import('../components/app/navModel.js').NavItem} NavItem */
+/** @typedef {import('../components/app/navModel.js').NavGroup} NavGroup */
+
+const { items, groups } = NAV_COPY;
 
 /** The areas, each mounted at `/<area>`. */
 export const ADMIN_AREAS = Object.freeze(['admin', 'dev']);
 
-function composeNav(area, features) {
-  return features
-    .flatMap((feature) => feature.nav[area])
-    .sort((a, b) => a.order - b.order);
-}
+const top = (id, label, path, icon, page) => ({ id, label, path, icon, page });
+const plain = (id, item) => ({ id, title: null, items: [item] });
 
 /** @type {Readonly<Record<AdminArea, NavGroup[]>>} */
 export const AREA_NAV = Object.freeze({
-  admin: composeNav('admin', ROUTE_FEATURES),
-  dev: composeNav('dev', ROUTE_FEATURES),
+  admin: [
+    {
+      id: 'main',
+      title: null,
+      items: [
+        top('overview', items.overview, '/', 'overview', 'users-overview'),
+        top('users', items.users, '/users', 'users', 'users'),
+        top('login-log', items.loginLog, '/login-log', 'loginLog', 'login-log'),
+        top('audit', items.audit, '/audit', 'audit', 'account-audit'),
+      ],
+    },
+  ],
+  dev: [
+    {
+      id: 'main',
+      title: null,
+      items: [
+        top('overview', items.systemOverview, '/', 'overview', 'dev-overview'),
+        top('users', items.usersAndAdmins, '/users', 'users', 'users'),
+        top('login-log', items.loginLog, '/login-log', 'loginLog', 'login-log'),
+        top('kill-switches', items.killSwitches, '/kill-switches', 'killSwitch', 'dev-kill-switches'),
+        top('usage', items.usage, '/usage', 'usage', 'dev-usage'),
+        top('api-keys', items.apiKeys, '/api-keys', 'apiKeys', 'api-keys'),
+        // Hidden: routable for the keyboard / accessibility gate, never listed in the sidebar.
+        { ...top('ui-kit', items.uiKit, '/ui-kit', 'general', 'ui-kit'), hidden: true },
+      ],
+    },
+    {
+      id: 'ai-config',
+      title: groups.aiConfig,
+      path: '/ai',
+      items: [
+        top('ai-general', items.general, '/ai/general', 'general', 'ai-general'),
+        top('ai-provider', items.aiProvider, '/ai/provider', 'aiProvider', 'ai-provider'),
+        top('ai-persona', items.persona, '/ai/persona', 'persona', 'ai-persona'),
+        top('ai-usage', items.aiUsage, '/ai/usage', 'aiUsage', 'ai-usage'),
+      ],
+    },
+    {
+      id: 'server-log',
+      title: groups.serverLog,
+      path: '/server-log',
+      items: [
+        top('server-log', items.serverLog, '/server-log', 'logs', 'server-log'),
+        top('server-log-audit', items.auditLog, '/server-log/audit', 'auditLog', 'server-log-audit'),
+        top('server-log-health', items.health, '/server-log/health', 'health', 'server-log-health'),
+      ],
+    },
+    plain('audit', top('audit', items.audit, '/audit', 'audit', 'account-audit')),
+  ],
 });
-
-/** Legacy path → new path per area, merged from every feature. */
-export const AREA_REDIRECTS = Object.freeze(Object.fromEntries(ADMIN_AREAS.map((area) => [
-  area, Object.freeze(Object.assign({}, ...ROUTE_FEATURES.map((feature) => feature.redirects[area]))),
-])));
 
 /** Page id → page registration, merged from every feature. */
 export const PAGE_TABLE = Object.freeze(Object.assign({}, ...ROUTE_FEATURES.map((feature) => feature.pages)));
@@ -83,24 +126,12 @@ export function navForArea(area) {
 }
 
 /**
- * Every routable page of an area, one entry per item without tabs and one per tab: `{path, page, label, item, tab?}`.
+ * Every page the router must serve for an area, one entry per item: `{path, page, label}`.
  * @param {AdminArea} area
  * @returns {Array<{path: string, page: string, label: string}>}
  */
 export function areaLeaves(area) {
-  return navItems(navForArea(area)).flatMap((item) => (item.tabs
-    ? item.tabs.map((tab) => ({ path: tab.path, page: tab.page, label: tab.label }))
-    : [{ path: item.path, page: item.page, label: item.label }]));
-}
-
-/**
- * Legacy path → new path of an area (old bookmarks keep working; the router answers them with a redirect).
- * @param {AdminArea} area
- * @returns {Readonly<Record<string, string>>}
- */
-export function redirectsFor(area) {
-  navForArea(area);
-  return AREA_REDIRECTS[area];
+  return navItems(navForArea(area)).map((item) => ({ path: item.path, page: item.page, label: item.label }));
 }
 
 /**
@@ -110,6 +141,18 @@ export function redirectsFor(area) {
  */
 export function areaHome(area) {
   return navItems(navForArea(area))[0].path;
+}
+
+/**
+ * Groups of an area whose bare path (`/ai`) must redirect to their first page. A group whose first page IS the group
+ * path (Server Log) gets none: a route that navigates to its own URL renders nothing and hides the real page.
+ * @param {AdminArea} area
+ * @returns {Array<{path: string, to: string}>}
+ */
+export function groupRedirects(area) {
+  return navForArea(area)
+    .filter((group) => group.path && group.items[0].path !== group.path)
+    .map((group) => ({ path: group.path, to: group.items[0].path }));
 }
 
 /**

@@ -111,5 +111,5 @@ test('UsersOverviewPage: one h1, a busy skeleton before the stats arrive, and th
   assert.equal((html.match(/<h1/g) ?? []).length, 1);
   assert.match(html, /role="status"[^>]*aria-busy="true"/);
   for (const link of ['Kelola pengguna', 'Lihat log login', 'Lihat audit']) assert.match(html, new RegExp(link));
-  assert.match(html, /href="\/activity\/login"/);
+  assert.match(html, /href="\/login-log"/);
 });

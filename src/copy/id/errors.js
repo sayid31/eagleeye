@@ -49,7 +49,7 @@ export const ERROR_MESSAGES = Object.freeze({
   CROSS_SITE_REFUSED: 'Permintaan ditolak karena berasal dari situs lain.',
   AUTH_UNAVAILABLE: 'Layanan login sedang tidak tersedia. Coba lagi nanti.',
   AUTH_NOT_CONFIGURED: 'Login belum dikonfigurasi di server ini.',
-  INTERNAL_ERROR: 'Terjadi kesalahan di server. Lihat Log server untuk detailnya.',
+  INTERNAL_ERROR: 'Terjadi kesalahan di server. Lihat Server Log untuk detailnya.',
 });
 
 /** HTTP status class → sentence, used when the code is missing or unknown. */
@@ -76,7 +76,7 @@ const PASSWORD_REASONS = Object.freeze({
 export const FIELD_LABELS = Object.freeze({
   email: 'email', name: 'nama', role: 'role', capabilities: 'izin fitur', password: 'password', generate: 'pilihan password',
   currentPassword: 'password Anda', confirmEmail: 'email konfirmasi', q: 'pencarian', status: 'status', userId: 'pengguna',
-  success: 'hasil', action: 'aksi', targetId: 'akun', source: 'sumber', id: 'akun', reason: 'alasan', gate: 'sakelar',
+  success: 'hasil', action: 'aksi', targetId: 'akun', source: 'sumber', id: 'akun', reason: 'alasan', gate: 'gate',
 });
 
 function normalize(problem) {
