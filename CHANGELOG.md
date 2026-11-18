@@ -13,6 +13,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
   Persona, Usage & Cost), Server Log and System Health, and the buttons are "Sign in" / "Sign out". Times and numbers follow
   English formatting ("5 min ago", "1,000"). The voice assistant's persona rules are unchanged and still shown in their
   original language.
+- **The landing hero is now a slowly rotating dot-matrix globe**, with thin arcs between cities and pulsing markers. It follows the
+  light/dark theme and stays still when the device asks for reduced motion. The "Data layers" legend card is gone.
 
 ### Added
 

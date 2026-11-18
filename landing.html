@@ -57,31 +57,7 @@
           <div class="ld-cta ld-cta--hero" data-cta-slot="hero" aria-busy="true" aria-live="polite"><a class="ld-btn ld-btn--primary" href="/login">Sign in</a></div>
           <p class="ld-note">Access is for registered accounts only. There is no self-registration.</p>
         </div>
-        <figure class="ld-visual" role="img" aria-label="Illustration: a globe with flight trails, satellite orbits, vessel and earthquake markers, and a data layer panel">
-          <svg viewBox="0 0 520 420" focusable="false" aria-hidden="true">
-            <circle class="ld-v-fill" cx="230" cy="215" r="160" />
-            <g class="ld-v-lines" fill="none"><circle cx="230" cy="215" r="160" /><ellipse cx="230" cy="215" rx="138" ry="160" /><ellipse cx="230" cy="215" rx="80" ry="160" /><path d="M230 55V375M70 215H390M91.4 135H368.6M91.4 295H368.6M150 76.4H310M150 353.6H310" /></g>
-            <ellipse class="ld-v-orbit" cx="230" cy="215" rx="215" ry="70" transform="rotate(-25 230 215)" fill="none" />
-            <path class="ld-v-track" d="M118 292C170 150 270 112 346 168" fill="none" />
-            <path class="ld-v-air" d="M346 156l9 22-9-5-9 5z" transform="rotate(38 346 168)" />
-            <path class="ld-v-air" d="M262 121l7 17-7-4-7 4z" transform="rotate(75 262 130)" />
-            <rect class="ld-v-ship" x="164" y="288" width="9" height="9" rx="1.5" transform="rotate(45 168 292)" />
-            <rect class="ld-v-ship" x="250" y="304" width="9" height="9" rx="1.5" transform="rotate(45 254 308)" />
-            <circle class="ld-v-quake" cx="292" cy="252" r="14" /><circle class="ld-v-quake" cx="292" cy="252" r="6" />
-            <circle class="ld-v-fire" cx="196" cy="168" r="5" />
-            <circle class="ld-v-sat" cx="360" cy="105" r="6" />
-          </svg>
-          <div class="ld-visual__panel" aria-hidden="true">
-            <p>Data layers</p>
-            <ul>
-              <li><span class="ld-dot ld-dot--air"></span>Aircraft<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--sea"></span>Vessels<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--sat"></span>Satellites<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--quake"></span>Earthquakes<b>Live</b></li>
-              <li><span class="ld-dot ld-dot--traffic"></span>Traffic<b>Simulated</b></li>
-            </ul>
-          </div>
-        </figure>
+        <div class="ld-earth"><canvas class="ld-earth__canvas" data-hero-globe aria-hidden="true"></canvas></div>
       </div>
     </section>
 

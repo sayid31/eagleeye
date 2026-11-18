@@ -139,6 +139,18 @@ https://www.naturalearthdata.com/about/terms-of-use/). We credit anyway: "Made w
 Earth". Registration in the in-app `dataCredits.js` attribution list ships with the resolver
 wiring (see below).
 
+### Landing hero land mask (`src/landing/hero-globe.landData.js`)
+
+A 720x360 (0.5°) 1-bit equirectangular land mask, run-length encoded (about 8.7 KB), generated from **Natural Earth 110m land**
+(`ne_110m_land.geojson`, `nvkelso/natural-earth-vector` commit `ca96624a56bd078437bca8184e78163e5039ad19`). It only decides which
+dots of the landing hero globe are land. **Public domain** (https://www.naturalearthdata.com/about/terms-of-use/); no attribution
+required. Regenerate with:
+
+```bash
+curl -sfL -o /tmp/ne_110m_land.geojson https://raw.githubusercontent.com/nvkelso/natural-earth-vector/ca96624a56bd078437bca8184e78163e5039ad19/geojson/ne_110m_land.geojson
+node scripts/gen-landing-land-mask.mjs /tmp/ne_110m_land.geojson > src/landing/hero-globe.landData.js
+```
+
 ### DataSF Analysis Neighborhoods (`neighborhoods/`)
 
 `neighborhoods/san-francisco.json` bundles the City & County of San Francisco's official
