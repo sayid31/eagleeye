@@ -13,10 +13,10 @@ test('audit filter ids match the server types', () => {
 
 test('describeAuditEntry words each event in Indonesian with a status', () => {
   assert.deepEqual(describeAuditEntry({ event: 'keys.changed', saved: ['OPENAI_API_KEY'], removed: ['TOMTOM_API_KEY'] }),
-    { title: 'API key changed', detail: 'disimpan: OPENAI_API_KEY · dihapus: TOMTOM_API_KEY', status: 'ok' });
+    { title: 'API key changed', detail: 'saved: OPENAI_API_KEY · dihapus: TOMTOM_API_KEY', status: 'ok' });
   assert.deepEqual(describeAuditEntry({ event: 'keys.tested', provider: 'openai', result: 'rejected', httpStatus: 401 }),
     { title: 'Connection tested', detail: 'OpenAI: ditolak (HTTP 401)', status: 'error' });
-  assert.equal(describeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'persona'] }).detail, 'Diubah: limits, persona');
+  assert.equal(describeAuditEntry({ event: 'voice_settings.saved', sections: ['limits', 'persona'] }).detail, 'Changed: limits, persona');
   assert.equal(describeAuditEntry({ event: 'admin.login_denied', result: 'not_admin' }).status, 'warn');
   assert.equal(describeAuditEntry({ event: 'log.cleared' }).title, 'Server Log cleared');
   const unknown = describeAuditEntry({ event: 'something.new', provider: 'x', result: 'y' });
@@ -29,7 +29,7 @@ test('auditRows keeps the server order and builds unique ids', () => {
   assert.equal(rows.length, 2);
   assert.notEqual(rows[0].id, rows[1].id);
   assert.equal(rows[0].via, 'Lewat admin');
-  assert.equal(rows[0].time.relative, '1 menit lalu');
+  assert.equal(rows[0].time.relative, '1 min ago');
   assert.equal(rows[1].via, '');
 });
 

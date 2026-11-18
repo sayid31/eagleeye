@@ -24,7 +24,7 @@ test('nameProblem mirrors the server rule (trimmed, 1–80)', () => {
   assert.equal(nameProblem('  Budi  '), null);
   assert.equal(nameProblem('   '), ACCOUNT_COPY.nameRequired);
   assert.equal(nameProblem('x'.repeat(80)), null);
-  assert.equal(nameProblem('x'.repeat(81)), 'Nama maksimal 80 karakter.');
+  assert.equal(nameProblem('x'.repeat(81)), 'Name can be at most 80 characters.');
 });
 
 test('roleLabel: Indonesian role names, unknown passes through', () => {

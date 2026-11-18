@@ -14,10 +14,10 @@ const summary = (patch = {}) => ({
 
 test('overviewCards: concise values with a sub-label per card', () => {
   const cards = overviewCards(summary());
-  assert.deepEqual(cards.version, { value: 'v1.2.3', detail: 'Berjalan di Bun 1.2.8' });
+  assert.deepEqual(cards.version, { value: 'v1.2.3', detail: 'Running on Bun 1.2.8' });
   assert.equal(cards.uptime.value, '1 j 05 mnt');
-  assert.deepEqual(cards.gates, { status: 'warn', value: '2 dari 3 menyala', detail: 'Dimatikan: Voice & AI' });
-  assert.deepEqual(cards.errors, { status: 'error', value: '2', detail: 'error dalam 24 jam terakhir' });
+  assert.deepEqual(cards.gates, { status: 'warn', value: '2 of 3 on', detail: 'Turned off: Voice & AI' });
+  assert.deepEqual(cards.errors, { status: 'error', value: '2', detail: 'errors in the last 24 hours' });
   assert.deepEqual(cards.login.rows.map((row) => [row.status, row.text]), [['ok', 'Ready'], ['off', 'Not active']]);
 });
 
@@ -31,7 +31,7 @@ test('overviewCards: all gates on and no errors read as ok; unconfigured login i
 
 test('keyPresence shows display names and presence only', () => {
   const view = keyPresence([{ id: 'openai', title: 'OPENAI', set: true }, { id: 'aisstream', title: 'AISSTREAM', set: false }]);
-  assert.equal(view.summary, '1 dari 2 terpasang');
+  assert.equal(view.summary, '1 of 2 keys set');
   assert.deepEqual(view.rows, [{ id: 'openai', name: 'OpenAI', set: true }, { id: 'aisstream', name: 'AISStream', set: false }]);
   assert.doesNotMatch(JSON.stringify(view), /sk-|value/);
 });

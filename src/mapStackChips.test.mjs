@@ -171,7 +171,7 @@ test('keyless ion stacks stay focusable, aria-disabled, and say why', () => {
   assert.equal(bingAerial.getAttribute('aria-disabled'), 'true');
   assert.equal(
     bingAerial.getAttribute('aria-label'),
-    'Bing Aerial tidak tersedia: Cesium ion token required for Bing stacks',
+    'Bing Aerial unavailable: Cesium ion token required for Bing stacks',
   );
   assert.ok(bingAerial.classList.contains('unavailable'));
   assert.equal(bingAerial.title, 'Cesium ion token required for Bing stacks');
@@ -196,7 +196,7 @@ test('a non-ion stack that fails never claims an ion token is required', () => {
 
   const google = container.children[0];
   assert.equal(google.getAttribute('aria-disabled'), 'true');
-  assert.equal(google.getAttribute('aria-label'), 'Google 3D tidak tersedia: Google 3D is unavailable');
+  assert.equal(google.getAttribute('aria-label'), 'Google 3D unavailable: Google 3D is unavailable');
   assert.equal(chipText(google), 'Google 3D', 'no ION badge on a stack that does not need ion');
   assert.equal(google.title, 'Google 3D is unavailable');
   assert.equal(chipText(container.children[1]), 'Bing Aerial', 'available ion stacks stay unbadged');
@@ -228,8 +228,8 @@ test('models carry the stack\'s own reason and never invent an active chip', () 
       },
       {
         requirement: '',
-        unavailableHint: 'Hybrid tidak tersedia',
-        title: 'Hybrid tidak tersedia',
+        unavailableHint: '${label || \'This map stack\'} is unavailable',
+        title: '${label || \'This map stack\'} is unavailable',
       },
     ],
   );

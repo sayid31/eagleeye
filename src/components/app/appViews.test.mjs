@@ -26,16 +26,16 @@ test('tableState: error wins, first load is a skeleton, a reload keeps the rows,
   assert.deepEqual(tableState({ loading: false, rowCount: 4 }), { state: 'ready', refreshing: false });
 });
 
-test('paginationView: "x–y dari z" line, neighbours, and hidden when it all fits the smallest page size', () => {
+test('paginationView: "x–y of z" line, neighbours, and hidden when it all fits the smallest page size', () => {
   const middle = paginationView({ total: 45, limit: 20, offset: 20 });
-  assert.equal(middle.label, '21–40 dari 45');
+  assert.equal(middle.label, '21–40 of 45');
   assert.equal(middle.prevOffset, 0);
   assert.equal(middle.nextOffset, 40);
   assert.equal(middle.visible, true);
   const last = paginationView({ total: 45, limit: 20, offset: 40 });
-  assert.equal(last.label, '41–45 dari 45');
+  assert.equal(last.label, '41–45 of 45');
   assert.equal(last.nextOffset, null);
-  assert.equal(paginationView({ total: 0, limit: 20, offset: 0 }).label, '0–0 dari 0');
+  assert.equal(paginationView({ total: 0, limit: 20, offset: 0 }).label, '0–0 of 0');
   assert.equal(paginationView({ total: 7, limit: 20, offset: 0 }).visible, false);
   assert.equal(paginationView({ total: 11, limit: 20, offset: 0 }).visible, true);
   assert.equal(paginationView({ total: 45, limit: 20, offset: 5 }).prevOffset, 0, 'never a negative offset');
@@ -83,7 +83,7 @@ test('initialsFor: name first, then the email local part, never empty', () => {
 });
 
 test('documentTitle follows "<page> · EagleEye View"', () => {
-  assert.equal(documentTitle('Users'), 'Pengguna · EagleEye View');
+  assert.equal(documentTitle('Users'), 'User · EagleEye View');
   assert.equal(documentTitle('  '), 'EagleEye View');
   assert.equal(documentTitle(undefined), 'EagleEye View');
 });
@@ -93,7 +93,7 @@ test('splitActions puts destructive actions last and drops hidden ones', () => {
   const { normal, destructive } = splitActions([
     { id: 'delete', label: 'Delete', onSelect: noop, destructive: true },
     { id: 'edit', label: 'Edit', onSelect: noop },
-    { id: 'role', label: 'Ubah role', onSelect: noop, hidden: true },
+    { id: 'role', label: 'Edit role', onSelect: noop, hidden: true },
     { id: 'reset', label: 'Reset password', onSelect: noop },
   ]);
   assert.deepEqual(normal.map((a) => a.id), ['edit', 'reset']);

@@ -34,7 +34,7 @@ test('levelBadge: icon + word per level, unknown reads as info', () => {
 
 test('logRow: relative + absolute time, repeat count, context', () => {
   const row = logRow(entry, NOW);
-  assert.equal(row.time.relative, '2 menit lalu');
+  assert.equal(row.time.relative, '2 min ago');
   assert.ok(row.time.absolute.length > 5);
   assert.equal(row.time.iso, new Date(entry.lastAt).toISOString());
   assert.equal(row.repeat, '12 kali');

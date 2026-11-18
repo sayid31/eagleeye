@@ -15,11 +15,11 @@ test('meterProgress: percent, clamped bar, true percent in text, safe against ze
 test('TomTom card: big number, accessible meter, reset countdown to the next UTC midnight', () => {
   const card = providerCard({ id: 'tomtom', configured: true, status: 'warn', data: { used: 830, budget: 1000, share: 0.83, date: '2026-11-18' } }, NOW);
   assert.equal(card.big.value, '830');
-  assert.equal(card.big.unit, 'dari 1.000 tile hari ini');
+  assert.equal(card.big.unit, 'of 1.000 tiles today');
   assert.equal(card.statusLabel, 'Almost used up');
   const [meter] = card.meters;
   assert.deepEqual([meter.valueNow, meter.valueMax, meter.tone], [830, 1000, 'warning']);
-  assert.equal(meter.text, '830 dari 1.000 tile (83%)');
+  assert.equal(meter.text, '830 of 1.000 tiles (83%)');
   assert.match(card.note, /Reset pukul 00\.00 UTC, 12 j 00 mnt lagi/);
 });
 
@@ -34,7 +34,7 @@ test('OpenSky card has no meter (the API reports remaining credits only) and say
 test('OpenAI card: minutes meter only with a daily cap, judge meter only when the judge is on', () => {
   const data = { enabled: true, todaySeconds: 600, dailyMinutes: 30, todayUsd: 0.5, periodUsd: 1.25, judgeEnabled: true, judgeCalls: 3, judgeMax: 300 };
   const card = providerCard({ id: 'openai', configured: true, status: 'ok', data }, NOW);
-  assert.deepEqual(card.meters.map((m) => [m.id, m.text]), [['minutes', '10 dari 30 menit (33%)'], ['judge', '3 dari 300 panggilan']]);
+  assert.deepEqual(card.meters.map((m) => [m.id, m.text]), [['minutes', '10 of 30 minutes (33%)'], ['judge', '3 of 300 calls']]);
   assert.deepEqual(card.facts.map((f) => f.value), ['~$0.50', '~$1.25']);
   const free = providerCard({ id: 'openai', configured: true, status: 'ok', data: { ...data, dailyMinutes: 0, judgeEnabled: false } }, NOW);
   assert.equal(free.meters.length, 0);

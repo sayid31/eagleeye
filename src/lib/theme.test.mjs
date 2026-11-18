@@ -99,10 +99,10 @@ test('admin.html, login.html and landing.html embed exactly this script, before 
   assert.doesNotMatch(read('admin.html'), /data-admin-theme/);
 });
 
-test('admin.html and login.html make no third-party request and declare lang="id"', () => {
+test('admin.html and login.html make no third-party request and declare lang="en"', () => {
   for (const file of ['admin.html', 'login.html']) {
     const html = read(file);
-    assert.match(html, /<html lang="id">/);
+    assert.match(html, /<html lang="en">/);
     assert.doesNotMatch(html, /(?:src|href)="(?:https?:)?\/\//, `${file}: no CDN/font host`);
   }
 });

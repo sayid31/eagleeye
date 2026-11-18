@@ -25,17 +25,17 @@ test('no wait copy while no fetch is in flight or the wait is still short', () =
 test('a queued fetch names the OSM queue and counts elapsed seconds', () => {
   assert.equal(
     osmWaitLabel(0, OSM_WAIT_REVEAL_MS),
-    'antre di server peta OSM · 4 dtk (biasanya ±45)',
+    'queued at the OSM map server · 4 s (typically ±45)',
   );
   assert.equal(
     osmWaitLabel(5000, 5000 + 12_900),
-    'antre di server peta OSM · 12 dtk (biasanya ±45)',
+    'queued at the OSM map server · 12 s (typically ±45)',
   );
 });
 
 test('past the typical queue the copy stops promising a 45 s ceiling', () => {
   const label = osmWaitLabel(0, OSM_WAIT_TYPICAL_MS + 3000);
-  assert.equal(label, 'server peta OSM masih antre · 48 dtk');
+  assert.equal(label, 'OSM map server still queued · 48 s');
   assert.ok(!label.includes('biasanya'));
 });
 

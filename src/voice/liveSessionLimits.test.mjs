@@ -46,7 +46,7 @@ test('no owner limits: the cap timer still closes the session once, stop still r
   assert.deepEqual(ended, []);
   clock.advance(1);
   clock.advance(60);
-  assert.deepEqual(ended, [{ kind: 'session', message: 'Sesi berakhir — batas durasi 30 menit' }]);
+  assert.deepEqual(ended, [{ kind: 'session', message: 'Session ended — 30-minute duration limit' }]);
   assert.equal(guard.stop(), true);
   assert.equal(guard.stop(), false);
 });
@@ -58,7 +58,7 @@ test('session length closes the session once, with the minutes in the message', 
   assert.equal(ended.length, 0);
   clock.advance(1);
   clock.advance(5);
-  assert.deepEqual(ended, [{ kind: 'session', message: 'Sesi berakhir — batas durasi 2 menit' }]);
+  assert.deepEqual(ended, [{ kind: 'session', message: 'Session ended — 2-minute duration limit' }]);
 });
 
 test('daily minutes left close the session when tighter than the session limit', () => {
@@ -76,7 +76,7 @@ test('idle closes the session; activity resets the idle clock', () => {
   clock.advance(20);
   assert.equal(ended.length, 0);
   clock.advance(10);
-  assert.deepEqual(ended, [{ kind: 'idle', message: 'Sesi berakhir — tidak ada percakapan 30 detik' }]);
+  assert.deepEqual(ended, [{ kind: 'idle', message: 'Session ended — no conversation for 30 seconds' }]);
 });
 
 test('stop clears the timer and a new start re-arms the one-shot', () => {

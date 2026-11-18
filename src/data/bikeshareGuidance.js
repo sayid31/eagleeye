@@ -44,7 +44,7 @@ export function nearestBikeshareCity(center, registry) {
 function nearestText(nearest) {
   if (!nearest) return '';
   const km = Math.round(nearest.km / 10) * 10;
-  return ` — terdekat: ${nearest.city}, ±${km.toLocaleString('id-ID')} km`;
+  return ` — terdekat: ${nearest.city}, ±${km.toLocaleString('en-US')} km`;
 }
 
 /**

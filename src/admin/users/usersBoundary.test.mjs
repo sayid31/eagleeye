@@ -53,8 +53,8 @@ test('bodies: create/update/password/role/delete validated at the boundary', () 
 
 test('userErrorMessage: Indonesian text per code, password reason, field', () => {
   assert.equal(userErrorMessage('EMAIL_TAKEN'), 'Email is already used by another account.');
-  assert.equal(userErrorMessage({ error: 'PASSWORD_WEAK', reason: 'too_short', min: 15 }), 'Password minimal 15 karakter.');
-  assert.equal(userErrorMessage({ error: 'INVALID_INPUT', field: 'email' }), 'Isian email tidak valid.');
+  assert.equal(userErrorMessage({ error: 'PASSWORD_WEAK', reason: 'too_short', min: 15 }), 'Password must be at least 15 characters.');
+  assert.equal(userErrorMessage({ error: 'INVALID_INPUT', field: 'email' }), 'The email field is not valid.');
   assert.equal(userErrorMessage('SOMETHING_NEW'), 'Request failed.');
 });
 

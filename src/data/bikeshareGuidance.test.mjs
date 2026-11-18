@@ -14,7 +14,7 @@ const JAKARTA = { lat: -6.2088, lon: 106.8456 };
 test('too high: ask the user to zoom in', () => {
   assert.deepEqual(bikeshareGuidance({ altitudeOk: false }), {
     status: 'zoom-in',
-    message: 'Perbesar peta (di bawah ±48 km) untuk memuat stasiun sepeda',
+    message: 'Zoom in (below ±48 km) to load bike stations',
   });
 });
 
@@ -64,7 +64,7 @@ test('every registered feed host passes the GBFS proxy allowlist', () => {
 
 test('guidance reaches the stats only when idle, empty and error-free', async () => {
   const { withBikeshareGuidance } = await import('./bikeshareGuidance.js');
-  const guidance = { status: 'zoom-in', message: 'Perbesar peta (di bawah ±48 km) untuk memuat stasiun sepeda' };
+  const guidance = { status: 'zoom-in', message: 'Zoom in (below ±48 km) to load bike stations' };
   const idle = { count: 0, lastUpdate: null, loading: false };
   assert.deepEqual(withBikeshareGuidance(idle, guidance), { ...idle, status: 'zoom-in', error: guidance.message });
   assert.equal(withBikeshareGuidance(idle, null), idle);

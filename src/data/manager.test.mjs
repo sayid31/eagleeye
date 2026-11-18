@@ -1890,7 +1890,7 @@ test('uncertain lifecycle state overrides ordinary feed status without disabling
   assert.equal(classes.get('feed-nominal'), false);
   assert.equal(
     mgr._buildMetaText(layer),
-    'TIDAK PASTI · Radio Browser · status siklus perlu direkonsiliasi',
+    'UNCERTAIN · Radio Browser · cycle state needs reconciling',
   );
 });
 

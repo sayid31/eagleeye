@@ -47,7 +47,7 @@ page.on('pageerror', (error) => consoleErrors.push(error.message));
 
 // The share-restore failure notice as src/uiShareState.js words it for a
 // `flight` label (the UI is Indonesian).
-const SHARE_FAILURE_NOTICE = 'flight yang dibagikan tidak dapat dipulihkan — feed tidak tersedia';
+const SHARE_FAILURE_NOTICE = 'Shared flight could not be restored — feed unavailable';
 
 // Keyboard disclosure hands focus to a tile from a 240 ms timer
 // (scheduleMapSourceFocus in src/uiPanelChrome.js). With Cesium busy on the

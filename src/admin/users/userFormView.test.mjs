@@ -58,7 +58,7 @@ test('handoverMessage: Indonesian, login URL from the origin, email, temp passwo
     '',
     'Alamat login: https://eagle-eye.example.test/login',
     'Email: ani@example.test',
-    'Password sementara: Tmp9xYzAbc',
+    'Temporary password: Tmp9xYzAbc',
     '',
     'Note: this password must be changed at first login. Do not share this message with anyone else.',
   ].join('\n'));

@@ -33,7 +33,7 @@ test('a timed-out poll surfaces a timeout reason instead of a generic failure', 
     assert.ok(requestedSignal, 'poll must carry a timeout-capable signal');
     assert.equal(feed.status, 'unavailable');
     assert.equal(feed.firstConnectPhase, 'unavailable');
-    assert.equal(feed.error, `waktu habis memuat AIS live (>${AIS_LIVE_FETCH_TIMEOUT_MS / 1000} dtk)`);
+    assert.equal(feed.error, `live AIS load timed out (>${AIS_LIVE_FETCH_TIMEOUT_MS / 1000} s)`);
   } finally {
     globalThis.fetch = priorFetch;
     console.warn = priorWarn;

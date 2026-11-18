@@ -12,10 +12,10 @@ const met = (input, identity) => Object.fromEntries(passwordRequirements(input, 
 
 test('passwordRequirements: the length line carries the shared minimum (12 user, 15 admin and super_admin)', () => {
   const label = (role) => passwordRequirements(form(''), { role })[0].label;
-  assert.equal(label('user'), `Minimal ${PASSWORD_MIN_USER} karakter`);
-  assert.equal(label('admin'), `Minimal ${PASSWORD_MIN_ADMIN} karakter`);
-  assert.equal(label('super_admin'), `Minimal ${PASSWORD_MIN_ADMIN} karakter`);
-  assert.equal(label(undefined), `Minimal ${PASSWORD_MIN_USER} karakter`);
+  assert.equal(label('user'), `At least ${PASSWORD_MIN_USER} characters`);
+  assert.equal(label('admin'), `At least ${PASSWORD_MIN_ADMIN} characters`);
+  assert.equal(label('super_admin'), `At least ${PASSWORD_MIN_ADMIN} characters`);
+  assert.equal(label(undefined), `At least ${PASSWORD_MIN_USER} characters`);
 });
 
 test('passwordRequirements: nothing is met on an empty form; each line turns on by itself as the input improves', () => {
@@ -39,8 +39,8 @@ test('changePasswordIssue: role-aware length, identity, same, confirm — each o
   assert.equal(changePasswordIssue(form('a long new password'), user), null);
   assert.deepEqual(changePasswordIssue(form('a long new password', { currentPassword: '' }), user), { field: 'current', message: PASSWORD_ERRORS.CURRENT_REQUIRED });
   assert.equal(changePasswordIssue(form('thirteen-char'), user), null, '13 chars ok for a user');
-  assert.deepEqual(changePasswordIssue(form('thirteen-char'), admin), { field: 'next', message: 'Password baru minimal 15 karakter.' });
-  assert.equal(message(form('short'), user), 'Password baru minimal 12 karakter.');
+  assert.deepEqual(changePasswordIssue(form('thirteen-char'), admin), { field: 'next', message: 'The new password must be at least 15 characters.' });
+  assert.equal(message(form('short'), user), 'The new password must be at least 12 characters.');
   assert.match(message(form('x'.repeat(129)), user), /maksimal 128/);
   assert.equal(message(form('budi@example.test'), user), PASSWORD_ERRORS.MATCHES_IDENTITY);
   assert.equal(message(form('Budi Santoso'), { ...user, name: 'budi santoso' }), PASSWORD_ERRORS.MATCHES_IDENTITY);

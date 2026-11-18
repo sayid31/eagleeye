@@ -19,7 +19,7 @@ test('each row carries label, honest status text and group order', () => {
   assert.equal(byId.traffic.label, 'Traffic');
   assert.equal(byId.traffic.statusText, 'Live');
   assert.equal(byId.flights.statusText, 'Mati');
-  assert.equal(byId.earthquakes.statusText, 'Terganggu · data 2 jam lalu');
+  assert.equal(byId.earthquakes.statusText, 'Terganggu · data 2 h ago');
   assert.ok(byId.flights.rowOrder < byId.earthquakes.rowOrder);
   assert.ok(byId.earthquakes.rowOrder < byId.traffic.rowOrder);
 });

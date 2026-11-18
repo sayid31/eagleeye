@@ -29,6 +29,6 @@ test('formatUtcClock zero-pads', () => {
 });
 
 test('healthLabels omits the degraded chip text at zero', () => {
-  assert.deepEqual(healthLabels({ live: 9, degraded: 1 }), { live: '9 sumber live', degraded: '1 terganggu' });
+  assert.deepEqual(healthLabels({ live: 9, degraded: 1 }), { live: 'Live sources: 9', degraded: '1 terganggu' });
   assert.equal(healthLabels({ live: 2, degraded: 0 }).degraded, '');
 });

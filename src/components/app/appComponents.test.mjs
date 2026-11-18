@@ -44,7 +44,7 @@ test('LoadingState announces one busy status with an sr-only label; EmptyState a
 
 test('FormField wires label, description and error with id / aria-invalid / aria-describedby', async () => {
   const { FormField } = await load('FormField');
-  const html = render(h(FormField, { label: 'Email', description: 'Used to sign in.', error: 'Isian email tidak valid.', required: true }, h('input', { type: 'email' })));
+  const html = render(h(FormField, { label: 'Email', description: 'Used to sign in.', error: 'The email field is not valid.', required: true }, h('input', { type: 'email' })));
   const id = /<input[^>]*\sid="([^"]+)"/.exec(html)[1];
   assert.match(html, new RegExp(`<label[^>]*for="${id.replace(/[:]/g, '\\:')}"`));
   assert.match(html, /aria-invalid="true"/);
@@ -81,7 +81,7 @@ test('CopyField: read-only labelled value, Salin button, aria-live confirmation,
   assert.ok(both.indexOf('Copy message') < both.indexOf('>Salin<'), 'the message copy comes first');
 });
 
-test('DataTable ready: sr-only caption, scope=col headers, md table + stacked cards, "x–y dari z" and page size', async () => {
+test('DataTable ready: sr-only caption, scope=col headers, md table + stacked cards, "x–y of z" and page size', async () => {
   const { DataTable } = await load('DataTable');
   const rows = [{ id: 'a', name: 'Ani' }, { id: 'b', name: 'Budi' }];
   const props = {
@@ -120,7 +120,7 @@ test('DataTable states: loading skeleton, human error with retry, empty vs filte
 
 test('RowActions renders an accessible trigger and nothing when every action is hidden', async () => {
   const { RowActions } = await load('RowActions');
-  const html = render(h(RowActions, { label: 'Aksi untuk ani@contoh.test', items: [{ id: 'edit', label: 'Edit', onSelect() {} }] }));
+  const html = render(h(RowActions, { label: 'Actions for ani@contoh.test', items: [{ id: 'edit', label: 'Edit', onSelect() {} }] }));
   assert.match(html, /<button[^>]*aria-label="Aksi untuk ani@contoh.test"[^>]*aria-haspopup="menu"/);
   assert.equal(render(h(RowActions, { label: 'x', items: [{ id: 'a', label: 'A', onSelect() {}, hidden: true }] })), '');
 });
@@ -153,7 +153,7 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
   assert.equal((html.match(/<main/g) ?? []).length, 1, 'exactly one main landmark');
   assert.match(html, /<nav aria-label="Navigasi Developer"/);
   assert.match(html, /<nav aria-label="Breadcrumb"/);
-  const labels = ['System Overview', 'Pengguna &amp; Admin', 'Login Log', 'Kill switch', 'Usage', 'API Keys', 'AI Configuration', 'General', 'AI Provider', 'Persona',
+  const labels = ['System Overview', 'User &amp; Admin', 'Login Log', 'Kill switch', 'Usage', 'API Keys', 'AI Configuration', 'General', 'AI Provider', 'Persona',
     'Pemakaian &amp; Biaya', 'Server Log', 'Audit Log', 'System Health', 'Audit'];
   let at = 0;
   for (const text of labels) {

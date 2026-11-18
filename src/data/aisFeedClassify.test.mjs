@@ -4,7 +4,7 @@ import { aisFetchFailureReason } from './aisFeedClassify.js';
 
 test('aisFetchFailureReason names a fetch timeout with its budget', () => {
   const timeout = new DOMException('The operation was aborted due to timeout', 'TimeoutError');
-  assert.equal(aisFetchFailureReason(timeout, 20000), 'waktu habis memuat AIS live (>20 dtk)');
+  assert.equal(aisFetchFailureReason(timeout, 20000), 'live AIS load timed out (>20 s)');
 });
 
 test('aisFetchFailureReason keeps other failure messages and has a fallback', () => {

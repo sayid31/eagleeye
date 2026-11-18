@@ -6,7 +6,7 @@ import {
 import { BROWSER_LOG_SOURCES, normalizeLogEvent } from '../admin/log/serverLogCore.mjs';
 
 const ais = (stats, over = {}) => ({ id: 'ais-live-vessels', name: 'AIS Vessels', enabled: true, lifecycleState: 'enabled', stats, ...over });
-const timeoutStats = { count: 0, lastUpdate: null, status: 'unavailable', error: 'waktu habis memuat AIS live (>20 dtk)' };
+const timeoutStats = { count: 0, lastUpdate: null, status: 'unavailable', error: 'live AIS load timed out (>20 s)' };
 
 test('a layer turning unavailable is reported once with its label and reason', () => {
   const first = layerHealthEvents(new Map(), [ais(timeoutStats)]);

@@ -25,7 +25,7 @@ test('stale data reads Terganggu with its age', () => {
   const status = layerShellStatus(row({ stats: { count: 3, stale: true, lastUpdate: NOW - 14 * 3600 * 1000 } }), NOW);
   assert.equal(status.key, 'degraded');
   assert.equal(status.label, 'Terganggu');
-  assert.equal(status.detail, 'data 14 jam lalu');
+  assert.equal(status.detail, 'data 14 h ago');
 });
 
 test('fallback and unavailable feeds are Terganggu, not Live', () => {
@@ -80,7 +80,7 @@ test('labels fall back to the declared name', () => {
 
 test('agoLabel is Indonesian and tolerant of bad input', () => {
   assert.equal(agoLabel(NOW - 5000, NOW), 'just now');
-  assert.equal(agoLabel(NOW - 90_000, NOW), '1 menit lalu');
+  assert.equal(agoLabel(NOW - 90_000, NOW), '1 min ago');
   assert.equal(agoLabel(undefined, NOW), null);
 });
 

@@ -77,7 +77,7 @@ test('POST /users: defaults, one-time temp password, role rules, reserved email,
     assert.equal(typeof reply.message, 'string');
   }
   const [, weak] = await t.call('POST', '/api/admin/users', admin.cookie, { email: 'w@example.test', name: 'W', password: 'short-pw' });
-  assert.deepEqual([weak.reason, weak.min, weak.message], ['too_short', 12, 'Password minimal 12 karakter.']);
+  assert.deepEqual([weak.reason, weak.min, weak.message], ['too_short', 12, 'Password must be at least 12 characters.']);
   const [, typed] = await t.call('POST', '/api/admin/users', owner, { email: 'admin3@example.test', name: 'A3', role: 'admin', password: STAFF_PASSWORD, capabilities: { premium: true } });
   assert.equal(typed.tempPassword, undefined, 'a typed password is not echoed back');
   assert.equal(typed.user.role, 'admin');

@@ -27,10 +27,10 @@ test('errorMessage: a known code maps to its Indonesian sentence', () => {
 });
 
 test('errorMessage: detail-bearing codes name the reason or the field', () => {
-  assert.equal(errorMessage({ error: 'PASSWORD_WEAK', reason: 'too_short', min: 15 }), 'Password minimal 15 karakter.');
+  assert.equal(errorMessage({ error: 'PASSWORD_WEAK', reason: 'too_short', min: 15 }), 'Password must be at least 15 characters.');
   assert.equal(errorMessage({ error: 'PASSWORD_WEAK', reason: 'matches_identity' }), 'Password cannot be the same as email or name.');
   assert.equal(errorMessage({ error: 'PASSWORD_WEAK' }), ERROR_MESSAGES.PASSWORD_WEAK);
-  assert.equal(errorMessage({ error: 'INVALID_INPUT', field: 'email' }), 'Isian email tidak valid.');
+  assert.equal(errorMessage({ error: 'INVALID_INPUT', field: 'email' }), 'The email field is not valid.');
   assert.equal(errorMessage({ error: 'INVALID_INPUT', field: 'nope' }), ERROR_MESSAGES.INVALID_INPUT);
 });
 

@@ -7,15 +7,15 @@ const NOW = 1_800_000_000_000;
 test('gateRow: a never-changed gate is "Menyala" with no reason', () => {
   const row = gateRow({ gate: 'layers', killed: false, reason: null, updatedAt: null, updatedBy: null }, NOW);
   assert.deepEqual([row.status, row.statusLabel, row.lastChange, row.reason, row.absolute], ['ok', 'On', 'Never changed.', null, null]);
-  assert.equal(row.switchLabel, 'Layer data: menyala untuk semua akun');
+  assert.equal(row.switchLabel, 'Layer data: on for all accounts');
 });
 
 test('gateRow: a switched-off gate says who, when and why', () => {
   const row = gateRow({ gate: 'ai', killed: true, reason: 'Biaya melonjak', updatedAt: NOW - 3 * 3_600_000, updatedBy: { id: 'u1', emailMasked: 'd***@x.test' } }, NOW);
   assert.equal(row.killed, true);
   assert.equal(row.statusLabel, 'Off');
-  assert.equal(row.lastChange, 'Diubah 3 jam lalu oleh d***@x.test.');
-  assert.equal(row.reason, 'Alasan: Biaya melonjak');
+  assert.equal(row.lastChange, 'Changed 3 jam lalu by d***@x.test.');
+  assert.equal(row.reason, 'Reason: Biaya melonjak');
   assert.ok(row.absolute);
   assert.match(gateRow({ gate: 'ai', killed: true, reason: null, updatedAt: NOW, updatedBy: null }, NOW).lastChange, /akun yang tidak dikenal/);
 });
@@ -42,7 +42,7 @@ test('dialogConfig: switching off is destructive and needs a reason of ≥3 char
 test('updateBody trims the reason and always sends a password string; savedToast warns when the audit failed', () => {
   assert.deepEqual(updateBody({ gate: 'ai', killed: true }, { reason: '  boros  ', password: 'pw' }), { gate: 'ai', killed: true, reason: 'boros', currentPassword: 'pw' });
   assert.equal(updateBody({ gate: 'ai', killed: false }, {}).currentPassword, '');
-  assert.deepEqual(savedToast({ switch: { gate: 'ai', killed: true }, audit: 'written' }), { kind: 'success', text: 'Voice & AI dimatikan untuk semua akun.' });
-  assert.deepEqual(savedToast({ switch: { gate: 'ai', killed: false }, audit: 'written' }), { kind: 'success', text: 'Voice & AI menyala kembali.' });
+  assert.deepEqual(savedToast({ switch: { gate: 'ai', killed: true }, audit: 'written' }), { kind: 'success', text: 'Voice & AI turned off for all accounts.' });
+  assert.deepEqual(savedToast({ switch: { gate: 'ai', killed: false }, audit: 'written' }), { kind: 'success', text: 'Voice & AI is back on.' });
   assert.equal(savedToast({ switch: { gate: 'ai', killed: true }, audit: 'failed' }).kind, 'warning');
 });

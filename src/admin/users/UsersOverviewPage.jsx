@@ -29,7 +29,7 @@ function StatCard({ card }) {
     <Card>
       <CardHeader>
         <CardDescription className="flex items-center gap-2"><Icon aria-hidden="true" className="size-4" />{copy.title}</CardDescription>
-        <CardTitle className="text-3xl font-semibold tabular-nums" data-testid={`stat-${card.key}`}>{card.value.toLocaleString('id-ID')}</CardTitle>
+        <CardTitle className="text-3xl font-semibold tabular-nums" data-testid={`stat-${card.key}`}>{card.value.toLocaleString('en-US')}</CardTitle>
       </CardHeader>
       <CardContent className="text-sm text-muted-foreground">{copy.hint}</CardContent>
     </Card>

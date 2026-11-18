@@ -19,13 +19,13 @@ import {
 import { readLayerSourceText } from './data/layerSourceText.testutil.mjs';
 
 test('universal status notices reuse the standard failure dwell', () => {
-  const notice = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 1000);
+  const notice = createGlobalStatusNotice('Shared Satelit unavailable', 1000);
   assert.equal(notice.hideAt, null, 'finite dwell waits until first presentation');
-  assert.equal(presentGlobalStatusNotice(notice, 1001).label, 'Satelit yang dibagikan tidak tersedia');
+  assert.equal(presentGlobalStatusNotice(notice, 1001).label, 'Shared Satelit unavailable');
   assert.equal(notice.hideAt, 1001 + LOADING_FAILURE_DWELL_MS);
   assert.deepEqual(presentGlobalStatusNotice(notice, notice.hideAt - 1), {
     state: 'error',
-    label: 'Satelit yang dibagikan tidak tersedia',
+    label: 'Shared Satelit unavailable',
     detail: '',
   });
   assert.equal(presentGlobalStatusNotice(notice, notice.hideAt), null);
@@ -78,9 +78,9 @@ test('universal notice masks active loading only for its own fixed dwell', () =>
   const summary = aggregateLayerLoading([{ id: 'satellites', name: 'Satellites', lifecycleState: 'enabling' }]);
   let loading = reduceLoadingFeedback(createLoadingFeedbackState(), summary, 0);
   loading = reduceLoadingFeedback(loading, summary, 200);
-  const notice = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 300);
+  const notice = createGlobalStatusNotice('Shared Satelit unavailable', 300);
 
-  assert.equal(presentGlobalLoadingStatus(notice, loading, summary, 301).label, 'Satelit yang dibagikan tidak tersedia');
+  assert.equal(presentGlobalLoadingStatus(notice, loading, summary, 301).label, 'Shared Satelit unavailable');
   assert.equal(presentGlobalLoadingStatus(notice, loading, summary, notice.hideAt).label, 'LOADING LIVE DATA');
 });
 
@@ -91,7 +91,7 @@ test('terminal failure preempts a finite notice, whose full dwell starts afterwa
   loading = reduceLoadingFeedback(loading, aggregateLayerLoading([]), 300, {
     type: 'visibility-failed', layerId: 'satellites', error: new Error('offline'),
   });
-  const notice = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 400);
+  const notice = createGlobalStatusNotice('Shared Satelit unavailable', 400);
 
   assert.equal(
     presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), 401).label,
@@ -101,12 +101,12 @@ test('terminal failure preempts a finite notice, whose full dwell starts afterwa
   loading = reduceLoadingFeedback(loading, aggregateLayerLoading([]), 5300);
   assert.equal(
     presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), 5300).label,
-    'Satelit yang dibagikan tidak tersedia',
+    'Shared Satelit unavailable',
   );
   assert.equal(notice.hideAt, 5300 + LOADING_FAILURE_DWELL_MS);
   assert.equal(
     presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), notice.hideAt - 1).label,
-    'Satelit yang dibagikan tidak tersedia',
+    'Shared Satelit unavailable',
   );
   assert.equal(presentGlobalLoadingStatus(notice, loading, aggregateLayerLoading([]), notice.hideAt), null);
 });
@@ -145,16 +145,16 @@ test('persistent acquisition never hides an unrelated manager failure', () => {
 });
 
 test('replacement, repetition, and hidden-tab elapsed time use the newest fixed deadline', () => {
-  const first = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 100);
-  const repeated = createGlobalStatusNotice('Satelit yang dibagikan tidak tersedia', 200);
-  const replacement = createGlobalStatusNotice('Pelacakan satelit yang dibagikan kedaluwarsa', 300);
+  const first = createGlobalStatusNotice('Shared Satelit unavailable', 100);
+  const repeated = createGlobalStatusNotice('Shared Satelit unavailable', 200);
+  const replacement = createGlobalStatusNotice('Shared satelit tracking expired', 300);
 
   presentGlobalStatusNotice(first, 100);
   presentGlobalStatusNotice(repeated, 200);
   presentGlobalStatusNotice(replacement, 300);
 
   assert.ok(repeated.hideAt > first.hideAt, 'a repeated event is a new accessible notice epoch');
-  assert.equal(presentGlobalStatusNotice(replacement, replacement.hideAt - 1).label, 'Pelacakan satelit yang dibagikan kedaluwarsa');
+  assert.equal(presentGlobalStatusNotice(replacement, replacement.hideAt - 1).label, 'Shared satelit tracking expired');
   assert.equal(presentGlobalStatusNotice(replacement, replacement.hideAt), null,
     'elapsed wall time while hidden expires the notice instead of replaying it');
 });

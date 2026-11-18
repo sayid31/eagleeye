@@ -11,7 +11,7 @@ import { formatCostUsd } from '../../../voice/voiceCost.js';
 import { formatCountdown, formatRelative, formatUptime, nextUtcMidnight } from '../lib/timeView.js';
 
 const SECONDS_PER_MINUTE = 60;
-const number = (n) => Number(n).toLocaleString('id-ID');
+const number = (n) => Number(n).toLocaleString('en-US');
 const wholeMinutes = (seconds) => Math.round((Number(seconds) || 0) / SECONDS_PER_MINUTE);
 
 /**

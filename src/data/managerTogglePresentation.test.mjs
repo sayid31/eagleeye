@@ -14,9 +14,9 @@ test('formatLayerCount compacts thousands', () => {
 
 test('formatLayerAge buckets seconds, minutes and hours', () => {
   assert.equal(formatLayerAge(NOW - 2_000, NOW), 'just now');
-  assert.equal(formatLayerAge(NOW - 42_000, NOW), '42d lalu');
-  assert.equal(formatLayerAge(NOW - 5 * 60_000, NOW), '5m lalu');
-  assert.equal(formatLayerAge(NOW - 3 * 3_600_000, NOW), '3j lalu');
+  assert.equal(formatLayerAge(NOW - 42_000, NOW), '42s ago');
+  assert.equal(formatLayerAge(NOW - 5 * 60_000, NOW), '5m ago');
+  assert.equal(formatLayerAge(NOW - 3 * 3_600_000, NOW), '3h ago');
 });
 
 test('buildLayerMetaText leads with the lifecycle phase, then errors, then age', () => {
@@ -26,7 +26,7 @@ test('buildLayerMetaText leads with the lifecycle phase, then errors, then age',
   );
   assert.equal(
     buildLayerMetaText({ source: 'USGS', enabled: true, lifecycleState: 'enabled', stats: { lastUpdate: NOW - 120_000 } }, NOW),
-    'USGS · 2m lalu',
+    'USGS · 2m ago',
   );
   assert.equal(
     buildLayerMetaText({ source: 'USGS', enabled: true, lifecycleState: 'enabled', stats: {} }, NOW),

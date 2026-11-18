@@ -18,7 +18,7 @@ test('voiceStatusEvent maps the session lifecycle', () => {
   assert.equal(voiceStatusEvent('connecting', 'error', 'GPT-Live SDP failed: HTTP 429').code, 'voice.session_failed');
   assert.equal(voiceStatusEvent('listening', 'error', 'Data channel closed').code, 'voice.session_dropped');
   assert.equal(voiceStatusEvent('executing', 'error').code, 'voice.session_dropped');
-  assert.equal(voiceStatusEvent('listening', 'idle', 'Sesi berakhir — batas durasi 10 menit').code, 'voice.session_auto_closed');
+  assert.equal(voiceStatusEvent('listening', 'idle', 'Session ended — 10-minute duration limit').code, 'voice.session_auto_closed');
   assert.equal(voiceStatusEvent('listening', 'idle', 'Session ended — cost cap ~$5.00').code, 'voice.session_auto_closed');
   assert.equal(voiceStatusEvent('listening', 'idle'), null, 'a user stop is not an event');
   assert.equal(voiceStatusEvent('listening', 'executing'), null);

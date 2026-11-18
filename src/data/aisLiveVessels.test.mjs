@@ -123,7 +123,7 @@ test('non-open status but rows still flowing is treated as stale, not down (null
 test('unknown status falls back to a generic reason and appends server detail', () => {
   assert.equal(
     deriveAisFeedError({ status: 'weird-state', error: 'something specific' }, 0),
-    'feed tidak tersedia (something specific)',
+    'feed unavailable (something specific)',
   );
 });
 
@@ -151,7 +151,7 @@ test("'live' is the healthy status and reads exactly like the older 'open'", () 
 test('a stale feed is surfaced even though cached vessels are still on screen', () => {
   assert.equal(
     deriveAisFeedError({ status: 'stale', silentForMs: 184_000, lastMessageAt: 5 }, 4_812),
-    'feed senyap 184d — tidak ada data AIS',
+    'feed silent 184s — no AIS data',
   );
 });
 
@@ -165,7 +165,7 @@ test('a stale feed without a silence figure still says the feed is silent', () =
 test('reconnecting reports which attempt is in flight, rows or no rows', () => {
   assert.equal(
     deriveAisFeedError({ status: 'reconnecting', reconnectAttempt: 2 }, 900),
-    'menyambung ulang ke feed… (percobaan 2)',
+    'reconnecting to the feed… (percobaan 2)',
   );
   assert.equal(deriveAisFeedError({ status: 'reconnecting' }, 0), 'menyambung ulang ke feed…');
 });
@@ -173,7 +173,7 @@ test('reconnecting reports which attempt is in flight, rows or no rows', () => {
 test('DOWN is a visible terminal state, not a silent retry', () => {
   assert.equal(
     deriveAisFeedError({ status: 'down', reconnectAttempt: 5 }, 1_200),
-    'feed mati — mencoba lagi perlahan (percobaan 5)',
+    'feed down — retrying slowly (percobaan 5)',
   );
 });
 
@@ -231,7 +231,7 @@ test('a degraded feed keeps its reason through snapshot classification', () => {
     rows: [{ mmsi: 'cached', lat: 29.7, lon: -95.1 }],
   });
   assert.equal(snapshot.acceptedRowCount, 1, 'the cached vessel is still drawable');
-  assert.equal(snapshot.error, 'feed mati — mencoba lagi perlahan (percobaan 5)');
+  assert.equal(snapshot.error, 'feed down — retrying slowly (percobaan 5)');
 });
 
 function makeFakeAisRuntime(startMs = 1000) {

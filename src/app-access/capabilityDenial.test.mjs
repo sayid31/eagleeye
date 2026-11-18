@@ -20,7 +20,7 @@ test('other refusals are not capability locks', () => {
 });
 
 test('toasts name the feature and why', () => {
-  assert.equal(denialToast({ gate: 'layers', kind: 'revoked' }), `${CAPABILITY_LABELS.layers} tidak lagi diizinkan admin — dinonaktifkan di halaman ini.`);
+  assert.equal(denialToast({ gate: 'layers', kind: 'revoked' }), `${CAPABILITY_LABELS.layers} is no longer allowed by an admin — disabled on this page.`);
   assert.match(denialToast({ gate: 'ai', kind: 'killed' }), /^Voice & AI sedang dimatikan developer/);
 });
 

@@ -23,7 +23,7 @@ test('landing.html works without JS: the CTA slots default to "Masuk" → /login
 });
 
 test('landing.html states the product boundary and the required page metadata', () => {
-  assert.match(html, /<html lang="id">/);
+  assert.match(html, /<html lang="en">/);
   assert.match(html, /<title>[^<]*EagleEye View[^<]*<\/title>/);
   assert.match(html, /<meta name="description" content="[^"]{50,}"/);
   assert.match(html, /<link rel="icon" type="image\/svg\+xml" href="\/logo.svg"/);

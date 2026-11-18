@@ -105,7 +105,7 @@ test('repeated tile failures on an active esri-dark-gray provider trigger the ge
     for (let i = 0; i < 20; i++) await Promise.resolve();
 
     assert.equal(h.controller.getActiveId(), 'osm', 'two tile failures must trigger the OSM fallback');
-    assert.equal(h.controller.getState().lastError, 'Permintaan tile Esri Dark Gray gagal; memakai OSM');
+    assert.equal(h.controller.getState().lastError, 'Esri Dark Gray tile request failed; using OSM');
   } finally {
     h.restore();
   }
@@ -124,7 +124,7 @@ test('esri-imagery keeps its own existing tile-failure message after the gate wa
     assert.equal(h.controller.getActiveId(), 'osm');
     assert.equal(
       h.controller.getState().lastError,
-      'Permintaan tile Esri Satellite gagal; memakai OSM',
+      'Esri Satellite tile request failed; using OSM',
       'esri-imagery must keep naming itself, not esri-dark-gray, after the shared-set refactor',
     );
   } finally {

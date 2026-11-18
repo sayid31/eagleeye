@@ -42,7 +42,7 @@ test('flow failures map onto short, specific reasons', () => {
   assert.equal(reason('flow tile 12/1/1: HTTP 429'), 'TomTom daily quota used up');
   assert.equal(reason('flow tile 12/1/1: HTTP 502'), 'TomTom server unreachable');
   assert.equal(reason('flow tile 12/1/1: HTTP 504'), 'TomTom server unreachable');
-  assert.equal(reason('flow tile 12/1/1: HTTP 418'), 'Galat aliran TomTom (HTTP 418)');
+  assert.equal(reason('flow tile 12/1/1: HTTP 418'), 'TomTom flow error (HTTP 418)');
   assert.equal(reason('flow fetch failed'), 'TomTom flow unavailable');
 });
 

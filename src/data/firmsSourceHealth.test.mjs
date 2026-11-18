@@ -31,7 +31,7 @@ test('the summary names every source outcome for the log', () => {
 test('a partial failure reads degraded on the chip, never Live', () => {
   const sources = [{ source: 'VIIRS_NOAA20_NRT', count: 62018, ok: true }, STAGING[1]];
   const reason = firmsPartialFailureReason(sources);
-  assert.equal(reason, 'sumber FIRMS gagal: NOAA-21');
+  assert.equal(reason, 'FIRMS source failed: NOAA-21');
   assert.equal(firmsPartialFailureReason([{ source: 'VIIRS_NOAA20_NRT', count: 5, ok: true }]), null);
   assert.equal(layerFeedState({ count: 62018, lastUpdate: 1, degraded: true, error: reason }), 'degraded');
 });
@@ -153,7 +153,7 @@ test('proxy: a partial failure is cached with each failed source and its reason'
         ['VIIRS_NOAA21_NRT', false, 'HTTP 429'],
         ['VIIRS_SNPP_NRT', true, undefined],
       ]);
-      assert.equal(firmsPartialFailureReason(result.body.sources), 'sumber FIRMS gagal: NOAA-21');
+      assert.equal(firmsPartialFailureReason(result.body.sources), 'FIRMS source failed: NOAA-21');
     });
   } finally { rmSync(dir, { recursive: true, force: true }); }
 });

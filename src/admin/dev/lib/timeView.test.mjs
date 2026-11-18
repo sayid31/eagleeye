@@ -6,9 +6,9 @@ const NOW = Date.UTC(2026, 10, 18, 12, 0, 0);
 
 test('formatRelative: just now, minutes, hours, days, then the date; a dash without a time', () => {
   assert.equal(formatRelative(NOW - 10_000, NOW), 'just now');
-  assert.equal(formatRelative(NOW - 5 * 60_000, NOW), '5 menit lalu');
-  assert.equal(formatRelative(NOW - 3 * 3_600_000, NOW), '3 jam lalu');
-  assert.equal(formatRelative(NOW - 3 * 86_400_000, NOW), '3 hari lalu');
+  assert.equal(formatRelative(NOW - 5 * 60_000, NOW), '5 min ago');
+  assert.equal(formatRelative(NOW - 3 * 3_600_000, NOW), '3 h ago');
+  assert.equal(formatRelative(NOW - 3 * 86_400_000, NOW), '3 d ago');
   assert.match(formatRelative(NOW - 90 * 86_400_000, NOW), /\d{2}/);
   assert.doesNotMatch(formatRelative(NOW - 90 * 86_400_000, NOW), /lalu/);
   assert.equal(formatRelative(null, NOW), '—');
@@ -28,7 +28,7 @@ test('formatUptime', () => {
   assert.equal(formatUptime(45), '45 dtk');
   assert.equal(formatUptime(600), '10 mnt');
   assert.equal(formatUptime(3900), '1 j 05 mnt');
-  assert.equal(formatUptime(190_000), '2 hari 4 j');
+  assert.equal(formatUptime(190_000), '2 d 4 h');
   assert.equal(formatUptime(-5), '0 dtk');
 });
 

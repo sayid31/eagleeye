@@ -1,6 +1,6 @@
 // src/admin/dev/lib/timeView.js
 /**
- * Time wording shared by the /dev system pages: relative ("5 menit lalu"), absolute ("06 Nov 14.05.09"), uptime and
+ * Time wording shared by the /dev system pages: relative ("5 min ago"), absolute ("Nov 06, 14:05:09"), uptime and
  * countdown. Pure: `now` is always passed in so output is deterministic.
  *
  * @module admin/dev/lib/timeView
@@ -14,10 +14,10 @@ const DAY = 86_400;
 const JUST_NOW_SECONDS = 45;
 /** Beyond this many days a relative phrase stops helping; show the date. */
 const RELATIVE_MAX_DAYS = 30;
-const LOCALE = 'id-ID';
+const LOCALE = 'en-US';
 
 /**
- * "06 Nov 14.05.09" in the viewer's time zone; the year is added when it is not the current one.
+ * "Nov 06, 14:05:09" in the viewer's time zone; the year is added when it is not the current one.
  * @param {number} ms
  * @param {{now?: number, locale?: string, seconds?: boolean}} [options]
  * @returns {string} "—" for a missing or invalid time.
@@ -28,12 +28,12 @@ export function formatAbsolute(ms, { now = Date.now(), locale = LOCALE, seconds 
   const sameYear = date.getFullYear() === new Date(now).getFullYear();
   return date.toLocaleString(locale, {
     day: '2-digit', month: 'short', ...(sameYear ? {} : { year: 'numeric' }),
-    hour: '2-digit', minute: '2-digit', ...(seconds ? { second: '2-digit' } : {}), hour12: false,
+    hour: '2-digit', minute: '2-digit', ...(seconds ? { second: '2-digit' } : {}), hourCycle: 'h23',
   });
 }
 
 /**
- * "baru saja" / "5 menit lalu" / "3 jam lalu" / "2 hari lalu"; the date past 30 days; "—" without a time.
+ * "just now" / "5 min ago" / "3 h ago" / "2 d ago"; the date past 30 days; "—" without a time.
  * @param {number | null | undefined} at
  * @param {number} now
  */
@@ -47,7 +47,7 @@ export function formatRelative(at, now) {
   return days <= RELATIVE_MAX_DAYS ? T.daysAgo(days) : formatAbsolute(at, { now, seconds: false });
 }
 
-/** 45 → "45 dtk", 3900 → "1 j 05 mnt", 190000 → "2 hari 4 j". */
+/** 45 → "45 s", 3900 → "1 h 05 min", 190000 → "2 d 4 h". */
 export function formatUptime(totalSeconds) {
   const s = Math.max(0, Math.floor(Number(totalSeconds) || 0));
   if (s < MINUTE) return T.seconds(s);

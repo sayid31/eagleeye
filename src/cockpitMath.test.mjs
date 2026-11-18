@@ -72,18 +72,18 @@ test('cockpit Context scope distinguishes radius-complete feeds from viewport in
   );
   assert.equal(
     formatCockpitContextScope('TEST123', 250000),
-    'TEST123 · 250 KM JENDELA UDARA/LAUT',
+    'TEST123 · 250 KM AIR/SEA WINDOW',
   );
 });
 
 test('cockpit Context scope preserves zero and replaces missing values intentionally', () => {
   assert.equal(
     formatCockpitContextScope('', 0),
-    '— · 0 KM JENDELA UDARA/LAUT',
+    '— · 0 KM AIR/SEA WINDOW',
   );
   assert.equal(
     formatCockpitContextScope(undefined, Number.NaN, {}),
-    '— · — KM JENDELA UDARA/LAUT',
+    '— · — KM AIR/SEA WINDOW',
   );
 });
 

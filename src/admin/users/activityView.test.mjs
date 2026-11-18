@@ -29,7 +29,7 @@ test('login wording: failure reason, deleted and unknown accounts', () => {
   assert.equal(loginFailureText({ reason: 'new_reason' }), 'new_reason');
   assert.equal(loginFailureText({}), '—');
   assert.equal(loginAccountText({ userId: null }), 'Email not registered');
-  assert.equal(loginAccountText({ userId: 'U1', userName: 'Deleted user', userDeleted: true }), 'Pengguna terhapus (terhapus)');
+  assert.equal(loginAccountText({ userId: 'U1', userName: 'Deleted user', userDeleted: true }), 'User terhapus (terhapus)');
   assert.equal(loginAccountText({ userId: 'U1', userName: 'Ani' }), 'Ani');
 });
 
@@ -41,8 +41,8 @@ test('audit wording: actor redaction, action text, detail summaries', () => {
   assert.equal(auditActionText('user.delete'), 'Account deleted');
   assert.equal(auditActionText('user.future'), 'user.future');
   assert.equal(auditDetailText('role user'), 'Role: Pengguna');
-  assert.equal(auditDetailText('fields name,capabilities'), 'Diubah: nama, izin fitur');
-  assert.equal(auditDetailText('user → admin'), 'Pengguna → Admin');
+  assert.equal(auditDetailText('fields name,capabilities'), 'Changed: nama, izin fitur');
+  assert.equal(auditDetailText('user → admin'), 'User → Admin');
   assert.equal(auditDetailText('cli'), 'cli');
   assert.equal(auditDetailText(null), '');
 });
