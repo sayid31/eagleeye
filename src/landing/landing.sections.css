@@ -173,39 +173,6 @@
   font-size: 0.875rem;
 }
 
-.ld-shots {
-  display: grid;
-  gap: 1.5rem;
-  margin-top: 2rem;
-}
-
-.ld-shots img {
-  display: block;
-  width: 100%;
-  height: auto;
-  border: 1px solid var(--border);
-  border-radius: calc(var(--radius) + 2px);
-  background: var(--card);
-}
-
-.ld-shots figcaption {
-  margin-top: 0.75rem;
-  color: var(--muted-foreground);
-  font-size: 0.9375rem;
-}
-
-.ld-shots figcaption b {
-  display: block;
-  color: var(--foreground);
-  font-weight: 650;
-}
-
-/* Theme-matched screenshot: the pair of <img> elements swaps by the `.dark` class on <html>. */
-.dark .ld-only-light,
-:root:not(.dark) .ld-only-dark {
-  display: none;
-}
-
 .ld-table-wrap {
   margin-top: 2rem;
   overflow-x: auto;
@@ -280,10 +247,6 @@
 
   .ld-styles {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .ld-shots {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
