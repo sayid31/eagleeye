@@ -3,6 +3,7 @@ import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { ChevronLeftIcon, ChevronRightIcon, MoreHorizontalIcon } from "lucide-react"
+import { UI_COPY } from "@/copy/id/ui"
 
 function Pagination({
   className,
@@ -11,7 +12,7 @@ function Pagination({
   return (
     <nav
       role="navigation"
-      aria-label="pagination"
+      aria-label={UI_COPY.pagination}
       data-slot="pagination"
       className={cn("mx-auto flex w-full justify-center", className)}
       {...props}
@@ -63,12 +64,12 @@ function PaginationLink({
 
 function PaginationPrevious({
   className,
-  text = "Previous",
+  text = UI_COPY.previous,
   ...props
 }) {
   return (
     <PaginationLink
-      aria-label="Go to previous page"
+      aria-label={UI_COPY.previousPage}
       size="default"
       className={cn("pl-1.5!", className)}
       {...props}
@@ -81,12 +82,12 @@ function PaginationPrevious({
 
 function PaginationNext({
   className,
-  text = "Next",
+  text = UI_COPY.next,
   ...props
 }) {
   return (
     <PaginationLink
-      aria-label="Go to next page"
+      aria-label={UI_COPY.nextPage}
       size="default"
       className={cn("pr-1.5!", className)}
       {...props}
@@ -113,7 +114,7 @@ function PaginationEllipsis({
     >
       <MoreHorizontalIcon
       />
-      <span className="sr-only">More pages</span>
+      <span className="sr-only">{UI_COPY.morePages}</span>
     </span>
   )
 }

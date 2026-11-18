@@ -1,27 +1,23 @@
 // src/login/main.jsx
-/** Entry of `/login`, `/account` and `/account/password` (same bundle). Shares the /admin theme tokens and Google button. */
+/** Entry of `/login`, `/account` and `/account/password` (same bundle). Tailwind + tokens from src/ui/app.css; the old pages still use the legacy bridge styles. */
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router';
-import { ADMIN_THEME_KEY, resolveTheme } from '../admin/adminTheme.js';
+import { AppProviders } from '@/components/app/AppProviders.jsx';
+import '../ui/app.css';
+import '../admin/adminTheme.css';
+import './login.css';
 import { AccountPage } from './AccountPage.jsx';
 import { ChangePasswordPage } from './ChangePasswordPage.jsx';
 import { LoginApp } from './LoginApp.jsx';
-import '../admin/adminTheme.css';
-import './login.css';
 
-function applySavedTheme() {
-  let stored = null;
-  try { stored = window.localStorage.getItem(ADMIN_THEME_KEY); } catch { /* storage blocked: follow the OS */ }
-  document.documentElement.dataset.adminTheme = resolveTheme(stored, window.matchMedia('(prefers-color-scheme: dark)').matches);
-}
-
-applySavedTheme();
 createRoot(document.getElementById('login-root')).render(
-  <BrowserRouter>
-    <Routes>
-      <Route path="/account/password" element={<ChangePasswordPage />} />
-      <Route path="/account" element={<AccountPage />} />
-      <Route path="*" element={<LoginApp />} />
-    </Routes>
-  </BrowserRouter>,
+  <AppProviders>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/account/password" element={<ChangePasswordPage />} />
+        <Route path="/account" element={<AccountPage />} />
+        <Route path="*" element={<LoginApp />} />
+      </Routes>
+    </BrowserRouter>
+  </AppProviders>,
 );

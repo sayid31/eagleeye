@@ -1,6 +1,7 @@
 
 import { useTheme } from "@/lib/theme"
 import { Toaster as Sonner } from "sonner";
+import { UI_COPY } from "@/copy/id/ui"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({
@@ -12,6 +13,7 @@ const Toaster = ({
     <Sonner
       theme={theme}
       className="toaster group"
+      containerAriaLabel={UI_COPY.notifications}
       icons={{
         success: (
           <CircleCheckIcon className="size-4" />

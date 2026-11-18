@@ -1,70 +1,47 @@
 // src/admin/adminNav.js
 /**
- * Menu structure of the two dashboard areas served by the one admin bundle:
- *  - `/admin` (admin + super_admin): people — the `user` accounts.
- *  - `/dev` (super_admin only): the system, plus everything `/admin` has.
- * Pure data so the sidebar, the router and the tests all read one source of
- * truth. The server guard enforces the same area split; this only decides
- * what to render.
- *
- * A leaf with `page` renders that built page (AdminApp maps the id to a
- * component); a leaf without one renders the placeholder until it is built.
- * Paths are relative to the area basename; `/` is the area's own landing page.
+ * Composes the menu, the page table and the legacy redirects of the two dashboard areas from the route features
+ * (src/admin/routes/features/*.js, listed in routes/index.js). This file owns no page: to add or move one, edit the
+ * feature file that owns it.
+ *  - `/admin` (admin + super_admin): Ringkasan · Pengguna · Aktivitas (tabs Log Login | Audit).
+ *  - `/dev` (super_admin only): Ringkasan sistem; Akses; Kendali; Konfigurasi; Sistem.
+ * Pure data, so the sidebar, the router and the tests read one source of truth. The server guard enforces the same
+ * area split; this only decides what to render. Paths are relative to the area basename; `/` is the area home.
  *
  * @module admin/adminNav
  */
 
 import { isSuperAdminRole } from '../auth/authRoles.mjs';
+import { SHELL_COPY } from '../copy/id/shell.js';
+import { breadcrumbTrail, navItems } from '../components/app/navModel.js';
+import { ROUTE_FEATURES } from './routes/index.js';
 
 /** @typedef {'admin' | 'dev'} AdminArea */
-/** @typedef {{label: string, path: string, page?: string}} AdminLeaf */
-/** @typedef {{id: string, label: string, path: string, page?: string, children?: AdminLeaf[]}} AdminGroup */
+/** @typedef {import('../components/app/navModel.js').NavGroup & {order: number}} NavGroup */
+/** @typedef {import('../components/app/navModel.js').NavItem} NavItem */
 
 /** The areas, each mounted at `/<area>`. */
 export const ADMIN_AREAS = Object.freeze(['admin', 'dev']);
 
-/** @type {Readonly<Record<AdminArea, AdminGroup[]>>} */
+function composeNav(area, features) {
+  return features
+    .flatMap((feature) => feature.nav[area])
+    .sort((a, b) => a.order - b.order);
+}
+
+/** @type {Readonly<Record<AdminArea, NavGroup[]>>} */
 export const AREA_NAV = Object.freeze({
-  admin: [
-    { id: 'overview', label: 'Ringkasan', path: '/', page: 'users-overview' },
-    { id: 'users', label: 'Pengguna', path: '/users', page: 'users' },
-    { id: 'login-log', label: 'Log Login', path: '/login-log', page: 'login-log' },
-    { id: 'audit', label: 'Audit', path: '/audit', page: 'account-audit' },
-  ],
-  dev: [
-    { id: 'overview', label: 'Ringkasan sistem', path: '/', page: 'dev-overview' },
-    { id: 'users', label: 'Pengguna & Admin', path: '/users', page: 'users' },
-    { id: 'login-log', label: 'Log Login', path: '/login-log', page: 'login-log' },
-    { id: 'kill-switches', label: 'Kill switch', path: '/kill-switches', page: 'dev-kill-switches' },
-    { id: 'usage', label: 'Pemakaian', path: '/usage', page: 'dev-usage' },
-    { id: 'api-keys', label: 'API Keys', path: '/api-keys', page: 'api-keys' },
-    {
-      id: 'ai-config',
-      label: 'Konfigurasi AI',
-      path: '/ai',
-      children: [
-        { label: 'Umum', path: '/ai/general', page: 'ai-general' },
-        { label: 'Penyedia AI', path: '/ai/provider', page: 'ai-provider' },
-        { label: 'Persona', path: '/ai/persona', page: 'ai-persona' },
-        { label: 'Pemakaian & Biaya', path: '/ai/usage', page: 'ai-usage' },
-      ],
-    },
-    {
-      id: 'server-log',
-      label: 'Server Log',
-      path: '/server-log',
-      children: [
-        { label: 'Server Log', path: '/server-log', page: 'server-log' },
-        { label: 'Audit Log', path: '/server-log/audit', page: 'server-log-audit' },
-        { label: 'Kesehatan Sistem', path: '/server-log/health', page: 'server-log-health' },
-      ],
-    },
-    { id: 'audit', label: 'Audit', path: '/audit', page: 'account-audit' },
-  ],
+  admin: composeNav('admin', ROUTE_FEATURES),
+  dev: composeNav('dev', ROUTE_FEATURES),
 });
 
-const AREA_LABEL = Object.freeze({ admin: 'Admin', dev: 'Dev' });
-const ROLE_LABEL = Object.freeze({ super_admin: 'Super admin', admin: 'Admin' });
+/** Legacy path → new path per area, merged from every feature. */
+export const AREA_REDIRECTS = Object.freeze(Object.fromEntries(ADMIN_AREAS.map((area) => [
+  area, Object.freeze(Object.assign({}, ...ROUTE_FEATURES.map((feature) => feature.redirects[area]))),
+])));
+
+/** Page id → page registration, merged from every feature. */
+export const PAGE_TABLE = Object.freeze(Object.assign({}, ...ROUTE_FEATURES.map((feature) => feature.pages)));
 
 /**
  * Whether `pathname` is `prefix` itself or a path below it.
@@ -97,7 +74,7 @@ export function adminBasename(pathname) {
 /**
  * Menu groups of an area.
  * @param {AdminArea} area
- * @returns {AdminGroup[]}
+ * @returns {NavGroup[]}
  */
 export function navForArea(area) {
   const nav = ADMIN_AREAS.includes(area) ? AREA_NAV[area] : null;
@@ -106,12 +83,24 @@ export function navForArea(area) {
 }
 
 /**
- * Every page the router must serve for an area, one entry per leaf.
+ * Every routable page of an area, one entry per item without tabs and one per tab: `{path, page, label, item, tab?}`.
  * @param {AdminArea} area
- * @returns {AdminLeaf[]}
+ * @returns {Array<{path: string, page: string, label: string}>}
  */
 export function areaLeaves(area) {
-  return navForArea(area).flatMap((group) => group.children ?? [{ label: group.label, path: group.path, page: group.page }]);
+  return navItems(navForArea(area)).flatMap((item) => (item.tabs
+    ? item.tabs.map((tab) => ({ path: tab.path, page: tab.page, label: tab.label }))
+    : [{ path: item.path, page: item.page, label: item.label }]));
+}
+
+/**
+ * Legacy path → new path of an area (old bookmarks keep working; the router answers them with a redirect).
+ * @param {AdminArea} area
+ * @returns {Readonly<Record<string, string>>}
+ */
+export function redirectsFor(area) {
+  navForArea(area);
+  return AREA_REDIRECTS[area];
 }
 
 /**
@@ -120,55 +109,26 @@ export function areaLeaves(area) {
  * @returns {string}
  */
 export function areaHome(area) {
-  return areaLeaves(area)[0].path;
+  return navItems(navForArea(area))[0].path;
 }
 
 /**
- * First page of a group, used to redirect a bare group path (`/ai`).
- * @param {AdminGroup} group
- * @returns {string}
- */
-export function groupLanding(group) {
-  return group.children?.[0]?.path ?? group.path;
-}
-
-/**
- * Groups of an area whose bare path must redirect to their first page. A
- * group whose first page IS the group path (Server Log) gets no redirect: a
- * route that navigates to its own URL renders nothing and hides the real page.
- * @param {AdminArea} area
- * @returns {AdminGroup[]}
- */
-export function groupRedirects(area) {
-  return navForArea(area).filter((group) => group.children && groupLanding(group) !== group.path);
-}
-
-/**
- * Breadcrumb above the page: group then page, e.g. ['Konfigurasi AI', 'Umum'].
- * A top-level page is one crumb; an unknown path yields none.
+ * Breadcrumb labels above the page (group title when there is one, page, tab); an unknown path yields none.
  * @param {AdminArea} area
  * @param {string} pathname Router path without the area basename.
  * @returns {string[]}
  */
 export function breadcrumbFor(area, pathname) {
-  for (const group of navForArea(area)) {
-    if (!group.children) {
-      if (group.path === pathname) return [group.label];
-      continue;
-    }
-    const leaf = group.children.find((child) => child.path === pathname);
-    if (leaf) return leaf.label === group.label ? [group.label] : [group.label, leaf.label];
-  }
-  return [];
+  return breadcrumbTrail(navForArea(area), pathname).map((crumb) => crumb.label);
 }
 
 /**
- * Sub-label shown next to the brand ("Admin" / "Dev").
+ * Sub-label of the area (shown as a badge for `/dev`).
  * @param {AdminArea} area
  * @returns {string}
  */
 export function areaLabel(area) {
-  return AREA_LABEL[area];
+  return SHELL_COPY.areas[area];
 }
 
 /**
@@ -177,7 +137,7 @@ export function areaLabel(area) {
  * @returns {string}
  */
 export function roleLabel(role) {
-  return Object.hasOwn(ROLE_LABEL, role) ? ROLE_LABEL[role] : '';
+  return role === 'super_admin' || role === 'admin' ? SHELL_COPY.roles[role] : '';
 }
 
 /**
@@ -188,5 +148,5 @@ export function roleLabel(role) {
  */
 export function areaSwitchFor(area, role) {
   if (!isSuperAdminRole(role)) return null;
-  return area === 'dev' ? { href: '/admin', label: 'Buka area Admin' } : { href: '/dev', label: 'Buka area Dev' };
+  return area === 'dev' ? { href: '/admin', label: SHELL_COPY.openAdmin } : { href: '/dev', label: SHELL_COPY.openDev };
 }

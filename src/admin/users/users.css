@@ -1,62 +1,69 @@
-/* Pengguna / Log Login / Audit / Ringkasan pages (src/admin/users). Uses the admin theme tokens (adminTheme.css). */
-.usr-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.usr-header h1 { margin: 0 0 4px; }
-.usr-notice { margin: 0; }
-.usr-state { display: grid; gap: 12px; justify-items: start; }
-.usr-empty { display: grid; gap: 12px; justify-items: start; }
-.usr-empty h2 { margin: 0; font: 600 16px var(--adm-font-mono); letter-spacing: .06em; text-transform: uppercase; }
+/* LEGACY page styles: wrapped in @layer legacy (see src/admin/adminTheme.css). Removed with the page that uses them. */
+@layer theme, base, legacy, components, utilities;
 
-/* Tables: left-aligned, wrapping text (the shared table right-aligns numbers and never wraps), no inner
-   scroll box so the row menu is not clipped. Doubled class: this file loads before adminForms.css. */
-.adm-table-wrap.usr-table-wrap { max-height: none; overflow: visible; }
-.adm-table.usr-table th, .adm-table.usr-table td { text-align: left; vertical-align: top; white-space: normal; overflow-wrap: break-word; }
-.adm-table.usr-table td:has(.adm-pill), .adm-table.usr-table td:has(.usr-menu) { white-space: nowrap; overflow-wrap: normal; }
-.usr-sub { display: block; }
-.usr-mono { font-family: var(--adm-font-mono); font-size: 12px; }
-.usr-self { margin-left: 8px; color: var(--adm-accent); }
-.adm-table.usr-table td.usr-toggle-cell { white-space: nowrap; overflow-wrap: normal; }
-.usr-toggle-cell .usr-chip + .usr-chip { margin-left: 4px; }
-.usr-chip { font: 500 10px var(--adm-font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border: 1px dashed var(--adm-border-strong); color: var(--adm-muted); text-decoration: line-through; }
-.usr-chip-on { border-style: solid; border-color: var(--adm-ok); color: var(--adm-ok); text-decoration: none; }
+@layer legacy {
+  /* Pengguna / Log Login / Audit / Ringkasan pages (src/admin/users). Uses the admin theme tokens (adminTheme.css). */
+  .usr-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .usr-header h1 { margin: 0 0 4px; }
+  .usr-notice { margin: 0; }
+  .usr-state { display: grid; gap: 12px; justify-items: start; }
+  .usr-empty { display: grid; gap: 12px; justify-items: start; }
+  .usr-empty h2 { margin: 0; font: 600 16px var(--adm-font-mono); letter-spacing: .06em; text-transform: uppercase; }
 
-/* Row action menu (<details>). */
-.usr-menu { position: relative; display: inline-block; }
-.usr-menu > summary { list-style: none; cursor: pointer; }
-.usr-menu > summary::-webkit-details-marker { display: none; }
-.usr-menu-list { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 240px; display: grid; padding: 4px;
-  background: var(--adm-surface-solid); border: 1px solid var(--adm-border-strong); box-shadow: var(--adm-shadow); }
-.usr-menu-item { display: block; text-align: left; font: 13px var(--adm-font-sans); color: var(--adm-text); background: none; border: 0; padding: 8px 10px; cursor: pointer; text-decoration: none; }
-.usr-menu-item:hover, .usr-menu-item:focus-visible { background: var(--adm-accent-dim); }
-.usr-menu-danger { color: var(--adm-err); }
+  /* Tables: left-aligned, wrapping text (the shared table right-aligns numbers and never wraps), no inner
+     scroll box so the row menu is not clipped. Doubled class: this file loads before adminForms.css. */
+  .adm-table-wrap.usr-table-wrap { max-height: none; overflow: visible; }
+  .adm-table.usr-table th, .adm-table.usr-table td { text-align: left; vertical-align: top; white-space: normal; overflow-wrap: break-word; }
+  .adm-table.usr-table td:has(.adm-pill), .adm-table.usr-table td:has(.usr-menu) { white-space: nowrap; overflow-wrap: normal; }
+  .usr-sub { display: block; }
+  .usr-mono { font-family: var(--adm-font-mono); font-size: 12px; }
+  .usr-self { margin-left: 8px; color: var(--adm-accent); }
+  .adm-table.usr-table td.usr-toggle-cell { white-space: nowrap; overflow-wrap: normal; }
+  .usr-toggle-cell .usr-chip + .usr-chip { margin-left: 4px; }
+  .usr-chip { font: 500 10px var(--adm-font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 1px 6px; border: 1px dashed var(--adm-border-strong); color: var(--adm-muted); text-decoration: line-through; }
+  .usr-chip-on { border-style: solid; border-color: var(--adm-ok); color: var(--adm-ok); text-decoration: none; }
 
-.usr-filter-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
-.usr-pager { justify-content: flex-end; }
+  /* Row action menu (<details>). */
+  .usr-menu { position: relative; display: inline-block; }
+  .usr-menu > summary { list-style: none; cursor: pointer; }
+  .usr-menu > summary::-webkit-details-marker { display: none; }
+  .usr-menu-list { position: absolute; right: 0; top: calc(100% + 4px); z-index: 20; min-width: 240px; display: grid; padding: 4px;
+    background: var(--adm-surface-solid); border: 1px solid var(--adm-border-strong); box-shadow: var(--adm-shadow); }
+  .usr-menu-item { display: block; text-align: left; font: 13px var(--adm-font-sans); color: var(--adm-text); background: none; border: 0; padding: 8px 10px; cursor: pointer; text-decoration: none; }
+  .usr-menu-item:hover, .usr-menu-item:focus-visible { background: var(--adm-accent-dim); }
+  .usr-menu-danger { color: var(--adm-err); }
 
-/* Dialogs. */
-.usr-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 48px); box-sizing: border-box; padding: 20px; color: var(--adm-text);
-  background: var(--adm-surface-solid); border: 1px solid var(--adm-border-strong); border-radius: 4px; box-shadow: var(--adm-shadow); }
-.usr-dialog::backdrop { background: rgba(0, 0, 0, .55); }
-.usr-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
-.usr-dialog-head h2 { margin: 0; font: 600 15px var(--adm-font-mono); letter-spacing: .08em; text-transform: uppercase; }
-.usr-dialog-x { padding: 2px 10px; }
-.usr-form { display: grid; gap: 14px; }
-.usr-form p { margin: 0; }
-.usr-dialog-actions { justify-content: flex-end; }
-.usr-target { color: var(--adm-text); }
-.usr-toggles { border: 1px solid var(--adm-border); padding: 10px 12px; margin: 0; display: grid; gap: 10px; }
+  .usr-filter-chip { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; }
+  .usr-pager { justify-content: flex-end; }
 
-/* One-time password panel. */
-.usr-temp { display: grid; gap: 12px; }
-.usr-temp-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; }
-.usr-temp-facts dt { color: var(--adm-muted); font: 500 11px var(--adm-font-mono); letter-spacing: .1em; text-transform: uppercase; align-self: center; }
-.usr-temp-facts dd { margin: 0; overflow-wrap: anywhere; }
-.usr-temp-password { font: 600 16px var(--adm-font-mono); letter-spacing: .06em; padding: 4px 8px; background: var(--adm-sunken); border: 1px solid var(--adm-accent); }
-.usr-temp-message { font-family: var(--adm-font-mono); font-size: 12px; min-height: 190px; }
+  /* Dialogs. */
+  .usr-dialog { width: min(520px, calc(100vw - 32px)); max-height: calc(100vh - 48px); box-sizing: border-box; padding: 20px; color: var(--adm-text);
+    background: var(--adm-surface-solid); border: 1px solid var(--adm-border-strong); border-radius: 4px; box-shadow: var(--adm-shadow); }
+  .usr-dialog::backdrop { background: rgba(0, 0, 0, .55); }
+  .usr-dialog-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
+  .usr-dialog-head h2 { margin: 0; font: 600 15px var(--adm-font-mono); letter-spacing: .08em; text-transform: uppercase; }
+  .usr-dialog-x { padding: 2px 10px; }
+  .usr-form { display: grid; gap: 14px; }
+  .usr-form p { margin: 0; }
+  .usr-dialog-actions { justify-content: flex-end; }
+  .usr-target { color: var(--adm-text); }
+  .usr-toggles { border: 1px solid var(--adm-border); padding: 10px 12px; margin: 0; display: grid; gap: 10px; }
 
-/* Ringkasan cards. */
-.usr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
-.usr-stat { display: grid; gap: 6px; }
-.usr-stat-ok .adm-stat { color: var(--adm-ok); }
-.usr-stat-warn .adm-stat { color: var(--adm-warn); }
-.usr-stat-error .adm-stat { color: var(--adm-err); }
-.usr-stat-info .adm-stat { color: var(--adm-accent); }
+  /* One-time password panel. */
+  .usr-temp { display: grid; gap: 12px; }
+  .usr-temp-facts { display: grid; grid-template-columns: max-content 1fr; gap: 6px 12px; margin: 0; }
+  .usr-temp-facts dt { color: var(--adm-muted); font: 500 11px var(--adm-font-mono); letter-spacing: .1em; text-transform: uppercase; align-self: center; }
+  .usr-temp-facts dd { margin: 0; overflow-wrap: anywhere; }
+  .usr-temp-password { font: 600 16px var(--adm-font-mono); letter-spacing: .06em; padding: 4px 8px; background: var(--adm-sunken); border: 1px solid var(--adm-accent); }
+  .usr-temp-message { font-family: var(--adm-font-mono); font-size: 12px; min-height: 190px; }
+
+  /* Ringkasan cards. */
+  .usr-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+  .usr-stat { display: grid; gap: 6px; }
+  .usr-stat-ok .adm-stat { color: var(--adm-ok); }
+  .usr-stat-warn .adm-stat { color: var(--adm-warn); }
+  .usr-stat-error .adm-stat { color: var(--adm-err); }
+  .usr-stat-info .adm-stat { color: var(--adm-accent); }
+  /* Preflight zeroes the UA `margin: auto` that centres a modal <dialog>. */
+  .usr-dialog { margin: auto; }
+}

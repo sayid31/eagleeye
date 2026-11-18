@@ -1,3 +1,8 @@
+// EagleEye View patches to the generated file (re-apply after `shadcn add sidebar --overwrite`):
+//  1. the open/closed state is kept in localStorage (src/lib/sidebarState.js) instead of a cookie;
+//  2. SidebarInset renders a <div>, not <main>: AppShell owns the single <main id="main-content"> landmark so the
+//     header stays a top-level banner;
+//  3. screen-reader strings come from src/copy/id/ui.js (Indonesian).
 import * as React from "react"
 import { cva } from "class-variance-authority";
 import { cn } from "cn"
@@ -22,6 +27,7 @@ import {
 } from "@/components/ui/tooltip"
 import { PanelLeftIcon } from "lucide-react"
 import { writeSidebarOpen } from "@/lib/sidebarState"
+import { UI_COPY } from "@/copy/id/ui"
 
 const SIDEBAR_WIDTH = "16rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
@@ -171,8 +177,8 @@ function Sidebar({
           side={side}
         >
           <SheetHeader className="sr-only">
-            <SheetTitle>Sidebar</SheetTitle>
-            <SheetDescription>Displays the mobile sidebar.</SheetDescription>
+            <SheetTitle>{UI_COPY.sidebarTitle}</SheetTitle>
+            <SheetDescription>{UI_COPY.sidebarDescription}</SheetDescription>
           </SheetHeader>
           <div className="flex h-full w-full flex-col">{children}</div>
         </SheetContent>
@@ -247,7 +253,7 @@ function SidebarTrigger({
       {...props}
     >
       <PanelLeftIcon />
-      <span className="sr-only">Toggle Sidebar</span>
+      <span className="sr-only">{UI_COPY.toggleSidebar}</span>
     </Button>
   )
 }
@@ -262,10 +268,10 @@ function SidebarRail({
     <button
       data-sidebar="rail"
       data-slot="sidebar-rail"
-      aria-label="Toggle Sidebar"
+      aria-label={UI_COPY.toggleSidebar}
       tabIndex={-1}
       onClick={toggleSidebar}
-      title="Toggle Sidebar"
+      title={UI_COPY.toggleSidebar}
       className={cn(
         "absolute inset-y-0 z-20 hidden w-4 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:start-1/2 after:w-[2px] hover:after:bg-sidebar-border sm:flex ltr:-translate-x-1/2 rtl:-translate-x-1/2",
         "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
@@ -285,7 +291,7 @@ function SidebarInset({
   ...props
 }) {
   return (
-    <main
+    <div
       data-slot="sidebar-inset"
       className={cn(
         "relative flex w-full flex-1 flex-col bg-background md:peer-data-[variant=inset]:m-2 md:peer-data-[variant=inset]:ml-0 md:peer-data-[variant=inset]:rounded-xl md:peer-data-[variant=inset]:shadow-sm md:peer-data-[variant=inset]:peer-data-[state=collapsed]:ml-2",

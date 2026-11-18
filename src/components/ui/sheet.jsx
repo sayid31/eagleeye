@@ -5,6 +5,7 @@ import { Dialog as SheetPrimitive } from "radix-ui"
 
 import { Button } from "@/components/ui/button"
 import { XIcon } from "lucide-react"
+import { UI_COPY } from "@/copy/id/ui"
 
 function Sheet({
   ...props
@@ -75,7 +76,7 @@ function SheetContent({
             >
               <XIcon
               />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{UI_COPY.close}</span>
             </Button>
           </SheetPrimitive.Close>
         )}

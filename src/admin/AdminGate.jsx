@@ -5,13 +5,18 @@
  * `/dev`) is not theirs. This only decides what to RENDER; the real protection
  * is the server guard in front of every page and /api/admin/* route.
  */
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
+import { ErrorState } from '@/components/app/ErrorState.jsx';
+import { LoadingState } from '@/components/app/LoadingState.jsx';
+import { SHELL_COPY } from '@/copy/id/shell';
 import { fetchMe } from '../auth/authClientApi.js';
 import { adminGateDecision } from './adminGateDecision.js';
 
 /** Renders `children(session)` once the signed-in visitor may see this area. */
 export function AdminGate({ children }) {
   const [state, setState] = useState({ status: 'loading' });
+  const [attempt, setAttempt] = useState(0);
+  const retry = useCallback(() => { setState({ status: 'loading' }); setAttempt((n) => n + 1); }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -21,11 +26,11 @@ export function AdminGate({ children }) {
         if (decision.redirect) window.location.replace(decision.redirect);
         else if (!cancelled) setState({ status: 'ready', session: me });
       })
-      .catch((error) => { if (!cancelled) setState({ status: 'error', message: error.message }); });
+      .catch((error) => { if (!cancelled) setState({ status: 'error', error }); });
     return () => { cancelled = true; };
-  }, []);
+  }, [attempt]);
 
-  if (state.status === 'loading') return <main className="adm-login"><p>Memeriksa sesi…</p></main>;
-  if (state.status === 'error') return <main className="adm-login"><p className="adm-error" role="alert">{state.message}</p></main>;
+  if (state.status === 'loading') return <main className="mx-auto max-w-md p-8"><LoadingState variant="form" label={SHELL_COPY.checkingSession} /></main>;
+  if (state.status === 'error') return <main className="mx-auto max-w-md p-8"><ErrorState title={SHELL_COPY.sessionFailedTitle} error={state.error} onRetry={retry} /></main>;
   return children(state.session);
 }
