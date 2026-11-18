@@ -26,6 +26,8 @@ npm run dev            # start Vite dev server (http://localhost:4173)
 npm run build          # production build — must stay green before any PR
 npm test               # full unit suite (see below)
 npm run test:track     # headless real-app tracking-invariant regression harness (needs dev server running, same .env)
+npm run qa:contrast     # token contrast gate of the React UI (light + dark)
+npm run qa:ui -- --only <page-id> --port <own port>  # axe + 390 px reflow + console + keyboard probes + isolation; full matrix ~10 min
 npm run auth:migrate   # create/upgrade the login tables in AUTH_DATABASE_FILE (server also does it at start)
 ```
 
@@ -141,6 +143,31 @@ Read `docs/CURRENT-STATE.md` → "UI system" before touching them.
   delete it with the last page that uses it.
 - **Gates.** `npm run qa:contrast` (token contrast) and `npm run qa:ui` (axe, reflow, console,
   keyboard probes, build isolation; `npm run qa:ui -- --only <page-id>` for one page).
+
+### React surfaces (`/login`, `/account`, `/admin`, `/dev`) — separate from the map
+
+Built with Tailwind 4 + shadcn/ui in light and dark. Tailwind is imported only by
+`src/admin/main.jsx` and `src/login/main.jsx` (`src/ui/app.css`), so `style.css`,
+`src/ui*.js` and the vanilla landing never see it (`qa:ui` fails if the map CSS
+changes or React reaches the map). Details: `docs/CURRENT-STATE.md` §UI system.
+
+- **Where things live.** Tokens `src/ui/tokens.css`; shadcn components
+  `src/components/ui/` (vendored — patch only with a note); shared patterns
+  `src/components/app/` (`DataTable`, `ConfirmDialog`, `FormField`, `StatusBadge`,
+  `PageHeader`, ...); pages per feature under `src/admin/` and `src/login/`. A page
+  is registered in one file, `src/admin/routes/features/<feature>.js`, plus an
+  entry in `scripts/qa-ui/pages.mjs`. `/dev/ui-kit` shows every component.
+- **Rules.** Every user-visible string lives in `src/copy/id/*` (Indonesian; API
+  errors through `errorMessage()`, never a raw code or HTTP status; glossary in
+  `glossary.js`) — `copyLiterals.test.mjs` fails on literals. Tokens and shadcn
+  components only: no hex, no `!important`, no HUD ornaments; icons from
+  `lucide-react`; one `<h1>` per page via `PageHeader`; status = icon + word, never
+  colour alone; a `Dialog` opened from code needs `useReturnFocus`.
+- **Gates.** `qa:contrast` must stay green when touching `tokens.css`; run
+  `qa:ui --only <page>` for the page you change with your own `--port` (default
+  4461 collides when runs share a machine). JSX is tested through
+  `src/testing/jsxLoader.mjs` + `react-dom/server`; pure view-models get their own
+  `*.test.mjs`.
 
 ### `vite.config.js` — the proxy/secrets boundary
 
