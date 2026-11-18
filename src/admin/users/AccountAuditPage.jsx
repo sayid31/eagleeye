@@ -1,71 +1,77 @@
 /**
- * Audit (/admin/audit, /dev/audit): the `audit_log` table, newest first,
- * filterable by action and by account (`?targetId=` from the Pengguna row
- * menu), paged. An admin sees `user.*` actions on user accounts, other actors
- * shown only by role; a super_admin sees every action.
+ * Audit (/admin/activity/audit, /dev/activity/audit): the `audit_log` table, newest first, filterable by time range,
+ * action and account, paged. An admin sees `user.*` actions on user accounts with other actors shown only by role; a
+ * super_admin sees every action.
  */
-import { useState } from 'react';
-import { useSearchParams } from 'react-router';
+import { PageHeader } from '@/components/app/PageHeader.jsx';
+import { DataTable } from '@/components/app/DataTable.jsx';
+import { EmptyState } from '@/components/app/EmptyState.jsx';
+import { Badge } from '@/components/ui/badge';
 import { AUDIT_ACTIONS } from '../../auth/auditLog.mjs';
-import { LoadState, Pager, usePageData } from './UsersWidgets.jsx';
-import { AUDIT_COPY } from './usersCopy.js';
+import { ACTIVITY_COPY } from '../../copy/id/users.js';
+import { ActivityFilters } from './ActivityFilters.jsx';
+import { TwoLine } from './ActivityCells.jsx';
+import { FilterSelect } from './FilterSelect.jsx';
+import { TimeCell } from './TimeCell.jsx';
 import { usersApi } from './usersApi.js';
-import { auditActionText, auditActorText, auditDetailText, formatDateTime } from './usersView.js';
-import './users.css';
+import { useActivityFilter } from './useActivityFilter.js';
+import { useResource } from './useResource.js';
+import { ALL } from './usersView.js';
+import { auditActionChoices, auditActionText, auditActorText, auditDetailText, auditQuery, hasActivityFilters } from './activityView.js';
 
-const COPY = AUDIT_COPY;
+const COPY = ACTIVITY_COPY.audit;
+const FILTERS = ACTIVITY_COPY.filters;
 
-/** @param {{session: {user: {id: string}}, area: 'admin' | 'dev'}} props */
-export function AccountAuditPage({ session, area = 'admin' }) {
-  const [params, setParams] = useSearchParams();
-  const targetId = params.get('targetId') ?? '';
-  const [action, setAction] = useState('');
-  const [offset, setOffset] = useState(0);
-  const query = { action, targetId, offset };
-  const { data, loading, error, reload } = usePageData(() => usersApi.audit(query), JSON.stringify(query));
-  const choices = area === 'dev' ? AUDIT_ACTIONS : AUDIT_ACTIONS.filter((code) => code.startsWith('user.'));
-  const targetName = targetId ? (data?.entries?.[0]?.targetName ?? targetId) : '';
-
+function AuditCard({ entry, actor }) {
   return (
-    <div className="adm-page adm-page-wide">
-      <header className="adm-page-header">
-        <h1>{COPY.title}</h1>
-        <p className="adm-muted">{COPY.lead[area]}</p>
-      </header>
-      <div className="adm-card adm-log-filters" role="group" aria-label="Filter">
-        <select className="adm-input" aria-label={COPY.columns.action} value={action} onChange={(e) => { setAction(e.target.value); setOffset(0); }}>
-          <option value="">{COPY.allActions}</option>
-          {choices.map((code) => <option key={code} value={code}>{auditActionText(code)}</option>)}
-        </select>
-        {targetId ? (
-          <span className="usr-filter-chip">{COPY.filteredBy} {targetName}
-            <button type="button" className="adm-btn" onClick={() => { setParams({}); setOffset(0); }}>{COPY.clearFilter}</button>
-          </span>
-        ) : null}
-        <button type="button" className="adm-btn" disabled={loading} onClick={reload}>Muat ulang</button>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-start justify-between gap-2">
+        <Badge variant="outline">{auditActionText(entry.action)}</Badge>
+        <span className="text-xs text-muted-foreground"><TimeCell iso={entry.createdAt} /></span>
       </div>
-      <LoadState loading={loading && !data} error={error} onRetry={reload} empty={data?.total === 0} emptyText={COPY.empty} />
-      {data?.entries?.length ? (
-        <div className="adm-table-wrap usr-table-wrap">
-          <table className="adm-table usr-table">
-            <thead>
-              <tr><th>{COPY.columns.time}</th><th>{COPY.columns.actor}</th><th>{COPY.columns.action}</th><th>{COPY.columns.target}</th><th>{COPY.columns.detail}</th></tr>
-            </thead>
-            <tbody>
-              {data.entries.map((entry) => (
-                <tr key={entry.id}>
-                  <td>{formatDateTime(entry.createdAt)}</td>
-                  <td>{auditActorText(entry, session?.user)}</td>
-                  <td><span className="adm-pill adm-pill-info">{auditActionText(entry.action)}</span></td>
-                  <td>{entry.targetName ?? '—'}{entry.targetEmailMasked ? <small className="adm-field-hint usr-sub">{entry.targetEmailMasked}</small> : null}</td>
-                  <td className="adm-log-msg">{auditDetailText(entry.summary)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : null}
-      <Pager page={data} busy={loading} onOffset={setOffset} />
+      <TwoLine main={entry.targetName ?? '—'} sub={entry.targetEmailMasked} />
+      <p className="text-sm text-muted-foreground">{actor}{auditDetailText(entry.summary) ? ` · ${auditDetailText(entry.summary)}` : ''}</p>
     </div>
+  );
+}
+
+/** @param {{session: {user: {id: string}}, area?: 'admin' | 'dev'}} props */
+export function AccountAuditPage({ session, area = 'admin' }) {
+  const filter = useActivityFilter();
+  const me = session?.user;
+  const query = auditQuery({ range: filter.range, action: filter.extra, userId: filter.userId, limit: filter.limit, offset: filter.offset });
+  const { data, loading, error, reload } = useResource(() => usersApi.audit(query), JSON.stringify(query));
+  const filtered = hasActivityFilters({ range: filter.range, action: filter.extra, userId: filter.userId });
+  const actions = { [ALL]: FILTERS.allActions, ...Object.fromEntries(auditActionChoices(AUDIT_ACTIONS, area).map((code) => [code, auditActionText(code)])) };
+  const columns = [
+    { id: 'time', header: COPY.columns.time, cell: (entry) => <TimeCell iso={entry.createdAt} className="text-muted-foreground" /> },
+    { id: 'actor', header: COPY.columns.actor, cell: (entry) => auditActorText(entry, me) },
+    { id: 'action', header: COPY.columns.action, cell: (entry) => <Badge variant="outline">{auditActionText(entry.action)}</Badge> },
+    { id: 'target', header: COPY.columns.target, cell: (entry) => <TwoLine main={entry.targetName ?? '—'} sub={entry.targetEmailMasked} /> },
+    { id: 'detail', header: COPY.columns.detail, cell: (entry) => <span className="text-muted-foreground">{auditDetailText(entry.summary)}</span> },
+  ];
+  return (
+    <>
+      <PageHeader title={ACTIVITY_COPY.title} description={COPY.description[area]} />
+      <DataTable
+        caption={COPY.caption}
+        columns={columns}
+        rows={data?.entries ?? []}
+        getRowId={(entry) => String(entry.id)}
+        loading={loading}
+        error={error}
+        onRetry={reload}
+        filtered={filtered}
+        empty={<EmptyState title={COPY.emptyTitle} description={COPY.emptyDescription} />}
+        filteredEmpty={<EmptyState title={FILTERS.filteredEmptyTitle} description={FILTERS.filteredEmptyDescription} />}
+        renderCard={(entry) => <AuditCard entry={entry} actor={auditActorText(entry, me)} />}
+        toolbar={(
+          <ActivityFilters range={filter.range} onRange={filter.setRange} userId={filter.userId} onUser={filter.setUser} filtered={filtered} onReset={filter.reset}>
+            <FilterSelect label={FILTERS.actionLabel} value={filter.extra} options={actions} onChange={filter.setExtra} className="w-56" />
+          </ActivityFilters>
+        )}
+        pagination={{ total: data?.total ?? 0, limit: filter.limit, offset: filter.offset, onOffsetChange: filter.setOffset, onLimitChange: filter.setLimit }}
+      />
+    </>
   );
 }
