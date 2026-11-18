@@ -149,7 +149,7 @@ export const CONFIG_PROBES = [
       await page.keyboard.press('Tab');
       await clickText(page, '#main-content button', 'Simpan perubahan');
       await page.waitForSelector(CONFIRM);
-      assert.match(await text(page, CONFIRM), /Matikan asisten suara\?/);
+      assert.match(await text(page, CONFIRM), /Nonaktifkan asisten suara\?/);
       await page.keyboard.press('Escape');
       await gone(page, CONFIRM);
       assert.equal(calls.length, 0, 'cancelling saves nothing');
