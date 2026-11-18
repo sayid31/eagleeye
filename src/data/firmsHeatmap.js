@@ -313,7 +313,7 @@ export function createFirmsHeatmapLayer({
       const staleText = _lastUpdate ? `STALE · stored ${formatAge(now - _lastUpdate) || '<1h'}` : 'STALE';
       let loadingLabel = '';
       if (_loading) {
-        loadingLabel = _fires.length ? 'menyegarkan...' : 'memuat...';
+        loadingLabel = _fires.length ? 'refreshing...' : 'loading...';
       } else if (_keyRequired) {
         loadingLabel = 'KEY REQUIRED';
       } else if (_stale) {

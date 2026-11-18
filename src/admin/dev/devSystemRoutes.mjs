@@ -2,8 +2,8 @@
 /**
  * The `/dev` system API (super_admin), mounted by systemHealthPlugin right
  * after `/api/admin/health`:
- *  - `GET /api/admin/system`         → Ringkasan sistem (systemSummary.mjs);
- *  - `GET /api/admin/usage`          → Pemakaian & budget (usageReport.mjs);
+ *  - `GET /api/admin/system`         → System Overview (systemSummary.mjs);
+ *  - `GET /api/admin/usage`          → Usage & budget (usageReport.mjs);
  *  - `GET/PUT /api/admin/kill-switches` (killSwitchRoutes.mjs).
  * Every reader is injected so the routes are testable without Vite.
  *

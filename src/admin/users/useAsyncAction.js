@@ -1,5 +1,5 @@
 /**
- * One API call at a time for a dialog: its busy flag and the Indonesian sentence of a failure (never a raw code).
+ * One API call at a time for a dialog: its busy flag and the English sentence of a failure (never a raw code).
  * `run` resolves to the call's result, or undefined when it failed (the sentence is then in `error`).
  */
 import { useCallback, useState } from 'react';

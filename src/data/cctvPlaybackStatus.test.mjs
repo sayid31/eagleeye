@@ -10,7 +10,7 @@ test('playlist health ok with no video is reported as waiting, never as the heal
 
 test('stalled and recovering players are named on the plane', () => {
   assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'retrying', attempt: 3 }).message, /stalled.*#3/i);
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'recovering' }).message, /memulihkan/i);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'recovering' }).message, /recovering/i);
   assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'unavailable' }).message, /unavailable/i);
 });
 

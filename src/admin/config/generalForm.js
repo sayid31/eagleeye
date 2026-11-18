@@ -4,7 +4,7 @@
  * validates everything again (`validateVoiceSettings`); these checks only give a faster message.
  *
  * The server replaces settings wholesale on PUT, so the save starts from the settings last loaded and overwrites only
- * the fields this page owns — cost limits (Pemakaian & Biaya), persona rules and anything newer survive a save here.
+ * the fields this page owns — cost limits (Usage & Cost), persona rules and anything newer survive a save here.
  *
  * Pure — no DOM, no network.
  *
@@ -22,7 +22,7 @@ export const LIMIT_FIELDS = Object.freeze(
   Object.entries(COPY.limits.fields).map(([key, { label, unit }]) => Object.freeze({ key, label, unit })),
 );
 
-/** Indonesian display text per tool group (the server's English label also goes into the voice prompt). */
+/** English display text per tool group (the server's English label also goes into the voice prompt). */
 export const TOOL_GROUP_TEXT = COPY.toolGroups;
 
 /** Title + description for one tool group from GET /api/admin/voice/settings. */

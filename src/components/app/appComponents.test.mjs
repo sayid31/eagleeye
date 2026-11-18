@@ -19,7 +19,7 @@ test('StatusBadge pairs colour with an icon and a word; the capability chip says
   assert.match(active, /text-success/);
   const on = render(h(CapabilityChip, { name: 'Data layers', enabled: true }));
   const off = render(h(CapabilityChip, { name: 'Voice & AI', enabled: false }));
-  assert.match(on, /Layer data<span class="sr-only">: active<\/span>/);
+  assert.match(on, /Data layers<span class="sr-only">: active<\/span>/);
   assert.match(off, /Voice &amp; AI<span class="sr-only">: inactive<\/span>/);
   assert.doesNotMatch(on + off, /line-through/);
 });
@@ -153,7 +153,7 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
   assert.equal((html.match(/<main/g) ?? []).length, 1, 'exactly one main landmark');
   assert.match(html, /<nav aria-label="Developer navigation"/);
   assert.match(html, /<nav aria-label="Breadcrumb"/);
-  const labels = ['System Overview', 'User &amp; Admin', 'Login Log', 'Kill switch', 'Usage', 'API Keys', 'AI Configuration', 'General', 'AI Provider', 'Persona',
+  const labels = ['System Overview', 'Users &amp; Admins', 'Login Log', 'Kill switch', 'Usage', 'API Keys', 'AI Configuration', 'General', 'AI Provider', 'Persona',
     'Usage &amp; Cost', 'Server Log', 'Audit Log', 'System Health', 'Audit'];
   let at = 0;
   for (const text of labels) {
@@ -161,7 +161,7 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
     assert.ok(next >= at, `sidebar has "${text}" after the previous item (original order)`);
     at = next;
   }
-  for (const gone of ['Access', 'Controls', 'Activity', 'Switch', 'Log server']) assert.ok(!html.includes(gone), `no "${gone}"`);
+  for (const gone of ['Access', 'Controls', 'Activity', 'Switch', 'Server Log']) assert.ok(!html.includes(gone), `no "${gone}"`);
   assert.ok(!html.includes('Component catalog'), 'hidden item is not in the sidebar');
   assert.match(html, />Developer</);
   assert.match(html, /aria-current="page"[^>]*>(?:<svg[^>]*><\/svg>|<svg[\s\S]*?<\/svg>)<span>Usage &amp; Cost/);
@@ -179,7 +179,7 @@ test('AppShell (admin): no Developer badge and the four admin items', async () =
     area: 'admin', brand: { name: 'EagleEye View' }, groups: navForArea('admin'), pathname: '/', user: { email: 'a@b.test', role: 'admin' }, onSignOut() {},
   }, null))));
   assert.doesNotMatch(html, />Developer</);
-  assert.match(html, /<nav aria-label="Navigasi Admin"/);
+  assert.match(html, /<nav aria-label="Admin navigation"/);
   for (const text of ['Overview', 'Users', 'Login Log', 'Audit']) assert.ok(html.includes(`>${text}<`), text);
   assert.ok(!html.includes('Activity'));
 });

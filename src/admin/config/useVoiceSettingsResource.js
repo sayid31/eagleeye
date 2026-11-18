@@ -1,5 +1,5 @@
 // src/admin/config/useVoiceSettingsResource.js
-/** Loads GET /api/admin/voice/settings (the document behind Umum, Persona and Penyedia AI) once and on `reload`. */
+/** Loads GET /api/admin/voice/settings (the document behind Umum, Persona and AI Provider) once and on `reload`. */
 import { fetchVoiceSettings } from '../api/adminVoiceApi.js';
 import { useResource } from '../users/useResource.js';
 

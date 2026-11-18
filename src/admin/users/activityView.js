@@ -1,5 +1,5 @@
 /**
- * Pure wording and query logic of Log Login and Audit: result and account cells, audit actor / action / detail
+ * Pure wording and query logic of Login Log and Audit: result and account cells, audit actor / action / detail
  * text, device and IP shortening for table cells, and the filter → API query mapping. No DOM, no network.
  *
  * @module admin/users/activityView
@@ -76,7 +76,7 @@ export function auditActorText(entry, me) {
 }
 
 /**
- * Indonesian reading of an audit summary written by the account service (`role user`, `fields name,email`,
+ * English reading of an audit summary written by the account service (`role user`, `fields name,email`,
  * `user → admin`); anything else as stored.
  * @param {string | null | undefined} summary
  * @returns {string}

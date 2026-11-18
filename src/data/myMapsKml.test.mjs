@@ -9,7 +9,7 @@ const placemark = (name, description, coordinates) => `<Placemark><name>${name}<
 test('shelter descriptions map their fields and drop hosted photos', () => {
   const html = '<img src="https://mymaps.usercontent.google.com/hostedimage/m/*/abc" height="200" /><br><br>Dinas PU <br> <br> FID 0 <br> Nama Dinas PU <br> Fungsi Kantor <br> Jumlah_Lantai   3 <br> Kapasitas -<br> Uji_Kelayakan Belum<br> Keterangan Pemerintah <br> Alamat Jl. Taman Siswa No 1';
   assert.deepEqual(parseDescriptionFields(html), {
-    function: 'Kantor', floors: '3', feasibilityTest: 'Belum', note: 'Pemerintah', address: 'Jl. Taman Siswa No 1',
+    function: 'Kantor', floors: '3', feasibilityTest: 'Not set', note: 'Pemerintah', address: 'Jl. Taman Siswa No 1',
   });
 });
 

@@ -1,6 +1,6 @@
 // src/admin/dev/usage/UsageBudgetPage.jsx
 /**
- * /dev → Pemakaian (Pemakaian & budget): OpenSky credits (governor), TomTom daily tile budget and OpenAI voice
+ * /dev → Pemakaian (Usage & budget): OpenSky credits (governor), TomTom daily tile budget and OpenAI voice
  * usage, read-only, from the server's own counters. A provider without a key shows an empty state, not zeros.
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';

@@ -1,5 +1,5 @@
 /**
- * Feature "Akses": accounts and their history (Pengguna, Log Login, Audit, the /admin Ringkasan).
+ * Feature "Akses": accounts and their history (Pengguna, Login Log, Audit, the /admin Ringkasan).
  * Owner of: src/admin/users/**. To add a page of this feature register it here (page id → lazy component; ids are
  * unique across all features) and give it a menu entry in ../../adminNav.js.
  *

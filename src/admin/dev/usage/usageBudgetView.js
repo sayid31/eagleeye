@@ -1,6 +1,6 @@
 // src/admin/dev/usage/usageBudgetView.js
 /**
- * View-model of Pemakaian (Pemakaian & budget): one card per provider (OpenSky credits, TomTom daily tiles,
+ * View-model of Pemakaian (Usage & budget): one card per provider (OpenSky credits, TomTom daily tiles,
  * OpenAI voice) with a big number, optional progress meters, facts and a reset note; plus the 7-day voice table rows.
  * Built from `GET /api/admin/usage`. Pure.
  *

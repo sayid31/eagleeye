@@ -1,6 +1,6 @@
 // src/admin/config/providerForm.js
 /**
- * Form model of Konfigurasi → Penyedia AI → "Model dan suara". An empty choice means "not chosen here": the env var or
+ * Form model of Konfigurasi → AI Provider → "Model dan suara". An empty choice means "not chosen here": the env var or
  * built-in default decides. A save overwrites only `provider`, starting from the settings last loaded.
  *
  * Pure — no DOM, no network.

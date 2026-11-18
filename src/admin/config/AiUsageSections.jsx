@@ -1,5 +1,5 @@
 // src/admin/config/AiUsageSections.jsx
-/** Cards of Pemakaian & Biaya: today's spend against the daily cap, the per-day table and the rates behind the estimate. */
+/** Cards of Usage & Cost: today's spend against the daily cap, the per-day table and the rates behind the estimate. */
 import { AudioLines } from 'lucide-react';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';

@@ -1,5 +1,5 @@
 /**
- * Feature "Konfigurasi" (/dev only): API Keys and the Konfigurasi AI pages (Umum, Penyedia AI, Persona, Pemakaian &
+ * Feature "Konfigurasi" (/dev only): API Keys and the AI Configuration pages (Umum, AI Provider, Persona, Pemakaian &
  * Biaya). Owner of: src/admin/config/**. Register a page here and give it a menu entry in ../../adminNav.js.
  *
  * @module admin/routes/features/config

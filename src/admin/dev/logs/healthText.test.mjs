@@ -17,13 +17,13 @@ const facts = (patch = {}) => ({
   logs: { server: { entries: 42, bytes: 128_000, maxBytes: 5_242_880, writeFailing: false, lastWriteAt: NOW - 12_000 }, auditEntries: 17 },
   ...patch,
 });
-const ENGLISH = /\b(ago|Started|Configured|Receiving|Failing|Last answer|left|used|rows|entries|calls today|never|Not configured|No |Turned off|Enabled|Writing|not tested|last test|in a row)\b/;
+const INDONESIAN = /\b(lalu|Mulai|Terpasang|Menerima|Gagal|Jawaban terakhir|tersisa|terpakai|baris|entri|panggilan|belum|Dimatikan|Aktif|ditulis|berturut-turut|uji terakhir)\b/;
 
 function details(report) {
   return healthView(report).sections.flatMap((section) => section.items.map((item) => `${item.label} | ${item.detail}`));
 }
 
-test('every detail the server can produce is said in Indonesian', () => {
+test('every detail the server can produce is said in English', () => {
   const variants = [
     facts(),
     facts({ keys: [{ id: 'openai', title: 'OPENAI', set: true }], auditTail: [], ais: { status: 'auth-failed' }, routes: [], quotas: { opensky: null, openskyWarnAt: 400, tomtom: null }, voice: { enabled: false, dailyMinutes: 0, usedSeconds: 120, judgeEnabled: false, judgeCalls: 0, judgeMax: 300 }, logs: { server: { entries: 0, bytes: 0, maxBytes: 5_242_880, writeFailing: true, lastWriteAt: null }, auditEntries: 0 } }),
@@ -33,7 +33,7 @@ test('every detail the server can produce is said in Indonesian', () => {
     facts({ logs: { server: { entries: 0, bytes: 0, maxBytes: 5_242_880, writeFailing: false, lastWriteAt: null }, auditEntries: 1 } }),
   ];
   for (const variant of variants) {
-    for (const line of details(buildHealthReport(variant))) assert.doesNotMatch(line, ENGLISH, line);
+    for (const line of details(buildHealthReport(variant))) assert.doesNotMatch(line, INDONESIAN, line);
   }
 });
 

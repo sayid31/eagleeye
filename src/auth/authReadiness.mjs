@@ -4,7 +4,7 @@
  * sistem (plan/auth/06 §Operasional). Pure: input is the environment plus
  * COUNTS read from the auth database (authReadinessFacts.mjs); output is a
  * list of `{id, level, params}` — never a secret, an email or a key value.
- * Messages are rendered by the caller (English in the CLI, Indonesian in /dev).
+ * Messages are rendered by the caller (English in the CLI, English in /dev).
  *
  * @module auth/authReadiness
  */
@@ -82,7 +82,7 @@ export function authReadinessChecks({ env, facts = null }) {
 /** The checks worth showing as warnings (warn + error). */
 export const readinessWarnings = (checks) => checks.filter((item) => item.level !== 'ok');
 
-/** English one-liners for the CLI doctor (`/dev` renders its own Indonesian copy). */
+/** English one-liners for the CLI doctor (`/dev` renders its own English copy). */
 export const READINESS_MESSAGES_EN = Object.freeze({
   'auth.secret': ({ problem, legacy }) => (problem === 'missing' ? 'BETTER_AUTH_SECRET is not set'
     : problem ? 'BETTER_AUTH_SECRET is shorter than 32 characters'

@@ -1,6 +1,6 @@
 // src/admin/dev/usageReport.mjs
 /**
- * `/dev` → Pemakaian & budget: one card per paid provider, built from the
+ * `/dev` → Usage & budget: one card per paid provider, built from the
  * counters the server already keeps (OpenSky credit governor, TomTom daily
  * tile budget, the voice usage ledger). Nothing is counted here. Pure.
  *

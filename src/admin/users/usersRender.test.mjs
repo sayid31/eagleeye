@@ -74,7 +74,7 @@ test('PasswordChoice: radio group with both options; the typed case shows a labe
   const generated = render(h(PasswordChoice, { mode: 'generate', password: '', role: 'user', onMode() {}, onPassword() {} }));
   assert.match(generated, /role="radiogroup"[^>]*aria-label="Initial password"/);
   assert.match(generated, />Auto-generate</);
-  assert.match(generated, />Ketik sendiri</);
+  assert.match(generated, />Type it yourself</);
   assert.doesNotMatch(generated, /type="password"/);
   const typed = render(h(PasswordChoice, { mode: 'typed', password: 'pendek', role: 'admin', onMode() {}, onPassword() {} }));
   assert.match(typed, /type="password"/);

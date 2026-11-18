@@ -9,7 +9,7 @@ import {
 } from './data/detection.js';
 import { getKeyholeFadeTuning, setKeyholeFadeTuning } from './celestialRing.js';
 
-/** Indonesian display names for the detection density profiles (state values stay English). */
+/** English display names for the detection density profiles (state values stay English). */
 const DETECTION_MODE_LABELS = { SPARSE: 'sparse', BALANCED: 'balanced', DENSE: 'dense' };
 
 export const detectionUiMixin = {

@@ -1,6 +1,6 @@
 // src/admin/dev/overview/overviewView.js
 /**
- * View-model of Ringkasan sistem: the status cards, the key-presence list and the doctor warnings, from the
+ * View-model of System Overview: the status cards, the key-presence list and the doctor warnings, from the
  * `GET /api/admin/system` payload (which never carries a key value, a secret or an email). Pure.
  *
  * @module admin/dev/overview/overviewView

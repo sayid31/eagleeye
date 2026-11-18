@@ -45,7 +45,7 @@ export function resolveNav(groups, pathname) {
 
 /**
  * Breadcrumb trail: group title (text, only when the group has one and the page is not named like it), then the
- * page, e.g. `Konfigurasi AI / Umum`; `Server Log` alone for the Server Log page. No crumb is a link.
+ * page, e.g. `AI Configuration / Umum`; `Server Log` alone for the Server Log page. No crumb is a link.
  * @param {NavGroup[]} groups
  * @param {string} pathname
  * @returns {Crumb[]}

@@ -1,8 +1,8 @@
 // src/admin/dev/logs/healthText.js
 /**
- * Says the health report in Indonesian. The server builds each item's label and detail in English
+ * Says the health report in English. The server builds each item's label and detail in English
  * (systemHealthCore.mjs, whose output and tests stay as they are), so this module maps known item ids and detail
- * shapes to the Indonesian templates in copy/en/systemLogs.js. A detail it does not recognise is shown unchanged:
+ * shapes to the English templates in copy/en/systemLogs.js. A detail it does not recognise is shown unchanged:
  * better English than a wrong translation. Pure.
  *
  * @module admin/dev/logs/healthText
@@ -10,7 +10,7 @@
 import { HEALTH_COPY as H } from '../../../copy/en/systemLogs.js';
 import { providerName } from '../lib/statusView.js';
 
-/** "3 min ago" / "never" (server `ago()`) inside any text → Indonesian. */
+/** "3 min ago" / "never" (server `ago()`) inside any text → English. */
 export function translateAgo(text) {
   return String(text)
     .replace(/(\d+) s ago/g, (_, n) => H.ago.seconds(n))
@@ -47,11 +47,11 @@ const RULES = [
   [/^Turned off \(GEV_VOICE_JUDGE=off\)$/, () => D.judgeOff],
   [/^(\d+) of (\d+) calls today$/, (m) => D.judgeCalls(m[1], m[2])],
   [/^Writing to disk is failing$/, () => D.logFailing],
-  [/^(\d+) rows · (.+) · last write (.+)$/, (m) => D.logSummary(m[1], m[2] === 'not written yet' ? D.logNotWritten : m[2].replace(' of ', ' dari '), translateAgo(m[3]))],
+  [/^(\d+) rows · (.+) · last write (.+)$/, (m) => D.logSummary(m[1], m[2] === 'not written yet' ? D.logNotWritten : m[2].replace(' of ', ' of '), translateAgo(m[3]))],
   [/^(\d+) entries$/, (m) => D.auditEntries(m[1])],
 ];
 
-/** Indonesian detail of one health item; the original text when no rule knows it. */
+/** English detail of one health item; the original text when no rule knows it. */
 export function translateDetail(detail) {
   const text = String(detail ?? '');
   for (const [pattern, render] of RULES) {
@@ -62,12 +62,12 @@ export function translateDetail(detail) {
   return translateAgo(text);
 }
 
-/** Indonesian label of a health item (key items use the provider display name, service items keep their route). */
+/** English label of a health item (key items use the provider display name, service items keep their route). */
 export function translateLabel(item) {
   if (Object.hasOwn(H.labels, item.id)) return H.labels[item.id];
   if (item.id.startsWith('key.')) return providerName(item.id.slice('key.'.length), item.label);
   return item.label;
 }
 
-/** Indonesian title of a section (unknown ids keep the server title). */
+/** English title of a section (unknown ids keep the server title). */
 export const translateSection = (id, title) => (Object.hasOwn(H.sections, id) ? H.sections[id] : title);

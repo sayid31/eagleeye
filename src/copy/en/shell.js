@@ -1,5 +1,5 @@
 // src/copy/en/shell.js
-/** Indonesian strings of the application shell (/admin and /dev): sidebar, header, account menu, skip link. */
+/** English strings of the application shell (/admin and /dev): sidebar, header, account menu, skip link. */
 
 export const SHELL_COPY = Object.freeze({
   skipToContent: 'Skip to content',

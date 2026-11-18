@@ -34,14 +34,14 @@ test('universal status notices reuse the standard failure dwell', () => {
 test('acquiring notices persist without a dwell until explicitly cleared', () => {
   const notice = createGlobalStatusNotice('ACQUIRING', 1000, {
     state: 'acquiring',
-    detail: 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}',
+    detail: 'SHARED FLIGHT',
     persistent: true,
   });
   assert.equal(notice.hideAt, null);
   assert.deepEqual(presentGlobalStatusNotice(notice, 1_000_000), {
     state: 'acquiring',
     label: 'ACQUIRING',
-    detail: 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}',
+    detail: 'SHARED FLIGHT',
   });
 });
 
@@ -123,7 +123,7 @@ test('persistent acquisition never hides an unrelated manager failure', () => {
   });
   const acquiring = createGlobalStatusNotice('ACQUIRING', 100, {
     state: 'acquiring',
-    detail: 'SHARED ${String(result.label || \'OBJECT\').toUpperCase()}',
+    detail: 'SHARED FLIGHT',
     persistent: true,
   });
 

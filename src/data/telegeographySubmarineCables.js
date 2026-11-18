@@ -540,7 +540,7 @@ export function createTeleGeographySubmarineCableLayer({
 
     _loading = true;
     _error = null;
-    _loadingLabel = 'memuat...';
+    _loadingLabel = 'loading...';
     // Ownership token (the militaryAwareness activationId pattern): a
     // disable/abort followed by a fresh enable starts a NEWER load while this
     // one is still settling. The stale load must bail after every await and

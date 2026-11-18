@@ -1,6 +1,6 @@
 // src/copy/en/common.js
 /**
- * Indonesian UI strings shared by every React surface (buttons, states, table chrome, copy-to-clipboard, theme).
+ * English UI strings shared by every React surface (buttons, states, table chrome, copy-to-clipboard, theme).
  * Pure data; components import from here instead of writing literals. See glossary.js for the terminology rule.
  *
  * @module copy/en/common

@@ -1,6 +1,6 @@
 // src/admin/users/activityRange.mjs
 /**
- * Time windows the Log Login and Audit filters offer ("24 jam terakhir", ...). One pure module shared by the server boundary
+ * Time windows the Login Log and Audit filters offer ("24 jam terakhir", ...). One pure module shared by the server boundary
  * (which turns a window into a cutoff) and the browser (which lists the choices), so both always agree on the codes.
  *
  * @module admin/users/activityRange

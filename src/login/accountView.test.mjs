@@ -28,7 +28,7 @@ test('nameProblem mirrors the server rule (trimmed, 1–80)', () => {
 });
 
 test('roleLabel: Indonesian role names, unknown passes through', () => {
-  assert.equal(roleLabel('user'), 'Users');
+  assert.equal(roleLabel('user'), 'User');
   assert.equal(roleLabel('admin'), 'Admin');
   assert.match(roleLabel('super_admin'), /Developer/);
   assert.equal(roleLabel('auditor'), 'auditor');

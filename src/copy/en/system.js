@@ -1,5 +1,5 @@
 /**
- * Indonesian strings of the /dev system pages: Ringkasan sistem, Kill switch, Pemakaian (Pemakaian & budget).
+ * English strings of the /dev system pages: System Overview, Kill switch, Pemakaian (Usage & budget).
  * The log pages live in systemLogs.js. Technical terms (API key, token, voice, layer, runtime) stay English; "Sakelar
  * darurat" is the glossary term for the global kill switch (glossary.js).
  *

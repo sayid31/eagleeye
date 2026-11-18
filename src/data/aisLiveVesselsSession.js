@@ -104,7 +104,7 @@ function markAisUnavailable(reason) {
 export async function loadLivePositions(viewer) {
   if (!viewer || state.loading) return;
   state.loading = true;
-  state.loadingLabel = state.loaded ? 'memperbarui...' : 'memuat...';
+  state.loadingLabel = state.loaded ? 'updating...' : 'loading...';
   const requestController = new AbortController();
   const requestSessionId = state.sessionId;
   state.abort = requestController;

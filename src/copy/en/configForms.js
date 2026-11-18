@@ -1,6 +1,6 @@
 // src/copy/en/configForms.js
 /**
- * Indonesian copy of Umum, Persona and Pemakaian & Biaya (the voice-settings forms). Re-exported by config.js.
+ * English copy of Umum, Persona and Usage & Cost (the voice-settings forms). Re-exported by config.js.
  * Pure data; the tool-group texts translate the server's English labels, which also go into the voice prompt.
  *
  * @module copy/en/configForms

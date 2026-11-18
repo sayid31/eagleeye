@@ -1,6 +1,6 @@
 // src/admin/dev/systemSummary.mjs
 /**
- * `/dev` → Ringkasan sistem: version, runtime, uptime, login configuration,
+ * `/dev` → System Overview: version, runtime, uptime, login configuration,
  * key presence per provider, kill-switch states, recent Server Log errors and
  * the doctor's auth warnings — one payload, built from facts the server
  * already has. Pure. Never carries a key value, a secret or an email.

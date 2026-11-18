@@ -1,5 +1,5 @@
 /**
- * Filter state shared by Log Login and Audit: time range, one page-specific select (result / action), the account
+ * Filter state shared by Login Log and Audit: time range, one page-specific select (result / action), the account
  * (kept in the URL as `?userId=` so the Pengguna row menu can link to it), page size and offset. Every filter change
  * returns to the first page.
  */

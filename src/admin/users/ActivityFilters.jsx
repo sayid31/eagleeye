@@ -1,4 +1,4 @@
-/** Filter bar of Log Login and Audit: time range, the page's own select (children), the account, and reset. */
+/** Filter bar of Login Log and Audit: time range, the page's own select (children), the account, and reset. */
 import { Button } from '@/components/ui/button';
 import { ACTIVITY_COPY } from '../../copy/en/users.js';
 import { FilterSelect } from './FilterSelect.jsx';
@@ -10,7 +10,7 @@ const COPY = ACTIVITY_COPY.filters;
 /**
  * @param {{range: string, onRange: (value: string) => void, userId: string, onUser: (id: string) => void,
  *   filtered: boolean, onReset: () => void, children?: import('react').ReactNode}} props
- *   `children` is the page-specific select (result for Log Login, action for Audit).
+ *   `children` is the page-specific select (result for Login Log, action for Audit).
  */
 export function ActivityFilters({ range, onRange, userId, onUser, filtered, onReset, children }) {
   const { options } = useUserOptions(userId);

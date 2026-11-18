@@ -1,6 +1,6 @@
 // src/admin/config/AiUsagePage.jsx
 /**
- * /dev → Konfigurasi AI → Pemakaian & Biaya: today's minutes against the daily cap, a per-day table priced with the
+ * /dev → AI Configuration → Usage & Cost: today's minutes against the daily cap, a per-day table priced with the
  * current GPT-Live rates, the per-session cost limits and what the estimate leaves out.
  */
 import { useCallback, useState } from 'react';
@@ -19,7 +19,7 @@ import { useVoiceSettingsResource } from './useVoiceSettingsResource.js';
 
 const DEFAULT_DAYS = 30;
 
-/** Pemakaian & Biaya page. */
+/** Usage & Cost page. */
 export function AiUsagePage() {
   const [days, setDays] = useState(DEFAULT_DAYS);
   const usage = useResource(useCallback(() => fetchVoiceUsage(days), [days]), `usage-${days}`);

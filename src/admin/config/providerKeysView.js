@@ -47,7 +47,7 @@ export function describeTestResult(outcome, id) {
   return { result, label: entry.label, text: `${entry.text}${hint}`, tone };
 }
 
-/** What the connection test does for this provider, in Indonesian. */
+/** What the connection test does for this provider, in English. */
 export const testNote = (id) => KEY_TEST_NOTES[id] ?? '';
 
 /**

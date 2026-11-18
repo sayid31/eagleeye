@@ -1,6 +1,6 @@
 /**
- * Feature "Sistem" (/dev only): Ringkasan sistem, Kill switch, Pemakaian, and the Server Log group (Server Log, Audit
- * Log, Kesehatan Sistem). Owner of: src/admin/dev/**. Register a page here and give it a menu entry in ../../adminNav.js.
+ * Feature "Sistem" (/dev only): System Overview, Kill switch, Pemakaian, and the Server Log group (Server Log, Audit
+ * Log, System Health). Owner of: src/admin/dev/**. Register a page here and give it a menu entry in ../../adminNav.js.
  *
  * @module admin/routes/features/system
  */

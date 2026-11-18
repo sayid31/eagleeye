@@ -1,4 +1,4 @@
-// Shell presentation of data layers: honest status, grouping and Indonesian labels.
+// Shell presentation of data layers: honest status, grouping and English labels.
 // Pure functions over `layerFeedState` (managerFeedState.js) — no new feed logic lives here.
 import { isGuidanceStatus, layerFeedState } from '../data/managerFeedState.js';
 
@@ -77,7 +77,7 @@ export function layerOrder(id, registryIndex) {
 }
 
 /**
- * Indonesian "N jam lalu" for a past timestamp; null when unknown.
+ * English "N jam lalu" for a past timestamp; null when unknown.
  * @param {number|null|undefined} timestamp Epoch ms.
  * @param {number} [now] Epoch ms.
  */

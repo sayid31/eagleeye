@@ -1,6 +1,6 @@
 // src/admin/config/AiProviderPage.jsx
 /**
- * /dev → Konfigurasi AI → Penyedia AI: the GPT-Live voice and the delegation backend model, plus the state of the
+ * /dev → AI Configuration → AI Provider: the GPT-Live voice and the delegation backend model, plus the state of the
  * OpenAI key (managed on the API Keys page). The provider stays OpenAI. Empty choice = the .env value or built-in default.
  */
 import { Link } from 'react-router';
@@ -80,7 +80,7 @@ function ModelForm({ payload, reload }) {
   );
 }
 
-/** Penyedia AI page. */
+/** AI Provider page. */
 export function AiProviderPage() {
   const { data, error, reload } = useVoiceSettingsResource();
   const keys = useProviderKeys();

@@ -1,6 +1,6 @@
 // src/admin/dev/logs/healthView.js
 /**
- * View-model of the Kesehatan Sistem page: overall status line, sections with Indonesian labels and details, check time.
+ * View-model of the System Health page: overall status line, sections with English labels and details, check time.
  * Pure — built from the `GET /api/admin/health` report.
  *
  * @module admin/dev/logs/healthView

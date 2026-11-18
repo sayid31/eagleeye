@@ -42,7 +42,7 @@ test('an unknown provider id falls back to the server title', () => {
 });
 
 test('summary and store label are in owner terms', () => {
-  assert.equal(providersSummary(payload), '2 of 3 providers have a key. Keys are stored in file .env proyek on this computer.');
+  assert.equal(providersSummary(payload), '2 of 3 providers have a key. Keys are stored in the project\'s .env file on this computer.');
   assert.equal(storeLabel('pinokio-environment'), 'the Pinokio ENVIRONMENT file');
 });
 

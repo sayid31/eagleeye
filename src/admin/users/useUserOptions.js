@@ -1,4 +1,4 @@
-/** Accounts offered by the "Akun" filter of Log Login and Audit: the first 100 by the API's order (newest first). */
+/** Accounts offered by the "Akun" filter of Login Log and Audit: the first 100 by the API's order (newest first). */
 import { useMemo } from 'react';
 import { usersApi } from './usersApi.js';
 import { useResource } from './useResource.js';

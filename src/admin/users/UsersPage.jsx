@@ -1,5 +1,5 @@
 /**
- * Pengguna (/admin/users) and Pengguna & Admin (/dev/users): one component. The list, filters and paging come from
+ * Pengguna (/admin/users) and Users & Admins (/dev/users): one component. The list, filters and paging come from
  * `/api/admin/users`; every row action shown is a cell of authorizeUserAction for (signed-in account, row, area).
  */
 import { useCallback, useEffect, useRef, useState } from 'react';

@@ -12,7 +12,7 @@
 /** Short operator label: `VIIRS_NOAA20_NRT` → `NOAA-20`. */
 function sourceLabel(source) {
   const match = String(source || '').match(/VIIRS_(NOAA)(\d+)_|VIIRS_(SNPP)_/);
-  if (!match) return String(source || 'sumber');
+  if (!match) return String(source || 'source');
   return match[1] ? `NOAA-${match[2]}` : 'SNPP';
 }
 

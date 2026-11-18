@@ -1,5 +1,5 @@
 // src/copy/en/index.js
-/** Re-exports of the Indonesian UI copy modules (see glossary.js for the terminology rule). */
+/** Re-exports of the English UI copy modules (see glossary.js for the terminology rule). */
 export * from './common.js';
 export * from './errors.js';
 export * from './glossary.js';

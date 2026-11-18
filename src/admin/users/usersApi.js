@@ -1,7 +1,7 @@
 /**
  * Browser-side calls to the account-management API (session cookie):
  * `/api/admin/users`, `/api/admin/login-log`, `/api/admin/audit` (account
- * source). A refused call throws an Error whose `message` is the Indonesian
+ * source). A refused call throws an Error whose `message` is the English
  * text for its code (copy/en/errors.js) and whose `code`/`status`/`field`/`reason`/`min` say what happened (errorMessage() reads them).
  *
  * @module admin/users/usersApi

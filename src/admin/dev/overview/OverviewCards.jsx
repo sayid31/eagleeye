@@ -1,5 +1,5 @@
 // src/admin/dev/overview/OverviewCards.jsx
-/** The five status cards of Ringkasan sistem: version, uptime, login, Kill switch, errors in the log. */
+/** The five status cards of System Overview: version, uptime, login, Kill switch, errors in the log. */
 import { OVERVIEW_COPY as T } from '@/copy/en/system';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { StatCard } from './StatCard.jsx';

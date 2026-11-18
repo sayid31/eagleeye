@@ -13,7 +13,7 @@ async function readJson(response, action) {
   if (response.ok) return payload;
   const error = new Error(`${action} failed — ${payload.error || `HTTP ${response.status}`}`);
   error.status = response.status;
-  // The server words 4xx replies in Indonesian ("Kunci tidak dikenal: X"); the UI may show that sentence (failureMessage).
+  // The server words 4xx replies in English ("Kunci tidak dikenal: X"); the UI may show that sentence (failureMessage).
   error.detail = typeof payload.error === 'string' ? payload.error : '';
   throw error;
 }

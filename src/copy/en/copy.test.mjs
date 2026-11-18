@@ -4,7 +4,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ERROR_MESSAGES, GENERIC_ERROR, NETWORK_ERROR, STATUS_MESSAGES, errorMessage } from './errors.js';
-import { GLOSSARY, findGlossaryViolations } from './glossary.js';
+import { GLOSSARY, REQUIRED_TERMS, findGlossaryViolations } from './glossary.js';
+import { findIndonesianWords } from './indonesianVocabulary.mjs';
 import * as copy from './index.js';
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
@@ -12,7 +13,7 @@ const dir = path.dirname(fileURLToPath(import.meta.url));
 /** Every string a copy module exports, calling function entries with plausible arguments. */
 function strings(value, seen = new Set()) {
   if (typeof value === 'string') return [value];
-  if (typeof value === 'function') return strings(value('contoh', 12, 3));
+  if (typeof value === 'function') return strings(value('example', 12, 3));
   if (value && typeof value === 'object' && !seen.has(value)) {
     seen.add(value);
     return Object.values(value).flatMap((entry) => strings(entry, seen));
@@ -20,7 +21,7 @@ function strings(value, seen = new Set()) {
   return [];
 }
 
-test('errorMessage: a known code maps to its Indonesian sentence', () => {
+test('errorMessage: a known code maps to its English sentence', () => {
   assert.equal(errorMessage('FEATURE_DISABLED'), ERROR_MESSAGES.FEATURE_DISABLED);
   assert.equal(errorMessage({ error: 'EMAIL_TAKEN' }), 'This email is already used by another account.');
   assert.equal(errorMessage(Object.assign(new Error('x'), { code: 'REAUTH_FAILED', status: 403 })), 'Your password is incorrect.');
@@ -63,21 +64,28 @@ test('every API error code the server and the older api modules know has a sente
 });
 
 test('glossary: discouraged terms are found as whole phrases only, case-insensitively', () => {
-  assert.deepEqual(findGlossaryViolations('Matikan Sakelar darurat').map((row) => row.use), ['Kill switch']);
-  assert.deepEqual(findGlossaryViolations('buka log server sekarang').map((row) => row.use), ['Server Log']);
-  assert.deepEqual(findGlossaryViolations('Kill switch dan Server Log'), []);
-  assert.deepEqual(findGlossaryViolations('Jejak audit dan Anggaran provider').map((row) => row.use), ['Audit Log', 'Usage & budget']);
+  assert.deepEqual(findGlossaryViolations('Turn off the Emergency switch').map((row) => row.use), ['Kill switch']);
+  assert.deepEqual(findGlossaryViolations('open the server logs now').map((row) => row.use), ['Server Log']);
+  assert.deepEqual(findGlossaryViolations('Kill switch and Server Log'), []);
+  assert.deepEqual(findGlossaryViolations('Audit trail and Provider budget').map((row) => row.use), ['Audit Log', 'Usage & budget']);
+  assert.deepEqual(findGlossaryViolations('Log in or log out').map((row) => row.use), ['Sign in', 'Sign out']);
   assert.deepEqual(findGlossaryViolations('killswitches'), []);
   assert.ok(GLOSSARY.length >= 2);
 });
 
-test('every string in src/copy/en respects the glossary and is written in Indonesian punctuation (no raw error codes)', () => {
+test('the required menu and page names are spelled exactly like the glossary', () => {
+  const all = strings(Object.fromEntries(Object.entries(copy).filter(([name]) => name !== 'GLOSSARY' && name !== 'REQUIRED_TERMS')));
+  for (const term of REQUIRED_TERMS) assert.ok(all.includes(term), `no copy string is exactly "${term}"`);
+});
+
+test('every string in src/copy/en respects the glossary, has no Indonesian words and shows no raw error code', () => {
   // GLOSSARY lists the discouraged terms themselves, so it is the one export that may contain them.
-  const all = strings(Object.fromEntries(Object.entries(copy).filter(([name]) => name !== 'GLOSSARY')));
+  const all = strings(Object.fromEntries(Object.entries(copy).filter(([name]) => name !== 'GLOSSARY' && name !== 'REQUIRED_TERMS')));
   assert.ok(all.length > 80);
   const rawCodes = new RegExp(`\\b(${Object.keys(ERROR_MESSAGES).join('|')})\\b`);
   for (const text of all) {
     assert.deepEqual(findGlossaryViolations(text), [], text);
+    assert.deepEqual(findIndonesianWords(text), [], text);
     // Copy that can be shown to a person never spells an API error code. ERROR_MESSAGES is the one export whose keys are codes,
     // and strings() reads values only.
     assert.doesNotMatch(text, rawCodes, text);
@@ -87,5 +95,6 @@ test('every string in src/copy/en respects the glossary and is written in Indone
   for (const file of files) {
     const source = readFileSync(path.join(dir, file), 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
     assert.deepEqual(findGlossaryViolations(source), [], file);
+    assert.deepEqual(findIndonesianWords(source), [], file);
   }
 });

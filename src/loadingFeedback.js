@@ -33,7 +33,7 @@ export function normalizeLayerLoading(layer = {}) {
   const accepted = Boolean(stats.lastUpdate) || count > 0;
   return {
     id: String(layer.id || ''),
-    // Same Indonesian label as the layer panel; the module's English name is only a fallback.
+    // Same English label as the layer panel; the module's English name is only a fallback.
     label: layerLabel(String(layer.id || ''), String(layer.name || layer.id || 'Layers')),
     loading,
     disabling,

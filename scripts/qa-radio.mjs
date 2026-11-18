@@ -1197,7 +1197,7 @@ async function main() {
     });
     check(
       'user-facing chip, real Context entry rollback, and installation Search failures settle safely',
-      userFacingFailures.semanticFalseMessage === 'Radio could not be ${change.enabled ? \'turned on\' : \'turned off\'} properly'
+      userFacingFailures.semanticFalseMessage === 'Radio could not be turned off properly'
         && userFacingFailures.contextFailures.length === 8
         && userFacingFailures.contextFailures.every((failure) => (
           failure.result === false
@@ -1230,7 +1230,7 @@ async function main() {
         && userFacingFailures.directActivationRollbackFailures.length === 2
         && userFacingFailures.directActivationRollbackFailures.every((failure) => (
           failure.toastMessages.length === 1
-          && failure.toastMessages[0] === `${failure.layerId} could not be ${change.enabled ? 'turned on' : 'turned off'} properly`
+          && failure.toastMessages[0] === `${failure.layerId} could not be turned on properly`
           && failure.retryRetained
         ))
         && userFacingFailures.contextExitFailures.length === 2
@@ -1251,7 +1251,7 @@ async function main() {
         ))
         && userFacingFailures.unrelatedManagerFailure.result === false
         && userFacingFailures.unrelatedManagerFailure.toastMessages.length === 1
-        && userFacingFailures.unrelatedManagerFailure.toastMessages[0].includes('qa-unrelated-manager-failure could not be ${change.enabled ? \'turned on\' : \'turned off\'} properly')
+        && userFacingFailures.unrelatedManagerFailure.toastMessages[0].includes('qa-unrelated-manager-failure could not be turned on properly')
         && userFacingFailures.installationFalseMessage.includes('could not be updated')
         && userFacingFailures.installationFalseReleased
         && userFacingFailures.installationEnableRejectionMessage.includes('could not be updated')

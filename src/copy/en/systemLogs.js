@@ -1,6 +1,6 @@
 /**
- * Indonesian strings of the Server Log area of /dev: Server Log, Audit Log, Kesehatan Sistem. The health report is built
- * server-side in English; the `HEALTH_*` tables here are what healthText.js uses to say the same facts in Indonesian.
+ * English strings of the Server Log area of /dev: Server Log, Audit Log, System Health. The health report is built
+ * server-side in English; the `HEALTH_*` tables here are what healthText.js uses to say the same facts in English.
  *
  * @module copy/en/systemLogs
  */

@@ -3,7 +3,7 @@
 // (managerTogglePanel.js) reads `getAll()` rows and applies these results.
 import { layerFeedState, FEED_STATE_LABELS } from './managerFeedState.js';
 
-/** Lifecycle transition → user-visible (Indonesian) label; the state keys stay English. */
+/** Lifecycle transition → user-visible (English) label; the state keys stay English. */
 export const LIFECYCLE_LABELS = Object.freeze({
   enabling: 'TURNING ON',
   disabling: 'TURNING OFF',
@@ -20,7 +20,7 @@ export function formatLayerCount(n) {
 }
 
 /**
- * Short Indonesian age for the row meta line ("3m lalu").
+ * Short English age for the row meta line ("3m lalu").
  * @param {number} timestamp Epoch ms.
  * @param {number} [now] Epoch ms.
  * @returns {string}
@@ -63,7 +63,7 @@ export function buildLayerMetaText(layer, now = Date.now()) {
   if (stats.loading) {
     const loadingLabel = typeof stats.loadingLabel === 'string' && stats.loadingLabel.trim()
       ? stats.loadingLabel.trim()
-      : 'memuat...';
+      : 'loading...';
     return `${source} · ${loadingLabel}`;
   }
   if (feedState === 'fallback') {

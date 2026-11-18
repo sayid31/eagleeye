@@ -15,18 +15,18 @@ test('meterProgress: percent, clamped bar, true percent in text, safe against ze
 test('TomTom card: big number, accessible meter, reset countdown to the next UTC midnight', () => {
   const card = providerCard({ id: 'tomtom', configured: true, status: 'warn', data: { used: 830, budget: 1000, share: 0.83, date: '2026-11-18' } }, NOW);
   assert.equal(card.big.value, '830');
-  assert.equal(card.big.unit, 'of 1.000 tiles today');
+  assert.equal(card.big.unit, 'of 1,000 tiles today');
   assert.equal(card.statusLabel, 'Almost used up');
   const [meter] = card.meters;
   assert.deepEqual([meter.valueNow, meter.valueMax, meter.tone], [830, 1000, 'warning']);
-  assert.equal(meter.text, '830 of 1.000 tiles (83%)');
+  assert.equal(meter.text, '830 of 1,000 tiles (83%)');
   assert.match(card.note, /Resets at 00:00 UTC, in 12 h 00 min/);
 });
 
 test('OpenSky card has no meter (the API reports remaining credits only) and says how fresh the number is', () => {
   const card = providerCard({ id: 'opensky', configured: true, status: 'ok', data: { remaining: 3000, at: NOW - 240_000, warnAt: 400, ttlMs: 9000 } }, NOW);
   assert.equal(card.meters.length, 0);
-  assert.equal(card.big.value, '3.000');
+  assert.equal(card.big.value, '3,000');
   assert.deepEqual(card.facts.map((f) => f.value), ['400', '9 s']);
   assert.match(card.note, /4 min ago/);
 });

@@ -1,6 +1,6 @@
 // src/admin/dev/logs/HealthPage.jsx
 /**
- * /dev → Server Log → Kesehatan Sistem: one status per thing that can break — API keys (last connection test), the live AIS
+ * /dev → Server Log → System Health: one status per thing that can break — API keys (last connection test), the live AIS
  * feed, external services seen in traffic, quotas, voice limits and the log files. Read-only: nothing here calls a
  * provider; re-check a key with "Uji koneksi" on the providers page.
  */
@@ -35,7 +35,7 @@ function SectionCard({ section }) {
   );
 }
 
-/** Server Log → Kesehatan Sistem page. */
+/** Server Log → System Health page. */
 export function HealthPage() {
   const resource = useDevResource(fetchHealth);
   return (

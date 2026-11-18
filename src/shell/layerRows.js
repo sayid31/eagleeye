@@ -61,7 +61,7 @@ export function applyRowPlan(container, plan) {
     const order = String(entry.rowOrder);
     if (row.style.order !== order) row.style.order = order;
     // `.data-name` keeps its declared text (voice focus reads it); the visible
-    // Indonesian label is a sibling and `.data-name` is visually hidden by CSS.
+    // English label is a sibling and `.data-name` is visually hidden by CSS.
     const left = row.querySelector('.data-toggle-left');
     let label = left?.querySelector('.ee-layer-label');
     if (left && !label) {

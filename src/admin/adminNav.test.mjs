@@ -21,11 +21,11 @@ test('basename follows the browser path: /dev and below → /dev, everything els
   assert.equal(pathIsUnder('/devx', '/dev'), false);
 });
 
-test('/admin menu is the original four items: Ringkasan, Pengguna, Log Login, Audit', () => {
+test('/admin menu is the original four items: Ringkasan, Pengguna, Login Log, Audit', () => {
   assert.deepEqual(menu('admin'), [[null, [['Overview', '/'], ['Users', '/users'], ['Login Log', '/login-log'], ['Audit', '/audit']]]]);
 });
 
-test('/dev menu is the original list: fourteen pages, Konfigurasi AI and Server Log as labelled sub-lists, Audit last', () => {
+test('/dev menu is the original list: fourteen pages, AI Configuration and Server Log as labelled sub-lists, Audit last', () => {
   assert.deepEqual(menu('dev'), [
     [null, [['System Overview', '/'], ['Users & Admins', '/users'], ['Login Log', '/login-log'], ['Kill switch', '/kill-switches'],
       ['Usage', '/usage'], ['API Keys', '/api-keys']]],

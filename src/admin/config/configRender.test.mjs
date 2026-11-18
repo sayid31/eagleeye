@@ -71,7 +71,7 @@ test('Umum: the 30-minute hard cap is stated next to the limits and a larger val
   assert.match(html, /Hard limit of 30 minutes/);
   assert.match(html, /<label[^>]*>Maximum session length<\/label>/);
   const over = render(h(LimitsCard, { ...base, form: { limits: { ...form.limits, sessionMinutes: '60' } }, errors: { idleSeconds: 'Wrong.' } }));
-  assert.match(over, /Nilai 60 menit melebihi batas keras/);
+  assert.match(over, /A value of 60 minutes exceeds the hard limit/);
   assert.match(over, /aria-invalid="true"/);
   assert.match(over, /Wrong\./);
 });
@@ -102,7 +102,7 @@ test('Persona: core rules are read-only with their guard, extra rules are labell
   assert.match(topics, /aria-checked="true"/);
 });
 
-test('Pemakaian & Biaya: cost + audio, a labelled progress meter, per-day table and the empty state', async () => {
+test('Usage & Cost: cost + audio, a labelled progress meter, per-day table and the empty state', async () => {
   const { TodayCard, DailyCard } = await load('AiUsageSections');
   const day = { day: '2026-11-18', sessions: 2, seconds: 600, extrasUsd: 0.01, judgeCalls: 3, estimatedUsd: 0.5 };
   const usage = {

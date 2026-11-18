@@ -1,5 +1,5 @@
 /**
- * Log Login (/admin/login-log, /dev/login-log): every sign-in attempt, newest first, filterable by time
+ * Login Log (/admin/login-log, /dev/login-log): every sign-in attempt, newest first, filterable by time
  * range, result and account, paged. The server decides which rows an admin may see (user accounts only).
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';

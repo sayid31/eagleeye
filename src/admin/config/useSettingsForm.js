@@ -1,6 +1,6 @@
 // src/admin/config/useSettingsForm.js
 /**
- * State of one voice-settings form (Umum, Persona, Penyedia AI): the editable copy of the saved settings, whether it
+ * State of one voice-settings form (Umum, Persona, AI Provider): the editable copy of the saved settings, whether it
  * differs from them, validation, the save call and its outcome. A successful save reloads the settings, which resets
  * the form to what the server now holds.
  */

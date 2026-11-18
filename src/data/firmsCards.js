@@ -59,7 +59,7 @@ export function formatAge(deltaMs) {
   return `${Math.round(hours / 24)}d`;
 }
 
-/** Display bucket → Indonesian on-card wording (bucket ids stay English for data consumers). */
+/** Display bucket → English on-card wording (bucket ids stay English for data consumers). */
 const CONFIDENCE_LABELS = Object.freeze({ high: 'high', nominal: 'nominal', low: 'low' });
 
 /** Normalized 0..1 confidence → low/nominal/high display bucket. */

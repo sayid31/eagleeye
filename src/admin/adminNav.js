@@ -1,10 +1,10 @@
 // src/admin/adminNav.js
 /**
  * Menu structure of the two dashboard areas served by the one admin bundle:
- *  - `/admin` (admin + super_admin): Ringkasan · Pengguna · Log Login · Audit.
- *  - `/dev` (super_admin only): Ringkasan sistem · Pengguna & Admin · Log Login · Kill switch · Pemakaian · API Keys ·
- *    Konfigurasi AI (Umum, Penyedia AI, Persona, Pemakaian & Biaya) · Server Log (Server Log, Audit Log,
- *    Kesehatan Sistem) · Audit.
+ *  - `/admin` (admin + super_admin): Ringkasan · Pengguna · Login Log · Audit.
+ *  - `/dev` (super_admin only): System Overview · Users & Admins · Login Log · Kill switch · Pemakaian · API Keys ·
+ *    AI Configuration (Umum, AI Provider, Persona, Usage & Cost) · Server Log (Server Log, Audit Log,
+ *    System Health) · Audit.
  * Pure data, so the sidebar, the router and the tests read one source of truth. The server guard enforces the same
  * area split; this only decides what to render. Paths are relative to the area basename; `/` is the area home. A
  * titled group is a labelled sub-list in the sidebar; its pages are registered in routes/features/*.js (PAGE_TABLE).

@@ -60,7 +60,7 @@ export function rowActions(me, target, area) {
 
 /**
  * Menu entries of a row in display order, destructive ones flagged (RowActions puts them last under a separator).
- * Someone else's row also links to that account's Log Login and Audit (read-only views, always allowed).
+ * Someone else's row also links to that account's Login Log and Audit (read-only views, always allowed).
  * @param {ReturnType<typeof rowActions>} actions
  * @returns {Array<{id: string, destructive: boolean}>}
  */

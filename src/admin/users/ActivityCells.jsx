@@ -1,4 +1,4 @@
-/** Cell building blocks shared by the Log Login and Audit tables. */
+/** Cell building blocks shared by the Login Log and Audit tables. */
 import { StatusBadge } from '@/components/app/StatusBadge.jsx';
 import { ACTIVITY_COPY } from '../../copy/en/users.js';
 import { compactIp, describeDevice, loginAccountText, loginFailureText } from './activityView.js';

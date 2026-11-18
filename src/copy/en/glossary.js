@@ -1,28 +1,36 @@
 /**
- * Terminology rule for every Indonesian UI string (docs/DECISIONS.md, "Copy"): standard technical terms stay in
- * English (API key, token, log, layer, voice, password, role); words with a natural Indonesian counterpart use it.
- * The menu and page names are the dashboard's original ones and are enforced here: "Kill switch", "Server Log",
- * "Audit Log", "Kesehatan Sistem", "Pemakaian", "Pemakaian & Biaya", "Konfigurasi AI", "Penyedia AI", "API Keys",
- * "Log Login". `avoid` is matched case-insensitively and as a whole phrase, only against text shown to people (code,
+ * Terminology rule for every English UI string (docs/DECISIONS.md, "Copy"): the menu and page names below are the
+ * dashboard's original ones and are enforced here ("Overview", "System Overview", "Users", "Users & Admins",
+ * "Login Log", "Audit", "Kill switch", "Usage", "API Keys", "AI Configuration", "General", "AI Provider", "Persona",
+ * "Usage & Cost", "Server Log", "Audit Log", "System Health"; the verbs are "Sign in" / "Sign out"; the noun is
+ * "Login"). `avoid` is matched case-insensitively and as a whole phrase, only against text shown to people (code,
  * endpoints, file names and audit action ids keep their names). Add a row when a new inconsistency shows up.
  *
- * On/off vocabulary: accounts, capabilities and settings are "aktif / nonaktif" ("nonaktifkan"); only the Kill switch
- * gates are "menyala / dimatikan" (a switch). "Mati" alone is never used.
+ * On/off vocabulary: accounts, capabilities and settings are "active / inactive" ("deactivate"); only the Kill switch
+ * gates are "on / off" (a switch).
  *
  * @module copy/en/glossary
  */
 
 /** @type {ReadonlyArray<{avoid: string, use: string}>} */
 export const GLOSSARY = Object.freeze([
-  { avoid: 'Sakelar darurat', use: 'Kill switch' },
-  { avoid: 'Log server', use: 'Server Log' },
-  { avoid: 'Jejak audit', use: 'Audit Log' },
-  { avoid: 'Anggaran provider', use: 'Usage & budget' },
-  { avoid: 'Penyedia & API Keys', use: 'API Keys' },
-  { avoid: 'Aktivitas', use: 'Log Login / Audit' },
-  { avoid: 'Pemakai', use: 'Users' },
-  { avoid: 'Off', use: 'Inactive' },
+  { avoid: 'Emergency switch', use: 'Kill switch' },
+  { avoid: 'Server logs', use: 'Server Log' },
+  { avoid: 'Audit trail', use: 'Audit Log' },
+  { avoid: 'Provider budget', use: 'Usage & budget' },
+  { avoid: 'Providers & API Keys', use: 'API Keys' },
+  { avoid: 'End user', use: 'User' },
+  { avoid: 'Log in', use: 'Sign in' },
+  { avoid: 'Log out', use: 'Sign out' },
   { avoid: 'Sign-in', use: 'Login' },
+  { avoid: 'Dashboard', use: 'Overview' },
+]);
+
+/** The menu and page names that must read exactly like this wherever they are shown. */
+export const REQUIRED_TERMS = Object.freeze([
+  'Overview', 'System Overview', 'Users', 'Users & Admins', 'Login Log', 'Audit', 'Kill switch', 'Usage', 'API Keys',
+  'AI Configuration', 'General', 'AI Provider', 'Persona', 'Usage & Cost', 'Server Log', 'Audit Log', 'System Health',
+  'Sign in', 'Sign out',
 ]);
 
 const escapeRegExp = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
