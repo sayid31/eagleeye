@@ -161,7 +161,7 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
     assert.ok(next >= at, `sidebar has "${text}" after the previous item (original order)`);
     at = next;
   }
-  for (const gone of ['Access', 'Controls', 'Activity', 'Switch', 'Server Log']) assert.ok(!html.includes(gone), `no "${gone}"`);
+  for (const gone of ['Access', 'Controls', 'Activity', 'Switch', 'Server logs']) assert.ok(!html.includes(gone), `no "${gone}"`);
   assert.ok(!html.includes('Component catalog'), 'hidden item is not in the sidebar');
   assert.match(html, />Developer</);
   assert.match(html, /aria-current="page"[^>]*>(?:<svg[^>]*><\/svg>|<svg[\s\S]*?<\/svg>)<span>Usage &amp; Cost/);

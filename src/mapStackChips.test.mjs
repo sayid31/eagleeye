@@ -228,8 +228,8 @@ test('models carry the stack\'s own reason and never invent an active chip', () 
       },
       {
         requirement: '',
-        unavailableHint: '${label || \'This map stack\'} is unavailable',
-        title: '${label || \'This map stack\'} is unavailable',
+        unavailableHint: 'Hybrid is unavailable',
+        title: 'Hybrid is unavailable',
       },
     ],
   );

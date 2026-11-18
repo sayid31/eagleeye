@@ -60,7 +60,7 @@ test('station marker categories share the dropdown palette with stable overlap p
 test('cluster badges lead with a readable count and concise dominant category', () => {
   assert.equal(radioClusterBadgeText('news', 12), '12 NEWS');
   assert.equal(radioClusterBadgeText('public-safety', 7.9), '7 SECURITY');
-  assert.equal(radioClusterBadgeText('genre:jazz', 4), '4 MUSIK');
+  assert.equal(radioClusterBadgeText('genre:jazz', 4), '4 MUSIC');
   assert.equal(radioClusterBadgeText('unknown', -2), '0 LAINNYA');
 });
 

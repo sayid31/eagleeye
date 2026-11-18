@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { findIndonesianWords } from './indonesianVocabulary.mjs';
 import { fileURLToPath } from 'node:url';
 
 const srcRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -53,14 +54,14 @@ test('the UI never prints a raw error message, code or HTTP status: errors go th
   assert.deepEqual(offenders, []);
 });
 
-test('every API key the server offers has Indonesian name + purpose (the server "unlocks" text is English and never shown)', async () => {
+test('every API key the server offers has an English name + purpose of its own (the server "unlocks" text is never shown)', async () => {
   const { KEY_SETUP_KEYS } = await import('../../keySetupCore.mjs');
   const { PROVIDER_COPY, KEY_FIELD_LABELS } = await import('./config.js');
   for (const key of KEY_SETUP_KEYS) {
     const copy = PROVIDER_COPY[key.id];
     assert.ok(copy?.name && copy.purpose, `${key.id} has no PROVIDER_COPY entry`);
     assert.notEqual(copy.purpose, key.unlocks, key.id);
-    assert.doesNotMatch(copy.purpose, /\b(the|and|with|more|live)\b/i, `${key.id}: purpose reads as English`);
+    assert.deepEqual(findIndonesianWords(copy.purpose), [], `${key.id}: purpose has Indonesian words`);
   }
   for (const envVar of KEY_SETUP_KEYS.filter((key) => key.envVars.length > 1).flatMap((key) => key.envVars)) {
     assert.ok(KEY_FIELD_LABELS[envVar], `${envVar} has no field label`);

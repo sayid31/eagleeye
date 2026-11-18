@@ -24,7 +24,7 @@ test('UsersTable: named table, scoped headers, row menu per account, "Anda" on y
   const { UsersTable } = await load('UsersTable');
   const html = render(h(UsersTable, props()));
   assert.match(html, /<caption[^>]*sr-only[^>]*>User list<\/caption>/);
-  for (const header of ['Users', 'Role', 'Status', 'Permissions', 'Created']) assert.match(html, new RegExp(`scope="col"[^>]*>${header}<`), header);
+  for (const header of ['User', 'Role', 'Status', 'Permissions', 'Created']) assert.match(html, new RegExp(`scope="col"[^>]*>${header}<`), header);
   assert.match(html, /<span class="sr-only">Actions<\/span>/, 'actions header is sr-only');
   assert.match(html, /aria-label="Actions for sari@contoh\.test"/);
   assert.match(html, /aria-label="Actions for dev@example\.test"/, 'own row: edit name + sign-out + nothing else, still a menu');
