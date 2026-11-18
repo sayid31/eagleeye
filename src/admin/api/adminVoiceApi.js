@@ -16,6 +16,8 @@ async function readJson(response, action) {
   const reason = [payload.error, details].filter(Boolean).join(': ') || `HTTP ${response.status}`;
   const error = new Error(`${action} failed — ${reason}`);
   error.status = response.status;
+  // Validation replies carry Indonesian sentences from the server; failureMessage() may show them on 4xx.
+  error.detail = [payload.error, details].filter(Boolean).join(': ');
   throw error;
 }
 

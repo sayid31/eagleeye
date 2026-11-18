@@ -1,7 +1,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { defaultVoiceSettings, validateVoiceSettings } from '../../voice/voiceSettingsCore.mjs';
-import { TOOL_GROUP_TEXT, describeEnforced, describeToolGroup, generalFormFromSettings, parseLimit, settingsFromGeneralForm } from './generalForm.js';
+import { MAX_LIVE_SESSION_MINUTES } from '../../voice/liveSessionLimits.js';
+import { TOOL_GROUP_TEXT, describeToolGroup, enforcedChips, generalFormFromSettings, hardCapNote, limitErrors, parseLimit, sessionCapWarning, settingsFromGeneralForm, withDefaultLimits } from './generalForm.js';
 import { VOICE_TOOL_GROUP_IDS } from '../../voice/voiceToolGroups.js';
 
 const RANGES = { dailyMinutes: { min: 1, max: 1440 }, sessionMinutes: { min: 1, max: 120 }, idleSeconds: { min: 10, max: 3600 } };
@@ -29,13 +30,32 @@ test('parseLimit: empty/0 = off, decimals, words and out-of-range rejected', () 
   for (const bad of ['9', '3601', '1.5', 'ten', '-5']) assert.equal(parseLimit(bad, RANGES.idleSeconds).ok, false, bad);
 });
 
-test('bad limits block the save with one message each', () => {
+test('bad limits block the save with one message per field, keyed by the field', () => {
   const base = defaultVoiceSettings();
   const form = generalFormFromSettings(base);
   const r = settingsFromGeneralForm(base, { ...form, limits: { ...form.limits, sessionMinutes: '500', idleSeconds: '5' } }, RANGES);
   assert.equal(r.ok, false);
-  assert.equal(r.errors.length, 2);
-  assert.match(r.errors[0], /Durasi sesi maksimal: bilangan bulat 1–120 menit/);
+  assert.deepEqual(Object.keys(r.errors), ['sessionMinutes', 'idleSeconds']);
+  assert.match(r.errors.sessionMinutes, /Durasi sesi maksimal: isi bilangan bulat 1–120 menit/);
+  assert.deepEqual(limitErrors(form.limits, RANGES), {}, 'untouched defaults are valid');
+});
+
+test('a session length above the hard cap is accepted but warned about, next to the cap note', () => {
+  assert.equal(sessionCapWarning('30'), null);
+  assert.equal(sessionCapWarning(''), null);
+  assert.match(sessionCapWarning('45'), /45 menit melebihi batas keras.*30 menit/);
+  assert.match(hardCapNote(), new RegExp(`${MAX_LIVE_SESSION_MINUTES} menit`));
+  const base = defaultVoiceSettings();
+  const r = settingsFromGeneralForm(base, { ...generalFormFromSettings(base), limits: { ...generalFormFromSettings(base).limits, sessionMinutes: '45' } }, RANGES);
+  assert.equal(r.ok, true, 'the server still accepts up to 120');
+  assert.equal(r.settings.limits.sessionMinutes, 45);
+});
+
+test('withDefaultLimits resets only the limits', () => {
+  const form = { ...generalFormFromSettings(defaultVoiceSettings()), name: 'Ela', limits: { dailyMinutes: '5', sessionMinutes: '6', idleSeconds: '70' } };
+  const reset = withDefaultLimits(form);
+  assert.equal(reset.name, 'Ela');
+  assert.deepEqual(reset.limits, generalFormFromSettings(defaultVoiceSettings()).limits);
 });
 
 test('the save keeps fields this page does not own (cost limits, topics) and maps tool switches', () => {
@@ -51,10 +71,15 @@ test('the save keeps fields this page does not own (cost limits, topics) and map
   assert.equal(validateVoiceSettings(r.settings).ok, true);
 });
 
-test('describeEnforced summarizes the saved state', () => {
-  assert.equal(describeEnforced(defaultVoiceSettings()), 'Suara AKTIF · aturan inti AKTIF · daftar topik MATI · semua grup tools aktif');
+test('enforcedChips summarize the saved state as on/off capabilities', () => {
+  const groups = Object.keys(defaultVoiceSettings().toolGroups).map((id) => ({ id }));
+  assert.deepEqual(enforcedChips(defaultVoiceSettings(), groups).map((c) => [c.name, c.enabled]), [
+    ['Suara', true], ['Aturan inti', true], ['Batasan topik', false], [`Grup tools (${groups.length} dari ${groups.length})`, true]]);
   const s = { ...defaultVoiceSettings(), enabled: false, topics: { enabled: true, allowed: ['a', 'b'], refusal: '' }, toolGroups: { ...defaultVoiceSettings().toolGroups, media: false, annotate: false } };
-  assert.equal(describeEnforced(s), 'Suara MATI · aturan inti AKTIF · daftar topik AKTIF (2) · 2 grup tools mati');
+  const chips = enforcedChips(s, groups);
+  assert.deepEqual(chips.map((c) => c.enabled), [false, true, true, true]);
+  assert.equal(chips[2].name, 'Batasan topik (2)');
+  assert.equal(chips[3].name, `Grup tools (${groups.length - 2} dari ${groups.length})`);
 });
 
 test('saving General keeps the Persona extra rules and the provider choice', () => {
