@@ -14,14 +14,14 @@ export function AppHeader({ crumbs, badge }) {
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
       <SidebarTrigger className="-ml-1" />
-      <Separator orientation="vertical" className="mr-2 h-4" />
+      <Separator orientation="vertical" className="mr-2 data-vertical:h-4 data-vertical:self-center" />
       <Breadcrumb className="min-w-0 flex-1">
         <BreadcrumbList className="flex-nowrap">
           {crumbs.map((crumb, index) => {
             const last = index === crumbs.length - 1;
             return (
               <Fragment key={`${crumb.label}-${index}`}>
-                {index > 0 ? <BreadcrumbSeparator className={last ? undefined : 'hidden sm:block'} /> : null}
+                {index > 0 ? <BreadcrumbSeparator className="hidden sm:block" /> : null}
                 <BreadcrumbItem className={last ? 'min-w-0' : 'hidden sm:inline-flex'}>
                   {last ? <BreadcrumbPage className="truncate">{crumb.label}</BreadcrumbPage>
                     : crumb.href ? <BreadcrumbLink asChild><Link to={crumb.href}>{crumb.label}</Link></BreadcrumbLink>
