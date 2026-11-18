@@ -271,7 +271,7 @@ export const SHARE_TRACKING_RESTORE_POLICIES = Object.freeze({
     optionOwner: 'flights',
     optionKey: 'selectedMilitaryTrackingId',
     expiryWindowMs: 45_000,
-    label: 'military flights',
+    label: 'military flight',
   }),
   satellites: Object.freeze({
     optionOwner: 'satellites',
