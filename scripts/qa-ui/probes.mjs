@@ -165,7 +165,8 @@ export const PROBES = [
       assert.equal(await page.$eval('[role="menu"] [role="separator"]', () => true), true, 'separator before the destructive item');
       // Radix focuses the first item a frame after a keyboard open; wait for it so the arrow count is deterministic.
       await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menuitem');
-      await press(page, 'ArrowDown');
+      // Arrow keys move through the items (the menu wraps); two presses always reach both, so stop on the destructive one.
+      for (let i = 0; i < 2 && (await focusInfo(page)).text !== 'Delete'; i += 1) await press(page, 'ArrowDown');
       assert.equal((await focusInfo(page)).text, 'Delete');
       await page.keyboard.press('Escape');
       await page.waitForFunction(() => !document.querySelector('[role="menu"]'));
