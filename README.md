@@ -160,7 +160,7 @@ The tables are created and upgraded at server start (or with
 ### Then power it up — from the owner dashboard
 
 Keys are upgrades, not prerequisites. When you want one, open **`/dev`** →
-**API Keys** (the OpenAI key is under **Konfigurasi AI → Penyedia AI**): every
+**Penyedia & API Keys** (the OpenAI key is on its **Penyedia AI** tab): every
 supported key, what it switches on, where to get it, and a **Test connection**
 button. Paste, save, and the app restarts itself with the new capability on.
 API keys are managed by a super_admin only; you can also add keys to `.env`
@@ -170,7 +170,7 @@ directly.
   terminal clone → the repo-root `.env`. Either file is made owner-only
   *before* a secret is written into it, and it never leaves your machine.
 - **Keys you already have stay yours:** values from your shell or the macOS
-  Keychain show as *set outside this app* and are read-only in `/admin`.
+  Keychain show as *set outside this app* and are read-only in `/dev`.
 - **What to get first:** the free [Cesium ion](https://cesium.com/ion) token
   (eligible personal, non-commercial use; current terms and quotas apply) for
   photorealistic 3D and world terrain; a Google Maps key only for the direct,
@@ -181,12 +181,12 @@ directly.
 > [!WARNING]
 > Do not enter credentials in Pinokio 8.0.40's native **Configure** panel: that
 > release does not save this nested app file correctly, and it logs submitted
-> values. Use `/dev` → API Keys instead. Both file stores are
+> values. Use `/dev` → Penyedia & API Keys instead. Both file stores are
 > local plaintext; on macOS the Keychain via `./scripts/dev-fresh.sh` remains
 > the stronger option.
 
 The server binds to **localhost** on both paths, every page and `/api/*` route
-needs a signed-in account, and the key routes (`/dev` → API Keys) answer only a
+needs a signed-in account, and the key routes (`/dev` → Penyedia & API Keys) answer only a
 super_admin. Browser-side keys (Google Maps, Cesium ion)
 must be restricted at their providers — [SECURITY.md](SECURITY.md) shows how,
 and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
@@ -390,7 +390,7 @@ See [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md) for the authoritative runti
 Most of the globe is 🟢: flights (anonymous), military traffic, satellites, earthquakes, CCTV, radio, bikeshare, space missions, mapped installations, and every bundled dataset run with **zero keys**.
 
 **Once `/dev` is set up you never have to edit a file to add one.** Open
-`/dev` → API Keys, paste the key, save — the app writes it to its own local
+`/dev` → Penyedia & API Keys, paste the key, save — the app writes it to its own local
 store with owner-only permissions and restarts itself. Everything below is the map of what each key
 actually buys you.
 

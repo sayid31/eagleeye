@@ -7,6 +7,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Added
 
+- **Password sementara tampil sekali** dan harus dikonfirmasi sudah disalin sebelum dialog bisa ditutup; tombol "Salin pesan"
+  menyiapkan pesan siap kirim.
+- **Log Login dan Audit bisa difilter** menurut rentang waktu (24 jam, 7 hari, 30 hari), hasil, dan akun; menu baris pengguna
+  langsung menuju catatan akun itu.
+- **Peringatan perubahan belum disimpan** di pengaturan Umum, Persona, dan Penyedia AI; **konfirmasi** sebelum "Keluar dari
+  perangkat lain"; syarat password tampil langsung saat mengetik.
 - **Beranda publik di `/`.** Halaman perkenalan EagleEye View dalam Bahasa Indonesia: data yang bisa dilihat,
   kendali suara, gaya visual dan scene, sumber data beserta lisensinya, serta batasan produk (bukan pelacakan
   orang, pencarian nama, atau pengenalan wajah). Tombolnya mengikuti sesi: **Masuk** bila belum login, atau
@@ -82,6 +88,14 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Tampilan baru untuk login, akun, `/admin`, `/dev`, dan beranda.** Mengikuti standar shadcn/ui dengan tema terang dan gelap
+  (ikut pengaturan perangkat, bisa diganti kapan saja), nyaman di ponsel, dan bisa dioperasikan penuh dengan keyboard. Peta tidak
+  berubah.
+- **Menu `/dev` dirapikan.** Pemakaian dan Biaya digabung; API Keys dan Penyedia AI satu halaman (Penyedia & API Keys); Log server
+  satu halaman bertab (Log, Jejak audit, Kesehatan); Aktivitas (Log Login dan Audit) satu tempat. Alamat lama otomatis diarahkan.
+  "Kill switch" kini **Sakelar darurat** dan "Server Log" kini **Log server**.
+- **Teks antarmuka seragam.** Semua teks Bahasa Indonesia dengan istilah yang konsisten (aktif/nonaktif untuk akun dan pengaturan,
+  menyala/dimatikan untuk Sakelar darurat); kode galat dan status HTTP tidak lagi tampil mentah.
 - **Tampilan baru untuk `/admin` dan `/dev`, terang dan gelap.** Menu samping yang bisa dilipat (di HP jadi
   panel geser berisi semua menu), breadcrumb, tautan "Lewati ke konten", dan menu akun berisi tema
   (Terang / Gelap / Sistem), "Buka peta", pindah area, dan "Keluar". Pilihan tema tersimpan dan dipakai
@@ -130,6 +144,10 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Fixed
 
+- Tabel Pengguna kini terpakai di ponsel (tampil sebagai kartu), menu baris bisa dibuka dengan keyboard, dan fokus kembali ke
+  tempat semula setelah dialog ditutup.
+- Banner akun di peta tidak lagi menutup kotak pencarian di ponsel.
+- Tab tidak lagi muncul di atas judul halaman.
 - Masuk lewat Google dengan email yang tidak terdaftar tidak lagi membuat server login macet untuk semua
   orang (permintaan sebelumnya menggantung dan mengunci database login).
 - **Keamanan:** server aplikasi tidak lagi menyajikan file data internal ke siapa pun yang membuka URL-nya
