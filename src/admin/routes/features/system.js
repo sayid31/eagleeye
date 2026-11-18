@@ -1,8 +1,8 @@
 // src/admin/routes/features/system.js
 /**
  * Feature "Sistem" (/dev only): system overview, Sakelar darurat, Pemakaian & Biaya, Log server (+ audit trail, health).
- * Owner of: src/admin/dev/**, src/admin/pages/{log,audit,health,usage}*. Edit ONLY this file to add or move a page of
- * this feature (see access.js for the shape).
+ * Owner of: src/admin/dev/** (overview, killswitch, usage, logs). Edit ONLY this file to add or move a page of this
+ * feature (see access.js for the shape). The "Pemakaian AI" tab (`ai-usage`) still points at the AI configuration page.
  *
  * @module admin/routes/features/system
  */
@@ -10,19 +10,18 @@ import { NAV_COPY } from '../../../copy/id/nav.js';
 import { page } from '../pageRef.js';
 
 const { items, tabs, groups } = NAV_COPY;
-const devPage = (id) => page(() => import('../../dev/devPages.js'), (module) => module.DEV_PAGES[id]);
 
 /** @type {import('../index.js').RouteFeature} */
 export const systemRoutes = {
   id: 'system',
   pages: {
-    'dev-overview': devPage('dev-overview'),
-    'dev-kill-switches': devPage('dev-kill-switches'),
-    'dev-usage': devPage('dev-usage'),
+    'dev-overview': page(() => import('../../dev/overview/SystemOverviewPage.jsx'), 'SystemOverviewPage'),
+    'dev-kill-switches': page(() => import('../../dev/killswitch/KillSwitchPage.jsx'), 'KillSwitchPage'),
+    'dev-usage': page(() => import('../../dev/usage/UsageBudgetPage.jsx'), 'UsageBudgetPage'),
     'ai-usage': page(() => import('../../pages/UsagePage.jsx'), 'UsagePage'),
-    'server-log': page(() => import('../../pages/ServerLogPage.jsx'), 'ServerLogPage'),
-    'server-log-audit': page(() => import('../../pages/AuditLogPage.jsx'), 'AuditLogPage'),
-    'server-log-health': page(() => import('../../pages/SystemHealthPage.jsx'), 'SystemHealthPage'),
+    'server-log': page(() => import('../../dev/logs/ServerLogPage.jsx'), 'ServerLogPage'),
+    'server-log-audit': page(() => import('../../dev/logs/AuditLogPage.jsx'), 'AuditLogPage'),
+    'server-log-health': page(() => import('../../dev/logs/HealthPage.jsx'), 'HealthPage'),
     'ui-kit': page(() => import('../../dev/UiKitPage.jsx'), 'UiKitPage'),
   },
   nav: {

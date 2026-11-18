@@ -6,3 +6,5 @@ export * from './glossary.js';
 export * from './nav.js';
 export * from './shell.js';
 export * from './ui.js';
+export * from './system.js';
+export * from './systemLogs.js';
