@@ -163,7 +163,8 @@ export const PROBES = [
       const labels = await page.$$eval('[role="menu"] [role="menuitem"]', (nodes) => nodes.map((n) => n.textContent.trim()));
       assert.deepEqual(labels, ['Edit', 'Delete'], 'destructive action last');
       assert.equal(await page.$eval('[role="menu"] [role="separator"]', () => true), true, 'separator before the destructive item');
-      await press(page, 'ArrowDown');
+      // Radix focuses the first item a frame after a keyboard open; wait for it so the arrow count is deterministic.
+      await page.waitForFunction(() => document.activeElement?.getAttribute('role') === 'menuitem');
       await press(page, 'ArrowDown');
       assert.equal((await focusInfo(page)).text, 'Delete');
       await page.keyboard.press('Escape');

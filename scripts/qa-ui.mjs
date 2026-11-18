@@ -66,7 +66,7 @@ async function runProbes(browser, env) {
       await probe.run(page, env);
       results.push({ id: probe.id, ok: true });
     } catch (error) {
-      results.push({ id: probe.id, ok: false, error: error.message.split('\n')[0] });
+      results.push({ id: probe.id, ok: false, error: error.message.split('\n').slice(0, 6).join(' ⏎ ') });
     } finally {
       await context.close();
     }
