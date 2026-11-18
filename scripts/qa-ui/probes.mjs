@@ -108,7 +108,7 @@ export const PROBES = [
   {
     id: 'original-urls-and-titles', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev',
     async run(page, env) {
-      const labels = await page.$$eval('nav[aria-label^="Navigasi"] a', (nodes) => nodes.map((n) => n.textContent.trim()));
+      const labels = await page.$$eval('nav[aria-label$="navigation"] a', (nodes) => nodes.map((n) => n.textContent.trim()));
       assert.deepEqual(labels, DEV_ITEMS.map(([label]) => label), 'sidebar items equal the original menu, in order');
       for (const [label, path, title] of DEV_ITEMS) {
         await page.goto(`${env.url}/dev${path === '/' ? '' : path}`, { waitUntil: 'domcontentloaded' });
@@ -196,7 +196,7 @@ export const PROBES = [
     id: 'table-states', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ui-kit',
     async run(page) {
       for (const [mode, selector] of [['loading', '[aria-busy="true"]'], ['error', '[role="alert"] [data-slot="empty-description"]'], ['empty', '[data-slot="empty-title"]'], ['ready', 'table']]) {
-        await (await byText(page, '[aria-label="Keadaan tabel"] button', mode)).click();
+        await (await byText(page, '[aria-label="Table states"] button', mode)).click();
         await page.waitForSelector(`section[aria-label="Example user list"] ${selector}`);
       }
       assert.equal(await page.$eval('section[aria-label="Example user list"] nav[aria-label="Data pages"]', (el) => el.textContent.includes('of 45')), true);

@@ -216,8 +216,8 @@ export function createMissionPanel() {
   S._missionPanel.querySelector('.mission-action-row').insertAdjacentHTML(
     'beforeend',
     `<div class="mission-replay-transport" data-mission-replay-transport hidden>
-      <button type="button" data-mission-replay-toggle title="Jeda ulangan" aria-label="Jeda ulangan">Ⅱ</button>
-      <button type="button" class="cancel" data-mission-replay-cancel title="Batalkan ulangan" aria-label="Batalkan ulangan"><span aria-hidden="true">×</span></button>
+      <button type="button" data-mission-replay-toggle title="Pause replay" aria-label="Pause replay">Ⅱ</button>
+      <button type="button" class="cancel" data-mission-replay-cancel title="Cancel replay" aria-label="Cancel replay"><span aria-hidden="true">×</span></button>
     </div>`,
   );
   host.appendChild(S._missionPanel);

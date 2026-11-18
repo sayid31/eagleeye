@@ -38,7 +38,7 @@ export function railMarkup() {
         <span class="material-symbols-outlined" aria-hidden="true">${item.icon}</span>
       </button>`;
   return `
-  <nav id="shell-rail" aria-label="Navigasi utama">
+  <nav id="shell-rail" aria-label="Main navigation">
     <div class="shell-rail-group">${RAIL_ITEMS.map(button).join('')}</div>
     <div class="shell-rail-group" id="${RAIL_STYLE_SLOT_ID}"></div>
   </nav>`;
