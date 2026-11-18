@@ -1,5 +1,5 @@
 // src/admin/dev/overview/OverviewCards.jsx
-/** The five status cards of Ringkasan sistem: version, uptime, login, Sakelar darurat, errors in the log. */
+/** The five status cards of Ringkasan sistem: version, uptime, login, Kill switch, errors in the log. */
 import { OVERVIEW_COPY as T } from '@/copy/id/system';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { StatCard } from './StatCard.jsx';
@@ -36,7 +36,7 @@ export function OverviewCards({ summary }) {
         status={cards.errors.status}
         value={cards.errors.value}
         detail={cards.errors.detail}
-        link={{ to: '/logs/server', label: T.errors.open }}
+        link={{ to: '/server-log', label: T.errors.open }}
       />
     </div>
   );

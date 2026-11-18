@@ -1,8 +1,8 @@
 // src/copy/id/users.js
 /**
  * Indonesian copy of the user-management surfaces of /admin and /dev: Pengguna (list, create, edit, risky actions),
- * Aktivitas (Log Login, Audit) and the /admin Ringkasan. Pure data; builders (functions) take the subject of the
- * sentence so a dialog can name the account. Terminology follows glossary.js ("Log server", "Jejak audit").
+ * Log Login and Audit and the /admin Ringkasan. Pure data; builders (functions) take the subject of the
+ * sentence so a dialog can name the account. Terminology follows glossary.js ("Server Log", "Audit Log").
  *
  * @module copy/id/users
  */
@@ -180,7 +180,7 @@ export const USERS_COPY = Object.freeze({
     deleted: 'Akun dihapus',
     roleChanged: 'Role diubah',
     passwordReset: 'Password direset',
-    auditFailed: 'Aksi berhasil, tetapi catatan audit gagal ditulis. Lihat Log server.',
+    auditFailed: 'Aksi berhasil, tetapi catatan audit gagal ditulis. Lihat Server Log.',
   }),
   time: Object.freeze({
     now: 'baru saja',
@@ -189,8 +189,8 @@ export const USERS_COPY = Object.freeze({
 });
 
 export const ACTIVITY_COPY = Object.freeze({
-  title: 'Aktivitas',
   loginLog: Object.freeze({
+    title: 'Log Login',
     description: Object.freeze({
       admin: 'Setiap percobaan masuk akun pengguna, berhasil maupun gagal.',
       dev: 'Setiap percobaan masuk semua akun, termasuk email yang tidak terdaftar.',
@@ -213,11 +213,12 @@ export const ACTIVITY_COPY = Object.freeze({
     success: 'Berhasil',
   }),
   audit: Object.freeze({
+    title: 'Audit',
     description: Object.freeze({
       admin: 'Aksi manajemen akun pengguna: siapa mengubah apa dan kapan.',
-      dev: 'Semua aksi akun dan sistem yang tercatat. Jejak API key dan AI ada di Log server.',
+      dev: 'Semua aksi akun dan sistem yang tercatat. Jejak API key dan AI lama ada di Server Log → Audit Log.',
     }),
-    caption: 'Audit akun',
+    caption: 'Audit',
     columns: Object.freeze({ time: 'Waktu', actor: 'Pelaku', action: 'Aksi', target: 'Akun', detail: 'Detail' }),
     emptyTitle: 'Belum ada catatan audit',
     emptyDescription: 'Aksi pada akun akan tercatat di sini.',
@@ -241,7 +242,7 @@ export const ACTIVITY_COPY = Object.freeze({
       'role.set': 'Role diubah',
       'role.reconcile': 'Role disesuaikan dengan konfigurasi',
       'role.reconcile.blocked': 'Promosi super admin ditolak',
-      'killswitch.update': 'Sakelar darurat diubah',
+      'killswitch.update': 'Kill switch diubah',
       'keys.update': 'API key diubah',
       'bootstrap.super_admin': 'Super admin disiapkan (CLI)',
       'auth.unlock': 'Throttle dibuka (CLI)',
@@ -266,7 +267,7 @@ export const ACTIVITY_COPY = Object.freeze({
 
 export const OVERVIEW_COPY = Object.freeze({
   title: 'Ringkasan',
-  description: 'Keadaan akun pengguna dan aktivitas masuk 24 jam terakhir.',
+  description: 'Keadaan akun pengguna dan login 24 jam terakhir.',
   cardsLabel: 'Ringkasan akun',
   cards: Object.freeze({
     active: Object.freeze({ title: 'Pengguna aktif', hint: 'Bisa masuk sekarang' }),

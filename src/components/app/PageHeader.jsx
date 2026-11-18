@@ -1,15 +1,14 @@
 // src/components/app/PageHeader.jsx
 /**
- * The page's single <h1>, a one-line description, a slot for the primary actions and an optional tab strip below the
- * title (pages of a `RouteTabs` route pass `tabs={<RouteTabNav />}`); also sets the document title.
+ * The page's single <h1>, a one-line description and a slot for the primary actions; also sets the document title.
  */
 import { useEffect } from 'react';
 import { usePageTitleSetter } from './PageTitleContext.jsx';
 
 /**
- * @param {{title: string, description?: string, actions?: import('react').ReactNode, tabs?: import('react').ReactNode}} props
+ * @param {{title: string, description?: string, actions?: import('react').ReactNode}} props
  */
-export function PageHeader({ title, description, actions, tabs }) {
+export function PageHeader({ title, description, actions }) {
   const setTitle = usePageTitleSetter();
   useEffect(() => {
     setTitle(title);
@@ -24,7 +23,6 @@ export function PageHeader({ title, description, actions, tabs }) {
         </div>
         {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
       </div>
-      {tabs ? <div className="mt-4">{tabs}</div> : null}
     </header>
   );
 }

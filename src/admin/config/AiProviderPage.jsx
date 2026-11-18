@@ -1,7 +1,7 @@
 // src/admin/config/AiProviderPage.jsx
 /**
- * /dev → Penyedia & API Keys → Penyedia AI: the GPT-Live voice and the delegation backend model, plus the state of the
- * OpenAI key (managed on the API Keys tab). The provider stays OpenAI. Empty choice = the .env value or built-in default.
+ * /dev → Konfigurasi AI → Penyedia AI: the GPT-Live voice and the delegation backend model, plus the state of the
+ * OpenAI key (managed on the API Keys page). The provider stays OpenAI. Empty choice = the .env value or built-in default.
  */
 import { Link } from 'react-router';
 import { KeyRound } from 'lucide-react';
@@ -9,7 +9,6 @@ import { ErrorState } from '@/components/app/ErrorState.jsx';
 import { FormField } from '@/components/app/FormField.jsx';
 import { LoadingState } from '@/components/app/LoadingState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AI_PROVIDER_COPY as T, PROVIDERS_COPY } from '@/copy/id/config';
@@ -54,7 +53,7 @@ function OpenAiKeyCard({ keys }) {
           <KeyStatusBadge status={row.status} />
           <span className="text-sm text-muted-foreground">{PROVIDERS_COPY.columns.source}: {row.source.label}</span>
         </div>
-        <Button asChild variant="outline" size="sm"><Link to="/providers/keys"><KeyRound aria-hidden="true" data-icon="inline-start" />{T.keyCard.manage}</Link></Button>
+        <Button asChild variant="outline" size="sm"><Link to="/api-keys"><KeyRound aria-hidden="true" data-icon="inline-start" />{T.keyCard.manage}</Link></Button>
       </div>
       {row.key.set ? null : <p className="text-sm text-muted-foreground">{T.keyCard.missing}</p>}
     </SettingsCard>
@@ -81,7 +80,7 @@ function ModelForm({ payload, reload }) {
   );
 }
 
-/** Penyedia AI tab. */
+/** Penyedia AI page. */
 export function AiProviderPage() {
   const { data, error, reload } = useVoiceSettingsResource();
   const keys = useProviderKeys();
@@ -91,7 +90,7 @@ export function AiProviderPage() {
   else body = <ModelForm payload={data} reload={reload} />;
   return (
     <div className="flex max-w-3xl flex-col gap-4">
-      <PageHeader title={PROVIDERS_COPY.title} description={PROVIDERS_COPY.aiDescription} tabs={<RouteTabNav />} />
+      <PageHeader title={PROVIDERS_COPY.aiTitle} description={PROVIDERS_COPY.aiDescription} />
       <OpenAiKeyCard keys={keys} />
       {body}
     </div>

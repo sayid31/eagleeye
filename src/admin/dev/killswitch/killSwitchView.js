@@ -1,6 +1,6 @@
 // src/admin/dev/killswitch/killSwitchView.js
 /**
- * View-model of the Sakelar darurat page: per-gate rows (state, who/when/why), the confirm-dialog configuration for a
+ * View-model of the Kill switch page: per-gate rows (state, who/when/why), the confirm-dialog configuration for a
  * requested change and the PUT body. Pure; the server validates the same rules (killSwitchCore.mjs).
  *
  * @module admin/dev/killswitch/killSwitchView

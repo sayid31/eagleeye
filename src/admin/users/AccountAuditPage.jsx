@@ -1,10 +1,9 @@
 /**
- * Audit (/admin/activity/audit, /dev/activity/audit): the `audit_log` table, newest first, filterable by time range,
+ * Audit (/admin/audit, /dev/audit): the `audit_log` table, newest first, filterable by time range,
  * action and account, paged. An admin sees `user.*` actions on user accounts with other actors shown only by role; a
  * super_admin sees every action.
  */
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { Badge } from '@/components/ui/badge';
@@ -53,7 +52,7 @@ export function AccountAuditPage({ session, area = 'admin' }) {
   ];
   return (
     <>
-      <PageHeader title={ACTIVITY_COPY.title} description={COPY.description[area]} tabs={<RouteTabNav />} />
+      <PageHeader title={ACTIVITY_COPY.audit.title} description={COPY.description[area]} />
       <DataTable
         caption={COPY.caption}
         columns={columns}

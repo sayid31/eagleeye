@@ -1,12 +1,13 @@
 // src/components/app/navModel.js
 /**
- * Pure model of a sidebar menu used by AppShell: groups of items, an item optionally having tabs (sub-routes shown as
- * tabs on the page, not in the sidebar). A `hidden` item is routable and titled but not listed in the sidebar. All paths are relative to the router basename, like `/users`.
+ * Pure model of a sidebar menu used by AppShell: groups of items. A group with a `title` is a labelled sub-list (its
+ * title is a heading, not a link); a group without one lists plain top-level items. A `hidden` item is routable and
+ * titled but not listed in the sidebar. All paths are relative to the router basename, like `/users`.
  *
  * @module components/app/navModel
- * @typedef {{id: string, label: string, path: string, page?: string}} NavTab
- * @typedef {{id: string, label: string, path: string, icon?: string, page?: string, tabs?: NavTab[], hidden?: boolean}} NavItem
- * @typedef {{id: string, title: string | null, items: NavItem[]}} NavGroup
+ * @typedef {{id: string, label: string, path: string, icon?: string, page?: string, hidden?: boolean}} NavItem
+ * @typedef {{id: string, title: string | null, path?: string, items: NavItem[]}} NavGroup
+ *   `path` (titled groups only) is the bare group address, e.g. `/ai`.
  * @typedef {{label: string, href?: string}} Crumb
  */
 
@@ -26,30 +27,25 @@ export function navItems(groups) {
 }
 
 /**
- * The item (and tab) that `pathname` belongs to, with its group; null for an unknown path.
- * The longest matching path wins, so `/usage/ai` resolves to the tab, not just the item.
+ * The item that `pathname` belongs to, with its group; null for an unknown path. The longest matching path wins,
+ * so `/server-log/audit` resolves to Audit Log, not to Server Log (`/server-log`).
  * @param {NavGroup[]} groups
  * @param {string} pathname
- * @returns {{group: NavGroup, item: NavItem, tab: NavTab | null} | null}
+ * @returns {{group: NavGroup, item: NavItem} | null}
  */
 export function resolveNav(groups, pathname) {
   let best = null;
   for (const group of groups) {
     for (const item of group.items) {
-      const candidates = [{ tab: null, path: item.path }, ...(item.tabs ?? []).map((tab) => ({ tab, path: tab.path }))];
-      for (const candidate of candidates) {
-        if (pathMatches(pathname, candidate.path) && (!best || candidate.path.length > best.length)) {
-          best = { group, item, tab: candidate.tab, length: candidate.path.length };
-        }
-      }
+      if (pathMatches(pathname, item.path) && (!best || item.path.length > best.item.path.length)) best = { group, item };
     }
   }
-  return best ? { group: best.group, item: best.item, tab: best.tab } : null;
+  return best;
 }
 
 /**
- * Breadcrumb trail: group title (text, only when the group has one), page, tab. The last crumb is the current page and
- * has no href; earlier crumbs link only when they are pages themselves.
+ * Breadcrumb trail: group title (text, only when the group has one and the page is not named like it), then the
+ * page, e.g. `Konfigurasi AI / Umum`; `Server Log` alone for the Server Log page. No crumb is a link.
  * @param {NavGroup[]} groups
  * @param {string} pathname
  * @returns {Crumb[]}
@@ -58,22 +54,19 @@ export function breadcrumbTrail(groups, pathname) {
   const found = resolveNav(groups, pathname);
   if (!found) return [];
   const trail = [];
-  if (found.group.title) trail.push({ label: found.group.title });
-  trail.push(found.tab ? { label: found.item.label, href: found.item.path } : { label: found.item.label });
-  if (found.tab) trail.push({ label: found.tab.label });
+  if (found.group.title && found.group.title !== found.item.label) trail.push({ label: found.group.title });
+  trail.push({ label: found.item.label });
   return trail;
 }
 
 /**
- * Default document title segment for a path (the tab label when there is one, else the page label).
+ * Default document title segment for a path (the page label).
  * @param {NavGroup[]} groups
  * @param {string} pathname
  * @returns {string | null}
  */
 export function navTitleFor(groups, pathname) {
-  const found = resolveNav(groups, pathname);
-  if (!found) return null;
-  return found.tab ? `${found.item.label}: ${found.tab.label}` : found.item.label;
+  return resolveNav(groups, pathname)?.item.label ?? null;
 }
 
 /**

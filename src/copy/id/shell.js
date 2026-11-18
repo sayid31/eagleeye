@@ -1,5 +1,5 @@
 // src/copy/id/shell.js
-/** Indonesian strings of the application shell (/admin and /dev): sidebar, header, account menu, skip link. */
+/** Indonesian strings of the application shell (/admin and /dev): sidebar, header, account foot, skip link. */
 
 export const SHELL_COPY = Object.freeze({
   skipToContent: 'Lewati ke konten',
@@ -7,13 +7,12 @@ export const SHELL_COPY = Object.freeze({
   breadcrumb: 'Breadcrumb',
   toggleSidebar: 'Buka atau tutup menu samping',
   developerBadge: 'Developer',
-  accountMenu: 'Menu akun',
   signedInAs: 'Masuk sebagai',
-  openMap: 'Buka peta',
+  openMap: 'Kembali ke peta',
   signOut: 'Keluar',
   signingOut: 'Keluar…',
   openAdmin: 'Buka area Admin',
-  openDev: 'Buka area Developer',
+  openDev: 'Buka area Dev',
   checkingSession: 'Memeriksa sesi…',
   sessionFailedTitle: 'Sesi tidak bisa diperiksa',
   notFoundTitle: 'Halaman tidak ditemukan',

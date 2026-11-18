@@ -17,7 +17,7 @@ function Body({ card }) {
         title={T.emptyNotConfigured.title}
         description={T.emptyNotConfigured.description}
         className="border-0 p-2"
-        action={<Button asChild variant="outline" size="sm"><Link to="/providers/keys">{T.emptyNotConfigured.action}</Link></Button>}
+        action={<Button asChild variant="outline" size="sm"><Link to="/api-keys">{T.emptyNotConfigured.action}</Link></Button>}
       />
     );
   }

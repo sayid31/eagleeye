@@ -4,7 +4,7 @@
  * validates everything again (`validateVoiceSettings`); these checks only give a faster message.
  *
  * The server replaces settings wholesale on PUT, so the save starts from the settings last loaded and overwrites only
- * the fields this page owns — cost limits (Pemakaian AI), persona rules and anything newer survive a save here.
+ * the fields this page owns — cost limits (Pemakaian & Biaya), persona rules and anything newer survive a save here.
  *
  * Pure — no DOM, no network.
  *

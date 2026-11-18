@@ -1,5 +1,5 @@
 /**
- * Indonesian strings of the /dev system pages: Ringkasan sistem, Sakelar darurat, Pemakaian & Biaya (Anggaran provider).
+ * Indonesian strings of the /dev system pages: Ringkasan sistem, Kill switch, Pemakaian (Pemakaian & budget).
  * The log pages live in systemLogs.js. Technical terms (API key, token, voice, layer, runtime) stay English; "Sakelar
  * darurat" is the glossary term for the global kill switch (glossary.js).
  *
@@ -50,17 +50,17 @@ export const OVERVIEW_COPY = Object.freeze({
     off: 'Belum aktif',
   }),
   gates: Object.freeze({
-    title: 'Sakelar darurat',
+    title: 'Kill switch',
     allOn: 'Semua fitur berbayar menyala',
     value: (on, total) => `${on} dari ${total} menyala`,
     someOff: (names) => `Dimatikan: ${names}`,
-    manage: 'Kelola sakelar',
+    manage: 'Kelola kill switch',
   }),
   errors: Object.freeze({
-    title: 'Error di log server',
+    title: 'Error di Server Log',
     detail: (hours) => `error dalam ${hours} jam terakhir`,
     none: (hours) => `Tidak ada error dalam ${hours} jam terakhir`,
-    open: 'Buka log server',
+    open: 'Buka Server Log',
   }),
   keys: Object.freeze({
     title: 'API key per provider',
@@ -112,7 +112,7 @@ export const DOCTOR_COPY = Object.freeze({
   }),
   'auth.reconcileBlocked': Object.freeze({
     title: 'Email super admin ditolak',
-    text: ({ count }) => `${count} email di konfigurasi ditolak menjadi super admin. Lihat jejak audit untuk rinciannya.`,
+    text: ({ count }) => `${count} email di konfigurasi ditolak menjadi super admin. Lihat Audit untuk rinciannya.`,
   }),
   'auth.exposure': Object.freeze({
     title: 'Server terjangkau dari luar',
@@ -129,11 +129,11 @@ export const GATE_COPY = Object.freeze({
 });
 
 export const KILL_SWITCH_COPY = Object.freeze({
-  title: 'Sakelar darurat',
+  title: 'Kill switch',
   description: 'Matikan satu fitur berbayar untuk semua akun saat biaya melonjak atau ada gangguan.',
   refresh: 'Muat ulang',
-  loadingLabel: 'Memuat status sakelar darurat',
-  errorTitle: 'Status sakelar tidak bisa dimuat',
+  loadingLabel: 'Memuat status kill switch',
+  errorTitle: 'Status kill switch tidak bisa dimuat',
   notice: Object.freeze({
     title: 'Berlaku untuk semua orang, termasuk Anda',
     body: 'Permintaan baru ke fitur yang dimatikan langsung ditolak dalam 2 detik. Sesi voice yang sedang berjalan tidak diputus.',
@@ -150,8 +150,8 @@ export const KILL_SWITCH_COPY = Object.freeze({
   dialog: Object.freeze({
     offTitle: (gate) => `Matikan ${gate} untuk semua akun?`,
     onTitle: (gate) => `Nyalakan kembali ${gate}?`,
-    offImpact: (stops) => `Berlaku untuk semua orang termasuk Anda. ${stops} Fitur ini berhenti sampai Anda menyalakannya lagi. Perubahan dicatat di jejak audit.`,
-    onImpact: (gate) => `${gate} bisa dipakai lagi oleh semua akun yang punya izinnya. Perubahan dicatat di jejak audit.`,
+    offImpact: (stops) => `Berlaku untuk semua orang termasuk Anda. ${stops} Fitur ini berhenti sampai Anda menyalakannya lagi. Perubahan dicatat di Audit.`,
+    onImpact: (gate) => `${gate} bisa dipakai lagi oleh semua akun yang punya izinnya. Perubahan dicatat di Audit.`,
     offAction: 'Matikan sekarang',
     onAction: 'Nyalakan kembali',
     reasonOff: 'Alasan (wajib, minimal 3 karakter)',
@@ -162,12 +162,12 @@ export const KILL_SWITCH_COPY = Object.freeze({
   toast: Object.freeze({
     off: (gate) => `${gate} dimatikan untuk semua akun.`,
     on: (gate) => `${gate} menyala kembali.`,
-    auditFailed: 'Perubahan tersimpan, tetapi catatan audit gagal ditulis. Periksa log server.',
+    auditFailed: 'Perubahan tersimpan, tetapi catatan audit gagal ditulis. Periksa Server Log.',
   }),
 });
 
 export const USAGE_COPY = Object.freeze({
-  title: 'Anggaran provider',
+  title: 'Pemakaian & budget',
   description: 'Pemakaian harian dari penghitung di server. Angka OpenSky dan TomTom dihitung sejak server mulai.',
   refresh: 'Muat ulang',
   loadingLabel: 'Memuat pemakaian provider',

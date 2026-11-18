@@ -1,6 +1,6 @@
 // src/copy/id/configForms.js
 /**
- * Indonesian copy of Umum, Persona and Pemakaian AI (the voice-settings forms). Re-exported by config.js.
+ * Indonesian copy of Umum, Persona and Pemakaian & Biaya (the voice-settings forms). Re-exported by config.js.
  * Pure data; the tool-group texts translate the server's English labels, which also go into the voice prompt.
  *
  * @module copy/id/configForms
@@ -77,7 +77,7 @@ export const PERSONA_COPY = Object.freeze({
   loadError: 'Persona tidak bisa dimuat',
   core: {
     title: 'Aturan inti',
-    description: 'Selalu berlaku dan terkunci. Dikirim di setiap sesi suara. Aturan berlabel Prompt hanya instruksi ke model dan bisa meleset; judge di Log server mencatat jawaban yang keluar topik.',
+    description: 'Selalu berlaku dan terkunci. Dikirim di setiap sesi suara. Aturan berlabel Prompt hanya instruksi ke model dan bisa meleset; judge di Server Log mencatat jawaban yang keluar topik.',
     summary: (rules, groups, backed) => `${rules} aturan dalam ${groups} grup. ${backed} juga dijaga kode aplikasi, sisanya hanya oleh prompt suara.`,
     group: (rules, backed) => (backed ? `${rules} aturan · ${backed} dijaga kode` : `${rules} aturan`),
     forbid: 'Dilarang',
@@ -126,7 +126,7 @@ export const USAGE_AI_COPY = Object.freeze({
   title: 'Pemakaian & Biaya',
   description: 'Perkiraan dari meter mic sendiri, bukan tagihan OpenAI.',
   loading: 'Memuat pemakaian AI',
-  loadError: 'Pemakaian AI tidak bisa dimuat',
+  loadError: 'Pemakaian & Biaya tidak bisa dimuat',
   today: {
     title: 'Hari ini',
     cost: 'Perkiraan biaya',
@@ -139,7 +139,7 @@ export const USAGE_AI_COPY = Object.freeze({
   },
   daily: {
     title: 'Pemakaian harian',
-    caption: 'Pemakaian AI per hari',
+    caption: 'Pemakaian harian',
     range: 'Rentang waktu',
     rangeOption: (days) => `${days} hari`,
     columns: { day: 'Hari', sessions: 'Sesi', audio: 'Audio', extras: 'Baca layar', judge: 'Panggilan judge', cost: 'Perkiraan biaya' },

@@ -1,15 +1,14 @@
 // src/admin/AdminApp.jsx
 /**
- * Route table of one dashboard area (`/admin` or `/dev`), built from the composed navigation (adminNav.js): one lazy
- * route per page, tab items as nested routes under a RouteTabs strip, and a redirect for every legacy path. It owns no
- * page; pages register in src/admin/routes/features/*.js.
+ * Route table of one dashboard area (`/admin` or `/dev`), built from the navigation (adminNav.js): one lazy route per
+ * menu item, plus the bare-group redirect (`/ai` → `/ai/general`). It owns no page; pages register in
+ * src/admin/routes/features/*.js.
  */
 import { lazy } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
-import { RouteTabs } from '@/components/app/RouteTabs.jsx';
 import { SHELL_COPY } from '@/copy/id/shell';
-import { PAGE_TABLE, areaHome, navForArea, redirectsFor } from './adminNav.js';
+import { PAGE_TABLE, areaHome, areaLeaves, groupRedirects } from './adminNav.js';
 import { AdminLayout } from './AdminLayout.jsx';
 import { loadPage } from './routes/pageRef.js';
 
@@ -21,7 +20,7 @@ function lazyPage(id) {
   return lazyPages.get(id);
 }
 
-/** Client-side redirect that keeps the query string and hash (e.g. `/login-log?userId=…` → `/activity/login?userId=…`). */
+/** Client-side redirect that keeps the query string and hash. */
 function RedirectTo({ to }) {
   const { search, hash } = useLocation();
   return <Navigate to={{ pathname: to, search, hash }} replace />;
@@ -39,19 +38,9 @@ function PageElement({ id, session, area }) {
 
 const relativePath = (path) => path.slice(1);
 
-function itemRoute(item, session, area) {
-  if (!item.tabs) {
-    const element = <PageElement id={item.page} session={session} area={area} />;
-    return item.path === '/' ? <Route key={item.id} index element={element} /> : <Route key={item.id} path={relativePath(item.path)} element={element} />;
-  }
-  return (
-    <Route key={item.id} path={relativePath(item.path)} element={<RouteTabs label={item.label} tabs={item.tabs} />}>
-      <Route index element={<RedirectTo to={item.tabs[0].path} />} />
-      {item.tabs.map((tab) => (
-        <Route key={tab.id} path={tab.path.slice(item.path.length + 1)} element={<PageElement id={tab.page} session={session} area={area} />} />
-      ))}
-    </Route>
-  );
+function leafRoute(leaf, session, area) {
+  const element = <PageElement id={leaf.page} session={session} area={area} />;
+  return leaf.path === '/' ? <Route key={leaf.path} index element={element} /> : <Route key={leaf.path} path={relativePath(leaf.path)} element={element} />;
 }
 
 /** Routes of `area` inside the shared layout. */
@@ -62,10 +51,10 @@ export function AdminApp({ area, session }) {
       <Route element={<AdminLayout area={area} session={session} />}>
         {/* Old /admin/login bookmarks land on the area home (login is /login now). */}
         <Route path="login" element={<RedirectTo to={home} />} />
-        {Object.entries(redirectsFor(area)).map(([from, to]) => (
-          <Route key={from} path={relativePath(from)} element={<RedirectTo to={to} />} />
+        {groupRedirects(area).map(({ path, to }) => (
+          <Route key={path} path={relativePath(path)} element={<RedirectTo to={to} />} />
         ))}
-        {navForArea(area).flatMap((group) => group.items).map((item) => itemRoute(item, session, area))}
+        {areaLeaves(area).map((leaf) => leafRoute(leaf, session, area))}
         <Route path="*" element={<NotFoundPage />} />
       </Route>
     </Routes>

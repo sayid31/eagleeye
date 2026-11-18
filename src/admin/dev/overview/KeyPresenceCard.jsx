@@ -25,7 +25,7 @@ export function KeyPresenceCard({ keys }) {
             </li>
           ))}
         </ul>
-        <Link to="/providers/keys" className="text-sm font-medium text-link underline-offset-4 hover:underline">{T.keys.manage}</Link>
+        <Link to="/api-keys" className="text-sm font-medium text-link underline-offset-4 hover:underline">{T.keys.manage}</Link>
       </CardContent>
     </Card>
   );

@@ -1,5 +1,5 @@
 /**
- * Pure wording and query logic of Aktivitas (Log Login, Audit): result and account cells, audit actor / action / detail
+ * Pure wording and query logic of Log Login and Audit: result and account cells, audit actor / action / detail
  * text, device and IP shortening for table cells, and the filter → API query mapping. No DOM, no network.
  *
  * @module admin/users/activityView

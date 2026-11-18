@@ -1,6 +1,6 @@
 // src/admin/dev/logs/AuditLogPage.jsx
 /**
- * /dev → Log server → Jejak audit kunci & AI: who changed what — API key changes and connection tests, voice-settings
+ * /dev → Server Log → Audit Log: who changed what — API key changes and connection tests, voice-settings
  * saves, admin sign-ins and log clears. Names and codes only; never a key value or an email.
  */
 import { RefreshCw } from 'lucide-react';
@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';
 import { PageHeader } from '@/components/app/PageHeader.jsx';
-import { RouteTabNav } from '@/components/app/RouteTabs.jsx';
 import { AUDIT_COPY as T, AUDIT_FILTER_COPY } from '@/copy/id/systemLogs';
 import { StatusBadge } from '@/components/app/StatusBadge';
 import { LogTime } from './LogTime.jsx';
@@ -23,7 +22,7 @@ const COLUMNS = [
   { id: 'via', header: T.columns.via, cell: (row) => <span className="text-sm text-muted-foreground">{row.via || '—'}</span> },
 ];
 
-/** Log server → Jejak audit tab. */
+/** Server Log → Audit Log page. */
 export function AuditLogPage() {
   const audit = useAuditLog();
   const rows = auditRows(audit.entries, Date.now());
@@ -31,7 +30,6 @@ export function AuditLogPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
-        tabs={<RouteTabNav />}
         title={T.title}
         description={T.description}
         actions={(

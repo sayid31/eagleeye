@@ -1,5 +1,5 @@
 // src/admin/config/ProviderTable.jsx
-/** The provider table (≥md) / stacked cards (<md) of Penyedia & API Keys. */
+/** The provider table (≥md) / stacked cards (<md) of API Keys. */
 import { KeyRound } from 'lucide-react';
 import { DataTable } from '@/components/app/DataTable.jsx';
 import { EmptyState } from '@/components/app/EmptyState.jsx';

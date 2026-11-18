@@ -1,5 +1,5 @@
 /**
- * Indonesian strings of the Log server area of /dev: Log, Jejak audit kunci & AI, Kesehatan. The health report is built
+ * Indonesian strings of the Server Log area of /dev: Server Log, Audit Log, Kesehatan Sistem. The health report is built
  * server-side in English; the `HEALTH_*` tables here are what healthText.js uses to say the same facts in Indonesian.
  *
  * @module copy/id/systemLogs
@@ -25,9 +25,9 @@ export const LOG_SOURCE_COPY = Object.freeze({
 });
 
 export const SERVER_LOG_COPY = Object.freeze({
-  title: 'Log server',
+  title: 'Server Log',
   description: 'Error, peringatan, dan event dari server serta browser yang memakai peta. Disimpan 30 hari; entri yang sama digabung.',
-  caption: 'Entri log server',
+  caption: 'Entri Server Log',
   counts: (error, warn, info) => `${error} error, ${warn} peringatan, ${info} info`,
   search: 'Cari kode atau pesan',
   searchPlaceholder: 'Cari kode atau pesan',
@@ -44,7 +44,7 @@ export const SERVER_LOG_COPY = Object.freeze({
   openDetailFor: (code) => `Lihat detail ${code}`,
   empty: Object.freeze({ title: 'Log masih kosong', description: 'Belum ada error, peringatan, atau event yang tercatat.' }),
   noMatch: Object.freeze({ title: 'Tidak ada entri yang cocok', description: 'Ubah level, sumber, atau kata kunci pencarian.' }),
-  errorTitle: 'Log server tidak bisa dimuat',
+  errorTitle: 'Server Log tidak bisa dimuat',
   sheet: Object.freeze({
     title: 'Detail entri log',
     description: 'Isi entri sudah disamarkan di server: tanpa key, token, atau email.',
@@ -61,10 +61,10 @@ export const SERVER_LOG_COPY = Object.freeze({
   }),
   clear: Object.freeze({
     open: 'Kosongkan log',
-    title: 'Kosongkan log server?',
-    impact: 'Semua entri log server dihapus dan tidak bisa dikembalikan. Jejak audit tidak ikut terhapus, dan satu catatan pengosongan akan tersimpan.',
+    title: 'Kosongkan Server Log?',
+    impact: 'Semua entri Server Log dihapus dan tidak bisa dikembalikan. Audit Log tidak ikut terhapus, dan satu catatan pengosongan akan tersimpan.',
     action: 'Kosongkan log',
-    done: (removed) => `${removed} entri dihapus dari log server.`,
+    done: (removed) => `${removed} entri dihapus dari Server Log.`,
   }),
 });
 
@@ -77,18 +77,18 @@ export const AUDIT_FILTER_COPY = Object.freeze([
 ]);
 
 export const AUDIT_COPY = Object.freeze({
-  title: 'Jejak audit kunci & AI',
+  title: 'Audit Log',
   description: 'Siapa mengubah apa: API key, tes koneksi, pengaturan suara, login admin, dan pengosongan log. Isi key dan email tidak pernah dicatat.',
-  caption: 'Jejak audit kunci dan AI',
+  caption: 'Audit Log',
   typeLabel: 'Jenis perubahan',
   refresh: 'Muat ulang',
   loadMore: 'Muat lebih banyak',
   loaded: (count) => `${count} entri dimuat`,
   columns: Object.freeze({ time: 'Waktu', change: 'Perubahan', detail: 'Detail', via: 'Lewat' }),
   via: (source) => `Lewat ${source}`,
-  empty: Object.freeze({ title: 'Belum ada jejak audit', description: 'Perubahan API key, pengaturan suara, dan login admin akan muncul di sini.' }),
+  empty: Object.freeze({ title: 'Belum ada catatan Audit Log', description: 'Perubahan API key, pengaturan suara, dan login admin akan muncul di sini.' }),
   noMatch: Object.freeze({ title: 'Tidak ada entri jenis ini', description: 'Pilih jenis perubahan lain.' }),
-  errorTitle: 'Jejak audit tidak bisa dimuat',
+  errorTitle: 'Audit Log tidak bisa dimuat',
   results: Object.freeze({ ok: 'berhasil', rejected: 'ditolak', unreachable: 'tidak terjangkau', untestable: 'tidak bisa dites', not_set: 'key belum diisi' }),
   events: Object.freeze({
     'keys.changed': 'API key diubah',
@@ -100,7 +100,7 @@ export const AUDIT_COPY = Object.freeze({
     'admin.logout': 'Admin keluar',
     'admin.login_denied': 'Login ditolak',
     'admin.login_failed': 'Login gagal',
-    'log.cleared': 'Log server dikosongkan',
+    'log.cleared': 'Server Log dikosongkan',
   }),
   details: Object.freeze({
     saved: (names) => `disimpan: ${names}`,
@@ -119,7 +119,7 @@ export const AUDIT_COPY = Object.freeze({
 });
 
 export const HEALTH_COPY = Object.freeze({
-  title: 'Kesehatan',
+  title: 'Kesehatan Sistem',
   description: 'Satu status untuk setiap hal yang bisa rusak. Halaman ini hanya membaca; tidak ada provider yang dipanggil.',
   refresh: 'Periksa ulang',
   loadingLabel: 'Memeriksa kondisi sistem',
@@ -130,7 +130,7 @@ export const HEALTH_COPY = Object.freeze({
     problems: (n) => `${n} masalah`,
     warnings: (n) => `${n} peringatan`,
   }),
-  testHint: 'Untuk memeriksa ulang sebuah key, pakai Uji koneksi di Penyedia & API Keys.',
+  testHint: 'Untuk memeriksa ulang sebuah key, pakai Uji koneksi di API Keys.',
   sections: Object.freeze({
     server: 'Server',
     keys: 'API key',
@@ -150,8 +150,8 @@ export const HEALTH_COPY = Object.freeze({
     'voice.enabled': 'Asisten voice',
     'voice.minutes': 'Menit voice hari ini',
     'voice.judge': 'Judge keluar topik',
-    'log.server': 'File log server',
-    'log.audit': 'Jejak audit',
+    'log.server': 'File Server Log',
+    'log.audit': 'Audit Log',
   }),
   ago: Object.freeze({
     seconds: (n) => `${n} dtk lalu`,

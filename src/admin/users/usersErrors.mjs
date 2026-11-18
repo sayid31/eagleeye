@@ -27,7 +27,7 @@ export const USER_ERROR_MESSAGES = Object.freeze({
   REAUTH_REQUIRED: 'Masuk ulang dengan Google dulu (maksimal 10 menit sebelum aksi ini), lalu coba lagi.',
   CONFIRM_EMAIL_MISMATCH: 'Email konfirmasi tidak cocok dengan email akun.',
   AUTH_UNAVAILABLE: 'Layanan login sedang tidak tersedia.',
-  INTERNAL_ERROR: 'Terjadi kesalahan di server; lihat Log server.',
+  INTERNAL_ERROR: 'Terjadi kesalahan di server; lihat Server Log.',
 });
 
 const PASSWORD_REASONS = Object.freeze({
