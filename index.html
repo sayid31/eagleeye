@@ -103,7 +103,7 @@
         <span>+20</span><span>+10</span><span class="active">00</span><span>−10</span><span>−20</span>
       </div>
       <div class="cockpit-horizon-guide">
-        <span></span><small>RATA</small><span></span>
+        <span></span><small>LEVEL</small><span></span>
       </div>
       <div id="cockpit-route-direction" class="cockpit-route-direction" hidden aria-label="Estimated destination heading">
         <svg class="cockpit-route-chevron" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -218,7 +218,7 @@
         <div role="listitem" data-context-cohort="flights"><span>FLT</span><strong>—</strong><small>OpenSky</small></div>
         <div role="listitem" data-context-cohort="military"><span>MIL</span><strong>—</strong><small>adsb.lol</small></div>
         <div role="listitem" data-context-cohort="ais-live-vessels"><span>AIS</span><strong>—</strong><small>AISStream</small></div>
-        <div role="listitem" data-context-cohort="military-installations"><span>SITUS</span><strong>—</strong><small>OpenStreetMap</small></div>
+        <div role="listitem" data-context-cohort="military-installations"><span>SITE</span><strong>—</strong><small>OpenStreetMap</small></div>
       </div>
       <div class="cockpit-context-nearest">
         <span id="cockpit-context-direction" class="material-symbols-outlined" aria-hidden="true">navigation</span>
@@ -258,7 +258,7 @@
           </div>
           <span class="cockpit-route-arrow material-symbols-outlined" aria-hidden="true">east</span>
           <div class="cockpit-route-airport">
-            <span>KE</span>
+            <span>TO</span>
             <strong id="cockpit-route-to">UNKNOWN</strong>
           </div>
         </div>
@@ -313,9 +313,9 @@
       <footer class="cockpit-signal-footer">
         <span id="cockpit-brief-source">SOURCED EVENTS · NO SYNTHETIC NEWS</span>
         <nav class="cockpit-brief-tabs" aria-label="Cockpit summary pages">
-          <button type="button" data-cockpit-brief-index="0" aria-label="Show Live Signals" aria-current="true">SIN</button>
+          <button type="button" data-cockpit-brief-index="0" aria-label="Show Live Signals" aria-current="true">SIG</button>
           <button type="button" data-cockpit-brief-index="1" aria-label="Show Regional News">NEWS</button>
-          <button type="button" data-cockpit-brief-index="2" aria-label="Show Local Info">LOKAL</button>
+          <button type="button" data-cockpit-brief-index="2" aria-label="Show Local Info">LOCAL</button>
         </nav>
       </footer>
     </aside>
@@ -481,7 +481,7 @@
       <span class="pp-label">Clean view</span>
     </button>
     <div class="pp-toggle-group">
-      <button class="pp-toggle-btn" id="bloom-toggle" title="Bloom / Cahaya">
+      <button class="pp-toggle-btn" id="bloom-toggle" title="Bloom / Glow">
         <span class="pp-icon">&#x2728;</span>
         <span class="pp-label">Bloom</span>
       </button>
@@ -605,7 +605,7 @@
     <div class="panel-glow"></div>
     <div class="data-panel-inner">
       <div class="panel-header">
-        <span class="panel-title">LAYER DATA</span>
+        <span class="panel-title">DATA LAYERS</span>
         <span class="panel-divider"></span>
         <button class="panel-collapse-btn" data-collapse-target="data-panel" title="Collapse panel">+</button>
       </div>
@@ -658,7 +658,7 @@
           <button id="cctv-auto-hop-btn" class="scene-btn" title="Switch to the next camera automatically every few seconds">AUTO-JUMP OFF</button>
           <button id="cctv-projection-btn" class="scene-btn" title="Show the camera's video screen in the 3D world">PROJECTION ON</button>
         </div>
-        <span id="cctv-quality-chip" title="Camera position calibration quality">KAL · --</span>
+        <span id="cctv-quality-chip" title="Camera position calibration quality">CAL · --</span>
       </details>
       <div class="cctv-calibration-block">
         <div class="cctv-calibration-header">
@@ -667,12 +667,12 @@
         </div>
         <div id="cctv-cal-readout" class="cctv-cal-readout" aria-label="Camera pose — click a value to type">
           <button class="cctv-cal-value" data-cal-field="heading" title="Heading (compass °) — click to type">HDG --</button>
-          <button class="cctv-cal-value" data-cal-field="pitch" title="Tilt (° up/down) — click to type">MIRING --</button>
+          <button class="cctv-cal-value" data-cal-field="pitch" title="Tilt (° up/down) — click to type">TILT --</button>
           <button class="cctv-cal-value" data-cal-field="fov" title="Horizontal FOV (°) — click to type">FOV --</button>
           <button class="cctv-cal-value" data-cal-field="range" title="Distance / monitor plane distance (m) — click to type">RANGE --</button>
           <button class="cctv-cal-value" data-cal-field="height" title="Mounting height above ground (m) — click to type">HGT --</button>
-          <button class="cctv-cal-value" data-cal-field="north" title="North offset from catalog position (m) — click to type">ΔU --</button>
-          <button class="cctv-cal-value" data-cal-field="east" title="East offset from catalog position (m) — click to type">ΔT --</button>
+          <button class="cctv-cal-value" data-cal-field="north" title="North offset from catalog position (m) — click to type">ΔN --</button>
+          <button class="cctv-cal-value" data-cal-field="east" title="East offset from catalog position (m) — click to type">ΔE --</button>
         </div>
         <div class="cctv-controls cctv-calibration-actions">
           <button id="cctv-calib-save-btn" class="scene-btn">SAVE CAL</button>
@@ -717,7 +717,7 @@
       <div class="scene-controls">
         <button id="scene-export-btn" class="scene-btn">EXPORT PRESET</button>
         <button id="scene-import-btn" class="scene-btn">IMPORT</button>
-        <button id="scene-download-btn" class="scene-btn">LOG PROSES</button>
+        <button id="scene-download-btn" class="scene-btn">PROCESS LOG</button>
         <input type="file" id="scene-import-file" accept="application/json,.json" hidden />
       </div>
       <div class="scene-progress">
@@ -859,7 +859,7 @@
             </div>
             <label class="radio-volume-row" for="radio-volume">
               <span>VOLUME</span>
-              <input id="radio-volume" class="gev-quantitative-slider" type="range" min="0" max="100" value="80" aria-label="Volume Radio" />
+              <input id="radio-volume" class="gev-quantitative-slider" type="range" min="0" max="100" value="80" aria-label="Radio volume" />
               <output id="radio-volume-value" class="gev-slider-value" for="radio-volume">80%</output>
             </label>
             <div id="radio-playback-state" class="radio-playback-state" role="status" aria-live="polite">Radio off</div>
