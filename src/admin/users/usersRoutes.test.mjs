@@ -210,6 +210,10 @@ test('GET /login-log: admin sees user accounts only; super_admin also admins and
   assert.equal((await t.call('GET', '/api/admin/login-log?limit=1000', owner))[1].limit, 100);
   assert.equal((await t.call('GET', '/api/admin/login-log?success=maybe', owner))[1].field, 'success');
   assert.equal((await t.call('GET', '/api/admin/login-log?userId=a%20b', owner))[1].field, 'userId');
+  assert.equal((await t.call('GET', '/api/admin/login-log?range=24h&limit=100', owner))[1].total, asOwner.total, 'every row so far is from the last 24 hours');
+  t.state.db.prepare("UPDATE login_log SET createdAt = '2020-01-01T00:00:00.000Z' WHERE id IN (SELECT id FROM login_log LIMIT 1)").run();
+  assert.equal((await t.call('GET', '/api/admin/login-log?range=24h&limit=100', owner))[1].total, asOwner.total - 1, 'a row older than the window drops out of 24h');
+  assert.equal((await t.call('GET', '/api/admin/login-log?range=forever', owner))[1].field, 'range');
 });
 
 test('GET /audit: admin gets user.* on user accounts with other actors redacted; super_admin all; ?source=system is the legacy trail', async () => {

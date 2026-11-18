@@ -1,41 +1,90 @@
 /**
- * /admin → Ringkasan: account and sign-in counters from `/api/admin/users/stats`
- * (an admin's numbers cover `user` accounts only; a super_admin's cover all).
+ * /admin → Ringkasan: account and sign-in counters from `/api/admin/users/stats` (an admin's numbers cover `user`
+ * accounts only; a super_admin's cover all), a first-run call to action and shortcuts to the other pages.
  */
-import { Link } from 'react-router';
-import { LoadState, usePageData } from './UsersWidgets.jsx';
-import { OVERVIEW_COPY } from './usersCopy.js';
+import { AlertTriangle, Clock, History, KeyRound, LogIn, UserPlus, UserX, Users } from 'lucide-react';
+import { Link, useNavigate } from 'react-router';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { EmptyState } from '@/components/app/EmptyState.jsx';
+import { ErrorState } from '@/components/app/ErrorState.jsx';
+import { LoadingState } from '@/components/app/LoadingState.jsx';
+import { PageHeader } from '@/components/app/PageHeader.jsx';
+import { OVERVIEW_COPY } from '../../copy/id/users.js';
+import { overviewCards, overviewIsEmpty } from './overviewView.js';
 import { usersApi } from './usersApi.js';
-import './users.css';
+import { useResource } from './useResource.js';
 
-const CARDS = [
-  ['active', 'ok'], ['inactive', 'muted'], ['throttled', 'warn'], ['mustChangePassword', 'info'], ['logins24h', 'ok'], ['failed24h', 'error'],
+const ICONS = { users: Users, userX: UserX, clock: Clock, key: KeyRound, login: LogIn, alert: AlertTriangle };
+const LINKS = [
+  { id: 'users', to: '/users', icon: Users },
+  { id: 'loginLog', to: '/activity/login', icon: LogIn },
+  { id: 'audit', to: '/activity/audit', icon: History },
 ];
 
-export function UsersOverviewPage() {
-  const { data, loading, error, reload } = usePageData(() => usersApi.stats(), 'stats');
-  const stats = data?.stats;
+function StatCard({ card }) {
+  const copy = OVERVIEW_COPY.cards[card.key];
+  const Icon = ICONS[card.icon];
   return (
-    <div className="adm-page adm-page-wide">
-      <header className="adm-page-header">
-        <h1>{OVERVIEW_COPY.title}</h1>
-        <p className="adm-muted">{OVERVIEW_COPY.lead}</p>
-      </header>
-      <LoadState loading={loading && !stats} error={error} onRetry={reload} />
-      {stats ? (
-        <div className="usr-stats">
-          {CARDS.map(([key, tone]) => (
-            <section key={key} className={`adm-card usr-stat usr-stat-${tone}`}>
-              <span className="adm-field-label">{OVERVIEW_COPY.cards[key]}</span>
-              <span className="adm-stat" data-testid={`stat-${key}`}>{stats[key]}</span>
-            </section>
-          ))}
-        </div>
-      ) : null}
-      <div className="adm-actions">
-        <Link className="adm-btn" to="/users">{OVERVIEW_COPY.links.users}</Link>
-        <Link className="adm-btn" to="/login-log">{OVERVIEW_COPY.links.loginLog}</Link>
-      </div>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardDescription className="flex items-center gap-2"><Icon aria-hidden="true" className="size-4" />{copy.title}</CardDescription>
+        <CardTitle className="text-3xl font-semibold tabular-nums" data-testid={`stat-${card.key}`}>{card.value.toLocaleString('id-ID')}</CardTitle>
+      </CardHeader>
+      <CardContent className="text-sm text-muted-foreground">{copy.hint}</CardContent>
+    </Card>
+  );
+}
+
+function QuickLinks() {
+  return (
+    <section aria-labelledby="overview-links" className="mt-8">
+      <h2 id="overview-links" className="mb-3 text-base font-medium">{OVERVIEW_COPY.links.title}</h2>
+      <ul className="grid gap-3 sm:grid-cols-3">
+        {LINKS.map(({ id, to, icon: Icon }) => (
+          <li key={id}>
+            <Link to={to} className="flex h-full items-start gap-3 rounded-xl border bg-card p-4 text-card-foreground transition-colors hover:bg-muted/50 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none">
+              <Icon aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+              <span className="grid gap-1">
+                <span className="font-medium">{OVERVIEW_COPY.links[id].title}</span>
+                <span className="text-sm text-muted-foreground">{OVERVIEW_COPY.links[id].description}</span>
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+export function UsersOverviewPage() {
+  const navigate = useNavigate();
+  const { data, loading, error, reload } = useResource(() => usersApi.stats(), 'stats');
+  const stats = data?.stats;
+  let body;
+  if (error) body = <ErrorState error={error} onRetry={reload} />;
+  else if (!stats || loading) body = <LoadingState variant="cards" label={OVERVIEW_COPY.cardsLabel} />;
+  else if (overviewIsEmpty(stats)) {
+    body = (
+      <EmptyState
+        icon={UserPlus}
+        title={OVERVIEW_COPY.empty.title}
+        description={OVERVIEW_COPY.empty.description}
+        action={<Button onClick={() => navigate('/users', { state: { openCreate: true } })}>{OVERVIEW_COPY.empty.cta}</Button>}
+      />
+    );
+  } else {
+    body = (
+      <ul aria-label={OVERVIEW_COPY.cardsLabel} className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {overviewCards(stats).map((card) => <li key={card.key}><StatCard card={card} /></li>)}
+      </ul>
+    );
+  }
+  return (
+    <>
+      <PageHeader title={OVERVIEW_COPY.title} description={OVERVIEW_COPY.description} />
+      {body}
+      <QuickLinks />
+    </>
   );
 }

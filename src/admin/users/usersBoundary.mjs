@@ -12,6 +12,7 @@ import { AUDIT_ACTIONS } from '../../auth/auditLog.mjs';
 import { CAPABILITY_KEYS, DEFAULT_CAPABILITIES } from '../../auth/authCapabilities.mjs';
 import { ROLES } from '../../auth/authRoles.mjs';
 import { clampPage } from '../../auth/accountQueries.mjs';
+import { ACTIVITY_RANGES } from './activityRange.mjs';
 
 export const MAX_QUERY_LENGTH = 100;
 const MAX_TEXT = 320;
@@ -154,8 +155,14 @@ const optionalId = (params, field) => {
   return value === '' || ID.test(value) ? { value: value || undefined } : invalid(field);
 };
 
+/** Optional time window (`range=24h|7d|30d`); empty = all time. */
+function optionalRange(params) {
+  const range = params.get('range') ?? '';
+  return range === '' || ACTIVITY_RANGES.includes(range) ? { value: range || undefined } : invalid('range');
+}
+
 /**
- * `GET /api/admin/login-log?userId&success&limit&offset`.
+ * `GET /api/admin/login-log?userId&success&range&limit&offset`.
  * @param {string} url
  */
 export function parseLoginLogQuery(url) {
@@ -164,14 +171,16 @@ export function parseLoginLogQuery(url) {
   if (userId.error) return userId;
   const success = params.get('success') ?? '';
   if (!['', 'true', 'false'].includes(success)) return invalid('success');
-  return { userId: userId.value, success: success === '' ? undefined : success === 'true', ...clampPage({ limit: params.get('limit'), offset: params.get('offset') }) };
+  const range = optionalRange(params);
+  if (range.error) return range;
+  return { userId: userId.value, success: success === '' ? undefined : success === 'true', range: range.value, ...clampPage({ limit: params.get('limit'), offset: params.get('offset') }) };
 }
 
 /** Sources of `GET /api/admin/audit`: the account `audit_log` table, or the legacy key/AI JSONL trail. */
 export const AUDIT_SOURCES = Object.freeze(['account', 'system']);
 
 /**
- * `GET /api/admin/audit?source&action&targetId&limit&offset` (account source).
+ * `GET /api/admin/audit?source&action&targetId&range&limit&offset` (account source).
  * @param {string} url
  */
 export function parseAccountAuditQuery(url) {
@@ -184,5 +193,7 @@ export function parseAccountAuditQuery(url) {
   if (action && !AUDIT_ACTIONS.includes(action)) return invalid('action');
   const targetId = optionalId(params, 'targetId');
   if (targetId.error) return targetId;
-  return { source, action: action || undefined, targetId: targetId.value, ...clampPage({ limit: params.get('limit'), offset: params.get('offset') }) };
+  const range = optionalRange(params);
+  if (range.error) return range;
+  return { source, action: action || undefined, targetId: targetId.value, range: range.value, ...clampPage({ limit: params.get('limit'), offset: params.get('offset') }) };
 }

@@ -23,9 +23,13 @@ test('parseUsersRoute: every contract route, /stats never an id, 404 vs 405', ()
 test('list / log / audit queries: enums checked, paging clamped', () => {
   assert.deepEqual(parseUserListQuery('/?q=%20ani%20&status=active&limit=500&offset=-1'), { q: 'ani', status: 'active', role: undefined, limit: 100, offset: 0 });
   assert.equal(parseUserListQuery('/?role=root').error.field, 'role');
-  assert.deepEqual(parseLoginLogQuery('/?success=false&userId=U_1'), { userId: 'U_1', success: false, limit: 20, offset: 0 });
+  assert.deepEqual(parseLoginLogQuery('/?success=false&userId=U_1'), { userId: 'U_1', success: false, range: undefined, limit: 20, offset: 0 });
+  assert.equal(parseLoginLogQuery('/?range=7d').range, '7d');
+  assert.equal(parseLoginLogQuery('/?range=forever').error.field, 'range');
   assert.equal(parseLoginLogQuery('/?success=1').error.field, 'success');
-  assert.deepEqual(parseAccountAuditQuery('/?action=user.delete&offset=40'), { source: 'account', action: 'user.delete', targetId: undefined, limit: 20, offset: 40 });
+  assert.deepEqual(parseAccountAuditQuery('/?action=user.delete&offset=40'), { source: 'account', action: 'user.delete', targetId: undefined, range: undefined, limit: 20, offset: 40 });
+  assert.equal(parseAccountAuditQuery('/?range=30d').range, '30d');
+  assert.equal(parseAccountAuditQuery('/?range=1y').error.field, 'range');
   assert.deepEqual(parseAccountAuditQuery('/?source=system&action=anything'), { source: 'system' });
   assert.equal(parseAccountAuditQuery('/?action=nope').error.field, 'action');
 });
