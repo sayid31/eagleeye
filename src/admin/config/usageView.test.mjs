@@ -33,7 +33,7 @@ test('todayView: no limit, some left, used up', () => {
 });
 
 test('effectiveLimitsLine words the limits in force', () => {
-  assert.equal(effectiveLimitsLine({ costLimits: { effective: { warnUsd: 1, capUsd: null } } }), 'Berlaku sekarang: peringatan di ~$1.00, sesi berhenti di mati.');
+  assert.equal(effectiveLimitsLine({ costLimits: { effective: { warnUsd: 1, capUsd: null } } }), 'Berlaku sekarang: peringatan ~$1.00, batas keras nonaktif.');
 });
 
 test('cost form: empty = built-in default, off = none, number = USD; base fields survive', () => {

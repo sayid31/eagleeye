@@ -39,9 +39,9 @@ test('OpenAI card: minutes meter only with a daily cap, judge meter only when th
   const free = providerCard({ id: 'openai', configured: true, status: 'ok', data: { ...data, dailyMinutes: 0, judgeEnabled: false } }, NOW);
   assert.equal(free.meters.length, 0);
   assert.equal(free.big.unit, 'menit hari ini, tanpa batas harian');
-  assert.ok(free.facts.some((f) => f.value === 'Judge dimatikan'));
+  assert.ok(free.facts.some((f) => f.value === 'Judge nonaktif'));
   const off = providerCard({ id: 'openai', configured: true, status: 'off', data: { ...data, enabled: false } }, NOW);
-  assert.equal(off.statusLabel, 'Voice dimatikan');
+  assert.equal(off.statusLabel, 'Voice nonaktif');
 });
 
 test('a provider without data shows the right empty state, never zeros', () => {

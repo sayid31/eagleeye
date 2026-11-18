@@ -151,7 +151,7 @@ export const USAGE_AI_COPY = Object.freeze({
   limits: {
     title: 'Batas biaya per sesi',
     description: (warn, cap) => `Kosong memakai default bawaan (peringatan ${warn}, berhenti ${cap}). Isi "off" untuk tanpa batas.`,
-    effective: (warn, cap) => `Berlaku sekarang: peringatan di ${warn}, sesi berhenti di ${cap}.`,
+    effective: (warn, cap) => `Berlaku sekarang: peringatan ${warn}, batas keras ${cap}.`,
     off: 'nonaktif',
     warn: { label: 'Peringatan (USD)', placeholder: 'Bawaan' },
     cap: { label: 'Batas keras (USD)', placeholder: 'Bawaan' },
