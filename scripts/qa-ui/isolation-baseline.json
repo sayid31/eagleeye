@@ -1,0 +1,5 @@
+{
+  "_note": "Map console CSS as built from the base commit 79974ed89 (before the UI refactor). Regenerate (node scripts/qa-ui.mjs --update-isolation-baseline) ONLY when style.css or the map's CSS imports change on purpose.",
+  "mapCss": { "bytes": 217260, "sha256": "a63a8d31f8243eb240176515d6407c3e1a02d0350e9475b677ff51409ee52071" },
+  "mapMainJsBytesReference": 1245267
+}

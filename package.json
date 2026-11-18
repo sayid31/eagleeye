@@ -40,6 +40,8 @@
     "preview": "vite preview",
     "test": "node scripts/run-unit-tests.mjs",
     "test:track": "node scripts/track-regression.mjs",
+    "qa:contrast": "node scripts/ui-contrast.mjs",
+    "qa:ui": "node scripts/qa-ui.mjs",
     "qa:map-source-tray": "node scripts/qa-map-source-tray.mjs",
     "qa:boot-timing": "node scripts/qa-boot-timing.mjs",
     "auth:migrate": "node scripts/auth-migrate.mjs",

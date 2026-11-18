@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import { Textarea } from '@/components/ui/textarea';
 import { COMMON_COPY, CONFIRM_COPY } from '@/copy/id/common';
+import { useReturnFocus } from '@/lib/useReturnFocus';
 import { errorMessage } from '@/copy/id/errors';
 import { FormField } from './FormField.jsx';
 import { PasswordInput } from './PasswordInput.jsx';
@@ -32,6 +33,7 @@ export function ConfirmDialog({ open, onOpenChange, title, impact, actionLabel, 
   const [values, setValues] = useState({ typed: '', reason: '', password: '' });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const returnFocus = useReturnFocus(open);
   const { canConfirm } = confirmState({ typeToConfirm, reason, password, values, busy });
   const guarded = Boolean(typeToConfirm || reason || password);
   const set = (key) => (event) => setValues((current) => ({ ...current, [key]: event.target.value }));
@@ -60,7 +62,7 @@ export function ConfirmDialog({ open, onOpenChange, title, impact, actionLabel, 
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="sm:max-w-md">
+      <AlertDialogContent className="sm:max-w-md" onCloseAutoFocus={returnFocus}>
         <form onSubmit={submit} className="grid gap-4">
           <AlertDialogHeader>
             <AlertDialogTitle>{title}</AlertDialogTitle>

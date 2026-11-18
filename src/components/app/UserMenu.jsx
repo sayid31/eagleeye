@@ -24,10 +24,10 @@ export function UserMenu({ user, mapHref = '/app', areaLink = null, onSignOut })
       <SidebarMenuItem>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <SidebarMenuButton size="lg" aria-label={`${SHELL_COPY.accountMenu}: ${user?.email ?? ''}`} className="data-[state=open]:bg-sidebar-accent">
+            <SidebarMenuButton size="lg" data-account-menu className="data-[state=open]:bg-sidebar-accent">
               <Avatar><AvatarFallback>{initialsFor(user)}</AvatarFallback></Avatar>
               <span className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium" title={user?.email}>{user?.email}</span>
+                <span className="truncate font-medium" title={user?.email}><span className="sr-only">{SHELL_COPY.accountMenu}: </span>{user?.email}</span>
                 <span className="truncate text-xs text-muted-foreground">{role}</span>
               </span>
               <ChevronsUpDown aria-hidden="true" className="ml-auto size-4" />

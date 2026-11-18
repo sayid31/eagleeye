@@ -159,7 +159,8 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
   assert.ok(!html.includes('Katalog komponen'), 'hidden item is not in the sidebar');
   assert.match(html, />Developer</);
   assert.match(html, /aria-current="page"[^>]*>(?:<svg[^>]*><\/svg>|<svg[\s\S]*?<\/svg>)<span>Pemakaian &amp; Biaya/);
-  assert.match(html, /aria-label="Menu akun: dev@example\.test"/);
+  assert.match(html, /data-account-menu[^>]*>[\s\S]*?<span class="sr-only">Menu akun: <\/span>dev@example\.test/, 'the account menu name contains its visible text');
+  assert.doesNotMatch(html, /aria-label="Menu akun/, 'no aria-label that would differ from the visible text (WCAG 2.5.3)');
   assert.match(html, /<h1>Isi halaman<\/h1>/);
   assert.match(html, /aria-label="Buka atau tutup menu samping"/);
 });

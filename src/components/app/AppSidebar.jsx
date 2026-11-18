@@ -12,12 +12,14 @@ import { navIcon } from './navIcons.js';
 import { pathMatches } from './navModel.js';
 
 function MenuItem({ item, pathname }) {
-  const { isMobile, setOpenMobile } = useSidebar();
+  const { isMobile, setOpenMobile, state } = useSidebar();
+  // A tooltip exists only while the desktop sidebar is collapsed to icons: a hidden-but-open tooltip would swallow the first Esc inside the mobile sheet.
+  const tooltip = !isMobile && state === 'collapsed' ? item.label : undefined;
   const Icon = navIcon(item.icon ?? item.id);
   const active = pathMatches(pathname, item.path);
   return (
     <SidebarMenuItem>
-      <SidebarMenuButton asChild isActive={active} tooltip={item.label}>
+      <SidebarMenuButton asChild isActive={active} tooltip={tooltip}>
         <Link to={item.path} aria-current={active ? 'page' : undefined} onClick={() => { if (isMobile) setOpenMobile(false); }}>
           <Icon aria-hidden="true" />
           <span>{item.label}</span>
@@ -37,8 +39,8 @@ export function AppSidebar({ brand, area, groups, pathname, user, areaLink, onSi
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild tooltip={brand.name}>
-              <a href="/app" aria-label={`${brand.name}: ${SHELL_COPY.openMap}`}>
+            <SidebarMenuButton size="lg" asChild>
+              <a href="/app" title={SHELL_COPY.openMap}>
                 <img src="/logo.svg" alt="" width="20" height="36" className="h-8 w-auto shrink-0" />
                 <span className="grid flex-1 text-left leading-tight">
                   <span className="truncate font-semibold">{brand.name}</span>

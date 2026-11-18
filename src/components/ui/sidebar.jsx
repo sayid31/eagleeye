@@ -2,7 +2,8 @@
 //  1. the open/closed state is kept in localStorage (src/lib/sidebarState.js) instead of a cookie;
 //  2. SidebarInset renders a <div>, not <main>: AppShell owns the single <main id="main-content"> landmark so the
 //     header stays a top-level banner;
-//  3. screen-reader strings come from src/copy/id/ui.js (Indonesian).
+//  3. screen-reader strings come from src/copy/id/ui.js (Indonesian);
+//  4. the mobile Sheet returns focus to whatever opened it (Radix only does so for its own Trigger; see src/lib/useReturnFocus.js).
 import * as React from "react"
 import { cva } from "class-variance-authority";
 import { cn } from "cn"
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/tooltip"
 import { PanelLeftIcon } from "lucide-react"
 import { writeSidebarOpen } from "@/lib/sidebarState"
+import { useReturnFocus } from "@/lib/useReturnFocus"
 import { UI_COPY } from "@/copy/id/ui"
 
 const SIDEBAR_WIDTH = "16rem"
@@ -144,6 +146,7 @@ function Sidebar({
   ...props
 }) {
   const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
+  const returnFocus = useReturnFocus(openMobile)
 
   if (collapsible === "none") {
     return (
@@ -168,6 +171,7 @@ function Sidebar({
           data-sidebar="sidebar"
           data-slot="sidebar"
           data-mobile="true"
+          onCloseAutoFocus={returnFocus}
           className="w-(--sidebar-width) bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
           style={
             {
