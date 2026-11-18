@@ -7,7 +7,7 @@ const NOW = 1_800_000_000_000;
 test('gateRow: a never-changed gate is "Menyala" with no reason', () => {
   const row = gateRow({ gate: 'layers', killed: false, reason: null, updatedAt: null, updatedBy: null }, NOW);
   assert.deepEqual([row.status, row.statusLabel, row.lastChange, row.reason, row.absolute], ['ok', 'On', 'Never changed.', null, null]);
-  assert.equal(row.switchLabel, 'Layer data: on for all accounts');
+  assert.equal(row.switchLabel, 'Data layers: on for all accounts');
 });
 
 test('gateRow: a switched-off gate says who, when and why', () => {

@@ -65,14 +65,14 @@ test('CapabilitySwitches: a fieldset with a legend, one labelled switch per capa
   assert.equal((html.match(/role="switch"/g) ?? []).length, 3);
   for (const title of ['Data layers', 'Voice &amp; AI', 'Premium map &amp; search']) assert.match(html, new RegExp(`<label[^>]*>${title}</label>`), title);
   assert.match(html, /aria-checked="true"/);
-  assert.match(html, /Berbiaya per permintaan \(Google Maps\)/);
+  assert.match(html, /Billed per request \(Google Maps\)/);
   assert.equal((html.match(/aria-describedby="[^"]+-description"/g) ?? []).length, 3);
 });
 
 test('PasswordChoice: radio group with both options; the typed case shows a labelled field and the live requirement list', async () => {
   const { PasswordChoice } = await load('UserFormFields');
   const generated = render(h(PasswordChoice, { mode: 'generate', password: '', role: 'user', onMode() {}, onPassword() {} }));
-  assert.match(generated, /role="radiogroup"[^>]*aria-label="Password awal"/);
+  assert.match(generated, /role="radiogroup"[^>]*aria-label="Initial password"/);
   assert.match(generated, />Auto-generate</);
   assert.match(generated, />Ketik sendiri</);
   assert.doesNotMatch(generated, /type="password"/);

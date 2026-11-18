@@ -18,6 +18,6 @@ export const SHELL_COPY = Object.freeze({
   sessionFailedTitle: 'The session could not be checked',
   notFoundTitle: 'Page not found',
   notFoundDescription: 'This address does not exist in this area. Pick a page from the side menu.',
-  roles: Object.freeze({ super_admin: 'Super admin', admin: 'Admin', user: 'Users' }),
+  roles: Object.freeze({ super_admin: 'Super admin', admin: 'Admin', user: 'User' }),
   areas: Object.freeze({ admin: 'Admin', dev: 'Developer' }),
 });

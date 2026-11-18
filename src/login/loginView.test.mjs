@@ -58,7 +58,7 @@ test('signInErrorText: every outcome in Indonesian; wrong/throttled share one ge
   assert.equal(signInErrorText('ACCOUNT_DISABLED'), 'Account deactivated, contact an admin.');
   assert.equal(signInErrorText('GOOGLE_SIGN_IN_REQUIRED'), 'This account signs in with Google.');
   assert.match(signInErrorText('RATE_LIMITED'), /Too many attempts/);
-  assert.match(signInErrorText('NETWORK'), /could not be reached/);
+  assert.match(signInErrorText('NETWORK'), /Could not reach the server/);
   assert.equal(signInErrorText('whatever'), SIGN_IN_GENERIC_ERROR);
   assert.equal(signInErrorText('toString'), SIGN_IN_GENERIC_ERROR, 'prototype keys are not codes');
   assert.ok(Object.isFrozen(SIGN_IN_ERRORS));

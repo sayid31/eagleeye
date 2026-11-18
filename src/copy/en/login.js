@@ -133,4 +133,4 @@ export const ACCOUNT_COPY = Object.freeze({
 });
 
 /** Role names as shown to the account holder. */
-export const ROLE_LABELS = Object.freeze({ user: 'Users', admin: 'Admin', super_admin: 'Developer (super admin)' });
+export const ROLE_LABELS = Object.freeze({ user: 'User', admin: 'Admin', super_admin: 'Developer (super admin)' });

@@ -41,13 +41,13 @@ test('the field failures now fall through to the SECTOR readout', () => {
 
 test('the boundary is pinned on both sides, inclusive at the bound', () => {
   const at = composeLocalityTag({ ...LINCOLN, distKm: NEAR_POI_MAX_KM }, 40, -78);
-  assert.match(at, /^DEKAT LINCOLN MEMORIAL/, 'exactly at the bound still reads NEAR');
+  assert.match(at, /^NEAR LINCOLN MEMORIAL/, 'exactly at the bound still reads NEAR');
 
   const just_under = composeLocalityTag({ ...LINCOLN, distKm: NEAR_POI_MAX_KM - 0.1 }, 40, -78);
-  assert.match(just_under, /^DEKAT LINCOLN MEMORIAL/);
+  assert.match(just_under, /^NEAR LINCOLN MEMORIAL/);
 
   const just_over = composeLocalityTag({ ...LINCOLN, distKm: NEAR_POI_MAX_KM + 0.1 }, 40, -78);
-  assert.match(just_over, /^SEKTOR /, 'one step past the bound falls through');
+  assert.match(just_over, /^SECTOR /, 'one step past the bound falls through');
 });
 
 test('a real but distant POI no longer reads as NEAR (2026-09 Kawah Ijen report)', () => {
@@ -100,8 +100,8 @@ test('hud.js actually composes its summary through this helper', () => {
 });
 
 test('a missing or malformed nearest POI never crashes the summary', () => {
-  assert.match(composeLocalityTag(null, 0, 0), /^SEKTOR /);
-  assert.match(composeLocalityTag(undefined, 0, 0), /^SEKTOR /);
-  assert.match(composeLocalityTag({ ...LINCOLN, distKm: NaN }, 10, 10), /^SEKTOR /);
-  assert.match(composeLocalityTag({ ...LINCOLN }, 10, 10), /^SEKTOR /);
+  assert.match(composeLocalityTag(null, 0, 0), /^SECTOR /);
+  assert.match(composeLocalityTag(undefined, 0, 0), /^SECTOR /);
+  assert.match(composeLocalityTag({ ...LINCOLN, distKm: NaN }, 10, 10), /^SECTOR /);
+  assert.match(composeLocalityTag({ ...LINCOLN }, 10, 10), /^SECTOR /);
 });

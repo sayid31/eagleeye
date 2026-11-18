@@ -70,7 +70,7 @@ test('buildSelectedFireCard: full detail card with coords, selected flag, no fad
 
 test('buildSelectedFireCard: night detections are tagged', () => {
   const card = buildSelectedFireCard(fire({ night: true }), NOW);
-  assert.match(card.details[1], / · MALAM$/);
+  assert.match(card.details[1], / · NIGHT$/);
 });
 
 test('buildCellCard: plural noun, max FRP and newest age, accent passthrough', () => {

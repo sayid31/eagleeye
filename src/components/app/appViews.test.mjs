@@ -83,7 +83,7 @@ test('initialsFor: name first, then the email local part, never empty', () => {
 });
 
 test('documentTitle follows "<page> · EagleEye View"', () => {
-  assert.equal(documentTitle('Users'), 'User · EagleEye View');
+  assert.equal(documentTitle('Users'), 'Users · EagleEye View');
   assert.equal(documentTitle('  '), 'EagleEye View');
   assert.equal(documentTitle(undefined), 'EagleEye View');
 });

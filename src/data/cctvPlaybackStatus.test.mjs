@@ -9,7 +9,7 @@ test('playlist health ok with no video is reported as waiting, never as the heal
 });
 
 test('stalled and recovering players are named on the plane', () => {
-  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'retrying', attempt: 3 }).message, /macet.*#3/i);
+  assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'retrying', attempt: 3 }).message, /stalled.*#3/i);
   assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'recovering' }).message, /memulihkan/i);
   assert.match(videoPlaceholderHealth({ status: 'ok' }, { state: 'unavailable' }).message, /unavailable/i);
 });
@@ -54,5 +54,5 @@ test('a connect timeout is reported as no data from the source', () => {
   const playback = { state: 'retrying', attempt: 2, reason: 'no-data' };
   assert.match(videoPlaceholderHealth({ status: 'ok' }, playback).message, /no data from the source.*#2/i);
   assert.match(playbackBadge('retrying', { reason: 'no-data' }).text, /NO DATA FROM SOURCE/);
-  assert.match(playbackBadge('retrying').text, /MACET/);
+  assert.match(playbackBadge('retrying').text, /STALLED/);
 });

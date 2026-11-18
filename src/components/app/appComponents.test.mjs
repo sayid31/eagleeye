@@ -151,7 +151,7 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
   assert.match(html, /<a href="#main-content"/);
   assert.match(html, /<main id="main-content" tabindex="-1"/);
   assert.equal((html.match(/<main/g) ?? []).length, 1, 'exactly one main landmark');
-  assert.match(html, /<nav aria-label="Navigasi Developer"/);
+  assert.match(html, /<nav aria-label="Developer navigation"/);
   assert.match(html, /<nav aria-label="Breadcrumb"/);
   const labels = ['System Overview', 'User &amp; Admin', 'Login Log', 'Kill switch', 'Usage', 'API Keys', 'AI Configuration', 'General', 'AI Provider', 'Persona',
     'Usage &amp; Cost', 'Server Log', 'Audit Log', 'System Health', 'Audit'];

@@ -241,7 +241,7 @@ test('Radio is nested inside Context with separate disclosure and power controls
   const contextEnd = html.indexOf('\n  </aside>', contextStart);
   assert.ok(contextStart >= 0 && radioStart > contextStart && radioStart < contextEnd);
   assert.match(html, /id="radio-panel"[^>]*data-panel-id="radio-panel"/);
-  assert.match(html, /aria-label="Pemutaran radio"/);
+  assert.match(html, /aria-label="Radio playback"/);
   assert.match(html, /id="context-radio-toggle-btn"[^>]*aria-expanded="false"[^>]*aria-controls="context-radio-mini"/);
   assert.doesNotMatch(html, /id="context-radio-toggle-btn"[^>]*aria-pressed=/);
   assert.match(html, /id="context-radio-mini"[^>]*aria-label="Compact Radio controls"[^>]*hidden/);

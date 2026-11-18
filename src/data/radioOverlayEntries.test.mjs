@@ -291,7 +291,7 @@ test('Radio text uses protected selected and bounded ambient WorldOverlay entrie
   const cluster = createRadioClusterOverlayEntry({
     id: 'a:z:12',
     position,
-    text: '12 BERITA',
+    text: '1212 NEWS
     accent: '#44adff',
     stationCount: 12,
   });
@@ -301,7 +301,7 @@ test('Radio text uses protected selected and bounded ambient WorldOverlay entrie
   assert.equal(cluster.horizonCull, true);
   assert.equal(cluster.maxDistance, RADIO_GLOBE_INTERACTION_MAX_DISTANCE_M);
   assert.equal(cluster.distanceScale.far, RADIO_GLOBE_INTERACTION_MAX_DISTANCE_M);
-  assert.equal(cluster.title, '12 BERITA');
+  assert.equal(cluster.title, '1212 NEWS;
   assert.equal(cluster.priority, 12);
   assert.equal(cluster.stateless, true);
   assert.equal(cluster.edgeFade, 'none');

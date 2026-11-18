@@ -1528,7 +1528,7 @@ test('awareness rescans only for invalidation, source change, or meaningful move
 
 test('installation summaries disclose viewport-scoped coverage', () => {
   const empty = summarizeInstallationViewport([], { available: true, stale: false });
-  assert.match(empty.reason, /feed viewport/i);
+  assert.match(empty.reason, /viewport feed/i);
   assert.match(empty.reason, /not a full 250 km survey/i);
 
   const unavailable = summarizeInstallationViewport([], { available: false, stale: false });

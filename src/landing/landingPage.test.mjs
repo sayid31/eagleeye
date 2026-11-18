@@ -29,7 +29,7 @@ test('landing.html states the product boundary and the required page metadata', 
   assert.match(html, /<link rel="icon" type="image\/svg\+xml" href="\/logo.svg"/);
   assert.match(html, /Not a people-tracking tool/);
   assert.match(html, /search by a person's name/);
-  assert.match(html, /pengenalan wajah/);
+  assert.match(html, /face recognition/);
   assert.doesNotMatch(html, />\s*Daftar\s*</, 'no sign-up button');
 });
 

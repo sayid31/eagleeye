@@ -68,7 +68,7 @@ test('Umum: the 30-minute hard cap is stated next to the limits and a larger val
   const form = { limits: { dailyMinutes: '60', sessionMinutes: '30', idleSeconds: '300' } };
   const base = { form, ranges, errors: {}, onChange: noop, onReset: noop };
   const html = render(h(LimitsCard, base));
-  assert.match(html, /Batas keras 30 menit/);
+  assert.match(html, /Hard limit of 30 minutes/);
   assert.match(html, /<label[^>]*>Maximum session length<\/label>/);
   const over = render(h(LimitsCard, { ...base, form: { limits: { ...form.limits, sessionMinutes: '60' } }, errors: { idleSeconds: 'Wrong.' } }));
   assert.match(over, /Nilai 60 menit melebihi batas keras/);
@@ -88,7 +88,7 @@ test('Persona: core rules are read-only with their guard, extra rules are labell
   const { CoreRulesCard, ExtraRulesCard, TopicsCard } = await load('PersonaSections');
   const core = render(h(CoreRulesCard, { rules: { groups: CORE_RULE_GROUPS, rules: VOICE_CORE_RULES } }));
   assert.match(core, /<details[^>]*open/);
-  assert.match(core, /Forbidden:  /);
+  assert.match(core, /Forbidden:/);
   assert.doesNotMatch(core, /<input|<textarea/, 'locked rules have no controls');
   const empty = render(h(ExtraRulesCard, { rows: [], focusIndex: null, onChange: noop }));
   assert.match(empty, /No extra rules yet/);

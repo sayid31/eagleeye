@@ -564,7 +564,7 @@ test('markup, startup ordering and accessibility remain pinned', () => {
   const envTile = html.slice(html.indexOf('data-first-run-choice="environmental"'));
   const visible = envTile.slice(envTile.indexOf('<small>'), envTile.indexOf('</small>'));
   assert.match(visible, /earthquake/i);
-  assert.match(visible, /titik api/i, 'the tile must promise the fires it enables');
+  assert.match(visible, /active fires/i, 'the tile must promise the fires it enables');
 
   // The card's one persuasive line is OWNER-AUTHORED and pinned verbatim,
   // unspaced em dash included. This is copy, not prose to be improved in a

@@ -164,7 +164,7 @@ test('formatDistance formats meters under 1km and km above', () => {
 
 test('composeRouteLabel appends distance/duration for a real route', () => {
   const label = composeRouteLabel('Downtown', 1200, 900, 'car', false);
-  assert.match(label, /Downtown — 1\.2 km · 15 min berkendara/);
+  assert.match(label, /Downtown — 1\.2 km · 15 min driving/);
 });
 
 test('composeRouteLabel marks a fallback straight-line with no travel time', () => {

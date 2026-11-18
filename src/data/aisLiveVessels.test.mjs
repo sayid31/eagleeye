@@ -165,7 +165,7 @@ test('a stale feed without a silence figure still says the feed is silent', () =
 test('reconnecting reports which attempt is in flight, rows or no rows', () => {
   assert.equal(
     deriveAisFeedError({ status: 'reconnecting', reconnectAttempt: 2 }, 900),
-    'reconnecting to the feed… (percobaan 2)',
+    'reconnecting to the feed… (attempt 2)',
   );
   assert.equal(deriveAisFeedError({ status: 'reconnecting' }, 0), 'reconnecting to the feed…');
 });
@@ -173,7 +173,7 @@ test('reconnecting reports which attempt is in flight, rows or no rows', () => {
 test('DOWN is a visible terminal state, not a silent retry', () => {
   assert.equal(
     deriveAisFeedError({ status: 'down', reconnectAttempt: 5 }, 1_200),
-    'feed down — retrying slowly (percobaan 5)',
+    'feed down — retrying slowly (attempt 5)',
   );
 });
 
@@ -231,7 +231,7 @@ test('a degraded feed keeps its reason through snapshot classification', () => {
     rows: [{ mmsi: 'cached', lat: 29.7, lon: -95.1 }],
   });
   assert.equal(snapshot.acceptedRowCount, 1, 'the cached vessel is still drawable');
-  assert.equal(snapshot.error, 'feed down — retrying slowly (percobaan 5)');
+  assert.equal(snapshot.error, 'feed down — retrying slowly (attempt 5)');
 });
 
 function makeFakeAisRuntime(startMs = 1000) {

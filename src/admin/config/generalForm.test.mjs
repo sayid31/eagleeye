@@ -43,7 +43,7 @@ test('bad limits block the save with one message per field, keyed by the field',
 test('a session length above the hard cap is accepted but warned about, next to the cap note', () => {
   assert.equal(sessionCapWarning('30'), null);
   assert.equal(sessionCapWarning(''), null);
-  assert.match(sessionCapWarning('45'), /45 menit melebihi batas keras.*30 menit/);
+  assert.match(sessionCapWarning('45'), /A value of 45 minutes exceeds the hard limit.*30 minutes/);
   assert.match(hardCapNote(), new RegExp(`${MAX_LIVE_SESSION_MINUTES} minutes`));
   const base = defaultVoiceSettings();
   const r = settingsFromGeneralForm(base, { ...generalFormFromSettings(base), limits: { ...generalFormFromSettings(base).limits, sessionMinutes: '45' } }, RANGES);

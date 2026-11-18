@@ -29,7 +29,7 @@ test('login wording: failure reason, deleted and unknown accounts', () => {
   assert.equal(loginFailureText({ reason: 'new_reason' }), 'new_reason');
   assert.equal(loginFailureText({}), '—');
   assert.equal(loginAccountText({ userId: null }), 'Email not registered');
-  assert.equal(loginAccountText({ userId: 'U1', userName: 'Deleted user', userDeleted: true }), 'User terhapus (terhapus)');
+  assert.equal(loginAccountText({ userId: 'U1', userName: 'Deleted user', userDeleted: true }), 'Deleted user (deleted)');
   assert.equal(loginAccountText({ userId: 'U1', userName: 'Ani' }), 'Ani');
 });
 

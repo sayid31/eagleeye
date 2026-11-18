@@ -22,7 +22,7 @@ test('formatLayerAge buckets seconds, minutes and hours', () => {
 test('buildLayerMetaText leads with the lifecycle phase, then errors, then age', () => {
   assert.equal(
     buildLayerMetaText({ source: 'NASA FIRMS', lifecycleState: 'enabling', stats: {} }, NOW),
-    'MENYALAKAN · NASA FIRMS',
+    'TURNING ON · NASA FIRMS',
   );
   assert.equal(
     buildLayerMetaText({ source: 'USGS', enabled: true, lifecycleState: 'enabled', stats: { lastUpdate: NOW - 120_000 } }, NOW),
@@ -46,7 +46,7 @@ test('a still-enabling layer presents ON with the enabling label', () => {
   assert.equal(view.phase, 'enabling');
   assert.equal(view.state, 'enabling');
   assert.equal(view.text, 'TURNING ON');
-  assert.equal(view.ariaLabel, 'Titik api: MENYALAKAN');
+  assert.equal(view.ariaLabel, 'Fire hotspots: TURNING ON');
   assert.equal(view.feedClass, null, 'no feed colouring before the layer is settled ON');
 });
 
