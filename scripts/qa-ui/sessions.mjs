@@ -18,7 +18,7 @@ const ACCOUNTS = Object.freeze({
   // A super_admin must hold a CLI-set password (or a Google account) or the actor resolver refuses the role.
   super_admin: { email: QA_SUPER_ADMIN_EMAIL, name: 'Dev Owner', role: 'super_admin', passwordSetBy: PASSWORD_SET_BY.cli },
   admin: { email: 'admin@example.test', name: 'Ani Admin', role: 'admin', passwordSetBy: PASSWORD_SET_BY.self },
-  user: { email: 'user@example.test', name: 'Budi Pengguna', role: 'user', passwordSetBy: PASSWORD_SET_BY.admin },
+  user: { email: 'user@example.test', name: 'Budi User', role: 'user', passwordSetBy: PASSWORD_SET_BY.admin },
 });
 
 /**

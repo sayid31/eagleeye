@@ -16,7 +16,7 @@ const heroCta = (page) => page.$eval('[data-cta-slot="hero"] a', (a) => ({ text:
 
 const LOCKED_USER_ME = {
   configured: true, signedIn: true, home: '/app', googleSignIn: false,
-  user: { id: 'qa-user', name: 'Budi Pengguna', email: 'user@example.test', role: 'user', capabilities: { layers: false, ai: false, premium: false } },
+  user: { id: 'qa-user', name: 'Budi User', email: 'user@example.test', role: 'user', capabilities: { layers: false, ai: false, premium: false } },
 };
 
 const ctaProbe = (role, text, href) => ({
@@ -80,7 +80,7 @@ export const LANDING_PROBES = [
   },
   ctaProbe('anonymous', 'Sign in', '/login'),
   ctaProbe('user', 'Open Console', '/app'),
-  ctaProbe('admin', 'Panel Admin', '/admin'),
+  ctaProbe('admin', 'Admin Panel', '/admin'),
   ctaProbe('super_admin', 'Developer Console', '/dev'),
   {
     id: 'map-account-banner-phone', role: 'user', viewport: 'mobile', theme: 'dark', path: '/app', waitFor: '#account-banner',

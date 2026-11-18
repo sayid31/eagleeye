@@ -16,7 +16,7 @@ export async function answerJson(page, responses) {
   });
 }
 
-const QA_USER = { id: 'qa-user', name: 'Budi Pengguna', email: 'user@example.test', role: 'user', capabilities: { layers: true, ai: true, premium: false } };
+const QA_USER = { id: 'qa-user', name: 'Budi User', email: 'user@example.test', role: 'user', capabilities: { layers: true, ai: true, premium: false } };
 
 /** `/api/me` of a signed-in user whose password an admin has just set. */
 export const FORCED_CHANGE_ME = { configured: true, signedIn: true, home: '/app', googleSignIn: false, user: { ...QA_USER, mustChangePassword: true } };

@@ -137,7 +137,7 @@ self sign-up. One-time setup in `.env` (template in `.env.example`):
 |---|---|
 | `BETTER_AUTH_SECRET` | Required. 32+ random characters, e.g. `openssl rand -base64 32`. Signs the session cookie. |
 | `SUPER_ADMIN_EMAILS` | Required. Comma-separated emails of the developer accounts (role `super_admin`, area `/dev`). The only source of super_admin. |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional. "Masuk dengan Google" for super_admins only (shown on `/login` when coming from `/dev`). Web-application OAuth client from [Google Cloud Console](https://console.cloud.google.com/apis/credentials), redirect URI `http://localhost:4173/api/auth/callback/google` (your real origin if different). |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Optional. "Sign in with Google" for super_admins only (shown on `/login` when coming from `/dev`). Web-application OAuth client from [Google Cloud Console](https://console.cloud.google.com/apis/credentials), redirect URI `http://localhost:4173/api/auth/callback/google` (your real origin if different). |
 | `BETTER_AUTH_URL` | Optional; default `http://localhost:<PORT>`. Open the app on exactly this origin (`localhost`, not `127.0.0.1`). |
 | `AUTH_TRUSTED_PROXIES` | Optional; reverse-proxy IPs/CIDRs whose `X-Forwarded-For` is trusted for the client IP. |
 | `AUTH_DATABASE_FILE` | Optional; default `.gev-data/auth.db` (SQLite, owner-only, gitignored; an old `data/auth.db` is moved there once). |

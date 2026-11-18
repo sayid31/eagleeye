@@ -36,13 +36,13 @@ const ROLE_CTA = Object.freeze({
     secondary: [{ label: 'Account', href: LANDING_ROUTES.account }, SIGN_OUT],
   },
   admin: {
-    primary: { label: 'Panel Admin', href: LANDING_ROUTES.admin },
+    primary: { label: 'Admin Panel', href: LANDING_ROUTES.admin },
     secondary: [OPEN_CONSOLE, SIGN_OUT],
   },
   super_admin: {
     primary: { label: 'Developer Console', href: LANDING_ROUTES.dev },
     secondary: [
-      { label: 'Panel Admin', href: LANDING_ROUTES.admin },
+      { label: 'Admin Panel', href: LANDING_ROUTES.admin },
       { label: 'Console', href: LANDING_ROUTES.app },
       SIGN_OUT,
     ],

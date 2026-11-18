@@ -5,6 +5,15 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ## [Unreleased]
 
+### Changed
+
+- **The whole interface is now in English.** The map console, the public landing page, the login and account pages, the
+  `/admin` and `/dev` consoles, error messages, tooltips and screen-reader labels were Indonesian; they now read in English.
+  Menu and page names are Overview, Users, Login Log, Audit, Kill switch, Usage, API Keys, AI Configuration (General, AI Provider,
+  Persona, Usage & Cost), Server Log and System Health, and the buttons are "Sign in" / "Sign out". Times and numbers follow
+  English formatting ("5 min ago", "1,000"). The voice assistant's persona rules are unchanged and still shown in their
+  original language.
+
 ### Added
 
 - **Password sementara tampil sekali** dan harus dikonfirmasi sudah disalin sebelum dialog bisa ditutup; tombol "Salin pesan"

@@ -34,17 +34,17 @@ test('user → Buka Konsol, with Akun and Keluar', () => {
   });
 });
 
-test('admin → Panel Admin, with Buka Konsol and Keluar', () => {
+test('admin → Admin Panel, with Buka Konsol and Keluar', () => {
   assert.deepEqual(landingCta(me('admin')), {
-    primary: { label: 'Panel Admin', href: '/admin' },
+    primary: { label: 'Admin Panel', href: '/admin' },
     secondary: [{ label: 'Open Console', href: '/app' }, SIGN_OUT],
   });
 });
 
-test('super_admin → Developer Console, with Panel Admin, Konsol and Keluar', () => {
+test('super_admin → Developer Console, with Admin Panel, Konsol and Keluar', () => {
   assert.deepEqual(landingCta(me('super_admin')), {
     primary: { label: 'Developer Console', href: '/dev' },
-    secondary: [{ label: 'Panel Admin', href: '/admin' }, { label: 'Console', href: '/app' }, SIGN_OUT],
+    secondary: [{ label: 'Admin Panel', href: '/admin' }, { label: 'Console', href: '/app' }, SIGN_OUT],
   });
 });
 
@@ -75,7 +75,7 @@ test('returned objects are copies: mutating one result does not leak into the ne
   first.primary.label = 'X';
   first.secondary.push({ label: 'Y', href: '/y' });
   first.secondary[1].label = 'Z';
-  assert.deepEqual(labels(landingCta(me('admin'))), ['Panel Admin', 'Open Console', 'Sign out']);
+  assert.deepEqual(labels(landingCta(me('admin'))), ['Admin Panel', 'Open Console', 'Sign out']);
   assert.equal(LANDING_ROUTES.app, '/app');
   assert.ok(Object.isFrozen(LANDING_ROUTES));
 });

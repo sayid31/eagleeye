@@ -253,6 +253,9 @@ printing credential values. Full key map and proxy-route ownership: `README.md`
   `docs/CURRENT-STATE.md` section. If it adds/changes a data source, update
   `DATA_SOURCES.md` with license/attribution — don't bundle
   redistribution-restricted data; fetch it at runtime instead.
+- UI language is English: every string a person reads lives in `src/copy/en/` (React surfaces) or the map's own markup, and
+  `src/copy/en/englishOnly.test.mjs` fails on Indonesian words. Menu/page names follow `src/copy/en/glossary.js`. The voice
+  persona and core-rule text is sent to the model and is the one deliberate exception (it keeps its language).
 - Product boundary (enforced in review, not code): this project models
   events/assets/infrastructure/systems (aircraft, vessels, satellites, fires,
   cameras, cities) — not named-person search, face recognition, or

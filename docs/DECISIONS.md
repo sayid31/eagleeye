@@ -6,6 +6,15 @@ or design is what it is. For what the system currently does, read
 `docs/CURRENT-STATE.md` instead; that file is present-tense only and does
 not carry this kind of dated narrative.
 
+## 2026-11-18 — The UI language is English (owner request; supersedes the Indonesian-UI wording below)
+
+Every string a person reads (map console, landing, login, account, `/admin`, `/dev`, errors, tooltips, `aria-label`s, `<title>`s, `lang="en"`) is English. Done in bulk with scripts (extract → one reviewed translation table → exact-token replacement in source, tests and QA probes), not file by file.
+
+- **Menu and page names.** Overview, System Overview, Users, Users & Admins, Login Log, Audit, Kill switch, Usage, API Keys, AI Configuration (General, AI Provider, Persona, Usage & Cost), Server Log, Audit Log, System Health; the verbs are "Sign in" / "Sign out" and the noun is "Login" (so "Login Log", never "Sign-in"). `src/copy/en/glossary.js` enforces them and forbids the replaced Indonesian-era synonyms.
+- **Counts use wording that reads right for 1 and N** ("Entries: 3", "Sessions: 1", "${n} min ago") instead of a plural helper; relative times are short forms ("5 min ago", "2 h ago") and dates/numbers use `en-US` (`Intl.RelativeTimeFormat('en')`, `1,000`, 24-hour `hourCycle: 'h23'`).
+- **Why a vocabulary guard, not only the copy-literals scan.** `englishOnly.test.mjs` scans every copy module, `.jsx` and view module under `admin`, `login`, `components`, `lib`, `landing` for unambiguous Indonesian words (`indonesianVocabulary.mjs`), so a leftover cannot come back through a new string.
+- **Left unchanged on purpose.** The voice agent's persona and core-rule text and its default refusal sentence (`src/voice/voiceCoreRules.js`, `voiceSystemPromptSettings.js`) are sent to the model, so translating them would change agent behaviour; the Persona page therefore still displays those rules in their original language. External data (CCTV and place names, upstream messages), proper nouns, code identifiers (`atas`/`samping` camera-angle ids, API codes, CSS classes, env var names) and `plan/**` are untouched.
+
 ## 2026-11-18 — UI refactor: look only; menu, URLs and terms revert to the original (owner correction; plan/refaktor-ui/10)
 
 The owner asked for a new look (shadcn theme, light/dark, UI quality), not a new information architecture. The refactor had restructured the `/dev` menu (14 items → Ringkasan + 4 groups), merged pages into tabs under new paths with redirects, and renamed menu terms. That is reverted for the sidebar menu list and the pages behind it; the shell, header, account menu, mobile Sheet and page contents keep the new look.
