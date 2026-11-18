@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { ConfirmDialog } from '@/components/app/ConfirmDialog.jsx';
 import { CopyField } from '@/components/app/CopyField.jsx';
 import { USERS_COPY } from '../../copy/id/users.js';
-import { handoverMessage } from './usersView.js';
+import { handoverMessage } from './userFormView.js';
 
 const COPY = USERS_COPY.oneTime;
 

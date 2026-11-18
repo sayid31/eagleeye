@@ -9,7 +9,8 @@ import { UserDialog } from './UserDialog.jsx';
 import { PasswordChoice } from './UserFormFields.jsx';
 import { usersApi } from './usersApi.js';
 import { useAsyncAction } from './useAsyncAction.js';
-import { errorField, passwordRequirements } from './usersView.js';
+import { errorField } from './usersView.js';
+import { passwordRequirements } from './userFormView.js';
 
 const COPY = USERS_COPY;
 

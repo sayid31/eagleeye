@@ -104,6 +104,15 @@ export const USERS_COPY = Object.freeze({
     submit: 'Simpan perubahan',
     nothingChanged: 'Belum ada perubahan.',
   }),
+  /** Lines of the "Salin pesan" text an admin sends to a new or reset account. */
+  handover: Object.freeze({
+    created: 'Akun EagleEye Anda sudah dibuat.',
+    reset: 'Password akun EagleEye Anda sudah direset.',
+    loginUrl: (url) => `Alamat login: ${url}`,
+    email: (value) => `Email: ${value}`,
+    password: (value) => `Password sementara: ${value}`,
+    note: 'Catatan: password ini wajib diganti saat login pertama. Jangan bagikan pesan ini ke orang lain.',
+  }),
   oneTime: Object.freeze({
     createdHeading: 'Akun dibuat. Salin password sementara',
     resetHeading: 'Password direset. Salin password sementara',

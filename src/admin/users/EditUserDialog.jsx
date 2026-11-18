@@ -10,7 +10,8 @@ import { UserDialog } from './UserDialog.jsx';
 import { CapabilitySwitches } from './UserFormFields.jsx';
 import { usersApi } from './usersApi.js';
 import { useAsyncAction } from './useAsyncAction.js';
-import { editPayload, errorField } from './usersView.js';
+import { errorField } from './usersView.js';
+import { editPayload } from './userFormView.js';
 
 const COPY = USERS_COPY;
 const FORM_FIELDS = ['email', 'name'];

@@ -16,7 +16,8 @@ import { UserDialog } from './UserDialog.jsx';
 import { CapabilitySwitches, PasswordChoice } from './UserFormFields.jsx';
 import { usersApi } from './usersApi.js';
 import { useAsyncAction } from './useAsyncAction.js';
-import { createFormDefaults, createFormReady, createPayload, errorField } from './usersView.js';
+import { errorField } from './usersView.js';
+import { createFormDefaults, createFormReady, createPayload } from './userFormView.js';
 
 const COPY = USERS_COPY;
 const FORM_FIELDS = ['email', 'name', 'password'];
