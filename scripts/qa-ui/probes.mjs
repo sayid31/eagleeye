@@ -112,7 +112,7 @@ export const PROBES = [
       assert.deepEqual(labels, DEV_ITEMS.map(([label]) => label), 'sidebar items equal the original menu, in order');
       for (const [label, path, title] of DEV_ITEMS) {
         await page.goto(`${env.url}/dev${path === '/' ? '' : path}`, { waitUntil: 'domcontentloaded' });
-        await page.waitForSelector(MAIN);
+        await page.waitForSelector('#main-content h1');
         assert.equal(await page.$eval('#main-content h1', (el) => el.textContent), title, `${label} (${path}) page title`);
       }
       await page.goto(`${env.url}/dev/ai`, { waitUntil: 'domcontentloaded' });

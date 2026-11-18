@@ -9,14 +9,13 @@ import {
 import { SHELL_COPY } from '@/copy/id/shell';
 import { UserMenu } from './UserMenu.jsx';
 import { navIcon } from './navIcons.js';
-import { pathMatches } from './navModel.js';
+import { resolveNav } from './navModel.js';
 
-function MenuItem({ item, pathname }) {
+function MenuItem({ item, active }) {
   const { isMobile, setOpenMobile, state } = useSidebar();
   // A tooltip exists only while the desktop sidebar is collapsed to icons: a hidden-but-open tooltip would swallow the first Esc inside the mobile sheet.
   const tooltip = !isMobile && state === 'collapsed' ? item.label : undefined;
   const Icon = navIcon(item.icon ?? item.id);
-  const active = pathMatches(pathname, item.path);
   return (
     <SidebarMenuItem>
       <SidebarMenuButton asChild isActive={active} tooltip={tooltip}>
@@ -34,6 +33,8 @@ function MenuItem({ item, pathname }) {
  *   user?: object, areaLink?: {href: string, label: string} | null, onSignOut: () => void}} props
  */
 export function AppSidebar({ brand, area, groups, pathname, user, areaLink, onSignOut }) {
+  // One active item: the longest matching path, so `/server-log/audit` does not also light up `/server-log`.
+  const activeId = resolveNav(groups, pathname)?.item.id;
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -57,7 +58,7 @@ export function AppSidebar({ brand, area, groups, pathname, user, areaLink, onSi
             <SidebarGroup key={group.id}>
               {group.title ? <SidebarGroupLabel>{group.title}</SidebarGroupLabel> : null}
               <SidebarGroupContent>
-                <SidebarMenu>{group.items.filter((item) => !item.hidden).map((item) => <MenuItem key={item.id} item={item} pathname={pathname} />)}</SidebarMenu>
+                <SidebarMenu>{group.items.filter((item) => !item.hidden).map((item) => <MenuItem key={item.id} item={item} active={item.id === activeId} />)}</SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
           ))}

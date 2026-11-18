@@ -76,8 +76,7 @@ export const SYSTEM_PROBES = [
       await tabUntil(page, 'a[href="/dev/server-log/health"]', { max: 40 });
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => location.pathname === '/dev/server-log/health');
-      await page.waitForSelector('#main-content h1');
-      assert.equal(await page.$eval('#main-content h1', (el) => el.textContent), 'Kesehatan Sistem');
+      await page.waitForFunction(() => document.querySelector('#main-content h1')?.textContent === 'Kesehatan Sistem', { timeout: 8000 });
       assert.equal(await page.$eval('a[aria-current="page"]', (el) => el.textContent), 'Kesehatan Sistem');
     },
   },

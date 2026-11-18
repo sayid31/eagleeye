@@ -183,3 +183,14 @@ test('AppShell (admin): no Developer badge and the four admin items', async () =
   for (const text of ['Ringkasan', 'Pengguna', 'Log Login', 'Audit']) assert.ok(html.includes(`>${text}<`), text);
   assert.ok(!html.includes('Aktivitas'));
 });
+
+test('AppShell (dev): a nested page marks only itself current, not its parent page (/server-log/audit vs /server-log)', async () => {
+  const { AppShell } = await load('AppShell');
+  const { AppProviders } = await load('AppProviders');
+  const { navForArea } = await loader.load('src/admin/adminNav.js');
+  const html = render(h(AppProviders, null, h(StaticRouter, { location: '/server-log/audit' }, h(AppShell, {
+    area: 'dev', brand: { name: 'EagleEye View' }, groups: navForArea('dev'), pathname: '/server-log/audit', user: { email: 'a@b.test', role: 'super_admin' }, onSignOut() {},
+  }, null))));
+  const current = [...html.matchAll(/aria-current="page"[^>]*>(?:<svg[\s\S]*?<\/svg>)?<span>([^<]*)</g)].map((m) => m[1]);
+  assert.deepEqual(current, ['Audit Log']);
+});

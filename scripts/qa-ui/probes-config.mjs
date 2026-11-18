@@ -167,8 +167,7 @@ export const CONFIG_PROBES = [
       await tabUntil(page, 'a[href="/dev/ai/provider"]', { max: 40 });
       await page.keyboard.press('Enter');
       await page.waitForFunction(() => location.pathname === '/dev/ai/provider');
-      await page.waitForSelector('#main-content h1');
-      assert.equal(await text(page, '#main-content h1'), 'Penyedia AI');
+      await page.waitForFunction(() => document.querySelector('#main-content h1')?.textContent === 'Penyedia AI', { timeout: 8000 });
       assert.equal(await text(page, 'a[aria-current="page"]'), 'Penyedia AI');
     },
   },
