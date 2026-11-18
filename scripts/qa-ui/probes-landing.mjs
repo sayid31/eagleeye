@@ -33,7 +33,7 @@ export const LANDING_PROBES = [
     id: 'landing-skip-link', role: 'anonymous', viewport: 'desktop', theme: 'light', path: '/', waitFor: MAIN,
     async run(page) {
       await tabUntil(page, 'a[href="#main-content"]', { max: 2 });
-      assert.match((await focusInfo(page)).text, /Lewati ke konten/);
+      assert.match((await focusInfo(page)).text, /Skip to content/);
       await page.keyboard.press('Enter');
       await waitForFocus(page, MAIN);
     },

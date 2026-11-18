@@ -35,7 +35,7 @@ test('badge appears only for non-healthy player states', () => {
   assert.equal(playbackBadge('live'), null);
   assert.equal(playbackBadge(null), null);
   assert.equal(playbackBadge('retrying').frameState, 'stalled');
-  assert.match(playbackBadge('connecting').text, /MENGHUBUNGKAN/);
+  assert.match(playbackBadge('connecting').text, /CONNECTING/);
 });
 
 import { EMPTY_PLAYLIST_MESSAGE } from './cctvSourceHealth.mjs';

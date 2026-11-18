@@ -1233,7 +1233,7 @@ test('share tracking policies pin each owner, key, label, and acquisition deadli
       optionOwner: 'flights',
       optionKey: 'selectedFlightsTrackingId',
       expiryWindowMs: 90_000,
-      label: 'penerbangan',
+      label: 'flight',
     },
     military: {
       optionOwner: 'flights',
@@ -1245,7 +1245,7 @@ test('share tracking policies pin each owner, key, label, and acquisition deadli
       optionOwner: 'satellites',
       optionKey: 'selectedSatTrackingId',
       expiryWindowMs: 300_000,
-      label: 'satelit',
+      label: 'satellite',
     },
   });
 });

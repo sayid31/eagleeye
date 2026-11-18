@@ -25,10 +25,10 @@ test('isLeavingClick catches plain same-origin link clicks only', () => {
 
 test('failureMessage shows the server sentence for 4xx validation, a mapped sentence otherwise', () => {
   const failure = (status, detail) => Object.assign(new Error('x'), { status, detail });
-  assert.equal(failureMessage(failure(400, 'Kunci tidak dikenal: FOO')), 'Kunci tidak dikenal: FOO');
-  assert.equal(failureMessage(failure(422, 'Pengaturan tidak valid: a; b')), 'Pengaturan tidak valid: a; b');
-  assert.match(failureMessage(failure(403, 'Akses ditolak')), /izin/);
+  assert.equal(failureMessage(failure(400, 'Unknown key: FOO')), 'Unknown key: FOO');
+  assert.equal(failureMessage(failure(422, 'Invalid settings: a; b')), 'Invalid settings: a; b');
+  assert.match(failureMessage(failure(403, 'Access denied')), /permission/);
   assert.match(failureMessage(failure(500, 'boom')), /Server Log/);
-  assert.match(failureMessage(failure(400, 'INVALID_INPUT')), /tidak valid/);
-  assert.match(failureMessage(new TypeError('Failed to fetch')), /terhubung/);
+  assert.match(failureMessage(failure(400, 'INVALID_INPUT')), /not valid/);
+  assert.match(failureMessage(new TypeError('Failed to fetch')), /reach the server/);
 });

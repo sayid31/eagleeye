@@ -101,7 +101,7 @@ test('LoginResultCell: success and failure badges carry icon + word, failure add
   assert.match(ok, />Success</);
   const bad = render(h(LoginResultCell, { entry: { success: false, reason: 'throttled' } }));
   assert.match(bad, />Failed</);
-  assert.match(bad, /Ter-throttle/);
+  assert.match(bad, /Throttled/);
   assert.match(bad, /<svg[^>]*aria-hidden="true"/);
 });
 

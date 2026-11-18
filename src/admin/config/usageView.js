@@ -40,7 +40,7 @@ export function formatDuration(seconds) {
   const rest = s % 60;
   if (h) return `${h} j ${String(m).padStart(2, '0')} min`;
   if (!m && !rest) return '0 min';
-  return rest ? `${m} min ${String(rest).padStart(2, '0')} dtk` : `${m} min`;
+  return rest ? `${m} min ${String(rest).padStart(2, '0')} s` : `${m} min`;
 }
 
 /** Estimated money, always marked as an estimate ("~$0.42"). */

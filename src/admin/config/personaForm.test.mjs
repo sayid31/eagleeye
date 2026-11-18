@@ -8,7 +8,7 @@ test('core rules are grouped in display order with every rule shown once', () =>
   const grouped = groupCoreRules(CORE_RULE_GROUPS, VOICE_CORE_RULES);
   assert.deepEqual(grouped.map((g) => g.id), CORE_RULE_GROUPS.map((g) => g.id));
   assert.equal(grouped.reduce((n, g) => n + g.rules.length, 0), 37);
-  assert.equal(guardLabel('prompt+code'), 'Prompt + kode');
+  assert.equal(guardLabel('prompt+code'), 'Prompt + code');
   assert.equal(guardLabel('unknown'), 'Prompt');
 });
 
@@ -31,7 +31,7 @@ test('topic restriction is saved from Persona: trimmed list, empty list refused 
   assert.equal(r.settings.persona.name, 'Ela');
   const empty = settingsFromPersonaForm(base, [], { topicsEnabled: true, topics: '  ', refusal: '' });
   assert.equal(empty.ok, false);
-  assert.match(empty.errors[0], /minimal satu topik/);
+  assert.match(empty.errors[0], /at least one allowed topic/);
   // Without a topic form the saved topics are kept as they are.
   const saved = { ...base, topics: { enabled: true, allowed: ['radio'], refusal: '' } };
   assert.deepEqual(settingsFromPersonaForm(saved, []).settings.topics, saved.topics);
@@ -44,7 +44,7 @@ test('half-filled, too-long and too-many rules are refused with a message', () =
   const many = Array.from({ length: 21 }, (_, i) => ({ forbid: `f${i}`, instead: 'i' }));
   const r = settingsFromPersonaForm(base, many);
   assert.equal(r.ok, false);
-  assert.match(r.errors[0], /Maksimal 20/);
+  assert.match(r.errors[0], /At most 20/);
 });
 
 test('summarizeCoreRules and describeRuleGroup count rules and code-backed ones', async () => {
@@ -53,21 +53,21 @@ test('summarizeCoreRules and describeRuleGroup count rules and code-backed ones'
     { id: 'topic', label: 'Topik', rules: [{ guard: 'prompt' }, { guard: 'prompt' }] },
     { id: 'actions', label: 'Tindakan', rules: [{ guard: 'prompt+code' }] },
   ];
-  assert.equal(summarizeCoreRules(groups), '3 aturan dalam 2 grup. 1 juga dijaga kode aplikasi, sisanya hanya oleh prompt suara.');
-  assert.equal(describeRuleGroup(groups[0]), '2 aturan');
-  assert.equal(describeRuleGroup(groups[1]), '1 aturan · 1 dijaga kode');
+  assert.equal(summarizeCoreRules(groups), '3 rules in 2 groups. 1 are also enforced by app code; the rest only by the voice prompt.');
+  assert.equal(describeRuleGroup(groups[0]), '2 rules');
+  assert.equal(describeRuleGroup(groups[1]), '1 rules · 1 enforced by code');
 });
 
 test('summaries and the default persona come from copy and the server defaults', async () => {
   const { defaultPersonaForm, describeRuleGroup, summarizeCoreRules } = await import('./personaForm.js');
   const groups = groupCoreRules(CORE_RULE_GROUPS, VOICE_CORE_RULES);
-  assert.match(summarizeCoreRules(groups), /^37 aturan dalam \d+ grup\. \d+ juga dijaga kode aplikasi/);
-  assert.match(describeRuleGroup({ rules: [{ guard: 'prompt+code' }, { guard: 'prompt' }] }), /^2 aturan · 1 dijaga kode$/);
+  assert.match(summarizeCoreRules(groups), /^37 rules in \d+ groups\. \d+ are also enforced by app code/);
+  assert.match(describeRuleGroup({ rules: [{ guard: 'prompt+code' }, { guard: 'prompt' }] }), /^2 rules · 1 enforced by code$/);
   assert.deepEqual(defaultPersonaForm(), { rows: [], topics: { topicsEnabled: false, topics: '', refusal: '' } });
 });
 
 test('validation messages are Indonesian sentences naming the row', () => {
   const base = defaultVoiceSettings();
-  assert.deepEqual(settingsFromPersonaForm(base, [{ forbid: 'x', instead: '' }]).errors, ['Aturan tambahan 1: isi kolom Dilarang dan Gantinya.']);
-  assert.match(settingsFromPersonaForm(base, [{ forbid: 'x'.repeat(201), instead: 'y' }]).errors[0], /maksimal 200 karakter per kolom/);
+  assert.deepEqual(settingsFromPersonaForm(base, [{ forbid: 'x', instead: '' }]).errors, ['Extra rule 1: fill in the Forbidden and Instead fields.']);
+  assert.match(settingsFromPersonaForm(base, [{ forbid: 'x'.repeat(201), instead: 'y' }]).errors[0], /at most 200 characters per field/);
 });

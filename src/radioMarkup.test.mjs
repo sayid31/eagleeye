@@ -261,7 +261,7 @@ test('Radio is nested inside Context with separate disclosure and power controls
   assert.match(html, /id="radio-tuner-needle"[^>]*aria-hidden="true"/);
   assert.match(html, /SNAPS TO AVAILABLE STATIONS/);
   assert.match(html, /class="radio-tuner-scale" aria-hidden="true"><\/div>/);
-  assert.match(html, /DIREKTORI: RADIO BROWSER/);
+  assert.match(html, /DIRECTORY: RADIO BROWSER/);
   assert.match(html, /Audio connects directly to the broadcaster/);
   assert.doesNotMatch(html, /radio-(?:favicon|visualizer|spectrum)/i);
   assert.match(css, /#radio-tuner-slider::-(?:webkit-slider-thumb|moz-range-thumb)/);

@@ -25,7 +25,7 @@ test('values outside the server lists are refused; sources read as plain words',
   const refused = settingsFromProviderForm(defaultVoiceSettings(), { voice: 'robot', backendModel: 'x' }, OPTIONS);
   assert.equal(refused.ok, false);
   assert.deepEqual(Object.keys(refused.errors), ['voice', 'backendModel']);
-  assert.equal(describeSource('admin'), 'dipilih di sini');
-  assert.equal(describeSource('env'), 'dari .env');
-  assert.equal(describeSource(undefined), 'default bawaan');
+  assert.equal(describeSource('admin'), 'chosen here');
+  assert.equal(describeSource('env'), 'from .env');
+  assert.equal(describeSource(undefined), 'built-in default');
 });

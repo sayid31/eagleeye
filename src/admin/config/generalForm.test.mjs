@@ -36,7 +36,7 @@ test('bad limits block the save with one message per field, keyed by the field',
   const r = settingsFromGeneralForm(base, { ...form, limits: { ...form.limits, sessionMinutes: '500', idleSeconds: '5' } }, RANGES);
   assert.equal(r.ok, false);
   assert.deepEqual(Object.keys(r.errors), ['sessionMinutes', 'idleSeconds']);
-  assert.match(r.errors.sessionMinutes, /Durasi sesi maksimal: isi bilangan bulat 1–120 menit/);
+  assert.match(r.errors.sessionMinutes, /Maximum session length: enter a whole number from 1 to 120 minutes/);
   assert.deepEqual(limitErrors(form.limits, RANGES), {}, 'untouched defaults are valid');
 });
 
@@ -44,7 +44,7 @@ test('a session length above the hard cap is accepted but warned about, next to 
   assert.equal(sessionCapWarning('30'), null);
   assert.equal(sessionCapWarning(''), null);
   assert.match(sessionCapWarning('45'), /45 menit melebihi batas keras.*30 menit/);
-  assert.match(hardCapNote(), new RegExp(`${MAX_LIVE_SESSION_MINUTES} menit`));
+  assert.match(hardCapNote(), new RegExp(`${MAX_LIVE_SESSION_MINUTES} minutes`));
   const base = defaultVoiceSettings();
   const r = settingsFromGeneralForm(base, { ...generalFormFromSettings(base), limits: { ...generalFormFromSettings(base).limits, sessionMinutes: '45' } }, RANGES);
   assert.equal(r.ok, true, 'the server still accepts up to 120');
@@ -74,12 +74,12 @@ test('the save keeps fields this page does not own (cost limits, topics) and map
 test('enforcedChips summarize the saved state as on/off capabilities', () => {
   const groups = Object.keys(defaultVoiceSettings().toolGroups).map((id) => ({ id }));
   assert.deepEqual(enforcedChips(defaultVoiceSettings(), groups).map((c) => [c.name, c.enabled]), [
-    ['Suara', true], ['Aturan inti', true], ['Batasan topik', false], [`Grup tools (${groups.length} dari ${groups.length})`, true]]);
+    ['Voice', true], ['Core rules', true], ['Topic restriction', false], [`Tool groups (${groups.length} of ${groups.length})`, true]]);
   const s = { ...defaultVoiceSettings(), enabled: false, topics: { enabled: true, allowed: ['a', 'b'], refusal: '' }, toolGroups: { ...defaultVoiceSettings().toolGroups, media: false, annotate: false } };
   const chips = enforcedChips(s, groups);
   assert.deepEqual(chips.map((c) => c.enabled), [false, true, true, true]);
-  assert.equal(chips[2].name, 'Batasan topik (2)');
-  assert.equal(chips[3].name, `Grup tools (${groups.length - 2} dari ${groups.length})`);
+  assert.equal(chips[2].name, 'Topic restriction (2)');
+  assert.equal(chips[3].name, `Tool groups (${groups.length - 2} of ${groups.length})`);
 });
 
 test('saving General keeps the Persona extra rules and the provider choice', () => {
@@ -95,7 +95,7 @@ test('saving General keeps the Persona extra rules and the provider choice', () 
 test('every tool group has Indonesian display text; an unknown group falls back to the server text', () => {
   assert.deepEqual(Object.keys(TOOL_GROUP_TEXT).sort(), [...VOICE_TOOL_GROUP_IDS].sort());
   assert.deepEqual(describeToolGroup({ id: 'camera', label: 'Camera & navigation', description: 'x', toolCount: 9 }),
-    { title: 'Kamera & navigasi (9 tools)', description: TOOL_GROUP_TEXT.camera.description });
+    { title: 'Camera & navigation (9 tools)', description: TOOL_GROUP_TEXT.camera.description });
   assert.deepEqual(describeToolGroup({ id: 'future', label: 'Future', description: 'Later.', toolCount: 1 }),
     { title: 'Future (1 tools)', description: 'Later.' });
 });

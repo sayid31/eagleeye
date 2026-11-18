@@ -44,7 +44,7 @@ export const PROBES = [
     id: 'skip-link', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev',
     async run(page) {
       await tabUntil(page, 'a[href="#main-content"]', { max: 2 });
-      assert.match((await focusInfo(page)).text, /Lewati ke konten/);
+      assert.match((await focusInfo(page)).text, /Skip to content/);
       await page.keyboard.press('Enter');
       await waitForFocus(page, MAIN);
     },

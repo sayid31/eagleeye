@@ -5,8 +5,8 @@ import { costFormFromSettings, formatDuration, formatEstimate, limitToText, effe
 
 test('formatDuration covers zero, seconds, minutes and hours', () => {
   assert.equal(formatDuration(0), '0 min');
-  assert.equal(formatDuration(5), '0 min 05 dtk');
-  assert.equal(formatDuration(245.9), '4 min 05 dtk');
+  assert.equal(formatDuration(5), '0 min 05 s');
+  assert.equal(formatDuration(245.9), '4 min 05 s');
   assert.equal(formatDuration(600), '10 min');
   assert.equal(formatDuration(7380), '2 j 03 min');
   assert.equal(formatDuration(-3), '0 min');
@@ -18,10 +18,10 @@ test('formatEstimate marks money as an estimate', () => {
 
 test('todayView: no limit, some left, used up', () => {
   const at = (dailyMinutes, remainingSeconds) => todayView({ dailyMinutes, remainingSeconds, summary: { today: { seconds: 600, estimatedUsd: 0.5 } } });
-  assert.equal(at(0, null).line, '10 min terpakai hari ini. Tanpa batas harian.');
+  assert.equal(at(0, null).line, '10 min used today. No daily limit.');
   assert.equal(at(0, null).meter, null);
   const some = at(30, 1200);
-  assert.equal(some.line, '10 min dari 30 menit terpakai hari ini. Sisa 20 min.');
+  assert.equal(some.line, '10 min of 30 minutes used today. 20 min left.');
   assert.deepEqual([some.meter.tone, some.meter.percent, some.meter.valueMax], ['success', 33, 30]);
   assert.equal(some.cost, '~$0.50');
   const close = at(12, 120);
@@ -29,11 +29,11 @@ test('todayView: no limit, some left, used up', () => {
   const gone = at(10, 0);
   assert.equal(gone.reached, true);
   assert.equal(gone.meter.tone, 'destructive');
-  assert.match(gone.line, /sesi baru ditolak sampai tengah malam/);
+  assert.match(gone.line, /new sessions are rejected until midnight/);
 });
 
 test('effectiveLimitsLine words the limits in force', () => {
-  assert.equal(effectiveLimitsLine({ costLimits: { effective: { warnUsd: 1, capUsd: null } } }), 'Berlaku sekarang: peringatan ~$1.00, batas keras nonaktif.');
+  assert.equal(effectiveLimitsLine({ costLimits: { effective: { warnUsd: 1, capUsd: null } } }), 'In effect now: warning ~$1.00, hard limit inactive.');
 });
 
 test('cost form: empty = built-in default, off = none, number = USD; base fields survive', () => {

@@ -10,8 +10,8 @@ const tomtom = { id: 'tomtom', title: 'TOMTOM', envVars: ['TOMTOM_API_KEY'], set
 const payload = { keys: [openai, opensky, tomtom], store: 'env-file' };
 
 test('status and source follow presence, source and this visit\'s test', () => {
-  assert.deepEqual(keyStatus({ set: false }), { id: 'unset', label: 'Belum', tone: 'muted' });
-  assert.equal(keyStatus(openai).label, 'Terpasang');
+  assert.deepEqual(keyStatus({ set: false }), { id: 'unset', label: 'Not set', tone: 'muted' });
+  assert.equal(keyStatus(openai).label, 'Key set');
   assert.equal(keyStatus(openai, 'rejected').id, 'rejected');
   assert.equal(keyStatus({ set: false }, 'rejected').id, 'unset', 'an empty key is never "rejected"');
   assert.equal(keyStatus(openai, 'ok').id, 'set');
@@ -27,7 +27,7 @@ test('providerRows carry Indonesian name and purpose, status, source, editabilit
   const rows = providerRows(payload, { openai: { result: 'rejected', at: 1 } });
   assert.deepEqual(rows.map((r) => r.id), ['openai', 'opensky', 'tomtom']);
   assert.equal(rows[0].name, 'OpenAI');
-  assert.match(rows[0].purpose, /suara/);
+  assert.match(rows[0].purpose, /Voice assistant/);
   assert.equal(rows[0].status.id, 'rejected');
   assert.equal(rows[0].lastTest.at, 1);
   assert.equal(rows[1].testable, false);
@@ -42,17 +42,17 @@ test('an unknown provider id falls back to the server title', () => {
 });
 
 test('summary and store label are in owner terms', () => {
-  assert.equal(providersSummary(payload), '2 dari 3 penyedia sudah punya kunci. Kunci disimpan di file .env proyek di komputer ini.');
-  assert.equal(storeLabel('pinokio-environment'), 'file ENVIRONMENT Pinokio');
+  assert.equal(providersSummary(payload), '2 of 3 providers have a key. Keys are stored in file .env proyek on this computer.');
+  assert.equal(storeLabel('pinokio-environment'), 'the Pinokio ENVIRONMENT file');
 });
 
 test('buildKeyUpdate trims, requires every variable, rejects spaces and keys errors by variable', () => {
   assert.deepEqual(buildKeyUpdate(openai, { OPENAI_API_KEY: '  abc123  ' }), { ok: true, updates: { OPENAI_API_KEY: 'abc123' } });
-  assert.match(buildKeyUpdate(openai, {}).errors.OPENAI_API_KEY, /API key wajib diisi/);
+  assert.match(buildKeyUpdate(openai, {}).errors.OPENAI_API_KEY, /API key is required/);
   const partial = buildKeyUpdate(opensky, { OPENSKY_CLIENT_ID: 'id' });
   assert.deepEqual(Object.keys(partial.errors), ['OPENSKY_CLIENT_SECRET']);
-  assert.match(partial.errors.OPENSKY_CLIENT_SECRET, /Isi semua kolom/);
-  assert.match(buildKeyUpdate(openai, { OPENAI_API_KEY: 'a b' }).errors.OPENAI_API_KEY, /tidak boleh berisi spasi/);
+  assert.match(partial.errors.OPENSKY_CLIENT_SECRET, /Fill in every field/);
+  assert.match(buildKeyUpdate(openai, { OPENAI_API_KEY: 'a b' }).errors.OPENAI_API_KEY, /cannot contain spaces/);
   assert.deepEqual(buildKeyRemoval(opensky), { OPENSKY_CLIENT_ID: null, OPENSKY_CLIENT_SECRET: null });
 });
 
@@ -65,8 +65,8 @@ test('field labels: a single variable is "API key", parts use their own names', 
 test('test results read as words with a tone; the AIS hint only joins "tidak terhubung"', () => {
   assert.deepEqual(['ok', 'rejected', 'unreachable', 'untestable', 'not_set', 'weird'].map((r) => describeTestResult({ result: r }, 'x').tone),
     ['success', 'destructive', 'warning', 'muted', 'muted', 'muted']);
-  assert.match(describeTestResult({ result: 'unreachable' }, 'aisstream').text, /layer Kapal/);
-  assert.doesNotMatch(describeTestResult({ result: 'unreachable' }, 'openai').text, /layer Kapal/);
-  assert.equal(describeTestResult({ result: 'weird' }, 'x').label, 'Tidak diketahui');
+  assert.match(describeTestResult({ result: 'unreachable' }, 'aisstream').text, /Vessels layer/);
+  assert.doesNotMatch(describeTestResult({ result: 'unreachable' }, 'openai').text, /Vessels layer/);
+  assert.equal(describeTestResult({ result: 'weird' }, 'x').label, 'Unknown');
   assert.doesNotMatch(describeTestResult({ result: 'rejected', httpStatus: 401, message: 'HTTP 401' }, 'x').text, /401/, 'no raw status');
 });
