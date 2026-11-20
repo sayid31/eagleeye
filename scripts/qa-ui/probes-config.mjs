@@ -74,7 +74,7 @@ export const CONFIG_PROBES = [
       const result = (name) => page.$eval(row(name), (btn) => btn.closest('tr').querySelector('[aria-live="polite"]').textContent.replace(/\s+/g, ' ').trim());
       assert.equal(await page.$(row('NASA FIRMS')), null, 'no test button for a provider without a key');
       assert.match(await result('Google Maps'), /Not tested/);
-      for (const [name, key] of [['Google Maps', 'Enter'], ['AIS Stream', 'Space']]) {
+      for (const [name, key] of [['Google Maps', 'Enter'], ['AISStream', 'Space']]) {
         await page.focus(row(name));
         await page.keyboard.press(key);
         await page.waitForFunction((sel) => /Rejected/.test(document.querySelector(sel).closest('tr').querySelector('[aria-live="polite"]').textContent), { timeout: 4000 }, row(name));
