@@ -7,6 +7,12 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Cleaner admin chrome.** The collapsed sidebar shows only the logo (no leftover bit of the brand name). The theme menu in the
+  header offers just Light and Dark (the first visit still follows the device setting), and the duplicate theme item is gone from
+  the account menu.
+- **The OpenAI key is managed on AI Provider**, not in API Keys: the card there has Change key / Add key, test and delete. API
+  Keys now lists only the other providers. The Voice and Model backend selects show the value in use (for example
+  "marin (default)") instead of a generic "Default", with a "Use default" item to clear an override.
 - **The whole interface is now in English.** The map console, the public landing page, the login and account pages, the
   `/admin` and `/dev` consoles, error messages, tooltips and screen-reader labels were Indonesian; they now read in English.
   Menu and page names are Overview, Users, Login Log, Audit, Kill switch, Usage, API Keys, AI Configuration (General, AI Provider,
