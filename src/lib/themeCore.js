@@ -1,7 +1,9 @@
 // src/lib/themeCore.js
 /**
  * Theme preference logic shared by the React surfaces and the inline anti-flash script: one localStorage key
- * (`gev-theme`) holds `light`, `dark` or `system` (the default, follows the OS). Pure; no React, no DOM globals
+ * (`gev-theme`) holds `light` or `dark` (an explicit pick) or is absent/`system` (no pick yet: follow the OS).
+ * The React toggle offers only light/dark; `system` stays a valid stored value because older visits and the vanilla
+ * landing control still write it. Pure; no React, no DOM globals
  * at import time, so node:test can run it.
  *
  * @module lib/themeCore
@@ -9,6 +11,8 @@
 
 export const THEME_STORAGE_KEY = 'gev-theme';
 export const THEME_PREFERENCES = Object.freeze(['light', 'dark', 'system']);
+/** The two choices the React toggle offers; `system` is only the "no explicit choice yet" state. */
+export const THEME_CHOICES = Object.freeze(['light', 'dark']);
 export const DEFAULT_THEME_PREFERENCE = 'system';
 export const DARK_CLASS = 'dark';
 export const DARK_MEDIA_QUERY = '(prefers-color-scheme: dark)';

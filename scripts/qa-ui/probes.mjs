@@ -66,7 +66,8 @@ export const PROBES = [
       await press(page, 'ArrowDown');
       assert.equal((await focusInfo(page, '[role="menu"]')).inside, true, 'arrow keys move focus into the menu');
       const items = await page.$$eval('[role="menu"] [role^="menuitem"]', (nodes) => nodes.map((n) => n.textContent.trim()));
-      for (const wanted of ['Display theme', 'Open map', 'Open Admin area', 'Sign out']) assert.ok(items.some((t) => t.includes(wanted)), `menu item "${wanted}" in ${items.join(' | ')}`);
+      for (const wanted of ['Open map', 'Open Admin area', 'Sign out']) assert.ok(items.some((t) => t.includes(wanted)), `menu item "${wanted}" in ${items.join(' | ')}`);
+      assert.ok(!items.some((t) => /theme|light|dark|system/i.test(t)), `the account menu has no theme item: ${items.join(' | ')}`);
       await expectEscapeRestoresFocus(page, '[role="menu"]', USER_MENU);
     },
   },
@@ -82,13 +83,36 @@ export const PROBES = [
       assert.equal(await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme), 'dark');
       await page.click('header button[aria-label="Display theme"]');
       await page.waitForSelector('[role="menuitemradio"]');
-      await (await byText(page, '[role="menuitemradio"]', 'System')).click();
-      assert.equal(await stored(page), 'system');
-      await page.reload({ waitUntil: 'domcontentloaded' });
-      await page.waitForSelector(MAIN);
-      assert.equal(await dark(page), false, 'system + light OS preference = light after reload');
+      const choices = await page.$$eval('[role="menuitemradio"]', (nodes) => nodes.map((n) => n.textContent.trim()));
+      assert.deepEqual(choices, ['Light', 'Dark'], 'only Light and Dark are offered');
+      assert.equal(await page.$eval('[role="menuitemradio"][aria-checked="true"]', (el) => el.textContent.trim()), 'Dark', 'the painted theme is the checked item');
+      await page.keyboard.press('Escape');
     },
   },
+  ...['light', 'dark'].map((theme) => ({
+    id: `sidebar-collapsed-logo-only-${theme}`, role: 'super_admin', viewport: 'desktop', theme, path: '/dev',
+    async run(page) {
+      await page.evaluate(() => localStorage.setItem('gev-sidebar', 'closed'));
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.waitForSelector('[data-slot="sidebar"][data-state="collapsed"]');
+      const brand = await page.evaluate(() => {
+        const link = document.querySelector('[data-slot="sidebar"] a[href="/app"]');
+        const box = link.getBoundingClientRect();
+        const img = link.querySelector('img').getBoundingClientRect();
+        const visibleText = [...link.querySelectorAll('span')].filter((el) => el.getBoundingClientRect().width > 0 && el.textContent.trim());
+        const sidebar = document.querySelector('[data-slot="sidebar-container"]').getBoundingClientRect();
+        return {
+          visibleText: visibleText.map((el) => el.textContent.trim()), imgCentreOffset: Math.abs((img.left + img.width / 2) - (box.left + box.width / 2)),
+          imgInside: img.left >= box.left - 0.5 && img.right <= box.right + 0.5, linkInside: box.right <= sidebar.right + 0.5,
+          overflowX: document.documentElement.scrollWidth > document.documentElement.clientWidth,
+        };
+      });
+      assert.deepEqual(brand.visibleText, [], 'no brand name or badge text beside the logo in icon mode');
+      assert.ok(brand.imgCentreOffset <= 1.5, `the logo is centred (off by ${brand.imgCentreOffset}px)`);
+      assert.ok(brand.imgInside && brand.linkInside && !brand.overflowX, `nothing clips or overflows: ${JSON.stringify(brand)}`);
+      await page.evaluate(() => localStorage.removeItem('gev-sidebar'));
+    },
+  })),
   {
     id: 'mobile-navigation-lists-everything', role: 'super_admin', viewport: 'mobile', theme: 'light', path: '/dev',
     async run(page) {

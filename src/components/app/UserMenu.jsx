@@ -1,15 +1,12 @@
 // src/components/app/UserMenu.jsx
-/** Account menu in the sidebar footer: initials avatar, email + role, theme, map link, other area, sign out. */
-import { ChevronsUpDown, LogOut, Map as MapIcon, Palette, Shield } from 'lucide-react';
+/** Account menu in the sidebar footer: initials avatar, email + role, map link, other area, sign out. */
+import { ChevronsUpDown, LogOut, Map as MapIcon, Shield } from 'lucide-react';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent,
-  DropdownMenuSubTrigger, DropdownMenuTrigger,
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from '@/components/ui/sidebar';
-import { THEME_COPY } from '@/copy/en/common';
 import { SHELL_COPY } from '@/copy/en/shell';
-import { ThemeRadioItems } from './ThemeToggle.jsx';
 import { initialsFor } from './navModel.js';
 
 /**
@@ -40,10 +37,6 @@ export function UserMenu({ user, mapHref = '/app', areaLink = null, onSignOut })
               {role ? <span className="block text-xs text-muted-foreground">{role}</span> : null}
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger><Palette aria-hidden="true" />{THEME_COPY.toggle}</DropdownMenuSubTrigger>
-              <DropdownMenuSubContent><ThemeRadioItems /></DropdownMenuSubContent>
-            </DropdownMenuSub>
             <DropdownMenuItem asChild><a href={mapHref}><MapIcon aria-hidden="true" />{SHELL_COPY.openMap}</a></DropdownMenuItem>
             {areaLink ? <DropdownMenuItem asChild><a href={areaLink.href}><Shield aria-hidden="true" />{areaLink.label}</a></DropdownMenuItem> : null}
             <DropdownMenuSeparator />

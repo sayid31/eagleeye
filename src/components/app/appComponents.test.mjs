@@ -136,6 +136,7 @@ test('ThemeToggle and UserMenu expose labelled controls inside the providers', a
   const html = render(h(AppProviders, null, h(ThemeToggle)));
   assert.match(html, /aria-label="Display theme"/);
   assert.match(html, /aria-haspopup="menu"/);
+  assert.doesNotMatch(html, /System/, 'the toggle has no System choice');
 });
 
 test('AppShell (dev): skip link first, one labelled sidebar nav with group titles and every visible item, Developer badge, labelled breadcrumb, focusable <main>', async () => {
@@ -148,6 +149,9 @@ test('AppShell (dev): skip link first, one labelled sidebar nav with group title
     areaLink: areaSwitchFor('dev', user.role), onSignOut() {},
   }, h('h1', null, 'Page content')))));
   assert.ok(html.indexOf('Skip to content') < html.indexOf('data-slot="sidebar-wrapper"'), 'skip link precedes everything');
+  // Icon mode shows the logo alone: the brand text block is hidden there (not clipped) and the logo is centred.
+  assert.match(html, /<span class="[^"]*group-data-\[collapsible=icon\]:hidden[^"]*"><span class="[^"]*">EagleEye View/);
+  assert.match(html, /group-data-\[collapsible=icon\]:justify-center/);
   assert.match(html, /<a href="#main-content"/);
   assert.match(html, /<main id="main-content" tabindex="-1"/);
   assert.equal((html.match(/<main/g) ?? []).length, 1, 'exactly one main landmark');

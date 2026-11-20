@@ -6,7 +6,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createJsxLoader } from '../testing/jsxLoader.mjs';
 import {
-  THEME_INIT_SCRIPT, THEME_PREFERENCES, THEME_STORAGE_KEY, applyTheme, normalizePreference, readStoredPreference, resolveTheme, writeStoredPreference,
+  THEME_CHOICES, THEME_INIT_SCRIPT, THEME_PREFERENCES, THEME_STORAGE_KEY, applyTheme, normalizePreference, readStoredPreference, resolveTheme, writeStoredPreference,
 } from './themeCore.js';
 
 const read = (file) => readFileSync(new URL(`../../${file}`, import.meta.url), 'utf8');
@@ -30,6 +30,14 @@ test('one shared storage key and three preferences, system by default', () => {
   assert.equal(normalizePreference(undefined), 'system');
   assert.equal(normalizePreference('purple'), 'system');
   assert.equal(normalizePreference('dark'), 'dark');
+});
+
+test('the toggle offers only light and dark; a stored "system" (older visits, landing control) still means follow the OS', () => {
+  assert.deepEqual([...THEME_CHOICES], ['light', 'dark']);
+  assert.ok(THEME_CHOICES.every((choice) => THEME_PREFERENCES.includes(choice)));
+  assert.equal(readStoredPreference({ getItem: () => 'system' }), 'system');
+  assert.equal(resolveTheme('system', true), 'dark');
+  assert.equal(resolveTheme('system', false), 'light');
 });
 
 test('resolveTheme: an explicit choice wins over the OS; system follows it', () => {

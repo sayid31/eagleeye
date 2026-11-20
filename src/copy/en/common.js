@@ -32,7 +32,6 @@ export const THEME_COPY = Object.freeze({
   toggle: 'Display theme',
   light: 'Light',
   dark: 'Dark',
-  system: 'System',
 });
 
 export const COPY_FIELD_COPY = Object.freeze({
