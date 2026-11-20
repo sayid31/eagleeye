@@ -40,10 +40,11 @@ export function AppSidebar({ brand, area, groups, pathname, user, areaLink, onSi
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
+            <SidebarMenuButton size="lg" asChild className="group-data-[collapsible=icon]:justify-center">
               <a href="/app" title={SHELL_COPY.openMap}>
                 <img src="/logo.svg" alt="" width="20" height="36" className="h-8 w-auto shrink-0" />
-                <span className="grid flex-1 text-left leading-tight">
+                {/* Hidden (not clipped) in icon mode: the 32 px button would otherwise show a sliver of the brand name beside the logo. */}
+                <span className="grid flex-1 text-left leading-tight group-data-[collapsible=icon]:hidden">
                   <span className="truncate font-semibold">{brand.name}</span>
                   {brand.badge ? <Badge variant="secondary" className="mt-0.5 w-fit">{brand.badge}</Badge> : null}
                 </span>
