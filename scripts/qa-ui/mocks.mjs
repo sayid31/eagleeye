@@ -87,6 +87,8 @@ export const POPULATED_USAGE = Object.freeze({
 });
 
 export const SETUPS_CONFIG = Object.freeze({
+  // The desktop sidebar remembered as collapsed to icons (see src/lib/sidebarState.js).
+  sidebarCollapsed: (page) => page.evaluateOnNewDocument(() => { try { localStorage.setItem('gev-sidebar', 'closed'); } catch { /* blocked storage: the sidebar simply stays expanded */ } }),
   keysMixed: (page) => answerApi(page, { '/api/admin/keys': ({ method }) => (method === 'GET' ? MIXED_KEYS : undefined) }),
   usagePopulated: (page) => answerApi(page, { '/api/admin/voice/usage': ({ method }) => (method === 'GET' ? POPULATED_USAGE : undefined) }),
 });

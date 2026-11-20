@@ -14,6 +14,19 @@ import {
 
 const COPY = PROVIDERS_COPY;
 
+/**
+ * Which page manages a provider's key. Default `api-keys`; OpenAI is `ai-provider` (its key sits next to the voice
+ * and model choices). Status-only lists elsewhere (system overview, kill switch) still show every provider.
+ */
+export const KEY_OWNER_PAGES = Object.freeze({ openai: 'ai-provider' });
+export const KEYS_PAGE_OWNER = 'api-keys';
+export const AI_PROVIDER_PAGE_OWNER = 'ai-provider';
+
+/** Page that manages this provider's key. */
+export const keyOwner = (id) => KEY_OWNER_PAGES[id] ?? KEYS_PAGE_OWNER;
+
+const ownedBy = (payload, owner) => payload.keys.filter((key) => keyOwner(key.id) === owner);
+
 /** Where saved keys go, in owner terms. */
 export function storeLabel(store) {
   return store === 'pinokio-environment' ? COPY.stores.pinokio : COPY.stores.env;
@@ -70,12 +83,13 @@ export function keySource(key, store) {
 }
 
 /**
- * Rows of the provider table.
+ * Rows of the provider table of one page (API Keys by default; `ai-provider` gives the OpenAI row).
  * @param {{keys: object[], store: string}} payload GET /api/admin/keys.
  * @param {Record<string, {result: string, at: number}>} [tests] This visit's test results by provider id.
+ * @param {string} [owner] Page that manages the rows (see keyOwner).
  */
-export function providerRows(payload, tests = {}) {
-  return payload.keys.map((key) => {
+export function providerRows(payload, tests = {}, owner = KEYS_PAGE_OWNER) {
+  return ownedBy(payload, owner).map((key) => {
     const text = providerText(key);
     const last = tests[key.id] ?? null;
     return {
@@ -94,10 +108,10 @@ export function providerRows(payload, tests = {}) {
   });
 }
 
-/** "5 dari 8 penyedia sudah punya kunci…" */
+/** "5 of 7 providers have a key…" — counts only the providers the API Keys page manages. */
 export function providersSummary(payload) {
-  const set = payload.keys.filter((key) => key.set).length;
-  return COPY.summary(set, payload.keys.length, storeLabel(payload.store));
+  const owned = ownedBy(payload, KEYS_PAGE_OWNER);
+  return COPY.summary(owned.filter((key) => key.set).length, owned.length, storeLabel(payload.store));
 }
 
 /**

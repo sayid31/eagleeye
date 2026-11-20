@@ -25,7 +25,7 @@ const noop = () => {};
 
 test('provider table: caption, scoped headers, status + source words, one labelled action per row, no key values', async () => {
   const { ProviderTable } = await load('ProviderTable');
-  const html = render(h(ProviderTable, { rows: providerRows(PAYLOAD, { openai: { result: 'ok', at: Date.UTC(2026, 10, 18, 7, 2) } }), loading: false, error: null, onRetry: noop, onOpen: noop, busy: false }));
+  const html = render(h(ProviderTable, { rows: [...providerRows(PAYLOAD, { openai: { result: 'ok', at: Date.UTC(2026, 10, 18, 7, 2) } }, 'ai-provider'), ...providerRows(PAYLOAD)], loading: false, error: null, onRetry: noop, onOpen: noop, busy: false }));
   assert.match(html, /<caption[^>]*sr-only[^>]*>Providers and API key status<\/caption>/);
   assert.equal([...html.matchAll(/<th[^>]*scope="col"/g)].length, 5);
   assert.match(html, /aria-label="Change key for OpenAI"/);
@@ -37,6 +37,25 @@ test('provider table: caption, scoped headers, status + source words, one labell
   assert.match(html, /Not tested/);
   assert.match(html, /<ul[^>]*aria-label="Providers and API key status"/, 'stacked cards for mobile');
   assert.doesNotMatch(html, /sk-|OPENAI_API_KEY/);
+});
+
+test('OpenAI key card (AI Provider): status, source and a labelled Change key / Add key button in place, no link out', async () => {
+  const { OpenAiKeyCard } = await load('OpenAiKeyCard');
+  const keys = (payload, extra = {}) => ({ payload, tests: {}, restarting: false, applySaved: noop, recordTest: noop, ...extra });
+  const html = render(h(OpenAiKeyCard, { keys: keys(PAYLOAD) }));
+  assert.match(html, /<h2[^>]*>OpenAI key<\/h2>|OpenAI key/);
+  assert.match(html, /Key set/);
+  assert.match(html, /Sources: \.env/);
+  assert.match(html, /aria-label="Change key for OpenAI"[^>]*>Change key</);
+  assert.doesNotMatch(html, /<a |Manage in API Keys|OPENAI_API_KEY/);
+  const unset = { ...PAYLOAD, keys: PAYLOAD.keys.map((key) => (key.id === 'openai' ? { ...key, set: false, managed: null } : key)) };
+  const missing = render(h(OpenAiKeyCard, { keys: keys(unset) }));
+  assert.match(missing, /aria-label="Add key for OpenAI"/);
+  assert.match(missing, /There is no OpenAI key yet/);
+  const restarting = render(h(OpenAiKeyCard, { keys: keys(PAYLOAD, { restarting: true }) }));
+  assert.match(restarting, /Server is restarting/);
+  assert.match(restarting, /aria-label="Change key for OpenAI"[^>]*disabled=""/);
+  assert.equal(render(h(OpenAiKeyCard, { keys: keys(null) })), '', 'nothing until the key list has loaded');
 });
 
 test('provider table states: skeleton, error with retry, empty', async () => {

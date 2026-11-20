@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildKeyRemoval, buildKeyUpdate, describeTestResult, fieldLabel, isEditable, keySource, keyStatus, providerRows, providersSummary, storeLabel,
+  buildKeyRemoval, buildKeyUpdate, describeTestResult, fieldLabel, isEditable, keyOwner, keySource, keyStatus, providerRows, providersSummary, storeLabel,
 } from './providerKeysView.js';
 
 const openai = { id: 'openai', title: 'OPENAI', envVars: ['OPENAI_API_KEY'], set: true, managed: 'file', tier: 'metered' };
@@ -23,8 +23,16 @@ test('status and source follow presence, source and this visit\'s test', () => {
   assert.equal(isEditable(tomtom), false);
 });
 
+test('ownership: OpenAI belongs to AI Provider, every other provider to API Keys; the summary counts only the latter', () => {
+  assert.deepEqual(providerRows(payload).map((r) => r.id), ['opensky', 'tomtom']);
+  assert.deepEqual(providerRows(payload, {}, 'ai-provider').map((r) => r.id), ['openai']);
+  assert.equal(keyOwner('openai'), 'ai-provider');
+  assert.equal(keyOwner('anything-else'), 'api-keys');
+  assert.match(providersSummary(payload), /^1 of 2 providers have a key\./);
+});
+
 test('providerRows carry Indonesian name and purpose, status, source, editability and the last test', () => {
-  const rows = providerRows(payload, { openai: { result: 'rejected', at: 1 } });
+  const rows = providerRows(payload, { openai: { result: 'rejected', at: 1 } }, 'ai-provider').concat(providerRows(payload));
   assert.deepEqual(rows.map((r) => r.id), ['openai', 'opensky', 'tomtom']);
   assert.equal(rows[0].name, 'OpenAI');
   assert.match(rows[0].purpose, /Voice assistant/);
@@ -42,7 +50,7 @@ test('an unknown provider id falls back to the server title', () => {
 });
 
 test('summary and store label are in owner terms', () => {
-  assert.equal(providersSummary(payload), '2 of 3 providers have a key. Keys are stored in the project\'s .env file on this computer.');
+  assert.equal(providersSummary(payload), '1 of 2 providers have a key. Keys are stored in the project\'s .env file on this computer.');
   assert.equal(storeLabel('pinokio-environment'), 'the Pinokio ENVIRONMENT file');
 });
 

@@ -73,8 +73,8 @@ export const SAVE_COPY = Object.freeze({
 export const PROVIDERS_COPY = Object.freeze({
   title: 'API Keys',
   aiTitle: 'AI Provider',
-  keysDescription: 'Data and AI service keys used by the server. Key values are never shown, only whether one is set.',
-  aiDescription: 'Voice and model for the voice assistant. The OpenAI key is managed in API Keys.',
+  keysDescription: 'Data service keys used by the server. Key values are never shown, only whether one is set.',
+  aiDescription: 'Voice and model for the voice assistant, and the OpenAI key that runs it.',
   loading: 'Loading providers',
   loadError: 'Providers could not be loaded',
   tableCaption: 'Providers and API key status',
@@ -130,14 +130,14 @@ export const KEY_SHEET_COPY = Object.freeze({
 });
 
 export const AI_PROVIDER_COPY = Object.freeze({
-  keyCard: { title: 'OpenAI key', description: 'The key that runs the voice assistant.', manage: 'Manage in API Keys', missing: 'There is no OpenAI key yet, so the voice assistant cannot be used.' },
+  keyCard: { title: 'OpenAI key', description: 'The key that runs the voice assistant.', missing: 'There is no OpenAI key yet, so the voice assistant cannot be used.' },
   model: {
     title: 'Model and voice',
     description: (model, source) => `Voice model: ${model} (${source}). The voice cannot change while a session is running.`,
     voice: { label: 'Voice', description: (value, source) => `In use: ${value} (${source}).` },
     backend: { label: 'Model backend (tools and reasoning)', description: (value, source) => `In use: ${value} (${source}). Billed separately by OpenAI and not included in the cost meter.` },
-    defaultChoice: 'Default (.env or app default)',
   },
+  choice: { current: (value) => `${value} (default)`, reset: (value) => `Use default (${value})`, resetUnknown: 'Use default (.env or app default)' },
   sources: { admin: 'chosen here', env: 'from .env', default: 'built-in default' },
   errors: { voice: 'Voice: pick one from the list.', backend: 'Model backend: pick one from the list.' },
   saved: 'Saved. New voice sessions use this voice and model.',

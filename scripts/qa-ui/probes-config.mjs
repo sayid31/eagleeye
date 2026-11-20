@@ -27,14 +27,14 @@ async function clickText(page, selector, start) {
 }
 
 /** Answer the keys API with the mixed set; the PUT returns the set without OpenAI (as after a removal). */
-async function mockKeys(page) {
+async function mockKeys(page, opener = 'Change key for OpenAI') {
   const withoutOpenAi = { ...MIXED_KEYS, keys: MIXED_KEYS.keys.map((key) => (key.id === 'openai' ? { ...key, set: false, managed: null } : key)) };
   const calls = await answerApi(page, {
     '/api/admin/keys': ({ method }) => (method === 'GET' ? MIXED_KEYS : { ok: true, status: withoutOpenAi, restarting: true }),
     '/api/admin/keys/test': () => ({ id: 'openai', result: 'rejected', httpStatus: 401, message: 'x' }),
   });
   await page.reload({ waitUntil: 'domcontentloaded' });
-  await page.waitForSelector('button[aria-label="Change key for OpenAI"]');
+  await page.waitForSelector(`button[aria-label="${opener}"]`);
   return calls;
 }
 
@@ -48,12 +48,12 @@ export const CONFIG_PROBES = [
   {
     id: 'keys-sheet-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/api-keys',
     async run(page) {
-      await mockKeys(page);
-      const opener = 'button[aria-label="Change key for OpenAI"]';
+      await mockKeys(page, 'Change key for Google Maps');
+      const opener = 'button[aria-label="Change key for Google Maps"]';
       await page.focus(opener);
       await page.keyboard.press('Enter');
       await page.waitForSelector(SHEET);
-      assert.match(await text(page, `${SHEET} [data-slot="sheet-title"]`), /Change key for OpenAI/);
+      assert.match(await text(page, `${SHEET} [data-slot="sheet-title"]`), /Change key for Google Maps/);
       assert.equal((await focusInfo(page, SHEET)).inside, true, 'focus moves into the sheet');
       await expectFocusTrapped(page, SHEET, 12);
       assert.equal(await page.$eval(`${SHEET} input`, (el) => el.type), 'password', 'the key field is secret');
@@ -67,10 +67,31 @@ export const CONFIG_PROBES = [
     },
   },
   {
-    id: 'keys-remove-confirm-and-test', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/api-keys',
+    id: 'keys-page-has-no-openai', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/api-keys',
+    async run(page) {
+      await mockKeys(page, 'Change key for Google Maps');
+      const names = await page.$$eval('#main-content tbody th, #main-content tbody td:first-child', (cells) => cells.map((c) => c.textContent));
+      assert.ok(names.length > 0, 'the provider table rendered');
+      assert.ok(!names.some((n) => /OpenAI/.test(n)), `OpenAI is managed on AI Provider, not here: ${names.join(' | ')}`);
+      assert.match(await text(page, '#main-content'), /3 of 7 providers have a key/);
+      assert.equal(await page.$('button[aria-label$="OpenAI"]'), null);
+    },
+  },
+  {
+    id: 'openai-key-sheet-on-ai-provider', role: 'super_admin', viewport: 'desktop', theme: 'dark', path: '/dev/ai/provider',
     async run(page) {
       const calls = await mockKeys(page);
-      await page.click('button[aria-label="Change key for OpenAI"]');
+      const opener = 'button[aria-label="Change key for OpenAI"]';
+      assert.match(await text(page, '#main-content'), /OpenAI key/);
+      assert.equal(await page.$('#main-content a[href="/dev/api-keys"]'), null, 'no link out to API Keys');
+      await page.focus(opener);
+      await page.keyboard.press('Enter');
+      await page.waitForSelector(SHEET);
+      assert.equal((await focusInfo(page, SHEET)).inside, true, 'focus moves into the sheet');
+      await page.keyboard.press('Escape');
+      await gone(page, SHEET);
+      await waitForFocus(page, opener);
+      await page.click(opener);
       await page.waitForSelector(SHEET);
       await clickText(page, `${SHEET} button`, 'Test connection');
       await page.waitForFunction(() => /Rejected\./.test(document.querySelector('[role="dialog"] [aria-live="polite"]')?.textContent ?? ''), { timeout: 4000 });
@@ -175,6 +196,8 @@ export const CONFIG_PROBES = [
     id: 'ai-model-select-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/ai/provider',
     async run(page) {
       await page.waitForSelector('#main-content [role="combobox"]');
+      const shown = await page.$$eval('#main-content [role="combobox"]', (nodes) => nodes.map((n) => n.textContent.trim()));
+      assert.ok(shown.every((value) => /\(default\)$/.test(value)), `with no override each select shows the value in use: ${shown.join(' | ')}`);
       await page.focus('#main-content [role="combobox"]');
       await page.keyboard.press('Enter');
       await page.waitForSelector('[role="listbox"]');
@@ -183,6 +206,7 @@ export const CONFIG_PROBES = [
       await gone(page, '[role="listbox"]');
       await page.waitForFunction(() => document.querySelector('[aria-label="Save settings"] [role="status"]')?.textContent.includes('Unsaved'), { timeout: 3000 });
       assert.equal(await barStatus(page), 'Unsaved changes', `listbox choice: ${await text(page, '#main-content [role="combobox"]')}`);
+      assert.doesNotMatch(await text(page, '#main-content [role="combobox"]'), /Default \(\.env/, 'the select shows a real value, not the generic default label');
       await clickText(page, '#main-content button', 'Discard changes');
       await page.waitForFunction((s) => document.querySelector('[aria-label="Save settings"] [role="status"]')?.textContent.includes(s), { timeout: 3000 }, SAVED_STATUS);
     },
