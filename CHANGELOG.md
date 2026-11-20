@@ -7,6 +7,9 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Test connection is visible again for every API key.** Each key that is set has a "Test connection" button next to "Change key"
+  (API Keys, its mobile cards, and the OpenAI key card on AI Provider); the result shows right in the "Last connection test" cell.
+  The "Sources" column (".env", "Keychain or shell") is gone from the API-key screens.
 - **Cleaner admin chrome.** The collapsed sidebar shows only the logo (no leftover bit of the brand name). The theme menu in the
   header offers just Light and Dark (the first visit still follows the device setting), and the duplicate theme item is gone from
   the account menu.

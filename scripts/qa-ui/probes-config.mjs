@@ -67,6 +67,25 @@ export const CONFIG_PROBES = [
     },
   },
   {
+    id: 'keys-row-test-keyboard', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/api-keys',
+    async run(page) {
+      const calls = await mockKeys(page, 'Change key for Google Maps');
+      const row = (name) => `button[aria-label="Test connection for ${name}"]`;
+      const result = (name) => page.$eval(row(name), (btn) => btn.closest('tr').querySelector('[aria-live="polite"]').textContent.replace(/\s+/g, ' ').trim());
+      assert.equal(await page.$(row('NASA FIRMS')), null, 'no test button for a provider without a key');
+      assert.match(await result('Google Maps'), /Not tested/);
+      for (const [name, key] of [['Google Maps', 'Enter'], ['AIS Stream', 'Space']]) {
+        await page.focus(row(name));
+        await page.keyboard.press(key);
+        await page.waitForFunction((sel) => /Rejected/.test(document.querySelector(sel).closest('tr').querySelector('[aria-live="polite"]').textContent), { timeout: 4000 }, row(name));
+        await waitForFocus(page, row(name));
+        assert.doesNotMatch(await result(name), /401|\.env|Sources/, 'no raw HTTP status or key source');
+      }
+      assert.equal(calls.filter((c) => c.path === '/api/admin/keys/test').length, 2);
+      assert.doesNotMatch(await text(page, '#main-content'), /Sources|\.env/, 'no key source on the page');
+    },
+  },
+  {
     id: 'keys-page-has-no-openai', role: 'super_admin', viewport: 'desktop', theme: 'light', path: '/dev/api-keys',
     async run(page) {
       await mockKeys(page, 'Change key for Google Maps');
@@ -84,6 +103,12 @@ export const CONFIG_PROBES = [
       const opener = 'button[aria-label="Change key for OpenAI"]';
       assert.match(await text(page, '#main-content'), /OpenAI key/);
       assert.equal(await page.$('#main-content a[href="/dev/api-keys"]'), null, 'no link out to API Keys');
+      const testButton = 'button[aria-label="Test connection for OpenAI"]';
+      await page.focus(testButton);
+      await page.keyboard.press('Enter');
+      await page.waitForFunction(() => /Rejected/.test(document.querySelector('#main-content [aria-live="polite"]')?.textContent ?? ''), { timeout: 4000 });
+      await waitForFocus(page, testButton);
+      assert.doesNotMatch(await text(page, '#main-content'), /Source|\.env/, 'no key source on the card');
       await page.focus(opener);
       await page.keyboard.press('Enter');
       await page.waitForSelector(SHEET);
