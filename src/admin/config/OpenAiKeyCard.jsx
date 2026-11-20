@@ -1,6 +1,6 @@
 // src/admin/config/OpenAiKeyCard.jsx
 /**
- * The OpenAI key, managed in place on AI Provider: status, source and the same side sheet as API Keys (set, replace,
+ * The OpenAI key, managed in place on AI Provider: status, the visible Test connection button and the same side sheet as API Keys (set, replace,
  * test, delete). Key values are never shown. Saving restarts the server, so the buttons stay off afterwards.
  */
 import { useState } from 'react';
@@ -9,7 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AI_PROVIDER_COPY as T, PROVIDERS_COPY } from '@/copy/en/config';
 import { SettingsCard } from './GeneralSections.jsx';
 import { KeySheet } from './KeySheet.jsx';
-import { KeyStatusBadge, ProviderAction } from './ProviderCells.jsx';
+import { KeyStatusBadge, ProviderActions, TestCell } from './ProviderCells.jsx';
 import { AI_PROVIDER_PAGE_OWNER, providerRows } from './providerKeysView.js';
 
 /** @param {{keys: ReturnType<import('./useProviderKeys.js').useProviderKeys>}} props */
@@ -31,9 +31,9 @@ export function OpenAiKeyCard({ keys }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
             <KeyStatusBadge status={row.status} />
-            <span className="text-sm text-muted-foreground">{P.columns.source}: {row.source.label}</span>
+            <span className="flex flex-wrap items-center gap-1.5 text-sm"><span className="text-muted-foreground">{P.columns.test}:</span><TestCell row={row} /></span>
           </div>
-          <ProviderAction row={row} onOpen={() => setOpen(true)} disabled={keys.restarting} />
+          <ProviderActions row={row} onOpen={() => setOpen(true)} onTest={keys.runTest} testing={keys.testing} disabled={keys.restarting} />
         </div>
         {row.key.set ? null : <p className="text-sm text-muted-foreground">{T.keyCard.missing}</p>}
       </SettingsCard>

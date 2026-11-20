@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  buildKeyRemoval, buildKeyUpdate, describeTestResult, fieldLabel, isEditable, keyOwner, keySource, keyStatus, providerRows, providersSummary, storeLabel,
+  buildKeyRemoval, buildKeyUpdate, describeTestResult, fieldLabel, isEditable, keyOwner, keyStatus, providerRows, providersSummary,
 } from './providerKeysView.js';
 
 const openai = { id: 'openai', title: 'OPENAI', envVars: ['OPENAI_API_KEY'], set: true, managed: 'file', tier: 'metered' };
@@ -9,16 +9,12 @@ const opensky = { id: 'opensky', title: 'OPENSKY', envVars: ['OPENSKY_CLIENT_ID'
 const tomtom = { id: 'tomtom', title: 'TOMTOM', envVars: ['TOMTOM_API_KEY'], set: true, managed: 'external', tier: 'free' };
 const payload = { keys: [openai, opensky, tomtom], store: 'env-file' };
 
-test('status and source follow presence, source and this visit\'s test', () => {
+test('status follows presence and this visit\'s test', () => {
   assert.deepEqual(keyStatus({ set: false }), { id: 'unset', label: 'Not set', tone: 'muted' });
   assert.equal(keyStatus(openai).label, 'Key set');
   assert.equal(keyStatus(openai, 'rejected').id, 'rejected');
   assert.equal(keyStatus({ set: false }, 'rejected').id, 'unset', 'an empty key is never "rejected"');
   assert.equal(keyStatus(openai, 'ok').id, 'set');
-  assert.equal(keySource(openai, 'env-file').label, '.env');
-  assert.equal(keySource(openai, 'pinokio-environment').id, 'pinokio');
-  assert.equal(keySource(tomtom, 'env-file').id, 'external');
-  assert.equal(keySource(opensky, 'env-file').id, 'none');
   assert.equal(isEditable(openai) && isEditable(opensky), true);
   assert.equal(isEditable(tomtom), false);
 });
@@ -31,7 +27,7 @@ test('ownership: OpenAI belongs to AI Provider, every other provider to API Keys
   assert.match(providersSummary(payload), /^1 of 2 providers have a key\./);
 });
 
-test('providerRows carry Indonesian name and purpose, status, source, editability and the last test', () => {
+test('providerRows carry Indonesian name and purpose, status, editability and the last test', () => {
   const rows = providerRows(payload, { openai: { result: 'rejected', at: 1 } }, 'ai-provider').concat(providerRows(payload));
   assert.deepEqual(rows.map((r) => r.id), ['openai', 'opensky', 'tomtom']);
   assert.equal(rows[0].name, 'OpenAI');
@@ -39,6 +35,7 @@ test('providerRows carry Indonesian name and purpose, status, source, editabilit
   assert.equal(rows[0].status.id, 'rejected');
   assert.equal(rows[0].lastTest.at, 1);
   assert.equal(rows[1].testable, false);
+  assert.ok(rows.every((row) => !('source' in row)), 'rows carry no key source');
   assert.equal(rows[2].editable, false);
   assert.equal(rows[2].testable, true, 'a key set outside the app can still be tested');
   for (const row of rows) assert.doesNotMatch(JSON.stringify({ ...row, key: undefined }), /[A-Z]{3,}_[A-Z_]+_(KEY|SECRET|TOKEN)\b.*=/);
@@ -49,9 +46,14 @@ test('an unknown provider id falls back to the server title', () => {
   assert.deepEqual([row.name, row.purpose], ['FUTURE', 'Something']);
 });
 
-test('summary and store label are in owner terms', () => {
-  assert.equal(providersSummary(payload), '1 of 2 providers have a key. Keys are stored in the project\'s .env file on this computer.');
-  assert.equal(storeLabel('pinokio-environment'), 'the Pinokio ENVIRONMENT file');
+test('the summary counts keys and names no source', () => {
+  assert.equal(providersSummary(payload), '1 of 2 providers have a key.');
+});
+
+test('a failed test is worded from its message, never a raw status', () => {
+  assert.deepEqual(describeTestResult({ result: 'error', message: 'Could not reach the server.' }, 'tomtom'), {
+    result: 'error', label: 'Test failed', text: 'Could not reach the server.', tone: 'destructive',
+  });
 });
 
 test('buildKeyUpdate trims, requires every variable, rejects spaces and keys errors by variable', () => {

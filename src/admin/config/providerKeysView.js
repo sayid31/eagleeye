@@ -1,8 +1,8 @@
 // src/admin/config/providerKeysView.js
 /**
- * View-model of API Keys: one row per provider from GET /api/admin/keys (never a key value — only presence
- * and source), the input rules of the "Ubah kunci" sheet and the wording of connection-test results. The server
- * validates every value again (`validateKeySetupUpdates`).
+ * View-model of API Keys: one row per provider from GET /api/admin/keys (never a key value — only presence), the input
+ * rules of the "Change key" sheet and the wording of connection-test results. The server validates every value
+ * again (`validateKeySetupUpdates`).
  *
  * Pure — no DOM, no network.
  *
@@ -27,11 +27,6 @@ export const keyOwner = (id) => KEY_OWNER_PAGES[id] ?? KEYS_PAGE_OWNER;
 
 const ownedBy = (payload, owner) => payload.keys.filter((key) => keyOwner(key.id) === owner);
 
-/** Where saved keys go, in owner terms. */
-export function storeLabel(store) {
-  return store === 'pinokio-environment' ? COPY.stores.pinokio : COPY.stores.env;
-}
-
 /** Only keys this app's own store holds can be replaced or removed here. */
 export const isEditable = (key) => !key.set || key.managed === 'file';
 
@@ -53,6 +48,7 @@ export function fieldLabel(key, envVar) {
  * @returns {{result: string, label: string, text: string, tone: 'success' | 'destructive' | 'warning' | 'muted'}}
  */
 export function describeTestResult(outcome, id) {
+  if (outcome?.result === 'error') return { result: 'error', label: KEY_SHEET_COPY.testFailed, text: outcome.message ?? '', tone: 'destructive' };
   const result = Object.hasOwn(KEY_TEST_RESULTS, outcome?.result) ? outcome.result : 'unknown';
   const entry = KEY_TEST_RESULTS[result];
   const tone = { ok: 'success', rejected: 'destructive', unreachable: 'warning' }[result] ?? 'muted';
@@ -75,13 +71,6 @@ export function keyStatus(key, lastResult = null) {
   return { id: 'set', label: COPY.status.set, tone: 'success' };
 }
 
-/** Source of a present key: the app's own store, or somewhere outside the app (read-only here). */
-export function keySource(key, store) {
-  if (!key.set) return { id: 'none', label: COPY.sources.none };
-  if (key.managed === 'external') return { id: 'external', label: COPY.sources.external };
-  return store === 'pinokio-environment' ? { id: 'pinokio', label: COPY.sources.pinokio } : { id: 'env', label: COPY.sources.env };
-}
-
 /**
  * Rows of the provider table of one page (API Keys by default; `ai-provider` gives the OpenAI row).
  * @param {{keys: object[], store: string}} payload GET /api/admin/keys.
@@ -100,7 +89,6 @@ export function providerRows(payload, tests = {}, owner = KEYS_PAGE_OWNER) {
       tier: COPY.tier[key.tier] ?? '',
       envVars: key.envVars,
       status: keyStatus(key, last?.result),
-      source: keySource(key, payload.store),
       editable: isEditable(key),
       testable: key.set,
       lastTest: last,
@@ -111,7 +99,7 @@ export function providerRows(payload, tests = {}, owner = KEYS_PAGE_OWNER) {
 /** "5 of 7 providers have a key…" — counts only the providers the API Keys page manages. */
 export function providersSummary(payload) {
   const owned = ownedBy(payload, KEYS_PAGE_OWNER);
-  return COPY.summary(owned.filter((key) => key.set).length, owned.length, storeLabel(payload.store));
+  return COPY.summary(owned.filter((key) => key.set).length, owned.length);
 }
 
 /**

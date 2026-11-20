@@ -1,5 +1,5 @@
 // src/admin/config/KeyTestPanel.jsx
-/** "Uji koneksi": runs the provider's connection test and shows the result inline (a polite live region, never a raw status). */
+/** "Test connection": runs the provider's connection test and shows the result inline (a polite live region, never a raw status). */
 import { useState } from 'react';
 import { CircleCheck, CircleX, TriangleAlert, Info } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -16,10 +16,10 @@ const TONES = {
   muted: { Icon: Info, className: 'text-muted-foreground' },
 };
 
-/** @param {{row: {id: string, testable: boolean}, onTested: (id: string, outcome: object) => void}} props */
+/** @param {{row: {id: string, testable: boolean, lastTest?: object | null}, onTested: (id: string, outcome: object) => void}} props */
 export function KeyTestPanel({ row, onTested }) {
   const [running, setRunning] = useState(false);
-  const [view, setView] = useState(null);
+  const [view, setView] = useState(() => (row.lastTest ? describeTestResult(row.lastTest, row.id) : null));
   const run = async () => {
     setRunning(true);
     setView(null);
@@ -28,7 +28,9 @@ export function KeyTestPanel({ row, onTested }) {
       onTested(row.id, outcome);
       setView(describeTestResult(outcome, row.id));
     } catch (failure) {
-      setView({ label: T.testFailed, text: failureMessage(failure), tone: 'destructive' });
+      const outcome = { result: 'error', message: failureMessage(failure) };
+      onTested(row.id, outcome);
+      setView(describeTestResult(outcome, row.id));
     } finally {
       setRunning(false);
     }

@@ -23,31 +23,42 @@ const PAYLOAD = {
 };
 const noop = () => {};
 
-test('provider table: caption, scoped headers, status + source words, one labelled action per row, no key values', async () => {
+test('provider table: caption, scoped headers, status words, a Test connection per set key, one labelled action per row, no key values', async () => {
   const { ProviderTable } = await load('ProviderTable');
-  const html = render(h(ProviderTable, { rows: [...providerRows(PAYLOAD, { openai: { result: 'ok', at: Date.UTC(2026, 10, 18, 7, 2) } }, 'ai-provider'), ...providerRows(PAYLOAD)], loading: false, error: null, onRetry: noop, onOpen: noop, busy: false }));
+  const html = render(h(ProviderTable, { rows: [...providerRows(PAYLOAD, { openai: { result: 'ok', at: Date.UTC(2026, 10, 18, 7, 2) } }, 'ai-provider'), ...providerRows(PAYLOAD)], loading: false, error: null, onRetry: noop, onOpen: noop, onTest: noop, testing: {}, busy: false }));
   assert.match(html, /<caption[^>]*sr-only[^>]*>Providers and API key status<\/caption>/);
-  assert.equal([...html.matchAll(/<th[^>]*scope="col"/g)].length, 5);
+  assert.equal([...html.matchAll(/<th[^>]*scope="col"/g)].length, 4);
   assert.match(html, /aria-label="Change key for OpenAI"/);
   assert.match(html, /aria-label="Add key for OpenSky"/);
   assert.match(html, /Key set/);
   assert.match(html, />Not set</);
-  assert.match(html, /Keychain or shell/);
+  assert.doesNotMatch(html, /Sources|Keychain|\.env/, 'no key source in the API-key UI');
+  assert.match(html, /aria-label="Test connection for OpenAI"/);
+  assert.match(html, /aria-label="Test connection for TomTom"/);
+  assert.doesNotMatch(html, /aria-label="Test connection for OpenSky"/, 'no test button without a key');
+  assert.match(html, /role="status" aria-live="polite"/);
   assert.match(html, /Success •/);
   assert.match(html, /Not tested/);
   assert.match(html, /<ul[^>]*aria-label="Providers and API key status"/, 'stacked cards for mobile');
   assert.doesNotMatch(html, /sk-|OPENAI_API_KEY/);
 });
 
-test('OpenAI key card (AI Provider): status, source and a labelled Change key / Add key button in place, no link out', async () => {
+test('OpenAI key card (AI Provider): status, a visible Test connection and a labelled Change key / Add key button in place, no link out', async () => {
   const { OpenAiKeyCard } = await load('OpenAiKeyCard');
-  const keys = (payload, extra = {}) => ({ payload, tests: {}, restarting: false, applySaved: noop, recordTest: noop, ...extra });
+  const keys = (payload, extra = {}) => ({ payload, tests: {}, restarting: false, applySaved: noop, recordTest: noop, runTest: noop, testing: {}, ...extra });
   const html = render(h(OpenAiKeyCard, { keys: keys(PAYLOAD) }));
   assert.match(html, /<h2[^>]*>OpenAI key<\/h2>|OpenAI key/);
   assert.match(html, /Key set/);
-  assert.match(html, /Sources: \.env/);
+  assert.doesNotMatch(html, /Source|\.env/);
+  assert.match(html, /aria-label="Test connection for OpenAI"[^>]*>Test connection</);
+  assert.match(html, /Last connection test:/);
   assert.match(html, /aria-label="Change key for OpenAI"[^>]*>Change key</);
   assert.doesNotMatch(html, /<a |Manage in API Keys|OPENAI_API_KEY/);
+  const running = render(h(OpenAiKeyCard, { keys: keys(PAYLOAD, { testing: { openai: true } }) }));
+  assert.match(running, /aria-disabled="true"/);
+  assert.match(running, /Testing…/);
+  const failed = render(h(OpenAiKeyCard, { keys: keys(PAYLOAD, { tests: { openai: { result: 'error', message: 'Check your connection.', at: 1 } } }) }));
+  assert.match(failed, /Test failed: Check your connection\./);
   const unset = { ...PAYLOAD, keys: PAYLOAD.keys.map((key) => (key.id === 'openai' ? { ...key, set: false, managed: null } : key)) };
   const missing = render(h(OpenAiKeyCard, { keys: keys(unset) }));
   assert.match(missing, /aria-label="Add key for OpenAI"/);
@@ -60,7 +71,7 @@ test('OpenAI key card (AI Provider): status, source and a labelled Change key / 
 
 test('provider table states: skeleton, error with retry, empty', async () => {
   const { ProviderTable } = await load('ProviderTable');
-  const base = { onRetry: noop, onOpen: noop, busy: false };
+  const base = { onRetry: noop, onOpen: noop, onTest: noop, testing: {}, busy: false };
   assert.match(render(h(ProviderTable, { ...base, rows: [], loading: true, error: null })), /aria-busy="true"/);
   const failed = render(h(ProviderTable, { ...base, rows: [], loading: false, error: { status: 403 } }));
   assert.match(failed, /role="alert"/);

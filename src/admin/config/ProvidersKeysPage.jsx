@@ -1,7 +1,6 @@
 // src/admin/config/ProvidersKeysPage.jsx
 /**
- * /dev → API Keys: one row per provider (key present or not, where it comes from, last connection
- * test) and a sheet to set, replace, test or remove a key. Key values are never shown, only sent.
+ * /dev → API Keys: one row per provider (key present or not, last connection test) and a sheet to set, replace, test or remove a key. Key values are never shown, only sent.
  */
 import { useState } from 'react';
 import { RotateCw } from 'lucide-react';
@@ -30,7 +29,7 @@ export function ProvidersKeysPage() {
           <AlertDescription>{T.restarting.description}</AlertDescription>
         </Alert>
       ) : null}
-      <ProviderTable rows={rows} loading={keys.loading} error={keys.payload ? null : keys.error} onRetry={keys.reload} busy={keys.restarting} onOpen={setOpenId} />
+      <ProviderTable rows={rows} loading={keys.loading} error={keys.payload ? null : keys.error} onRetry={keys.reload} busy={keys.restarting} onOpen={setOpenId} onTest={keys.runTest} testing={keys.testing} />
       <KeySheet row={sheetRow} onOpenChange={(open) => { if (!open) setOpenId(null); }} onSaved={keys.applySaved} onTested={keys.recordTest} />
     </>
   );

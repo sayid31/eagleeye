@@ -78,17 +78,18 @@ export const PROVIDERS_COPY = Object.freeze({
   loading: 'Loading providers',
   loadError: 'Providers could not be loaded',
   tableCaption: 'Providers and API key status',
-  summary: (set, total, store) => `${set} of ${total} providers have a key. Keys are stored in ${store} on this computer.`,
-  stores: { env: 'the project\'s .env file', pinokio: 'the Pinokio ENVIRONMENT file' },
+  summary: (set, total) => `${set} of ${total} providers have a key.`,
   restarting: {
     title: 'Server is restarting',
     description: 'The server restarts so every feature uses the latest keys. This page reloads itself; wait a few seconds.',
   },
-  columns: { provider: 'Provider', status: 'Key status', source: 'Sources', test: 'Last connection test', actions: 'Actions' },
+  columns: { provider: 'Provider', status: 'Key status', test: 'Last connection test', actions: 'Actions' },
   status: { set: 'Key set', unset: 'Not set', rejected: 'Rejected' },
-  sources: { env: '.env', pinokio: 'Pinokio ENVIRONMENT', external: 'Keychain or shell', none: '—' },
   tier: { metered: 'Paid account', free: 'Free' },
-  test: { never: 'Not tested', at: (label, time) => `${label} • ${time}` },
+  test: {
+    never: 'Not tested', none: '—', at: (label, time) => `${label} • ${time}`, failed: (message) => `Test failed: ${message}`,
+    button: 'Test connection', buttonLabel: (name) => `Test connection for ${name}`, running: 'Testing…',
+  },
   actions: { change: 'Change key', install: 'Add key', changeLabel: (name) => `Change key for ${name}`, installLabel: (name) => `Add key for ${name}` },
   empty: { title: 'No providers', description: 'The server did not send a provider list. Reload the page.' },
 });
