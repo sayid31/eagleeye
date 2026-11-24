@@ -60,7 +60,7 @@
 
 @media (min-width: 64rem) {
   .ld-hero {
-    padding-block: 4.5rem 5rem;
+    padding-block: 2rem 3rem;
   }
 
   .ld-hero__grid {
@@ -70,7 +70,8 @@
 
   /* On wide screens the globe bleeds past the content column toward the page edge (the hero clips it). */
   .ld-earth {
-    margin-block: 0;
+    /* The mask fades the globe's edge, so the box may reach over the hero padding: the copy sits higher, still centred on the globe. */
+    margin-block: -2rem;
     width: 116%;
     max-width: none;
     margin-right: -16%;
