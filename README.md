@@ -20,7 +20,7 @@ Photorealistic 3D globe. Live aircraft, ships, satellites, earthquakes, traffic,
 
 🏆 **#1 on GitHub Trending this past week — thank you.** You asked for a one-click install; it's here.
 
-⚡ **No keys, no signup, no config file.** One click through [Pinokio](https://pinokio.computer/) — or `npm install && npm run dev` — and the globe comes to life. Keys are power-ups you paste into the app later. **[→ Quick Start](#-quick-start)**
+⚡ **No provider keys, no data-provider signups, one login setup.** One click through [Pinokio](https://pinokio.computer/) — or `npm install && npm run dev` — set the login once (see *Sign in*, below), and the globe comes to life. Keys are power-ups you paste into the app later. **[→ Quick Start](#-quick-start)**
 
 </div>
 
@@ -79,11 +79,11 @@ with bigger data sources whenever you're ready.
 
 ## ⚡ Quick Start
 
-**Nothing to sign up for to get started.** Both paths below land you in the
+**Nothing to sign up for at any data provider to get started.** Both paths below land you in the
 same place: a live satellite globe — keyless Esri World Imagery with keyless
 terrain, and OSM stepping in automatically if Esri is ever unreachable — with
 aircraft, military traffic, satellites, earthquakes, public cameras, radio and
-launches already moving on it. No account, no key, no file to edit.
+launches already moving on it. No provider account, no provider key; the only file to edit is the one-time login setup in `.env`.
 
 **Optional signups, optimal experience.** The keyless globe gets you running;
 a couple of two-minute signups make it spectacular. In-app place search
@@ -195,7 +195,7 @@ and it carries the LAN-sharing rules alongside [Keys & Costs](#-api-keys).
 
 ## 🕐 The First Five Minutes
 
-No account, no signup. The first-run card will offer to stage a mission for you — or run this gauntlet yourself. Somewhere in these five minutes it stops feeling like a demo:
+No provider account, no data-provider signup. Once you are signed in, the first-run card will offer to stage a mission for you — or run this gauntlet yourself. Somewhere in these five minutes it stops feeling like a demo:
 
 1. **Light up the sky.** Take the **Live Contacts** mission (or turn on **Flights** yourself) — thousands of live aircraft, gliding on real telemetry, detection mesh already reading the scene. Click one: the camera locks on, a trail draws behind it, and its live telemetry card comes up.
 2. **Take the controls.** Hit **COCKPIT** on your tracked plane and ride it down, switching sensors mid-flight: NVG into Ironbow FLIR.
