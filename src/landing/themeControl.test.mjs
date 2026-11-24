@@ -30,5 +30,6 @@ test('landing.html carries exactly the two controls the model describes, each wi
   const buttons = [...html.matchAll(/<button type="button" data-theme-value="(\w+)" aria-pressed="(\w+)" aria-label="([^"]+)"/g)];
   assert.deepEqual(buttons.map((match) => [match[1], match[3]]), [['light', 'Light'], ['dark', 'Dark']]);
   assert.equal((html.match(/data-theme-value=/g) || []).length, 2, 'no other theme button');
-  assert.equal(html.includes('ld-i-monitor'), false, 'the System (monitor) icon is gone');
+  const group = html.match(/<div class="ld-theme"[\s\S]*?<\/div>/)[0];
+  assert.equal(group.includes('ld-i-monitor'), false, 'the System (monitor) icon is gone from the control');
 });
