@@ -49,10 +49,9 @@ export const LANDING_PROBES = [
       await page.focus('.ld-theme [data-theme-value="dark"]');
       await page.keyboard.press('Enter');
       assert.deepEqual(await state(), { dark: true, stored: 'dark', pressed: ['Dark'] });
-      await page.focus('.ld-theme [data-theme-value="system"]');
+      assert.equal(await page.$$eval('.ld-theme button', (els) => els.length), 2, 'only Light and Dark are offered');
+      await page.focus('.ld-theme [data-theme-value="light"]');
       await page.keyboard.press('Space');
-      assert.deepEqual(await state(), { dark: false, stored: 'system', pressed: ['System'] }, 'System follows the emulated OS (light)');
-      await page.click('.ld-theme [data-theme-value="light"]');
       assert.deepEqual(await state(), { dark: false, stored: 'light', pressed: ['Light'] });
     },
   },

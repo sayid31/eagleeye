@@ -19,7 +19,7 @@ function safeStorage() {
   }
 }
 
-/** Wire the Terang/Gelap/Sistem buttons; "Sistem" also follows OS changes while selected. */
+/** Wire the Light/Dark buttons; with no explicit choice stored the theme follows OS changes. */
 export function mountThemeControl(root = document) {
   const group = root.querySelector('.ld-theme');
   if (!group) return;
@@ -28,7 +28,7 @@ export function mountThemeControl(root = document) {
   let preference = readStoredPreference(storage);
   const paint = () => {
     applyTheme(document.documentElement, resolveTheme(preference, media.matches));
-    for (const state of themeControlModel(preference)) {
+    for (const state of themeControlModel(preference, media.matches)) {
       group.querySelector(`[data-theme-value="${state.value}"]`)?.setAttribute('aria-pressed', String(state.pressed));
     }
   };

@@ -7,6 +7,8 @@ of current runtime behavior, see [`docs/CURRENT-STATE.md`](docs/CURRENT-STATE.md
 
 ### Changed
 
+- **Simpler theme switch on the landing page.** The header offers just Light and Dark icons (the System button is gone); the
+  first visit still follows the device setting, and your pick is remembered.
 - **Test connection is visible again for every API key.** Each key that is set has a "Test connection" button next to "Change key"
   (API Keys, its mobile cards, and the OpenAI key card on AI Provider); the result shows right in the "Last connection test" cell.
   The "Sources" column (".env", "Keychain or shell") is gone from the API-key screens.
